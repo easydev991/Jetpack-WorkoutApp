@@ -1,8 +1,8 @@
-package com.example.jetpack_workoutapp
+package com.workout.jetpack_workoutapp
 
 import android.app.Application
-import com.example.jetpack_workoutapp.data.AppContainer
-import com.example.jetpack_workoutapp.data.DefaultAppContainer
+import com.workout.jetpack_workoutapp.data.AppContainer
+import com.workout.jetpack_workoutapp.data.DefaultAppContainer
 
 class JetpackWorkoutApplication: Application() {
     lateinit var container: AppContainer

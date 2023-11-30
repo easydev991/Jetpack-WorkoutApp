@@ -1,7 +1,7 @@
-package com.example.jetpack_workoutapp.data
+package com.workout.jetpack_workoutapp.data
 
-import com.example.jetpack_workoutapp.model.Event
-import com.example.jetpack_workoutapp.network.SWApi
+import com.workout.jetpack_workoutapp.model.Event
+import com.workout.jetpack_workoutapp.network.SWApi
 
 interface SWRepository {
     /** Fetches list of MarsPhoto from marsApi */

@@ -1,6 +1,6 @@
-package com.example.jetpack_workoutapp.data
+package com.workout.jetpack_workoutapp.data
 
-import com.example.jetpack_workoutapp.network.SWApi
+import com.workout.jetpack_workoutapp.network.SWApi
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
