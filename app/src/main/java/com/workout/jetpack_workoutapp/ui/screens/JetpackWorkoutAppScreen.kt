@@ -1,4 +1,4 @@
-package com.example.jetpack_workoutapp.ui.screens
+package com.workout.jetpack_workoutapp.ui.screens
 
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel

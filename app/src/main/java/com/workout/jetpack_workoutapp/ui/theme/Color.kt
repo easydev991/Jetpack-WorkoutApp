@@ -1,4 +1,4 @@
-package com.example.jetpack_workoutapp.ui.theme
+package com.workout.jetpack_workoutapp.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
