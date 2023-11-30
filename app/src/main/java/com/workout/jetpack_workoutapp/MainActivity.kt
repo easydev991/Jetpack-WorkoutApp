@@ -1,4 +1,4 @@
-package com.example.jetpack_workoutapp
+package com.workout.jetpack_workoutapp
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -10,8 +10,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.jetpack_workoutapp.ui.screens.JetpackWorkoutAppScreen
-import com.example.jetpack_workoutapp.ui.theme.JetpackWorkoutAppTheme
+import com.workout.jetpack_workoutapp.ui.screens.JetpackWorkoutAppScreen
+import com.workout.jetpack_workoutapp.ui.theme.JetpackWorkoutAppTheme
 
 class MainActivity: ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

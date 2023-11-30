@@ -1,4 +1,4 @@
-package com.example.jetpack_workoutapp
+package com.workout.jetpack_workoutapp
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

@@ -1,4 +1,4 @@
-package com.example.jetpack_workoutapp.ui.screens
+package com.workout.jetpack_workoutapp.ui.screens
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -8,9 +8,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.jetpack_workoutapp.JetpackWorkoutApplication
-import com.example.jetpack_workoutapp.data.SWRepository
-import com.example.jetpack_workoutapp.model.Event
+import com.workout.jetpack_workoutapp.JetpackWorkoutApplication
+import com.workout.jetpack_workoutapp.data.SWRepository
+import com.workout.jetpack_workoutapp.model.Event
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
