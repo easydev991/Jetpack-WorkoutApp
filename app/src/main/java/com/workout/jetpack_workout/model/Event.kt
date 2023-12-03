@@ -1,4 +1,4 @@
-package com.workout.jetpack_workoutapp.model
+package com.workout.jetpack_workout.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

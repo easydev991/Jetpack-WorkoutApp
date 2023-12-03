@@ -1,4 +1,4 @@
-package com.workout.jetpack_workoutapp
+package com.workout.jetpack_workout
 
 import org.junit.Test
 import org.junit.Assert.*
