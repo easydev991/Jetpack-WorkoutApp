@@ -1,4 +1,4 @@
-package com.workout.jetpack_workoutapp.ui.theme
+package com.workout.jetpack_workout.ui.theme
 
 import android.app.Activity
 import android.os.Build
