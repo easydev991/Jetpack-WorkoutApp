@@ -1,6 +1,6 @@
-package com.workout.jetpack_workoutapp.network
+package com.workout.jetpack_workout.network
 
-import com.workout.jetpack_workoutapp.model.Event
+import com.workout.jetpack_workout.model.Event
 import retrofit2.http.GET
 
 interface SWApi {

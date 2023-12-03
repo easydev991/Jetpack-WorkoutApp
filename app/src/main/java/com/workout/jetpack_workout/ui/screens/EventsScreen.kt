@@ -1,4 +1,4 @@
-package com.workout.jetpack_workoutapp.ui.screens
+package com.workout.jetpack_workout.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,7 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.workout.jetpack_workoutapp.model.Event
+import com.workout.jetpack_workout.model.Event
 
 @Composable
 fun EventsScreen(
