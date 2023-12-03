@@ -14,7 +14,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <application
-        android:name="com.workout.jetpack_workout.JetpackWorkoutApplication"
+        android:name=".JetpackWorkoutApplication"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false"
@@ -26,7 +26,7 @@
         tools:ignore="LockedOrientationActivity"
         tools:targetApi="s">
         <activity
-            android:name="com.workout.jetpack_workout.MainActivity"
+            android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.JetpackWorkoutApp"
             android:screenOrientation="portrait">
