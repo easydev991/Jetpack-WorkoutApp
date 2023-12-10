@@ -1,4 +1,4 @@
-package com.workout.jetpack_workout.ui.screens
+package com.workout.jetpack_workout.ui.screens.events
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
