@@ -26,7 +26,7 @@ import com.workout.jetpack_workout.ui.screens.settings.SettingsScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun JetpackWorkoutAppScreen() {
+fun RootScreen() {
     val rootNavController = rememberNavController()
     val navBackStackEntry by rootNavController.currentBackStackEntryAsState()
     Scaffold(
