@@ -1,9 +1,11 @@
-package com.workout.jetpack_workout.ui.screens
+package com.workout.jetpack_workout.ui.screens.events
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,10 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.workout.jetpack_workout.R
 import com.workout.jetpack_workout.model.Event
 
 @Composable
@@ -30,13 +34,20 @@ fun EventsScreen(
     modifier: Modifier = Modifier
 ) {
     when (uiState) {
-        is EventsUIState.Loading -> Text("loading")
+        is EventsUIState.Loading -> LoadingScreen()
         is EventsUIState.Success -> PastEventsScreen(
             uiState.events,
             modifier = modifier.fillMaxWidth()
         )
 
         is EventsUIState.Error -> ErrorScreen(retryAction = { /*TODO*/ })
+    }
+}
+
+@Composable
+fun LoadingScreen() {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Text(text = stringResource(R.string.loading), modifier = Modifier.align(Alignment.Center))
     }
 }
 
