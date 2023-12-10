@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">WorkOut</string>
+    <string name="grounds">Parks</string>
+    <string name="events">Events</string>
+    <string name="messages">Messages</string>
+    <string name="profile">Profile</string>
+    <string name="settings">Settings</string>
 </resources>
