@@ -9,7 +9,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.workout.jetpack_workout.ui.screens.JetpackWorkoutAppScreen
+import com.workout.jetpack_workout.ui.screens.RootScreen
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 
 class MainActivity: ComponentActivity() {
@@ -21,7 +21,7 @@ class MainActivity: ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    JetpackWorkoutAppScreen()
+                    RootScreen()
                 }
             }
         }
@@ -32,6 +32,6 @@ class MainActivity: ComponentActivity() {
 @Composable
 fun AppPreview() {
     JetpackWorkoutAppTheme {
-        JetpackWorkoutAppScreen()
+        RootScreen()
     }
 }
