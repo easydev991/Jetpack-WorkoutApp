@@ -7,7 +7,6 @@ import com.workout.jetpack_workout.network.SWApi
 import kotlinx.coroutines.flow.Flow
 
 interface SWRepository {
-    /** Fetches list of MarsPhoto from marsApi */
     suspend fun getPastEvents(): List<Event>
     val isAuthorized: Flow<Boolean>
     suspend fun savePreference(isAuthorized: Boolean)
@@ -17,12 +16,12 @@ class SWRepositoryImp(
     private val swApi: SWApi,
     private val dataStore: DataStore<Preferences>
 ): SWRepository {
-    override suspend fun getPastEvents(): List<Event> =
-        swApi.getPastEvents()
-
     private val preferencesRepository: UserPreferencesRepository by lazy {
         UserPreferencesRepository(dataStore)
     }
+
+    override suspend fun getPastEvents(): List<Event> = swApi.getPastEvents()
+
     override val isAuthorized: Flow<Boolean>
         get() = preferencesRepository.isAuthorized
 
