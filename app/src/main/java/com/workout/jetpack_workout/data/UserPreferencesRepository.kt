@@ -32,9 +32,7 @@ class UserPreferencesRepository(
                 throw it
             }
         }
-        .map {
-            it[is_authorized] ?: false
-        }
+        .map { it[is_authorized] ?: false }
 
     suspend fun savePreference(isAuthorized: Boolean) {
         dataStore.edit {
