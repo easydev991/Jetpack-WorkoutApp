@@ -1,7 +1,9 @@
 package com.workout.jetpack_workout.data
 
-import com.workout.jetpack_workout.network.SWApi
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.workout.jetpack_workout.network.SWApi
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.Retrofit
@@ -10,7 +12,9 @@ interface AppContainer {
     val swRepository: SWRepository
 }
 
-class DefaultAppContainer: AppContainer {
+class DefaultAppContainer(
+    private val dataStore: DataStore<Preferences>
+): AppContainer {
     private val baseUrl = "https://workout.su/api/v3/"
 
     /**
@@ -18,7 +22,7 @@ class DefaultAppContainer: AppContainer {
      */
     private val retrofit: Retrofit = Retrofit.Builder()
         .baseUrl(baseUrl)
-        .addConverterFactory(Json{
+        .addConverterFactory(Json {
             isLenient = true
             ignoreUnknownKeys = true
         }.asConverterFactory("application/json".toMediaType()))
@@ -35,6 +39,9 @@ class DefaultAppContainer: AppContainer {
      * DI implementation for SW repository
      */
     override val swRepository: SWRepository by lazy {
-        SWNetworkRepository(retrofitService)
+        SWRepositoryImp(
+            swApi = retrofitService,
+            dataStore = dataStore
+        )
     }
 }
