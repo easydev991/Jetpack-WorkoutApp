@@ -7,4 +7,29 @@
     <string name="profile">Профиль</string>
     <string name="settings">Настройки</string>
     <string name="loading">Загрузка…</string>
+
+    <string name="future_events">Планируемые</string>
+    <string name="past_events">Прошедшие</string>
+
+    <string name="send_friend_request">Добавить в друзья</string>
+    <string name="remove_friend">Удалить из друзей</string>
+
+    <string name="block">Заблокировать</string>
+    <string name="unblock">Разблокировать</string>
+
+    <string name="user_will_be_blocked">Добавить пользователя в чёрный список?</string>
+    <string name="user_will_be_unblocked">Удалить пользователя из чёрного списка?</string>
+
+    <string name="small_park">Маленькая</string>
+    <string name="medium_park">Средняя</string>
+    <string name="large_park">Большая</string>
+
+    <string name="soviet_park">Советская</string>
+    <string name="modern_park">Современная</string>
+    <string name="collars_park">Хомуты</string>
+    <string name="legendary_park">Легендарная</string>
+
+    <string name="man">Мужчина</string>
+    <string name="woman">Женщина</string>
+    <string name="message_for_user">Сообщение для %1$s</string>
 </resources>

@@ -6,4 +6,30 @@
     <string name="profile">Profile</string>
     <string name="settings">Settings</string>
     <string name="loading">Loading…</string>
+
+    <string name="future_events">Planned</string>
+    <string name="past_events">Past</string>
+
+    <string name="send_friend_request">Add a friend</string>
+    <string name="remove_friend">Remove from friends</string>
+
+    <string name="block">Block</string>
+    <string name="unblock">Unblock</string>
+
+    <string name="user_will_be_blocked">Block this user?</string>
+    <string name="user_will_be_unblocked">Unblock this user?</string>
+
+    <string name="small_park">Small</string>
+    <string name="medium_park">Medium</string>
+    <string name="large_park">Large</string>
+
+    <string name="soviet_park">Soviet</string>
+    <string name="modern_park">Modern</string>
+    <string name="collars_park">Collars</string>
+    <string name="legendary_park">Legendary</string>
+
+    <string name="man">Man</string>
+    <string name="woman">Woman</string>
+
+    <string name="message_for_user">Message for %1$s</string>
 </resources>
