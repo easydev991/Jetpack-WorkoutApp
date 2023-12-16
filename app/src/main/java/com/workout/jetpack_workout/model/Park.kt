@@ -12,20 +12,26 @@ data class Park(
     val id: Long,
     val name: String,
     @SerialName("class_id")
-    val classID: Long,
+    /**
+     * Размер площадки, модель [ParkSize]
+     */
+    val sizeID: Int,
+    /**
+     * Тип площадки, модель [ParkType]
+     */
     @SerialName("type_id")
-    val typeID: Long,
+    val typeID: Int,
     val longitude: String,
     val latitude: String,
     val address: String,
     @SerialName("city_id")
-    val cityID: Long,
+    val cityID: Int,
     @SerialName("country_id")
-    val countryID: Long,
+    val countryID: Int,
     @SerialName("comments_count")
-    val commentsCount: Long,
+    val commentsCount: Int,
     val preview: String,
-    val trainings: Long,
+    val trainings: Int,
     @SerialName("create_date")
     val createDate: String,
     @SerialName("modify_date")
@@ -36,10 +42,37 @@ data class Park(
     @SerialName("train_here")
     val trainHere: Boolean? = null,
     @SerialName("equipment_ids")
-    val equipmentIDS: List<Long>,
+    val equipmentIDS: List<Int>,
     val mine: Boolean? = null,
     @SerialName("can_edit")
     val canEdit: Boolean? = null,
     @SerialName("users_train_here")
-    val usersTrainHere: List<User>
-)
+    val trainingUsers: List<User>
+) {
+    val size: ParkSize? = ParkSize.values().firstOrNull {
+        it.model.rawValue == sizeID
+    }
+    val type: ParkType? = ParkType.values().firstOrNull {
+        it.model.rawValue == typeID
+    }
+
+    /**
+     * Есть ли комментарии
+     */
+    val hasComments = commentsCount > 0
+
+    /**
+     * Есть ли фотографии
+     */
+    val hasPhotos = photos.isNotEmpty()
+
+    /**
+     * Есть ли участники
+     */
+    val hasParticipants = trainingUsers.isNotEmpty()
+
+    /**
+     * Ссылка на мероприятие, которой можно поделиться
+     */
+    val shareLinkStringURL = "https://workout.su/areas/$id"
+}

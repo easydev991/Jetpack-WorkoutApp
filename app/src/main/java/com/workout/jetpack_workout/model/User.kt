@@ -1,5 +1,7 @@
 package com.workout.jetpack_workout.model
 
+import android.content.res.Resources
+import com.workout.jetpack_workout.R
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -11,10 +13,9 @@ import kotlinx.serialization.Serializable
  * @property cityID Идентификатор города
  * @property countryID Идентификатор страны
  * @property birthDate Дата рождения, например: "1990-11-25"
- * @property createDate Дата создания, например: "2013-01-16T03:35:54+04:00"
  * @property email Электронный адрес
  * @property fullName Настоящее имя
- * @property gender Пол, 0 - мужчина, 1 - женщина
+ * @property genderCode Пол, 0 - мужчина, 1 - женщина, модель [Gender]
  * @property friendRequestCount Количество заявок на добавление в друзья, например: "1"
  * @property friendsCount Количество друзей
  * @property parksCount Количество площадок, где тренируется, например: "2"
@@ -28,26 +29,71 @@ data class User(
     val name: String,
     val image: String,
     @SerialName("city_id")
-    val cityID: Long? = null,
+    val cityID: Int? = null,
     @SerialName("country_id")
-    val countryID: Long? = null,
+    val countryID: Int? = null,
     @SerialName("birth_date")
     val birthDate: String? = null,
-    @SerialName("create_date")
-    val createDate: String? = null,
     val email: String? = null,
     @SerialName("fullname")
     val fullName: String? = null,
-    val gender: Long? = null,
+    @SerialName("gender")
+    val genderCode: Int? = null,
     @SerialName("friend_request_count")
     val friendRequestCount: String? = null,
     @SerialName("friend_count")
-    val friendsCount: Long? = null,
+    val friendsCount: Int? = null,
     @SerialName("area_count")
     val parksCount: String? = null,
     @SerialName("added_areas")
     val addedParks: List<Park>? = null,
     @SerialName("journal_count")
-    val journalCount: Long? = null,
+    val journalCount: Int? = null,
     val lang: String
-)
+) {
+    val genderOption: Gender? = if (genderCode != null) {
+        Gender.values().firstOrNull { it.model.rawValue == genderCode }
+    } else {
+        null
+    }
+
+    /**
+     * Есть ли дневники
+     */
+    val hasJournals = if (journalCount != null) {
+        journalCount > 0
+    } else {
+        false
+    }
+
+    /**
+     * Есть ли друзья
+     */
+    val hasFriends = if (friendsCount != null) {
+        friendsCount > 0
+    } else {
+        false
+    }
+
+    /**
+     * Тренируется ли на каких-нибудь площадках
+     */
+    val hasUsedParks = if (parksCount?.toIntOrNull() != null) {
+        parksCount.toInt() > 0
+    } else {
+        false
+    }
+
+    /**
+     * Добавил ли какие-нибудь площадки
+     */
+    val hasAddedParks = addedParks?.isNotEmpty() ?: false
+
+    /**
+     * Сообщение для `name`
+     */
+    val messageFor = Resources.getSystem().getString(
+        R.string.message_for_user,
+        name
+    )
+}
