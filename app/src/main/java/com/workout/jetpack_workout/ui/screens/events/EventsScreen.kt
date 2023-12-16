@@ -86,7 +86,7 @@ fun PastEventsScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Text(text = it.beginDate)
-                    Text(text = "CityID: ${it.cityid}")
+                    Text(text = "CityID: ${it.cityID}")
                 }
             }
         }
