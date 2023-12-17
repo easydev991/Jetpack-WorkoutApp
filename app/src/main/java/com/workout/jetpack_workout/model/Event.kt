@@ -18,14 +18,14 @@ data class Event(
     @SerialName("city_id")
     val cityID: Int,
     @SerialName("comment_count")
-    val commentsCount: Int,
+    val commentsCount: Int? = null,
     val preview: String,
     @SerialName("area_id")
     val parkID: Long? = null,
     val latitude: String,
     val longitude: String,
     @SerialName("user_count")
-    val userCount: Int,
+    val trainingUsersCount: Int? = null,
     /**
      * `true` - предстоящее мероприятие, `false` - прошедшее
      */
@@ -53,7 +53,10 @@ data class Event(
     /**
      * Есть ли комментарии
      */
-    val hasComments = commentsCount > 0
+    val hasComments = !comments.isNullOrEmpty()
+    private val needUpdateComments = commentsCount?.let {
+        it > 0 && comments.isNullOrEmpty()
+    } ?: false
 
     /**
      * Есть ли фотографии
@@ -64,9 +67,17 @@ data class Event(
      * Есть ли участники
      */
     val hasParticipants = !trainingUsers.isNullOrEmpty()
+    private val needUpdateParticipants = trainingUsersCount?.let {
+        it > 0 && trainingUsers.isNullOrEmpty()
+    } ?: false
 
     /**
      * Ссылка на мероприятие, которой можно поделиться
      */
     val shareLinkStringURL = "https://workout.su/trainings/$id"
+
+    /**
+     * `true` - сервер прислал всю информацию о мероприятии, `false` - не всю
+     */
+    val isFull = (!needUpdateParticipants && !needUpdateComments)
 }
