@@ -1,7 +1,5 @@
 package com.workout.jetpack_workout.model
 
-import android.content.res.Resources
-import com.workout.jetpack_workout.R
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -88,12 +86,4 @@ data class User(
      * Добавил ли какие-нибудь площадки
      */
     val hasAddedParks = addedParks?.isNotEmpty() ?: false
-
-    /**
-     * Сообщение для `name`
-     */
-    val messageFor = Resources.getSystem().getString(
-        R.string.message_for_user,
-        name
-    )
 }
