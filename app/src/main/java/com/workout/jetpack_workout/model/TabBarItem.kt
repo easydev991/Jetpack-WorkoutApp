@@ -40,10 +40,10 @@ data class TabBarItem(
                 selectedIconID = R.drawable.filled_person
             ),
             TabBarItem(
-                titleId = R.string.settings,
-                route = "settings",
-                unselectedIconID = R.drawable.outline_settings,
-                selectedIconID = R.drawable.filled_settings
+                titleId = R.string.more,
+                route = "more",
+                unselectedIconID = R.drawable.outline_info,
+                selectedIconID = R.drawable.filled_info
             ),
         )
     }

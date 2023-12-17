@@ -5,6 +5,7 @@
     <string name="events">Мероприятия</string>
     <string name="messages">Сообщения</string>
     <string name="profile">Профиль</string>
+    <string name="more">Ещё</string>
     <string name="settings">Настройки</string>
     <string name="loading">Загрузка…</string>
 
@@ -32,4 +33,15 @@
     <string name="man">Мужчина</string>
     <string name="woman">Женщина</string>
     <string name="message_for_user">Сообщение для %1$s</string>
+
+    <string name="about_app">О приложении</string>
+    <string name="send_feedback">Отправить обратную связь </string>
+    <string name="rate_app">Оценить приложение </string>
+    <string name="terms_of_use">Пользовательское соглашение</string>
+    <string name="official_site">Официальный сайт</string>
+    <string name="app_developer">Разработчик приложения</string>
+    <string name="app_version">Версия</string>
+    <string name="support_project">Поддержать проект</string>
+    <string name="workout_shop">Магазин WORKOUT</string>
+    <string name="choose_email_client">Выберите приложение для отправки письма</string>
 </resources>

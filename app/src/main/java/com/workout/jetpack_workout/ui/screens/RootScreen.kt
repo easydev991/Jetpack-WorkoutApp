@@ -3,6 +3,7 @@ package com.workout.jetpack_workout.ui.screens
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -20,9 +21,9 @@ import androidx.navigation.compose.rememberNavController
 import com.workout.jetpack_workout.model.TabBarItem
 import com.workout.jetpack_workout.ui.screens.events.EventsNavHost
 import com.workout.jetpack_workout.ui.screens.messages.MessagesNavHost
+import com.workout.jetpack_workout.ui.screens.more.MoreScreen
 import com.workout.jetpack_workout.ui.screens.parks.ParksNavHost
 import com.workout.jetpack_workout.ui.screens.profile.ProfileNavHost
-import com.workout.jetpack_workout.ui.screens.settings.SettingsScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,7 +38,11 @@ fun RootScreen() {
                     NavigationBarItem(
                         selected = isSelected,
                         label = {
-                            Text(text = stringResource(id = item.titleId))
+                            Text(
+                                text = stringResource(id = item.titleId),
+                                style = MaterialTheme.typography.labelSmall,
+                                softWrap = false
+                            )
                         },
                         icon = {
                             Icon(
@@ -82,8 +87,8 @@ fun RootScreen() {
             composable("profile") {
                 ProfileNavHost()
             }
-            composable("settings") {
-                SettingsScreen()
+            composable("more") {
+                MoreScreen()
             }
         }
     }
