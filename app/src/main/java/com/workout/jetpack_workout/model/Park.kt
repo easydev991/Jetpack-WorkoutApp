@@ -29,14 +29,15 @@ data class Park(
     @SerialName("country_id")
     val countryID: Int,
     @SerialName("comments_count")
-    val commentsCount: Int,
+    val commentsCount: Int? = null,
     val preview: String,
-    val trainings: Int,
+    @SerialName("trainings")
+    val trainingUsersCount: Int? = null,
     @SerialName("create_date")
-    val createDate: String,
+    val createDate: String? = null,
     @SerialName("modify_date")
     val modifyDate: String,
-    val author: User,
+    val author: User? = null,
     val photos: List<Photo>,
     val comments: List<Comment>? = null,
     @SerialName("train_here")
@@ -59,7 +60,10 @@ data class Park(
     /**
      * Есть ли комментарии
      */
-    val hasComments = commentsCount > 0
+    val hasComments = !comments.isNullOrEmpty()
+    private val needUpdateComments = commentsCount?.let {
+        it > 0 && comments.isNullOrEmpty()
+    } ?: false
 
     /**
      * Есть ли фотографии
@@ -70,9 +74,23 @@ data class Park(
      * Есть ли участники
      */
     val hasParticipants = trainingUsers.isNotEmpty()
+    private val needUpdateParticipants = trainingUsersCount?.let {
+        it > 0 && trainingUsers.isNullOrEmpty()
+    } ?: false
 
     /**
      * Ссылка на мероприятие, которой можно поделиться
      */
     val shareLinkStringURL = "https://workout.su/areas/$id"
+
+    /**
+     * `true` - сервер прислал всю информацию о площадке, `false` - не всю
+     */
+    val isFull = (
+            createDate != null
+                    && author != null
+                    && hasPhotos
+                    && !needUpdateParticipants
+                    && !needUpdateComments
+            )
 }
