@@ -1,5 +1,6 @@
 package com.workout.jetpack_workout.ui.ds
 
+import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
@@ -18,12 +19,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -58,11 +59,11 @@ fun ListRowView(
                 Image(
                     painter = painterResource(leadingIconID),
                     contentDescription = "Leading icon",
-                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.primary),
+                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onSecondaryContainer),
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
                         .size(34.dp)
-                        .background(color = MaterialTheme.colorScheme.primaryContainer)
+                        .background(color = MaterialTheme.colorScheme.secondaryContainer)
                 )
             }
             Text(
@@ -71,12 +72,14 @@ fun ListRowView(
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
-        Row {
-            if (trailingText.isNotEmpty()) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            if (trailingText.isNotBlank()) {
                 Text(
                     text = trailingText,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             AnimatedVisibility(
@@ -86,7 +89,7 @@ fun ListRowView(
             ) {
                 Image(
                     imageVector = Icons.Default.KeyboardArrowRight,
-                    colorFilter = ColorFilter.tint(color = Color.Gray),
+                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.secondary),
                     contentDescription = "Chevron"
                 )
             }
@@ -95,47 +98,50 @@ fun ListRowView(
 }
 
 @Preview(showBackground = true)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
 @Composable
 fun ListRowViewPreview() {
     JetpackWorkoutAppTheme {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(horizontal = 16.dp)
-        ) {
-            ListRowView(leadingText = "Текст")
-            ListRowView(
-                leadingText = "Текст",
-                showChevron = true
-            )
-            ListRowView(
-                leadingText = "Текст",
-                trailingText = "подпись"
-            )
-            ListRowView(
-                leadingText = "Текст",
-                trailingText = "подпись",
-                showChevron = true
-            )
-            ListRowView(
-                leadingIconID = R.drawable.outline_person,
-                leadingText = "Текст"
-            )
-            ListRowView(
-                leadingIconID = R.drawable.outline_person,
-                leadingText = "Текст",
-                showChevron = true
-            )
-            ListRowView(
-                leadingIconID = R.drawable.outline_person,
-                leadingText = "Текст",
-                trailingText = "подпись"
-            )
-            ListRowView(
-                leadingIconID = R.drawable.outline_person,
-                leadingText = "Текст",
-                trailingText = "подпись",
-                showChevron = true
-            )
+        Surface {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(horizontal = 16.dp)
+            ) {
+                ListRowView(leadingText = "Текст")
+                ListRowView(
+                    leadingText = "Текст",
+                    showChevron = true
+                )
+                ListRowView(
+                    leadingText = "Текст",
+                    trailingText = "подпись"
+                )
+                ListRowView(
+                    leadingText = "Текст",
+                    trailingText = "подпись",
+                    showChevron = true
+                )
+                ListRowView(
+                    leadingIconID = R.drawable.outline_person,
+                    leadingText = "Текст"
+                )
+                ListRowView(
+                    leadingIconID = R.drawable.outline_person,
+                    leadingText = "Текст",
+                    showChevron = true
+                )
+                ListRowView(
+                    leadingIconID = R.drawable.outline_person,
+                    leadingText = "Текст",
+                    trailingText = "подпись"
+                )
+                ListRowView(
+                    leadingIconID = R.drawable.outline_person,
+                    leadingText = "Текст",
+                    trailingText = "подпись",
+                    showChevron = true
+                )
+            }
         }
     }
 }
