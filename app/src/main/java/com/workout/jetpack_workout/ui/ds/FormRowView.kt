@@ -41,9 +41,7 @@ private fun FormRowViewContainer(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
         ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isLight) 4.dp else 0.dp
-        )
+        border = CardDefaults.outlinedCardBorder(isLight)
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,

@@ -25,7 +25,7 @@ fun SectionView(
         Text(
             text = stringResource(id = titleID).uppercase(),
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.secondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(
                 start = if (addPaddingToTitle) 12.dp else 0.dp,
                 bottom = 2.dp
