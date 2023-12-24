@@ -89,7 +89,7 @@ fun ListRowView(
             ) {
                 Image(
                     imageVector = Icons.Default.KeyboardArrowRight,
-                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.secondary),
+                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onSurfaceVariant),
                     contentDescription = "Chevron"
                 )
             }

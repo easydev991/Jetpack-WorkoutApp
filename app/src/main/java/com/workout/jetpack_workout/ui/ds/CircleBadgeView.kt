@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
@@ -21,8 +20,7 @@ fun CircleBadgeView(
     modifier: Modifier = Modifier,
     value: Int
 ) {
-    val isLight = MaterialTheme.colorScheme.isLight()
-    val badgeColor = if (isLight) Color(0xff67be70) else Color(0xff6ac173)
+    val badgeColor = MaterialTheme.colorScheme.primary
     Box(
         modifier = modifier
             .drawWithContent {
