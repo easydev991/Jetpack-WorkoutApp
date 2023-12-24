@@ -2,20 +2,14 @@ package com.workout.jetpack_workout.ui.screens
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -32,78 +26,63 @@ import com.workout.jetpack_workout.ui.screens.profile.ProfileNavHost
 @Composable
 fun RootScreen() {
     val rootNavController = rememberNavController()
-    val navBackStackEntry by rootNavController.currentBackStackEntryAsState()
     Scaffold(
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 0.dp
-            ) {
-                TabBarItem.Items.list.forEach { item ->
-                    val isSelected = item.route == navBackStackEntry?.destination?.route
-                    NavigationBarItem(
-                        alwaysShowLabel = false,
-                        selected = isSelected,
-                        label = {
-                            Text(
-                                text = stringResource(id = item.titleId),
-                                fontSize = 10.sp,
-                                letterSpacing = 0.2.sp,
-                                softWrap = false,
-                                overflow = TextOverflow.Visible,
-                            )
-                        },
-                        icon = {
-                            Icon(
-                                painter = painterResource(
-                                    id = if (isSelected) {
-                                        item.selectedIconID
-                                    } else {
-                                        item.unselectedIconID
-                                    }
-                                ),
-                                tint = if (isSelected) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                },
-                                contentDescription = item.route
-                            )
-                        },
-                        onClick = {
-                            rootNavController.navigate(item.route) {
-                                popUpTo(rootNavController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    )
-                }
-            }
+            BottomNavigationView(navController = rootNavController)
         }
     ) { padding ->
         NavHost(
             rootNavController,
-            startDestination = "parks",
+            startDestination = TabBarItem.Parks.route,
             modifier = Modifier.padding(padding)
         ) {
-            composable("parks") {
+            composable(TabBarItem.Parks.route) {
                 ParksNavHost()
             }
-            composable("events") {
+            composable(TabBarItem.Events.route) {
                 EventsNavHost()
             }
-            composable("messages") {
+            composable(TabBarItem.Messages.route) {
                 MessagesNavHost()
             }
-            composable("profile") {
+            composable(TabBarItem.Profile.route) {
                 ProfileNavHost()
             }
-            composable("more") {
+            composable(TabBarItem.More.route) {
                 MoreScreen()
             }
+        }
+    }
+}
+
+@Composable
+private fun BottomNavigationView(navController: NavController) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val items = listOf(
+        TabBarItem.Parks,
+        TabBarItem.Events,
+        TabBarItem.Messages,
+        TabBarItem.Profile,
+        TabBarItem.More
+    )
+    NavigationBar(tonalElevation = 0.dp) {
+        items.forEach { item ->
+            val isSelected = item.route == navBackStackEntry?.destination?.route
+            NavigationBarItem(
+                alwaysShowLabel = false,
+                selected = isSelected,
+                label = { item.Label() },
+                icon = { item.Icon(isSelected = isSelected) },
+                onClick = {
+                    navController.navigate(item.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
         }
     }
 }
