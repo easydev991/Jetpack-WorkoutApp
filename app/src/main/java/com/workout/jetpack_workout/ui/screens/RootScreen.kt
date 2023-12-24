@@ -11,7 +11,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -24,11 +23,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.workout.jetpack_workout.model.TabBarItem
+import com.workout.jetpack_workout.ui.ds.isLight
 import com.workout.jetpack_workout.ui.screens.events.EventsNavHost
 import com.workout.jetpack_workout.ui.screens.messages.MessagesNavHost
 import com.workout.jetpack_workout.ui.screens.more.MoreScreen
 import com.workout.jetpack_workout.ui.screens.parks.ParksNavHost
 import com.workout.jetpack_workout.ui.screens.profile.ProfileNavHost
+import com.workout.jetpack_workout.ui.theme.dark_tinted_button_pressed
+import com.workout.jetpack_workout.ui.theme.light_tinted_button_pressed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,7 +40,11 @@ fun RootScreen() {
     Scaffold(
         bottomBar = {
             NavigationBar(
-                contentColor = Color(0x406ac173),
+                contentColor = if (MaterialTheme.colorScheme.isLight()) {
+                    light_tinted_button_pressed
+                } else {
+                    dark_tinted_button_pressed
+                },
                 containerColor = MaterialTheme.colorScheme.surface,
                 tonalElevation = 0.dp
             ) {
