@@ -11,10 +11,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -35,10 +37,15 @@ fun RootScreen() {
     val navBackStackEntry by rootNavController.currentBackStackEntryAsState()
     Scaffold(
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                contentColor = Color(0x406ac173),
+                containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 0.dp
+            ) {
                 TabBarItem.Items.list.forEach { item ->
                     val isSelected = item.route == navBackStackEntry?.destination?.route
                     NavigationBarItem(
+                        alwaysShowLabel = false,
                         selected = isSelected,
                         label = {
                             Text(
@@ -59,6 +66,11 @@ fun RootScreen() {
                                         item.unselectedIconID
                                     }
                                 ),
+                                tint = if (isSelected) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
                                 contentDescription = item.route
                             )
                         },
