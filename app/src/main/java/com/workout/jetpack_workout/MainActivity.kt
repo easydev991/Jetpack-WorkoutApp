@@ -2,12 +2,14 @@ package com.workout.jetpack_workout
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
 import com.workout.jetpack_workout.ui.screens.RootScreen
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
@@ -15,11 +17,17 @@ import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 class MainActivity: ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val systemBarStyle = SystemBarStyle.auto(
+            Color.Transparent.toArgb(), Color.Transparent.toArgb()
+        )
+        enableEdgeToEdge(
+            statusBarStyle = systemBarStyle,
+            navigationBarStyle = systemBarStyle
+        )
         setContent {
             JetpackWorkoutAppTheme {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    color = MaterialTheme.colorScheme.background,
                 ) {
                     RootScreen()
                 }

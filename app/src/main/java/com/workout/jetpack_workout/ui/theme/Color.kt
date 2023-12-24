@@ -14,7 +14,7 @@ val light_onBackground = Color(0xff000000)
 val light_small_elements = Color(0xff858383)
 val light_separators = Color(0x66858383)
 
-val dark_accent = Color(0xff6ac173) 
+val dark_accent = Color(0xff6ac173)
 val dark_text_filled_button = Color(0xff1a1a1a)
 val dark_card_background = Color(0xff2e3034)
 val dark_main_text = Color(0xffffffff)
