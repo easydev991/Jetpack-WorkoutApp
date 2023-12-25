@@ -6,6 +6,7 @@ import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -37,11 +39,17 @@ private fun FormRowViewContainer(
     val isLight = MaterialTheme.colorScheme.isLight()
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-        ),
-        border = CardDefaults.outlinedCardBorder(isLight)
+        colors = if (isLight) {
+            CardDefaults.outlinedCardColors()
+        } else {
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        },
+        border = if (isLight) BorderStroke(
+            1.dp,
+            Color.LightGray
+        ) else null
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -80,7 +88,7 @@ fun FormRowView(
             if (trailingText.isNotBlank()) {
                 Text(
                     text = trailingText,
-                    color = MaterialTheme.colorScheme.secondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -101,7 +109,9 @@ fun FormRowView(
             ) {
                 Image(
                     imageVector = Icons.Default.KeyboardArrowRight,
-                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.secondary),
+                    colorFilter = ColorFilter.tint(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
                     contentDescription = "Chevron"
                 )
             }

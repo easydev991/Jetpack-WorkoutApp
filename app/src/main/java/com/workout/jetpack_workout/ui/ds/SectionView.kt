@@ -19,7 +19,7 @@ fun SectionView(
     @StringRes titleID: Int,
     addPaddingToTitle: Boolean = true,
     @StringRes footerID: Int? = null,
-    content: @Composable() () -> Unit
+    content: @Composable () -> Unit
 ) {
     Column(modifier = modifier) {
         Text(

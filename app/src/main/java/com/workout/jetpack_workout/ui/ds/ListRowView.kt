@@ -59,17 +59,17 @@ fun ListRowView(
                 Image(
                     painter = painterResource(leadingIconID),
                     contentDescription = "Leading icon",
-                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onSecondaryContainer),
+                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.primary),
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
                         .size(34.dp)
-                        .background(color = MaterialTheme.colorScheme.secondaryContainer)
+                        .background(color = MaterialTheme.colorScheme.secondary)
                 )
             }
             Text(
                 text = leadingText,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
         Row(
