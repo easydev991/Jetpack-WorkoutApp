@@ -34,7 +34,7 @@ fun CircleBadgeView(
         Text(
             text = if (value > 9) "9+" else "$value",
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onPrimary,
+            color = MaterialTheme.colorScheme.primaryContainer,
             modifier = Modifier.padding(5.dp)
         )
     }
