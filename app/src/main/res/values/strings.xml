@@ -43,4 +43,10 @@
     <string name="support_project">Support the project</string>
     <string name="workout_shop">WORKOUT shop</string>
     <string name="choose_email_client">Choose an Email client</string>
+
+    <plurals name="ageInYears">
+        <item quantity="zero">age not specified</item>
+        <item quantity="one">%1$d year old</item>
+        <item quantity="other">%1$d years old</item>
+    </plurals>
 </resources>
