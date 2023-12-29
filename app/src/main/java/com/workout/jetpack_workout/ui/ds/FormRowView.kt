@@ -27,8 +27,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.workout.jetpack_workout.R
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 
 @Composable
@@ -159,16 +161,28 @@ fun FormRowViewPreview() {
                 modifier = Modifier.padding(horizontal = 16.dp)
             ) {
                 FormRowView(
-                    leadingText = "Где тренируется",
-                    trailingText = "26 площадок"
+                    leadingText = "Where trains",
+                    trailingText = pluralStringResource(
+                        id = R.plurals.parksCount,
+                        count = 26,
+                        26
+                    )
                 )
                 FormRowView(
-                    leadingText = "Друзья",
-                    trailingText = "50 друзей"
+                    leadingText = "Friends",
+                    trailingText = pluralStringResource(
+                        id = R.plurals.friendsCount,
+                        count = 50,
+                        50
+                    )
                 )
                 FormRowView(
-                    leadingText = "Друзья",
-                    trailingText = "50 друзей",
+                    leadingText = "Friends",
+                    trailingText = pluralStringResource(
+                        id = R.plurals.friendsCount,
+                        count = 50,
+                        50
+                    ),
                     badgeValue = 5
                 )
                 SwitchFormRowView(
