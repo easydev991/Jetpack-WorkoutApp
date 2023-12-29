@@ -49,4 +49,46 @@
         <item quantity="one">%1$d year old</item>
         <item quantity="other">%1$d years old</item>
     </plurals>
+
+    <plurals name="friendsCount">
+        <item quantity="zero">nobody yet</item>
+        <item quantity="one">%1$d friend</item>
+        <item quantity="other">%1$d friends</item>
+    </plurals>
+
+    <plurals name="parksCount">
+        <item quantity="one">%1$d park</item>
+        <item quantity="other">%1$d parks</item>
+    </plurals>
+
+    <plurals name="journalsCount">
+        <item quantity="one">%1$d journal</item>
+        <item quantity="other">%1$d journals</item>
+    </plurals>
+
+    <plurals name="peopleCount">
+        <item quantity="zero">nobody yet</item>
+        <item quantity="one">%1$d person</item>
+        <item quantity="two">%1$d persons</item>
+        <item quantity="other">%1$d people</item>
+    </plurals>
+
+    <plurals name="peopleTrainHere">
+        <item quantity="zero">Nobody trains here yet</item>
+        <item quantity="one">%1$d person trains here</item>
+        <item quantity="two">%1$d persons train here</item>
+        <item quantity="other">%1$d people train here</item>
+    </plurals>
+
+    <plurals name="usersCount">
+        <item quantity="zero">nobody yet</item>
+        <item quantity="one">%1$d user</item>
+        <item quantity="other">%1$d users</item>
+    </plurals>
+
+    <plurals name="photoSectionHeader">
+        <item quantity="zero">Photos</item>
+        <item quantity="one">%1$d photo</item>
+        <item quantity="other">%1$d photos</item>
+    </plurals>
 </resources>

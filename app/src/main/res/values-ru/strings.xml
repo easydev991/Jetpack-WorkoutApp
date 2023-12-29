@@ -53,4 +53,66 @@
         <item quantity="many">%1$d лет</item>
         <item quantity="other">%1$d лет</item>
     </plurals>
+
+    <plurals name="friendsCount">
+        <item quantity="zero">пока никого</item>
+        <item quantity="one">%1$d друг</item>
+        <item quantity="two">%1$d друга</item>
+        <item quantity="few">%1$d друга</item>
+        <item quantity="many">%1$d друзей</item>
+        <item quantity="other">%1$d друзей</item>
+    </plurals>
+
+    <plurals name="parksCount">
+        <item quantity="zero">0 площадок</item>
+        <item quantity="one">%1$d площадка</item>
+        <item quantity="two">%1$d площадки</item>
+        <item quantity="few">%1$d площадки</item>
+        <item quantity="many">%1$d площадок</item>
+        <item quantity="other">%1$d площадок</item>
+    </plurals>
+
+    <plurals name="journalsCount">
+        <item quantity="one">%1$d дневник</item>
+        <item quantity="two">%1$d дневника</item>
+        <item quantity="few">%1$d дневника</item>
+        <item quantity="many">%1$d дневников</item>
+        <item quantity="other">%1$d дневников</item>
+    </plurals>
+
+    <plurals name="peopleCount">
+        <item quantity="zero">пока никого</item>
+        <item quantity="one">%1$d человек</item>
+        <item quantity="two">%1$d человека</item>
+        <item quantity="few">%1$d человека</item>
+        <item quantity="many">%1$d человек</item>
+        <item quantity="other">%1$d человек</item>
+    </plurals>
+
+    <plurals name="peopleTrainHere">
+        <item quantity="zero">Здесь пока никто не тренируется</item>
+        <item quantity="one">Тренируется %1$d человек</item>
+        <item quantity="two">Тренируются %1$d человека</item>
+        <item quantity="few">Тренируются %1$d человека</item>
+        <item quantity="many">Тренируются %1$d человек</item>
+        <item quantity="other">Тренируются %1$d человек</item>
+    </plurals>
+
+    <plurals name="usersCount">
+        <item quantity="zero">пока никого</item>
+        <item quantity="one">%1$d пользователь</item>
+        <item quantity="two">%1$d пользователя</item>
+        <item quantity="few">%1$d пользователя</item>
+        <item quantity="many">%1$d пользователей</item>
+        <item quantity="other">%1$d пользователей</item>
+    </plurals>
+
+    <plurals name="photoSectionHeader">
+        <item quantity="zero">Фотографии</item>
+        <item quantity="one">%1$d фотография</item>
+        <item quantity="two">%1$d фотографии</item>
+        <item quantity="few">%1$d фотографии</item>
+        <item quantity="many">%1$d фотографий</item>
+        <item quantity="other">%1$d фотографий</item>
+    </plurals>
 </resources>
