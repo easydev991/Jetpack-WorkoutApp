@@ -44,4 +44,13 @@
     <string name="support_project">Поддержать проект</string>
     <string name="workout_shop">Магазин WORKOUT</string>
     <string name="choose_email_client">Выберите приложение для отправки письма</string>
+
+    <plurals name="ageInYears">
+        <item quantity="zero">возраст не указан</item>
+        <item quantity="one">%1$d год</item>
+        <item quantity="two">%1$d года</item>
+        <item quantity="few">%1$d года</item>
+        <item quantity="many">%1$d лет</item>
+        <item quantity="other">%1$d лет</item>
+    </plurals>
 </resources>
