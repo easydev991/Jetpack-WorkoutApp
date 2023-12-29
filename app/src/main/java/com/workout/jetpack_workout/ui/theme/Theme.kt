@@ -39,6 +39,7 @@ private val LightColors = lightColorScheme(
     onSurface = light_main_text,
     surfaceVariant = light_background,
     onSurfaceVariant = light_small_elements,
+    surfaceTint = light_card_background,
     outline = light_separators,
     inverseOnSurface = light_background,
     inverseSurface = light_main_text,
@@ -69,6 +70,7 @@ private val DarkColors = darkColorScheme(
     onSurface = dark_main_text,
     surfaceVariant = dark_background,
     onSurfaceVariant = dark_small_elements,
+    surfaceTint = dark_card_background,
     outline = dark_separators,
     inverseOnSurface = dark_background,
     inverseSurface = dark_main_text,
@@ -80,7 +82,7 @@ private val DarkColors = darkColorScheme(
 @Composable
 fun JetpackWorkoutAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true, // available on Android 12+
+    dynamicColor: Boolean = false, // available on Android 12+
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

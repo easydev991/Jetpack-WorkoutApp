@@ -1,0 +1,29 @@
+package com.workout.jetpack_workout.ui.ds
+
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun FormCardContainer(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    val isLight = MaterialTheme.colorScheme.isLight()
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(
+            if (isLight) 4.dp else 0.dp
+        )
+    ) {
+        content()
+    }
+}

@@ -18,7 +18,8 @@ class MainActivity: ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val systemBarStyle = SystemBarStyle.auto(
-            Color.Transparent.toArgb(), Color.Transparent.toArgb()
+            Color.Transparent.toArgb(),
+            Color.Transparent.toArgb()
         )
         enableEdgeToEdge(
             statusBarStyle = systemBarStyle,
@@ -27,7 +28,7 @@ class MainActivity: ComponentActivity() {
         setContent {
             JetpackWorkoutAppTheme {
                 Surface(
-                    color = MaterialTheme.colorScheme.background,
+                    color = MaterialTheme.colorScheme.background
                 ) {
                     RootScreen()
                 }
