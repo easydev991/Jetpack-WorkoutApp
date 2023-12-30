@@ -9,11 +9,18 @@
     <string name="settings">Настройки</string>
     <string name="loading">Загрузка…</string>
 
+    <string name="auth_invitation">Авторизуйтесь, чтобы иметь доступ ко всем возможностям</string>
+    <string name="authorization">Авторизация</string>
+    <string name="registration_info">Регистрация доступна на сайте workout.su</string>
+
     <string name="future_events">Планируемые</string>
     <string name="past_events">Прошедшие</string>
 
+    <string name="accept_friend_request">Добавить</string>
+    <string name="decline_friend_request">Отклонить</string>
     <string name="send_friend_request">Добавить в друзья</string>
     <string name="remove_friend">Удалить из друзей</string>
+    <string name="message">Сообщение</string>
 
     <string name="block">Заблокировать</string>
     <string name="unblock">Разблокировать</string>
@@ -34,6 +41,38 @@
     <string name="woman">Женщина</string>
     <string name="message_for_user">Сообщение для %1$s</string>
 
+    <string name="edit_profile">Изменить профиль</string>
+    <string name="login">Логин</string>
+    <string name="login_or_email">Логин или почта</string>
+    <string name="email">Email</string>
+    <string name="name">Имя</string>
+    <string name="change_password">Изменить пароль</string>
+    <string name="gender">Пол</string>
+    <string name="birthdate">Дата рождения</string>
+    <string name="country">Страна</string>
+    <string name="city">Город</string>
+
+    <string name="current_password">Текущий пароль</string>
+    <string name="enter_password">Введи текущий пароль</string>
+    <string name="new_password">Новый пароль</string>
+    <string name="enter_new_password">Введи новый пароль</string>
+    <string name="password_confirmation">Подтверждение пароля</string>
+    <string name="enter_new_password_again">Новый пароль ещё раз</string>
+    <string name="password_short">Минимум 6 символов</string>
+    <string name="password_not_match">Пароли должны совпадать</string>
+    <string name="save_changes">Сохранить изменения</string>
+
+    <string name="select_country">Выбери страну</string>
+    <string name="select_city">Выбери город</string>
+
+    <string name="requests">Заявки</string>
+    <string name="friends">Друзья</string>
+    <string name="where_trains">Где тренируется</string>
+    <string name="male_added_parks">Добавил площадки</string>
+    <string name="female_added_parks">Добавила площадки</string>
+    <string name="journals">Дневники</string>
+    <string name="black_list">Чёрный список</string>
+
     <string name="about_app">О приложении</string>
     <string name="send_feedback">Отправить обратную связь </string>
     <string name="rate_app">Оценить приложение </string>
@@ -48,7 +87,6 @@
     <plurals name="ageInYears">
         <item quantity="zero">возраст не указан</item>
         <item quantity="one">%1$d год</item>
-        <item quantity="two">%1$d года</item>
         <item quantity="few">%1$d года</item>
         <item quantity="many">%1$d лет</item>
         <item quantity="other">%1$d лет</item>
@@ -57,7 +95,6 @@
     <plurals name="friendsCount">
         <item quantity="zero">пока никого</item>
         <item quantity="one">%1$d друг</item>
-        <item quantity="two">%1$d друга</item>
         <item quantity="few">%1$d друга</item>
         <item quantity="many">%1$d друзей</item>
         <item quantity="other">%1$d друзей</item>
@@ -66,7 +103,6 @@
     <plurals name="parksCount">
         <item quantity="zero">0 площадок</item>
         <item quantity="one">%1$d площадка</item>
-        <item quantity="two">%1$d площадки</item>
         <item quantity="few">%1$d площадки</item>
         <item quantity="many">%1$d площадок</item>
         <item quantity="other">%1$d площадок</item>
@@ -74,7 +110,6 @@
 
     <plurals name="journalsCount">
         <item quantity="one">%1$d дневник</item>
-        <item quantity="two">%1$d дневника</item>
         <item quantity="few">%1$d дневника</item>
         <item quantity="many">%1$d дневников</item>
         <item quantity="other">%1$d дневников</item>
@@ -83,7 +118,6 @@
     <plurals name="peopleCount">
         <item quantity="zero">пока никого</item>
         <item quantity="one">%1$d человек</item>
-        <item quantity="two">%1$d человека</item>
         <item quantity="few">%1$d человека</item>
         <item quantity="many">%1$d человек</item>
         <item quantity="other">%1$d человек</item>
@@ -92,7 +126,6 @@
     <plurals name="peopleTrainHere">
         <item quantity="zero">Здесь пока никто не тренируется</item>
         <item quantity="one">Тренируется %1$d человек</item>
-        <item quantity="two">Тренируются %1$d человека</item>
         <item quantity="few">Тренируются %1$d человека</item>
         <item quantity="many">Тренируются %1$d человек</item>
         <item quantity="other">Тренируются %1$d человек</item>
@@ -101,7 +134,6 @@
     <plurals name="usersCount">
         <item quantity="zero">пока никого</item>
         <item quantity="one">%1$d пользователь</item>
-        <item quantity="two">%1$d пользователя</item>
         <item quantity="few">%1$d пользователя</item>
         <item quantity="many">%1$d пользователей</item>
         <item quantity="other">%1$d пользователей</item>
@@ -110,7 +142,6 @@
     <plurals name="photoSectionHeader">
         <item quantity="zero">Фотографии</item>
         <item quantity="one">%1$d фотография</item>
-        <item quantity="two">%1$d фотографии</item>
         <item quantity="few">%1$d фотографии</item>
         <item quantity="many">%1$d фотографий</item>
         <item quantity="other">%1$d фотографий</item>

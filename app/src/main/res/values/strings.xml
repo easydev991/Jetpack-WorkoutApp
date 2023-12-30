@@ -8,11 +8,18 @@
     <string name="settings">Settings</string>
     <string name="loading">Loading…</string>
 
+    <string name="auth_invitation">Log in to have access to all features</string>
+    <string name="authorization">Authorization</string>
+    <string name="registration_info">Registration is available on workout.su</string>
+
     <string name="future_events">Planned</string>
     <string name="past_events">Past</string>
 
+    <string name="accept_friend_request">Accept</string>
+    <string name="decline_friend_request">Decline</string>
     <string name="send_friend_request">Add a friend</string>
     <string name="remove_friend">Remove from friends</string>
+    <string name="message">Message</string>
 
     <string name="block">Block</string>
     <string name="unblock">Unblock</string>
@@ -32,6 +39,38 @@
     <string name="man">Man</string>
     <string name="woman">Woman</string>
     <string name="message_for_user">Message for %1$s</string>
+
+    <string name="edit_profile">Edit your profile</string>
+    <string name="login">Login</string>
+    <string name="login_or_email">Login or email</string>
+    <string name="email">Email</string>
+    <string name="name">Name</string>
+    <string name="change_password">Change password</string>
+    <string name="gender">Gender</string>
+    <string name="birthdate">Date of birth</string>
+    <string name="country">Country</string>
+    <string name="city">City</string>
+
+    <string name="current_password">Current password</string>
+    <string name="enter_password">Enter current password</string>
+    <string name="new_password">New password</string>
+    <string name="enter_new_password">Enter a new password</string>
+    <string name="password_confirmation">Password confirmation</string>
+    <string name="enter_new_password_again">New password again</string>
+    <string name="password_short">At least 6 characters</string>
+    <string name="password_not_match">Passwords must match</string>
+    <string name="save_changes">Save changes</string>
+
+    <string name="select_country">Select a country</string>
+    <string name="select_city">Select a city</string>
+
+    <string name="requests">Requests</string>
+    <string name="friends">Friends</string>
+    <string name="where_trains">Where trains</string>
+    <string name="male_added_parks">Added parks</string>
+    <string name="female_added_parks">Added parks</string>
+    <string name="journals">Journals</string>
+    <string name="black_list">Black list</string>
 
     <string name="about_app">About the app</string>
     <string name="send_feedback">Send feedback</string>
