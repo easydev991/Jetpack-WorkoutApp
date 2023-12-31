@@ -1,36 +1,46 @@
 package com.workout.jetpack_workout.ui.screens.events
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
+import com.workout.jetpack_workout.R
+import com.workout.jetpack_workout.model.TabBarItem
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventsNavHost() {
     val navController = rememberNavController()
     val eventsViewModel: EventsViewModel = viewModel(factory = EventsViewModel.Factory)
     NavHost(
         navController,
-        startDestination = "events"
+        startDestination = TabBarItem.Events.route
     ) {
-        composable("events") {
-            EventsRootScreen(uiState = eventsViewModel.eventsUIState)
+        composable(TabBarItem.Events.route) {
+            Scaffold(
+                topBar = {
+                    CenterAlignedTopAppBar(
+                        title = {
+                            Text(text = stringResource(id = R.string.events))
+                        },
+                        windowInsets = WindowInsets(top = 0)
+                    )
+                }
+            ) {
+                EventsScreen(
+                    modifier = Modifier.padding(it),
+                    uiState = eventsViewModel.eventsUIState
+                )
+            }
         }
-    }
-}
-
-@Composable
-fun EventsRootScreen(uiState: EventsUIState) {
-    EventsScreen(uiState = uiState)
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MessagesRootScreenPreview() {
-    JetpackWorkoutAppTheme {
-        EventsRootScreen(uiState = EventsUIState.Success(listOf()))
     }
 }
