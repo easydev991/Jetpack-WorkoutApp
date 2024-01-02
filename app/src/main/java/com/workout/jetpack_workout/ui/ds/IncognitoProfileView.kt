@@ -3,12 +3,8 @@ package com.workout.jetpack_workout.ui.ds
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -25,6 +21,7 @@ import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 @Composable
 fun IncognitoProfileView(
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     onClickAuth: () -> Unit
 ) {
     Column(
@@ -39,17 +36,12 @@ fun IncognitoProfileView(
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(bottom = 22.dp)
         )
-        Button(
-            modifier = Modifier
-                .scaleOnTap()
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            contentPadding = PaddingValues(12.dp),
-            shape = RoundedCornerShape(12.dp),
+        SWButton(
+            modifier = Modifier.padding(bottom = 16.dp),
+            text = stringResource(id = R.string.authorization),
+            enabled = enabled,
             onClick = onClickAuth
-        ) {
-            Text(text = stringResource(id = R.string.authorization))
-        }
+        )
         Text(
             text = stringResource(id = R.string.registration_info),
             maxLines = 2,
