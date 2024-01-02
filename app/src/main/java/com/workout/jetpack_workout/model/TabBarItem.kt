@@ -57,8 +57,8 @@ sealed class TabBarItem(
     object Parks: TabBarItem(
         titleId = R.string.parks,
         route = "parks",
-        unselectedIconID = R.drawable.outline_map,
-        selectedIconID = R.drawable.filled_map
+        unselectedIconID = R.drawable.parksicon,
+        selectedIconID = R.drawable.parksicon
     )
 
     object Events: TabBarItem(
@@ -85,7 +85,7 @@ sealed class TabBarItem(
     object More: TabBarItem(
         titleId = R.string.more,
         route = "more",
-        unselectedIconID = R.drawable.outline_info,
-        selectedIconID = R.drawable.filled_info
+        unselectedIconID = R.drawable.outline_list,
+        selectedIconID = R.drawable.filled_list
     )
 }
