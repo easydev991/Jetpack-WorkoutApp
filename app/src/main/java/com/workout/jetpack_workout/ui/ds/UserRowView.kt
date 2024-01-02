@@ -8,7 +8,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -26,13 +25,12 @@ fun UserRowView(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalPadding = 12.dp
         ) {
-            WorkoutAsyncImage(
+            SWAsyncImage(
                 imageStringURL = imageStringURL,
                 size = 42.dp,
                 shape = CircleShape
             )
             Column(
-                horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(

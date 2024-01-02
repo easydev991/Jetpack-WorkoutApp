@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun FormRowContainer(
     modifier: Modifier = Modifier,
+    verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
     horizontalArrangement: Arrangement.Horizontal,
     horizontalPadding: Dp = 12.dp,
     verticalPadding: Dp = 0.dp,
@@ -20,7 +21,7 @@ fun FormRowContainer(
 ) {
     Row(
         horizontalArrangement = horizontalArrangement,
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = verticalAlignment,
         modifier = modifier
             .fillMaxWidth()
             .padding(

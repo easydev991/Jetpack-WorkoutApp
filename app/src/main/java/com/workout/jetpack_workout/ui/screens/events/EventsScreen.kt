@@ -64,8 +64,7 @@ fun PastEventsScreen(
     ) {
         items(events, key = { it.id }) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.Top
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context = LocalContext.current)

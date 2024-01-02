@@ -42,7 +42,7 @@ fun UserProfileCardView(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.fillMaxWidth()
     ) {
-        WorkoutAsyncImage(
+        SWAsyncImage(
             imageStringURL = imageStringURL,
             size = 150.dp
         )
@@ -60,7 +60,6 @@ fun UserProfileCardView(
             )
             Column(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
-                horizontalAlignment = Alignment.Start
             ) {
                 AdditionalInfoRow(
                     imageVector = Icons.Rounded.AccountCircle,
