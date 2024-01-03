@@ -3,13 +3,9 @@ package com.workout.jetpack_workout.ui.ds
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -44,7 +40,6 @@ fun SectionView(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Preview(
     showBackground = true,
     locale = "ru"
@@ -83,21 +78,6 @@ fun SectionViewPreview() {
                     address = "Россия, Арзамас",
                     onClickAccept = {},
                     onClickDecline = {}
-                )
-            }
-            Divider()
-            SectionView(
-                titleID = R.string.new_password,
-                titleBottomPadding = 6.dp
-            ) {
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = "",
-                    placeholder = {
-                        Text(text = stringResource(id = R.string.enter_new_password))
-                    },
-                    onValueChange = {},
-                    shape = RoundedCornerShape(8.dp)
                 )
             }
         }

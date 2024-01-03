@@ -32,7 +32,9 @@ fun EventsScreen(
             modifier = modifier.fillMaxWidth()
         )
 
-        is EventsUIState.Error -> ErrorScreen(retryAction = { /*TODO*/ })
+        is EventsUIState.Error -> ErrorScreen(
+            retryAction = { TODO(reason = "Нужно обработать ошибку") }
+        )
     }
 }
 

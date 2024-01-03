@@ -49,7 +49,7 @@ fun MessagesRootScreen(modifier: Modifier = Modifier) {
     IncognitoProfileView(
         modifier = modifier.padding(horizontal = 16.dp),
         onClickAuth = {
-            // TODO: открыть экран авторизации
+            TODO(reason = "Нужно подключить экран авторизации")
         }
     )
 }

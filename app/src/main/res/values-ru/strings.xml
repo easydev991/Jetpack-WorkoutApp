@@ -44,7 +44,6 @@
 
     <string name="edit_profile">Изменить профиль</string>
     <string name="login">Логин</string>
-    <string name="login_or_email">Логин или почта</string>
     <string name="email">Email</string>
     <string name="name">Имя</string>
     <string name="change_password">Изменить пароль</string>
@@ -54,11 +53,8 @@
     <string name="city">Город</string>
 
     <string name="current_password">Текущий пароль</string>
-    <string name="enter_password">Введи текущий пароль</string>
     <string name="new_password">Новый пароль</string>
-    <string name="enter_new_password">Введи новый пароль</string>
-    <string name="password_confirmation">Подтверждение пароля</string>
-    <string name="enter_new_password_again">Новый пароль ещё раз</string>
+    <string name="password_confirmation">Новый пароль ещё раз</string>
     <string name="password_short">Минимум 6 символов</string>
     <string name="password_not_match">Пароли должны совпадать</string>
     <string name="save_changes">Сохранить изменения</string>

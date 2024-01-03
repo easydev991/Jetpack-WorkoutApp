@@ -43,7 +43,6 @@
 
     <string name="edit_profile">Edit your profile</string>
     <string name="login">Login</string>
-    <string name="login_or_email">Login or email</string>
     <string name="email">Email</string>
     <string name="name">Name</string>
     <string name="change_password">Change password</string>
@@ -53,11 +52,8 @@
     <string name="city">City</string>
 
     <string name="current_password">Current password</string>
-    <string name="enter_password">Enter current password</string>
     <string name="new_password">New password</string>
-    <string name="enter_new_password">Enter a new password</string>
-    <string name="password_confirmation">Password confirmation</string>
-    <string name="enter_new_password_again">New password again</string>
+    <string name="password_confirmation">New password again</string>
     <string name="password_short">At least 6 characters</string>
     <string name="password_not_match">Passwords must match</string>
     <string name="save_changes">Save changes</string>
