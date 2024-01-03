@@ -87,9 +87,10 @@
 
     <string name="train_here">Тренируюсь здесь</string>
     <string name="participate_too">Пойду на мероприятие</string>
+    <string name="nobody_yet">пока никого</string>
+    <string name="photos">Фотографии</string>
 
     <plurals name="ageInYears">
-        <item quantity="zero">возраст не указан</item>
         <item quantity="one">%1$d год</item>
         <item quantity="few">%1$d года</item>
         <item quantity="many">%1$d лет</item>
@@ -97,7 +98,6 @@
     </plurals>
 
     <plurals name="friendsCount">
-        <item quantity="zero">пока никого</item>
         <item quantity="one">%1$d друг</item>
         <item quantity="few">%1$d друга</item>
         <item quantity="many">%1$d друзей</item>
@@ -105,7 +105,6 @@
     </plurals>
 
     <plurals name="parksCount">
-        <item quantity="zero">0 площадок</item>
         <item quantity="one">%1$d площадка</item>
         <item quantity="few">%1$d площадки</item>
         <item quantity="many">%1$d площадок</item>
@@ -120,7 +119,6 @@
     </plurals>
 
     <plurals name="peopleCount">
-        <item quantity="zero">пока никого</item>
         <item quantity="one">%1$d человек</item>
         <item quantity="few">%1$d человека</item>
         <item quantity="many">%1$d человек</item>
@@ -136,7 +134,6 @@
     </plurals>
 
     <plurals name="usersCount">
-        <item quantity="zero">пока никого</item>
         <item quantity="one">%1$d пользователь</item>
         <item quantity="few">%1$d пользователя</item>
         <item quantity="many">%1$d пользователей</item>
@@ -144,7 +141,6 @@
     </plurals>
 
     <plurals name="photoSectionHeader">
-        <item quantity="zero">Фотографии</item>
         <item quantity="one">%1$d фотография</item>
         <item quantity="few">%1$d фотографии</item>
         <item quantity="many">%1$d фотографий</item>

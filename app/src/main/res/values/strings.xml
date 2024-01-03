@@ -86,15 +86,15 @@
 
     <string name="train_here">I train here</string>
     <string name="participate_too">I am participating</string>
+    <string name="nobody_yet">nobody yet</string>
+    <string name="photos">Photos</string>
 
     <plurals name="ageInYears">
-        <item quantity="zero">age not specified</item>
         <item quantity="one">%1$d year old</item>
         <item quantity="other">%1$d years old</item>
     </plurals>
 
     <plurals name="friendsCount">
-        <item quantity="zero">nobody yet</item>
         <item quantity="one">%1$d friend</item>
         <item quantity="other">%1$d friends</item>
     </plurals>
@@ -110,7 +110,6 @@
     </plurals>
 
     <plurals name="peopleCount">
-        <item quantity="zero">nobody yet</item>
         <item quantity="one">%1$d person</item>
         <item quantity="two">%1$d persons</item>
         <item quantity="other">%1$d people</item>
@@ -124,13 +123,11 @@
     </plurals>
 
     <plurals name="usersCount">
-        <item quantity="zero">nobody yet</item>
         <item quantity="one">%1$d user</item>
         <item quantity="other">%1$d users</item>
     </plurals>
 
     <plurals name="photoSectionHeader">
-        <item quantity="zero">Photos</item>
         <item quantity="one">%1$d photo</item>
         <item quantity="other">%1$d photos</item>
     </plurals>
