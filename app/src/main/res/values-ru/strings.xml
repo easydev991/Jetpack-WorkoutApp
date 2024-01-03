@@ -85,10 +85,45 @@
     <string name="workout_shop">Магазин WORKOUT</string>
     <string name="choose_email_client">Выберите приложение для отправки письма</string>
 
+    <string name="parks_filter">Фильтр площадок</string>
+    <string name="size">Размер</string>
+    <string name="type">Тип</string>
+    <string name="reset_filter">Сбросить фильтры</string>
+
+    <string name="parks_map">Карта</string>
+    <string name="parks_list">Список</string>
+
+    <string name="park_title">Площадка</string>
+    <string name="build_route">Построить маршрут</string>
+    <string name="create_event">Создать мероприятие</string>
     <string name="train_here">Тренируюсь здесь</string>
     <string name="participate_too">Пойду на мероприятие</string>
     <string name="nobody_yet">пока никого</string>
+    <string name="added_by">Добавил</string>
+    <string name="comments">Комментарии</string>
+    <string name="add_comment">Добавить комментарий</string>
+    <string name="photo">Фото</string>
+    <string name="delete_photo">Удалить фото</string>
     <string name="photos">Фотографии</string>
+    <string name="need_update_park">Нужно обновить данные о площадке?</string>
+    <string name="send_letter">Написать письмо</string>
+    <string name="edit">Изменить</string>
+    <string name="report">Пожаловаться</string>
+    <string name="delete_ground">Удалить площадку?</string>
+    <string name="delete">Удалить</string>
+    <string name="address">Адрес</string>
+    <string name="park_address">Адрес площадки</string>
+    <string name="park_type">Тип площадки</string>
+    <string name="park_size">Размер площадки</string>
+    <string name="save">Сохранить</string>
+
+    <string name="event_title">Мероприятие</string>
+    <string name="when">Когда</string>
+    <string name="where">Где</string>
+    <string name="participants">Участники</string>
+    <string name="description">Описание</string>
+    <string name="organized_by">Организатор</string>
+    <string name="close">Закрыть</string>
 
     <plurals name="ageInYears">
         <item quantity="one">%1$d год</item>

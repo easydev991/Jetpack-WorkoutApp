@@ -84,10 +84,45 @@
     <string name="workout_shop">WORKOUT shop</string>
     <string name="choose_email_client">Choose an Email client</string>
 
+    <string name="parks_filter">Parks filter</string>
+    <string name="size">Size</string>
+    <string name="type">Type</string>
+    <string name="reset_filter">Reset filters</string>
+
+    <string name="parks_map">Map</string>
+    <string name="parks_list">List</string>
+
+    <string name="park_title">Park</string>
+    <string name="build_route">Build a route</string>
+    <string name="create_event">Create an event</string>
     <string name="train_here">I train here</string>
     <string name="participate_too">I am participating</string>
     <string name="nobody_yet">nobody yet</string>
+    <string name="added_by">Added by</string>
+    <string name="comments">Comments</string>
+    <string name="add_comment">Add a comment</string>
+    <string name="photo">Photo</string>
+    <string name="delete_photo">Delete the photo</string>
     <string name="photos">Photos</string>
+    <string name="need_update_park">Should we update any information about this park?</string>
+    <string name="send_letter">Write a letter</string>
+    <string name="edit">Edit</string>
+    <string name="report">Report</string>
+    <string name="delete_ground">Delete the park?</string>
+    <string name="delete">Delete</string>
+    <string name="address">Address</string>
+    <string name="park_address">Park address</string>
+    <string name="park_type">Park type</string>
+    <string name="park_size">Park size</string>
+    <string name="save">Save</string>
+
+    <string name="event_title">Event</string>
+    <string name="when">When</string>
+    <string name="where">Where</string>
+    <string name="participants">Participants</string>
+    <string name="description">Description</string>
+    <string name="organized_by">Organized by</string>
+    <string name="close">Close</string>
 
     <plurals name="ageInYears">
         <item quantity="one">%1$d year old</item>
