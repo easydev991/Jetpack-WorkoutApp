@@ -21,7 +21,7 @@ fun FormCardContainer(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         ),
         elevation = CardDefaults.cardElevation(
-            if (isLight) 4.dp else 0.dp
+            if (isLight) 2.dp else 0.dp
         )
     ) {
         content()

@@ -30,6 +30,7 @@ fun SWAsyncImage(
     modifier: Modifier = Modifier,
     imageStringURL: String?,
     size: Dp,
+    contentScale: ContentScale = ContentScale.Fit,
     shape: Shape = RoundedCornerShape(12.dp),
     showBorder: Boolean = true
 ) {
@@ -40,7 +41,7 @@ fun SWAsyncImage(
             .build(),
         placeholder = painterResource(id = R.drawable.defaultworkout),
         contentDescription = "Preview",
-        contentScale = ContentScale.Fit,
+        contentScale = contentScale,
         modifier = modifier
             .size(size)
             .clip(shape)

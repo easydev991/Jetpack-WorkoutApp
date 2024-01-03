@@ -36,19 +36,19 @@ data class Park(
     @SerialName("create_date")
     val createDate: String? = null,
     @SerialName("modify_date")
-    val modifyDate: String,
+    val modifyDate: String? = null,
     val author: User? = null,
-    val photos: List<Photo>,
+    val photos: List<Photo>? = null,
     val comments: List<Comment>? = null,
     @SerialName("train_here")
     val trainHere: Boolean? = null,
     @SerialName("equipment_ids")
-    val equipmentIDS: List<Int>,
+    val equipmentIDS: List<Int>? = null,
     val mine: Boolean? = null,
     @SerialName("can_edit")
     val canEdit: Boolean? = null,
     @SerialName("users_train_here")
-    val trainingUsers: List<User>
+    val trainingUsers: List<User>? = null
 ) {
     val size: ParkSize? = ParkSize.values().firstOrNull {
         it.model.rawValue == sizeID
@@ -68,12 +68,12 @@ data class Park(
     /**
      * Есть ли фотографии
      */
-    val hasPhotos = photos.isNotEmpty()
+    val hasPhotos = !photos.isNullOrEmpty()
 
     /**
      * Есть ли участники
      */
-    val hasParticipants = trainingUsers.isNotEmpty()
+    val hasParticipants = !trainingUsers.isNullOrEmpty()
     private val needUpdateParticipants = trainingUsersCount?.let {
         it > 0 && trainingUsers.isNullOrEmpty()
     } ?: false

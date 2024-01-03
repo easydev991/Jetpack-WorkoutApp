@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">WorkOut</string>
     <string name="parks">Площадки</string>
+    <string name="parks_title">Площадки (%1$s)</string>
     <string name="events">Мероприятия</string>
     <string name="messages">Сообщения</string>
     <string name="profile">Профиль</string>
@@ -126,8 +127,8 @@
         <item quantity="other">%1$d человек</item>
     </plurals>
 
+    <string name="nobody_trains_here">Здесь пока никто не тренируется</string>
     <plurals name="peopleTrainHere">
-        <item quantity="zero">Здесь пока никто не тренируется</item>
         <item quantity="one">Тренируется %1$d человек</item>
         <item quantity="few">Тренируются %1$d человека</item>
         <item quantity="many">Тренируются %1$d человек</item>

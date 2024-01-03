@@ -49,7 +49,7 @@ fun FriendRequestRowView(
                         maxLines = 1,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    if (address != null) {
+                    if (!address.isNullOrBlank()) {
                         Text(
                             text = address,
                             color = MaterialTheme.colorScheme.onSurfaceVariant

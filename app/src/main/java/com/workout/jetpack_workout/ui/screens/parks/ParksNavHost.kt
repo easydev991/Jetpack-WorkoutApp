@@ -8,21 +8,26 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.workout.jetpack_workout.R
+import com.workout.jetpack_workout.model.Park
 import com.workout.jetpack_workout.model.TabBarItem
-import com.workout.jetpack_workout.ui.ds.IncognitoProfileView
-import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
+import com.workout.jetpack_workout.utils.ReadJSONFromAssets
+import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ParksNavHost() {
     val navController = rememberNavController()
+    val oldParks = ReadJSONFromAssets(
+        LocalContext.current,
+        "parks.json"
+    )
+    val decodedParks = Json.decodeFromString<List<Park>>(oldParks)
     NavHost(
         navController,
         startDestination = TabBarItem.Parks.route
@@ -32,32 +37,22 @@ fun ParksNavHost() {
                 topBar = {
                     CenterAlignedTopAppBar(
                         title = {
-                            Text(text = stringResource(id = R.string.parks))
+                            Text(
+                                text = stringResource(
+                                    id = R.string.parks_title,
+                                    decodedParks.size
+                                )
+                            )
                         },
                         windowInsets = WindowInsets(top = 0)
                     )
                 }
             ) {
-                ParksRootScreen(modifier = Modifier.padding(it))
+                ParksRootScreen(
+                    modifier = Modifier.padding(it),
+                    parks = decodedParks
+                )
             }
         }
-    }
-}
-
-@Composable
-fun ParksRootScreen(modifier: Modifier = Modifier) {
-    IncognitoProfileView(
-        modifier = modifier.padding(horizontal = 16.dp),
-        onClickAuth = {
-            // TODO: открыть экран авторизации
-        }
-    )
-}
-
-@Preview(showBackground = true, locale = "ru")
-@Composable
-fun ParksRootScreenPreview() {
-    JetpackWorkoutAppTheme {
-        ParksRootScreen()
     }
 }
