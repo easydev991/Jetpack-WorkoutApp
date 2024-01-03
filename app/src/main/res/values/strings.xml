@@ -113,6 +113,7 @@
     <string name="save">Save</string>
 
     <string name="event_title">Event</string>
+    <string name="event_details_placeholder">Add some details about the upcoming event</string>
     <string name="when">When</string>
     <string name="where">Where</string>
     <string name="participants">Participants</string>
