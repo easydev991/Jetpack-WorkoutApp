@@ -208,7 +208,7 @@ private fun didTapSendFeedback(context: Context) {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, locale = "ru")
 @Composable
 fun MoreScreenPreview() {
     JetpackWorkoutAppTheme {

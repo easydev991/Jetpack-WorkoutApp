@@ -84,6 +84,9 @@
     <string name="workout_shop">Магазин WORKOUT</string>
     <string name="choose_email_client">Выберите приложение для отправки письма</string>
 
+    <string name="train_here">Тренируюсь здесь</string>
+    <string name="participate_too">Пойду на мероприятие</string>
+
     <plurals name="ageInYears">
         <item quantity="zero">возраст не указан</item>
         <item quantity="one">%1$d год</item>

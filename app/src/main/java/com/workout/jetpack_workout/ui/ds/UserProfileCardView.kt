@@ -102,10 +102,11 @@ private fun AdditionalInfoRow(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, locale = "ru")
 @Preview(
     uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
+    showBackground = true,
+    locale = "ru"
 )
 @Composable
 fun UserProfileCardViewPreview() {

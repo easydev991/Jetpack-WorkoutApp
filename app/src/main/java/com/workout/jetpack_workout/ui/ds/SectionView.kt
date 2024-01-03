@@ -1,14 +1,21 @@
 package com.workout.jetpack_workout.ui.ds
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.workout.jetpack_workout.R
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
@@ -18,41 +25,81 @@ fun SectionView(
     modifier: Modifier = Modifier,
     @StringRes titleID: Int,
     addPaddingToTitle: Boolean = true,
-    @StringRes footerID: Int? = null,
+    titleBottomPadding: Dp = 2.dp,
     content: @Composable () -> Unit
 ) {
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(titleBottomPadding)
+    ) {
         Text(
             text = stringResource(id = titleID).uppercase(),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(
-                start = if (addPaddingToTitle) 12.dp else 0.dp,
-                bottom = 2.dp
+                start = if (addPaddingToTitle) 12.dp else 0.dp
             )
         )
         content()
-        if (footerID != null) {
-            Text(
-                text = stringResource(id = footerID),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.padding(top = 12.dp)
-            )
-        }
     }
 }
 
-@Preview(showBackground = true)
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(
+    showBackground = true,
+    locale = "ru"
+)
 @Composable
 fun SectionViewPreview() {
     JetpackWorkoutAppTheme {
-        SectionView(
-            titleID = R.string.about_app,
-            addPaddingToTitle = false,
-            footerID = R.string.more
+        Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            ListRowView(leadingText = "Text")
+            SectionView(
+                titleID = R.string.about_app,
+                addPaddingToTitle = false
+            ) {
+                ListRowView(leadingText = "Text")
+            }
+            Divider()
+            SectionView(
+                titleID = R.string.friends,
+                titleBottomPadding = 4.dp
+            ) {
+                UserRowView(
+                    imageStringURL = null,
+                    name = "Alica",
+                    address = "Россия, Арзамас"
+                )
+            }
+            Divider()
+            SectionView(
+                titleID = R.string.requests,
+                titleBottomPadding = 4.dp
+            ) {
+                FriendRequestRowView(
+                    imageStringURL = null,
+                    name = "Alica",
+                    address = "Россия, Арзамас",
+                    onClickAccept = {},
+                    onClickDecline = {}
+                )
+            }
+            Divider()
+            SectionView(
+                titleID = R.string.new_password,
+                titleBottomPadding = 6.dp
+            ) {
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = "",
+                    placeholder = {
+                        Text(text = stringResource(id = R.string.enter_new_password))
+                    },
+                    onValueChange = {},
+                    shape = RoundedCornerShape(8.dp)
+                )
+            }
         }
     }
 }

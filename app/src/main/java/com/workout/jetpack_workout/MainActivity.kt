@@ -37,7 +37,7 @@ class MainActivity: ComponentActivity() {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, locale = "ru")
 @Composable
 fun AppPreview() {
     JetpackWorkoutAppTheme {

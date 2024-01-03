@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.workout.jetpack_workout.R
@@ -124,10 +125,11 @@ fun SwitchFormRowView(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, locale = "ru")
 @Preview(
     uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
+    showBackground = true,
+    locale = "ru"
 )
 @Composable
 fun FormRowViewPreview() {
@@ -138,7 +140,7 @@ fun FormRowViewPreview() {
                 modifier = Modifier.padding(horizontal = 16.dp)
             ) {
                 FormRowView(
-                    leadingText = "Where trains",
+                    leadingText = stringResource(id = R.string.where_trains),
                     trailingText = pluralStringResource(
                         id = R.plurals.parksCount,
                         count = 26,
@@ -146,7 +148,7 @@ fun FormRowViewPreview() {
                     )
                 )
                 FormRowView(
-                    leadingText = "Friends",
+                    leadingText = stringResource(id = R.string.friends),
                     trailingText = pluralStringResource(
                         id = R.plurals.friendsCount,
                         count = 50,
@@ -154,7 +156,7 @@ fun FormRowViewPreview() {
                     )
                 )
                 FormRowView(
-                    leadingText = "Friends",
+                    leadingText = stringResource(id = R.string.friends),
                     trailingText = pluralStringResource(
                         id = R.plurals.friendsCount,
                         count = 50,
@@ -163,12 +165,12 @@ fun FormRowViewPreview() {
                     badgeValue = 5
                 )
                 SwitchFormRowView(
-                    leadingText = "Тренируюсь здесь",
+                    leadingText = stringResource(id = R.string.train_here),
                     isOn = false,
                     onCheckedChange = {}
                 )
                 SwitchFormRowView(
-                    leadingText = "Пойду на мероприятие",
+                    leadingText = stringResource(id = R.string.participate_too),
                     isOn = true,
                     onCheckedChange = {}
                 )

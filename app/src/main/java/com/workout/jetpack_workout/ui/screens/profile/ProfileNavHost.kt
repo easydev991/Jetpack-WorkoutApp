@@ -54,7 +54,7 @@ fun ProfileRootScreen(modifier: Modifier = Modifier) {
     )
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, locale = "ru")
 @Composable
 fun ProfileRootScreenPreview() {
     JetpackWorkoutAppTheme {

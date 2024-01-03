@@ -83,6 +83,9 @@
     <string name="workout_shop">WORKOUT shop</string>
     <string name="choose_email_client">Choose an Email client</string>
 
+    <string name="train_here">I train here</string>
+    <string name="participate_too">I am participating</string>
+
     <plurals name="ageInYears">
         <item quantity="zero">age not specified</item>
         <item quantity="one">%1$d year old</item>

@@ -54,7 +54,7 @@ fun MessagesRootScreen(modifier: Modifier = Modifier) {
     )
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, locale = "ru")
 @Composable
 fun MessagesRootScreenPreview() {
     JetpackWorkoutAppTheme {

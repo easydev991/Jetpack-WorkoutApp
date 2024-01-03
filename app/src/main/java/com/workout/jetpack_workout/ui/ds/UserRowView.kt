@@ -49,10 +49,11 @@ fun UserRowView(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, locale = "ru")
 @Preview(
     uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
+    showBackground = true,
+    locale = "ru"
 )
 @Composable
 fun UserRowViewPreview() {
@@ -60,7 +61,7 @@ fun UserRowViewPreview() {
         Surface {
             UserRowView(
                 imageStringURL = null,
-                name = "Very very very very very very long user name for two lines",
+                name = "yellowmouse215",
                 address = "Россия, Москва"
             )
         }

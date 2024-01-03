@@ -54,7 +54,7 @@ fun ParksRootScreen(modifier: Modifier = Modifier) {
     )
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, locale = "ru")
 @Composable
 fun ParksRootScreenPreview() {
     JetpackWorkoutAppTheme {

@@ -79,10 +79,11 @@ fun FriendRequestRowView(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, locale = "ru")
 @Preview(
     uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true
+    showBackground = true,
+    locale = "ru"
 )
 @Composable
 fun FriendRequestRowViewPreview() {
@@ -90,8 +91,8 @@ fun FriendRequestRowViewPreview() {
         Surface {
             FriendRequestRowView(
                 imageStringURL = null,
-                name = "Very very very very very very long user name for two lines",
-                address = "Россия, Москва",
+                name = "Silverfrog19",
+                address = "Россия, Архангельск",
                 onClickAccept = {},
                 onClickDecline = {}
             )
