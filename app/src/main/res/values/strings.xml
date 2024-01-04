@@ -69,6 +69,26 @@
     <string name="journals">Journals</string>
     <string name="black_list">Black list</string>
 
+    <string name="journals_title">Workout journals</string>
+    <string name="empty_journals">No journals here yet</string>
+    <string name="create_journal">Create a journal</string>
+    <string name="new_journal">New journal</string>
+    <string name="first_entry_placeholder">Create the first entry</string>
+    <string name="new_entry">New entry</string>
+    <string name="new_entry_placeholder">Create a new entry in the journal</string>
+    <string name="send">Send</string>
+    <string name="setup_action">Configure</string>
+    <string name="journal_settings">Journal settings</string>
+    <string name="journal_title_placeholder">Journal title</string>
+    <string name="edit_entry_title">Edit entry</string>
+    <string name="read_access">Who can see the entries</string>
+    <string name="comment_access">Who can leave comments</string>
+    <string name="everybody_access">Everybody</string>
+    <string name="friends_access">Friends</string>
+    <string name="only_me_access">Only me</string>
+    <string name="delete_journal">Delete the journal?</string>
+    <string name="delete_journal_entry">Delete the journal entry?</string>
+
     <string name="about_app">About the app</string>
     <string name="send_feedback">Send feedback</string>
     <string name="rate_app">Rate the app</string>

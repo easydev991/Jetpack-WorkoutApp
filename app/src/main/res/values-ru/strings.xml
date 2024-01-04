@@ -70,6 +70,26 @@
     <string name="journals">Дневники</string>
     <string name="black_list">Чёрный список</string>
 
+    <string name="journals_title">Дневники тренировок</string>
+    <string name="empty_journals">Дневников пока нет</string>
+    <string name="create_journal">Создать дневник</string>
+    <string name="new_journal">Новый дневник</string>
+    <string name="first_entry_placeholder">Создай первую запись в дневнике</string>
+    <string name="new_entry">Новая запись</string>
+    <string name="new_entry_placeholder">Создай новую запись в дневнике</string>
+    <string name="send">Отправить</string>
+    <string name="setup_action">Настроить</string>
+    <string name="journal_settings">Настройки дневника</string>
+    <string name="journal_title_placeholder">Название дневника</string>
+    <string name="edit_entry_title">Изменить запись</string>
+    <string name="read_access">Кто видит записи</string>
+    <string name="comment_access">Кто может оставлять комментарии</string>
+    <string name="everybody_access">Все</string>
+    <string name="friends_access">Друзья</string>
+    <string name="only_me_access">Только я</string>
+    <string name="delete_journal">Удалить дневник?</string>
+    <string name="delete_journal_entry">Удалить запись из дневника?</string>
+
     <string name="about_app">О приложении</string>
     <string name="send_feedback">Отправить обратную связь </string>
     <string name="rate_app">Оценить приложение </string>
