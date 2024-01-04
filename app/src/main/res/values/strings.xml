@@ -114,6 +114,9 @@
 
     <string name="event_title">Event</string>
     <string name="event_details_placeholder">Add some details about the upcoming event</string>
+    <string name="date_time">Date and time</string>
+    <string name="date">Date</string>
+    <string name="time">Time</string>
     <string name="when">When</string>
     <string name="where">Where</string>
     <string name="participants">Participants</string>
