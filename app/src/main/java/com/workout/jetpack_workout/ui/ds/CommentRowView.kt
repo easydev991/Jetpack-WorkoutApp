@@ -40,6 +40,12 @@ import androidx.compose.ui.unit.dp
 import com.workout.jetpack_workout.R
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 
+/**
+ * Действие для комментария к площадке/мероприятию
+ *
+ * @property titleID Идентификатор локализованной строки с названием действия
+ * @property imageVector Иконка для действия
+ */
 enum class CommentAction(
     @StringRes val titleID: Int,
     val imageVector: ImageVector
@@ -58,6 +64,18 @@ enum class CommentAction(
     )
 }
 
+/**
+ * Вьюшка с комментарием к площадке/мероприятию
+ *
+ * @param modifier Модификатор
+ * @param imageStringURL Ссылка на аватар комментатора
+ * @param authorName Имя комментатора
+ * @param dateString Дата отправки комментария (например, 21 мая 2023)
+ * @param bodyText Текст комментария
+ * @param enabled Доступность кнопки с действиями
+ * @param byMainUser Является ли автором основной пользователь приложения
+ * @param onClickAction Действие при нажатии на кнопку с тремя точками справа
+ */
 @Composable
 fun CommentRowView(
     modifier: Modifier = Modifier,

@@ -21,6 +21,9 @@ private enum class ButtonState {
     Idle
 }
 
+/**
+ * Изменяет размер вьюшки при нажатии
+ */
 fun Modifier.scaleOnTap() = composed {
     var buttonState by remember { mutableStateOf(ButtonState.Idle) }
     val animatedTranslation by animateFloatAsState(

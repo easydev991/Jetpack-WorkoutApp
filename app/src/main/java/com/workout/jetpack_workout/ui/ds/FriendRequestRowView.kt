@@ -18,6 +18,16 @@ import androidx.compose.ui.unit.dp
 import com.workout.jetpack_workout.R
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 
+/**
+ * Вьюшка для входящей заявки на добавление в список друзей
+ *
+ * @param modifier Модификатор
+ * @param imageStringURL Ссылка на аватар
+ * @param name Имя
+ * @param address Адрес в формате "Россия, Москва"
+ * @param onClickAccept Действие по нажатию на кнопку "Принять"
+ * @param onClickDecline Действие по нажатию на кнопку "Отклонить"
+ */
 @Composable
 fun FriendRequestRowView(
     modifier: Modifier = Modifier,

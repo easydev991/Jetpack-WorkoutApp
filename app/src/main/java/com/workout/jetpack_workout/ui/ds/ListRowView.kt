@@ -34,6 +34,13 @@ import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 
 /**
  * В фигме называется "Элемент списка"
+ *
+ * @param modifier Модификатор
+ * @param leadingIconID Идентификатор для иконки слева
+ * @param leadingText Текст слева
+ * @param trailingText Текст справа
+ * @param showChevron Показывать ли шеврон
+ * @param enabled Влияет на отображение шеврона
  */
 @Composable
 fun ListRowView(
@@ -42,7 +49,7 @@ fun ListRowView(
     leadingText: String,
     trailingText: String = "",
     showChevron: Boolean = false,
-    isEnabled: Boolean = true
+    enabled: Boolean = true
 ) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -83,7 +90,7 @@ fun ListRowView(
                 )
             }
             AnimatedVisibility(
-                visible = showChevron && isEnabled,
+                visible = showChevron && enabled,
                 enter = fadeIn() + expandHorizontally(),
                 exit = fadeOut() + shrinkHorizontally()
             ) {

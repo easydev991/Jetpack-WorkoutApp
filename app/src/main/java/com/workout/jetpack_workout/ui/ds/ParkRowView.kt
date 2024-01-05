@@ -23,6 +23,15 @@ import androidx.compose.ui.unit.dp
 import com.workout.jetpack_workout.R
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 
+/**
+ * Вьюшка с информацией о площадке в списке
+ *
+ * @param modifier Модификатор
+ * @param imageStringURL Ссылка на превью-фото площадки
+ * @param name Название площадки
+ * @param address Адрес площадки (может быть любой, какой пришлет сервер)
+ * @param peopleTrainCount Количество людей, тренирующихся на площадке
+ */
 @Composable
 fun ParkRowView(
     modifier: Modifier = Modifier,

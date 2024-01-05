@@ -24,6 +24,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 
+/**
+ * Индикатор загрузки (колесо)
+ *
+ * @param modifier Модификатор
+ */
 @Composable
 fun LoadingOverlayView(modifier: Modifier = Modifier) {
     Box(

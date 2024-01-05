@@ -13,6 +13,15 @@ import androidx.compose.ui.unit.dp
 import com.workout.jetpack_workout.R
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 
+/**
+ * Вьюшка для ввода большого количества текста. Например, для записи в дневнике
+ *
+ * @param modifier Модификатор
+ * @param text Основной текст
+ * @param labelID Идентификатор локализованной строки с плейсхолдером
+ * @param enabled Доступность текстового поля для ввода текста
+ * @param onTextChange Возвращает текст при вводе
+ */
 @Composable
 fun SWTextEditor(
     modifier: Modifier = Modifier,

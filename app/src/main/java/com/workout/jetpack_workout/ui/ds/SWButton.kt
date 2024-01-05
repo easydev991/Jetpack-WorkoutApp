@@ -28,42 +28,62 @@ import androidx.compose.ui.unit.dp
 import com.workout.jetpack_workout.R
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 
-enum class SWButtonSize {
-    LARGE {
-        override val model = Model(
-            horizontalSpacing = 10.dp,
-            paddingValues = PaddingValues(
-                horizontal = 20.dp,
-                vertical = 12.dp
-            ),
-            iconSize = 19.dp
-        )
-    },
-    SMALL {
-        override val model = Model(
-            horizontalSpacing = 6.dp,
-            paddingValues = PaddingValues(
-                horizontal = 16.dp,
-                vertical = 8.dp
-            ),
-            iconSize = 15.dp
-        )
-    };
+/**
+ * Размер кнопки
+ *
+ * @property horizontalSpacing Расстояние между текстом и иконкой
+ * @property paddingValues Паддинги для контента кнопки
+ * @property iconSize Размер иконки
+ */
+enum class SWButtonSize(
+    val horizontalSpacing: Dp,
+    val paddingValues: PaddingValues,
+    val iconSize: Dp
+) {
+    /**
+     * Большой размер (стандартный)
+     */
+    LARGE(
+        horizontalSpacing = 10.dp,
+        paddingValues = PaddingValues(
+            horizontal = 20.dp,
+            vertical = 12.dp
+        ),
+        iconSize = 19.dp
+    ),
 
-    abstract val model: Model
-
-    data class Model(
-        val horizontalSpacing: Dp,
-        val paddingValues: PaddingValues,
-        val iconSize: Dp
-    )
+    /**
+     * Маленький размер
+     */
+    SMALL(
+        horizontalSpacing = 6.dp,
+        paddingValues = PaddingValues(
+            horizontal = 16.dp,
+            vertical = 8.dp
+        ),
+        iconSize = 15.dp
+    );
 }
 
+/**
+ * Вариант кнопки
+ */
 enum class SWButtonMode {
     FILLED,
     TINTED
 }
 
+/**
+ * Основная кнопка
+ *
+ * @param modifier Модификатор
+ * @param size Размер - [SWButtonSize]
+ * @param mode Вариант - [SWButtonMode]
+ * @param imageVector Иконка
+ * @param text Текст
+ * @param enabled Доступность кнопки для нажатий
+ * @param onClick Действие при нажатии
+ */
 @Composable
 fun SWButton(
     modifier: Modifier = Modifier,
@@ -93,7 +113,7 @@ fun SWButton(
                 SWButtonMode.TINTED -> MaterialTheme.colorScheme.onSecondary
             }
         ),
-        contentPadding = size.model.paddingValues,
+        contentPadding = size.paddingValues,
         shape = RoundedCornerShape(12.dp),
         enabled = enabled,
         onClick = onClick
@@ -101,8 +121,8 @@ fun SWButton(
         if (imageVector != null) {
             Image(
                 modifier = Modifier
-                    .padding(end = size.model.horizontalSpacing)
-                    .size(size.model.iconSize),
+                    .padding(end = size.horizontalSpacing)
+                    .size(size.iconSize),
                 imageVector = imageVector,
                 colorFilter = ColorFilter.tint(
                     if (mode == SWButtonMode.FILLED)
@@ -116,7 +136,10 @@ fun SWButton(
     }
 }
 
-@Preview(showBackground = true, locale = "ru")
+@Preview(
+    showBackground = true,
+    locale = "ru"
+)
 @Preview(
     uiMode = Configuration.UI_MODE_NIGHT_YES,
     showBackground = true,

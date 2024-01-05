@@ -25,6 +25,16 @@ import coil.request.ImageRequest
 import com.workout.jetpack_workout.R
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 
+/**
+ * Вьюшка для асинхронной загрузки картинки, использует [coil]
+ *
+ * @param modifier Модификатор
+ * @param imageStringURL Ссылка на картинку
+ * @param size Размер картинки
+ * @param contentScale Как уместить картинку (fit/crop...)
+ * @param shape Форма вьюшки, по умолчанию прямоугольник с радиусом углов 12
+ * @param showBorder Нужно ли показывать зеленую рамку
+ */
 @Composable
 fun SWAsyncImage(
     modifier: Modifier = Modifier,

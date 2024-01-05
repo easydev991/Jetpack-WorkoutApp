@@ -18,6 +18,13 @@ import androidx.compose.ui.unit.dp
 import com.workout.jetpack_workout.R
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 
+/**
+ * Вьюшка, закрывающая фичу для неавторизованного пользователя
+ *
+ * @param modifier Модификатор
+ * @param enabled Доступность кнопки "Авторизация"
+ * @param onClickAuth Действие по нажатию на кнопку "Авторизация"
+ */
 @Composable
 fun IncognitoProfileView(
     modifier: Modifier = Modifier,

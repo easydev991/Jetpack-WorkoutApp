@@ -8,6 +8,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+/**
+ * Обертка для добавления тени в светлой теме
+ *
+ * @param modifier Модификатор
+ * @param content Контент
+ */
 @Composable
 fun FormCardContainer(
     modifier: Modifier = Modifier,

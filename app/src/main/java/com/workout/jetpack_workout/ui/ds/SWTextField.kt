@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -23,9 +22,18 @@ import com.workout.jetpack_workout.R
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 
 /**
- * Лучше использовать [mutableStateOf] для хранения текста во вьюмодели
+ * Основной текстфилд. Лучше использовать mutableStateOf для хранения текста во вьюмодели
+ *
+ * @param modifier Модификатор
+ * @param text Текст
+ * @param labelID Идентификатор локализованной строки с плейсхолдером
+ * @param secure Нужно ли скрыть текст (например, для пароля)
+ * @param singleLine Нужно ли ограничить текст одной строкой
+ * @param isError Состояние ошибки
+ * @param enabled Доступность текстфилда для ввода текста
+ * @param supportingText Текст-подсказка внизу
+ * @param onTextChange Возвращает текст при вводе
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SWTextField(
     modifier: Modifier = Modifier,

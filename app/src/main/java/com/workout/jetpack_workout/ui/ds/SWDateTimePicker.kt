@@ -39,16 +39,39 @@ import com.workout.jetpack_workout.R
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 import java.text.DateFormat
 
+/**
+ * Вариант пикера даты
+ *
+ * @property titleID Идентификатор локализованной строки с текстом слева от пикера
+ * @property showTimePicker Нужно ли показывать пикер времени
+ */
 enum class SWDatePickerMode(
     @StringRes val titleID: Int,
     val showTimePicker: Boolean
 ) {
+    /**
+     * Дата рождения (день, месяц и год)
+     */
     BIRTHDAY(R.string.birthdate, false),
+
+    /**
+     * Дата проведения мероприятия (день, месяц, год, время)
+     */
     EVENT(R.string.date_time, true)
 }
 
 /**
- * Полезная [статья](https://semicolonspace.com/jetpack-compose-date-picker-material3/)
+ * Пикер для даты/времени. Полезная [статья](https://semicolonspace.com/jetpack-compose-date-picker-material3/)
+ *
+ * @param modifier Модификатор
+ * @param mode Вариант пикера - [SWDatePickerMode]
+ * @param initialSelectedDateMillis Изначально заданная дата в миллисекундах
+ * @param yearRange Допустимый диапазон в годах от и до
+ * @param initialHour Изначально заданный час
+ * @param initialMinute Изначально заданные минуты
+ * @param enabled Доступность кнопок для вызова пикера
+ * @param onClickSaveDate Действие при сохранении даты
+ * @param onClickSaveTime Действие при сохранении времени
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -173,6 +196,15 @@ private fun SWTimePicker(
     onClickSave: (Int, Int) -> Unit
 ) {
     var showTimePicker by remember { mutableStateOf(false) }
+    SWButton(
+        modifier = modifier,
+        text = formattedString,
+        size = SWButtonSize.SMALL,
+        mode = SWButtonMode.TINTED,
+        enabled = enabled
+    ) {
+        showTimePicker = true
+    }
     if (showTimePicker) {
         AlertDialog(
             modifier = Modifier
@@ -211,15 +243,6 @@ private fun SWTimePicker(
                 }
             }
         }
-    }
-    SWButton(
-        modifier = modifier,
-        text = formattedString,
-        size = SWButtonSize.SMALL,
-        mode = SWButtonMode.TINTED,
-        enabled = enabled
-    ) {
-        showTimePicker = true
     }
 }
 

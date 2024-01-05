@@ -16,6 +16,15 @@ import androidx.compose.ui.unit.dp
 import com.workout.jetpack_workout.R
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 
+/**
+ * Обертка для добавления мелкого заголовка контенту
+ *
+ * @param modifier Модификатор
+ * @param titleID Идентификатор локализованной строки для заголовка
+ * @param addPaddingToTitle Нужно ли добавлять паддинг слева от заголовка
+ * @param titleBottomPadding Паддинг снизу от заголовка, по умолчанию 2
+ * @param content Контент
+ */
 @Composable
 fun SectionView(
     modifier: Modifier = Modifier,
@@ -40,10 +49,7 @@ fun SectionView(
     }
 }
 
-@Preview(
-    showBackground = true,
-    locale = "ru"
-)
+@Preview(showBackground = true, locale = "ru")
 @Composable
 fun SectionViewPreview() {
     JetpackWorkoutAppTheme {

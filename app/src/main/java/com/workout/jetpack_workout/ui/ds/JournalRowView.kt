@@ -40,6 +40,12 @@ import androidx.compose.ui.unit.dp
 import com.workout.jetpack_workout.R
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 
+/**
+ * Действие для дневника/записи в дневнике
+ *
+ * @property titleID Идентификатор локализованной строки с названием действия
+ * @property imageVector Иконка для действия
+ */
 enum class JournalAction(
     @StringRes val titleID: Int,
     val imageVector: ImageVector
@@ -62,11 +68,36 @@ enum class JournalAction(
     )
 }
 
+/**
+ * Тип вьюшки
+ *
+ * @property messageMaxLines Лимит строк для основного текста вьюшки
+ */
 enum class JournalRowMode(val messageMaxLines: Int) {
+    /**
+     * Дневник
+     */
     ROOT(messageMaxLines = 2),
+
+    /**
+     * Запись в дневнике
+     */
     ENTRY(messageMaxLines = Int.MAX_VALUE)
 }
 
+/**
+ * Вьюшка для дневника/записи в дневнике в списке
+ *
+ * @param modifier Модификатор
+ * @param imageStringURL Ссылка на аватар автора дневника/записи
+ * @param title Заголовок для вьюшки
+ * @param dateString Дата публикации
+ * @param bodyText Основной текст
+ * @param mode Режим вьюшки - [JournalRowMode]
+ * @param enabled Доступность кнопки-меню с доп. действиями
+ * @param actions Доп. действия для кнопки-меню
+ * @param onClickAction Действие при нажатии на кнопку в меню
+ */
 @Composable
 fun JournalRowView(
     modifier: Modifier = Modifier,

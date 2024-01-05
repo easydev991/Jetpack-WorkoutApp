@@ -29,6 +29,16 @@ import com.workout.jetpack_workout.R
 import com.workout.jetpack_workout.model.Gender
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 
+/**
+ * Карточка профиля
+ *
+ * @param modifier Модификатор
+ * @param imageStringURL Ссылка на фото профиля
+ * @param userName Имя
+ * @param gender Пол
+ * @param age Возраст в годах
+ * @param shortAddress Краткий адрес в формате "Россия, Москва"
+ */
 @Composable
 fun UserProfileCardView(
     modifier: Modifier = Modifier,

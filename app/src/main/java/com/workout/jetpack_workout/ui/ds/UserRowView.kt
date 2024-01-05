@@ -13,6 +13,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 
+/**
+ * Вьюшка с краткой информацией о пользователе
+ *
+ * @param modifier Модификатор
+ * @param imageStringURL Ссылка на аватар пользователя
+ * @param name Имя
+ * @param address Адрес в формате "Россия, Москва"
+ */
 @Composable
 fun UserRowView(
     modifier: Modifier = Modifier,

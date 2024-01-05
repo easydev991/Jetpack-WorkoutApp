@@ -15,6 +15,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 
+/**
+ * Вьюшка с бейджиком, например для непрочитанных сообщений в чате
+ *
+ * @param modifier Модификатор
+ * @param value Цифра в бейджике. Значения больше 9 будут заменяться на 9+
+ */
 @Composable
 fun CircleBadgeView(
     modifier: Modifier = Modifier,

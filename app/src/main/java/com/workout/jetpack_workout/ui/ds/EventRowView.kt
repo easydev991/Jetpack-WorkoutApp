@@ -20,6 +20,15 @@ import androidx.compose.ui.unit.dp
 import com.workout.jetpack_workout.R
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
 
+/**
+ * Вьюшка для мероприятия в списке
+ *
+ * @param modifier Модификатор
+ * @param imageStringURL Ссылка на превью-фото
+ * @param name Название мероприятия
+ * @param dateString Дата проведения мероприятия
+ * @param address Адрес мероприятия (город, страна)
+ */
 @Composable
 fun EventRowView(
     modifier: Modifier = Modifier,
@@ -66,6 +75,12 @@ fun EventRowView(
     }
 }
 
+/**
+ * Вьюшка с доп. информацией
+ *
+ * @param imageID Идентификатор для картинки в ресурсах
+ * @param text Текст
+ */
 @Composable
 private fun AdditionalInfoRow(
     @DrawableRes imageID: Int,

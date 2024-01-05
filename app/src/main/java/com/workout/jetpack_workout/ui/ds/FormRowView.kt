@@ -45,6 +45,12 @@ private fun FormRowViewContainer(
 
 /**
  * В фигме называется "Ячейка формы"
+ *
+ * @param modifier Модификатор
+ * @param leadingText Текст слева
+ * @param trailingText Текст справа
+ * @param badgeValue Цифра в бейджике (если передать null, то без бейджика)
+ * @param enabled Влияет на отображение шеврона справа
  */
 @Composable
 fun FormRowView(
@@ -52,7 +58,7 @@ fun FormRowView(
     leadingText: String,
     trailingText: String = "",
     badgeValue: Int? = null,
-    isEnabled: Boolean = true
+    enabled: Boolean = true
 ) {
     FormRowViewContainer(
         modifier = modifier.padding(vertical = 12.dp)
@@ -83,7 +89,7 @@ fun FormRowView(
                 )
             }
             AnimatedVisibility(
-                visible = isEnabled,
+                visible = enabled,
                 enter = fadeIn() + expandHorizontally(),
                 exit = fadeOut() + shrinkHorizontally()
             ) {
