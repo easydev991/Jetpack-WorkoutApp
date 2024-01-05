@@ -31,7 +31,6 @@ fun IncognitoProfileView(
     ) {
         Text(
             text = stringResource(id = R.string.auth_invitation),
-            maxLines = 2,
             color = MaterialTheme.colorScheme.onPrimaryContainer,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(bottom = 22.dp)

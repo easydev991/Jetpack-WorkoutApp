@@ -40,6 +40,7 @@ fun SWAsyncImage(
             .crossfade(300)
             .build(),
         placeholder = painterResource(id = R.drawable.defaultworkout),
+        error = painterResource(id = R.drawable.defaultworkout),
         contentDescription = "Preview",
         contentScale = contentScale,
         modifier = modifier
