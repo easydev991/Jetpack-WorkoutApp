@@ -1,16 +1,14 @@
 package com.workout.jetpack_workout.ui.ds
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.workout.jetpack_workout.ui.theme.JetpackWorkoutAppTheme
@@ -27,23 +25,13 @@ fun CircleBadgeView(
     value: Int
 ) {
     val badgeColor = MaterialTheme.colorScheme.primary
-    Box(
+    Text(
+        text = if (value > 99) "99+" else "$value",
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.primaryContainer,
         modifier = modifier
-            .drawWithContent {
-                this.drawCircle(
-                    badgeColor,
-                    9.dp.toPx()
-                )
-                this.drawContent()
-            }
-    ) {
-        Text(
-            text = if (value > 9) "9+" else "$value",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.padding(5.dp)
-        )
-    }
+            .circleBackground(badgeColor, 2.dp)
+    )
 }
 
 @Preview(showBackground = true)
@@ -55,9 +43,12 @@ fun CircleBadgeView(
 fun CircleBadgeViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 CircleBadgeView(value = 4)
-                CircleBadgeView(value = 10)
+                CircleBadgeView(value = 120)
             }
         }
     }
