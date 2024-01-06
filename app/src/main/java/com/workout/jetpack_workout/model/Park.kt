@@ -51,10 +51,10 @@ data class Park(
     val trainingUsers: List<User>? = null
 ) {
     val size: ParkSize? = ParkSize.values().firstOrNull {
-        it.model.rawValue == sizeID
+        it.rawValue == sizeID
     }
     val type: ParkType? = ParkType.values().firstOrNull {
-        it.model.rawValue == typeID
+        it.rawValue == typeID
     }
 
     /**

@@ -127,7 +127,7 @@ fun UserProfileCardViewPreview() {
             UserProfileCardView(
                 imageStringURL = null,
                 userName = "Very very very very very very long user name for two lines",
-                gender = stringResource(id = Gender.FEMALE.model.description),
+                gender = stringResource(id = Gender.FEMALE.description),
                 age = 30,
                 shortAddress = "Россия, Москва"
             )
