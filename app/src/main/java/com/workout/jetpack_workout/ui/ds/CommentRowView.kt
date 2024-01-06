@@ -98,9 +98,7 @@ fun CommentRowView(
     }
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(12.dp)
+        modifier = modifier.padding(12.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -117,8 +115,7 @@ fun CommentRowView(
                     shape = CircleShape
                 )
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier.fillMaxWidth(0.9f)
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
                         text = authorName,
@@ -195,7 +192,10 @@ fun CommentRowView(
     }
 }
 
-@Preview(showBackground = true, locale = "ru")
+@Preview(
+    showBackground = true,
+    locale = "ru"
+)
 @Preview(
     uiMode = Configuration.UI_MODE_NIGHT_YES,
     showBackground = true,

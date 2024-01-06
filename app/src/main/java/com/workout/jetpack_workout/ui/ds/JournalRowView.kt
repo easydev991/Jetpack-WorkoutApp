@@ -115,9 +115,7 @@ fun JournalRowView(
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.Start,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)
+            modifier = Modifier.padding(12.dp)
         ) {
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -125,8 +123,7 @@ fun JournalRowView(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxWidth(0.9f)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     SWAsyncImage(
                         imageStringURL = imageStringURL,
@@ -177,6 +174,7 @@ fun JournalRowView(
                                         color = when (item) {
                                             JournalAction.DELETE,
                                             JournalAction.REPORT -> MaterialTheme.colorScheme.error
+
                                             else -> MaterialTheme.colorScheme.onPrimaryContainer
                                         }
                                     )
@@ -188,6 +186,7 @@ fun JournalRowView(
                                             when (item) {
                                                 JournalAction.DELETE,
                                                 JournalAction.REPORT -> MaterialTheme.colorScheme.error
+
                                                 else -> MaterialTheme.colorScheme.onPrimaryContainer
                                             }
                                         ),
@@ -214,7 +213,10 @@ fun JournalRowView(
     }
 }
 
-@Preview(showBackground = true, locale = "ru")
+@Preview(
+    showBackground = true,
+    locale = "ru"
+)
 @Preview(
     uiMode = Configuration.UI_MODE_NIGHT_YES,
     showBackground = true,
