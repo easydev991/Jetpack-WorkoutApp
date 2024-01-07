@@ -2,6 +2,7 @@ package com.workout.jetpack_workout.ui.ds
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -27,7 +28,7 @@ fun FormRowContainer(
     horizontalArrangement: Arrangement.Horizontal,
     horizontalPadding: Dp = 12.dp,
     verticalPadding: Dp = 0.dp,
-    content: @Composable () -> Unit
+    content: @Composable() (RowScope.() -> Unit)
 ) {
     Row(
         horizontalArrangement = horizontalArrangement,
