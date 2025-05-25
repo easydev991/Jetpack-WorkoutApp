@@ -50,7 +50,7 @@ data class User(
     val lang: String
 ) {
     val genderOption: Gender? = if (genderCode != null) {
-        Gender.values().firstOrNull { it.rawValue == genderCode }
+        Gender.entries.firstOrNull { it.rawValue == genderCode }
     } else {
         null
     }

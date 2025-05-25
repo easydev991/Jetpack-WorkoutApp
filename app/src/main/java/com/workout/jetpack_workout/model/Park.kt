@@ -50,10 +50,10 @@ data class Park(
     @SerialName("users_train_here")
     val trainingUsers: List<User>? = null
 ) {
-    val size: ParkSize? = ParkSize.values().firstOrNull {
+    val size: ParkSize? = ParkSize.entries.firstOrNull {
         it.rawValue == sizeID
     }
-    val type: ParkType? = ParkType.values().firstOrNull {
+    val type: ParkType? = ParkType.entries.firstOrNull {
         it.rawValue == typeID
     }
 

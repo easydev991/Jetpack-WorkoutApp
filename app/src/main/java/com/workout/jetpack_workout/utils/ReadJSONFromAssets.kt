@@ -11,7 +11,7 @@ fun ReadJSONFromAssets(
 ): String {
     val identifier = "[ReadJSONFromAssets]"
     try {
-        val file = context.assets.open("$path")
+        val file = context.assets.open(path)
         Log.i(
             identifier,
             "Нашли файл: $file.",
