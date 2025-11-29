@@ -1,0 +1,240 @@
+---
+description: Правила тест-драйвен разработки (TDD) для Android-приложения
+alwaysApply: true
+---
+
+# Test-Driven Development (TDD)
+
+## Основные принципы
+
+### 1. Красный-Зеленый-Рефакторинг
+- **Красный**: Пиши тесты для целевой логики ДО реализации кода (тесты должны падать)
+- **Зеленый**: Реализуй минимальный код для прохождения тестов
+- **Рефакторинг**: Улучши код после успешных тестов
+
+### 2. Итеративный процесс
+1. **Напиши тест** с корректной логикой (должен падать)
+2. **Реализуй функционал** до прохождения теста
+3. **Запусти тесты** - тест должен пройти
+4. **Повтори** для следующей функции
+
+### 3. Критерии приемки
+- **Тесты проходят успешно** (unit-тесты и инструментальные тесты)
+- **Проект собирается** без ошибок
+- **Код соответствует** стандартам проекта
+
+### 4. Правила
+- **Всегда начинай с тестов** перед написанием кода
+- **Не меняй код** пока тесты проходят успешно
+- **Итеративно дорабатывай** функционал до прохождения тестов
+
+## Технологии тестирования
+
+### Unit-тесты
+- **JUnit 4.13.2** - основной фреймворк для unit-тестирования
+- **Kotlin Coroutines Test** - для тестирования асинхронного кода
+- **Mockito** или **MockK** - для создания моков (при необходимости)
+- Расположение: `app/src/test/java/`
+
+### Инструментальные тесты
+- **AndroidX Test Ext JUnit 1.3.0** - для инструментальных тестов
+- **Espresso Core 3.7.0** - для UI тестирования
+- **Compose UI Test JUnit4** - для тестирования Compose UI
+- Расположение: `app/src/androidTest/java/`
+
+## Структура тестов
+
+### Unit-тесты
+```kotlin
+package com.workout.jetpack_workout
+
+import org.junit.Test
+import org.junit.Assert.*
+
+class SomeServiceTest {
+    @Test
+    fun `should return expected result for valid input`() {
+        // Arrange
+        val service = SomeService()
+        val input = "test"
+        
+        // Act
+        val result = service.process(input)
+        
+        // Assert
+        assertEquals("expected", result)
+    }
+}
+```
+
+### Инструментальные тесты
+```kotlin
+package com.workout.jetpack_workout
+
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.Assert.*
+
+@RunWith(AndroidJUnit4::class)
+class SomeInstrumentedTest {
+    @Test
+    fun `should work correctly on device`() {
+        // Context of the app under test
+        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+        // Test implementation
+    }
+}
+```
+
+### Compose UI тесты
+```kotlin
+package com.workout.jetpack_workout
+
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import org.junit.Rule
+import org.junit.Test
+
+class SomeComposeScreenTest {
+    @get:Rule
+    val composeTestRule = createComposeRule()
+    
+    @Test
+    fun `should display correct content`() {
+        composeTestRule.setContent {
+            SomeScreen()
+        }
+        
+        composeTestRule.onNodeWithText("Expected Text").assertExists()
+    }
+}
+```
+
+## Запуск тестов
+
+### Unit-тесты
+- **Gradle**: `./gradlew test` или `./gradlew testDebugUnitTest`
+- **Android Studio**: ПКМ на тестовом классе → Run
+
+### Инструментальные тесты
+- **Gradle**: `./gradlew connectedAndroidTest` или `./gradlew connectedDebugAndroidTest`
+- **Android Studio**: ПКМ на тестовом классе → Run (требуется подключенное устройство/эмулятор)
+
+### Все тесты
+- **Gradle**: `./gradlew test connectedAndroidTest`
+
+## Правила написания тестов
+
+### Именование
+- Используй описательные имена тестов с обратными кавычками для читаемости
+- Пример: `` `should return error when input is invalid`() ``
+- Группируй связанные тесты в один класс
+
+### Структура теста (AAA)
+- **Arrange** - подготовка данных и зависимостей
+- **Act** - выполнение тестируемого действия
+- **Assert** - проверка результата
+
+### Моки и зависимости
+- Используй моки для внешних зависимостей (сеть, база данных, файловая система)
+- Избегай реальных сетевых запросов в тестах
+- Используй dependency injection для передачи моков
+
+### Асинхронный код
+- Используй `runTest` из `kotlinx.coroutines.test` для тестирования корутин
+- Используй `TestDispatcher` для контроля выполнения корутин
+
+### Тестирование ViewModel
+- Тестируй бизнес-логику ViewModel с моками репозиториев/сервисов
+- Проверяй изменения состояния через `StateFlow` или `LiveData`
+
+### Тестирование Compose UI
+- Используй `createComposeRule()` для Compose тестов
+- Используй семантику для поиска элементов UI
+- Тестируй взаимодействие пользователя (клики, ввод текста)
+
+## Что тестировать
+
+### Обязательно
+- **Бизнес-логика** в сервисах и репозиториях
+- **ViewModels** с моками зависимостей
+- **Утилиты** и вспомогательные функции
+- **Валидация** пользовательского ввода
+
+### По необходимости
+- **UI компоненты** (Compose тесты)
+- **Навигация** между экранами
+- **Интеграционные тесты** для критичных потоков
+
+### Не тестировать напрямую
+- **View/Composable** функции (только через UI тесты)
+- **Android системные компоненты** (Activity, Fragment)
+- **Сторонние библиотеки**
+
+## Примеры TDD цикла
+
+### Пример 1: Создание сервиса
+1. **Красный**: Написать тест для метода сервиса (тест падает)
+```kotlin
+@Test
+fun `should calculate sum correctly`() {
+    val calculator = Calculator()
+    val result = calculator.sum(2, 3)
+    assertEquals(5, result)
+}
+```
+
+2. **Зеленый**: Реализовать минимальный код для прохождения теста
+```kotlin
+class Calculator {
+    fun sum(a: Int, b: Int): Int = a + b
+}
+```
+
+3. **Рефакторинг**: Улучшить код, сохраняя прохождение тестов
+
+### Пример 2: Создание ViewModel
+1. **Красный**: Написать тест для ViewModel
+```kotlin
+@Test
+fun `should load data successfully`() = runTest {
+    val mockRepository = mockk<SomeRepository>()
+    coEvery { mockRepository.getData() } returns Result.success(testData)
+    
+    val viewModel = SomeViewModel(mockRepository)
+    viewModel.loadData()
+    
+    assertEquals(testData, viewModel.uiState.value.data)
+}
+```
+
+2. **Зеленый**: Реализовать ViewModel
+3. **Рефакторинг**: Улучшить код
+
+## Интеграция с разработкой
+
+### Перед написанием кода
+1. Определи, что нужно протестировать
+2. Напиши тест, который описывает желаемое поведение
+3. Убедись, что тест падает (красный)
+
+### Во время реализации
+1. Реализуй минимальный код для прохождения теста
+2. Запусти тесты, убедись что они проходят (зеленый)
+3. При необходимости добавь дополнительные тесты
+
+### После реализации
+1. Рефакторинг кода, сохраняя прохождение тестов
+2. Убедись, что все тесты проходят
+3. Проверь, что проект собирается без ошибок
+
+## Заключение
+
+TDD помогает создавать более надежный и поддерживаемый код. Следуя принципам TDD, мы получаем:
+- **Лучшее покрытие тестами** - код тестируется с самого начала
+- **Более чистый код** - тесты помогают думать о дизайне
+- **Уверенность в рефакторинге** - тесты защищают от регрессий
+- **Документацию** - тесты показывают, как должен работать код
