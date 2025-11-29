@@ -21,7 +21,7 @@ import com.workout.jetpack_workout.R
 import com.workout.jetpack_workout.model.Park
 import com.workout.jetpack_workout.model.TabBarItem
 import com.workout.jetpack_workout.utils.ReadJSONFromAssets
-import kotlinx.serialization.json.Json
+import com.workout.jetpack_workout.utils.WorkoutAppJson
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,7 +31,7 @@ fun ParksNavHost() {
         LocalContext.current,
         "parks.json"
     )
-    val decodedParks = Json.decodeFromString<List<Park>>(oldParks)
+    val decodedParks = WorkoutAppJson.decodeFromString<List<Park>>(oldParks)
     NavHost(
         navController,
         startDestination = TabBarItem.Parks.route

@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun FormCardContainer(
     modifier: Modifier = Modifier,
-    content: @Composable() (ColumnScope.() -> Unit)
+    content: @Composable (ColumnScope.() -> Unit)
 ) {
     val isLight = MaterialTheme.colorScheme.isLight()
     Card(

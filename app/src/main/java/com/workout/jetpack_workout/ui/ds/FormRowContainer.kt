@@ -28,7 +28,7 @@ fun FormRowContainer(
     horizontalArrangement: Arrangement.Horizontal,
     horizontalPadding: Dp = 12.dp,
     verticalPadding: Dp = 0.dp,
-    content: @Composable() (RowScope.() -> Unit)
+    content: @Composable (RowScope.() -> Unit)
 ) {
     Row(
         horizontalArrangement = horizontalArrangement,

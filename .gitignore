@@ -15,4 +15,8 @@
 local.properties
 .idea/inspectionProfiles/Project_Default.xml
 .idea/appInsightsSettings.xml
-.idea/deploymentTargetDropDown.xml
+.idea/deploymentTargetSelector.xml
+.idea/markdown.xml
+.idea/runConfigurations.xml
+.idea/deviceManager.xml
+.idea/migrations.xml
