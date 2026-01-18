@@ -32,6 +32,7 @@ app/
 ## Зависимости
 
 Основные зависимости проекта:
+
 - `androidx.core:core-ktx:1.17.0`
 - `androidx.lifecycle:lifecycle-runtime-ktx:2.10.0`
 - `androidx.activity:activity-compose:1.12.2`
@@ -77,6 +78,7 @@ app/
 ## Разрешения
 
 Приложение запрашивает следующие разрешения:
+
 - `INTERNET` - для сетевого взаимодействия
 - `CAMERA` - для съемки фотографий
 - `ACCESS_NETWORK_STATE` - для проверки состояния сети
@@ -86,6 +88,7 @@ app/
 ## Сборка и разработка
 
 Для сборки проекта используется Gradle с Kotlin DSL. Основные команды:
+
 - `./gradlew build` - полная сборка проекта
 - `./gradlew assembleDebug` - сборка отладочной версии
 - `./gradlew installDebug` - установка отладочной версии на устройство
