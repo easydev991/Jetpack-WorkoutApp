@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.workout.jetpack_workout"
+    namespace = "com.swparks"
     compileSdk = 36
 
     defaultConfig {
