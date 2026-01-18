@@ -1,0 +1,165 @@
+---
+alwaysApply: true
+---
+
+# Тестирование
+
+## Типы тестов
+
+- **Unit**: бизнес-логика изолированно, MockK для зависимостей, AAA паттерн
+- **Integration**: взаимодействие слоев (DAO, Repository), реальные реализации БД
+- **UI**: критические сценарии, Compose Testing для компонентов
+
+## Инструменты
+
+- JUnit 5 - unit-тесты
+- MockK - мокирование
+- Compose Testing - Compose компоненты
+- Room Testing - для интеграционных тестов БД
+- kotlinx-coroutines-test - для тестирования корутин
+- Turbine - для тестирования Flow/StateFlow (app.cash.turbine:turbine:1.1.0)
+
+## Структура
+
+- `app/src/test/` - unit-тесты (ViewModels, Use Cases, Domain models)
+- `app/src/androidTest/` - integration/UI тесты (DAO, Repository, UI компоненты)
+- Структура зеркалит код
+- Имена классов: `*Test`
+
+## Best Practices
+
+**Важно:** Ограничения на интеграционные тесты с ViewModels
+
+- ⚠️ **Допустимо:** Для интеграционных тестов ViewModels использовать `runTest`, `MainDispatcherRule` и `Turbine`
+- ✅ **Рекомендуется:** Тестировать ViewModels только через unit-тесты с MockK
+- ✅ **Допустимо:** Тестировать DAO и Repository через интеграционные тесты без ViewModels
+- ✅ **Допустимо:** UI-тесты для Compose компонентов без бизнес-логики
+
+**Причина ограничений:**
+
+- Конфликт между `runBlocking` и `viewModelScope.launch`
+- Flow репозитория не активируется корректно в тестах
+- Тесты зависают бесконечно или падают
+- Unit-тесты с MockK обеспечивают лучшее покрытие бизнес-логики
+
+### Рабочий подход к тестированию
+
+**Unit-тесты ViewModels (с MockK):**
+
+```kotlin
+@Test
+fun loadItems_whenRepositoryReturnsData_thenSuccessState() {
+    // Given
+    val mockRepository = mockk<ItemRepository>()
+    every { mockRepository.getAllItems() } returns flowOf(listOf(item))
+    val viewModel = MainScreenViewModel(mockRepository)
+
+    // When
+    viewModel.loadItems()
+
+    // Then
+    assertEquals(MainScreenState.Success(listOf(item)), viewModel.uiState.value)
+}
+```
+
+**Интеграционные тесты DAO и Repository:**
+
+```kotlin
+@Test
+fun test() {
+    runBlocking {
+        repository.insertItem(item)
+        val result = repository.getItemById(id)
+        assertNotNull(result)
+    }
+}
+```
+
+- ✅ Прямые вызовы DAO/Repository
+- ✅ Синхронные операции с БД
+- ✅ Блокируют поток до завершения корутины
+- ✅ Не используют ViewModel
+- ✅ Используют только repository
+
+**Интеграционные тесты ViewModels (только для существующих):**
+
+```kotlin
+@Test
+fun whenItemExistsInDatabase_thenLoadsSuccessfully() {
+    runTest {
+        val insertedId = repository.insertItem(testItem)
+        val savedStateHandle = SavedStateHandle(mapOf("itemId" to insertedId))
+        viewModel = DetailScreenViewModel(repository, NoOpLogger(), savedStateHandle)
+
+        // Тестируем эмиссии StateFlow с помощью Turbine
+        viewModel.uiState.test {
+            val loadingState = awaitItem()
+            assertTrue(loadingState is DetailScreenState.Loading)
+
+            val successState = awaitItem()
+            assertTrue(successState is DetailScreenState.Success)
+        }
+    }
+}
+```
+
+- ✅ Использовать `runTest` вместо `runBlocking`
+- ✅ Использовать `MainDispatcherRule` для замены `Dispatchers.Main`
+- ✅ Использовать `Turbine` для тестирования StateFlow эмиссий
+- ✅ Использовать `advanceUntilIdle()` для ожидания завершения корутин
+
+**UI-тесты Compose компонентов:**
+
+```kotlin
+@Test
+fun daysCountText_whenToday_thenShowsToday() {
+    composeTestRule.setContent {
+        DaysCountText(item)
+    }
+    composeTestRule.onNodeWithText("Сегодня").assertIsDisplayed()
+}
+```
+
+- ✅ Тестируют UI компоненты в изоляции
+- ✅ Используют Compose Testing
+- ✅ Быстрые и надежные
+- ✅ Не зависят от ViewModel
+
+### Тестирование сетевых функций
+
+- ✅ **Только на моках**: Использовать MockK для API клиентов (SWApi, Retrofit)
+- ❌ **Без реальных запросов**: Запрещены реальные HTTP запросы к серверу в тестах
+- ✅ **Изолированное тестирование**: Тестировать бизнес-логику независимо от сети
+- ✅ **Предсказуемые ответы**: Использовать фиксированные mock-ответы от сервера
+
+**Пример тестирования с моком:**
+
+```kotlin
+@Test
+fun loadEvents_whenApiReturnsData_thenSuccess() {
+    // Given
+    val mockApi = mockk<SWApi>()
+    coEvery { mockApi.getEvents() } returns mockEventResponse
+    val repository = SWRepository(mockApi)
+
+    // When
+    val result = runBlocking { repository.getEvents() }
+
+    // Then
+    assertNotNull(result)
+    assertEquals(2, result.size)
+}
+```
+
+### Общие практики
+
+- Быстрые и независимые тесты
+- Описательные имена
+- Один тест - одна проверка
+- Тестировать поведение, не реализацию
+- Интеграционные тесты только для DAO и Repository
+- Unit-тесты для ViewModels с моками
+- Сетевые функции только на моках (без реальных запросов)
+- UI-тесты для Compose компонентов без бизнес-логики
+- Использовать JUnit 5 аннотации (`@Test`, `@Before`, `@After`)
+- Использовать assertions JUnit 5 (`assertEquals`, `assertTrue`, `assertNull`)

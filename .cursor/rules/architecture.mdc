@@ -1,0 +1,137 @@
+---
+alwaysApply: true
+---
+
+# Архитектура SWParks
+
+## MVVM
+
+- **Model**: Data layer (Room, repositories, API)
+- **View**: Compose UI
+- **ViewModel**: UI state management
+
+## Clean Architecture
+
+```
+Presentation (UI, ViewModel)
+├── Domain (Use Cases, entities)
+└── Data (Repositories, локальные и сетевые источники)
+```
+
+**Важно:** Есть сетевые источники данных (SWApi) для работы с сервером workout.su
+
+---
+
+## Dependency Injection (DI)
+
+**Ручной DI через factory методы** в `AppContainer`. Проект не использует Hilt.
+
+**Причины:** простой граф зависимостей, быстрая компиляция, меньше зависимостей, простые тесты.
+
+**DI контейнер:**
+
+- **AppContainer** - factory методы для создания репозиториев, API клиентов и ViewModel
+- **AuthContainer** (опционально) - factory методы для авторизации и сессии
+- **PreferencesContainer** (опционально) - factory методы для DataStore и настроек
+
+**Примечание:** Hilt стоит рассмотреть при росте проекта (>15 ViewModel, сложные графы зависимостей).
+
+## Слои
+
+### Data
+
+- **Room** (опционально) - для кэширования данных офлайн
+- **Repository Implementations**:
+  - `SWRepository` - основной репозиторий для работы с данными (площадки, мероприятия, пользователи и т.д.)
+  - `UserPreferencesRepository` - хранение настроек (тема, язык, токен авторизации)
+- **API Client**: `SWApi` - HTTP клиент для запросов к серверу (Retrofit + Kotlinx Serialization)
+- **Formatter** (опционально) - локализация и форматирование данных
+
+### Domain
+
+- **Use Cases**: бизнес-логика, один use case - одна ответственность:
+  - **Авторизация**: `LoginUseCase`, `LogoutUseCase`, `RecoveryPasswordUseCase`
+  - **Площадки**: `GetParksUseCase`, `GetParkDetailUseCase`, `CreateParkUseCase`, `UpdateParkUseCase`
+  - **Мероприятия**: `GetEventsUseCase`, `GetEventDetailUseCase`, `CreateEventUseCase`, `UpdateEventUseCase`
+  - **Профиль**: `GetUserProfileUseCase`, `UpdateUserProfileUseCase`
+  - **Друзья**: `GetFriendsUseCase`, `GetFriendRequestsUseCase`, `AcceptFriendRequestUseCase`
+  - **Сообщения**: `GetDialogsUseCase`, `GetMessagesUseCase`, `SendMessageUseCase`
+  - **Дневники**: `GetJournalsUseCase`, `GetJournalEntriesUseCase`
+  - И другие use cases для бизнес-логики приложения
+- **Entities**: модели данных:
+  - `User`, `LoginSuccess` - пользователи и авторизация
+  - `Park`, `ParkType`, `ParkSize` - площадки
+  - `Event`, `EventKind` - мероприятия
+  - `Comment` - комментарии
+  - `Photo` - фотографии
+  - `Country`, `City` - географические данные
+  - `FriendAction`, `BlacklistAction` - действия над друзьями/черным списком
+  - `Gender`, `TabBarItem` - вспомогательные модели
+- **Repository Interfaces** (опционально) - абстракции репозиториев для тестирования
+
+### Presentation
+
+- **ViewModels**:
+  - `AuthViewModel` - авторизация и восстановление пароля
+  - `ProfileViewModel`, `EditProfileViewModel` - профиль и редактирование
+  - `ParksListViewModel`, `ParksMapViewModel`, `ParkDetailViewModel`, `EditParkViewModel` - площадки
+  - `EventsViewModel`, `EventDetailViewModel`, `EditEventViewModel` - мероприятия
+  - `DialogsListViewModel`, `ChatViewModel` - сообщения
+  - `JournalsListViewModel`, `JournalDetailViewModel`, `EditJournalViewModel` - дневники
+  - `RootScreenViewModel` - управление навигацией по вкладкам
+  - И другие ViewModels для оставшихся экранов
+- **UI State**: sealed классы (Loading/Success/Error) для состояний экранов:
+  - `AuthUiState`, `ProfileUiState`, `ParksUiState`, `EventsUiState`
+  - `DialogsUiState`, `ChatUiState`, `JournalsUiState`
+- **Screens**: Compose экраны в `ui/screens/`:
+  - `auth/` - экраны авторизации (LoginScreen, RecoveryScreen)
+  - `profile/` - экраны профиля (ProfileScreen, EditProfileScreen, FriendsScreen и т.д.)
+  - `parks/` - экраны площадок (ParksListScreen, ParksMapScreen, ParkDetailScreen и т.д.)
+  - `events/` - экраны мероприятий (EventsScreen, EventDetailScreen, EditEventScreen)
+  - `messages/` - экраны сообщений (DialogsListScreen, ChatScreen)
+  - `journals/` - экраны дневников (JournalsListScreen, JournalDetailScreen и т.д.)
+  - `settings/` - экраны настроек (MoreScreen, ThemeSettingsScreen, AppDataScreen и т.д.)
+  - `RootScreen` - корневой экран с навигацией по вкладкам
+- **Navigation**: `navigation/Screen.kt` - централизованные маршруты навигации
+- **Theme**: тема в `ui/theme/`
+- **Design System**: компоненты дизайн-системы в `ui/ds/` (23 компонента)
+
+### Utilities
+
+- **Logger** - интерфейс (аналог JetpackDays - AndroidLogger, NoOpLogger)
+- **Analytics** (опционально) - `FirebaseAnalyticsHelper` для screen_view и событий (только release)
+- **Crash** (опционально) - `CrashlyticsHelper` для отчетов о крашах (только release)
+- **NetworkUtils** (опционально) - утилиты для работы с сетью
+- **ImageUtils** (опционально) - утилиты для работы с изображениями
+
+## Отличия от JetpackDays
+
+### Сетевые функции
+
+- **SWApi** - HTTP клиент для работы с сервером workout.su (отсутствует в JetpackDays)
+- **Retrofit + Kotlinx Serialization** - для API запросов (отсутствует в JetpackDays)
+- **Авторизация** - Login/Logout с токеном авторизации (отсутствует в JetpackDays)
+
+### Масштаб проекта
+
+- **Больше экранов** - ~30+ экранов vs ~7 в JetpackDays
+- **Больше моделей** - 14+ моделей vs ~7 в JetpackDays
+- **Сложные бизнес-потоки** - авторизация, друзья, сообщения, дневники (отсутствуют в JetpackDays)
+
+## Референсы
+
+### Архитектура и структура
+
+- **JetpackDays** - референсный проект для базовой архитектуры (MVVM, Clean Architecture, ручной DI)
+- Подход к слоистой архитектуре идентичен JetpackDays
+- Dependency Injection через factory методы (без Hilt) - как в JetpackDays
+
+### Функционал и экраны
+
+- **SwiftUI-WorkoutApp** - iOS-приложение - эталон функциональности и дизайна
+- При разработке экранов ориентироваться на iOS-версию для консистентности UI и UX
+
+### Компоненты дизайн-системы
+
+- ✅ Компоненты дизайн-системы уже реализованы и готовы к использованию (23 компонента)
+- Использовать готовые компоненты для верстки экранов
