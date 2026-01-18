@@ -151,6 +151,81 @@ fun loadEvents_whenApiReturnsData_thenSuccess() {
 }
 ```
 
+**Мокирование HttpException:**
+
+```kotlin
+@Test
+fun getEvents_whenApiThrowsHttpException_thenThrowsHttpException() = runTest {
+    // Given
+    val mockResponse = mockk<Response<*>>(relaxed = true)
+    every { mockResponse.code() } returns 404
+    val mockApi = mockk<SWApi>()
+    coEvery { mockApi.getEvents() } throws HttpException(mockResponse)
+    
+    // When/Then
+    assertThrows<HttpException> { repository.getEvents() }
+}
+```
+
+### Тестирование Flow с исключениями
+
+**Важно:** Для Flow с исключениями, которые обрабатываются через `catch`, используйте `first()` или `collect()` вместо Turbine.
+
+**Тестирование IOException (обрабатывается в catch):**
+
+```kotlin
+@Test
+fun isAuthorized_whenIOExceptionOccurs_thenEmitsEmptyPreferences() = runTest {
+    // Given
+    val mockDataStore = mockk<DataStore<Preferences>>()
+    every { mockDataStore.data } returns flow { throw IOException("Test error") }
+    val repository = UserPreferencesRepository(mockDataStore)
+
+    // When
+    val result = repository.isAuthorized.first()
+
+    // Then
+    assertEquals(false, result)
+}
+```
+
+**Тестирование других исключений (пробрасываются дальше):**
+
+```kotlin
+@Test
+fun isAuthorized_whenOtherExceptionOccurs_thenThrowsException() = runTest {
+    // Given
+    val testException = RuntimeException("Test error")
+    val mockDataStore = mockk<DataStore<Preferences>>()
+    every { mockDataStore.data } returns flow { throw testException }
+    val repository = UserPreferencesRepository(mockDataStore)
+
+    // When/Then
+    var exceptionThrown = false
+    try {
+        repository.isAuthorized.collect { }
+    } catch (e: RuntimeException) {
+        exceptionThrown = true
+    }
+    assertTrue(exceptionThrown)
+}
+```
+
+**Мокирование Android Log:**
+
+```kotlin
+@Before
+fun setup() {
+    mockkStatic(Log::class)
+    every { Log.e(any(), any(), any()) } returns 0
+}
+
+@After
+fun tearDown() {
+    unmockkAll()
+}
+```
+
 ### Общие практики
 
 - Быстрые и независимые тесты
