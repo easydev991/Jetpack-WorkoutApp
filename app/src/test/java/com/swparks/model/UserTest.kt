@@ -1,0 +1,210 @@
+package com.swparks.model
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class UserTest {
+    // Вспомогательные методы для создания тестовых данных
+    private fun createTestPark(id: Long = 1L) = Park(
+        id = id,
+        name = "Test Park",
+        sizeID = 1,
+        typeID = 1,
+        longitude = "37.6173",
+        latitude = "55.7558",
+        address = "Test Address",
+        cityID = 1,
+        countryID = 1,
+        preview = "https://example.com/preview.jpg"
+    )
+
+    private fun createTestUser(
+        genderCode: Int? = null,
+        journalCount: Int? = null,
+        friendsCount: Int? = null,
+        parksCount: String? = null,
+        addedParks: List<Park>? = null
+    ) = User(
+        id = 1L,
+        name = "testuser",
+        image = "https://example.com/image.jpg",
+        cityID = null,
+        countryID = null,
+        birthDate = null,
+        email = null,
+        fullName = null,
+        genderCode = genderCode,
+        friendRequestCount = null,
+        friendsCount = friendsCount,
+        parksCount = parksCount,
+        addedParks = addedParks,
+        journalCount = journalCount,
+        lang = "ru"
+    )
+
+    @Test
+    fun genderOption_whenGenderCodeIs0_thenReturnsMale() {
+        // Given
+        val user = createTestUser(genderCode = 0)
+
+        // When & Then
+        assertEquals(Gender.MALE, user.genderOption)
+    }
+
+    @Test
+    fun genderOption_whenGenderCodeIs1_thenReturnsFemale() {
+        // Given
+        val user = createTestUser(genderCode = 1)
+
+        // When & Then
+        assertEquals(Gender.FEMALE, user.genderOption)
+    }
+
+    @Test
+    fun genderOption_whenGenderCodeIsNull_thenReturnsNull() {
+        // Given
+        val user = createTestUser(genderCode = null)
+
+        // When & Then
+        assertNull(user.genderOption)
+    }
+
+    @Test
+    fun genderOption_whenGenderCodeIsInvalid_thenReturnsNull() {
+        // Given
+        val user = createTestUser(genderCode = 999)
+
+        // When & Then
+        assertNull(user.genderOption)
+    }
+
+    @Test
+    fun hasJournals_whenJournalCountIsGreaterThanZero_thenReturnsTrue() {
+        // Given
+        val user = createTestUser(journalCount = 5)
+
+        // When & Then
+        assertTrue(user.hasJournals)
+    }
+
+    @Test
+    fun hasJournals_whenJournalCountIsZero_thenReturnsFalse() {
+        // Given
+        val user = createTestUser(journalCount = 0)
+
+        // When & Then
+        assertFalse(user.hasJournals)
+    }
+
+    @Test
+    fun hasJournals_whenJournalCountIsNull_thenReturnsFalse() {
+        // Given
+        val user = createTestUser(journalCount = null)
+
+        // When & Then
+        assertFalse(user.hasJournals)
+    }
+
+    @Test
+    fun hasFriends_whenFriendsCountIsGreaterThanZero_thenReturnsTrue() {
+        // Given
+        val user = createTestUser(friendsCount = 3)
+
+        // When & Then
+        assertTrue(user.hasFriends)
+    }
+
+    @Test
+    fun hasFriends_whenFriendsCountIsZero_thenReturnsFalse() {
+        // Given
+        val user = createTestUser(friendsCount = 0)
+
+        // When & Then
+        assertFalse(user.hasFriends)
+    }
+
+    @Test
+    fun hasFriends_whenFriendsCountIsNull_thenReturnsFalse() {
+        // Given
+        val user = createTestUser(friendsCount = null)
+
+        // When & Then
+        assertFalse(user.hasFriends)
+    }
+
+    @Test
+    fun hasUsedParks_whenParksCountIsValidAndGreaterThanZero_thenReturnsTrue() {
+        // Given
+        val user = createTestUser(parksCount = "5")
+
+        // When & Then
+        assertTrue(user.hasUsedParks)
+    }
+
+    @Test
+    fun hasUsedParks_whenParksCountIsZero_thenReturnsFalse() {
+        // Given
+        val user = createTestUser(parksCount = "0")
+
+        // When & Then
+        assertFalse(user.hasUsedParks)
+    }
+
+    @Test
+    fun hasUsedParks_whenParksCountIsNull_thenReturnsFalse() {
+        // Given
+        val user = createTestUser(parksCount = null)
+
+        // When & Then
+        assertFalse(user.hasUsedParks)
+    }
+
+    @Test
+    fun hasUsedParks_whenParksCountIsInvalidString_thenReturnsFalse() {
+        // Given
+        val user = createTestUser(parksCount = "invalid")
+
+        // When & Then
+        assertFalse(user.hasUsedParks)
+    }
+
+    @Test
+    fun hasUsedParks_whenParksCountIsEmptyString_thenReturnsFalse() {
+        // Given
+        val user = createTestUser(parksCount = "")
+
+        // When & Then
+        assertFalse(user.hasUsedParks)
+    }
+
+    @Test
+    fun hasAddedParks_whenAddedParksListIsNotEmpty_thenReturnsTrue() {
+        // Given
+        val park = createTestPark()
+        val user = createTestUser(addedParks = listOf(park))
+
+        // When & Then
+        assertTrue(user.hasAddedParks)
+    }
+
+    @Test
+    fun hasAddedParks_whenAddedParksIsNull_thenReturnsFalse() {
+        // Given
+        val user = createTestUser(addedParks = null)
+
+        // When & Then
+        assertFalse(user.hasAddedParks)
+    }
+
+    @Test
+    fun hasAddedParks_whenAddedParksListIsEmpty_thenReturnsFalse() {
+        // Given
+        val user = createTestUser(addedParks = emptyList())
+
+        // When & Then
+        assertFalse(user.hasAddedParks)
+    }
+}

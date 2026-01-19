@@ -28,6 +28,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * @param name Название мероприятия
  * @param dateString Дата проведения мероприятия
  * @param address Адрес мероприятия (город, страна)
+ * @param onClick Обработчик нажатия на элемент
  */
 @Composable
 fun EventRowView(
@@ -35,9 +36,13 @@ fun EventRowView(
     imageStringURL: String?,
     name: String,
     dateString: String,
-    address: String
+    address: String,
+    onClick: (() -> Unit)? = null
 ) {
-    FormCardContainer(modifier = modifier) {
+    FormCardContainer(
+        modifier = modifier,
+        onClick = onClick
+    ) {
         FormRowContainer(
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.spacedBy(12.dp),

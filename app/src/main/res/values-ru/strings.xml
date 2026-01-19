@@ -3,10 +3,15 @@
     <string name="app_name">WorkOut</string>
     <string name="parks">Площадки</string>
     <string name="parks_title">Площадки (%1$s)</string>
+    <string name="filter_parks">Фильтр площадок</string>
     <string name="events">Мероприятия</string>
+    <string name="events_title">Мероприятия</string>
     <string name="messages">Сообщения</string>
+    <string name="messages_title">Сообщения</string>
     <string name="profile">Профиль</string>
+    <string name="profile_title">Профиль</string>
     <string name="more">Ещё</string>
+    <string name="more_title">Ещё</string>
     <string name="settings">Настройки</string>
     <string name="loading">Загрузка…</string>
 
@@ -201,4 +206,7 @@
         <item quantity="many">%1$d фотографий</item>
         <item quantity="other">%1$d фотографий</item>
     </plurals>
+
+    <string name="error_label">Ошибка!</string>
+    <string name="try_again_button">Попробовать снова</string>
 </resources>

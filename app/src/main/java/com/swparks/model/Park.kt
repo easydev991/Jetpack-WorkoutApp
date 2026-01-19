@@ -2,7 +2,6 @@ package com.swparks.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import org.w3c.dom.Comment
 
 /**
  * Модель площадки для воркаута

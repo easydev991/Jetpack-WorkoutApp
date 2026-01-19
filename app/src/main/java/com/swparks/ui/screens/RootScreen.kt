@@ -1,88 +1,172 @@
 package com.swparks.ui.screens
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import com.swparks.model.TabBarItem
-import com.swparks.ui.screens.events.EventsNavHost
-import com.swparks.ui.screens.messages.MessagesNavHost
+import com.swparks.model.Park
+import com.swparks.navigation.BottomNavigationBar
+import com.swparks.navigation.Screen
+import com.swparks.navigation.rememberAppState
+import com.swparks.ui.screens.events.EventsScreen
+import com.swparks.ui.screens.messages.MessagesRootScreen
 import com.swparks.ui.screens.more.MoreScreen
-import com.swparks.ui.screens.parks.ParksNavHost
-import com.swparks.ui.screens.profile.ProfileNavHost
+import com.swparks.ui.screens.parks.ParksRootScreen
+import com.swparks.ui.screens.profile.ProfileRootScreen
+import com.swparks.utils.ReadJSONFromAssets
+import com.swparks.utils.WorkoutAppJson
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RootScreen() {
-    val rootNavController = rememberNavController()
+    val appState = rememberAppState()
+
     Scaffold(
         bottomBar = {
-            BottomNavigationView(navController = rootNavController)
+            BottomNavigationBar(appState = appState)
         }
-    ) { padding ->
+    ) { paddingValues ->
         NavHost(
-            rootNavController,
-            startDestination = TabBarItem.Parks.route,
-            modifier = Modifier.padding(padding)
+            navController = appState.navController,
+            startDestination = Screen.Parks.route,
+            modifier = Modifier.padding(paddingValues),
         ) {
-            composable(TabBarItem.Parks.route) {
-                ParksNavHost()
+            // Вкладка "Площадки"
+            composable(route = Screen.Parks.route) {
+                val context = LocalContext.current
+                val parks = remember {
+                    val oldParks = ReadJSONFromAssets(context, "parks.json")
+                    WorkoutAppJson.decodeFromString<List<Park>>(oldParks)
+                }
+                ParksRootScreen(
+                    parks = parks,
+                )
             }
-            composable(TabBarItem.Events.route) {
-                EventsNavHost()
+
+            // Вкладка "Мероприятия"
+            composable(route = Screen.Events.route) {
+                EventsScreen()
             }
-            composable(TabBarItem.Messages.route) {
-                MessagesNavHost()
+
+            // Вкладка "Сообщения"
+            composable(route = Screen.Messages.route) {
+                MessagesRootScreen()
             }
-            composable(TabBarItem.Profile.route) {
-                ProfileNavHost()
+
+            // Вкладка "Профиль"
+            composable(route = Screen.Profile.route) {
+                ProfileRootScreen()
             }
-            composable(TabBarItem.More.route) {
+
+            // Вкладка "Ещё"
+            composable(route = Screen.More.route) {
                 MoreScreen()
             }
-        }
-    }
-}
 
-@Composable
-private fun BottomNavigationView(navController: NavController) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val items = listOf(
-        TabBarItem.Parks,
-        TabBarItem.Events,
-        TabBarItem.Messages,
-        TabBarItem.Profile,
-        TabBarItem.More
-    )
-    NavigationBar(tonalElevation = 0.dp) {
-        items.forEach { item ->
-            val isSelected = item.route == navBackStackEntry?.destination?.route
-            NavigationBarItem(
-                alwaysShowLabel = false,
-                selected = isSelected,
-                label = { item.Label() },
-                icon = { item.Icon(isSelected = isSelected) },
-                onClick = {
-                    navController.navigate(item.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            )
+            // Детальные экраны площадок (будут добавлены позже)
+            composable(route = Screen.ParkDetail.route) {
+                // TODO: Реализовать ParkDetailScreen
+            }
+
+            composable(route = Screen.CreatePark.route) {
+                // TODO: Реализовать CreateParkScreen
+            }
+
+            composable(route = Screen.EditPark.route) {
+                // TODO: Реализовать EditParkScreen
+            }
+
+            // Детальные экраны мероприятий (будут добавлены позже)
+            composable(route = Screen.EventDetail.route) {
+                // TODO: Реализовать EventDetailScreen
+            }
+
+            composable(route = Screen.CreateEvent.route) {
+                // TODO: Реализовать CreateEventScreen
+            }
+
+            composable(route = Screen.EditEvent.route) {
+                // TODO: Реализовать EditEventScreen
+            }
+
+            // Экраны сообщений (будут добавлены позже)
+            composable(route = Screen.Chat.route) {
+                // TODO: Реализовать ChatScreen
+            }
+
+            composable(route = Screen.Friends.route) {
+                // TODO: Реализовать FriendsScreen
+            }
+
+            composable(route = Screen.UserSearch.route) {
+                // TODO: Реализовать UserSearchScreen
+            }
+
+            // Экраны профиля (будут добавлены позже)
+            composable(route = Screen.EditProfile.route) {
+                // TODO: Реализовать EditProfileScreen
+            }
+
+            composable(route = Screen.UserParks.route) {
+                // TODO: Реализовать UserParksScreen
+            }
+
+            composable(route = Screen.UserTrainingParks.route) {
+                // TODO: Реализовать UserTrainingParksScreen
+            }
+
+            composable(route = Screen.Blacklist.route) {
+                // TODO: Реализовать BlacklistScreen
+            }
+
+            composable(route = Screen.JournalsList.route) {
+                // TODO: Реализовать JournalsListScreen
+            }
+
+            composable(route = Screen.JournalDetail.route) {
+                // TODO: Реализовать JournalDetailScreen
+            }
+
+            composable(route = Screen.CreateJournal.route) {
+                // TODO: Реализовать CreateJournalScreen
+            }
+
+            composable(route = Screen.EditJournal.route) {
+                // TODO: Реализовать EditJournalScreen
+            }
+
+            composable(route = Screen.AddJournalEntry.route) {
+                // TODO: Реализовать AddJournalEntryScreen
+            }
+
+            composable(route = Screen.ChangePassword.route) {
+                // TODO: Реализовать ChangePasswordScreen
+            }
+
+            composable(route = Screen.SelectCountry.route) {
+                // TODO: Реализовать SelectCountryScreen
+            }
+
+            composable(route = Screen.SelectCity.route) {
+                // TODO: Реализовать SelectCityScreen
+            }
+
+            // Экраны настроек (будут добавлены позже)
+            composable(route = Screen.ThemeIcon.route) {
+                // TODO: Реализовать ThemeIconScreen
+            }
+
+            // Экраны авторизации (модальные окна)
+            composable(route = Screen.Login.route) {
+                // TODO: Реализовать LoginScreen как модальное окно
+            }
+
+            composable(route = Screen.Register.route) {
+                // TODO: Реализовать RegisterScreen как модальное окно
+            }
         }
     }
 }

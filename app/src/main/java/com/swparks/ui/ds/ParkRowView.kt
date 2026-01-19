@@ -31,6 +31,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * @param name Название площадки
  * @param address Адрес площадки (может быть любой, какой пришлет сервер)
  * @param peopleTrainCount Количество людей, тренирующихся на площадке
+ * @param onClick Обработчик нажатия на элемент
  */
 @Composable
 fun ParkRowView(
@@ -38,9 +39,13 @@ fun ParkRowView(
     imageStringURL: String?,
     name: String,
     address: String? = null,
-    peopleTrainCount: Int
+    peopleTrainCount: Int,
+    onClick: (() -> Unit)? = null
 ) {
-    FormCardContainer(modifier = modifier) {
+    FormCardContainer(
+        modifier = modifier,
+        onClick = onClick
+    ) {
         FormRowContainer(
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.spacedBy(12.dp),

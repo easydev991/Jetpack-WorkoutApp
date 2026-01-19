@@ -17,7 +17,7 @@ import java.io.IOException
 
 sealed interface EventsUIState {
     data class Success(val events: List<Event>): EventsUIState
-    object Error: EventsUIState
+    data class Error(val message: String?): EventsUIState
     object Loading: EventsUIState
 }
 
@@ -36,9 +36,9 @@ class EventsViewModel(private val swRepository: SWRepository): ViewModel() {
                 val pastEvents = swRepository.getPastEvents()
                 EventsUIState.Success(events = pastEvents)
             } catch (e: IOException) {
-                EventsUIState.Error
+                EventsUIState.Error(message = e.message)
             } catch (e: HttpException) {
-                EventsUIState.Error
+                EventsUIState.Error(message = e.message())
             }
         }
     }

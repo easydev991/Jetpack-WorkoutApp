@@ -22,8 +22,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
-import com.swparks.ui.theme.dark_incoming_message
-import com.swparks.ui.theme.light_incoming_message
 
 /**
  * Тип сообщения (входящее/исходящее)
@@ -65,8 +63,7 @@ fun MessageBubbleView(
     dateString: String
 ) {
     val bubbleColor = when (messageType) {
-        MessageType.INCOMING -> if (MaterialTheme.colorScheme.isLight())
-            light_incoming_message else dark_incoming_message
+        MessageType.INCOMING -> MaterialTheme.colorScheme.surfaceVariant
         MessageType.SENT -> MaterialTheme.colorScheme.primary
     }
     val isIncoming = messageType == MessageType.INCOMING

@@ -2,6 +2,7 @@
     <string name="app_name">WorkOut</string>
     <string name="parks">Parks</string>
     <string name="parks_title">Parks (%1$s)</string>
+    <string name="filter_parks">Filter Parks</string>
     <string name="events">Events</string>
     <string name="messages">Messages</string>
     <string name="profile">Profile</string>
@@ -100,6 +101,11 @@
     <string name="workout_shop">WORKOUT shop</string>
     <string name="choose_email_client">Choose an Email client</string>
 
+    <string name="events_title">Events</string>
+    <string name="messages_title">Messages</string>
+    <string name="profile_title">Profile</string>
+    <string name="more_title">More</string>
+
     <string name="parks_filter">Parks filter</string>
     <string name="size">Size</string>
     <string name="type">Type</string>
@@ -186,4 +192,7 @@
         <item quantity="one">%1$d photo</item>
         <item quantity="other">%1$d photos</item>
     </plurals>
+
+    <string name="error_label">Error!</string>
+    <string name="try_again_button">Try again</string>
 </resources>

@@ -4,6 +4,34 @@ alwaysApply: true
 
 # Архитектура SWParks
 
+## Принципы архитектурного подхода
+
+**Основано на:** Официальной архитектуре Android (Now in Android), MVVM и Clean Architecture
+
+### Ключевые принципы
+
+1. **Три слоя архитектуры:**
+   - **Data layer** - источники данных, репозитории, бизнес-логика данных
+   - **Domain layer** - use cases для бизнес-логики UI
+   - **UI layer** - Compose UI и ViewModels
+
+2. **Реактивное программирование:**
+   - Использование Kotlin Flows для потоков данных
+   - **Unidirectional data flow (UDF)** - события текут вниз, данные текут вверх
+   - Higher layers реагируют на изменения в lower layers
+
+3. **Гибридный подход с кэшированием:**
+   - Локальное хранилище (Room) - кэш для офлайн режима и быстрой загрузки
+   - API - основной источник данных (источник правды)
+   - **Разные стратегии для разных типов данных** (см. раздел "Гибридный подход с кэшированием")
+   - Офлайн режим поддерживается только для чтения, создание/редактирование требует сети
+
+4. **Repositories как единый API:**
+   - Единственный способ доступа к данным
+   - Экспонируют данные как потоки (Flow)
+   - Чтение из локального источника с обновлением с сервера
+   - Запись через suspend функции (сразу на сервер, потом в кэш)
+
 ## MVVM
 
 - **Model**: Data layer (Room, repositories, API)
@@ -36,73 +64,502 @@ Presentation (UI, ViewModel)
 
 **Примечание:** Hilt стоит рассмотреть при росте проекта (>15 ViewModel, сложные графы зависимостей).
 
-## Слои
+## Гибридный подход с кэшированием
 
-### Data
+**Для разных типов данных - разные стратегии кэширования:**
 
-- **Room** (опционально) - для кэширования данных офлайн
-- **Repository Implementations**:
-  - `SWRepository` - основной репозиторий для работы с данными (площадки, мероприятия, пользователи и т.д.)
-  - `UserPreferencesRepository` - хранение настроек (тема, язык, токен авторизации)
-- **API Client**: `SWApi` - HTTP клиент для запросов к серверу (Retrofit + Kotlinx Serialization)
-- **Formatter** (опционально) - локализация и форматирование данных
+### Стратегия 1: Read-only с кэшем (площадки, города, страны)
 
-### Domain
+**Для данных, которые только читаются и редко меняются:**
 
-- **Use Cases**: бизнес-логика, один use case - одна ответственность:
-  - **Авторизация**: `LoginUseCase`, `LogoutUseCase`, `RecoveryPasswordUseCase`
-  - **Площадки**: `GetParksUseCase`, `GetParkDetailUseCase`, `CreateParkUseCase`, `UpdateParkUseCase`
-  - **Мероприятия**: `GetEventsUseCase`, `GetEventDetailUseCase`, `CreateEventUseCase`, `UpdateEventUseCase`
-  - **Профиль**: `GetUserProfileUseCase`, `UpdateUserProfileUseCase`
-  - **Друзья**: `GetFriendsUseCase`, `GetFriendRequestsUseCase`, `AcceptFriendRequestUseCase`
-  - **Сообщения**: `GetDialogsUseCase`, `GetMessagesUseCase`, `SendMessageUseCase`
-  - **Дневники**: `GetJournalsUseCase`, `GetJournalEntriesUseCase`
-  - И другие use cases для бизнес-логики приложения
-- **Entities**: модели данных:
-  - `User`, `LoginSuccess` - пользователи и авторизация
-  - `Park`, `ParkType`, `ParkSize` - площадки
-  - `Event`, `EventKind` - мероприятия
-  - `Comment` - комментарии
-  - `Photo` - фотографии
-  - `Country`, `City` - географические данные
-  - `FriendAction`, `BlacklistAction` - действия над друзьями/черным списком
-  - `Gender`, `TabBarItem` - вспомогательные модели
-- **Repository Interfaces** (опционально) - абстракции репозиториев для тестирования
+- **Чтение:** Сразу из кэша (Room), затем обновление с сервера
+- **Офлайн режим:** Чтение из кэша работает ✅
+- **Создание/редактирование:** Сразу на сервер, потом в кэш
+- **Офлайн создание:** Невозможно ❌ (показать ошибку сети)
 
-### Presentation
+### Стратегия 2: Online-first с дифференцированным кэшем (мероприятия)
 
-- **ViewModels**:
-  - `AuthViewModel` - авторизация и восстановление пароля
-  - `ProfileViewModel`, `EditProfileViewModel` - профиль и редактирование
-  - `ParksListViewModel`, `ParksMapViewModel`, `ParkDetailViewModel`, `EditParkViewModel` - площадки
-  - `EventsViewModel`, `EventDetailViewModel`, `EditEventViewModel` - мероприятия
-  - `DialogsListViewModel`, `ChatViewModel` - сообщения
-  - `JournalsListViewModel`, `JournalDetailViewModel`, `EditJournalViewModel` - дневники
-  - `RootScreenViewModel` - управление навигацией по вкладкам
-  - И другие ViewModels для оставшихся экранов
-- **UI State**: sealed классы (Loading/Success/Error) для состояний экранов:
-  - `AuthUiState`, `ProfileUiState`, `ParksUiState`, `EventsUiState`
-  - `DialogsUiState`, `ChatUiState`, `JournalsUiState`
-- **Screens**: Compose экраны в `ui/screens/`:
-  - `auth/` - экраны авторизации (LoginScreen, RecoveryScreen)
-  - `profile/` - экраны профиля (ProfileScreen, EditProfileScreen, FriendsScreen и т.д.)
-  - `parks/` - экраны площадок (ParksListScreen, ParksMapScreen, ParkDetailScreen и т.д.)
-  - `events/` - экраны мероприятий (EventsScreen, EventDetailScreen, EditEventScreen)
-  - `messages/` - экраны сообщений (DialogsListScreen, ChatScreen)
-  - `journals/` - экраны дневников (JournalsListScreen, JournalDetailScreen и т.д.)
-  - `settings/` - экраны настроек (MoreScreen, ThemeSettingsScreen, AppDataScreen и т.д.)
-  - `RootScreen` - корневой экран с навигацией по вкладкам
-- **Navigation**: `navigation/Screen.kt` - централизованные маршруты навигации
-- **Theme**: тема в `ui/theme/`
-- **Design System**: компоненты дизайн-системы в `ui/ds/` (23 компонента)
+**Для мероприятий - две категории с разными стратегиями кэширования:**
 
-### Utilities
+- **Будущие мероприятия:** НЕ кэшировать, загружать с сервера при каждом открытии приложения
+  - Только хранить пока приложение "живое" (в памяти)
+  - При полном закрытии приложения - очистить кэш будущих мероприятий
+  - При открытии приложения - загружать заново
 
-- **Logger** - интерфейс (аналог JetpackDays - AndroidLogger, NoOpLogger)
-- **Analytics** (опционально) - `FirebaseAnalyticsHelper` для screen_view и событий (только release)
-- **Crash** (опционально) - `CrashlyticsHelper` для отчетов о крашах (только release)
-- **NetworkUtils** (опционально) - утилиты для работы с сетью
-- **ImageUtils** (опционально) - утилиты для работы с изображениями
+- **Прошедшие мероприятия:** Кэшировать как обычные данные
+  - Хранить в Room персистентно
+  - Обновлять с сервера периодически
+
+### Стратегия 3: Online-first без кэша (дневники)
+
+**Для дневников - персональные данные пользователя:**
+
+- **Чтение:** Всегда с сервера
+- **Создание/редактирование:** Сразу на сервер
+- **Офлайн режим:** Невозможен ❌ (показать ошибку сети)
+- **Комментарии к дневникам:** Приходят в том же ответе, что и дневник
+
+### Стратегия 4: Online-first HTTP запросы (сообщения, друзья)
+
+**Для первой итерации - HTTP запросы без polling:**
+
+- **Чтение:** При открытии экрана - запрос к серверу
+- **Отправка сообщений:** Сразу на сервер, затем запрос обновления
+- **Отметка прочитанным:** Сразу на сервер
+- **Офлайн режим:** Невозможен ❌ (показать ошибку сети)
+- **TODO:** Polling можно добавить в будущем для real-time updates
+
+### Стратегия 5: Online-first с кэшем для офлайн (профиль)
+
+**Для профиля пользователя - персональные данные:**
+
+- **Чтение:** С сервера, кэш для офлайн режима
+- **Обновление:** Сразу на сервер, потом в кэш
+- **Офлайн режим:** Чтение из кэша (если есть) ✅, обновление невозможно ❌
+
+### Стратегия 6: Online-first без кэша (авторизация)
+
+**Для авторизации - всегда онлайн:**
+
+- **Авторизация:** Всегда на сервер
+- **Выход:** Удаление токена и всех локальных данных пользователя (без запроса на сервер)
+- **Офлайн режим:** Невозможен ❌
+
+### Стратегия 7: Комментарии (включены в ответе сущности)
+
+**Комментарии к площадкам, мероприятиям, дневникам:**
+
+- **Нет отдельного запроса** для получения комментариев
+- **Комментарии приходят в том же ответе**, что и сущность
+- **Чтение:** При загрузке площадки/мероприятия/дневника - комментарии уже включены
+- **Создание:** Сразу на сервер
+
+### Пример реализации стратегий
+
+**Стратегия 1: Read-only с кэшем (площадки)**
+
+```kotlin
+class ParksRepository(
+    private val parksDao: ParksDao,
+    private val swApi: SWApi,
+) {
+    // Чтение: сначала из кэша, потом обновление с сервера
+    fun getParksFlow(): Flow<List<Park>> = flow {
+        // 1. Сразу выдаем кэшированные данные
+        emit(parksDao.getAll().map { it.toDomain() })
+
+        // 2. Обновляем с сервера
+        try {
+            val remoteParks = swApi.getParks()
+            parksDao.insertAll(remoteParks.map { it.toEntity() })
+            emit(parksDao.getAll().map { it.toDomain() })
+        } catch (e: IOException) {
+            Log.e("ParksRepository", "Ошибка загрузки площадок с сервера: ${e.message}")
+        }
+    }
+
+    // Создание: сразу на сервер, потом в кэш
+    suspend fun createPark(park: Park): Result<Park> = try {
+        val remotePark = swApi.createPark(park.toRequest())
+        parksDao.insert(remotePark.toEntity())
+        Result.success(remotePark.toDomain())
+    } catch (e: IOException) {
+        Result.failure(NetworkException("Не удалось создать площадку. Проверьте интернет-соединение", e))
+    }
+}
+```
+
+**Стратегия 5: Online-first с кэшем для офлайн (профиль)**
+
+```kotlin
+class UsersRepository(
+    private val userDao: UserDao,
+    private val swApi: SWApi,
+) {
+    // Чтение: с сервера, кэш для офлайн режима
+    suspend fun getUserProfile(userId: Long): Result<User> = try {
+        val remoteUser = swApi.getUserProfile(userId)
+        userDao.insert(remoteUser.toEntity())
+        Result.success(remoteUser.toDomain())
+    } catch (e: IOException) {
+        // Ошибка сети - пытаемся из кэша
+        val cachedUser = userDao.getById(userId)
+        if (cachedUser != null) {
+            Log.i("UsersRepository", "Загружен профиль из кэша (офлайн режим)")
+            Result.success(cachedUser.toDomain())
+        } else {
+            Result.failure(NetworkException("Не удалось загрузить профиль. Проверьте интернет-соединение", e))
+        }
+    }
+
+    // Обновление: сразу на сервер, потом в кэш
+    suspend fun updateUserProfile(user: User): Result<User> = try {
+        val remoteUser = swApi.updateUserProfile(user.id, user.toRequest())
+        userDao.insert(remoteUser.toEntity())
+        Result.success(remoteUser.toDomain())
+    } catch (e: IOException) {
+        Result.failure(NetworkException("Не удалось обновить профиль. Проверьте интернет-соединение", e))
+    }
+}
+```
+
+## Data Layer
+
+### Основные принципы
+
+**Data Layer - гибридный источник данных:**
+
+- **Сетевые источники** - основной источник данных (источник правды)
+- **Локальное хранилище** - кэш для офлайн режима и быстрой загрузки
+- **Разные стратегии** для разных типов данных (см. раздел "Гибридный подход с кэшированием")
+- **Чтение данных** - из локального хранилища (если применимо) + обновление с сервера
+- **Запись данных** - через suspend функции репозиториев (сразу на сервер, потом в кэш)
+- **Ошибки при чтении** - обрабатываются корректно, показывают кэшированные данные
+- **Ошибки при синхронизации** - обрабатываются с exponential backoff
+
+### Компоненты Data Layer
+
+#### 1. Локальные источники данных
+
+- **Room** - для кэширования данных офлайн:
+  - Entities: `ParkEntity`, `EventEntity`, `UserEntity` и т.д.
+  - DAO: `ParkDao`, `EventDao`, `UserDao` и т.д.
+  - Database: `SWDatabase`
+  - Converters - конвертеры для сложных типов
+
+- **DataStore** - для настроек и предпочтений:
+  - Proto DataStore для структурированных данных (настройки приложения)
+  - Preferences DataStore для простых настроек (тема, язык, токен авторизации)
+
+#### 2. Сетевые источники данных
+
+- **Retrofit + Kotlinx Serialization** - HTTP клиент для API запросов:
+  - `SWApi` - API клиент для работы с сервером workout.su
+  - Endpoint-функции для всех API запросов
+  - Конвертеры для сериализации/десериализации JSON
+
+#### 3. Repository Implementations
+
+**Принципы репозиториев:**
+
+- **Единый API доступа к данным** для других слоев
+- **Экспонируют данные как Flow** (не как snapshot)
+- **Чтение с обновлением** - из локального источника (если применимо) + обновление с сервера
+- **Запись через suspend функции** - сразу на сервер, потом в кэш (если применимо)
+- **Обработка ошибок синхронизации** без прерывания работы UI
+
+**Репозитории:**
+
+- **ParksRepository** - работа с площадками (Стратегия 1)
+- **EventsRepository** - работа с мероприятиями (Стратегия 2)
+- **UsersRepository** - работа с пользователями (Стратегия 5)
+- **JournalsRepository** - работа с дневниками (Стратегия 3)
+- **MessagesRepository** - работа с сообщениями (Стратегия 4)
+- **FriendsRepository** - работа с друзьями (Стратегия 4)
+- **AuthRepository** - работа с авторизацией (Стратегия 6)
+- **UserPreferencesRepository** - хранение настроек, токена, состояния авторизации
+
+#### 4. Data Sources
+
+Репозитории могут зависеть от одного или нескольких источников данных:
+
+**Пример для ParksRepository:**
+
+| Название       | Backed by         | Назначение                                      |
+|----------------|-------------------|-------------------------------------------------|
+| ParksDao       | Room/SQLite       | Персистентные данные площадок                    |
+| SWApi          | Remote API        | Данные площадок с сервера                        |
+| Preferences    | DataStore         | Настройки фильтров и сортировки площадок         |
+
+### Обработка ошибок сети
+
+**Все сетевые операции должны корректно обрабатывать ошибки:**
+
+- `IOException` - ошибки сети, показывать пользователю понятное сообщение
+- `HttpException` - ошибки сервера (400, 401, 404, 500 и т.д.)
+- Валидация на сервере может отклонить данные - пользователь получит ошибку
+
+**Пример обработки ошибок:**
+
+```kotlin
+suspend fun createPark(park: Park): Result<Park> = try {
+    val remotePark = swApi.createPark(park.toRequest())
+    parksDao.insert(remotePark.toEntity())
+    Result.success(remotePark.toDomain())
+} catch (e: HttpException) {
+    // Ошибка сервера (400, 401, 404, 500 и т.д.)
+    val errorMessage = when (e.code()) {
+        400 -> "Неверные данные формы"
+        401 -> "Необходима авторизация"
+        404 -> "Ресурс не найден"
+        500 -> "Ошибка сервера"
+        else -> "Неизвестная ошибка"
+    }
+    Result.failure(ServerException(errorMessage, e))
+} catch (e: IOException) {
+    // Ошибка сети
+    Result.failure(NetworkException("Не удалось создать площадку. Проверьте интернет-соединение", e))
+}
+```
+
+## Domain Layer
+
+### Основные принципы
+
+**Domain Layer содержит use cases:**
+
+- Классы с одним вызываемым методом (`operator fun invoke`)
+- Бизнес-логика для упрощения ViewModels
+- Устранение дублирования логики
+- Комбинирование и трансформация данных из репозиториев
+
+**Важно:** Domain layer в swparks **не содержит** use cases для обработки событий. События обрабатываются UI layer через прямые вызовы методов репозиториев.
+
+### Use Cases
+
+**Принципы:**
+
+- **Один use case - одна ответственность**
+- Use case вызывает `operator fun invoke` для вызова
+- Используют данные из репозиториев (через suspend функции или Flow)
+- Комбинируют данные из нескольких репозиториев
+- Трансформируют данные для использования в UI
+
+**Примеры Use Cases:**
+
+**Авторизация:**
+
+- `LoginUseCase` - авторизация пользователя
+- `LogoutUseCase` - выход из учетной записи
+- `RecoveryPasswordUseCase` - восстановление пароля
+
+**Площадки:**
+
+- `GetParksUseCase` - получить список площадок (с фильтрацией)
+- `GetParkDetailUseCase` - получить детальную информацию о площадке (с комментариями)
+- `CreateParkUseCase` - создать новую площадку
+- `UpdateParkUseCase` - обновить площадку
+- `DeleteParkUseCase` - удалить площадку
+
+**Мероприятия:**
+
+- `GetUpcomingEventsUseCase` - получить список будущих мероприятий (всегда с сервера)
+- `GetPastEventsUseCase` - получить список прошедших мероприятий (из кэша с обновлением)
+- `CreateEventUseCase` - создать новое мероприятие
+- `UpdateEventUseCase` - обновить мероприятие
+- `DeleteEventUseCase` - удалить мероприятие
+
+**Профиль:**
+
+- `GetUserProfileUseCase` - получить профиль пользователя
+- `UpdateUserProfileUseCase` - обновить профиль
+- `SearchUsersUseCase` - поиск пользователей по нику
+
+**Друзья:**
+
+- `GetFriendsUseCase` - получить список друзей
+- `GetFriendRequestsUseCase` - получить запросы в друзья
+- `AcceptFriendRequestUseCase` - принять запрос в друзья
+- `RejectFriendRequestUseCase` - отклонить запрос
+- `SendFriendRequestUseCase` - отправить запрос в друзья
+
+**Сообщения:**
+
+- `GetDialogsUseCase` - получить список диалогов
+- `GetMessagesUseCase` - получить сообщения чата
+- `SendMessageUseCase` - отправить сообщение
+- `MarkMessagesAsReadUseCase` - отметить сообщения прочитанными
+- `DeleteDialogUseCase` - удалить диалог
+
+**Дневники:**
+
+- `GetJournalsUseCase` - получить список дневников
+- `GetJournalEntriesUseCase` - получить записи дневника
+- `CreateJournalUseCase` - создать дневник
+- `UpdateJournalUseCase` - обновить дневник
+- `DeleteJournalUseCase` - удалить дневник
+
+**Комментарии:**
+
+- `GetParkCommentsUseCase` - получить комментарии площадки (включены в ответе площадки)
+- `GetEventCommentsUseCase` - получить комментарии мероприятия (включены в ответе мероприятия)
+- `CreateCommentUseCase` - создать комментарий
+- `UpdateCommentUseCase` - обновить комментарий
+- `DeleteCommentUseCase` - удалить комментарий
+
+### Entities
+
+**Domain entities - модели данных для бизнес-логики:**
+
+- `User`, `LoginSuccess` - пользователи и авторизация
+- `Park`, `ParkType`, `ParkSize` - площадки
+- `Event`, `EventKind` - мероприятия
+- `Comment` - комментарии
+- `Photo` - фотографии
+- `Country`, `City` - географические данные
+- `FriendAction`, `BlacklistAction` - действия над друзьями/черным списком
+- `Gender` - вспомогательные модели
+
+### Repository Interfaces (опционально)
+
+**Абстракции репозиториев для тестирования:**
+
+- `ParksRepository` - интерфейс репозитория площадок
+- `EventsRepository` - интерфейс репозитория мероприятий
+- `UsersRepository` - интерфейс репозитория пользователей
+- И т.д.
+
+## UI Layer
+
+### Основные принципы
+
+**UI Layer состоит из:**
+
+- **UI элементы**, созданные с помощью Jetpack Compose
+- **Android ViewModels** для управления состоянием UI
+
+**ViewModels:**
+
+- Получают данные из use cases или репозиториев
+- Трансформируют потоки в UI state
+- UI элементы отражают state
+- Пользовательские взаимодействия передаются как события в ViewModel
+
+### Моделирование UI State
+
+**UI state моделируется как sealed иерархия:**
+
+- Используются sealed interfaces и immutable data classes
+- State объекты эммитятся только через трансформацию потоков данных
+- UI state всегда отражает данные приложения (данные - источник правды)
+- UI элементы обрабатывают все возможные состояния
+
+**Пример: Список площадок на ParksListScreen:**
+
+```kotlin
+sealed class ParksUiState {
+    data object Loading : ParksUiState()
+    data class Success(val parks: List<Park>) : ParksUiState()
+    data class Error(val message: String) : ParksUiState()
+}
+```
+
+### Трансформация потоков в UI State
+
+**ViewModels получают потоки данных (cold flows) из use cases или репозиториев:**
+
+- Потоки комбинируются через `combine` или трансформируются через `map`
+- Создается единый поток UI state
+- Поток конвертируется в hot flow через `stateIn`
+- StateFlow позволяет UI элементам читать последнее известное состояние
+
+**Пример отображения списка площадок:**
+
+```kotlin
+class ParksListViewModel(
+    getParksUseCase: GetParksUseCase,
+) : ViewModel() {
+
+    val uiState: StateFlow<ParksUiState> = getParksUseCase()
+        .map<List<Park>, ParksUiState> { ParksUiState.Success(it) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = ParksUiState.Loading
+        )
+}
+```
+
+### Обработка пользовательских взаимодействий
+
+**Действия пользователя передаются из UI элементов в ViewModels через обычные вызовы методов:**
+
+- Методы передаются в UI элементы как lambda-выражения
+- ViewModel обрабатывает действия, вызывая репозитории
+
+**Пример фильтрации площадок:**
+
+```kotlin
+// ParksListViewModel
+fun onFilterChange(filter: ParkFilter) {
+    _currentFilter.value = filter
+}
+```
+
+**В UI:**
+
+```kotlin
+ParksListScreen(
+    onFilterChange = { viewModel.onFilterChange(it) }
+)
+```
+
+### ViewModels
+
+**Правила:**
+
+- Получают данные из use cases или репозиториев
+- Трансформируют потоки данных в UI state через `stateIn`
+- Обрабатывают пользовательские события
+- Используют `viewModelScope` для корутин (автоматическая отмена при очистке)
+- **НЕ содержат бизнес-логику** (делегируют use cases и репозиториям)
+
+**Примеры ViewModels:**
+
+- `AuthViewModel` - авторизация и восстановление пароля
+- `ProfileViewModel`, `EditProfileViewModel` - профиль и редактирование
+- `ParksListViewModel`, `ParksMapViewModel`, `ParkDetailViewModel`, `EditParkViewModel` - площадки
+- `EventsViewModel`, `EventDetailViewModel`, `EditEventViewModel` - мероприятия
+- `DialogsListViewModel`, `ChatViewModel` - сообщения
+- `JournalsListViewModel`, `JournalDetailViewModel`, `EditJournalViewModel` - дневники
+- И другие ViewModels для оставшихся экранов
+
+### Screens
+
+**Compose экраны в `ui/screens/`:**
+
+**Структура папок:**
+
+- `auth/` - экраны авторизации (LoginScreen, RecoveryScreen, WelcomeScreen)
+- `profile/` - экраны профиля (ProfileScreen, EditProfileScreen, FriendsScreen и т.д.)
+- `parks/` - экраны площадок (ParksListScreen, ParksMapScreen, ParkDetailScreen и т.д.)
+- `events/` - экраны мероприятий (EventsScreen, EventDetailScreen, EditEventScreen)
+- `messages/` - экраны сообщений (DialogsListScreen, ChatScreen)
+- `journals/` - экраны дневников (JournalsListScreen, JournalDetailScreen и т.д.)
+- `settings/` - экраны настроек (MoreScreen, ThemeSettingsScreen, AppDataScreen и т.д.)
+- `RootScreen` - корневой экран с навигацией по вкладкам
+
+### Navigation
+
+**Централизованные маршруты навигации:**
+
+- `navigation/Screen.kt` - sealed class Screen со всеми маршрутами навигации
+- `navigation/TopLevelDestination.kt` - data class для верхнеуровневых назначений (вкладок)
+- `navigation/AppState.kt` - класс для управления состоянием навигации
+- Единый NavHost в RootScreen (отдельные NavHost для каждой вкладки - запрещены)
+
+### Theme
+
+**Тема приложения:**
+
+- `ui/theme/` - тема и цвета
+- Material Design 3
+- Поддержка темной и светлой темы
+- Поддержка динамических цветов (Android 12+)
+
+### Design System
+
+**Компоненты дизайн-системы в `ui/ds/`:**
+
+- ✅ Компоненты дизайн-системы уже реализованы и готовы к использованию (23 компонента)
+- Использовать готовые компоненты для верстки экранов
+
+## Обработка изображений
+
+- **Coil** - загрузка и кэширование изображений
+- **Максимальное количество фото** - 15 шт. для площадок и мероприятий
+- Сжатие изображений перед загрузкой
+- Форматирование для разных размеров экранов
 
 ## Отличия от JetpackDays
 
@@ -117,21 +574,64 @@ Presentation (UI, ViewModel)
 - **Больше экранов** - ~30+ экранов vs ~7 в JetpackDays
 - **Больше моделей** - 14+ моделей vs ~7 в JetpackDays
 - **Сложные бизнес-потоки** - авторизация, друзья, сообщения, дневники (отсутствуют в JetpackDays)
+- **Сетевая синхронизация** - API, токены, кэширование (отсутствует в JetpackDays)
+- **Real-time коммуникация** - HTTP запросы для сообщений и друзей (отсутствует в JetpackDays)
+
+### Архитектурные улучшения (по сравнению с JetpackDays)
+
+- **Гибридный подход** - разные стратегии для разных типов данных
+- **Дифференцированное кэширование** - будущие/прошедшие мероприятия
+- **Комментарии в ответах сущностей** - нет отдельных запросов для комментариев
+- **HTTP запросы для чата** - без WebSocket для первой итерации
+- **Reactive UI state** - StateFlow вместо прямого доступа к данным
+- **Centralized navigation** - единый NavHost и AppState (в JetpackDays нет)
 
 ## Референсы
 
 ### Архитектура и структура
 
+- **Now in Android (android/nowinandroid)** - референс для архитектурного подхода
+  - [Architecture Learning Journey](https://github.com/android/nowinandroid/blob/main/docs/ArchitectureLearningJourney.md)
+  - Три слоя: Data, Domain, UI
+  - Реактивное программирование с Kotlin Flows
+  - Unidirectional data flow
 - **JetpackDays** - референсный проект для базовой архитектуры (MVVM, Clean Architecture, ручной DI)
-- Подход к слоистой архитектуре идентичен JetpackDays
-- Dependency Injection через factory методы (без Hilt) - как в JetpackDays
+- Подход к слоистой архитектуре идентичен Now in Android с адаптацией под swparks
 
 ### Функционал и экраны
 
 - **SwiftUI-WorkoutApp** - iOS-приложение - эталон функциональности и дизайна
+  - [DialogScreen.swift](https://github.com/...) - HTTP запросы для чата без WebSocket
+  - [MessagesClient.swift](https://github.com/...) - протокол сообщений через HTTP
 - При разработке экранов ориентироваться на iOS-версию для консистентности UI и UX
 
 ### Компоненты дизайн-системы
 
 - ✅ Компоненты дизайн-системы уже реализованы и готовы к использованию (23 компонента)
 - Использовать готовые компоненты для верстки экранов
+
+## TODO на будущие итерации
+
+### Polling для real-time updates
+
+**Сообщения и друзья - добавить polling:**
+
+- Сейчас: HTTP запросы при открытии экрана и отправке сообщений
+- Будущее: Polling каждые N секунд для real-time updates
+- Оптимизация: Не обновлять, если пользователь не активен в чате
+
+### WebSocket для real-time updates
+
+**Рассмотреть внедрение WebSocket:**
+
+- Если сервер добавит поддержку WebSocket в будущем
+- Миграция с HTTP запросов на WebSocket для сообщений и друзей
+- Экономия трафика и улучшение UX
+
+### Exponential backoff для синхронизации
+
+**Оптимизировать синхронизацию данных:**
+
+- Добавить exponential backoff для повторных попыток при ошибках сети
+- Логирование ошибок синхронизации
+- Уведомление пользователя при постоянных ошибках
