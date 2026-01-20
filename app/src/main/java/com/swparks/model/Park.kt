@@ -1,5 +1,8 @@
 package com.swparks.model
 
+import com.swparks.data.datetime.FlexibleDateDeserializer
+import com.swparks.data.serialization.IntStringSerializer
+import com.swparks.data.serialization.LongStringSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -8,22 +11,26 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class Park(
+    @Serializable(with = LongStringSerializer::class)
     val id: Long,
     val name: String,
     @SerialName("class_id")
     /**
      * Размер площадки, модель [ParkSize]
      */
+    @Serializable(with = IntStringSerializer::class)
     val sizeID: Int,
     /**
      * Тип площадки, модель [ParkType]
      */
     @SerialName("type_id")
+    @Serializable(with = IntStringSerializer::class)
     val typeID: Int,
     val longitude: String,
     val latitude: String,
     val address: String,
     @SerialName("city_id")
+    @Serializable(with = IntStringSerializer::class)
     val cityID: Int,
     @SerialName("country_id")
     val countryID: Int,
@@ -31,9 +38,12 @@ data class Park(
     val commentsCount: Int? = null,
     val preview: String,
     @SerialName("trainings")
+    @Serializable(with = IntStringSerializer::class)
     val trainingUsersCount: Int? = null,
+    @Serializable(with = FlexibleDateDeserializer::class)
     @SerialName("create_date")
     val createDate: String? = null,
+    @Serializable(with = FlexibleDateDeserializer::class)
     @SerialName("modify_date")
     val modifyDate: String? = null,
     val author: User? = null,

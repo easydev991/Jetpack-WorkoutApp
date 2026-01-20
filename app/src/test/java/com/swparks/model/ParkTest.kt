@@ -15,6 +15,7 @@ class ParkTest {
         lang = "ru"
     )
 
+    @Suppress("LongParameterList")
     private fun createTestPark(
         id: Long = 1L,
         sizeID: Int = 1,
@@ -138,7 +139,7 @@ class ParkTest {
     fun hasComments_whenCommentsListIsNotEmpty_thenReturnsTrue() {
         // Given
         val comment = Comment(
-            commentID = 1L,
+            id = 1L,
             body = "Test comment",
             date = "2024-01-01",
             user = createTestUser()
@@ -245,7 +246,7 @@ class ParkTest {
     fun isFull_whenAllDataIsPresent_thenReturnsTrue() {
         // Given
         val comment = Comment(
-            commentID = 1L,
+            id = 1L,
             body = "Test comment",
             date = "2024-01-01",
             user = createTestUser()

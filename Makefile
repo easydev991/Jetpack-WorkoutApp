@@ -36,11 +36,19 @@ clean:
 ## test: Запуск unit-тестов (JVM, без устройства)
 test:
 	@if [ -f scripts/test_report.py ]; then chmod +x scripts/test_report.py; fi
-	./gradlew test --console=plain || true
-	@echo "Тесты выполнены. Результаты:"
-	@find app/build/test-results -name "*.xml" -exec grep -h "testsuite" {} \;
-	@echo ""
-	@python3 scripts/test_report.py
+	@./gradlew test --console=plain; BUILD_STATUS=$$?; \
+	if [ $$BUILD_STATUS -ne 0 ]; then \
+		echo ""; \
+		echo "================================================================================"; \
+		printf "\033[1;31m[FAIL] СБОРКА ПРОВАЛИЛАСЬ С ОШИБКАМИ\033[0m\n"; \
+		echo "================================================================================"; \
+		exit 1; \
+	else \
+		echo "Тесты выполнены. Результаты:"; \
+		find app/build/test-results -name "*.xml" -exec grep -h "testsuite" {} \; 2>/dev/null || true; \
+		echo ""; \
+		python3 scripts/test_report.py; \
+	fi
 
 ## android-test: Запуск интеграционных тестов на Android устройстве
 android-test:

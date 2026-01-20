@@ -1,0 +1,109 @@
+package com.swparks.data.interceptor
+
+import android.util.Log
+import com.swparks.data.UserPreferencesRepository
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
+import io.mockk.verify
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import okhttp3.Interceptor
+import okhttp3.Request
+import okhttp3.Response
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+
+/** Unit тесты для AuthInterceptor */
+@OptIn(ExperimentalCoroutinesApi::class)
+class AuthInterceptorTest {
+    private lateinit var testDispatcher: TestDispatcher
+
+    @Before
+    fun setup() {
+        testDispatcher = UnconfinedTestDispatcher()
+        Dispatchers.setMain(testDispatcher)
+        mockkStatic(Log::class)
+        every { Log.e(any(), any()) } returns 0
+        every { Log.i(any(), any()) } returns 0
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+        unmockkAll()
+    }
+
+    @Test
+    fun intercept_whenResponseCodeIs401_thenLogsErrorAndCallsClearToken() = runTest {
+        // Given
+        val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
+        val interceptor = AuthInterceptor(mockPreferencesRepository)
+
+        val chain = mockk<Interceptor.Chain>()
+        val request = Request.Builder().url("https://example.com/api/test").build()
+        val response = mockk<Response>()
+
+        every { chain.request() } returns request
+        every { chain.proceed(request) } returns response
+        every { response.code } returns 401
+
+        // When
+        interceptor.intercept(chain)
+
+        // Then
+        verify {
+            Log.e("AuthInterceptor", "Ошибка авторизации (401): токен недействителен или истек")
+        }
+        verify { mockPreferencesRepository.clearToken() }
+    }
+
+    @Test
+    fun intercept_whenResponseCodeIsNot401_thenDoesNotClearToken() = runTest {
+        // Given
+        val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
+        val interceptor = AuthInterceptor(mockPreferencesRepository)
+
+        val chain = mockk<Interceptor.Chain>()
+        val request = Request.Builder().url("https://example.com/api/test").build()
+        val response = mockk<Response>()
+
+        every { chain.request() } returns request
+        every { chain.proceed(request) } returns response
+        every { response.code } returns 200
+
+        // When
+        interceptor.intercept(chain)
+
+        // Then
+        verify(exactly = 0) { mockPreferencesRepository.clearToken() }
+    }
+
+    @Test
+    fun intercept_whenResponseCodeIs500_thenDoesNotClearToken() = runTest {
+        // Given
+        val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
+        val interceptor = AuthInterceptor(mockPreferencesRepository)
+
+        val chain = mockk<Interceptor.Chain>()
+        val request = Request.Builder().url("https://example.com/api/test").build()
+        val response = mockk<Response>()
+
+        every { chain.request() } returns request
+        every { chain.proceed(request) } returns response
+        every { response.code } returns 500
+
+        // When
+        interceptor.intercept(chain)
+
+        // Then
+        verify(exactly = 0) { mockPreferencesRepository.clearToken() }
+    }
+}

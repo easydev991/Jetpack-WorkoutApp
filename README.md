@@ -10,6 +10,12 @@
 - Это Android-версия моего пет-проекта "Street Workout Площадки", которая повторяет функциональность [iOS-версии](https://github.com/easydev991/SwiftUI-WorkoutApp) по мере возможности
 - [Ссылка на старое приложение в Play Market](https://workout.su/android)
 
+## Документация
+
+- [План разработки приложения](docs/development-plan.md)
+- [План реализации API](docs/api-implementation-plan.md)
+- [Сравнение эндпоинтов iOS и Android](docs/api-implementation-comparison.md)
+
 ## Помощь проекту
 
 Информация о том, как внести вклад в проект, доступна в [CONTRIBUTING.md](.github/CONTRIBUTING.md)

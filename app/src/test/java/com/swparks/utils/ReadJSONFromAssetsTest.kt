@@ -61,7 +61,7 @@ class ReadJSONFromAssetsTest {
     @Test
     fun readJSONFromAssets_whenExceptionOccurs_thenReturnsEmptyString() {
         // Given
-        val exception = RuntimeException("Unexpected error")
+        val exception = IOException("Unexpected error")
         every { mockAssetManager.open("test.json") } throws exception
 
         mockkStatic(android.util.Log::class)

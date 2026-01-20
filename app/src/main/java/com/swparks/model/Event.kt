@@ -1,5 +1,8 @@
 package com.swparks.model
 
+import com.swparks.data.datetime.FlexibleDateDeserializer
+import com.swparks.data.serialization.IntStringSerializer
+import com.swparks.data.serialization.LongStringSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -11,6 +14,7 @@ data class Event(
     val id: Long,
     val title: String,
     val description: String,
+    @Serializable(with = FlexibleDateDeserializer::class)
     @SerialName("begin_date")
     val beginDate: String,
     @SerialName("country_id")
@@ -21,10 +25,12 @@ data class Event(
     val commentsCount: Int? = null,
     val preview: String,
     @SerialName("area_id")
+    @Serializable(with = LongStringSerializer::class)
     val parkID: Long? = null,
     val latitude: String,
     val longitude: String,
     @SerialName("user_count")
+    @Serializable(with = IntStringSerializer::class)
     val trainingUsersCount: Int? = null,
     /**
      * `true` - предстоящее мероприятие, `false` - прошедшее

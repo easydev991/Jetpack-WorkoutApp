@@ -9,7 +9,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.JetpackWorkoutApplication
-import com.swparks.data.SWRepository
+import com.swparks.data.repository.SWRepository
 import com.swparks.model.Event
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -46,7 +46,8 @@ class EventsViewModel(private val swRepository: SWRepository): ViewModel() {
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as JetpackWorkoutApplication)
+                val application =
+                    this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as JetpackWorkoutApplication
                 val swRepository = application.container.swRepository
                 EventsViewModel(swRepository = swRepository)
             }

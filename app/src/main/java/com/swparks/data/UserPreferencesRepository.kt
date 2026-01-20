@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 import java.io.IOException
 
 class UserPreferencesRepository(
@@ -37,6 +38,18 @@ class UserPreferencesRepository(
     suspend fun savePreference(isAuthorized: Boolean) {
         dataStore.edit {
             it[is_authorized] = isAuthorized
+        }
+    }
+
+    /**
+     * Синхронно очищает токен авторизации
+     * Используется в AuthInterceptor, который работает в не-suspend контексте
+     */
+    fun clearToken() {
+        runBlocking {
+            dataStore.edit {
+                it[is_authorized] = false
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ package com.swparks.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import com.swparks.data.datetime.FlexibleDateDeserializer
 
 /**
  * Модель пользователя
@@ -30,6 +31,7 @@ data class User(
     val cityID: Int? = null,
     @SerialName("country_id")
     val countryID: Int? = null,
+    @Serializable(with = FlexibleDateDeserializer::class)
     @SerialName("birth_date")
     val birthDate: String? = null,
     val email: String? = null,

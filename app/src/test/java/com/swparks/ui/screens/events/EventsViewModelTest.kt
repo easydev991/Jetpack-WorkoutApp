@@ -1,6 +1,6 @@
 package com.swparks.ui.screens.events
 
-import com.swparks.data.SWRepository
+import com.swparks.data.repository.SWRepository
 import com.swparks.model.Event
 import com.swparks.model.User
 import io.mockk.coEvery

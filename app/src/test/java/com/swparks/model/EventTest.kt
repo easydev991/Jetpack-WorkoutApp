@@ -14,6 +14,7 @@ class EventTest {
         lang = "ru"
     )
 
+    @Suppress("LongParameterList")
     private fun createTestEvent(
         id: Long = 1L,
         description: String = "Test description",
@@ -80,7 +81,7 @@ class EventTest {
     fun hasComments_whenCommentsListIsNotEmpty_thenReturnsTrue() {
         // Given
         val comment = Comment(
-            commentID = 1L,
+            id = 1L,
             body = "Test comment",
             date = "2024-01-01",
             user = createTestUser()
@@ -178,7 +179,7 @@ class EventTest {
     fun isFull_whenAllDataIsPresent_thenReturnsTrue() {
         // Given
         val comment = Comment(
-            commentID = 1L,
+            id = 1L,
             body = "Test comment",
             date = "2024-01-01",
             user = createTestUser()

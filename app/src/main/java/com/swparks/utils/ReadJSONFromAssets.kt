@@ -3,6 +3,7 @@ package com.swparks.utils
 import android.content.Context
 import android.util.Log
 import java.io.BufferedReader
+import java.io.IOException
 import java.io.InputStreamReader
 
 fun ReadJSONFromAssets(
@@ -29,12 +30,11 @@ fun ReadJSONFromAssets(
             "Успешно прочитали JSON из ассетов по адресу: $path",
         )
         return jsonString
-    } catch (e: Exception) {
+    } catch (e: IOException) {
         Log.e(
             identifier,
             "Не смогли прочитать JSON, ошибка: $e.",
         )
-        e.printStackTrace()
         return ""
     }
 }

@@ -7,8 +7,8 @@ import com.swparks.R
  * Действие с чёрным списком по отношению к другому пользователю (заблокировать/разблокировать)
  */
 enum class BlacklistAction(
-    @StringRes val description: Int,
-    @StringRes val alertMessage: Int
+    @param:StringRes val description: Int,
+    @param:StringRes val alertMessage: Int
 ) {
     BLOCK(
         description = R.string.block,
@@ -18,4 +18,12 @@ enum class BlacklistAction(
         description = R.string.unblock,
         alertMessage = R.string.user_will_be_unblocked
     )
+}
+
+/**
+ * Преобразует UI-модель BlacklistAction в API-модель ApiBlacklistOption
+ */
+fun BlacklistAction.toApiOption(): ApiBlacklistOption = when (this) {
+    BlacklistAction.BLOCK -> ApiBlacklistOption.ADD
+    BlacklistAction.UNBLOCK -> ApiBlacklistOption.REMOVE
 }

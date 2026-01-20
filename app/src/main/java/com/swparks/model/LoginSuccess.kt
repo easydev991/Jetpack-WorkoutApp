@@ -9,5 +9,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class LoginSuccess(
     @SerialName("user_id")
-    val userID: Int
+    val userId: Long
 )
