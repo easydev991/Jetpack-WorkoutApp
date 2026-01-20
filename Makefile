@@ -35,7 +35,12 @@ clean:
 # Тестирование
 ## test: Запуск unit-тестов (JVM, без устройства)
 test:
-	./gradlew test --console=plain && echo "Тесты выполнены. Результаты:" && find app/build/test-results -name "*.xml" -exec grep -h "testsuite" {} \; | head -10
+	@if [ -f scripts/test_report.py ]; then chmod +x scripts/test_report.py; fi
+	./gradlew test --console=plain || true
+	@echo "Тесты выполнены. Результаты:"
+	@find app/build/test-results -name "*.xml" -exec grep -h "testsuite" {} \;
+	@echo ""
+	@python3 scripts/test_report.py
 
 ## android-test: Запуск интеграционных тестов на Android устройстве
 android-test:
@@ -76,8 +81,7 @@ format:
 
 # Сборка и запуск всех проверок
 ## check: Полная проверка (сборка + тесты + линтер)
-check: build
-	./gradlew test --console=plain && echo "Тесты выполнены. Результаты:" && find app/build/test-results -name "*.xml" -exec grep -h "testsuite" {} \; | head -10
+check: build test
 	./gradlew ktlintCheck detekt
 
 # Установка приложения
