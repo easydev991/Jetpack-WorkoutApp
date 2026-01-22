@@ -10,15 +10,19 @@
 
 ### Android-приложение (Jetpack-WorkoutApp)
 
-- 🚧 **В начальной стадии разработки**
+- 🚧 **В активной разработке**
 - ✅ Реализованы компоненты дизайн-системы (23 компонента для верстки UI)
-- ✅ Реализованы базовые модели данных (14 моделей)
-- ✅ Реализован репозиторий и API-клиент для работы с сервером
+- ✅ Реализованы модели данных (30+ моделей)
+- ✅ Реализован полный API клиент SWApi с 57 эндпоинтами (все запросы к серверу)
+- ✅ Реализован репозиторий SWRepository для работы с данными
 - ✅ Реализована базовая навигация между экранами через RootScreen
+- ✅ Реализована архитектура безопасности для токена авторизации (CryptoManager, SecureTokenRepository, TokenInterceptor, AuthInterceptor)
+- ✅ Реализованы Use Cases для авторизации (LoginUseCase, LogoutUseCase)
+- ✅ Реализован AuthViewModel для авторизации и смены пароля
+- ✅ Все баги API исправлены (7 из 7)
 - ⚠️ Экраны-заглушки для основных разделов приложения (нет функционала)
 - ⚠️ EventsScreen имеет ViewModel, но функционал минимальный
 - ⚠️ ParksRootScreen отображает данные из assets, но без бизнес-логики
-- ❌ Авторизация не реализована
 - ❌ Большинство экранов не имеют функционала
 - ✅ Namespace изменен на `com.swparks`
 
@@ -59,17 +63,55 @@
 
 #### Реализованные модели данных
 
-- User, LoginSuccess, Park, ParkType, ParkSize
-- Event, EventKind, Country, City, Photo, Comment
-- FriendAction, BlacklistAction, Gender, TabBarItem
+- **Пользователи и авторизация**: User, LoginSuccess, MainUserForm, RegistrationRequest, ResetPasswordRequest, ChangePasswordRequest
+- **Площадки**: Park, ParkType, ParkSize, ParkForm
+- **Мероприятия**: Event, EventKind, EventType, EventForm
+- **Комментарии и фотографии**: Comment, Photo
+- **Друзья и черный список**: FriendAction, BlacklistAction, ApiFriendAction, ApiBlacklistOption
+- **Географические данные**: Country, City, Gender
+- **Навигация**: TabBarItem, TopLevelDestination
+- **Дневники**: JournalResponse, JournalEntryResponse, JournalAccess, EditJournalSettingsRequest
+- **Сообщения**: DialogResponse, MessageResponse, MarkAsReadRequest
+- **Другие**: TextEntryOption, SocialUpdates, ErrorResponse
+
+**Всего:** 30+ моделей данных
 
 #### Реализованная архитектура
 
-- **AppContainer** - контейнер зависимостей
-- **SWRepository / SWRepositoryImp** - репозиторий для работы с данными
+**Data Layer:**
+
+- **AppContainer** - контейнер зависимостей (DI контейнер)
+- **SWRepository** - репозиторий для работы с данными (57 API endpoints)
 - **UserPreferencesRepository** - репозиторий для настроек (DataStore)
-- **SWApi** - API клиент для сетевых запросов
+- **SecureTokenRepository** - репозиторий для защищенного хранения токена авторизации с шифрованием Tink
+
+**Network Layer:**
+
+- **SWApi** - API клиент для сетевых запросов (57 endpoints)
+- **AuthInterceptor** - интерцептор для обработки ошибок 401
+- **TokenInterceptor** - интерцептор для добавления токена авторизации в заголовки
+
+**Security:**
+
+- **CryptoManager** - менеджер шифрования через Tink (AES-128-GCM-HKDF)
+- **EncryptedStringSerializer** - сериализатор для шифрования токена в DataStore
+
+**Domain Layer:**
+
+- **LoginUseCase** - use case для авторизации
+- **LogoutUseCase** - use case для выхода из учетной записи
+- **ServerException, NetworkException** - исключения для обработки ошибок
+
+**Presentation Layer:**
+
+- **AuthViewModel** - ViewModel для авторизации и смены пароля
 - **EventsViewModel** - ViewModel для экрана мероприятий (минимальная функциональность)
+
+**Утилиты:**
+
+- **FlexibleDateDeserializer** - десериализатор дат с поддержкой часовых поясов
+- **NetworkUtils** - утилиты для работы с сетью
+- **JsonUtils, ReadJSONFromAssets** - утилиты для работы с JSON и assets
 
 ---
 
@@ -304,28 +346,39 @@
 - `LoginScreen` - экран входа
 - `RecoveryScreen` - экран восстановления пароля
 - `WelcomeScreen` - экран приветствия (для неавторизованных пользователей)
+- `ChangePasswordScreen` - экран смены пароля
 
 **Основные функции:**
 
 - Вход в сервис workout.su под существующей учетной записью
 - Восстановление пароля от учетной записи
-- Сохранение токена авторизации в DataStore
+- Смена пароля авторизованного пользователя
+- Сохранение токена авторизации в DataStore с шифрованием Tink
 - Проверка авторизации при запуске приложения
+- Выход из учетной записи с очисткой токена и флага авторизации
 
 **Технические задачи:**
 
-- Создать API endpoints для авторизации и восстановления пароля
-- Реализовать LoginScreen с полями для логина и пароля
-- Реализовать RecoveryScreen с полем для email
-- Сохранять токен авторизации в DataStore
-- Реализовать проверку авторизации при запуске приложения
-- Добавить экран приветствия для неавторизованных пользователей
+- ✅ Создать API endpoints для авторизации и восстановления пароля (57 endpoints реализовано)
+- ✅ Реализовать безопасное хранение токена авторизации (CryptoManager, SecureTokenRepository, TokenInterceptor)
+- ✅ Реализовать LoginUseCase для авторизации с сохранением токена
+- ✅ Реализовать LogoutUseCase для выхода с очисткой токена
+- ✅ Реализовать AuthViewModel с интерефейсами ILoginUseCase и ILogoutUseCase
+- ⚠️ Реализовать LoginScreen с полями для логина и пароля
+- ⚠️ Реализовать RecoveryScreen с полем для email
+- ⚠️ Реализовать ChangePasswordScreen с полями для старого и нового пароля
+- ⚠️ Реализовать WelcomeScreen для неавторизованных пользователей
+- ⚠️ Реализовать проверку авторизации при запуске приложения
+- ⚠️ Реализовать защиту экранов с авторизацией при запуске
 
 **Детальные планы:**
 
-- `docs/screens/6_Login_Screen.md` - экран входа
-- `docs/screens/6.1_Recovery_Screen.md` - экран восстановления пароля
-- `docs/screens/6.2_Welcome_Screen.md` - экран приветствия
+- ✅ `docs/auth-token-plan.md` - план безопасной работы с токеном авторизации (ЗАВЕРШЕН)
+- ✅ `docs/api-implementation-plan.md` - план реализации API (57 endpoints - ЗАВЕРШЕН)
+- 📄 `docs/screens/6_Login_Screen.md` - экран входа (НЕ СОЗДАН)
+- 📄 `docs/screens/6.1_Recovery_Screen.md` - экран восстановления пароля (НЕ СОЗДАН)
+- 📄 `docs/screens/6.2_Welcome_Screen.md` - экран приветствия (НЕ СОЗДАН)
+- ✅ `docs/screens/6.6_ChangePasswordScreen.md` - экран смены пароля (СОЗДАН, но не реализован)
 
 ---
 
@@ -524,31 +577,122 @@
 app/src/main/java/com/swparks/
 ├── data/              # Data layer
 │   ├── AppContainer.kt           # DI контейнер
-│   ├── SWRepository.kt           # Репозиторий
-│   └── UserPreferencesRepository.kt # DataStore настройки
-├── model/             # Модели данных (14 моделей)
-│   ├── User, LoginSuccess
-│   ├── Park, ParkType, ParkSize
-│   ├── Event, EventKind
+│   ├── SWRepository.kt           # Репозиторий (57 endpoints)
+│   ├── UserPreferencesRepository.kt # DataStore настройки
+│   ├── SecureTokenRepository.kt   # Репозиторий для защищенного токена
+│   ├── APIError.kt, ErrorResponse.kt, StatusCodeGroup.kt
+│   ├── NetworkUtils.kt
+│   ├── crypto/                   # Шифрование через Tink
+│   │   ├── CryptoManager.kt
+│   │   └── CryptoManagerImpl.kt
+│   ├── datetime/                 # Десериализация дат
+│   │   └── FlexibleDateDeserializer.kt
+│   ├── interceptor/              # Interceptor'ы для OkHttp
+│   │   ├── AuthInterceptor.kt    # Обработка 401
+│   │   └── TokenInterceptor.kt   # Добавление токена в заголовок
+│   ├── serialization/            # Сериализаторы для JSON
+│   │   ├── IntStringSerializer.kt
+│   │   └── LongStringSerializer.kt
+│   └── serializer/              # Сериализатор для шифрования
+│       └── EncryptedStringSerializer.kt
+├── domain/            # Domain layer
+│   ├── exception/               # Исключения
+│   │   ├── NetworkException.kt
+│   │   └── ServerException.kt
+│   └── usecase/                # Use cases
+│       ├── ILoginUseCase.kt
+│       ├── ILogoutUseCase.kt
+│       ├── LoginUseCase.kt
+│       └── LogoutUseCase.kt
+├── model/             # Модели данных (30+ моделей)
+│   ├── User, LoginSuccess, MainUserForm, RegistrationRequest
+│   ├── ResetPasswordRequest, ChangePasswordRequest
+│   ├── Park, ParkType, ParkSize, ParkForm
+│   ├── Event, EventKind, EventType, EventForm
 │   ├── Comment, Photo
-│   ├── FriendAction, BlacklistAction
+│   ├── FriendAction, BlacklistAction, ApiFriendAction, ApiBlacklistOption
 │   ├── Country, City, Gender
-│   └── TabBarItem
+│   ├── TabBarItem, TopLevelDestination
+│   ├── JournalResponse, JournalEntryResponse, JournalAccess
+│   ├── EditJournalSettingsRequest
+│   ├── DialogResponse, MessageResponse, MarkAsReadRequest
+│   ├── TextEntryOption, SocialUpdates, ErrorResponse
+│   └── ... (и другие модели)
 ├── network/           # API клиенты
-│   └── SWApi.kt                  # HTTP клиент
+│   └── SWApi.kt                  # HTTP клиент (57 endpoints)
 ├── ui/
 │   ├── ds/            # Компоненты дизайн-системы (23 компонента)
 │   ├── screens/       # Экраны приложения
-│   │   ├── parks/    # Площадки
-│   │   ├── events/   # Мероприятия
-│   │   ├── profile/  # Профиль
-│   │   ├── messages/ # Сообщения
-│   │   ├── more/     # Настройки
+│   │   ├── events/   # Мероприятия (EventsScreen, EventsViewModel)
+│   │   ├── profile/  # Профиль (ProfileRootScreen - заглушка)
+│   │   ├── messages/ # Сообщения (MessagesRootScreen - заглушка)
+│   │   ├── more/     # Настройки (MoreScreen - заглушка)
+│   │   ├── parks/    # Площадки (ParksRootScreen - заглушка)
 │   │   └── RootScreen.kt
+│   ├── viewmodel/     # ViewModels
+│   │   └── AuthViewModel.kt
 │   └── theme/         # Тема и цвета
+├── navigation/        # Навигация
+│   ├── AppState.kt
+│   ├── Destinations.kt
+│   ├── Navigation.kt
+│   └── TopLevelDestination.kt
 └── utils/             # Утилиты
     ├── JsonUtils.kt
     └── ReadJSONFromAssets.kt
+```
+
+### Структура тестов
+
+```text
+app/src/test/java/com/swparks/                       # Unit-тесты
+├── data/                                          # Тесты Data layer
+│   ├── crypto/                                     # Тесты шифрования
+│   │   └── CryptoManagerIntegrationTest.kt
+│   ├── interceptor/                                 # Тесты интерцепторов
+│   │   ├── AuthInterceptorTest.kt
+│   │   └── TokenInterceptorTest.kt
+│   ├── repository/                                 # Тесты репозитория
+│   │   ├── SWRepositoryTest.kt
+│   │   ├── SWRepositoryAuthTest.kt
+│   │   ├── SWRepositoryProfileTest.kt
+│   │   ├── SWRepositoryFriendsTest.kt
+│   │   ├── SWRepositoryParksTest.kt
+│   │   ├── SWRepositoryEventsTest.kt
+│   │   ├── SWRepositoryMessagesTest.kt
+│   │   ├── SWRepositoryJournalsTest.kt
+│   │   └── SWRepositoryCommentsTest.kt
+│   ├── serialization/                              # Тесты сериализаторов
+│   │   ├── IntStringSerializerTest.kt
+│   │   └── LongStringSerializerTest.kt
+│   ├── serializer/                                 # Тесты сериализаторов
+│   │   └── EncryptedStringSerializerTest.kt
+│   ├── datetime/                                   # Тесты десериализации дат
+│   │   └── FlexibleDateDeserializerTest.kt
+│   └── SecureTokenRepositoryTest.kt               # Тесты защищенного репозитория
+├── domain/                                        # Тесты Domain layer
+│   └── usecase/                                   # Тесты use cases
+│       ├── LoginUseCaseTest.kt
+│       └── LogoutUseCaseTest.kt
+├── model/                                         # Тесты моделей данных
+│   ├── LoginSuccessTest.kt
+│   ├── ParkTest.kt, ParkFormTest.kt
+│   ├── EventTest.kt, EventFormTest.kt
+│   ├── CommentTest.kt
+│   ├── JournalResponseTest.kt, JournalEntryResponseTest.kt
+│   ├── DialogResponseTest.kt, MessageResponseTest.kt
+│   └── ParkDeserializationTest.kt, EventDeserializationTest.kt
+├── network/                                       # Тесты сети
+│   ├── MockSWApi.kt                                # Mock API для тестов
+│   └── MockSWApiTest.kt
+├── ui/viewmodel/                                   # Тесты ViewModels
+│   └── AuthViewModelTest.kt
+└── utils/                                         # Тесты утилит
+    └── ReadJSONFromAssetsTest.kt
+
+app/src/androidTest/java/com/swparks/               # Интеграционные тесты
+└── data/crypto/
+    └── CryptoManagerIntegrationTest.kt               # Интеграционные тесты шифрования
 ```
 
 ### Целевая структура (референс: JetpackDays)
@@ -653,9 +797,63 @@ app/src/main/java/com/swparks/
 - Использовать безопасное разворачивание опционалов (избегать `!!`)
 - После любых изменений в коде выполнять `make format`
 
+### Реализованный API
+
+✅ **57 из 57 endpoints полностью реализованы** (100%)
+
+- **Авторизация и профиль**: 7 endpoints (login, logout, register, resetPassword, changePassword, getProfile, updateProfile)
+- **Друзья и черный список**: 10 endpoints (getFriends, getFriendRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, deleteFriend, getBlacklist, addToBlacklist, removeFromBlacklist, getSocialUpdates)
+- **Страны и города**: 1 endpoint (getCountries)
+- **Площадки**: 15 endpoints (getParks, getPark, createPark, updatePark, deletePark, getUserParks, getComments, createComment, updateComment, deleteComment, reportComment, sendEmailUpdate, setTrainingStatus, updatePark)
+- **Мероприятия**: 12 endpoints (getEvents, getEvent, createEvent, updateEvent, deleteEvent, getUpcomingEvents, getPastEvents, getUserEvents, setEventStatus, getComments, createComment, deleteComment)
+- **Сообщения**: 5 endpoints (getDialogs, getMessages, sendMessage, deleteDialog, markAsRead)
+- **Дневники**: 7 endpoints (getJournals, getJournal, createJournal, updateJournal, deleteJournal, updateJournalSettings, getEntries)
+
+**Статистика:**
+
+- 100% реализация API сервера
+- Все баги исправлены (7 из 7)
+- 0 расхождений с iOS-версией
+
+### Безопасность авторизации
+
+✅ **Полностью реализована безопасная работа с токеном авторизации**
+
+- **CryptoManager** - шифрование через Tink (AES-128-GCM-HKDF)
+- **SecureTokenRepository** - защищенное хранение токена в DataStore с шифрованием
+- **TokenInterceptor** - автоматическое добавление токена в заголовок `Authorization: Basic {token}`
+- **AuthInterceptor** - обработка ошибок 401 и очистка флага авторизации
+- **LoginUseCase, LogoutUseCase** - use cases для авторизации и выхода
+- **AuthViewModel** - ViewModel для авторизации и смены пароля
+
+### Тестирование
+
+- **Unit-тесты**: 35+ тестов для всех основных компонентов
+- **Интеграционные тесты**: CryptoManagerIntegrationTest
+- **MockK для тестирования**: MockSWApi для изолированного тестирования сетевых функций
+- **Turbine для Flow**: тестирование реактивных потоков данных
+- **Все сетевые функции**: тестируются только на моках, без реальных HTTP запросов
+
+### Детальная документация
+
+- ✅ `docs/api-implementation-plan.md` - план реализации API (ЗАВЕРШЕН)
+- ✅ `docs/auth-token-plan.md` - план безопасной работы с токеном (ЗАВЕРШЕН)
+- ✅ `docs/navigation-plan.md` - план навигации
+- 📄 `docs/screens/6.6_ChangePasswordScreen.md` - экран смены пароля (создан, не реализован)
+
 ---
 
 ## История изменений
 
 - 2025-01: Первоначальный план разработки
 - 2026-01-18: Полная актуализация плана - организация по вкладкам навигации, TDD подход, детальные планы для каждого экрана
+- 2026-01-22: Обновление плана на основе фактического состояния проекта:
+  - Реализован полный API клиент SWApi с 57 эндпоинтами
+  - Реализована архитектура безопасности для токена авторизации (CryptoManager, SecureTokenRepository, TokenInterceptor, AuthInterceptor)
+  - Реализованы Use Cases для авторизации (LoginUseCase, LogoutUseCase)
+  - Реализован AuthViewModel для авторизации и смены пароля
+  - Все баги API исправлены (7 из 7)
+  - Обновлен список моделей данных (30+ моделей вместо 14)
+  - Обновлена документация по авторизации (добавлен ChangePasswordScreen)
+  - Обновлена структура проекта с учетом новых компонентов
+  - Добавлена информация о реализованном API и тестах
