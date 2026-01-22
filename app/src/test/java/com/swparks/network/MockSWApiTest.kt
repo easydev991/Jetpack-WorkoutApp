@@ -4,6 +4,7 @@ import com.swparks.model.ChangePasswordRequest
 import com.swparks.model.EditJournalSettingsRequest
 import com.swparks.model.JournalAccess
 import com.swparks.model.MarkAsReadRequest
+import com.swparks.model.ResetPasswordRequest
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -147,25 +148,12 @@ class MockSWApiTest {
         assertEquals("Russia", result.name)
     }
 
-    @Test
-    fun createMockSocialUpdates_whenCalled_thenReturnsSocialUpdates() {
-        // When
-        val result = mockApi.createMockSocialUpdates()
-
-        // Then
-        assertNotNull(result)
-        assertNotNull(result.user)
-        assertEquals(2, result.friends.size)
-        assertEquals(1, result.friendRequests.size)
-        assertEquals(1, result.blacklist.size)
-    }
-
     // ==================== Тесты API методов ====================
 
     @Test
     fun login_whenCalled_thenReturnsMockLoginSuccess() = runTest {
         // When
-        val result = mockApi.login("test_token")
+        val result = mockApi.login()
 
         // Then
         assertNotNull(result)
@@ -174,8 +162,11 @@ class MockSWApiTest {
 
     @Test
     fun resetPassword_whenCalled_thenReturnsMockLoginSuccess() = runTest {
+        // Given
+        val request = ResetPasswordRequest("test_login")
+
         // When
-        val result = mockApi.resetPassword("test_login")
+        val result = mockApi.resetPassword(request)
 
         // Then
         assertNotNull(result)
@@ -213,17 +204,6 @@ class MockSWApiTest {
         // Then
         assertTrue(result.isSuccessful)
         assertEquals(200, result.code())
-    }
-
-    @Test
-    fun getSocialUpdates_whenCalled_thenReturnsMockSocialUpdates() = runTest {
-        // When
-        val result = mockApi.getSocialUpdates(1L)
-
-        // Then
-        assertNotNull(result)
-        assertNotNull(result.user)
-        assertTrue(result.friends.isNotEmpty())
     }
 
     @Test
@@ -558,13 +538,11 @@ class MockSWApiTest {
     fun editJournalSettings_whenCalled_thenReturnsSuccessResponse() = runTest {
         // Given
         val request =
-                EditJournalSettingsRequest.create(
-                        journalId = 123L,
-                        title = "New Title",
-                        userId = 1,
-                        viewAccess = JournalAccess.ALL,
-                        commentAccess = JournalAccess.ALL
-                )
+            EditJournalSettingsRequest.create(
+                title = "New Title",
+                viewAccess = JournalAccess.ALL,
+                commentAccess = JournalAccess.ALL
+            )
 
         // When
         val result = mockApi.editJournalSettings(1L, 123L, request)

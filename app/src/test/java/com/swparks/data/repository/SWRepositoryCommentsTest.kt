@@ -5,7 +5,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import com.swparks.domain.exception.NetworkException
-import com.swparks.domain.exception.ServerException
 import com.swparks.model.TextEntryOption
 import com.swparks.network.SWApi
 import io.mockk.coEvery
@@ -93,15 +92,14 @@ class SWRepositoryCommentsTest {
     }
 
     @Test
-    fun addComment_whenOptionIsJournal_thenCallsAddCommentToJournalEntry() = runTest {
+    fun addComment_whenOptionIsJournal_thenCallsSaveJournalEntry() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
         coEvery {
-            mockApi.addCommentToJournalEntry(
+            mockApi.saveJournalEntry(
                 userId = any(),
                 journalId = any(),
-                entryId = any(),
-                comment = any()
+                message = any()
             )
         } returns mockk(relaxed = true)
 
@@ -109,7 +107,7 @@ class SWRepositoryCommentsTest {
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
         val repository = SWRepositoryImp(mockApi, mockDataStore)
-        val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L, entryId = 123L)
+        val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L)
 
         // When
         val result = repository.addComment(option, "Test comment")
@@ -117,32 +115,12 @@ class SWRepositoryCommentsTest {
         // Then
         assertTrue(result.isSuccess)
         coVerify {
-            mockApi.addCommentToJournalEntry(
+            mockApi.saveJournalEntry(
                 userId = 1L,
                 journalId = 789L,
-                entryId = 123L,
-                comment = "Test comment"
+                message = "Test comment"
             )
         }
-    }
-
-    @Test
-    fun addComment_whenOptionIsJournalWithoutEntryId_thenReturnsFailure() = runTest {
-        // Given
-        val mockApi = mockk<SWApi>()
-
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
-        val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L, entryId = null)
-
-        // When
-        val result = repository.addComment(option, "Test comment")
-
-        // Then
-        assertTrue(result.isFailure)
-        assertTrue(result.exceptionOrNull() is ServerException)
     }
 
     @Test
@@ -235,16 +213,15 @@ class SWRepositoryCommentsTest {
     }
 
     @Test
-    fun editComment_whenOptionIsJournal_thenCallsEditJournalEntryComment() = runTest {
+    fun editComment_whenOptionIsJournal_thenCallsEditJournalEntry() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
         coEvery {
-            mockApi.editJournalEntryComment(
+            mockApi.editJournalEntry(
                 userId = any(),
                 journalId = any(),
                 entryId = any(),
-                commentId = any(),
-                comment = any()
+                newEntryText = any()
             )
         } returns mockk(relaxed = true)
 
@@ -252,7 +229,7 @@ class SWRepositoryCommentsTest {
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
         val repository = SWRepositoryImp(mockApi, mockDataStore)
-        val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L, entryId = 123L)
+        val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L)
 
         // When
         val result = repository.editComment(option, 999L, "Updated comment")
@@ -260,33 +237,13 @@ class SWRepositoryCommentsTest {
         // Then
         assertTrue(result.isSuccess)
         coVerify {
-            mockApi.editJournalEntryComment(
+            mockApi.editJournalEntry(
                 userId = 1L,
                 journalId = 789L,
-                entryId = 123L,
-                commentId = 999L,
-                comment = "Updated comment"
+                entryId = 999L,
+                newEntryText = "Updated comment"
             )
         }
-    }
-
-    @Test
-    fun editComment_whenOptionIsJournalWithoutEntryId_thenReturnsFailure() = runTest {
-        // Given
-        val mockApi = mockk<SWApi>()
-
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
-        val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L, entryId = null)
-
-        // When
-        val result = repository.editComment(option, 999L, "Updated comment")
-
-        // Then
-        assertTrue(result.isFailure)
-        assertTrue(result.exceptionOrNull() is ServerException)
     }
 
     @Test
@@ -360,15 +317,14 @@ class SWRepositoryCommentsTest {
     }
 
     @Test
-    fun deleteComment_whenOptionIsJournal_thenCallsDeleteJournalEntryComment() = runTest {
+    fun deleteComment_whenOptionIsJournal_thenCallsDeleteJournalEntry() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
         coEvery {
-            mockApi.deleteJournalEntryComment(
+            mockApi.deleteJournalEntry(
                 userId = any(),
                 journalId = any(),
-                entryId = any(),
-                commentId = any()
+                entryId = any()
             )
         } returns mockk(relaxed = true)
 
@@ -376,7 +332,7 @@ class SWRepositoryCommentsTest {
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
         val repository = SWRepositoryImp(mockApi, mockDataStore)
-        val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L, entryId = 123L)
+        val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L)
 
         // When
         val result = repository.deleteComment(option, 999L)
@@ -384,32 +340,12 @@ class SWRepositoryCommentsTest {
         // Then
         assertTrue(result.isSuccess)
         coVerify {
-            mockApi.deleteJournalEntryComment(
+            mockApi.deleteJournalEntry(
                 userId = 1L,
                 journalId = 789L,
-                entryId = 123L,
-                commentId = 999L
+                entryId = 999L
             )
         }
-    }
-
-    @Test
-    fun deleteComment_whenOptionIsJournalWithoutEntryId_thenReturnsFailure() = runTest {
-        // Given
-        val mockApi = mockk<SWApi>()
-
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
-        val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L, entryId = null)
-
-        // When
-        val result = repository.deleteComment(option, 999L)
-
-        // Then
-        assertTrue(result.isFailure)
-        assertTrue(result.exceptionOrNull() is ServerException)
     }
 
     @Test

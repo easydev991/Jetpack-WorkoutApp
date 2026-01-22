@@ -8,6 +8,7 @@ import com.swparks.domain.exception.NetworkException
 import com.swparks.model.Event
 import com.swparks.model.EventForm
 import com.swparks.model.EventType
+import com.swparks.model.User
 import com.swparks.network.SWApi
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -47,8 +48,8 @@ class SWRepositoryEventsTest {
         unmockkAll()
     }
 
-    private fun createMockUser(id: Long = 1L): com.swparks.model.User {
-        return com.swparks.model.User(
+    private fun createMockUser(id: Long = 1L): User {
+        return User(
             id = id,
             name = "testuser",
             image = "",

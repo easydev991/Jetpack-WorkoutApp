@@ -52,7 +52,7 @@ class SWRepositoryAuthTest {
         // Given
         val mockSuccess = LoginSuccess(userId = 123L)
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.login("test_token") } returns mockSuccess
+        coEvery { mockApi.login() } returns mockSuccess
 
         val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -65,14 +65,14 @@ class SWRepositoryAuthTest {
         // Then
         assertTrue(result.isSuccess)
         assertEquals(mockSuccess, result.getOrNull())
-        coVerify { mockApi.login("test_token") }
+        coVerify { mockApi.login() }
     }
 
     @Test
     fun login_whenApiThrowsIOException_thenReturnsFailure() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.login(any()) } throws IOException("Network error")
+        coEvery { mockApi.login() } throws IOException("Network error")
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -92,7 +92,7 @@ class SWRepositoryAuthTest {
         // Given
         val mockSuccess = LoginSuccess(userId = 123L)
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.login(null) } returns mockSuccess
+        coEvery { mockApi.login() } returns mockSuccess
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -104,7 +104,7 @@ class SWRepositoryAuthTest {
 
         // Then
         assertTrue(result.isSuccess)
-        coVerify { mockApi.login(null) }
+        coVerify { mockApi.login() }
     }
 
     @Test
@@ -112,7 +112,7 @@ class SWRepositoryAuthTest {
         // Given
         val mockSuccess = LoginSuccess(userId = 123L)
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.resetPassword("test_login") } returns mockSuccess
+        coEvery { mockApi.resetPassword(any()) } returns mockSuccess
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -124,7 +124,7 @@ class SWRepositoryAuthTest {
 
         // Then
         assertTrue(result.isSuccess)
-        coVerify { mockApi.resetPassword("test_login") }
+        coVerify { mockApi.resetPassword(any()) }
     }
 
     @Test

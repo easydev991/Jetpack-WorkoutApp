@@ -222,14 +222,16 @@ class SWRepositoryProfileTest {
     @Test
     fun getSocialUpdates_whenApiReturnsUpdates_thenReturnsSocialUpdates() = runTest {
         // Given
-        val mockUpdates = com.swparks.model.SocialUpdatesResponse(
-            user = createMockUser(),
-            friends = listOf(createMockUser(2L), createMockUser(3L)),
-            friendRequests = listOf(createMockUser(4L)),
-            blacklist = listOf(createMockUser(5L))
-        )
+
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.getSocialUpdates(1L) } returns mockUpdates
+coEvery { mockApi.getUser(1L) } returns createMockUser(1L)
+
+coEvery { mockApi.getFriendsForUser(1L) } returns listOf(createMockUser(2L), createMockUser(3L))
+
+coEvery { mockApi.getFriendRequests() } returns listOf(createMockUser(4L))
+
+coEvery { mockApi.getBlacklist() } returns listOf(createMockUser(5L))
+
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -246,15 +248,31 @@ class SWRepositoryProfileTest {
         assertEquals(2, socialUpdates?.friends?.size)
         assertEquals(1, socialUpdates?.friendRequests?.size)
         assertEquals(1, socialUpdates?.blacklist?.size)
+coVerify { mockApi.getUser(1L) }
+
+coVerify { mockApi.getFriendsForUser(1L) }
+
+coVerify { mockApi.getFriendRequests() }
+
+coVerify { mockApi.getBlacklist() }
+
     }
 
     @Test
     fun getSocialUpdates_whenApiThrowsException_thenReturnsFailure() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.getSocialUpdates(any()) } throws IOException("Network error")
+coEvery { mockApi.getUser(any()) } throws IOException("Network error")
 
-        val mockDataStore = mockk<DataStore<Preferences>>()
+coEvery { mockApi.getFriendsForUser(any()) } throws IOException("Network error")
+
+coEvery { mockApi.getFriendRequests() } throws IOException("Network error")
+
+coEvery { mockApi.getBlacklist() } throws IOException("Network error")
+
+
+val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
+
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
         val repository = SWRepositoryImp(mockApi, mockDataStore)

@@ -5,9 +5,17 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.swparks.data.crypto.CryptoManager
+import com.swparks.data.crypto.CryptoManagerImpl
 import com.swparks.data.interceptor.AuthInterceptor
+import com.swparks.data.interceptor.TokenInterceptor
 import com.swparks.data.repository.SWRepository
 import com.swparks.data.repository.SWRepositoryImp
+import com.swparks.data.serializer.EncryptedStringSerializer
+import com.swparks.domain.usecase.ILoginUseCase
+import com.swparks.domain.usecase.ILogoutUseCase
+import com.swparks.domain.usecase.LoginUseCase
+import com.swparks.domain.usecase.LogoutUseCase
 import com.swparks.network.SWApi
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -16,6 +24,10 @@ import retrofit2.Retrofit
 
 interface AppContainer {
     val swRepository: SWRepository
+
+    // Use cases для авторизации
+    val loginUseCase: ILoginUseCase
+    val logoutUseCase: ILogoutUseCase
 
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
@@ -37,24 +49,49 @@ class DefaultAppContainer(context: Context) : AppContainer {
         isLenient = true
         ignoreUnknownKeys = true
     }
-    
+
+    // ==================== Криптография и хранение токена ====================
+
+    // Создаем CryptoManager для шифрования токена
+    private val cryptoManager: CryptoManager by lazy {
+        CryptoManagerImpl(context)
+    }
+
+    // Создаем EncryptedStringSerializer для шифрования/дешифрования токена
+    private val encryptedStringSerializer: EncryptedStringSerializer by lazy {
+        EncryptedStringSerializer(cryptoManager)
+    }
+
+    // Создаем SecureTokenRepository для безопасного хранения токена
+    private val secureTokenRepository: SecureTokenRepository by lazy {
+        SecureTokenRepository(context.dataStore, encryptedStringSerializer)
+    }
+
     // Создаем UserPreferencesRepository для использования в AuthInterceptor
     private val preferencesRepository: UserPreferencesRepository by lazy {
         UserPreferencesRepository(context.dataStore)
     }
-    
-    // Создаем AuthInterceptor
+
+    // ==================== Interceptors ====================
+
+    // Создаем TokenInterceptor для добавления токена в заголовки
+    private val tokenInterceptor: TokenInterceptor by lazy {
+        TokenInterceptor(secureTokenRepository)
+    }
+
+    // Создаем AuthInterceptor для обработки ошибок 401
     private val authInterceptor: AuthInterceptor by lazy {
         AuthInterceptor(preferencesRepository)
     }
-    
-    // Создаем OkHttpClient с AuthInterceptor
+
+    // Создаем OkHttpClient с обоими interceptors
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
+            .addInterceptor(tokenInterceptor)
             .addInterceptor(authInterceptor)
             .build()
     }
-    
+
     private val retrofit: Retrofit = Retrofit.Builder()
         .baseUrl(baseUrl)
         .client(okHttpClient)
@@ -71,6 +108,16 @@ class DefaultAppContainer(context: Context) : AppContainer {
             swApi = retrofitService,
             dataStore = context.dataStore
         )
+    }
+
+    // ==================== Use cases для авторизации ====================
+
+    override val loginUseCase: ILoginUseCase by lazy {
+        LoginUseCase(secureTokenRepository, swRepository)
+    }
+
+    override val logoutUseCase: ILogoutUseCase by lazy {
+        LogoutUseCase(secureTokenRepository, swRepository)
     }
 
     // ==================== API клиенты для разных функциональных областей ====================

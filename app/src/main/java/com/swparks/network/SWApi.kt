@@ -11,9 +11,8 @@ import com.swparks.model.LoginSuccess
 import com.swparks.model.MarkAsReadRequest
 import com.swparks.model.MessageResponse
 import com.swparks.model.Park
-
-
-import com.swparks.model.SocialUpdatesResponse
+import com.swparks.model.RegistrationRequest
+import com.swparks.model.ResetPasswordRequest
 import com.swparks.model.User
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -32,17 +31,17 @@ import retrofit2.http.Query
 interface SWApi {
     // ==================== АВТОРИЗАЦИЯ И ПРОФИЛЬ ====================
 
-// Регистрация
-@POST("registration")
-suspend fun register(@Body request: com.swparks.model.RegistrationRequest): LoginSuccess
+    // Регистрация
+    @POST("registration")
+    suspend fun register(@Body request: RegistrationRequest): LoginSuccess
 
     // Авторизация
     @POST("auth/login")
-    suspend fun login(@Body token: String?): LoginSuccess
+    suspend fun login(): LoginSuccess
 
     // Сброс пароля
     @POST("auth/reset")
-    suspend fun resetPassword(@Body login: String): LoginSuccess
+    suspend fun resetPassword(@Body request: ResetPasswordRequest): LoginSuccess
 
     // Смена пароля
     @POST("auth/changepass")
@@ -73,10 +72,6 @@ suspend fun register(@Body request: com.swparks.model.RegistrationRequest): Logi
     // Удалить профиль текущего пользователя
     @DELETE("users/current")
     suspend fun deleteUser(): Response<Unit>
-
-    // Получить социальные обновления для пользователя
-    @GET("users/{userId}/social")
-    suspend fun getSocialUpdates(@Path("userId") userId: Long): SocialUpdatesResponse
 
     // ==================== ДРУЗЬЯ И ЧЕРНЫЙ СПИСОК ====================
 
@@ -383,33 +378,5 @@ suspend fun register(@Body request: com.swparks.model.RegistrationRequest): Logi
     suspend fun deleteJournal(
         @Path("userId") userId: Long,
         @Path("journalId") journalId: Long
-    ): Response<Unit>
-
-    // Добавить комментарий к записи в дневнике пользователя
-    @POST("users/{userId}/journals/{journalId}/messages/{entryId}/comments")
-    suspend fun addCommentToJournalEntry(
-        @Path("userId") userId: Long,
-        @Path("journalId") journalId: Long,
-        @Path("entryId") entryId: Long,
-        @Body comment: String
-    ): Response<Unit>
-
-    // Изменить комментарий к записи в дневнике пользователя
-    @POST("users/{userId}/journals/{journalId}/messages/{entryId}/comments/{commentId}")
-    suspend fun editJournalEntryComment(
-        @Path("userId") userId: Long,
-        @Path("journalId") journalId: Long,
-        @Path("entryId") entryId: Long,
-        @Path("commentId") commentId: Long,
-        @Body comment: String
-    ): Response<Unit>
-
-    // Удалить комментарий к записи в дневнике пользователя
-    @DELETE("users/{userId}/journals/{journalId}/messages/{entryId}/comments/{commentId}")
-    suspend fun deleteJournalEntryComment(
-        @Path("userId") userId: Long,
-        @Path("journalId") journalId: Long,
-        @Path("entryId") entryId: Long,
-        @Path("commentId") commentId: Long
     ): Response<Unit>
 }

@@ -91,6 +91,7 @@ dependencies {
     implementation(libs.coil.compose)
     // Preferences
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.google.crypto.tink)
 
     // Room
     implementation(libs.androidx.room.runtime)

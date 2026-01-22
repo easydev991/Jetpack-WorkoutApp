@@ -3,9 +3,9 @@ package com.swparks.data.repository
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import com.swparks.data.APIError
 import com.swparks.data.ErrorResponse
 import com.swparks.data.NetworkUtils
-import com.swparks.data.APIError
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.exception.ServerException
@@ -26,10 +26,13 @@ import com.swparks.model.MarkAsReadRequest
 import com.swparks.model.MessageResponse
 import com.swparks.model.Park
 import com.swparks.model.ParkForm
+import com.swparks.model.RegistrationRequest
+import com.swparks.model.ResetPasswordRequest
 import com.swparks.model.SocialUpdates
 import com.swparks.model.TextEntryOption
 import com.swparks.model.User
 import com.swparks.network.SWApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -51,11 +54,11 @@ interface SWRepository {
     suspend fun savePreference(isAuthorized: Boolean)
 
     // 3.1. Авторизация
-    suspend fun register(request: com.swparks.model.RegistrationRequest): Result<LoginSuccess>
+    suspend fun register(request: RegistrationRequest): Result<LoginSuccess>
     suspend fun login(token: String?): Result<LoginSuccess>
     suspend fun resetPassword(login: String): Result<Unit>
     suspend fun changePassword(current: String, new: String): Result<Unit>
-    
+
     // Принудительный логаут (при ошибке 401)
     suspend fun forceLogout()
 
@@ -136,7 +139,13 @@ interface SWRepository {
  * Все сетевые операции ловят общий Exception и оборачивают в Result.failure().
  * Это преднамеренный выбор для упрощения обработки ошибок в одном месте.
  */
-@Suppress("TooManyFunctions", "TooGenericExceptionCaught", "LargeClass", "MagicNumber", "CyclomaticComplexMethod")
+@Suppress(
+    "TooManyFunctions",
+    "TooGenericExceptionCaught",
+    "LargeClass",
+    "MagicNumber",
+    "CyclomaticComplexMethod"
+)
 class SWRepositoryImp(
     private val swApi: SWApi,
     private val dataStore: DataStore<Preferences>
@@ -201,7 +210,7 @@ class SWRepositoryImp(
     // 3.1. Авторизация
 
     override suspend fun register(
-        request: com.swparks.model.RegistrationRequest
+        request: RegistrationRequest
     ): Result<LoginSuccess> =
         try {
             val response = swApi.register(request)
@@ -220,7 +229,7 @@ class SWRepositoryImp(
 
     override suspend fun login(token: String?): Result<LoginSuccess> =
         try {
-            val response = swApi.login(token)
+            val response = swApi.login()
             // Сохраняем токен авторизации при успешном входе
             if (token != null) {
                 savePreference(true)
@@ -238,7 +247,7 @@ class SWRepositoryImp(
 
     override suspend fun resetPassword(login: String): Result<Unit> =
         try {
-            swApi.resetPassword(login)
+            swApi.resetPassword(ResetPasswordRequest(login))
             Result.success(Unit)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "восстановлении пароля"))
@@ -275,10 +284,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "загрузке пользователя"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "загрузке пользователя"))
         }
 
@@ -294,22 +299,24 @@ class SWRepositoryImp(
                 fullName = NetworkUtils.createPartWithName("fullname", form.fullname),
                 email = NetworkUtils.createPartWithName("email", form.email),
                 birthDate = NetworkUtils.createOptionalPartWithName("birth_date", form.birthDate),
-                gender = NetworkUtils.createOptionalPartWithName("gender", form.genderCode.toString()),
+                gender = NetworkUtils.createOptionalPartWithName(
+                    "gender",
+                    form.genderCode.toString()
+                ),
                 countryId = NetworkUtils.createOptionalPartWithName(
                     "country_id",
                     form.countryId?.toString()
                 ),
-                cityId = NetworkUtils.createOptionalPartWithName("city_id", form.cityId?.toString()),
+                cityId = NetworkUtils.createOptionalPartWithName(
+                    "city_id",
+                    form.cityId?.toString()
+                ),
                 image = NetworkUtils.createOptionalImagePart(image, "image")
             )
             Result.success(user)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "редактировании пользователя"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "редактировании пользователя"))
         }
 
@@ -322,31 +329,36 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "удалении пользователя"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "удалении пользователя"))
         }
 
     override suspend fun getSocialUpdates(userId: Long): Result<SocialUpdates> =
-        try {
-            val updates = swApi.getSocialUpdates(userId)
-            val socialUpdates = SocialUpdates(
-                user = updates.user,
-                friends = updates.friends,
-                friendRequests = updates.friendRequests,
-                blacklist = updates.blacklist
-            )
-            Result.success(socialUpdates)
-        } catch (e: IOException) {
-            Result.failure(handleIOException(e, "загрузке социальных обновлений"))
-        } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
+        kotlinx.coroutines.supervisorScope {
+            try {
+                // Параллельные запросы к серверу
+                val userDeferred = async { swApi.getUser(userId) }
+                val friendsDeferred = async { swApi.getFriendsForUser(userId) }
+                val requestsDeferred = async { swApi.getFriendRequests() }
+                val blacklistDeferred = async { swApi.getBlacklist() }
+
+                // Ожидание всех результатов
+                val user = userDeferred.await()
+                val friends = friendsDeferred.await()
+                val requests = requestsDeferred.await()
+                val blacklist = blacklistDeferred.await()
+
+                val socialUpdates = SocialUpdates(
+                    user = user,
+                    friends = friends,
+                    friendRequests = requests,
+                    blacklist = blacklist
+                )
+                Result.success(socialUpdates)
+            } catch (e: IOException) {
+                Result.failure(handleIOException(e, "загрузке социальных обновлений"))
+            } catch (e: HttpException) {
+                Result.failure(handleHttpException(e, "загрузке социальных обновлений"))
             }
-            Result.failure(handleHttpException(e, "загрузке социальных обновлений"))
         }
 
     override suspend fun findUsers(name: String): Result<List<User>> =
@@ -356,10 +368,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "поиске пользователей"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "поиске пользователей"))
         }
 
@@ -372,10 +380,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "загрузке друзей"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "загрузке друзей"))
         }
 
@@ -386,10 +390,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "загрузке заявок в друзья"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "загрузке заявок в друзья"))
         }
 
@@ -404,10 +404,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "обработке заявки в друзья"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "обработке заявки в друзья"))
         }
 
@@ -421,10 +417,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "действии с другом"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "действии с другом"))
         }
 
@@ -438,10 +430,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "действии с черным списком"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "действии с черным списком"))
         }
 
@@ -452,10 +440,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "загрузке черного списка"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "загрузке черного списка"))
         }
 
@@ -523,10 +507,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "сохранении площадки"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "сохранении площадки"))
         }
 
@@ -537,10 +517,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "удалении площадки"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "удалении площадки"))
         }
 
@@ -565,10 +541,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "изменении статуса тренировки"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "изменении статуса тренировки"))
         }
 
@@ -639,10 +611,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "сохранении мероприятия"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "сохранении мероприятия"))
         }
 
@@ -657,10 +625,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "изменении участия в мероприятии"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "изменении участия в мероприятии"))
         }
 
@@ -671,10 +635,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "удалении мероприятия"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "удалении мероприятия"))
         }
 
@@ -687,10 +647,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "загрузке диалогов"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "загрузке диалогов"))
         }
 
@@ -701,10 +657,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "загрузке сообщений"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "загрузке сообщений"))
         }
 
@@ -715,10 +667,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "отправке сообщения"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "отправке сообщения"))
         }
 
@@ -729,10 +677,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "отметке сообщений прочитанными"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "отметке сообщений прочитанными"))
         }
 
@@ -743,10 +687,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "удалении диалога"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "удалении диалога"))
         }
 
@@ -784,9 +724,7 @@ class SWRepositoryImp(
                 userId = userId ?: 1L, // Note: передавать реальный userId
                 journalId = journalId,
                 request = EditJournalSettingsRequest.create(
-                    journalId = journalId,
                     title = title,
-                    userId = userId?.toInt() ?: 0,
                     viewAccess = viewAccess,
                     commentAccess = commentAccess
                 )
@@ -795,10 +733,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "редактировании настроек дневника"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "редактировании настроек дневника"))
         }
 
@@ -825,10 +759,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "создании дневника"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "создании дневника"))
         }
 
@@ -842,10 +772,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "удалении дневника"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "удалении дневника"))
         }
 
@@ -859,10 +785,6 @@ class SWRepositoryImp(
             } catch (e: IOException) {
                 Result.failure(handleIOException(e, "добавлении комментария"))
             } catch (e: HttpException) {
-                // Если вернулась ошибка авторизации (401), принудительный логаут
-                if (e.code() == 401) {
-                    savePreference(false)
-                }
                 Result.failure(handleHttpException(e, "добавлении комментария"))
             }
 
@@ -872,42 +794,22 @@ class SWRepositoryImp(
             } catch (e: IOException) {
                 Result.failure(handleIOException(e, "добавлении комментария"))
             } catch (e: HttpException) {
-                // Если вернулась ошибка авторизации (401), принудительный логаут
-                if (e.code() == 401) {
-                    savePreference(false)
-                }
                 Result.failure(handleHttpException(e, "добавлении комментария"))
             }
 
             is TextEntryOption.Journal -> {
-// Для дневников комментарии добавляются к записям
-                val entryId =
-                    option.entryId
-                        ?: run {
-                            Log.e("SWRepository", "entryId не указан для комментария к дневнику")
-                            return Result.failure(
-                                ServerException(
-                                    "entryId обязателен для добавления комментария к дневнику"
-                                )
-                            )
-                        }
-
+// Для дневников создаются новые записи (сообщения)
                 try {
-                    swApi.addCommentToJournalEntry(
+                    swApi.saveJournalEntry(
                         option.ownerId,
                         option.journalId,
-                        entryId,
                         comment
                     )
                     Result.success(Unit)
                 } catch (e: IOException) {
-                    Result.failure(handleIOException(e, "добавлении комментария к дневнику"))
+                    Result.failure(handleIOException(e, "создании записи в дневнике"))
                 } catch (e: HttpException) {
-                    // Если вернулась ошибка авторизации (401), принудительный логаут
-                    if (e.code() == 401) {
-                        savePreference(false)
-                    }
-                    Result.failure(handleHttpException(e, "добавлении комментария к дневнику"))
+                    Result.failure(handleHttpException(e, "создании записи в дневнике"))
                 }
 
             }
@@ -924,10 +826,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "редактировании комментария"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "редактировании комментария"))
         }
 
@@ -937,46 +835,23 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "редактировании комментария"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), принудительный логаут
-            if (e.code() == 401) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "редактировании комментария"))
         }
 
         is TextEntryOption.Journal -> {
-// Для дневников редактируются комментарии к записям
-            val entryId =
-                option.entryId
-                    ?: run {
-                        Log.e(
-                            "SWRepository",
-                            "entryId не указан для редактирования комментария к дневнику"
-                        )
-                        return Result.failure(
-                            ServerException(
-                                "entryId обязателен для редактирования комментария к дневнику"
-                            )
-                        )
-                    }
-
+// Для дневников редактируются сами записи (сообщения)
             try {
-                swApi.editJournalEntryComment(
+                swApi.editJournalEntry(
                     option.ownerId,
                     option.journalId,
-                    entryId,
                     commentId,
                     newComment
                 )
                 Result.success(Unit)
             } catch (e: IOException) {
-                Result.failure(handleIOException(e, "редактировании комментария к дневнику"))
+                Result.failure(handleIOException(e, "редактировании записи в дневнике"))
             } catch (e: HttpException) {
-                // Если вернулась ошибка авторизации (401), принудительный логаут
-                if (e.code() == 401) {
-                    savePreference(false)
-                }
-                Result.failure(handleHttpException(e, "редактировании комментария к дневнику"))
+                Result.failure(handleHttpException(e, "редактировании записи в дневнике"))
             }
 
         }
@@ -990,10 +865,6 @@ class SWRepositoryImp(
             } catch (e: IOException) {
                 Result.failure(handleIOException(e, "удалении комментария"))
             } catch (e: HttpException) {
-                // Если вернулась ошибка авторизации (401), принудительный логаут
-                if (e.code() == 401) {
-                    savePreference(false)
-                }
                 Result.failure(handleHttpException(e, "удалении комментария"))
             }
 
@@ -1003,45 +874,22 @@ class SWRepositoryImp(
             } catch (e: IOException) {
                 Result.failure(handleIOException(e, "удалении комментария"))
             } catch (e: HttpException) {
-                // Если вернулась ошибка авторизации (401), принудительный логаут
-                if (e.code() == 401) {
-                    savePreference(false)
-                }
                 Result.failure(handleHttpException(e, "удалении комментария"))
             }
 
             is TextEntryOption.Journal -> {
-// Для дневников удаляются комментарии к записям
-                val entryId =
-                    option.entryId
-                        ?: run {
-                            Log.e(
-                                "SWRepository",
-                                "entryId не указан для удаления комментария к дневнику"
-                            )
-                            return Result.failure(
-                                ServerException(
-                                    "entryId обязателен для удаления комментария к дневнику"
-                                )
-                            )
-                        }
-
+// Для дневников удаляются сами записи (сообщения)
                 try {
-                    swApi.deleteJournalEntryComment(
+                    swApi.deleteJournalEntry(
                         option.ownerId,
                         option.journalId,
-                        entryId,
                         commentId
                     )
                     Result.success(Unit)
                 } catch (e: IOException) {
-                    Result.failure(handleIOException(e, "удалении комментария к дневнику"))
+                    Result.failure(handleIOException(e, "удалении записи из дневника"))
                 } catch (e: HttpException) {
-                    // Если вернулась ошибка авторизации (401), принудительный логаут
-                    if (e.code() == 401) {
-                        savePreference(false)
-                    }
-                    Result.failure(handleHttpException(e, "удалении комментария к дневнику"))
+                    Result.failure(handleHttpException(e, "удалении записи из дневника"))
                 }
 
             }

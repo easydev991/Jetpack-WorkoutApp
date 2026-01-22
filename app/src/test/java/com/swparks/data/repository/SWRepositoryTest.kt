@@ -201,7 +201,7 @@ class SWRepositoryTest {
         // Given
         val mockSuccess = LoginSuccess(userId = 123L)
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.login(any()) } returns mockSuccess
+        coEvery { mockApi.login() } returns mockSuccess
 
         val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -214,7 +214,7 @@ class SWRepositoryTest {
         // Then
         assertTrue(result.isSuccess)
         assertEquals(mockSuccess, result.getOrNull())
-        coVerify { mockApi.login("test_token") }
+        coVerify { mockApi.login() }
     }
 
     @Test

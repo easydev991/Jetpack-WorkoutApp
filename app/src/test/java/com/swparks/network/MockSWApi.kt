@@ -1,8 +1,10 @@
 package com.swparks.network
 
+import com.swparks.model.ChangePasswordRequest
 import com.swparks.model.Comment
 import com.swparks.model.Country
 import com.swparks.model.DialogResponse
+import com.swparks.model.EditJournalSettingsRequest
 import com.swparks.model.Event
 import com.swparks.model.JournalEntryResponse
 import com.swparks.model.JournalResponse
@@ -12,7 +14,7 @@ import com.swparks.model.MessageResponse
 import com.swparks.model.Park
 import com.swparks.model.Photo
 import com.swparks.model.RegistrationRequest
-import com.swparks.model.SocialUpdatesResponse
+import com.swparks.model.ResetPasswordRequest
 import com.swparks.model.User
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -218,26 +220,9 @@ class MockSWApi : SWApi {
         cities = listOf()
     )
 
-    /**
-     * Создать фиктивные социальные обновления
-     */
-    fun createMockSocialUpdates() = SocialUpdatesResponse(
-        user = createMockUser(id = 1L),
-        friends = listOf(
-            createMockUser(id = 2L, name = "friend1", fullName = "Friend One"),
-            createMockUser(id = 3L, name = "friend2", fullName = "Friend Two")
-        ),
-        friendRequests = listOf(
-            createMockUser(id = 4L, name = "request1", fullName = "Request One")
-        ),
-        blacklist = listOf(
-            createMockUser(id = 5L, name = "blocked1", fullName = "Blocked User")
-        )
-    )
-
     // ==================== АВТОРИЗАЦИЯ И ПРОФИЛЬ ====================
 
-    override suspend fun login(token: String?): LoginSuccess {
+    override suspend fun login(): LoginSuccess {
         return createMockLoginSuccess()
     }
 
@@ -246,11 +231,11 @@ class MockSWApi : SWApi {
     }
 
 
-    override suspend fun resetPassword(login: String): LoginSuccess {
+    override suspend fun resetPassword(request: ResetPasswordRequest): LoginSuccess {
         return createMockLoginSuccess()
     }
 
-    override suspend fun changePassword(request: com.swparks.model.ChangePasswordRequest): Response<Unit> {
+    override suspend fun changePassword(request: ChangePasswordRequest): Response<Unit> {
         return Response.success(Unit)
     }
 
@@ -274,10 +259,6 @@ class MockSWApi : SWApi {
 
     override suspend fun deleteUser(): Response<Unit> {
         return Response.success(Unit)
-    }
-
-    override suspend fun getSocialUpdates(userId: Long): SocialUpdatesResponse {
-        return createMockSocialUpdates()
     }
 
     // ==================== ДРУЗЬЯ И ЧЕРНЫЙ СПИСОК ====================
@@ -544,7 +525,7 @@ class MockSWApi : SWApi {
     override suspend fun editJournalSettings(
         userId: Long,
         journalId: Long,
-        request: com.swparks.model.EditJournalSettingsRequest
+        request: EditJournalSettingsRequest
     ): Response<Unit> {
         return Response.success(Unit)
     }
@@ -590,34 +571,6 @@ class MockSWApi : SWApi {
     }
 
     override suspend fun deleteJournal(userId: Long, journalId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
-
-    override suspend fun addCommentToJournalEntry(
-        userId: Long,
-        journalId: Long,
-        entryId: Long,
-        comment: String
-    ): Response<Unit> {
-        return Response.success(Unit)
-    }
-
-    override suspend fun editJournalEntryComment(
-        userId: Long,
-        journalId: Long,
-        entryId: Long,
-        commentId: Long,
-        comment: String
-    ): Response<Unit> {
-        return Response.success(Unit)
-    }
-
-    override suspend fun deleteJournalEntryComment(
-        userId: Long,
-        journalId: Long,
-        entryId: Long,
-        commentId: Long
-    ): Response<Unit> {
         return Response.success(Unit)
     }
 }
