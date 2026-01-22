@@ -34,7 +34,7 @@ class CryptoManagerIntegrationTest {
         // Очищаем старые данные перед каждым тестом
         val prefs = context.getSharedPreferences(KEYSET_PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().clear().apply()
-        
+
         cryptoManager = CryptoManagerImpl(context, KEYSET_KEY)
     }
 
@@ -55,7 +55,11 @@ class CryptoManagerIntegrationTest {
         val decrypted = cryptoManager.decrypt(encrypted)
 
         // Then
-        assertArrayEquals("Дешифрованные данные должны совпадать с оригинальными", originalData, decrypted)
+        assertArrayEquals(
+            "Дешифрованные данные должны совпадать с оригинальными",
+            originalData,
+            decrypted
+        )
     }
 
     @Test
@@ -82,7 +86,10 @@ class CryptoManagerIntegrationTest {
 
         // Then
         // Зашифрованные данные должны быть разными из-за случайного IV (Initialization Vector)
-        assertTrue("Зашифрованные данные должны быть разными", !encrypted1.contentEquals(encrypted2))
+        assertTrue(
+            "Зашифрованные данные должны быть разными",
+            !encrypted1.contentEquals(encrypted2)
+        )
     }
 
     @Test
@@ -149,6 +156,10 @@ class CryptoManagerIntegrationTest {
         val decrypted = cryptoManager.decrypt(encrypted)
 
         // Then
-        assertArrayEquals("Специальные символы должны дешифроваться корректно", specialData, decrypted)
+        assertArrayEquals(
+            "Специальные символы должны дешифроваться корректно",
+            specialData,
+            decrypted
+        )
     }
 }

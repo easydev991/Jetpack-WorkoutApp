@@ -1,21 +1,22 @@
 package com.swparks.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.outlined.Chat
+import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.filled.Event
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.Event
-import androidx.compose.material.icons.outlined.List
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.navigation.NavHostController
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.swparks.R
@@ -43,7 +44,8 @@ fun rememberAppState(
 class AppState(
     val navController: NavHostController,
 ) {
-    private val previousDestination = androidx.compose.runtime.mutableStateOf<androidx.navigation.NavDestination?>(null)
+    private val previousDestination =
+        mutableStateOf<androidx.navigation.NavDestination?>(null)
 
     /**
      * Текущий пункт назначения навигации
@@ -125,8 +127,8 @@ object TopLevelDestinations {
 
     val MESSAGES = TopLevelDestination(
         route = Screen.Messages.route,
-        selectedIcon = Icons.Filled.Chat,
-        unselectedIcon = Icons.Outlined.Chat,
+        selectedIcon = Icons.AutoMirrored.Filled.Chat,
+        unselectedIcon = Icons.AutoMirrored.Outlined.Chat,
         iconTextId = R.string.messages,
         titleTextId = R.string.messages_title,
     )
@@ -141,8 +143,8 @@ object TopLevelDestinations {
 
     val MORE = TopLevelDestination(
         route = Screen.More.route,
-        selectedIcon = Icons.Filled.List,
-        unselectedIcon = Icons.Outlined.List,
+        selectedIcon = Icons.AutoMirrored.Filled.List,
+        unselectedIcon = Icons.AutoMirrored.Outlined.List,
         iconTextId = R.string.more,
         titleTextId = R.string.more_title,
     )

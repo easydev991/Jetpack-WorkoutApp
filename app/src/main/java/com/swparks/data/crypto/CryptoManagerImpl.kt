@@ -40,8 +40,8 @@ class CryptoManagerImpl(
         val decrypted = aead.decrypt(ciphertext, null)
         Log.d(TAG, "Decrypted ${ciphertext.size} -> ${decrypted.size} bytes")
         decrypted
-    } catch (e: Exception) {
+    } catch (e: SecurityException) {
         Log.e(TAG, "Decryption failed", e)
-        throw SecurityException("Decryption failed", e)
+        throw e
     }
 }

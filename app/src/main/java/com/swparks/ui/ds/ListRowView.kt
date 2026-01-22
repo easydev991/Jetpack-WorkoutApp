@@ -17,7 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,7 +33,7 @@ import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 /**
- * В фигме называется "Элемент списка"
+ * Данные для отображения элемента списка
  *
  * @param modifier Модификатор
  * @param leadingIconID Идентификатор для иконки слева
@@ -42,19 +42,26 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * @param showChevron Показывать ли шеврон
  * @param enabled Влияет на отображение шеврона
  */
+data class ListRowData(
+    val modifier: Modifier = Modifier,
+    @DrawableRes val leadingIconID: Int? = null,
+    val leadingText: String,
+    val trailingText: String = "",
+    val showChevron: Boolean = false,
+    val enabled: Boolean = true
+)
+
+/**
+ * В фигме называется "Элемент списка"
+ *
+ * @param data Данные для отображения - [ListRowData]
+ */
 @Composable
-fun ListRowView(
-    modifier: Modifier = Modifier,
-    @DrawableRes leadingIconID: Int? = null,
-    leadingText: String,
-    trailingText: String = "",
-    showChevron: Boolean = false,
-    enabled: Boolean = true
-) {
+fun ListRowView(data: ListRowData) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
+        modifier = data.modifier
             .fillMaxWidth()
             .padding(vertical = 10.dp)
     ) {
@@ -62,9 +69,9 @@ fun ListRowView(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (leadingIconID != null) {
+            if (data.leadingIconID != null) {
                 Image(
-                    painter = painterResource(leadingIconID),
+                    painter = painterResource(data.leadingIconID),
                     contentDescription = "Leading icon",
                     colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.primary),
                     modifier = Modifier
@@ -74,7 +81,7 @@ fun ListRowView(
                 )
             }
             Text(
-                text = leadingText,
+                text = data.leadingText,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
@@ -82,20 +89,20 @@ fun ListRowView(
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            if (trailingText.isNotBlank()) {
+            if (data.trailingText.isNotBlank()) {
                 Text(
-                    text = trailingText,
+                    text = data.trailingText,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             AnimatedVisibility(
-                visible = showChevron && enabled,
+                visible = data.showChevron && data.enabled,
                 enter = fadeIn() + expandHorizontally(),
                 exit = fadeOut() + shrinkHorizontally()
             ) {
                 Image(
-                    imageVector = Icons.Default.KeyboardArrowRight,
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onSurfaceVariant),
                     contentDescription = "Chevron"
                 )
@@ -118,41 +125,69 @@ fun ListRowViewPreview() {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.padding(horizontal = 16.dp)
             ) {
-                ListRowView(leadingText = "Текст")
-                ListRowView(
-                    leadingText = "Текст",
-                    showChevron = true
-                )
-                ListRowView(
-                    leadingText = "Текст",
-                    trailingText = "подпись"
-                )
-                ListRowView(
-                    leadingText = "Текст",
-                    trailingText = "подпись",
-                    showChevron = true
-                )
-                ListRowView(
-                    leadingIconID = R.drawable.outline_person,
-                    leadingText = "Текст"
-                )
-                ListRowView(
-                    leadingIconID = R.drawable.outline_person,
-                    leadingText = "Текст",
-                    showChevron = true
-                )
-                ListRowView(
-                    leadingIconID = R.drawable.outline_person,
-                    leadingText = "Текст",
-                    trailingText = "подпись"
-                )
-                ListRowView(
-                    leadingIconID = R.drawable.outline_person,
-                    leadingText = "Текст",
-                    trailingText = "подпись",
-                    showChevron = true
-                )
+                PreviewListRowsWithoutIcon()
+                PreviewListRowsWithIcon()
             }
         }
     }
+}
+
+@Composable
+private fun PreviewListRowsWithoutIcon() {
+    ListRowView(
+        data = ListRowData(
+            leadingText = "Текст"
+        )
+    )
+    ListRowView(
+        data = ListRowData(
+            leadingText = "Текст",
+            showChevron = true
+        )
+    )
+    ListRowView(
+        data = ListRowData(
+            leadingText = "Текст",
+            trailingText = "подпись"
+        )
+    )
+    ListRowView(
+        data = ListRowData(
+            leadingText = "Текст",
+            trailingText = "подпись",
+            showChevron = true
+        )
+    )
+}
+
+@Composable
+private fun PreviewListRowsWithIcon() {
+    ListRowView(
+        data = ListRowData(
+            leadingIconID = R.drawable.outline_person,
+            leadingText = "Текст"
+        )
+    )
+    ListRowView(
+        data = ListRowData(
+            leadingIconID = R.drawable.outline_person,
+            leadingText = "Текст",
+            showChevron = true
+        )
+    )
+    ListRowView(
+        data = ListRowData(
+            leadingIconID = R.drawable.outline_person,
+            leadingText = "Текст",
+            trailingText = "подпись"
+        )
+    )
+    ListRowView(
+        data = ListRowData(
+            leadingIconID = R.drawable.outline_person,
+            leadingText = "Текст",
+            trailingText = "подпись",
+            showChevron = true
+        )
+    )
 }

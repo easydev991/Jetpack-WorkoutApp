@@ -7,7 +7,7 @@ import okhttp3.Response
 
 /**
  * Interceptor для обработки ошибок авторизации (401)
- * 
+ *
  * При получении ответа со статусом 401 (Unauthorized):
  * - Логирует ошибку авторизации
  * - Очищает токен авторизации
@@ -24,7 +24,7 @@ class AuthInterceptor(
 
     /**
      * Перехватывает HTTP-ответы и обрабатывает ошибку 401
-     * 
+     *
      * @param chain цепочка перехватчиков
      * @return HTTP-ответ
      */
@@ -34,7 +34,7 @@ class AuthInterceptor(
         // Проверяем статус код 401 (Unauthorized)
         if (response.code == UNAUTHORIZED_STATUS_CODE) {
             Log.e(TAG, "Ошибка авторизации (401): токен недействителен или истек")
-            
+
             // Очищаем токен авторизации синхронно
             clearToken()
         }

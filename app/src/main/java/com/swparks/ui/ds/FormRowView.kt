@@ -21,12 +21,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
+
+private object FormRowViewPreviewConstants {
+    const val PARKS_COUNT = 26
+    const val FRIENDS_COUNT = 50
+    const val BADGE_VALUE = 5
+}
 
 @Composable
 private fun FormRowViewContainer(
@@ -35,11 +41,14 @@ private fun FormRowViewContainer(
 ) {
     FormCardContainer {
         FormRowContainer(
-            modifier = modifier,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            content()
-        }
+            config = FormRowConfig(
+                modifier = modifier,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                content = {
+                    content()
+                }
+            )
+        )
     }
 }
 
@@ -61,7 +70,7 @@ fun FormRowView(
     enabled: Boolean = true
 ) {
     FormRowViewContainer(
-        modifier = modifier.padding(vertical = 12.dp)
+        modifier = modifier.padding(vertical = dimensionResource(id = R.dimen.spacing_small))
     ) {
         Text(
             text = leadingText,
@@ -83,8 +92,8 @@ fun FormRowView(
                 CircleBadgeView(
                     value = badgeValue,
                     modifier = Modifier.padding(
-                        start = 12.dp,
-                        end = 4.dp
+                        start = dimensionResource(id = R.dimen.spacing_regular),
+                        end = dimensionResource(id = R.dimen.spacing_xxsmall)
                     )
                 )
             }
@@ -117,7 +126,7 @@ fun SwitchFormRowView(
     onCheckedChange: (Boolean) -> Unit
 ) {
     FormRowViewContainer(
-        modifier = modifier.padding(vertical = 4.dp)
+        modifier = modifier.padding(vertical = dimensionResource(id = R.dimen.spacing_xxsmall))
     ) {
         Text(
             text = leadingText,
@@ -142,33 +151,33 @@ fun FormRowViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.padding(horizontal = 16.dp)
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_regular)),
+                modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.spacing_regular))
             ) {
                 FormRowView(
                     leadingText = stringResource(id = R.string.where_trains),
                     trailingText = pluralStringResource(
                         id = R.plurals.parksCount,
-                        count = 26,
-                        26
+                        count = FormRowViewPreviewConstants.PARKS_COUNT,
+                        FormRowViewPreviewConstants.PARKS_COUNT
                     )
                 )
                 FormRowView(
                     leadingText = stringResource(id = R.string.friends),
                     trailingText = pluralStringResource(
                         id = R.plurals.friendsCount,
-                        count = 50,
-                        50
+                        count = FormRowViewPreviewConstants.FRIENDS_COUNT,
+                        FormRowViewPreviewConstants.FRIENDS_COUNT
                     )
                 )
                 FormRowView(
                     leadingText = stringResource(id = R.string.friends),
                     trailingText = pluralStringResource(
                         id = R.plurals.friendsCount,
-                        count = 50,
-                        50
+                        count = FormRowViewPreviewConstants.FRIENDS_COUNT,
+                        FormRowViewPreviewConstants.FRIENDS_COUNT
                     ),
-                    badgeValue = 5
+                    badgeValue = FormRowViewPreviewConstants.BADGE_VALUE
                 )
                 SwitchFormRowView(
                     leadingText = stringResource(id = R.string.train_here),

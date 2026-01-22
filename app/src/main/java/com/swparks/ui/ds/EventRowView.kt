@@ -21,7 +21,7 @@ import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 /**
- * Вьюшка для мероприятия в списке
+ * Данные для отображения вьюшки мероприятия в списке
  *
  * @param modifier Модификатор
  * @param imageStringURL Ссылка на превью-фото
@@ -30,53 +30,65 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * @param address Адрес мероприятия (город, страна)
  * @param onClick Обработчик нажатия на элемент
  */
+data class EventRowData(
+    val modifier: Modifier = Modifier,
+    val imageStringURL: String?,
+    val name: String,
+    val dateString: String,
+    val address: String,
+    val onClick: (() -> Unit)? = null
+)
+
+/**
+ * Вьюшка для мероприятия в списке
+ *
+ * @param data Данные для отображения - [EventRowData]
+ */
 @Composable
-fun EventRowView(
-    modifier: Modifier = Modifier,
-    imageStringURL: String?,
-    name: String,
-    dateString: String,
-    address: String,
-    onClick: (() -> Unit)? = null
-) {
+fun EventRowView(data: EventRowData) {
     FormCardContainer(
-        modifier = modifier,
-        onClick = onClick
+        modifier = data.modifier,
+        onClick = data.onClick
     ) {
         FormRowContainer(
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalPadding = 12.dp
-        ) {
-            SWAsyncImage(
-                imageStringURL = imageStringURL,
-                size = 74.dp,
-                showBorder = false
-            )
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    AdditionalInfoRow(
-                        imageID = R.drawable.round_access_time_16,
-                        text = dateString
+            config = FormRowConfig(
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalPadding = 12.dp,
+                content = {
+                    SWAsyncImage(
+                        config = AsyncImageConfig(
+                            imageStringURL = data.imageStringURL,
+                            size = 74.dp,
+                            showBorder = false
+                        )
                     )
-                    AdditionalInfoRow(
-                        imageID = R.drawable.outline_assistant_navigation_16,
-                        text = address
-                    )
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = data.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            AdditionalInfoRow(
+                                imageID = R.drawable.round_access_time_16,
+                                text = data.dateString
+                            )
+                            AdditionalInfoRow(
+                                imageID = R.drawable.outline_assistant_navigation_16,
+                                text = data.address
+                            )
+                        }
+                    }
                 }
-            }
-        }
+            )
+        )
     }
 }
 
@@ -119,10 +131,12 @@ fun EventRowViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             EventRowView(
-                imageStringURL = null,
-                name = "Открытая воскресная тренировка #3 в 2023 году",
-                dateString = "22 янв, 12:00",
-                address = "Москва"
+                data = EventRowData(
+                    imageStringURL = null,
+                    name = "Открытая воскресная тренировка #3 в 2023 году",
+                    dateString = "22 янв, 12:00",
+                    address = "Москва"
+                )
             )
         }
     }

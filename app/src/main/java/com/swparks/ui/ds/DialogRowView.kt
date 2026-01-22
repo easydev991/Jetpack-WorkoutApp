@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 /**
- * Вьюшка с диалогом в списке
+ * Данные для отображения вьюшки с диалогом в списке
  *
  * @param modifier Модификатор
  * @param imageStringURL Аватар автора сообщения
@@ -28,68 +28,124 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * @param bodyText Текст сообщения
  * @param unreadCount Количество непрочитанных сообщений в диалоге
  */
+data class DialogRowData(
+    val modifier: Modifier = Modifier,
+    val imageStringURL: String?,
+    val authorName: String,
+    val dateString: String,
+    val bodyText: String,
+    val unreadCount: Int? = null
+)
+
+/**
+ * Вьюшка с диалогом в списке
+ *
+ * @param data Данные для отображения - [DialogRowData]
+ */
 @Composable
-fun DialogRowView(
-    modifier: Modifier = Modifier,
-    imageStringURL: String?,
+fun DialogRowView(data: DialogRowData) {
+    FormCardContainer(modifier = data.modifier) {
+        FormRowContainer(
+            config = FormRowConfig(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalPadding = 12.dp,
+                content = {
+                    DialogRowAvatar(
+                        imageStringURL = data.imageStringURL
+                    )
+                    DialogRowContent(
+                        authorName = data.authorName,
+                        dateString = data.dateString,
+                        bodyText = data.bodyText,
+                        unreadCount = data.unreadCount
+                    )
+                }
+            )
+        )
+    }
+}
+
+@Composable
+private fun DialogRowAvatar(imageStringURL: String?) {
+    SWAsyncImage(
+        config = AsyncImageConfig(
+            imageStringURL = imageStringURL,
+            size = 42.dp,
+            contentScale = ContentScale.Crop,
+            shape = CircleShape,
+            showBorder = true
+        )
+    )
+}
+
+@Composable
+private fun DialogRowContent(
     authorName: String,
     dateString: String,
     bodyText: String,
-    unreadCount: Int? = null
+    unreadCount: Int?
 ) {
-    FormCardContainer(modifier = modifier) {
-        FormRowContainer(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalPadding = 12.dp
-        ) {
-            SWAsyncImage(
-                imageStringURL = imageStringURL,
-                size = 42.dp,
-                contentScale = ContentScale.Crop,
-                shape = CircleShape,
-                showBorder = true
-            )
-            Column(
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                horizontalAlignment = Alignment.Start
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = authorName,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.weight(2f)
-                    )
-                    Text(
-                        text = dateString,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = bodyText,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight(400),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.weight(1f)
-                    )
-                    if (unreadCount != null && unreadCount > 0) {
-                        CircleBadgeView(value = unreadCount)
-                    }
-                }
-            }
+    Column(
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalAlignment = Alignment.Start
+    ) {
+        DialogRowHeader(
+            authorName = authorName,
+            dateString = dateString
+        )
+        DialogRowBody(
+            bodyText = bodyText,
+            unreadCount = unreadCount
+        )
+    }
+}
+
+@Composable
+private fun DialogRowHeader(
+    authorName: String,
+    dateString: String
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = authorName,
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier.weight(2f)
+        )
+        Text(
+            text = dateString,
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun DialogRowBody(
+    bodyText: String,
+    unreadCount: Int?
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = bodyText,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight(400),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f)
+        )
+        if (unreadCount != null && unreadCount > 0) {
+            CircleBadgeView(value = unreadCount)
         }
     }
 }
@@ -111,17 +167,21 @@ fun DialogRowViewPreview() {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 DialogRowView(
-                    imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
-                    authorName = "angryswan732",
-                    dateString = "12:30",
-                    bodyText = "Встретимся с ребятами в субботу, там и обсудим тренировку"
+                    data = DialogRowData(
+                        imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
+                        authorName = "angryswan732",
+                        dateString = "12:30",
+                        bodyText = "Встретимся с ребятами в субботу, там и обсудим тренировку"
+                    )
                 )
                 DialogRowView(
-                    imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
-                    authorName = "angryswan732",
-                    dateString = "12:30",
-                    bodyText = "Встретимся с ребятами в субботу, там и обсудим тренировку",
-                    unreadCount = 9
+                    data = DialogRowData(
+                        imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
+                        authorName = "angryswan732",
+                        dateString = "12:30",
+                        bodyText = "Встретимся с ребятами в субботу, там и обсудим тренировку",
+                        unreadCount = 9
+                    )
                 )
             }
         }

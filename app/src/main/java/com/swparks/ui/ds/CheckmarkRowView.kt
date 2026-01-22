@@ -13,7 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,31 +33,33 @@ fun CheckmarkRowView(
     isChecked: Boolean
 ) {
     FormRowContainer(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalPadding = 12.dp
-    ) {
-        Text(
-            text = text,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
-            modifier = Modifier.weight(2f)
-        )
-        AnimatedVisibility(
-            visible = isChecked,
-            enter = fadeIn() + expandHorizontally(),
-            exit = fadeOut() + shrinkHorizontally()
+        config = FormRowConfig(
+            modifier = modifier,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalPadding = 12.dp
         ) {
-            Image(
-                imageVector = Icons.Default.Check,
-                colorFilter = ColorFilter.tint(
-                    color = MaterialTheme.colorScheme.primary
-                ),
-                contentDescription = "Checkmark"
+            Text(
+                text = text,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.weight(2f)
             )
+            AnimatedVisibility(
+                visible = isChecked,
+                enter = fadeIn() + expandHorizontally(),
+                exit = fadeOut() + shrinkHorizontally()
+            ) {
+                Image(
+                    imageVector = Icons.Default.Check,
+                    colorFilter = ColorFilter.tint(
+                        color = MaterialTheme.colorScheme.primary
+                    ),
+                    contentDescription = "Checkmark"
+                )
+            }
         }
-    }
+    )
 }
 
 @Preview(
@@ -85,7 +87,7 @@ fun CheckmarkRowViewPreview() {
                             isChecked = randomBoolean
                         )
                         if (it != numbers.last()) {
-                            Divider()
+                            HorizontalDivider()
                         }
                     }
                 }

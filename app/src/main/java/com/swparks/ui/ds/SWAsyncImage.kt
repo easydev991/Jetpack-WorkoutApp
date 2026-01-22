@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -26,40 +27,50 @@ import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 /**
+ * Конфигурация для асинхронной загрузки картинки
+ *
+ * @property modifier Модификатор
+ * @property imageStringURL Ссылка на картинку
+ * @property size Размер картинки
+ * @property contentScale Как уместить картинку (fit/crop...)
+ * @property shape Форма вьюшки
+ * @property showBorder Нужно ли показывать зеленую рамку
+ */
+data class AsyncImageConfig(
+    val modifier: Modifier = Modifier,
+    val imageStringURL: String?,
+    val size: Dp,
+    val contentScale: ContentScale = ContentScale.Fit,
+    val shape: Shape? = null,
+    val showBorder: Boolean = true
+)
+
+/**
  * Вьюшка для асинхронной загрузки картинки, использует [coil]
  *
- * @param modifier Модификатор
- * @param imageStringURL Ссылка на картинку
- * @param size Размер картинки
- * @param contentScale Как уместить картинку (fit/crop...)
- * @param shape Форма вьюшки, по умолчанию прямоугольник с радиусом углов 12
- * @param showBorder Нужно ли показывать зеленую рамку
+ * @param config Конфигурация для отображения - [AsyncImageConfig]
  */
 @Composable
-fun SWAsyncImage(
-    modifier: Modifier = Modifier,
-    imageStringURL: String?,
-    size: Dp,
-    contentScale: ContentScale = ContentScale.Fit,
-    shape: Shape = RoundedCornerShape(12.dp),
-    showBorder: Boolean = true
-) {
+fun SWAsyncImage(config: AsyncImageConfig) {
+    val context = LocalContext.current
+    val defaultShape = RoundedCornerShape(dimensionResource(id = R.dimen.spacing_xsmall))
+    val shape = config.shape ?: defaultShape
     AsyncImage(
-        model = ImageRequest.Builder(context = LocalContext.current)
-            .data(imageStringURL)
-            .crossfade(300)
+        model = ImageRequest.Builder(context)
+            .data(config.imageStringURL)
+            .crossfade(context.resources.getInteger(R.integer.crossfade_duration_ms))
             .build(),
         placeholder = painterResource(id = R.drawable.defaultworkout),
         error = painterResource(id = R.drawable.defaultworkout),
         contentDescription = "Preview",
-        contentScale = contentScale,
-        modifier = modifier
-            .size(size)
+        contentScale = config.contentScale,
+        modifier = config.modifier
+            .size(config.size)
             .clip(shape)
             .let {
-                if (showBorder) {
+                if (config.showBorder) {
                     return@let it.border(
-                        width = 2.dp,
+                        width = dimensionResource(id = R.dimen.border_width),
                         color = MaterialTheme.colorScheme.primary,
                         shape = shape
                     )
@@ -68,6 +79,7 @@ fun SWAsyncImage(
             }
     )
 }
+
 @Preview(showBackground = true)
 @Preview(
     uiMode = Configuration.UI_MODE_NIGHT_YES,
@@ -82,22 +94,30 @@ fun SWAsyncImagePreview() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 SWAsyncImage(
-                    imageStringURL = null,
-                    size = 42.dp
+                    config = AsyncImageConfig(
+                        imageStringURL = null,
+                        size = 42.dp
+                    )
                 )
                 SWAsyncImage(
-                    imageStringURL = null,
-                    size = 42.dp,
-                    shape = CircleShape
+                    config = AsyncImageConfig(
+                        imageStringURL = null,
+                        size = 42.dp,
+                        shape = CircleShape
+                    )
                 )
                 SWAsyncImage(
-                    imageStringURL = null,
-                    size = 74.dp,
-                    showBorder = false
+                    config = AsyncImageConfig(
+                        imageStringURL = null,
+                        size = 74.dp,
+                        showBorder = false
+                    )
                 )
                 SWAsyncImage(
-                    imageStringURL = null,
-                    size = 150.dp
+                    config = AsyncImageConfig(
+                        imageStringURL = null,
+                        size = 150.dp
+                    )
                 )
             }
         }

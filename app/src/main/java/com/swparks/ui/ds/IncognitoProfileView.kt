@@ -43,10 +43,12 @@ fun IncognitoProfileView(
             modifier = Modifier.padding(bottom = 22.dp)
         )
         SWButton(
-            modifier = Modifier.padding(bottom = 16.dp),
-            text = stringResource(id = R.string.authorization),
-            enabled = enabled,
-            onClick = onClickAuth
+            config = ButtonConfig(
+                modifier = Modifier.padding(bottom = 16.dp),
+                text = stringResource(id = R.string.authorization),
+                enabled = enabled,
+                onClick = onClickAuth
+            )
         )
         Text(
             text = stringResource(id = R.string.registration_info),

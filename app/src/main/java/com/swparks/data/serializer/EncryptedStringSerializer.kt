@@ -2,6 +2,7 @@ package com.swparks.data.serializer
 
 import android.util.Log
 import com.swparks.data.crypto.CryptoManager
+import java.lang.IllegalArgumentException
 
 /**
  * Вспомогательный класс для шифрования/дешифрования строк с помощью Tink.
@@ -46,7 +47,10 @@ class EncryptedStringSerializer(
 
             // Конвертируем в строку
             String(decryptedData, Charsets.UTF_8)
-        } catch (e: Exception) {
+        } catch (e: SecurityException) {
+            Log.e(tag, "Ошибка дешифрования данных", e)
+            null
+        } catch (e: IllegalArgumentException) {
             Log.e(tag, "Ошибка дешифрования данных", e)
             null
         }
@@ -70,7 +74,10 @@ class EncryptedStringSerializer(
 
             // Шифруем данные
             cryptoManager.encrypt(data)
-        } catch (e: Exception) {
+        } catch (e: SecurityException) {
+            Log.e(tag, "Ошибка шифрования данных", e)
+            byteArrayOf()
+        } catch (e: IllegalArgumentException) {
             Log.e(tag, "Ошибка шифрования данных", e)
             byteArrayOf()
         }

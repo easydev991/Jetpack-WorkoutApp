@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.swparks.R
 import com.swparks.model.Park
+import com.swparks.ui.ds.ParkRowData
 import com.swparks.ui.ds.ParkRowView
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
@@ -65,13 +66,15 @@ fun ParksRootScreen(
         ) {
             items(parks, key = { it.id }) { park ->
                 ParkRowView(
-                    imageStringURL = park.preview,
-                    name = park.name,
-                    address = park.address,
-                    peopleTrainCount = park.trainingUsersCount ?: 0,
-                    onClick = {
-                        Log.d("ParksRootScreen", "Нажата площадка: ${park.name}")
-                    }
+                    data = ParkRowData(
+                        imageStringURL = park.preview,
+                        name = park.name,
+                        address = park.address,
+                        peopleTrainCount = park.trainingUsersCount ?: 0,
+                        onClick = {
+                            Log.d("ParksRootScreen", "Нажата площадка: ${park.name}")
+                        }
+                    )
                 )
             }
         }

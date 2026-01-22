@@ -62,7 +62,7 @@ enum class SWButtonSize(
             vertical = 8.dp
         ),
         iconSize = 15.dp
-    );
+    )
 }
 
 /**
@@ -74,7 +74,7 @@ enum class SWButtonMode {
 }
 
 /**
- * Основная кнопка
+ * Конфигурация для отображения основной кнопки
  *
  * @param modifier Модификатор
  * @param size Размер - [SWButtonSize]
@@ -84,57 +84,65 @@ enum class SWButtonMode {
  * @param enabled Доступность кнопки для нажатий
  * @param onClick Действие при нажатии
  */
+data class ButtonConfig(
+    val modifier: Modifier = Modifier,
+    val size: SWButtonSize = SWButtonSize.LARGE,
+    val mode: SWButtonMode = SWButtonMode.FILLED,
+    val imageVector: ImageVector? = null,
+    val text: String,
+    val enabled: Boolean = true,
+    val onClick: () -> Unit
+)
+
+/**
+ * Основная кнопка
+ *
+ * @param config Конфигурация для отображения - [ButtonConfig]
+ */
 @Composable
-fun SWButton(
-    modifier: Modifier = Modifier,
-    size: SWButtonSize = SWButtonSize.LARGE,
-    mode: SWButtonMode = SWButtonMode.FILLED,
-    imageVector: ImageVector? = null,
-    text: String,
-    enabled: Boolean = true,
-    onClick: () -> Unit
-) {
+fun SWButton(config: ButtonConfig) {
     Button(
-        modifier = modifier
+        modifier = config.modifier
             .scaleOnTap()
             .let {
-                if (size == SWButtonSize.LARGE) {
+                if (config.size == SWButtonSize.LARGE) {
                     return@let it.fillMaxWidth()
                 }
                 it
             },
         colors = ButtonDefaults.buttonColors(
-            containerColor = when (mode) {
+            containerColor = when (config.mode) {
                 SWButtonMode.FILLED -> MaterialTheme.colorScheme.primary
                 SWButtonMode.TINTED -> MaterialTheme.colorScheme.secondary
             },
-            contentColor = when (mode) {
+            contentColor = when (config.mode) {
                 SWButtonMode.FILLED -> MaterialTheme.colorScheme.onPrimary
                 SWButtonMode.TINTED -> MaterialTheme.colorScheme.onSecondary
             }
         ),
-        contentPadding = size.paddingValues,
+        contentPadding = config.size.paddingValues,
         shape = RoundedCornerShape(12.dp),
-        enabled = enabled,
-        onClick = onClick
+        enabled = config.enabled,
+        onClick = config.onClick
     ) {
-        if (imageVector != null) {
+        if (config.imageVector != null) {
             Image(
                 modifier = Modifier
-                    .padding(end = size.horizontalSpacing)
-                    .size(size.iconSize),
-                imageVector = imageVector,
+                    .padding(end = config.size.horizontalSpacing)
+                    .size(config.size.iconSize),
+                imageVector = config.imageVector,
                 colorFilter = ColorFilter.tint(
-                    if (mode == SWButtonMode.FILLED)
+                    if (config.mode == SWButtonMode.FILLED)
                         MaterialTheme.colorScheme.onPrimary
                     else MaterialTheme.colorScheme.onSecondary
                 ),
                 contentDescription = null
             )
         }
-        Text(text = text)
+        Text(text = config.text)
     }
 }
+
 
 @Preview(
     showBackground = true,
@@ -153,75 +161,153 @@ fun SWButtonPreview() {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                SWButton(
-                    size = SWButtonSize.SMALL,
-                    text = stringResource(id = R.string.authorization),
-                    enabled = false,
-                    onClick = {}
-                )
-                SWButton(
-                    size = SWButtonSize.SMALL,
-                    text = stringResource(id = R.string.authorization),
-                    onClick = {}
-                )
-                SWButton(
-                    size = SWButtonSize.SMALL,
-                    text = stringResource(id = R.string.authorization),
-                    imageVector = Icons.Default.Add,
-                    onClick = {}
-                )
-                SWButton(
-                    text = stringResource(id = R.string.authorization),
-                    enabled = false,
-                    onClick = {}
-                )
-                SWButton(
-                    text = stringResource(id = R.string.authorization),
-                    onClick = {}
-                )
-                SWButton(
-                    text = stringResource(id = R.string.authorization),
-                    imageVector = Icons.Default.Add,
-                    onClick = {}
-                )
-                SWButton(
-                    size = SWButtonSize.SMALL,
-                    mode = SWButtonMode.TINTED,
-                    enabled = false,
-                    text = stringResource(id = R.string.authorization),
-                    onClick = {}
-                )
-                SWButton(
-                    size = SWButtonSize.SMALL,
-                    mode = SWButtonMode.TINTED,
-                    text = stringResource(id = R.string.authorization),
-                    onClick = {}
-                )
-                SWButton(
-                    size = SWButtonSize.SMALL,
-                    mode = SWButtonMode.TINTED,
-                    imageVector = Icons.Default.Add,
-                    text = stringResource(id = R.string.authorization),
-                    onClick = {}
-                )
-                SWButton(
-                    mode = SWButtonMode.TINTED,
-                    enabled = false,
-                    text = stringResource(id = R.string.authorization),
-                    onClick = {}
-                )
-                SWButton(
-                    mode = SWButtonMode.TINTED,
-                    text = stringResource(id = R.string.authorization),
-                    onClick = {}
-                )
-                SWButton(
-                    imageVector = Icons.Default.Add,
-                    text = stringResource(id = R.string.authorization),
-                    mode = SWButtonMode.TINTED,
-                    onClick = {}
-                )
+                PreviewSmallButtons()
+                PreviewLargeButtons()
             }
         }
     }
+}
+
+@Composable
+private fun PreviewSmallButtons() {
+    SWButton(
+        config = ButtonConfig(
+            size = SWButtonSize.SMALL,
+            text = stringResource(id = R.string.authorization),
+            enabled = false,
+            onClick = {}
+        )
+    )
+    SWButton(
+        config = ButtonConfig(
+            size = SWButtonSize.SMALL,
+            text = stringResource(id = R.string.authorization),
+            onClick = {}
+        )
+    )
+    SWButton(
+        config = ButtonConfig(
+            size = SWButtonSize.SMALL,
+            text = stringResource(id = R.string.authorization),
+            imageVector = Icons.Default.Add,
+            onClick = {}
+        )
+    )
+}
+
+@Composable
+private fun PreviewLargeButtons() {
+    SWButton(
+        config = ButtonConfig(
+            text = stringResource(id = R.string.authorization),
+            enabled = false,
+            onClick = {}
+        )
+    )
+    SWButton(
+        config = ButtonConfig(
+            text = stringResource(id = R.string.authorization),
+            onClick = {}
+        )
+    )
+    SWButton(
+        config = ButtonConfig(
+            text = stringResource(id = R.string.authorization),
+            imageVector = Icons.Default.Add,
+            onClick = {}
+        )
+    )
+}
+
+@Preview(
+    showBackground = true,
+    locale = "ru"
+)
+@Composable
+fun SWButtonTintedPreview() {
+    JetpackWorkoutAppTheme {
+        Surface {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                PreviewTintedButtons()
+            }
+        }
+    }
+}
+
+@Composable
+private fun PreviewTintedButtons() {
+    SWButton(
+        config = ButtonConfig(
+            size = SWButtonSize.SMALL,
+            mode = SWButtonMode.TINTED,
+            enabled = false,
+            text = stringResource(id = R.string.authorization),
+            onClick = {}
+        )
+    )
+    SWButton(
+        config = ButtonConfig(
+            size = SWButtonSize.SMALL,
+            mode = SWButtonMode.TINTED,
+            text = stringResource(id = R.string.authorization),
+            onClick = {}
+        )
+    )
+    SWButton(
+        config = ButtonConfig(
+            size = SWButtonSize.SMALL,
+            mode = SWButtonMode.TINTED,
+            imageVector = Icons.Default.Add,
+            text = stringResource(id = R.string.authorization),
+            onClick = {}
+        )
+    )
+}
+
+@Preview(
+    showBackground = true,
+    locale = "ru"
+)
+@Composable
+fun SWButtonMixedPreview() {
+    JetpackWorkoutAppTheme {
+        Surface {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                PreviewMixedButtons()
+            }
+        }
+    }
+}
+
+@Composable
+private fun PreviewMixedButtons() {
+    SWButton(
+        config = ButtonConfig(
+            mode = SWButtonMode.TINTED,
+            enabled = false,
+            text = stringResource(id = R.string.authorization),
+            onClick = {}
+        )
+    )
+    SWButton(
+        config = ButtonConfig(
+            mode = SWButtonMode.TINTED,
+            text = stringResource(id = R.string.authorization),
+            onClick = {}
+        )
+    )
+    SWButton(
+        config = ButtonConfig(
+            imageVector = Icons.Default.Add,
+            text = stringResource(id = R.string.authorization),
+            mode = SWButtonMode.TINTED,
+            onClick = {}
+        )
+    )
 }

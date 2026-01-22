@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import java.lang.SecurityException
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,6 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.swparks.BuildConfig
 import com.swparks.R
+import com.swparks.ui.ds.ListRowData
 import com.swparks.ui.ds.ListRowView
 import com.swparks.ui.ds.SectionView
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
@@ -89,72 +91,151 @@ private fun ScreenContent(
             verticalArrangement = Arrangement.spacedBy(14.dp),
             modifier = Modifier.verticalScroll(rememberScrollState())
         ) {
-            SectionView(
-                titleID = R.string.about_app,
-                addPaddingToTitle = false,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    ListRowView(
-                        leadingText = stringResource(id = R.string.send_feedback),
-                        showChevron = true,
-                        modifier = Modifier.clickable {
-                            didTapSendFeedback(context)
-                        }
-                    )
-                    ListRowView(
-                        leadingText = stringResource(id = R.string.rate_app),
-                        showChevron = true,
-                        modifier = Modifier.clickable {
-                            uriHandler.openUri(Links.rateApp)
-                        }
-                    )
-                    ListRowView(
-                        leadingText = stringResource(id = R.string.terms_of_use),
-                        showChevron = true,
-                        modifier = Modifier.clickable {
-                            uriHandler.openUri(Links.termsOfUse)
-                        }
-                    )
-                    ListRowView(
-                        leadingText = stringResource(id = R.string.official_site),
-                        showChevron = true,
-                        modifier = Modifier.clickable {
-                            uriHandler.openUri(Links.officialSite)
-                        }
-                    )
-                    ListRowView(
-                        leadingText = stringResource(id = R.string.app_developer),
-                        showChevron = true,
-                        modifier = Modifier.clickable {
-                            uriHandler.openUri(Links.appDeveloper)
-                        }
-                    )
-                    ListRowView(
-                        leadingText = stringResource(id = R.string.app_version),
-                        trailingText = BuildConfig.VERSION_NAME
-                    )
-                }
-            }
+            AboutAppSection(
+                context = context,
+                uriHandler = uriHandler
+            )
             HorizontalDivider()
-            SectionView(
-                titleID = R.string.support_project,
-                addPaddingToTitle = false,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            ) {
-                ListRowView(
-                    leadingText = stringResource(id = R.string.workout_shop),
-                    showChevron = true,
-                    modifier = Modifier
-                        .clickable {
-                            uriHandler.openUri(Links.workoutShop)
-                        }
-                )
-            }
+            SupportProjectSection(uriHandler = uriHandler)
         }
     }
+}
+
+@Composable
+private fun AboutAppSection(
+    context: Context,
+    uriHandler: UriHandler
+) {
+    SectionView(
+        titleID = R.string.about_app,
+        addPaddingToTitle = false,
+        modifier = Modifier.padding(horizontal = 16.dp)
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            SendFeedbackRow(context = context)
+            RateAppRow(uriHandler = uriHandler)
+            TermsOfUseRow(uriHandler = uriHandler)
+            OfficialSiteRow(uriHandler = uriHandler)
+            AppDeveloperRow(uriHandler = uriHandler)
+            AppVersionRow()
+        }
+    }
+}
+
+@Composable
+private fun SendFeedbackRow(
+    context: Context
+) {
+    ListRowView(
+        data = ListRowData(
+            leadingText = stringResource(id = R.string.send_feedback),
+            showChevron = true,
+            modifier = Modifier.clickable {
+                didTapSendFeedback(context)
+            }
+        )
+    )
+}
+
+@Composable
+private fun RateAppRow(
+    uriHandler: UriHandler
+) {
+    ListRowView(
+        data = ListRowData(
+            leadingText = stringResource(id = R.string.rate_app),
+            showChevron = true,
+            modifier = Modifier.clickable {
+                uriHandler.openUri(Links.rateApp)
+            }
+        )
+    )
+}
+
+@Composable
+private fun TermsOfUseRow(
+    uriHandler: UriHandler
+) {
+    ListRowView(
+        data = ListRowData(
+            leadingText = stringResource(id = R.string.terms_of_use),
+            showChevron = true,
+            modifier = Modifier.clickable {
+                uriHandler.openUri(Links.termsOfUse)
+            }
+        )
+    )
+}
+
+@Composable
+private fun OfficialSiteRow(
+    uriHandler: UriHandler
+) {
+    ListRowView(
+        data = ListRowData(
+            leadingText = stringResource(id = R.string.official_site),
+            showChevron = true,
+            modifier = Modifier.clickable {
+                uriHandler.openUri(Links.officialSite)
+            }
+        )
+    )
+}
+
+@Composable
+private fun AppDeveloperRow(
+    uriHandler: UriHandler
+) {
+    ListRowView(
+        data = ListRowData(
+            leadingText = stringResource(id = R.string.app_developer),
+            showChevron = true,
+            modifier = Modifier.clickable {
+                uriHandler.openUri(Links.appDeveloper)
+            }
+        )
+    )
+}
+
+@Composable
+private fun AppVersionRow() {
+    ListRowView(
+        data = ListRowData(
+            leadingText = stringResource(id = R.string.app_version),
+            trailingText = BuildConfig.VERSION_NAME
+        )
+    )
+}
+
+@Composable
+private fun SupportProjectSection(
+    uriHandler: UriHandler
+) {
+    SectionView(
+        titleID = R.string.support_project,
+        addPaddingToTitle = false,
+        modifier = Modifier.padding(horizontal = 16.dp)
+    ) {
+        WorkoutShopRow(uriHandler = uriHandler)
+    }
+}
+
+@Composable
+private fun WorkoutShopRow(
+    uriHandler: UriHandler
+) {
+    ListRowView(
+        data = ListRowData(
+            leadingText = stringResource(id = R.string.workout_shop),
+            showChevron = true,
+            modifier = Modifier
+                .clickable {
+                    uriHandler.openUri(Links.workoutShop)
+                }
+        )
+    )
 }
 
 private fun didTapSendFeedback(context: Context) {
@@ -193,8 +274,32 @@ private fun didTapSendFeedback(context: Context) {
                 Toast.LENGTH_LONG
             ).show()
         }
-    } catch (t: Throwable) {
-        t.localizedMessage?.let {
+    } catch (e: SecurityException) {
+        e.localizedMessage?.let {
+            Log.e(
+                tag,
+                it
+            )
+            Toast.makeText(
+                context,
+                it,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    } catch (e: IllegalArgumentException) {
+        e.localizedMessage?.let {
+            Log.e(
+                tag,
+                it
+            )
+            Toast.makeText(
+                context,
+                it,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    } catch (e: IllegalStateException) {
+        e.localizedMessage?.let {
             Log.e(
                 tag,
                 it

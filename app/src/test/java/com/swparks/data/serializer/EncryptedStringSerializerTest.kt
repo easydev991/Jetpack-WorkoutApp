@@ -36,9 +36,9 @@ class EncryptedStringSerializerTest {
         val mockCryptoManager = mockk<CryptoManager>()
         val plainText = "test_token_12345"
         val encryptedData = "encrypted_data_base64".toByteArray()
-        
+
         every { mockCryptoManager.decrypt(encryptedData) } returns plainText.toByteArray()
-        
+
         val serializer = EncryptedStringSerializer(mockCryptoManager)
 
         // When
@@ -68,9 +68,9 @@ class EncryptedStringSerializerTest {
         val plainText = "test_token_12345"
         val plainTextBytes = plainText.toByteArray()
         val encryptedData = "encrypted_data_base64".toByteArray()
-        
+
         every { mockCryptoManager.encrypt(plainTextBytes) } returns encryptedData
-        
+
         val serializer = EncryptedStringSerializer(mockCryptoManager)
 
         // When
@@ -100,10 +100,10 @@ class EncryptedStringSerializerTest {
         val plainText = "test_token_67890"
         val plainTextBytes = plainText.toByteArray()
         val encryptedData = "encrypted_token_base64".toByteArray()
-        
+
         every { mockCryptoManager.encrypt(plainTextBytes) } returns encryptedData
         every { mockCryptoManager.decrypt(encryptedData) } returns plainText.toByteArray()
-        
+
         val serializer = EncryptedStringSerializer(mockCryptoManager)
 
         // When

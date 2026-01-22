@@ -5,7 +5,7 @@ import com.swparks.R
 
 enum class ParkType(
     val rawValue: Int,
-    @StringRes val description: Int
+    @param:StringRes val description: Int
 ) {
     SOVIET(
         rawValue = 1,

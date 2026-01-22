@@ -6,11 +6,11 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
-import java.io.ByteArrayInputStream
-import java.io.IOException
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import java.io.ByteArrayInputStream
+import java.io.IOException
 
 class ReadJSONFromAssetsTest {
     private lateinit var mockContext: Context

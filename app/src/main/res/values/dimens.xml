@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Spacings -->
+    <dimen name="spacing_xxsmall">4dp</dimen>
+    <dimen name="spacing_xsmall">8dp</dimen>
+    <dimen name="spacing_small">12dp</dimen>
+    <dimen name="spacing_regular">16dp</dimen>
+    <dimen name="spacing_medium">20dp</dimen>
+    <dimen name="spacing_large">24dp</dimen>
+    <dimen name="spacing_xlarge">32dp</dimen>
+
+    <!-- Common Sizes -->
+    <dimen name="size_small">32dp</dimen>
+    <dimen name="size_medium">48dp</dimen>
+    <dimen name="size_large">80dp</dimen>
+
+    <!-- Icon Sizes -->
+    <dimen name="icon_size_small">32dp</dimen>
+    <dimen name="icon_size_medium">48dp</dimen>
+    <dimen name="icon_size_large">80dp</dimen>
+
+    <!-- Border Width -->
+    <dimen name="border_width">2dp</dimen>
+
+    <!-- Elevation -->
+    <dimen name="elevation_none">0dp</dimen>
+    <dimen name="elevation_small">2dp</dimen>
+    <dimen name="elevation_medium">4dp</dimen>
+
+    <!-- Animation Duration (ms) -->
+    <integer name="crossfade_duration_ms">300</integer>
+</resources>

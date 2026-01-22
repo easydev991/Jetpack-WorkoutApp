@@ -16,12 +16,12 @@ import retrofit2.HttpException
 import java.io.IOException
 
 sealed interface EventsUIState {
-    data class Success(val events: List<Event>): EventsUIState
-    data class Error(val message: String?): EventsUIState
-    object Loading: EventsUIState
+    data class Success(val events: List<Event>) : EventsUIState
+    data class Error(val message: String?) : EventsUIState
+    object Loading : EventsUIState
 }
 
-class EventsViewModel(private val swRepository: SWRepository): ViewModel() {
+class EventsViewModel(private val swRepository: SWRepository) : ViewModel() {
     var eventsUIState: EventsUIState by mutableStateOf(EventsUIState.Loading)
         private set
 

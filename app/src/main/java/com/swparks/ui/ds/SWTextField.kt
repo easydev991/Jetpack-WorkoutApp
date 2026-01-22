@@ -22,7 +22,7 @@ import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 /**
- * Основной текстфилд. Лучше использовать mutableStateOf для хранения текста во вьюмодели
+ * Конфигурация для отображения текстового поля
  *
  * @param modifier Модификатор
  * @param text Текст
@@ -34,41 +34,49 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * @param supportingText Текст-подсказка внизу
  * @param onTextChange Возвращает текст при вводе
  */
+data class TextFieldConfig(
+    val modifier: Modifier = Modifier,
+    val text: String,
+    @StringRes val labelID: Int,
+    val secure: Boolean = false,
+    val singleLine: Boolean = true,
+    val isError: Boolean = false,
+    val enabled: Boolean = true,
+    val supportingText: String = "",
+    val onTextChange: (String) -> Unit
+)
+
+/**
+ * Основной текстфилд. Лучше использовать mutableStateOf для хранения текста во вьюмодели
+ *
+ * @param config Конфигурация для отображения - [TextFieldConfig]
+ */
 @Composable
-fun SWTextField(
-    modifier: Modifier = Modifier,
-    text: String,
-    @StringRes labelID: Int,
-    secure: Boolean = false,
-    singleLine: Boolean = true,
-    isError: Boolean = false,
-    enabled: Boolean = true,
-    supportingText: String = "",
-    onTextChange: (String) -> Unit
-) {
+fun SWTextField(config: TextFieldConfig) {
     OutlinedTextField(
-        modifier = modifier.fillMaxWidth(),
-        value = text,
-        onValueChange = onTextChange,
-        singleLine = singleLine,
-        label = { Text(text = stringResource(id = labelID)) },
+        modifier = config.modifier.fillMaxWidth(),
+        value = config.text,
+        onValueChange = config.onTextChange,
+        singleLine = config.singleLine,
+        label = { Text(text = stringResource(id = config.labelID)) },
         supportingText = {
-            if (supportingText.isNotBlank()) {
+            if (config.supportingText.isNotBlank()) {
                 Text(
                     modifier = Modifier.fillMaxWidth(),
-                    text = supportingText,
+                    text = config.supportingText,
                     textAlign = TextAlign.Start,
                 )
             }
         },
         shape = RoundedCornerShape(8.dp),
-        visualTransformation = if (secure)
+        visualTransformation = if (config.secure)
             PasswordVisualTransformation()
         else VisualTransformation.None,
-        isError = isError,
-        enabled = enabled
+        isError = config.isError,
+        enabled = config.enabled
     )
 }
+
 
 @Preview(showBackground = true, locale = "ru")
 @Preview(
@@ -85,28 +93,36 @@ fun SWTextFieldPreview() {
                 modifier = Modifier.padding(horizontal = 16.dp)
             ) {
                 SWTextField(
-                    text = "",
-                    labelID = R.string.login,
-                    onTextChange = {}
+                    config = TextFieldConfig(
+                        text = "",
+                        labelID = R.string.login,
+                        onTextChange = {}
+                    )
                 )
                 SWTextField(
-                    text = "NineNineOne",
-                    labelID = R.string.login,
-                    onTextChange = {}
+                    config = TextFieldConfig(
+                        text = "NineNineOne",
+                        labelID = R.string.login,
+                        onTextChange = {}
+                    )
                 )
                 SWTextField(
-                    text = "123123123",
-                    secure = true,
-                    labelID = R.string.new_password,
-                    onTextChange = {}
+                    config = TextFieldConfig(
+                        text = "123123123",
+                        secure = true,
+                        labelID = R.string.new_password,
+                        onTextChange = {}
+                    )
                 )
                 SWTextField(
-                    text = "123",
-                    secure = true,
-                    isError = true,
-                    supportingText = stringResource(id = R.string.password_short),
-                    labelID = R.string.new_password,
-                    onTextChange = {}
+                    config = TextFieldConfig(
+                        text = "123",
+                        secure = true,
+                        isError = true,
+                        supportingText = stringResource(id = R.string.password_short),
+                        labelID = R.string.new_password,
+                        onTextChange = {}
+                    )
                 )
             }
         }

@@ -19,7 +19,7 @@ import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 /**
- * Вьюшка для входящей заявки на добавление в список друзей
+ * Данные для отображения вьюшки для входящей заявки на добавление в список друзей
  *
  * @param modifier Модификатор
  * @param imageStringURL Ссылка на аватар
@@ -28,64 +28,122 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * @param onClickAccept Действие по нажатию на кнопку "Принять"
  * @param onClickDecline Действие по нажатию на кнопку "Отклонить"
  */
+data class FriendRequestData(
+    val modifier: Modifier = Modifier,
+    val imageStringURL: String?,
+    val name: String,
+    val address: String?,
+    val onClickAccept: () -> Unit,
+    val onClickDecline: () -> Unit
+)
+
+/**
+ * Вьюшка для входящей заявки на добавление в список друзей
+ *
+ * @param data Данные для отображения - [FriendRequestData]
+ */
 @Composable
-fun FriendRequestRowView(
-    modifier: Modifier = Modifier,
-    imageStringURL: String?,
+fun FriendRequestRowView(data: FriendRequestData) {
+    FormCardContainer(modifier = data.modifier) {
+        FormRowContainer(
+            config = FormRowConfig(
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalPadding = 12.dp,
+                content = {
+                    FriendRequestAvatar(imageStringURL = data.imageStringURL)
+                    FriendRequestContent(
+                        name = data.name,
+                        address = data.address,
+                        onClickAccept = data.onClickAccept,
+                        onClickDecline = data.onClickDecline
+                    )
+                }
+            )
+        )
+    }
+}
+
+@Composable
+private fun FriendRequestAvatar(imageStringURL: String?) {
+    SWAsyncImage(
+        config = AsyncImageConfig(
+            imageStringURL = imageStringURL,
+            size = 42.dp,
+            shape = CircleShape
+        )
+    )
+}
+
+@Composable
+private fun FriendRequestContent(
     name: String,
     address: String?,
     onClickAccept: () -> Unit,
     onClickDecline: () -> Unit
 ) {
-    FormCardContainer(modifier = modifier) {
-        FormRowContainer(
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalPadding = 12.dp
-        ) {
-            SWAsyncImage(
-                imageStringURL = imageStringURL,
-                size = 42.dp,
-                shape = CircleShape
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        FriendRequestHeader(
+            name = name,
+            address = address
+        )
+        FriendRequestButtons(
+            onClickAccept = onClickAccept,
+            onClickDecline = onClickDecline
+        )
+    }
+}
+
+@Composable
+private fun FriendRequestHeader(
+    name: String,
+    address: String?
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            text = name,
+            maxLines = 1,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+        if (!address.isNullOrBlank()) {
+            Text(
+                text = address,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Column(
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = name,
-                        maxLines = 1,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    if (!address.isNullOrBlank()) {
-                        Text(
-                            text = address,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    SWButton(
-                        modifier = Modifier.weight(1f),
-                        size = SWButtonSize.SMALL,
-                        text = stringResource(id = R.string.accept_friend_request),
-                        onClick = onClickAccept
-                    )
-                    SWButton(
-                        modifier = Modifier.weight(1f),
-                        size = SWButtonSize.SMALL,
-                        mode = SWButtonMode.TINTED,
-                        text = stringResource(id = R.string.decline_friend_request),
-                        onClick = onClickDecline
-                    )
-                }
-            }
         }
+    }
+}
+
+@Composable
+private fun FriendRequestButtons(
+    onClickAccept: () -> Unit,
+    onClickDecline: () -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        SWButton(
+            config = ButtonConfig(
+                modifier = Modifier.weight(1f),
+                size = SWButtonSize.SMALL,
+                text = stringResource(id = R.string.accept_friend_request),
+                onClick = onClickAccept
+            )
+        )
+        SWButton(
+            config = ButtonConfig(
+                modifier = Modifier.weight(1f),
+                size = SWButtonSize.SMALL,
+                mode = SWButtonMode.TINTED,
+                text = stringResource(id = R.string.decline_friend_request),
+                onClick = onClickDecline
+            )
+        )
     }
 }
 
@@ -100,11 +158,13 @@ fun FriendRequestRowViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             FriendRequestRowView(
-                imageStringURL = null,
-                name = "Silverfrog19",
-                address = "Россия, Архангельск",
-                onClickAccept = {},
-                onClickDecline = {}
+                data = FriendRequestData(
+                    imageStringURL = null,
+                    name = "Silverfrog19",
+                    address = "Россия, Архангельск",
+                    onClickAccept = {},
+                    onClickDecline = {}
+                )
             )
         }
     }

@@ -30,7 +30,7 @@ import com.swparks.model.Gender
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 /**
- * Карточка профиля
+ * Данные для отображения карточки профиля
  *
  * @param modifier Модификатор
  * @param imageStringURL Ссылка на фото профиля
@@ -39,30 +39,39 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * @param age Возраст в годах
  * @param shortAddress Краткий адрес в формате "Россия, Москва"
  */
+data class UserProfileData(
+    val modifier: Modifier = Modifier,
+    val imageStringURL: String?,
+    val userName: String,
+    val gender: String,
+    val age: Int,
+    val shortAddress: String
+)
+
+/**
+ * Карточка профиля
+ *
+ * @param data Данные для отображения - [UserProfileData]
+ */
 @Composable
-fun UserProfileCardView(
-    modifier: Modifier = Modifier,
-    imageStringURL: String?,
-    userName: String,
-    gender: String,
-    age: Int,
-    shortAddress: String
-) {
+fun UserProfileCardView(data: UserProfileData) {
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.fillMaxWidth()
+        modifier = data.modifier.fillMaxWidth()
     ) {
         SWAsyncImage(
-            imageStringURL = imageStringURL,
-            size = 150.dp
+            config = AsyncImageConfig(
+                imageStringURL = data.imageStringURL,
+                size = 150.dp
+            )
         )
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = userName,
+                text = data.userName,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -75,22 +84,23 @@ fun UserProfileCardView(
             ) {
                 AdditionalInfoRow(
                     imageVector = Icons.Rounded.AccountCircle,
-                    text = "$gender, ${
+                    text = "${data.gender}, ${
                         pluralStringResource(
                             id = R.plurals.ageInYears,
-                            count = age,
-                            age
+                            count = data.age,
+                            data.age
                         )
                     }"
                 )
                 AdditionalInfoRow(
                     imageVector = Icons.Rounded.LocationOn,
-                    text = shortAddress
+                    text = data.shortAddress
                 )
             }
         }
     }
 }
+
 
 @Composable
 private fun AdditionalInfoRow(
@@ -125,11 +135,13 @@ fun UserProfileCardViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             UserProfileCardView(
-                imageStringURL = null,
-                userName = "Very very very very very very long user name for two lines",
-                gender = stringResource(id = Gender.FEMALE.description),
-                age = 30,
-                shortAddress = "Россия, Москва"
+                data = UserProfileData(
+                    imageStringURL = null,
+                    userName = "Very very very very very very long user name for two lines",
+                    gender = stringResource(id = Gender.FEMALE.description),
+                    age = 30,
+                    shortAddress = "Россия, Москва"
+                )
             )
         }
     }

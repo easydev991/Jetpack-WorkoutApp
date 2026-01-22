@@ -11,7 +11,7 @@
 ### Android-приложение (Jetpack-WorkoutApp)
 
 - 🚧 **В активной разработке**
-- ✅ Реализованы компоненты дизайн-системы (23 компонента для верстки UI)
+- ✅ Реализованы компоненты дизайн-системы (27 компонентов для верстки UI)
 - ✅ Реализованы модели данных (30+ моделей)
 - ✅ Реализован полный API клиент SWApi с 57 эндпоинтами (все запросы к серверу)
 - ✅ Реализован репозиторий SWRepository для работы с данными
@@ -48,9 +48,15 @@
 
 - UserProfileCardView, IncognitoProfileView
 
-**Другое:**
+**Компоненты состояния и ошибок:**
 
-- LoadingOverlayView, CircleBadgeView, CircleBackgroundModifier, ScaleOnTapModifier, ColorScheme+isLight
+- LoadingOverlayView, ErrorContentView
+
+**Модификаторы:**
+
+- CircleBadgeView, CircleBackgroundModifier, ScaleOnTapModifier, ColorScheme+isLight
+
+**Всего:** 27 компонентов дизайн-системы
 
 #### Реализованные экраны (статус: черновые заглушки)
 
@@ -621,7 +627,7 @@ app/src/main/java/com/swparks/
 ├── network/           # API клиенты
 │   └── SWApi.kt                  # HTTP клиент (57 endpoints)
 ├── ui/
-│   ├── ds/            # Компоненты дизайн-системы (23 компонента)
+│   ├── ds/            # Компоненты дизайн-системы (27 компонентов)
 │   ├── screens/       # Экраны приложения
 │   │   ├── events/   # Мероприятия (EventsScreen, EventsViewModel)
 │   │   ├── profile/  # Профиль (ProfileRootScreen - заглушка)
@@ -669,25 +675,22 @@ app/src/test/java/com/swparks/                       # Unit-тесты
 │   │   └── EncryptedStringSerializerTest.kt
 │   ├── datetime/                                   # Тесты десериализации дат
 │   │   └── FlexibleDateDeserializerTest.kt
-│   └── SecureTokenRepositoryTest.kt               # Тесты защищенного репозитория
+│   ├── SecureTokenRepositoryTest.kt               # Тесты защищенного репозитория
+│   └── UserPreferencesRepositoryTest.kt            # Тесты репозитория настроек
 ├── domain/                                        # Тесты Domain layer
 │   └── usecase/                                   # Тесты use cases
 │       ├── LoginUseCaseTest.kt
 │       └── LogoutUseCaseTest.kt
 ├── model/                                         # Тесты моделей данных
 │   ├── LoginSuccessTest.kt
-│   ├── ParkTest.kt, ParkFormTest.kt
-│   ├── EventTest.kt, EventFormTest.kt
+│   ├── UserTest.kt, MainUserFormTest.kt
+│   ├── ParkTest.kt, ParkFormTest.kt, ParkDeserializationTest.kt
+│   ├── EventTest.kt, EventFormTest.kt, EventDeserializationTest.kt
 │   ├── CommentTest.kt
 │   ├── JournalResponseTest.kt, JournalEntryResponseTest.kt
 │   ├── DialogResponseTest.kt, MessageResponseTest.kt
-│   └── ParkDeserializationTest.kt, EventDeserializationTest.kt
-├── network/                                       # Тесты сети
-│   ├── MockSWApi.kt                                # Mock API для тестов
-│   └── MockSWApiTest.kt
-├── ui/viewmodel/                                   # Тесты ViewModels
-│   └── AuthViewModelTest.kt
 └── utils/                                         # Тесты утилит
+    ├── JsonUtilsTest.kt
     └── ReadJSONFromAssetsTest.kt
 
 app/src/androidTest/java/com/swparks/               # Интеграционные тесты
@@ -736,7 +739,7 @@ app/src/main/java/com/swparks/
 
 ### Компоненты дизайн-системы
 
-- ✅ Компоненты дизайн-системы уже реализованы и готовы к использованию (23 компонента)
+- ✅ Компоненты дизайн-системы уже реализованы и готовы к использованию (27 компонентов)
 - Использовать готовые компоненты для верстки экранов
 
 ### Документация JetpackDays
@@ -828,11 +831,26 @@ app/src/main/java/com/swparks/
 
 ### Тестирование
 
-- **Unit-тесты**: 35+ тестов для всех основных компонентов
-- **Интеграционные тесты**: CryptoManagerIntegrationTest
-- **MockK для тестирования**: MockSWApi для изолированного тестирования сетевых функций
-- **Turbine для Flow**: тестирование реактивных потоков данных
-- **Все сетевые функции**: тестируются только на моках, без реальных HTTP запросов
+**Unit-тесты:**
+
+- **Data layer** - 20+ тестов для репозиториев, интерцепторов, сериализаторов, шифрования
+- **Domain layer** - 2 теста для use cases (LoginUseCase, LogoutUseCase)
+- **Model** - 14+ тестов для моделей данных
+- **ViewModel** - 2 теста (AuthViewModel, EventsViewModel)
+- **Utils** - 2 теста (JsonUtils, ReadJSONFromAssets)
+- **Mocking** - MockSWApi для изолированного тестирования сетевых функций
+
+**Интеграционные тесты:**
+
+- CryptoManagerIntegrationTest - интеграционные тесты шифрования
+
+**Всего:** 40+ тестов
+
+**Инструменты:**
+
+- MockK для создания моков
+- Turbine для тестирования Flow/StateFlow
+- Все сетевые функции тестируются только на моках, без реальных HTTP запросов
 
 ### Детальная документация
 

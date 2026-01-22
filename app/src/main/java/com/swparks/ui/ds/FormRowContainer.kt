@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * Обертка для заворачивания контента в горизонтальный стек
+ * Конфигурация для отображения горизонтального стека
  *
  * @param modifier Модификатор
  * @param verticalAlignment Выравнивание по вертикали
@@ -21,25 +21,31 @@ import androidx.compose.ui.unit.dp
  * @param verticalPadding Вертикальный паддинг
  * @param content Контент
  */
+data class FormRowConfig(
+    val modifier: Modifier = Modifier,
+    val verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
+    val horizontalArrangement: Arrangement.Horizontal,
+    val horizontalPadding: Dp = 12.dp,
+    val verticalPadding: Dp = 0.dp,
+    val content: @Composable (RowScope.() -> Unit)
+)
+
+/**
+ * Обертка для заворачивания контента в горизонтальный стек
+ *
+ * @param config Конфигурация для отображения - [FormRowConfig]
+ */
 @Composable
-fun FormRowContainer(
-    modifier: Modifier = Modifier,
-    verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
-    horizontalArrangement: Arrangement.Horizontal,
-    horizontalPadding: Dp = 12.dp,
-    verticalPadding: Dp = 0.dp,
-    content: @Composable (RowScope.() -> Unit)
-) {
+fun FormRowContainer(config: FormRowConfig) {
     Row(
-        horizontalArrangement = horizontalArrangement,
-        verticalAlignment = verticalAlignment,
-        modifier = modifier
+        horizontalArrangement = config.horizontalArrangement,
+        verticalAlignment = config.verticalAlignment,
+        modifier = config.modifier
             .fillMaxWidth()
             .padding(
-                horizontal = horizontalPadding,
-                vertical = verticalPadding
-            )
-    ) {
-        content()
-    }
+                horizontal = config.horizontalPadding,
+                vertical = config.verticalPadding
+            ),
+        content = config.content
+    )
 }

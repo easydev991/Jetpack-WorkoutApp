@@ -47,7 +47,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * @property imageVector Иконка для действия
  */
 enum class JournalAction(
-    @StringRes val titleID: Int,
+    @param:StringRes val titleID: Int,
     val imageVector: ImageVector
 ) {
     EDIT(
@@ -73,6 +73,11 @@ enum class JournalAction(
  *
  * @property messageMaxLines Лимит строк для основного текста вьюшки
  */
+/**
+ * Тип вьюшки
+ *
+ * @property messageMaxLines Лимит строк для основного текста вьюшки
+ */
 enum class JournalRowMode(val messageMaxLines: Int) {
     /**
      * Дневник
@@ -86,7 +91,26 @@ enum class JournalRowMode(val messageMaxLines: Int) {
 }
 
 /**
- * Вьюшка для дневника/записи в дневнике в списке
+ * Конфигурация для меню действий дневника/записи в дневнике
+ *
+ * @property showMenu Показано ли меню
+ * @property enabled Доступность кнопки-меню
+ * @property actions Список действий
+ * @property onMenuDismiss Обработчик закрытия меню
+ * @property onMenuShow Обработчик открытия меню
+ * @property onClickAction Обработчик клика на действие
+ */
+data class JournalActionsMenuConfig(
+    val showMenu: Boolean,
+    val enabled: Boolean = true,
+    val actions: List<JournalAction>,
+    val onMenuDismiss: () -> Unit,
+    val onMenuShow: () -> Unit,
+    val onClickAction: (JournalAction) -> Unit
+)
+
+/**
+ * Данные для отображения вьюшки дневника/записи в дневнике в списке
  *
  * @param modifier Модификатор
  * @param imageStringURL Ссылка на аватар автора дневника/записи
@@ -98,20 +122,27 @@ enum class JournalRowMode(val messageMaxLines: Int) {
  * @param actions Доп. действия для кнопки-меню
  * @param onClickAction Действие при нажатии на кнопку в меню
  */
+data class JournalRowData(
+    val modifier: Modifier = Modifier,
+    val imageStringURL: String?,
+    val title: String,
+    val dateString: String,
+    val bodyText: String,
+    val mode: JournalRowMode,
+    val enabled: Boolean = true,
+    val actions: List<JournalAction>,
+    val onClickAction: (JournalAction) -> Unit
+)
+
+/**
+ * Вьюшка для дневника/записи в дневнике в списке
+ *
+ * @param data Данные для отображения - [JournalRowData]
+ */
 @Composable
-fun JournalRowView(
-    modifier: Modifier = Modifier,
-    imageStringURL: String?,
-    title: String,
-    dateString: String,
-    bodyText: String,
-    mode: JournalRowMode,
-    enabled: Boolean = true,
-    actions: List<JournalAction>,
-    onClickAction: (JournalAction) -> Unit
-) {
+fun JournalRowView(data: JournalRowData) {
     var showMenu by remember { mutableStateOf(false) }
-    FormCardContainer(modifier = modifier) {
+    FormCardContainer(modifier = data.modifier) {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.Start,
@@ -121,96 +152,132 @@ fun JournalRowView(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    SWAsyncImage(
-                        imageStringURL = imageStringURL,
-                        size = 42.dp,
-                        contentScale = ContentScale.Crop,
-                        showBorder = false
+                JournalHeader(
+                    imageStringURL = data.imageStringURL,
+                    title = data.title,
+                    dateString = data.dateString
+                )
+                JournalActionsMenu(
+                    config = JournalActionsMenuConfig(
+                        showMenu = showMenu,
+                        enabled = data.enabled,
+                        actions = data.actions,
+                        onMenuDismiss = { showMenu = false },
+                        onMenuShow = { showMenu = true },
+                        onClickAction = data.onClickAction
                     )
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Text(
-                            text = dateString,
-                            style = MaterialTheme.typography.bodyMedium,
-                            maxLines = 1,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Box {
-                    IconButton(
-                        modifier = Modifier.size(24.dp),
-                        enabled = enabled,
-                        onClick = { showMenu = true }
-                    ) {
-                        Image(
-                            imageVector = Icons.Default.MoreVert,
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant),
-                            modifier = Modifier.size(18.dp),
-                            contentDescription = null
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = showMenu,
-                        onDismissRequest = { showMenu = false }
-                    ) {
-                        actions.forEach { item ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = stringResource(id = item.titleID),
-                                        color = when (item) {
-                                            JournalAction.DELETE,
-                                            JournalAction.REPORT -> MaterialTheme.colorScheme.error
-
-                                            else -> MaterialTheme.colorScheme.onPrimaryContainer
-                                        }
-                                    )
-                                },
-                                trailingIcon = {
-                                    Image(
-                                        imageVector = item.imageVector,
-                                        colorFilter = ColorFilter.tint(
-                                            when (item) {
-                                                JournalAction.DELETE,
-                                                JournalAction.REPORT -> MaterialTheme.colorScheme.error
-
-                                                else -> MaterialTheme.colorScheme.onPrimaryContainer
-                                            }
-                                        ),
-                                        contentDescription = null
-                                    )
-                                },
-                                onClick = {
-                                    showMenu = false
-                                    onClickAction(item)
-                                }
-                            )
-                        }
-                    }
-                }
+                )
             }
             Text(
-                text = bodyText,
+                text = data.bodyText,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight(400),
-                maxLines = mode.messageMaxLines,
+                maxLines = data.mode.messageMaxLines,
                 overflow = TextOverflow.Ellipsis
             )
         }
     }
+}
+
+@Composable
+private fun JournalHeader(
+    imageStringURL: String?,
+    title: String,
+    dateString: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        SWAsyncImage(
+            config = AsyncImageConfig(
+                imageStringURL = imageStringURL,
+                size = 42.dp,
+                contentScale = ContentScale.Crop,
+                showBorder = false
+            )
+        )
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Text(
+                text = dateString,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun JournalActionsMenu(config: JournalActionsMenuConfig) {
+    Box {
+        IconButton(
+            modifier = Modifier.size(24.dp),
+            enabled = config.enabled,
+            onClick = config.onMenuShow
+        ) {
+            Image(
+                imageVector = Icons.Default.MoreVert,
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant),
+                modifier = Modifier.size(18.dp),
+                contentDescription = null
+            )
+        }
+        DropdownMenu(
+            expanded = config.showMenu,
+            onDismissRequest = config.onMenuDismiss
+        ) {
+            config.actions.forEach { item ->
+                JournalDropdownMenuItem(
+                    action = item,
+                    onClick = {
+                        config.onMenuDismiss()
+                        config.onClickAction(item)
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun JournalDropdownMenuItem(
+    action: JournalAction,
+    onClick: () -> Unit
+) {
+    DropdownMenuItem(
+        text = {
+            Text(
+                text = stringResource(id = action.titleID),
+                color = getActionColor(action)
+            )
+        },
+        trailingIcon = {
+            Image(
+                imageVector = action.imageVector,
+                colorFilter = ColorFilter.tint(getActionColor(action)),
+                contentDescription = null
+            )
+        },
+        onClick = onClick
+    )
+}
+
+@Composable
+private fun getActionColor(action: JournalAction) = when (action) {
+    JournalAction.DELETE,
+    JournalAction.REPORT -> MaterialTheme.colorScheme.error
+
+    else -> MaterialTheme.colorScheme.onPrimaryContainer
 }
 
 @Preview(
@@ -230,37 +297,49 @@ fun JournalRowViewPreview() {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 JournalRowView(
-                    imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
-                    title = "Дневник №1",
-                    dateString = "17 февраля, 10:56",
-                    bodyText = "Сегодня была тренировка на стадионе. Для начала небольшая пробежка для разминки, затем пара подходов подтягиваний турнике, и несколько подходов отжиманий",
-                    mode = JournalRowMode.ROOT,
-                    actions = listOf(
-                        JournalAction.SETUP,
-                        JournalAction.DELETE
-                    ),
-                    onClickAction = {}
+                    data = JournalRowData(
+                        imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
+                        title = "Дневник №1",
+                        dateString = "17 февраля, 10:56",
+                        bodyText = "Сегодня была тренировка на стадионе. Для начала небольшая " +
+                                "пробежка для разминки, затем пара подходов подтягиваний турнике, " +
+                                "и несколько подходов отжиманий",
+                        mode = JournalRowMode.ROOT,
+                        actions = listOf(
+                            JournalAction.SETUP,
+                            JournalAction.DELETE
+                        ),
+                        onClickAction = {}
+                    )
                 )
                 JournalRowView(
-                    imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
-                    title = "NineNineOne",
-                    dateString = "20 февраля, 10:00",
-                    bodyText = "Сегодня была тренировка на стадионе. Для начала небольшая пробежка для разминки, затем пара подходов подтягиваний турнике, и несколько подходов отжиманий",
-                    mode = JournalRowMode.ENTRY,
-                    actions = listOf(
-                        JournalAction.EDIT,
-                        JournalAction.DELETE
-                    ),
-                    onClickAction = {}
+                    data = JournalRowData(
+                        imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
+                        title = "NineNineOne",
+                        dateString = "20 февраля, 10:00",
+                        bodyText = "Сегодня была тренировка на стадионе. Для начала небольшая " +
+                                "пробежка для разминки, затем пара подходов подтягиваний турнике, " +
+                                "и несколько подходов отжиманий",
+                        mode = JournalRowMode.ENTRY,
+                        actions = listOf(
+                            JournalAction.EDIT,
+                            JournalAction.DELETE
+                        ),
+                        onClickAction = {}
+                    )
                 )
                 JournalRowView(
-                    imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
-                    title = "NineNineOne",
-                    dateString = "20 февраля, 10:00",
-                    bodyText = "Сегодня была тренировка на стадионе. Для начала небольшая пробежка для разминки, затем пара подходов подтягиваний турнике, и несколько подходов отжиманий",
-                    mode = JournalRowMode.ENTRY,
-                    actions = listOf(JournalAction.REPORT),
-                    onClickAction = {}
+                    data = JournalRowData(
+                        imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
+                        title = "NineNineOne",
+                        dateString = "20 февраля, 10:00",
+                        bodyText = "Сегодня была тренировка на стадионе. Для начала небольшая " +
+                                "пробежка для разминки, затем пара подходов подтягиваний турнике, " +
+                                "и несколько подходов отжиманий",
+                        mode = JournalRowMode.ENTRY,
+                        actions = listOf(JournalAction.REPORT),
+                        onClickAction = {}
+                    )
                 )
             }
         }

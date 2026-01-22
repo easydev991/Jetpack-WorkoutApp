@@ -30,30 +30,35 @@ fun UserRowView(
 ) {
     FormCardContainer(modifier = modifier) {
         FormRowContainer(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalPadding = 12.dp
-        ) {
-            SWAsyncImage(
-                imageStringURL = imageStringURL,
-                size = 42.dp,
-                shape = CircleShape
-            )
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = name,
-                    maxLines = 1,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                if (!address.isNullOrBlank()) {
-                    Text(
-                        text = address,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+            config = FormRowConfig(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalPadding = 12.dp,
+                content = {
+                    SWAsyncImage(
+                        config = AsyncImageConfig(
+                            imageStringURL = imageStringURL,
+                            size = 42.dp,
+                            shape = CircleShape
+                        )
                     )
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = name,
+                            maxLines = 1,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        if (!address.isNullOrBlank()) {
+                            Text(
+                                text = address,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
-            }
-        }
+            )
+        )
     }
 }
 

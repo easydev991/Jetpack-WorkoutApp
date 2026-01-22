@@ -7,7 +7,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -21,6 +20,7 @@ import org.junit.Before
 import org.junit.Test
 import retrofit2.HttpException
 import retrofit2.Response
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EventsViewModelTest {
@@ -38,19 +38,19 @@ class EventsViewModelTest {
 
     private fun createMockEvent(id: Long = 1L): Event {
         return Event(
-                id = id,
-                title = "Test Event",
-                description = "Test Description",
-                beginDate = "2024-01-01",
-                countryID = 1,
-                cityID = 1,
-                preview = "",
-                latitude = "0.0",
-                longitude = "0.0",
-                isCurrent = false,
-                photos = emptyList(),
-                author = createMockUser(),
-                name = "Test Event"
+            id = id,
+            title = "Test Event",
+            description = "Test Description",
+            beginDate = "2024-01-01",
+            countryID = 1,
+            cityID = 1,
+            preview = "",
+            latitude = "0.0",
+            longitude = "0.0",
+            isCurrent = false,
+            photos = emptyList(),
+            author = createMockUser(),
+            name = "Test Event"
         )
     }
 
@@ -72,9 +72,9 @@ class EventsViewModelTest {
         // После init состояние может быть Loading или уже Success/Error в зависимости от времени
         // выполнения
         assertTrue(
-                viewModel.eventsUIState is EventsUIState.Loading ||
-                        viewModel.eventsUIState is EventsUIState.Success ||
-                        viewModel.eventsUIState is EventsUIState.Error
+            viewModel.eventsUIState is EventsUIState.Loading ||
+                    viewModel.eventsUIState is EventsUIState.Success ||
+                    viewModel.eventsUIState is EventsUIState.Error
         )
         coVerify { mockRepository.getPastEvents() }
     }
@@ -120,23 +120,23 @@ class EventsViewModelTest {
 
     @Test
     fun getPastEvents_whenRepositoryThrowsIOExceptionWithNullMessage_thenStateIsErrorWithNullMessage() =
-            runTest {
-                // Given
-                val mockRepository = mockk<SWRepository>()
-                coEvery { mockRepository.getPastEvents() } throws IOException()
+        runTest {
+            // Given
+            val mockRepository = mockk<SWRepository>()
+            coEvery { mockRepository.getPastEvents() } throws IOException()
 
-                val viewModel = EventsViewModel(mockRepository)
-                advanceUntilIdle() // Ждем завершения init
+            val viewModel = EventsViewModel(mockRepository)
+            advanceUntilIdle() // Ждем завершения init
 
-                // When
-                viewModel.getPastEvents()
-                advanceUntilIdle()
+            // When
+            viewModel.getPastEvents()
+            advanceUntilIdle()
 
-                // Then
-                assertTrue(viewModel.eventsUIState is EventsUIState.Error)
-                val errorState = viewModel.eventsUIState as EventsUIState.Error
-                assertEquals(null, errorState.message)
-            }
+            // Then
+            assertTrue(viewModel.eventsUIState is EventsUIState.Error)
+            val errorState = viewModel.eventsUIState as EventsUIState.Error
+            assertEquals(null, errorState.message)
+        }
 
     @Test
     fun getPastEvents_whenRepositoryThrowsHttpException_thenStateIsError() = runTest {

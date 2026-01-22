@@ -25,6 +25,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.swparks.R
 import com.swparks.model.Event
 import com.swparks.ui.ds.ErrorContentView
+import com.swparks.ui.ds.EventRowData
 import com.swparks.ui.ds.EventRowView
 import com.swparks.ui.ds.LoadingOverlayView
 
@@ -78,13 +79,15 @@ fun PastEventsScreen(
                 events,
                 key = { it.id }) { event ->
                 EventRowView(
-                    imageStringURL = event.preview,
-                    name = event.title,
-                    dateString = event.beginDate,
-                    address = "${event.countryID}, ${event.cityID}",
-                    onClick = {
-                        Log.d("EventsScreen", "Нажато мероприятие: ${event.title}")
-                    }
+                    data = EventRowData(
+                        imageStringURL = event.preview,
+                        name = event.title,
+                        dateString = event.beginDate,
+                        address = "${event.countryID}, ${event.cityID}",
+                        onClick = {
+                            Log.d("EventsScreen", "Нажато мероприятие: ${event.title}")
+                        }
+                    )
                 )
             }
         }

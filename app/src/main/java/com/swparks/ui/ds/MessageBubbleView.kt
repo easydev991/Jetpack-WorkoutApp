@@ -132,7 +132,9 @@ fun MessageBubbleViewPreview() {
             ) {
                 MessageBubbleView(
                     messageType = MessageType.INCOMING,
-                    messageBody = "orem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse ut semper quam. Phasellus non mauris sem. Donec sed fermentum eros. Donec pretium nec turpis a semper.",
+                    messageBody = "orem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                            "Suspendisse ut semper quam. Phasellus non mauris sem. " +
+                            "Donec sed fermentum eros. Donec pretium nec turpis a semper.",
                     dateString = "11:22"
                 )
                 MessageBubbleView(

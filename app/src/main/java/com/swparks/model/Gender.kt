@@ -5,7 +5,7 @@ import com.swparks.R
 
 enum class Gender(
     val rawValue: Int,
-    @StringRes val description: Int
+    @param:StringRes val description: Int
 ) {
     MALE(
         rawValue = 0,

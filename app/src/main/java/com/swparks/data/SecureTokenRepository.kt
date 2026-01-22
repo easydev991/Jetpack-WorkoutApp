@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.swparks.data.serializer.EncryptedStringSerializer
+import java.io.IOException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
@@ -96,7 +97,7 @@ class SecureTokenRepository(
             } else {
                 null
             }
-        } catch (e: Exception) {
+        } catch (e: IOException) {
             Log.e(tag, "Ошибка при чтении токена синхронно", e)
             null
         }
@@ -114,7 +115,7 @@ class SecureTokenRepository(
                     preferences.remove(encrypted_token)
                 }
                 Log.i(tag, "Токен авторизации успешно очищен")
-            } catch (e: Exception) {
+            } catch (e: IOException) {
                 Log.e(tag, "Ошибка при очистке токена", e)
             }
         }

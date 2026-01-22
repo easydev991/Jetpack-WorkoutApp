@@ -4,7 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -60,9 +60,9 @@ fun SectionViewPreview() {
                 titleID = R.string.about_app,
                 addPaddingToTitle = false
             ) {
-                ListRowView(leadingText = "Text")
+                ListRowView(data = ListRowData(leadingText = "Text"))
             }
-            Divider()
+            HorizontalDivider()
             SectionView(
                 titleID = R.string.friends,
                 titleBottomPadding = 4.dp
@@ -73,17 +73,19 @@ fun SectionViewPreview() {
                     address = "Россия, Арзамас"
                 )
             }
-            Divider()
+            HorizontalDivider()
             SectionView(
                 titleID = R.string.requests,
                 titleBottomPadding = 4.dp
             ) {
                 FriendRequestRowView(
-                    imageStringURL = null,
-                    name = "Alica",
-                    address = "Россия, Арзамас",
-                    onClickAccept = {},
-                    onClickDecline = {}
+                    data = FriendRequestData(
+                        imageStringURL = null,
+                        name = "Alica",
+                        address = "Россия, Арзамас",
+                        onClickAccept = {},
+                        onClickDecline = {}
+                    )
                 )
             }
         }

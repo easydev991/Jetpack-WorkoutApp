@@ -1,8 +1,8 @@
 package com.swparks.model
 
+import com.swparks.data.datetime.FlexibleDateDeserializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import com.swparks.data.datetime.FlexibleDateDeserializer
 
 /**
  * Модель пользователя

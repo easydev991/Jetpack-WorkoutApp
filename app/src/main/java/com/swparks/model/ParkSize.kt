@@ -5,7 +5,7 @@ import com.swparks.R
 
 enum class ParkSize(
     val rawValue: Int,
-    @StringRes val description: Int
+    @param:StringRes val description: Int
 ) {
     SMALL(
         rawValue = 1,

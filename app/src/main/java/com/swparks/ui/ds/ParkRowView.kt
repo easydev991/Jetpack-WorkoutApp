@@ -24,7 +24,7 @@ import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 /**
- * Вьюшка с информацией о площадке в списке
+ * Данные для отображения вьюшки с информацией о площадке в списке
  *
  * @param modifier Модификатор
  * @param imageStringURL Ссылка на превью-фото площадки
@@ -33,64 +33,76 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * @param peopleTrainCount Количество людей, тренирующихся на площадке
  * @param onClick Обработчик нажатия на элемент
  */
+data class ParkRowData(
+    val modifier: Modifier = Modifier,
+    val imageStringURL: String?,
+    val name: String,
+    val address: String? = null,
+    val peopleTrainCount: Int,
+    val onClick: (() -> Unit)? = null
+)
+
+/**
+ * Вьюшка с информацией о площадке в списке
+ *
+ * @param data Данные для отображения - [ParkRowData]
+ */
 @Composable
-fun ParkRowView(
-    modifier: Modifier = Modifier,
-    imageStringURL: String?,
-    name: String,
-    address: String? = null,
-    peopleTrainCount: Int,
-    onClick: (() -> Unit)? = null
-) {
+fun ParkRowView(data: ParkRowData) {
     FormCardContainer(
-        modifier = modifier,
-        onClick = onClick
+        modifier = data.modifier,
+        onClick = data.onClick
     ) {
         FormRowContainer(
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalPadding = 12.dp
-        ) {
-            SWAsyncImage(
-                imageStringURL = imageStringURL,
-                size = 84.dp,
-                contentScale = ContentScale.Crop,
-                showBorder = false
-            )
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    if (!address.isNullOrBlank()) {
-                        AdditionalInfoRow(
-                            imageID = R.drawable.outline_assistant_navigation_16,
-                            text = address
+            config = FormRowConfig(
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalPadding = 12.dp,
+                content = {
+                    SWAsyncImage(
+                        config = AsyncImageConfig(
+                            imageStringURL = data.imageStringURL,
+                            size = 84.dp,
+                            contentScale = ContentScale.Crop,
+                            showBorder = false
                         )
-                    }
-                    AdditionalInfoRow(
-                        imageID = R.drawable.outline_account_circle_16,
-                        text = if (peopleTrainCount > 0) {
-                            pluralStringResource(
-                                id = R.plurals.peopleTrainHere,
-                                count = peopleTrainCount,
-                                peopleTrainCount
-                            )
-                        } else {
-                            stringResource(id = R.string.nobody_trains_here)
-                        }
                     )
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = data.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            if (!data.address.isNullOrBlank()) {
+                                AdditionalInfoRow(
+                                    imageID = R.drawable.outline_assistant_navigation_16,
+                                    text = data.address
+                                )
+                            }
+                            AdditionalInfoRow(
+                                imageID = R.drawable.outline_account_circle_16,
+                                text = if (data.peopleTrainCount > 0) {
+                                    pluralStringResource(
+                                        id = R.plurals.peopleTrainHere,
+                                        count = data.peopleTrainCount,
+                                        data.peopleTrainCount
+                                    )
+                                } else {
+                                    stringResource(id = R.string.nobody_trains_here)
+                                }
+                            )
+                        }
+                    }
                 }
-            }
-        }
+            )
+        )
     }
 }
 
@@ -127,10 +139,12 @@ fun ParkRowViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             ParkRowView(
-                imageStringURL = null,
-                name = "N° 3 Легендарная / Средняя",
-                address = "м. Партизанская, улица 2-я Советская",
-                peopleTrainCount = 5
+                data = ParkRowData(
+                    imageStringURL = null,
+                    name = "N° 3 Легендарная / Средняя",
+                    address = "м. Партизанская, улица 2-я Советская",
+                    peopleTrainCount = 5
+                )
             )
         }
     }
