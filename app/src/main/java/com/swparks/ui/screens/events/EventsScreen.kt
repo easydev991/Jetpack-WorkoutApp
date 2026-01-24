@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -58,8 +57,7 @@ fun PastEventsScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(text = stringResource(id = R.string.events_title))
-                },
-                windowInsets = WindowInsets(top = 0)
+                }
             )
         },
         modifier = modifier

@@ -1,7 +1,6 @@
 package com.swparks.ui.screens.profile
 
 import android.util.Log
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,8 +23,7 @@ fun ProfileRootScreen(modifier: Modifier = Modifier) {
             CenterAlignedTopAppBar(
                 title = {
                     Text(text = stringResource(id = R.string.profile))
-                },
-                windowInsets = WindowInsets(top = 0),
+                }
             )
         }
     ) { paddingValues ->

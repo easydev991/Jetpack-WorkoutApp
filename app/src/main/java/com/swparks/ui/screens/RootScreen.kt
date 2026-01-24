@@ -1,5 +1,6 @@
 package com.swparks.ui.screens
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -28,7 +29,8 @@ fun RootScreen(appState: AppState) {
     Scaffold(
         bottomBar = {
             BottomNavigationBar(appState = appState)
-        }
+        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { paddingValues ->
         NavHost(
             navController = appState.navController,

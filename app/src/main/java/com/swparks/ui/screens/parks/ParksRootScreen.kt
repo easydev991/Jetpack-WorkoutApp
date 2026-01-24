@@ -3,7 +3,6 @@ package com.swparks.ui.screens.parks
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -37,7 +36,6 @@ fun ParksRootScreen(
                 title = {
                     Text(text = stringResource(R.string.parks_title, parks.size.toString()))
                 },
-                windowInsets = WindowInsets(top = 0),
                 actions = {
                     IconButton(
                         onClick = {
