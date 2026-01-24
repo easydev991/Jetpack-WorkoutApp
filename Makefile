@@ -52,11 +52,19 @@ test:
 
 ## android-test: Запуск интеграционных тестов на Android устройстве
 android-test:
-	./gradlew connectedDebugAndroidTest --console=plain
-	@echo ""
-	@echo "Интеграционные тесты выполнены"
-	@if [ -f app/build/reports/androidTests/connected/debug/index.html ]; then \
-		echo "HTML отчет: app/build/reports/androidTests/connected/debug/index.html"; \
+	@if [ -f scripts/android_test_report.py ]; then chmod +x scripts/android_test_report.py; fi
+	@./gradlew connectedDebugAndroidTest --console=plain; BUILD_STATUS=$$?; \
+	if [ $$BUILD_STATUS -ne 0 ]; then \
+		echo ""; \
+		echo "================================================================================"; \
+		printf "\033[1;31m[FAIL] СБОРКА ПРОВАЛИЛАСЬ С ОШИБКАМИ\033[0m\n"; \
+		echo "================================================================================"; \
+		exit 1; \
+	else \
+		echo "Тесты выполнены. Результаты:"; \
+		find app/build/reports/androidTests -name "*.html" 2>/dev/null | head -1 || echo "HTML отчет не найден"; \
+		echo ""; \
+		python3 scripts/android_test_report.py; \
 	fi
 
 ## test-all: Запуск всех тестов (unit + интеграционные)
