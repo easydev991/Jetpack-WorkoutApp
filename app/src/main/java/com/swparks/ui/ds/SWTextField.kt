@@ -37,7 +37,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
 data class TextFieldConfig(
     val modifier: Modifier = Modifier,
     val text: String,
-    @StringRes val labelID: Int,
+    @param:StringRes val labelID: Int,
     val secure: Boolean = false,
     val singleLine: Boolean = true,
     val isError: Boolean = false,

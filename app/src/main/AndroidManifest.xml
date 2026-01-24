@@ -18,9 +18,9 @@
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_launcher_1"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/ic_launcher_round_1"
         android:supportsRtl="false"
         android:theme="@style/Theme.JetpackWorkoutApp"
         tools:ignore="LockedOrientationActivity"
@@ -29,12 +29,162 @@
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.JetpackWorkoutApp"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait" />
+
+        <!-- Activity Aliases для смены иконки приложения -->
+        <!-- Activity Alias для DEFAULT иконки (включен по умолчанию) -->
+        <activity-alias
+            android:name=".MainActivityAliasIcon1"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_1"
+            android:roundIcon="@mipmap/ic_launcher_round_1"
+            android:targetActivity=".MainActivity">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+
+        <!-- Activity Alias для иконки 2 -->
+        <activity-alias
+            android:name=".MainActivityIcon2"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_2"
+            android:roundIcon="@mipmap/ic_launcher_round_2"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Activity Alias для иконки 3 -->
+        <activity-alias
+            android:name=".MainActivityIcon3"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_3"
+            android:roundIcon="@mipmap/ic_launcher_round_3"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Activity Alias для иконки 4 -->
+        <activity-alias
+            android:name=".MainActivityIcon4"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_4"
+            android:roundIcon="@mipmap/ic_launcher_round_4"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Activity Alias для иконки 5 -->
+        <activity-alias
+            android:name=".MainActivityIcon5"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_5"
+            android:roundIcon="@mipmap/ic_launcher_round_5"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Activity Alias для иконки 6 -->
+        <activity-alias
+            android:name=".MainActivityIcon6"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_6"
+            android:roundIcon="@mipmap/ic_launcher_round_6"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Activity Alias для иконки 7 -->
+        <activity-alias
+            android:name=".MainActivityIcon7"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_7"
+            android:roundIcon="@mipmap/ic_launcher_round_7"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Activity Alias для иконки 8 -->
+        <activity-alias
+            android:name=".MainActivityIcon8"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_8"
+            android:roundIcon="@mipmap/ic_launcher_round_8"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Activity Alias для иконки 9 -->
+        <activity-alias
+            android:name=".MainActivityIcon9"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_9"
+            android:roundIcon="@mipmap/ic_launcher_round_9"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Activity Alias для иконки 10 -->
+        <activity-alias
+            android:name=".MainActivityIcon10"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_10"
+            android:roundIcon="@mipmap/ic_launcher_round_10"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Activity Alias для иконки 11 -->
+        <activity-alias
+            android:name=".MainActivityIcon11"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_11"
+            android:roundIcon="@mipmap/ic_launcher_round_11"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
     </application>
 
 </manifest>
