@@ -69,20 +69,22 @@
 
 **UI-тесты для ThemeIconScreen:**
 
-- [ ] Создать файл `app/src/androidTest/java/com/swparks/ui/screen/ThemeIconScreenTest.kt`
-- [ ] Использовать Compose Testing (`createComposeRule`, `onNodeWithText`, `assertIsDisplayed`)
-- [ ] Тестировать: TopAppBar с кнопкой "Назад", секция "Тема приложения", секция "Динамические цвета", секция "Иконка приложения", клики по radio buttons и иконкам
-- [ ] Использовать `ThemeIconScreenContent` (изолированный UI без ViewModel)
+- [x] Создать файл `app/src/androidTest/java/com/swparks/ui/screens/themeicon/ThemeIconScreenTest.kt`
+- [x] Использовать Compose Testing (`createComposeRule`, `onNodeWithText`, `assertIsDisplayed`)
+- [x] Тестировать: TopAppBar с кнопкой "Назад", секция "Тема приложения", секция "Динамические цвета", секция "Иконка приложения", клики по radio buttons и иконкам
+- [x] Использовать `ThemeIconScreenContent` (изолированный UI без ViewModel)
 
 **UI-тесты для MoreScreen:**
 
-- [ ] Создать файл `app/src/androidTest/java/com/swparks/ui/screen/MoreScreenTest.kt`
-- [ ] Тестировать отображение кнопок: "Поделиться приложением", "GitHub page", "Оценить приложение", версия приложения
-- [ ] Тестировать кнопки секций "Другие приложения": "Счётчик дней" с открытием RuStore
-- [ ] Тестировать кнопки секций "Поддержать проект": "GitHub page" с открытием GitHub
-- [ ] Использовать `moreScreen` (изолированный UI без ViewModel)
+- [x] Создать файл `app/src/androidTest/java/com/swparks/ui/screens/more/MoreScreenTest.kt`
+- [x] Тестировать отображение кнопок: "Поделиться приложением", "GitHub page", "Оценить приложение", версия приложения
+- [x] Тестировать кнопки секций "Другие приложения": "Счётчик дней" с открытием RuStore
+- [x] Тестировать кнопки секций "Поддержать проект": "GitHub page" с открытием GitHub
+- [x] Использовать `MoreScreen` (изолированный UI без ViewModel)
 
 **Примечание:** ❌ Не писать тесты навигации между экранами
+
+**Статус:** ✅ Все UI-тесты реализованы и проходят (22 теста, 0 failed)
 
 ### 10.3 Ручное тестирование
 
