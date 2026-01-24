@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -121,7 +122,7 @@ fun SWButton(config: ButtonConfig) {
             }
         ),
         contentPadding = config.size.paddingValues,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(dimensionResource(R.dimen.spacing_small)),
         enabled = config.enabled,
         onClick = config.onClick
     ) {
@@ -158,7 +159,7 @@ fun SWButtonPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall)),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 PreviewSmallButtons()
@@ -228,7 +229,7 @@ fun SWButtonTintedPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall)),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 PreviewTintedButtons()
@@ -276,7 +277,7 @@ fun SWButtonMixedPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall)),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 PreviewMixedButtons()

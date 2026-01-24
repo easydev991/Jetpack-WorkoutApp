@@ -11,10 +11,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
@@ -40,11 +40,11 @@ fun IncognitoProfileView(
             text = stringResource(id = R.string.auth_invitation),
             color = MaterialTheme.colorScheme.onPrimaryContainer,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(bottom = 22.dp)
+            modifier = Modifier.padding(bottom = dimensionResource(id = R.dimen.spacing_medium_plus))
         )
         SWButton(
             config = ButtonConfig(
-                modifier = Modifier.padding(bottom = 16.dp),
+                modifier = Modifier.padding(bottom = dimensionResource(id = R.dimen.spacing_large)),
                 text = stringResource(id = R.string.authorization),
                 enabled = enabled,
                 onClick = onClickAuth
@@ -56,7 +56,7 @@ fun IncognitoProfileView(
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onPrimaryContainer,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(bottom = 22.dp)
+            modifier = Modifier.padding(bottom = dimensionResource(id = R.dimen.spacing_medium_plus))
         )
     }
 }
@@ -72,7 +72,7 @@ fun IncognitoProfileViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             IncognitoProfileView(
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular)),
                 onClickAuth = {}
             )
         }

@@ -17,9 +17,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.swparks.R
 import com.swparks.model.Park
 import com.swparks.ui.ds.ParkRowData
@@ -56,12 +56,12 @@ fun ParksRootScreen(
         LazyColumn(
             modifier = Modifier,
             contentPadding = PaddingValues(
-                start = 16.dp,
+                start = dimensionResource(R.dimen.spacing_regular),
                 top = paddingValues.calculateTopPadding(),
-                end = 16.dp,
-                bottom = 16.dp
+                end = dimensionResource(R.dimen.spacing_regular),
+                bottom = dimensionResource(R.dimen.spacing_regular)
             ),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
             horizontalAlignment = Alignment.Start,
         ) {
             items(parks, key = { it.id }) { park ->

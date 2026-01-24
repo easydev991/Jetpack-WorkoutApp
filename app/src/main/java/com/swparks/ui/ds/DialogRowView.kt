@@ -12,10 +12,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 /**
@@ -47,8 +49,8 @@ fun DialogRowView(data: DialogRowData) {
     FormCardContainer(modifier = data.modifier) {
         FormRowContainer(
             config = FormRowConfig(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalPadding = 12.dp,
+                horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
+                verticalPadding = dimensionResource(R.dimen.spacing_small),
                 content = {
                     DialogRowAvatar(
                         imageStringURL = data.imageStringURL
@@ -86,7 +88,7 @@ private fun DialogRowContent(
     unreadCount: Int?
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall_plus)),
         horizontalAlignment = Alignment.Start
     ) {
         DialogRowHeader(
@@ -106,7 +108,7 @@ private fun DialogRowHeader(
     dateString: String
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -132,7 +134,7 @@ private fun DialogRowBody(
     unreadCount: Int?
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -164,7 +166,7 @@ fun DialogRowViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
             ) {
                 DialogRowView(
                     data = DialogRowData(

@@ -105,6 +105,25 @@
     <string name="support_project">Поддержать проект</string>
     <string name="workout_shop">Магазин WORKOUT</string>
     <string name="choose_email_client">Выберите приложение для отправки письма</string>
+    <string name="other_apps">Другие приложения</string>
+    <string name="app_theme_and_icon">Тема и иконка приложения</string>
+    <string name="share_the_app">Поделиться приложением</string>
+    <string name="github_page">Страница на GitHub</string>
+    <string name="share_chooser_title">Поделиться WorkOut</string>
+    <string name="share_text">Посмотри приложение WorkOut для уличных площадок</string>
+    <string name="days_counter_app">Days Counter</string>
+    <string name="app_theme">Тема приложения</string>
+    <string name="dynamic_colors">Динамические цвета</string>
+    <string name="use_dynamic_colors">Использовать динамические цвета</string>
+    <string name="dynamic_colors_hint">Использовать цвета на основе обоев</string>
+    <string name="app_icon">Иконка приложения</string>
+    <string name="light">Светлая</string>
+    <string name="dark">Тёмная</string>
+    <string name="system">Системная</string>
+    <string name="back">Назад</string>
+    <string name="primary_icon">Основная иконка</string>
+    <string name="variant">Вариант</string>
+    <string name="app_display_name">Название приложения</string>
 
     <string name="parks_filter">Фильтр площадок</string>
     <string name="size">Размер</string>

@@ -9,8 +9,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 /**
@@ -30,7 +31,7 @@ fun CircleBadgeView(
         style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.primaryContainer,
         modifier = modifier
-            .circleBackground(badgeColor, 2.dp)
+            .circleBackground(badgeColor, dimensionResource(id = R.dimen.spacing_micro))
     )
 }
 
@@ -44,7 +45,7 @@ fun CircleBadgeViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 CircleBadgeView(value = 4)

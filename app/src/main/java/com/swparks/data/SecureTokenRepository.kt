@@ -8,12 +8,12 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.swparks.data.serializer.EncryptedStringSerializer
-import java.io.IOException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
+import java.io.IOException
 
 /**
  * Репозиторий для безопасного хранения токена авторизации.
@@ -41,7 +41,7 @@ class SecureTokenRepository(
      */
     val authToken: Flow<String?> = dataStore.data
         .catch {
-            if (it is java.io.IOException) {
+            if (it is IOException) {
                 Log.e(
                     tag,
                     "Ошибка при загрузке токена",

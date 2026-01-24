@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -53,8 +54,8 @@ fun EventRowView(data: EventRowData) {
         FormRowContainer(
             config = FormRowConfig(
                 verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalPadding = 12.dp,
+                horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
+                verticalPadding = dimensionResource(R.dimen.spacing_small),
                 content = {
                     SWAsyncImage(
                         config = AsyncImageConfig(
@@ -64,7 +65,7 @@ fun EventRowView(data: EventRowData) {
                         )
                     )
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall))
                     ) {
                         Text(
                             text = data.name,
@@ -74,7 +75,7 @@ fun EventRowView(data: EventRowData) {
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Column(
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall_plus))
                         ) {
                             AdditionalInfoRow(
                                 imageID = R.drawable.round_access_time_16,
@@ -105,7 +106,7 @@ private fun AdditionalInfoRow(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall_plus))
     ) {
         Image(
             painter = painterResource(id = imageID),

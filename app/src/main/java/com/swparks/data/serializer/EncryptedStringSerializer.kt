@@ -2,7 +2,6 @@ package com.swparks.data.serializer
 
 import android.util.Log
 import com.swparks.data.crypto.CryptoManager
-import java.lang.IllegalArgumentException
 
 /**
  * Вспомогательный класс для шифрования/дешифрования строк с помощью Tink.

@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -56,7 +57,7 @@ data class UserProfileData(
 @Composable
 fun UserProfileCardView(data: UserProfileData) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = data.modifier.fillMaxWidth()
     ) {
@@ -67,7 +68,7 @@ fun UserProfileCardView(data: UserProfileData) {
             )
         )
         Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall)),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -80,7 +81,7 @@ fun UserProfileCardView(data: UserProfileData) {
                 textAlign = TextAlign.Center
             )
             Column(
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall_plus)),
             ) {
                 AdditionalInfoRow(
                     imageVector = Icons.Rounded.AccountCircle,
@@ -109,13 +110,13 @@ private fun AdditionalInfoRow(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_xsmall))
     ) {
         Image(
             imageVector = imageVector,
             colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant),
             contentDescription = null,
-            modifier = Modifier.size(15.dp)
+            modifier = Modifier.size(dimensionResource(id = R.dimen.icon_size_indicator))
         )
         Text(
             text = text,

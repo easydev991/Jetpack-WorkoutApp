@@ -70,7 +70,7 @@ fun SWAsyncImage(config: AsyncImageConfig) {
             .let {
                 if (config.showBorder) {
                     return@let it.border(
-                        width = dimensionResource(id = R.dimen.border_width),
+                        width = dimensionResource(id = R.dimen.border_width_small),
                         color = MaterialTheme.colorScheme.primary,
                         shape = shape
                     )
@@ -90,7 +90,7 @@ fun SWAsyncImagePreview() {
     JetpackWorkoutAppTheme {
         Surface {
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall)),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 SWAsyncImage(

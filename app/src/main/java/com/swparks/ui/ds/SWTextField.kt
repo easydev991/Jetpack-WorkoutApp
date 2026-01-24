@@ -12,12 +12,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
@@ -68,7 +68,7 @@ fun SWTextField(config: TextFieldConfig) {
                 )
             }
         },
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(dimensionResource(R.dimen.spacing_xsmall)),
         visualTransformation = if (config.secure)
             PasswordVisualTransformation()
         else VisualTransformation.None,
@@ -89,8 +89,8 @@ fun SWTextFieldPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.padding(horizontal = 16.dp)
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular)),
+                modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
             ) {
                 SWTextField(
                     config = TextFieldConfig(

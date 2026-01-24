@@ -9,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -30,7 +31,7 @@ fun SectionView(
     modifier: Modifier = Modifier,
     @StringRes titleID: Int,
     addPaddingToTitle: Boolean = true,
-    titleBottomPadding: Dp = 2.dp,
+    titleBottomPadding: Dp = dimensionResource(id = R.dimen.spacing_small),
     content: @Composable () -> Unit
 ) {
     Column(
@@ -42,7 +43,7 @@ fun SectionView(
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(
-                start = if (addPaddingToTitle) 12.dp else 0.dp
+                start = if (addPaddingToTitle) dimensionResource(id = R.dimen.spacing_small) else 0.dp
             )
         )
         content()
@@ -54,7 +55,7 @@ fun SectionView(
 fun SectionViewPreview() {
     JetpackWorkoutAppTheme {
         Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
         ) {
             SectionView(
                 titleID = R.string.about_app,
@@ -65,7 +66,7 @@ fun SectionViewPreview() {
             HorizontalDivider()
             SectionView(
                 titleID = R.string.friends,
-                titleBottomPadding = 4.dp
+                titleBottomPadding = dimensionResource(R.dimen.spacing_xxsmall)
             ) {
                 UserRowView(
                     imageStringURL = null,
@@ -76,7 +77,7 @@ fun SectionViewPreview() {
             HorizontalDivider()
             SectionView(
                 titleID = R.string.requests,
-                titleBottomPadding = 4.dp
+                titleBottomPadding = dimensionResource(R.dimen.spacing_xxsmall)
             ) {
                 FriendRequestRowView(
                     data = FriendRequestData(

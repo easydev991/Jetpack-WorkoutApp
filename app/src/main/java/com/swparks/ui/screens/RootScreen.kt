@@ -8,22 +8,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.swparks.data.preferences.AppSettingsDataStore
 import com.swparks.model.Park
+import com.swparks.navigation.AppState
 import com.swparks.navigation.BottomNavigationBar
 import com.swparks.navigation.Screen
-import com.swparks.navigation.rememberAppState
 import com.swparks.ui.screens.events.EventsScreen
 import com.swparks.ui.screens.messages.MessagesRootScreen
 import com.swparks.ui.screens.more.MoreScreen
 import com.swparks.ui.screens.parks.ParksRootScreen
 import com.swparks.ui.screens.profile.ProfileRootScreen
+import com.swparks.ui.screens.themeicon.ThemeIconScreen
 import com.swparks.utils.ReadJSONFromAssets
 import com.swparks.utils.WorkoutAppJson
+import com.swparks.viewmodel.ThemeIconViewModel
 
 @Composable
-fun RootScreen() {
-    val appState = rememberAppState()
-
+fun RootScreen(appState: AppState) {
     Scaffold(
         bottomBar = {
             BottomNavigationBar(appState = appState)
@@ -63,7 +64,7 @@ fun RootScreen() {
 
             // Вкладка "Ещё"
             composable(route = Screen.More.route) {
-                MoreScreen()
+                MoreScreen(navController = appState.navController)
             }
 
             // Детальные экраны площадок (будут добавлены позже)
@@ -156,7 +157,22 @@ fun RootScreen() {
 
             // Экраны настроек (будут добавлены позже)
             composable(route = Screen.ThemeIcon.route) {
-                // TODO: Реализовать ThemeIconScreen
+                val context = LocalContext.current
+                val appSettingsDataStore = remember { AppSettingsDataStore(context) }
+                val factory = remember(appSettingsDataStore) {
+                    ThemeIconViewModel.factory(
+                        appSettingsDataStore,
+                        context.applicationContext as android.app.Application
+                    )
+                }
+                val viewModel = androidx.lifecycle.ViewModelProvider(
+                    androidx.lifecycle.ViewModelStore(),
+                    factory
+                )[ThemeIconViewModel::class.java]
+                ThemeIconScreen(
+                    viewModel = viewModel,
+                    onBackClick = { appState.navController.popBackStack() }
+                )
             }
 
             // Экраны авторизации (модальные окна)

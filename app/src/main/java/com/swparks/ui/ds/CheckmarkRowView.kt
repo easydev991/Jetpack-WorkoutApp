@@ -20,9 +20,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import java.util.Random
 
@@ -35,8 +36,8 @@ fun CheckmarkRowView(
     FormRowContainer(
         config = FormRowConfig(
             modifier = modifier,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalPadding = 12.dp
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall_plus)),
+            verticalPadding = dimensionResource(R.dimen.spacing_small)
         ) {
             Text(
                 text = text,
@@ -77,7 +78,7 @@ fun CheckmarkRowViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             FormCardContainer(
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
             ) {
                 LazyColumn {
                     items(numbers, key = { it }) {

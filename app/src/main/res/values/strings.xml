@@ -100,6 +100,25 @@
     <string name="support_project">Support the project</string>
     <string name="workout_shop">WORKOUT shop</string>
     <string name="choose_email_client">Choose an Email client</string>
+    <string name="other_apps">Other apps</string>
+    <string name="app_theme_and_icon">App theme and icon</string>
+    <string name="share_the_app">Share the app</string>
+    <string name="github_page">GitHub page</string>
+    <string name="share_chooser_title">Share WorkOut</string>
+    <string name="share_text">Check out WorkOut app for street workout parks</string>
+    <string name="days_counter_app">Days Counter</string>
+    <string name="app_theme">App theme</string>
+    <string name="dynamic_colors">Dynamic colors</string>
+    <string name="use_dynamic_colors">Use dynamic colors</string>
+    <string name="dynamic_colors_hint">Use colors based on your wallpaper</string>
+    <string name="app_icon">App icon</string>
+    <string name="light">Light</string>
+    <string name="dark">Dark</string>
+    <string name="system">System</string>
+    <string name="back">Back</string>
+    <string name="primary_icon">Primary icon</string>
+    <string name="variant">Variant</string>
+    <string name="app_display_name">App display name</string>
 
     <string name="events_title">Events</string>
     <string name="messages_title">Messages</string>

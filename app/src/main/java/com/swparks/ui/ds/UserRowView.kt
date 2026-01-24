@@ -9,8 +9,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 /**
@@ -31,8 +33,8 @@ fun UserRowView(
     FormCardContainer(modifier = modifier) {
         FormRowContainer(
             config = FormRowConfig(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalPadding = 12.dp,
+                horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
+                verticalPadding = dimensionResource(R.dimen.spacing_small),
                 content = {
                     SWAsyncImage(
                         config = AsyncImageConfig(
@@ -42,7 +44,7 @@ fun UserRowView(
                         )
                     )
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall))
                     ) {
                         Text(
                             text = name,

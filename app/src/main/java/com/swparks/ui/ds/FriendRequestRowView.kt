@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -48,8 +49,8 @@ fun FriendRequestRowView(data: FriendRequestData) {
         FormRowContainer(
             config = FormRowConfig(
                 verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalPadding = 12.dp,
+                horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
+                verticalPadding = dimensionResource(R.dimen.spacing_small),
                 content = {
                     FriendRequestAvatar(imageStringURL = data.imageStringURL)
                     FriendRequestContent(
@@ -83,7 +84,7 @@ private fun FriendRequestContent(
     onClickDecline: () -> Unit
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall_plus))
     ) {
         FriendRequestHeader(
             name = name,
@@ -102,7 +103,7 @@ private fun FriendRequestHeader(
     address: String?
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall))
     ) {
         Text(
             text = name,
@@ -124,7 +125,7 @@ private fun FriendRequestButtons(
     onClickDecline: () -> Unit
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall)),
         modifier = Modifier.fillMaxWidth()
     ) {
         SWButton(

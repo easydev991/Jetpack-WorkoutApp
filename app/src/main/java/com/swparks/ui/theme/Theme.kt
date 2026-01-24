@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.swparks.domain.model.AppTheme
 
 private val LightColors = lightColorScheme(
     primary = md_theme_light_primary,
@@ -95,16 +96,23 @@ private val DarkColors = darkColorScheme(
 @Composable
 fun JetpackWorkoutAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false, // available on Android 12+
+    appTheme: AppTheme? = null,
+    dynamicColor: Boolean = false, // TODO: change to true when dynamic colors are available
     content: @Composable () -> Unit
 ) {
+    val useDarkTheme = when (appTheme) {
+        AppTheme.LIGHT -> false
+        AppTheme.DARK -> true
+        AppTheme.SYSTEM, null -> darkTheme
+    }
+
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            if (useDarkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> DarkColors
+        useDarkTheme -> DarkColors
         else -> LightColors
     }
     val view = LocalView.current
@@ -114,14 +122,14 @@ fun JetpackWorkoutAppTheme(
             window.statusBarColor = Color.Transparent.toArgb()
             WindowCompat.getInsetsController(
                 window,
-                view
-            ).isAppearanceLightStatusBars = !darkTheme
+                view,
+            ).isAppearanceLightStatusBars = !useDarkTheme
         }
     }
 
     MaterialTheme(
         colorScheme = colorScheme,
         typography = AppTypography,
-        content = content
+        content = content,
     )
 }

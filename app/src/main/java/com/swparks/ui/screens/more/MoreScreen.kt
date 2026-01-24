@@ -1,12 +1,6 @@
 package com.swparks.ui.screens.more
 
-import android.content.ActivityNotFoundException
 import android.content.Context
-import android.content.Intent
-import android.os.Build
-import android.util.Log
-import android.widget.Toast
-import java.lang.SecurityException
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,38 +20,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.swparks.BuildConfig
 import com.swparks.R
+import com.swparks.navigation.Screen
 import com.swparks.ui.ds.ListRowData
 import com.swparks.ui.ds.ListRowView
 import com.swparks.ui.ds.SectionView
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
+import com.swparks.util.AppConstants
 
 private object Links {
-    const val rateApp = "https://workout.su/android"
+    const val rateApp = AppConstants.APP_RATE_URL
     const val termsOfUse = "https://workout.su/pravila"
     const val officialSite = "https://workout.su"
     const val appDeveloper = "https://t.me/easy_dev991"
     const val workoutShop = "https://workoutshop.ru"
 }
 
-private object Feedback {
-    const val recipient = "info@workout.su"
-    const val subject = "Jetpack WorkoutApp: Обратная связь"
-    val body = """
-        Android SDK: ${Build.VERSION.SDK_INT}
-        App version: ${BuildConfig.VERSION_NAME}
-        Над чем нам стоит поработать?
-    """.trimIndent()
-    const val intentType = "message/rfc822"
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MoreScreen() {
+fun MoreScreen(
+    navController: NavHostController? = null
+) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     Scaffold(
@@ -73,7 +61,8 @@ fun MoreScreen() {
         ScreenContent(
             modifier = Modifier.padding(it),
             context = context,
-            uriHandler = uriHandler
+            uriHandler = uriHandler,
+            navController = navController
         )
     }
 }
@@ -82,21 +71,43 @@ fun MoreScreen() {
 private fun ScreenContent(
     modifier: Modifier = Modifier,
     context: Context,
-    uriHandler: UriHandler
+    uriHandler: UriHandler,
+    navController: NavHostController? = null
 ) {
     Box(
         modifier = modifier.fillMaxSize()
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_small_plus)),
             modifier = Modifier.verticalScroll(rememberScrollState())
         ) {
+            SettingsSection(navController = navController)
+            HorizontalDivider()
             AboutAppSection(
                 context = context,
                 uriHandler = uriHandler
             )
             HorizontalDivider()
+            OtherAppsSection(uriHandler = uriHandler)
+            HorizontalDivider()
             SupportProjectSection(uriHandler = uriHandler)
+        }
+    }
+}
+
+@Composable
+private fun SettingsSection(
+    navController: NavHostController?
+) {
+    SectionView(
+        titleID = R.string.settings,
+        addPaddingToTitle = false,
+        modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.spacing_regular))
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_xxsmall))
+        ) {
+            ThemeAndIconRow(navController = navController)
         }
     }
 }
@@ -109,16 +120,29 @@ private fun AboutAppSection(
     SectionView(
         titleID = R.string.about_app,
         addPaddingToTitle = false,
-        modifier = Modifier.padding(horizontal = 16.dp)
+        modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.spacing_regular))
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_xxsmall))
         ) {
             SendFeedbackRow(context = context)
-            RateAppRow(uriHandler = uriHandler)
-            TermsOfUseRow(uriHandler = uriHandler)
-            OfficialSiteRow(uriHandler = uriHandler)
-            AppDeveloperRow(uriHandler = uriHandler)
+            ExternalLinkRow(
+                textResId = R.string.rate_app,
+                url = Links.rateApp,
+                uriHandler = uriHandler
+            )
+            ExternalLinkRow(
+                textResId = R.string.official_site,
+                url = Links.officialSite,
+                uriHandler = uriHandler
+            )
+            ExternalLinkRow(
+                textResId = R.string.app_developer,
+                url = Links.appDeveloper,
+                uriHandler = uriHandler
+            )
+            ShareAppRow(context = context)
+
             AppVersionRow()
         }
     }
@@ -133,67 +157,24 @@ private fun SendFeedbackRow(
             leadingText = stringResource(id = R.string.send_feedback),
             showChevron = true,
             modifier = Modifier.clickable {
-                didTapSendFeedback(context)
+                sendFeedback(context)
             }
         )
     )
 }
 
 @Composable
-private fun RateAppRow(
+private fun ExternalLinkRow(
+    textResId: Int,
+    url: String,
     uriHandler: UriHandler
 ) {
     ListRowView(
         data = ListRowData(
-            leadingText = stringResource(id = R.string.rate_app),
+            leadingText = stringResource(id = textResId),
             showChevron = true,
             modifier = Modifier.clickable {
-                uriHandler.openUri(Links.rateApp)
-            }
-        )
-    )
-}
-
-@Composable
-private fun TermsOfUseRow(
-    uriHandler: UriHandler
-) {
-    ListRowView(
-        data = ListRowData(
-            leadingText = stringResource(id = R.string.terms_of_use),
-            showChevron = true,
-            modifier = Modifier.clickable {
-                uriHandler.openUri(Links.termsOfUse)
-            }
-        )
-    )
-}
-
-@Composable
-private fun OfficialSiteRow(
-    uriHandler: UriHandler
-) {
-    ListRowView(
-        data = ListRowData(
-            leadingText = stringResource(id = R.string.official_site),
-            showChevron = true,
-            modifier = Modifier.clickable {
-                uriHandler.openUri(Links.officialSite)
-            }
-        )
-    )
-}
-
-@Composable
-private fun AppDeveloperRow(
-    uriHandler: UriHandler
-) {
-    ListRowView(
-        data = ListRowData(
-            leadingText = stringResource(id = R.string.app_developer),
-            showChevron = true,
-            modifier = Modifier.clickable {
-                uriHandler.openUri(Links.appDeveloper)
+                uriHandler.openUri(url)
             }
         )
     )
@@ -216,101 +197,96 @@ private fun SupportProjectSection(
     SectionView(
         titleID = R.string.support_project,
         addPaddingToTitle = false,
-        modifier = Modifier.padding(horizontal = 16.dp)
+        modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.spacing_regular))
     ) {
-        WorkoutShopRow(uriHandler = uriHandler)
+        Column(
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_xxsmall))
+        ) {
+            ExternalLinkRow(
+                textResId = R.string.workout_shop,
+                url = Links.workoutShop,
+                uriHandler = uriHandler
+            )
+            GithubRow(context = LocalContext.current)
+        }
     }
 }
 
 @Composable
-private fun WorkoutShopRow(
+private fun OtherAppsSection(
     uriHandler: UriHandler
+) {
+    SectionView(
+        titleID = R.string.other_apps,
+        addPaddingToTitle = false,
+        modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.spacing_regular))
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_xxsmall))
+        ) {
+            DaysCounterRow(uriHandler = uriHandler)
+        }
+    }
+}
+
+@Composable
+private fun ThemeAndIconRow(
+    navController: NavHostController?
 ) {
     ListRowView(
         data = ListRowData(
-            leadingText = stringResource(id = R.string.workout_shop),
+            leadingText = stringResource(id = R.string.app_theme_and_icon),
             showChevron = true,
-            modifier = Modifier
-                .clickable {
-                    uriHandler.openUri(Links.workoutShop)
-                }
+            modifier = Modifier.clickable {
+                navController?.navigate(Screen.ThemeIcon.route)
+            }
         )
     )
 }
 
-private fun didTapSendFeedback(context: Context) {
-    val tag = "MoreScreen_Feedback"
-    try {
-        val intent = Intent(Intent.ACTION_SEND)
-        intent.putExtra(
-            Intent.EXTRA_EMAIL,
-            Feedback.recipient
+@Composable
+private fun ShareAppRow(
+    context: Context
+) {
+    ListRowView(
+        data = ListRowData(
+            leadingText = stringResource(id = R.string.share_the_app),
+            showChevron = true,
+            modifier = Modifier.clickable {
+                shareApp(context)
+            }
         )
-        intent.putExtra(
-            Intent.EXTRA_SUBJECT,
-            Feedback.subject
+    )
+}
+
+@Composable
+private fun DaysCounterRow(
+    uriHandler: UriHandler
+) {
+    ListRowView(
+        data = ListRowData(
+            leadingText = stringResource(id = R.string.days_counter_app),
+            showChevron = true,
+            modifier = Modifier.clickable {
+                uriHandler.openUri(AppConstants.DAYS_COUNTER_APP_STORE_URL)
+            }
         )
-        intent.putExtra(
-            Intent.EXTRA_TEXT,
-            Feedback.body
+    )
+}
+
+@Composable
+private fun GithubRow(
+    context: Context
+) {
+    ListRowView(
+        data = ListRowData(
+            leadingText = stringResource(id = R.string.github_page),
+            showChevron = true,
+            modifier = Modifier.clickable {
+                openGitHub(context)
+            }
         )
-        intent.setType(Feedback.intentType)
-        context.startActivity(
-            Intent.createChooser(
-                intent,
-                context.getString(R.string.choose_email_client)
-            )
-        )
-    } catch (e: ActivityNotFoundException) {
-        // Нет приложения для отправки письма
-        e.localizedMessage?.let {
-            Log.e(
-                tag,
-                it
-            )
-            Toast.makeText(
-                context,
-                it,
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    } catch (e: SecurityException) {
-        e.localizedMessage?.let {
-            Log.e(
-                tag,
-                it
-            )
-            Toast.makeText(
-                context,
-                it,
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    } catch (e: IllegalArgumentException) {
-        e.localizedMessage?.let {
-            Log.e(
-                tag,
-                it
-            )
-            Toast.makeText(
-                context,
-                it,
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    } catch (e: IllegalStateException) {
-        e.localizedMessage?.let {
-            Log.e(
-                tag,
-                it
-            )
-            Toast.makeText(
-                context,
-                it,
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    }
+    )
 }
 
 @Preview(showBackground = true, locale = "ru")

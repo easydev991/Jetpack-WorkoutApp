@@ -32,9 +32,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import java.text.DateFormat
@@ -115,7 +115,7 @@ fun SWDateTimePicker(config: DateTimePickerConfig) {
     ) {
         Text(text = stringResource(id = config.mode.titleID))
         Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall)),
             verticalAlignment = Alignment.CenterVertically
         ) {
             SWDatePicker(
@@ -239,7 +239,7 @@ private fun SWTimePicker(
                 .fillMaxWidth()
                 .background(
                     color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(size = 12.dp)
+                    shape = RoundedCornerShape(size = dimensionResource(R.dimen.spacing_small))
                 ),
             onDismissRequest = { showTimePicker = false }
         ) {
@@ -250,7 +250,7 @@ private fun SWTimePicker(
                 TimePicker(state = state)
                 Row(
                     modifier = Modifier
-                        .padding(top = 12.dp)
+                        .padding(top = dimensionResource(id = R.dimen.spacing_small))
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
@@ -288,7 +288,7 @@ fun SWDateTimePickerPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
             ) {
                 SWDateTimePicker(
                     config = DateTimePickerConfig(

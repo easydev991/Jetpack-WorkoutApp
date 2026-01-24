@@ -20,8 +20,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 /**
@@ -52,7 +54,7 @@ fun LoadingOverlayView(modifier: Modifier = Modifier) {
                 .size(size = 50.dp)
                 .rotate(degrees = rotateAnimation)
                 .border(
-                    width = 4.dp,
+                    width = dimensionResource(R.dimen.border_width_medium),
                     brush = Brush.sweepGradient(
                         listOf(
                             MaterialTheme.colorScheme.primary,

@@ -32,11 +32,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
@@ -144,9 +144,9 @@ fun JournalRowView(data: JournalRowData) {
     var showMenu by remember { mutableStateOf(false) }
     FormCardContainer(modifier = data.modifier) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_xsmall)),
             horizontalAlignment = Alignment.Start,
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier.padding(dimensionResource(id = R.dimen.spacing_small))
         ) {
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -187,18 +187,18 @@ private fun JournalHeader(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_small))
     ) {
         SWAsyncImage(
             config = AsyncImageConfig(
                 imageStringURL = imageStringURL,
-                size = 42.dp,
+                size = dimensionResource(id = R.dimen.icon_size_medium),
                 contentScale = ContentScale.Crop,
                 showBorder = false
             )
         )
         Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_xxsmall))
         ) {
             Text(
                 text = title,
@@ -221,14 +221,14 @@ private fun JournalHeader(
 private fun JournalActionsMenu(config: JournalActionsMenuConfig) {
     Box {
         IconButton(
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(dimensionResource(id = R.dimen.icon_size_menu)),
             enabled = config.enabled,
             onClick = config.onMenuShow
         ) {
             Image(
                 imageVector = Icons.Default.MoreVert,
                 colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant),
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(dimensionResource(id = R.dimen.icon_size_dropdown)),
                 contentDescription = null
             )
         }
@@ -294,7 +294,7 @@ fun JournalRowViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
             ) {
                 JournalRowView(
                     data = JournalRowData(

@@ -9,9 +9,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.swparks.R
 import com.swparks.ui.ds.IncognitoProfileView
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
@@ -32,8 +32,8 @@ fun ProfileRootScreen(modifier: Modifier = Modifier) {
         IncognitoProfileView(
             modifier = modifier.padding(
                 top = paddingValues.calculateTopPadding(),
-                start = 16.dp,
-                end = 16.dp
+                start = dimensionResource(R.dimen.spacing_regular),
+                end = dimensionResource(R.dimen.spacing_regular)
             ),
             onClickAuth = {
                 Log.d("ProfileRootScreen", "Кнопка авторизации нажата")

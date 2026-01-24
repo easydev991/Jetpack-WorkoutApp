@@ -26,9 +26,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
@@ -63,10 +63,10 @@ fun ListRowView(data: ListRowData) {
         verticalAlignment = Alignment.CenterVertically,
         modifier = data.modifier
             .fillMaxWidth()
-            .padding(vertical = 10.dp)
+            .padding(vertical = dimensionResource(id = R.dimen.spacing_xsmall_plus))
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_small)),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (data.leadingIconID != null) {
@@ -75,8 +75,8 @@ fun ListRowView(data: ListRowData) {
                     contentDescription = "Leading icon",
                     colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.primary),
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .size(34.dp)
+                        .clip(RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_small)))
+                        .size(dimensionResource(id = R.dimen.icon_size_small_plus))
                         .background(color = MaterialTheme.colorScheme.secondary)
                 )
             }
@@ -87,7 +87,7 @@ fun ListRowView(data: ListRowData) {
             )
         }
         Row(
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_xxsmall_plus))
         ) {
             if (data.trailingText.isNotBlank()) {
                 Text(
@@ -122,8 +122,8 @@ fun ListRowViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(horizontal = 16.dp)
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall)),
+                modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
             ) {
                 PreviewListRowsWithoutIcon()
                 PreviewListRowsWithIcon()

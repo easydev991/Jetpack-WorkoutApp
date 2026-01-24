@@ -10,7 +10,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.dimensionResource
+import com.swparks.R
 
 /**
  * Обертка для добавления тени в светлой теме
@@ -41,12 +42,14 @@ fun FormCardContainer(
         } else {
             modifier
         },
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(dimensionResource(R.dimen.spacing_small)),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer
         ),
         elevation = CardDefaults.cardElevation(
-            if (isLight) 2.dp else 0.dp
+            if (isLight)
+                dimensionResource(R.dimen.elevation_small)
+            else dimensionResource(R.dimen.elevation_none)
         )
     ) {
         content()

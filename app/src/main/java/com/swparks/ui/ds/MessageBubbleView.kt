@@ -17,10 +17,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 /**
@@ -68,7 +70,7 @@ fun MessageBubbleView(
     }
     val isIncoming = messageType == MessageType.INCOMING
     Column(
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_xxsmall_plus)),
         horizontalAlignment = if (isIncoming) Alignment.Start else Alignment.End,
         modifier = modifier
     ) {
@@ -83,8 +85,8 @@ fun MessageBubbleView(
                     .clip(
                         RoundedCornerShape(
                             topStart = messageType.topStartCorner,
-                            topEnd = 20.dp,
-                            bottomStart = 20.dp,
+                            topEnd = dimensionResource(id = R.dimen.corner_radius_bubble),
+                            bottomStart = dimensionResource(id = R.dimen.corner_radius_bubble),
                             bottomEnd = messageType.bottomEndCorner
                         )
                     )
@@ -96,8 +98,8 @@ fun MessageBubbleView(
                     else MaterialTheme.colorScheme.onPrimary,
                     textAlign = TextAlign.Start,
                     modifier = Modifier.padding(
-                        vertical = 12.dp,
-                        horizontal = 18.dp
+                        vertical = dimensionResource(id = R.dimen.spacing_small),
+                        horizontal = dimensionResource(id = R.dimen.bubble_padding_horizontal)
                     )
                 )
             }
@@ -124,11 +126,11 @@ fun MessageBubbleViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(dimensionResource(R.dimen.spacing_regular))
             ) {
                 MessageBubbleView(
                     messageType = MessageType.INCOMING,

@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -123,8 +124,8 @@ fun CommentRowView(data: CommentRowData) {
         listOf(CommentAction.REPORT)
     }
     Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = data.modifier.padding(12.dp)
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall)),
+        modifier = data.modifier.padding(dimensionResource(R.dimen.spacing_small))
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -162,18 +163,18 @@ private fun CommentHeader(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
     ) {
         SWAsyncImage(
             config = AsyncImageConfig(
                 imageStringURL = imageStringURL,
-                size = 40.dp,
+                size = dimensionResource(R.dimen.size_small_plus),
                 contentScale = ContentScale.Crop,
                 shape = CircleShape
             )
         )
         Column(
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall_plus))
         ) {
             Text(
                 text = authorName,
@@ -195,7 +196,7 @@ private fun CommentHeader(
 private fun CommentActionsMenu(config: CommentActionsMenuConfig) {
     Box {
         IconButton(
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(dimensionResource(R.dimen.size_xsmall)),
             enabled = config.enabled,
             onClick = config.onMenuShow
         ) {
