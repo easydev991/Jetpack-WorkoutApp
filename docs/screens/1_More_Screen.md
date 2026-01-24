@@ -56,9 +56,9 @@
 
 ## Реализация (Этапы 1-9, 10.1) ✅
 
-- [x] ThemeIconScreen: Domain Layer (AppTheme, AppIcon, IconManager), Data Layer (AppSettingsDataStore), UI Layer (ThemeIconUiState, ThemeIconViewModel, ThemeIconScreen)
-- [x] MoreScreen: все 4 секции, функции (shareApp, openGitHub, ThemeAndIconRow, ShareAppRow, DaysCounterRow, GithubRow)
-- [x] Настройка иконок: activity-aliases в AndroidManifest.xml (11 штук), PNG и adaptive icons для всех размеров
+- [x] ThemeIconScreen: реализован полный стек (Domain: AppTheme, AppIcon, IconManager; Data: AppSettingsDataStore; UI: ThemeIconUiState, ThemeIconViewModel, ThemeIconScreen)
+- [x] MoreScreen: все 4 секции, функции (shareApp, openGitHub) и компоненты (ThemeAndIconRow, ShareAppRow, DaysCounterRow, GithubRow)
+- [x] Иконки: activity-aliases (11 штук), PNG и adaptive icons для всех размеров
 - [x] Unit-тесты: SettingsModelsTest.kt, ThemeIconViewModelTest.kt
 
 ---
@@ -67,64 +67,11 @@
 
 ### 10.2 UI-тесты
 
-**UI-тесты для ThemeIconScreen:**
-
-- [x] Создать файл `app/src/androidTest/java/com/swparks/ui/screens/themeicon/ThemeIconScreenTest.kt`
-- [x] Использовать Compose Testing (`createComposeRule`, `onNodeWithText`, `assertIsDisplayed`)
-- [x] Тестировать: TopAppBar с кнопкой "Назад", секция "Тема приложения", секция "Динамические цвета", секция "Иконка приложения", клики по radio buttons и иконкам
-- [x] Использовать `ThemeIconScreenContent` (изолированный UI без ViewModel)
-
-**UI-тесты для MoreScreen:**
-
-- [x] Создать файл `app/src/androidTest/java/com/swparks/ui/screens/more/MoreScreenTest.kt`
-- [x] Тестировать отображение кнопок: "Поделиться приложением", "GitHub page", "Оценить приложение", версия приложения
-- [x] Тестировать кнопки секций "Другие приложения": "Счётчик дней" с открытием RuStore
-- [x] Тестировать кнопки секций "Поддержать проект": "GitHub page" с открытием GitHub
-- [x] Использовать `MoreScreen` (изолированный UI без ViewModel)
-
-**Примечание:** ❌ Не писать тесты навигации между экранами
-
 **Статус:** ✅ Все UI-тесты реализованы и проходят (22 теста, 0 failed)
 
-### 10.3 Ручное тестирование
+**ThemeIconScreenTest.kt:** тестирование TopAppBar, секций темы/динамических цветов/иконки, кликов по элементам через Compose Testing
 
-- [ ] Проверить работу кнопки "Поделиться приложением" через Intent-подход (как в JetpackDays)
-- [ ] Проверить открытие GitHub через Intent-подход (как в JetpackDays)
-- [ ] Проверить открытие RuStore для оценки
-- [ ] Проверить смену темы приложения (LIGHT, DARK, SYSTEM)
-- [ ] Проверить смену иконки приложения
-- [ ] Проверить динамические цвета на Android 12+
-- [ ] Проверить персистентность настроек после перезапуска
-- [ ] Проверить работу кнопки "Назад" в ThemeIconScreen
-
-### 10.4 Критерии приемки тестов
-
-- ✅ Все unit-тесты проходят (ThemeIconViewModelTest, SettingsModelsTest)
-- ✅ Все UI-тесты проходят (ThemeIconScreenTest, MoreScreenTest)
-- ✅ Тесты следуют AAA паттерну
-- ✅ Описательные имена тестов на русском языке с `@DisplayName`
-- ✅ Тесты независимы и быстрые
-- ✅ Мокирование через MockK для зависимостей
-- ✅ Использование JUnit 5 утверждений
-
-### 10.2 UI-тесты
-
-**UI-тесты для ThemeIconScreen:**
-
-- [ ] Создать файл `app/src/androidTest/java/com/swparks/ui/screen/ThemeIconScreenTest.kt`
-- [ ] Использовать Compose Testing (`createComposeRule`, `onNodeWithText`, `assertIsDisplayed`)
-- [ ] Тестировать: TopAppBar с кнопкой "Назад", секция "Тема приложения", секция "Динамические цвета", секция "Иконка приложения", клики по radio buttons и иконкам
-- [ ] Использовать `ThemeIconScreenContent` (изолированный UI без ViewModel)
-
-**UI-тесты для MoreScreen:**
-
-- [ ] Создать файл `app/src/androidTest/java/com/swparks/ui/screen/MoreScreenTest.kt`
-- [ ] Тестировать отображение кнопок: "Поделиться приложением", "GitHub page", "Оценить приложение", версия приложения
-- [ ] Тестировать кнопки секций "Другие приложения": "Счётчик дней" с открытием RuStore
-- [ ] Тестировать кнопки секций "Поддержать проект": "GitHub page" с открытием GitHub
-- [ ] Использовать `moreScreen` (изолированный UI без ViewModel)
-
-**Примечание:** ❌ Не писать тесты навигации между экранами
+**MoreScreenTest.kt:** тестирование кнопок секций "О приложении", "Другие приложения", "Поддержать проект" (22 теста)
 
 ### 10.3 Ручное тестирование
 
@@ -208,10 +155,10 @@
 - ✅ MoreScreen: все секции, функции и навигация работают
 - ✅ Иконки: activity-aliases, PNG и adaptive icons для всех размеров
 - ✅ Unit-тесты: SettingsModelsTest.kt, ThemeIconViewModelTest.kt
+- ✅ UI-тесты: ThemeIconScreenTest.kt, MoreScreenTest.kt (22 теста)
 
 **Осталось:**
 
-- ❌ UI-тесты для ThemeIconScreen и MoreScreen (Этап 10.2)
 - ❌ Ручное тестирование всех функций (Этап 10.3)
 - ❌ Проверка смены иконки и персистентности настроек
 - ❌ Запуск всех тестов и проверка linting
