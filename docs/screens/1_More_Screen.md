@@ -54,101 +54,56 @@
 
 ---
 
-## Этап 1: Создание вспомогательных констант и утилит ✅
+## Реализация (Этапы 1-9, 10.1) ✅
 
-- [x] Созданы `AppConstants.kt` с константами URL, строковые ресурсы, `FeedbackSender.kt`, `ExternalLinkRow`
-
----
-
-## Этап 2: Domain Layer - Модели данных ✅
-
-- [x] Созданы `AppTheme.kt` enum (LIGHT, DARK, SYSTEM) и `AppIcon.kt` enum с 11 иконками
+- [x] ThemeIconScreen: Domain Layer (AppTheme, AppIcon, IconManager), Data Layer (AppSettingsDataStore), UI Layer (ThemeIconUiState, ThemeIconViewModel, ThemeIconScreen)
+- [x] MoreScreen: все 4 секции, функции (shareApp, openGitHub, ThemeAndIconRow, ShareAppRow, DaysCounterRow, GithubRow)
+- [x] Настройка иконок: activity-aliases в AndroidManifest.xml (11 штук), PNG и adaptive icons для всех размеров
+- [x] Unit-тесты: SettingsModelsTest.kt, ThemeIconViewModelTest.kt
 
 ---
 
-## Этап 3: Data Layer - Хранение настроек ✅
+## Тестирование (Этапы 10.2-10.4)
 
-- [x] Создан `AppSettingsDataStore.kt` с DataStore Preferences и Flow для theme, useDynamicColors, icon
+### 10.2 UI-тесты
 
----
+**UI-тесты для ThemeIconScreen:**
 
-## Этап 4: Domain Layer - Use Case для смены иконки ✅
+- [ ] Создать файл `app/src/androidTest/java/com/swparks/ui/screen/ThemeIconScreenTest.kt`
+- [ ] Использовать Compose Testing (`createComposeRule`, `onNodeWithText`, `assertIsDisplayed`)
+- [ ] Тестировать: TopAppBar с кнопкой "Назад", секция "Тема приложения", секция "Динамические цвета", секция "Иконка приложения", клики по radio buttons и иконкам
+- [ ] Использовать `ThemeIconScreenContent` (изолированный UI без ViewModel)
 
-- [x] Создан `IconManager.kt` use case для смены иконки через PackageManager с обработкой исключений
+**UI-тесты для MoreScreen:**
 
----
+- [ ] Создать файл `app/src/androidTest/java/com/swparks/ui/screen/MoreScreenTest.kt`
+- [ ] Тестировать отображение кнопок: "Поделиться приложением", "GitHub page", "Оценить приложение", версия приложения
+- [ ] Тестировать кнопки секций "Другие приложения": "Счётчик дней" с открытием RuStore
+- [ ] Тестировать кнопки секций "Поддержать проект": "GitHub page" с открытием GitHub
+- [ ] Использовать `moreScreen` (изолированный UI без ViewModel)
 
-## Этап 5: UI Layer - State management ✅
+**Примечание:** ❌ Не писать тесты навигации между экранами
 
-- [x] Созданы `ThemeIconUiState.kt` и `ThemeIconViewModel.kt` с StateFlow для управления состоянием
+### 10.3 Ручное тестирование
 
----
+- [ ] Проверить работу кнопки "Поделиться приложением" через Intent-подход (как в JetpackDays)
+- [ ] Проверить открытие GitHub через Intent-подход (как в JetpackDays)
+- [ ] Проверить открытие RuStore для оценки
+- [ ] Проверить смену темы приложения (LIGHT, DARK, SYSTEM)
+- [ ] Проверить смену иконки приложения
+- [ ] Проверить динамические цвета на Android 12+
+- [ ] Проверить персистентность настроек после перезапуска
+- [ ] Проверить работу кнопки "Назад" в ThemeIconScreen
 
-## Этап 6: UI Layer - Компоненты для ThemeIconScreen ✅
+### 10.4 Критерии приемки тестов
 
-- [x] Созданы компоненты: `DynamicColors.kt`, `IconPreviewItem.kt`, `DaysRadioButton.kt`
-
----
-
-## Этап 7: UI Layer - ThemeIconScreen ✅
-
-- [x] Создан `ThemeIconScreen.kt` с секциями: тема, динамические цвета, иконка (аналог JetpackDays)
-
----
-
-## Этап 8: Доработка MoreScreen ✅
-
-- [x] Добавлена секция "Настройки" с навигацией на ThemeIconScreen
-- [x] Удалена кнопка "Правила использования", добавлены кнопки "Поделиться приложением", "Счётчик дней", "GitHub page"
-- [x] Реализованы функции `shareApp()` и `openGitHub()` через Intent с обработкой исключений
-- [x] Добавлены компоненты: `ShareAppRow`, `DaysCounterRow`, `GithubRow`
-- [x] Интегрирован маршрут ThemeIconScreen в навигацию
-- [x] Исправлена интеграция MainActivity с MainActivityViewModel (DataStore в onCreate, factory без IconManager)
-
-**Порядок кнопок:**
-
-- Настройки: Тема и иконка
-- О приложении: Отправить обратную связь, Оценить приложение, Официальный сайт, Разработчик, Поделиться приложением, Версия
-- Другие приложения: Счётчик дней
-- Поддержать проект: Магазин WORKOUT, GitHub page
-
----
-
-## Этап 9: Настройка иконок приложения
-
-### 9.1 Создать activity aliases для иконок ✅
-
-- [x] В `AndroidManifest.xml` добавить activity-aliases для каждой иконки
-- [x] Настроить enabled/disabled logic для иконок
-
-### 9.2 Добавить ресурсы иконок ✅
-
-- [x] Добавить PNG иконки в `mipmap-*/ic_launcher_*` для каждого варианта
-- [x] Добавить adaptive icons для Android 8+
-- [x] Убедиться в наличии иконок для всех размеров (mdpi, hdpi, xhdpi, xxhdpi, xxxhdpi)
-
----
-
-## Этап 10: Тестирование
-
-### 10.1 Unit-тесты ✅
-
-**Тестирование enum моделей настроек:**
-
-- [x] Создать файл `app/src/test/java/com/swparks/domain/model/SettingsModelsTest.kt`
-- [x] Написать тесты для `AppTheme` enum (проверить все значения: LIGHT, DARK, SYSTEM)
-- [x] Написать тесты для `AppIcon` enum (проверить все значения иконок SWParks)
-- [x] Тестировать `valueOf`, `name`, выброс исключений
-
-**Тестирование ThemeIconViewModel:**
-
-- [x] Создать файл `app/src/test/java/com/swparks/viewmodel/ThemeIconViewModelTest.kt`
-- [x] Использовать MockK для мокирования зависимостей (AppSettingsDataStore, IconManager)
-- [x] Тестировать `updateTheme`, `updateIcon`, `updateDynamicColors`
-- [x] Проверять, что методы ViewModel вызывают соответствующие методы DataStore и IconManager
-- [x] Использовать JUnit 5 аннотации и корутины
-
-**Примечание:** ❌ Не писать unit-тесты для IconManager и AppSettingsDataStore (как в JetpackDays)
+- ✅ Все unit-тесты проходят (ThemeIconViewModelTest, SettingsModelsTest)
+- ✅ Все UI-тесты проходят (ThemeIconScreenTest, MoreScreenTest)
+- ✅ Тесты следуют AAA паттерну
+- ✅ Описательные имена тестов на русском языке с `@DisplayName`
+- ✅ Тесты независимы и быстрые
+- ✅ Мокирование через MockK для зависимостей
+- ✅ Использование JUnit 5 утверждений
 
 ### 10.2 UI-тесты
 
@@ -245,20 +200,16 @@
 
 ## Критерии завершения
 
-**Завершено (Этапы 1-8.7):**
+**Завершено:**
 
-- ✅ Все вспомогательные компоненты, модели, Data Layer, Domain Layer реализованы
-- ✅ UI Layer: ThemeIconScreen, MoreScreen доработаны полностью
-- ✅ Интеграция с навигацией и MainActivity выполнена
-- ✅ Все кнопки работают (шеринг, GitHub, оценка, тема, динамические цвета)
-- ✅ Проект собирается без ошибок и отформатирован
+- ✅ ThemeIconScreen: Domain, Data, UI слои полностью реализованы
+- ✅ MoreScreen: все секции, функции и навигация работают
+- ✅ Иконки: activity-aliases, PNG и adaptive icons для всех размеров
+- ✅ Unit-тесты: SettingsModelsTest.kt, ThemeIconViewModelTest.kt
 
-**Осталось (Этапы 9-10):**
+**Осталось:**
 
-- ❌ Настройка иконок в AndroidManifest.xml и ресурсы (Этап 9)
-- ❌ Unit-тесты для моделей и ViewModel (Этап 10.1)
 - ❌ UI-тесты для ThemeIconScreen и MoreScreen (Этап 10.2)
-- ❌ Ручное тестирование (Этап 10.3)
-- ❌ Смена иконки работает и сохраняется
-- ❌ Тесты проходят успешно
-- ❌ Нет замечаний от linting tools
+- ❌ Ручное тестирование всех функций (Этап 10.3)
+- ❌ Проверка смены иконки и персистентности настроек
+- ❌ Запуск всех тестов и проверка linting
