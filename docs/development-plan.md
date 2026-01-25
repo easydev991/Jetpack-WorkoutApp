@@ -17,13 +17,15 @@
 - ✅ Реализован репозиторий SWRepository для работы с данными
 - ✅ Реализована базовая навигация между экранами через RootScreen
 - ✅ Реализована архитектура безопасности для токена авторизации (CryptoManager, SecureTokenRepository, TokenInterceptor, AuthInterceptor)
-- ✅ Реализованы Use Cases для авторизации (LoginUseCase, LogoutUseCase)
-- ✅ Реализован AuthViewModel для авторизации и смены пароля
+- ✅ Реализованы Use Cases для авторизации (LoginUseCase, LogoutUseCase, IconManager)
+- ✅ Реализован AuthViewModel для авторизации
 - ✅ Все баги API исправлены (7 из 7)
-- ⚠️ Экраны-заглушки для основных разделов приложения (нет функционала)
-- ⚠️ EventsScreen имеет ViewModel, но функционал минимальный
+- ✅ MoreScreen и ThemeIconScreen полностью реализованы (вкладка "Ещё")
+- ⚠️ EventsScreen имеет ViewModel с базовым функционалом
 - ⚠️ ParksRootScreen отображает данные из assets, но без бизнес-логики
-- ❌ Большинство экранов не имеют функционала
+- ⚠️ ProfileRootScreen, MessagesRootScreen - заглушки
+- ❌ Экраны авторизации не реализованы
+- ❌ Большинство детальных экранов не имеют функционала
 - ✅ Namespace изменен на `com.swparks`
 
 #### Реализованные компоненты дизайн-системы (готовы к использованию)
@@ -61,11 +63,12 @@
 #### Реализованные экраны (статус: черновые заглушки)
 
 - ✅ **RootScreen** - корневой экран с навигацией по вкладкам
-- ⚠️ **ParksNavHost / ParksRootScreen** - экраны раздела площадок (отображают данные из assets)
-- ⚠️ **EventsNavHost / EventsScreen** - экраны раздела мероприятий (есть ViewModel, минимальный функционал)
-- ❌ **ProfileNavHost** - экран раздела профиля (только заглушка)
-- ❌ **MessagesNavHost** - экран раздела сообщений (только заглушка)
-- ❌ **MoreScreen** - экран раздела настроек (только заглушка)
+- ⚠️ **ParksRootScreen** - экран раздела площадок (отображают данные из assets)
+- ⚠️ **EventsScreen** - экран раздела мероприятий (есть ViewModel, минимальный функционал)
+- ⚠️ **MoreScreen** - экран раздела настроек (полностью реализован, 4 секции, все функции работают)
+- ⚠️ **ThemeIconScreen** - экран темы и иконки (полностью реализован: Domain, Data, UI слои)
+- ❌ **ProfileRootScreen** - экран раздела профиля (только заглушка)
+- ❌ **MessagesRootScreen** - экран раздела сообщений (только заглушка)
 
 #### Реализованные модели данных
 
@@ -105,13 +108,16 @@
 **Domain Layer:**
 
 - **LoginUseCase** - use case для авторизации
-- **LogoutUseCase** - use case для выхода из учетной записи
+- **LogoutUseCase** - use case для выхода
+- **IconManager** - use case для смены иконки приложения
 - **ServerException, NetworkException** - исключения для обработки ошибок
 
 **Presentation Layer:**
 
 - **AuthViewModel** - ViewModel для авторизации и смены пароля
 - **EventsViewModel** - ViewModel для экрана мероприятий (минимальная функциональность)
+- **ThemeIconViewModel** - ViewModel для экрана темы и иконки приложения
+- **MainActivityViewModel** - ViewModel для MainActivity
 
 **Утилиты:**
 
@@ -161,8 +167,8 @@
 
 **Экраны для реализации:**
 
-- `MoreScreen` - экран настроек (раздел "Ещё")
-- `ThemeIconScreen` - экран темы и иконки приложения, и для Android 12+ тоггл для динамических цветов (референс: JetpackDays)
+- ✅ `MoreScreen` - экран настроек (раздел "Ещё")
+- ✅ `ThemeIconScreen` - экран темы и иконки приложения, и для Android 12+ тоггл для динамических цветов (референс: JetpackDays)
 
 **Использование референса:**
 
@@ -170,6 +176,15 @@
 - Один комбинированный экран для выбора темы и иконки (не нужно делать 2 отдельных экрана), и для Android 12+ тоггл для динамических цветов
 - Отличаются только фактические иконки приложения
 - Локализация та же (русская и английская)
+
+**Статус реализации:** ✅ **ЗАВЕРШЕНО**
+
+- ✅ ThemeIconScreen: реализован полный стек (Domain: AppTheme, AppIcon, IconManager; Data: AppSettingsDataStore; UI: ThemeIconUiState, ThemeIconViewModel, ThemeIconScreen)
+- ✅ MoreScreen: все 4 секции, функции (shareApp, openGitHub, sendFeedback) и компоненты (ThemeAndIconRow, ShareAppRow, DaysCounterRow, GithubRow)
+- ✅ Иконки: activity-aliases (11 штук), PNG и adaptive icons для всех размеров
+- ✅ Unit-тесты: SettingsModelsTest.kt, ThemeIconViewModelTest.kt
+- ✅ UI-тесты: ThemeIconScreenTest.kt, MoreScreenTest.kt (22 теста)
+- ⚠️ Остается ручное тестирование всех функций (Этап 10.3)
 
 **Детальный план:** `docs/screens/1_More_Screen.md`
 
@@ -834,9 +849,9 @@ app/src/main/java/com/swparks/
 **Unit-тесты:**
 
 - **Data layer** - 20+ тестов для репозиториев, интерцепторов, сериализаторов, шифрования
-- **Domain layer** - 2 теста для use cases (LoginUseCase, LogoutUseCase)
+- **Domain layer** - 4 теста для use cases (LoginUseCase, LogoutUseCase, IconManager)
 - **Model** - 14+ тестов для моделей данных
-- **ViewModel** - 2 теста (AuthViewModel, EventsViewModel)
+- **ViewModel** - 3 теста (AuthViewModel, EventsViewModel, ThemeIconViewModel)
 - **Utils** - 2 теста (JsonUtils, ReadJSONFromAssets)
 - **Mocking** - MockSWApi для изолированного тестирования сетевых функций
 
@@ -857,7 +872,9 @@ app/src/main/java/com/swparks/
 - ✅ `docs/api-implementation-plan.md` - план реализации API (ЗАВЕРШЕН)
 - ✅ `docs/auth-token-plan.md` - план безопасной работы с токеном (ЗАВЕРШЕН)
 - ✅ `docs/navigation-plan.md` - план навигации
+- ✅ `docs/screens/1_More_Screen.md` - экран настроек и тема/иконка (ЗАВЕРШЕН)
 - 📄 `docs/screens/6.6_ChangePasswordScreen.md` - экран смены пароля (создан, не реализован)
+- 📄 Остальные детальные планы экранов не созданы
 
 ---
 
@@ -875,3 +892,19 @@ app/src/main/java/com/swparks/
   - Обновлена документация по авторизации (добавлен ChangePasswordScreen)
   - Обновлена структура проекта с учетом новых компонентов
   - Добавлена информация о реализованном API и тестах
+- 2026-01-25: Актуализация статуса реализации вкладки "Ещё" (More):
+  - ✅ MoreScreen полностью реализован (4 секции, все функции работают)
+  - ✅ ThemeIconScreen полностью реализован (Domain, Data, UI слои)
+  - ✅ IconManager use case реализован
+  - ✅ AppSettingsDataStore для хранения настроек
+  - ✅ Модели AppTheme и AppIcon созданы
+  - ✅ ThemeIconViewModel создан
+  - ✅ Unit-тесты: SettingsModelsTest.kt, ThemeIconViewModelTest.kt
+  - ✅ UI-тесты: ThemeIconScreenTest.kt, MoreScreenTest.kt (22 теста)
+  - Остается ручное тестирование функций (смена иконки, темы, динамические цвета)
+- 2026-01-25: Актуализация общего статуса проекта:
+  - Обновлен список реализованных экранов (MoreScreen и ThemeIconScreen отмечены как полностью реализованные)
+  - Обновлен список Use Cases (добавлен IconManager)
+  - Обновлен список ViewModels (добавлен ThemeIconViewModel)
+  - Обновлено количество unit-тестов для Domain layer (4 вместо 2)
+  - Обновлено количество unit-тестов для ViewModels (3 вместо 2)
