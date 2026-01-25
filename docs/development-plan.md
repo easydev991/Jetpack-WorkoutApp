@@ -11,14 +11,14 @@
 ### Android-приложение (Jetpack-WorkoutApp)
 
 - 🚧 **В активной разработке**
-- ✅ Реализованы компоненты дизайн-системы (27 компонентов для верстки UI)
+- ✅ Реализованы компоненты дизайн-системы (27 компонентов)
 - ✅ Реализованы модели данных (30+ моделей)
-- ✅ Реализован полный API клиент SWApi с 57 эндпоинтами (все запросы к серверу)
-- ✅ Реализован репозиторий SWRepository для работы с данными
-- ✅ Реализована базовая навигация между экранами через RootScreen
-- ✅ Реализована архитектура безопасности для токена авторизации (CryptoManager, SecureTokenRepository, TokenInterceptor, AuthInterceptor)
+- ✅ Реализован полный API клиент SWApi с 57 эндпоинтами
+- ✅ Реализован репозиторий SWRepository
+- ✅ Реализована базовая навигация через RootScreen
+- ✅ Реализована архитектура безопасности для токена (CryptoManager, SecureTokenRepository, TokenInterceptor, AuthInterceptor)
 - ✅ Реализованы Use Cases для авторизации (LoginUseCase, LogoutUseCase, IconManager)
-- ✅ Реализован AuthViewModel для авторизации
+- ✅ Реализован AuthViewModel
 - ✅ Все баги API исправлены (7 из 7)
 - ✅ MoreScreen и ThemeIconScreen полностью реализованы (вкладка "Ещё")
 - ⚠️ EventsScreen имеет ViewModel с базовым функционалом
@@ -30,43 +30,23 @@
 
 #### Реализованные компоненты дизайн-системы (готовы к использованию)
 
-**Базовые компоненты:**
+- **Базовые**: SWButton, SWTextField, SWTextEditor, SWDateTimePicker
+- **Изображения**: SWAsyncImage
+- **Строки списков**: ListRowView, ParkRowView, EventRowView, JournalRowView, UserRowView, FriendRequestRowView, DialogRowView, MessageBubbleView, CommentRowView, CheckmarkRowView
+- **Контейнеры**: FormRowView, FormRowContainer, FormCardContainer, SectionView
+- **Профиля**: UserProfileCardView, IncognitoProfileView
+- **Состояний и ошибок**: LoadingOverlayView, ErrorContentView
+- **Модификаторы**: CircleBadgeView, CircleBackgroundModifier, ScaleOnTapModifier, ColorScheme+isLight
 
-- SWButton, SWTextField, SWTextEditor, SWDateTimePicker
+**Всего:** 27 компонентов
 
-**Изображения:**
-
-- SWAsyncImage
-
-**Строки списков:**
-
-- ListRowView, ParkRowView, EventRowView, JournalRowView, UserRowView, FriendRequestRowView, DialogRowView, MessageBubbleView, CommentRowView, CheckmarkRowView
-
-**Контейнеры:**
-
-- FormRowView, FormRowContainer, FormCardContainer, SectionView
-
-**Компоненты профиля:**
-
-- UserProfileCardView, IncognitoProfileView
-
-**Компоненты состояния и ошибок:**
-
-- LoadingOverlayView, ErrorContentView
-
-**Модификаторы:**
-
-- CircleBadgeView, CircleBackgroundModifier, ScaleOnTapModifier, ColorScheme+isLight
-
-**Всего:** 27 компонентов дизайн-системы
-
-#### Реализованные экраны (статус: черновые заглушки)
+#### Реализованные экраны
 
 - ✅ **RootScreen** - корневой экран с навигацией по вкладкам
 - ⚠️ **ParksRootScreen** - экран раздела площадок (отображают данные из assets)
 - ⚠️ **EventsScreen** - экран раздела мероприятий (есть ViewModel, минимальный функционал)
-- ⚠️ **MoreScreen** - экран раздела настроек (полностью реализован, 4 секции, все функции работают)
-- ⚠️ **ThemeIconScreen** - экран темы и иконки (полностью реализован: Domain, Data, UI слои)
+- ✅ **MoreScreen** - экран раздела настроек (полностью реализован)
+- ✅ **ThemeIconScreen** - экран темы и иконки (полностью реализован)
 - ❌ **ProfileRootScreen** - экран раздела профиля (только заглушка)
 - ❌ **MessagesRootScreen** - экран раздела сообщений (только заглушка)
 
@@ -87,43 +67,17 @@
 
 #### Реализованная архитектура
 
-**Data Layer:**
+**Data Layer:** AppContainer (DI), SWRepository (57 endpoints), UserPreferencesRepository (DataStore), SecureTokenRepository (защищенный токен с шифрованием Tink)
 
-- **AppContainer** - контейнер зависимостей (DI контейнер)
-- **SWRepository** - репозиторий для работы с данными (57 API endpoints)
-- **UserPreferencesRepository** - репозиторий для настроек (DataStore)
-- **SecureTokenRepository** - репозиторий для защищенного хранения токена авторизации с шифрованием Tink
+**Network Layer:** SWApi (57 endpoints), AuthInterceptor (обработка 401), TokenInterceptor (добавление токена в заголовок)
 
-**Network Layer:**
+**Security:** CryptoManager (AES-128-GCM-HKDF), EncryptedStringSerializer
 
-- **SWApi** - API клиент для сетевых запросов (57 endpoints)
-- **AuthInterceptor** - интерцептор для обработки ошибок 401
-- **TokenInterceptor** - интерцептор для добавления токена авторизации в заголовки
+**Domain Layer:** LoginUseCase, LogoutUseCase, IconManager, ServerException, NetworkException
 
-**Security:**
+**Presentation Layer:** AuthViewModel, EventsViewModel, ThemeIconViewModel, MainActivityViewModel
 
-- **CryptoManager** - менеджер шифрования через Tink (AES-128-GCM-HKDF)
-- **EncryptedStringSerializer** - сериализатор для шифрования токена в DataStore
-
-**Domain Layer:**
-
-- **LoginUseCase** - use case для авторизации
-- **LogoutUseCase** - use case для выхода
-- **IconManager** - use case для смены иконки приложения
-- **ServerException, NetworkException** - исключения для обработки ошибок
-
-**Presentation Layer:**
-
-- **AuthViewModel** - ViewModel для авторизации и смены пароля
-- **EventsViewModel** - ViewModel для экрана мероприятий (минимальная функциональность)
-- **ThemeIconViewModel** - ViewModel для экрана темы и иконки приложения
-- **MainActivityViewModel** - ViewModel для MainActivity
-
-**Утилиты:**
-
-- **FlexibleDateDeserializer** - десериализатор дат с поддержкой часовых поясов
-- **NetworkUtils** - утилиты для работы с сетью
-- **JsonUtils, ReadJSONFromAssets** - утилиты для работы с JSON и assets
+**Утилиты:** FlexibleDateDeserializer, NetworkUtils, JsonUtils, ReadJSONFromAssets
 
 ---
 
@@ -179,20 +133,55 @@
 
 **Статус реализации:** ✅ **ЗАВЕРШЕНО**
 
-- ✅ ThemeIconScreen: реализован полный стек (Domain: AppTheme, AppIcon, IconManager; Data: AppSettingsDataStore; UI: ThemeIconUiState, ThemeIconViewModel, ThemeIconScreen)
-- ✅ MoreScreen: все 4 секции, функции (shareApp, openGitHub, sendFeedback) и компоненты (ThemeAndIconRow, ShareAppRow, DaysCounterRow, GithubRow)
-- ✅ Иконки: activity-aliases (11 штук), PNG и adaptive icons для всех размеров
+- ✅ ThemeIconScreen: полный стек (Domain: AppTheme, AppIcon, IconManager; Data: AppSettingsDataStore; UI: ThemeIconUiState, ThemeIconViewModel, ThemeIconScreen)
+- ✅ MoreScreen: 4 секции, все функции (shareApp, openGitHub, sendFeedback)
+- ✅ Иконки: activity-aliases (11 штук), PNG и adaptive icons
 - ✅ Unit-тесты: SettingsModelsTest.kt, ThemeIconViewModelTest.kt
 - ✅ UI-тесты: ThemeIconScreenTest.kt, MoreScreenTest.kt (22 теста)
-- ⚠️ Остается ручное тестирование всех функций (Этап 10.3)
 
 **Детальный план:** `docs/screens/1_More_Screen.md`
 
 ---
 
-### 2. Вкладка "Профиль" (Profile)
+### 2. Авторизация (Auth)
 
 **Почему второй:**
+
+- Требуется для всех экранов с бизнес-логикой
+- Экран входа должен показываться при запуске для неавторизованных пользователей
+- Базовая инфраструктура уже реализована (API, Use Cases, AuthViewModel)
+
+**Экраны для реализации:**
+
+- `LoginScreen` - экран входа (с кнопкой восстановления пароля)
+
+**Основные функции:**
+
+- Вход в сервис workout.su под существующей учетной записью
+- Восстановление пароля от учетной записи (через email)
+- Сохранение токена авторизации в DataStore с шифрованием Tink
+- Проверка авторизации при запуске приложения
+- Выход из учетной записи с очисткой токена и флага авторизации
+
+**Технические задачи:**
+
+- ✅ API endpoints для авторизации и восстановления пароля (57 endpoints)
+- ✅ Безопасное хранение токена авторизации (CryptoManager, SecureTokenRepository, TokenInterceptor)
+- ✅ LoginUseCase, LogoutUseCase, AuthViewModel
+- ⚠️ Реализовать LoginScreen (с кнопкой восстановления пароля)
+- ⚠️ Реализовать проверку авторизации при запуске и защиту экранов
+
+**Детальные планы:**
+
+- ✅ `docs/auth-token-plan.md` - план безопасной работы с токеном (ЗАВЕРШЕН)
+- ✅ `docs/api-implementation-plan.md` - план реализации API (57 endpoints - ЗАВЕРШЕН)
+- 📄 `docs/screens/2_Login_Screen.md` - экран входа (НЕ СОЗДАН)
+
+---
+
+### 3. Вкладка "Профиль" (Profile)
+
+**Почему третий:**
 
 - Авторизация требуется для большинства других экранов
 - Простые CRUD-операции для начала
@@ -202,6 +191,7 @@
 
 - `ProfileScreen` - экран профиля (просмотр)
 - `EditProfileScreen` - экран редактирования профиля
+- `ChangePasswordScreen` - экран смены пароля
 - `FriendsScreen` - экран списка друзей
 - `FriendRequestsScreen` - экран запросов в друзья
 - `UserParksScreen` - экран площадок пользователя
@@ -219,18 +209,19 @@
 
 **Детальные планы:**
 
-- `docs/screens/2_Profile_Screen.md` - основной экран профиля
-- `docs/screens/2.1_EditProfile_Screen.md` - редактирование профиля
-- `docs/screens/2.2_Friends_Screen.md` - экран друзей
-- `docs/screens/2.3_Blacklist_Screen.md` - черный список
-- `docs/screens/2.4_UserParks_Screen.md` - площадки пользователя
-- `docs/screens/2.5_Journals_Screen.md` - дневники (навигация)
+- `docs/screens/3.1_Profile_Screen.md` - основной экран профиля
+- `docs/screens/3.2_EditProfile_Screen.md` - редактирование профиля
+- `docs/screens/3.2.1_ChangePasswordScreen.md` - экран смены пароля
+- `docs/screens/3.3_Friends_Screen.md` - экран друзей
+- `docs/screens/3.4_Blacklist_Screen.md` - черный список
+- `docs/screens/3.5_UserParks_Screen.md` - площадки пользователя
+- `docs/screens/3.6_Journals_Screen.md` - дневники (навигация)
 
 ---
 
-### 3. Вкладка "Площадки" (Parks)
+### 4. Вкладка "Площадки" (Parks)
 
-**Почему третий:**
+**Почему четвертый:**
 
 - Офлайн-режим (данные из assets) - проще начать
 - Готовые компоненты дизайн-системы (ParkRowView, ListRowView)
@@ -270,16 +261,16 @@
 
 **Детальные планы:**
 
-- `docs/screens/3_Parks_Screen.md` - экран списка площадок
-- `docs/screens/3.1_Parks_Map_Screen.md` - экран карты площадок
-- `docs/screens/3.2_Park_Detail_Screen.md` - детальный экран площадки
-- `docs/screens/3.3_Edit_Park_Screen.md` - создание/редактирование площадки
+- `docs/screens/4_Parks_Screen.md` - экран списка площадок
+- `docs/screens/4.1_Parks_Map_Screen.md` - экран карты площадок
+- `docs/screens/4.2_Park_Detail_Screen.md` - детальный экран площадки
+- `docs/screens/4.3_Edit_Park_Screen.md` - создание/редактирование площадки
 
 ---
 
-### 4. Вкладка "Мероприятия" (Events)
+### 5. Вкладка "Мероприятия" (Events)
 
-**Почему четвертый:**
+**Почему пятый:**
 
 - Похожая логика на площадки (CRUD, комментарии)
 - Готовые компоненты дизайн-системы (EventRowView)
@@ -313,19 +304,18 @@
 
 **Детальные планы:**
 
-- `docs/screens/4_Events_Screen.md` - экран списка мероприятий
-- `docs/screens/4.1_Event_Detail_Screen.md` - детальный экран мероприятия
-- `docs/screens/4.2_Edit_Event_Screen.md` - создание/редактирование мероприятия
+- `docs/screens/5_Events_Screen.md` - экран списка мероприятий
+- `docs/screens/5.1_Event_Detail_Screen.md` - детальный экран мероприятия
+- `docs/screens/5.2_Edit_Event_Screen.md` - создание/редактирование мероприятия
 
 ---
 
-### 5. Вкладка "Сообщения" (Messages)
+### 6. Вкладка "Сообщения" (Messages)
 
-**Почему пятый:**
+**Почему шестой:**
 
 - Зависит от профиля (для списка диалогов)
-- Сложная логика реального времени
-- WebSocket или polling для обновлений
+- HTTP запросы для обновления данных (как в iOS-приложении)
 
 **Экраны для реализации:**
 
@@ -345,61 +335,11 @@
 - Реализовать список диалогов с непрочитанными сообщениями
 - Реализовать чат с отправкой и получением сообщений
 - Реализовать переход на чат из профиля пользователя
-- **TODO: Polling для real-time updates** - для первой итерации использовать HTTP запросы (как в iOS-приложении), добавить polling каждые N секунд в будущих итерациях
 
 **Детальные планы:**
 
-- `docs/screens/5_Dialogs_Screen.md` - экран списка диалогов
-- `docs/screens/5.1_Chat_Screen.md` - экран чата
-
----
-
-### 6. Авторизация (Auth)
-
-**Почему последняя:**
-
-- Требуется для всех экранов с бизнес-логикой
-- Экран входа должен показываться при запуске для неавторизованных пользователей
-- Можно отложить после реализации основных экранов для MVP
-
-**Экраны для реализации:**
-
-- `LoginScreen` - экран входа
-- `RecoveryScreen` - экран восстановления пароля
-- `WelcomeScreen` - экран приветствия (для неавторизованных пользователей)
-- `ChangePasswordScreen` - экран смены пароля
-
-**Основные функции:**
-
-- Вход в сервис workout.su под существующей учетной записью
-- Восстановление пароля от учетной записи
-- Смена пароля авторизованного пользователя
-- Сохранение токена авторизации в DataStore с шифрованием Tink
-- Проверка авторизации при запуске приложения
-- Выход из учетной записи с очисткой токена и флага авторизации
-
-**Технические задачи:**
-
-- ✅ Создать API endpoints для авторизации и восстановления пароля (57 endpoints реализовано)
-- ✅ Реализовать безопасное хранение токена авторизации (CryptoManager, SecureTokenRepository, TokenInterceptor)
-- ✅ Реализовать LoginUseCase для авторизации с сохранением токена
-- ✅ Реализовать LogoutUseCase для выхода с очисткой токена
-- ✅ Реализовать AuthViewModel с интерефейсами ILoginUseCase и ILogoutUseCase
-- ⚠️ Реализовать LoginScreen с полями для логина и пароля
-- ⚠️ Реализовать RecoveryScreen с полем для email
-- ⚠️ Реализовать ChangePasswordScreen с полями для старого и нового пароля
-- ⚠️ Реализовать WelcomeScreen для неавторизованных пользователей
-- ⚠️ Реализовать проверку авторизации при запуске приложения
-- ⚠️ Реализовать защиту экранов с авторизацией при запуске
-
-**Детальные планы:**
-
-- ✅ `docs/auth-token-plan.md` - план безопасной работы с токеном авторизации (ЗАВЕРШЕН)
-- ✅ `docs/api-implementation-plan.md` - план реализации API (57 endpoints - ЗАВЕРШЕН)
-- 📄 `docs/screens/6_Login_Screen.md` - экран входа (НЕ СОЗДАН)
-- 📄 `docs/screens/6.1_Recovery_Screen.md` - экран восстановления пароля (НЕ СОЗДАН)
-- 📄 `docs/screens/6.2_Welcome_Screen.md` - экран приветствия (НЕ СОЗДАН)
-- ✅ `docs/screens/6.6_ChangePasswordScreen.md` - экран смены пароля (СОЗДАН, но не реализован)
+- `docs/screens/6_Dialogs_Screen.md` - экран списка диалогов
+- `docs/screens/6.1_Chat_Screen.md` - экран чата
 
 ---
 
@@ -827,45 +767,27 @@ app/src/main/java/com/swparks/
 - **Сообщения**: 5 endpoints (getDialogs, getMessages, sendMessage, deleteDialog, markAsRead)
 - **Дневники**: 7 endpoints (getJournals, getJournal, createJournal, updateJournal, deleteJournal, updateJournalSettings, getEntries)
 
-**Статистика:**
-
-- 100% реализация API сервера
-- Все баги исправлены (7 из 7)
-- 0 расхождений с iOS-версией
+**Статистика:** 100% реализация API сервера, все баги исправлены (7 из 7), 0 расхождений с iOS-версией
 
 ### Безопасность авторизации
 
 ✅ **Полностью реализована безопасная работа с токеном авторизации**
 
-- **CryptoManager** - шифрование через Tink (AES-128-GCM-HKDF)
-- **SecureTokenRepository** - защищенное хранение токена в DataStore с шифрованием
-- **TokenInterceptor** - автоматическое добавление токена в заголовок `Authorization: Basic {token}`
-- **AuthInterceptor** - обработка ошибок 401 и очистка флага авторизации
-- **LoginUseCase, LogoutUseCase** - use cases для авторизации и выхода
-- **AuthViewModel** - ViewModel для авторизации и смены пароля
+- CryptoManager (AES-128-GCM-HKDF)
+- SecureTokenRepository (защищенное хранение в DataStore)
+- TokenInterceptor (автоматическое добавление токена в заголовок)
+- AuthInterceptor (обработка ошибок 401)
+- LoginUseCase, LogoutUseCase, AuthViewModel
 
 ### Тестирование
 
-**Unit-тесты:**
+**Unit-тесты:** Data layer (20+ тестов), Domain layer (4 теста), Model (14+ тестов), ViewModel (3 теста), Utils (2 теста), MockSWApi
 
-- **Data layer** - 20+ тестов для репозиториев, интерцепторов, сериализаторов, шифрования
-- **Domain layer** - 4 теста для use cases (LoginUseCase, LogoutUseCase, IconManager)
-- **Model** - 14+ тестов для моделей данных
-- **ViewModel** - 3 теста (AuthViewModel, EventsViewModel, ThemeIconViewModel)
-- **Utils** - 2 теста (JsonUtils, ReadJSONFromAssets)
-- **Mocking** - MockSWApi для изолированного тестирования сетевых функций
-
-**Интеграционные тесты:**
-
-- CryptoManagerIntegrationTest - интеграционные тесты шифрования
+**Интеграционные тесты:** CryptoManagerIntegrationTest
 
 **Всего:** 40+ тестов
 
-**Инструменты:**
-
-- MockK для создания моков
-- Turbine для тестирования Flow/StateFlow
-- Все сетевые функции тестируются только на моках, без реальных HTTP запросов
+**Инструменты:** MockK, Turbine, изолированное тестирование без реальных HTTP запросов
 
 ### Детальная документация
 
@@ -873,7 +795,6 @@ app/src/main/java/com/swparks/
 - ✅ `docs/auth-token-plan.md` - план безопасной работы с токеном (ЗАВЕРШЕН)
 - ✅ `docs/navigation-plan.md` - план навигации
 - ✅ `docs/screens/1_More_Screen.md` - экран настроек и тема/иконка (ЗАВЕРШЕН)
-- 📄 `docs/screens/6.6_ChangePasswordScreen.md` - экран смены пароля (создан, не реализован)
 - 📄 Остальные детальные планы экранов не созданы
 
 ---
@@ -886,25 +807,23 @@ app/src/main/java/com/swparks/
   - Реализован полный API клиент SWApi с 57 эндпоинтами
   - Реализована архитектура безопасности для токена авторизации (CryptoManager, SecureTokenRepository, TokenInterceptor, AuthInterceptor)
   - Реализованы Use Cases для авторизации (LoginUseCase, LogoutUseCase)
-  - Реализован AuthViewModel для авторизации и смены пароля
+  - Реализован AuthViewModel
   - Все баги API исправлены (7 из 7)
-  - Обновлен список моделей данных (30+ моделей вместо 14)
-  - Обновлена документация по авторизации (добавлен ChangePasswordScreen)
-  - Обновлена структура проекта с учетом новых компонентов
-  - Добавлена информация о реализованном API и тестах
+  - Обновлен список моделей данных (30+ моделей)
+  - Обновлена структура проекта
 - 2026-01-25: Актуализация статуса реализации вкладки "Ещё" (More):
-  - ✅ MoreScreen полностью реализован (4 секции, все функции работают)
-  - ✅ ThemeIconScreen полностью реализован (Domain, Data, UI слои)
+  - ✅ MoreScreen и ThemeIconScreen полностью реализованы
   - ✅ IconManager use case реализован
   - ✅ AppSettingsDataStore для хранения настроек
   - ✅ Модели AppTheme и AppIcon созданы
   - ✅ ThemeIconViewModel создан
   - ✅ Unit-тесты: SettingsModelsTest.kt, ThemeIconViewModelTest.kt
   - ✅ UI-тесты: ThemeIconScreenTest.kt, MoreScreenTest.kt (22 теста)
-  - Остается ручное тестирование функций (смена иконки, темы, динамические цвета)
 - 2026-01-25: Актуализация общего статуса проекта:
-  - Обновлен список реализованных экранов (MoreScreen и ThemeIconScreen отмечены как полностью реализованные)
-  - Обновлен список Use Cases (добавлен IconManager)
-  - Обновлен список ViewModels (добавлен ThemeIconViewModel)
-  - Обновлено количество unit-тестов для Domain layer (4 вместо 2)
-  - Обновлено количество unit-тестов для ViewModels (3 вместо 2)
+  - Обновлен список реализованных экранов
+  - Обновлены списки Use Cases и ViewModels
+  - Обновлено количество unit-тестов для Domain layer (4) и ViewModels (3)
+- 2026-01-25: Обновление плана разработки:
+  - Этап авторизации (Auth) перемещен сразу после вкладки "Ещё" (новый номер этапа: 2)
+  - Обновлена нумерация всех этапов с 2 по 7
+  - Обновлены ссылки на детальные документы экранов с учетом новой нумерации
