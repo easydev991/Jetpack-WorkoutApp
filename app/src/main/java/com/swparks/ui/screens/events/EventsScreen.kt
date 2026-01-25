@@ -59,14 +59,13 @@ fun PastEventsScreen(
                     Text(text = stringResource(id = R.string.events_title))
                 },
             )
-        },
-        modifier = modifier
+        }
     ) { paddingValues ->
         LazyColumn(
-            modifier = Modifier,
+            modifier = modifier.padding(paddingValues),
             contentPadding = PaddingValues(
                 start = dimensionResource(id = R.dimen.spacing_regular),
-                top = paddingValues.calculateTopPadding(),
+                top = dimensionResource(id = R.dimen.spacing_small),
                 end = dimensionResource(id = R.dimen.spacing_regular),
                 bottom = dimensionResource(id = R.dimen.spacing_regular)
             ),

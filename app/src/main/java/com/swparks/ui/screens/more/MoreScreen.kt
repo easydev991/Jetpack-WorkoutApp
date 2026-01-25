@@ -3,9 +3,8 @@ package com.swparks.ui.screens.more
 import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -72,24 +71,22 @@ private fun ScreenContent(
     uriHandler: UriHandler,
     navController: NavHostController? = null
 ) {
-    Box(
-        modifier = modifier.fillMaxSize()
+    Column(
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_small_plus)),
+        modifier = modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_small_plus)),
-            modifier = Modifier.verticalScroll(rememberScrollState())
-        ) {
-            SettingsSection(navController = navController)
-            HorizontalDivider()
-            AboutAppSection(
-                context = context,
-                uriHandler = uriHandler
-            )
-            HorizontalDivider()
-            OtherAppsSection(uriHandler = uriHandler)
-            HorizontalDivider()
-            SupportProjectSection(uriHandler = uriHandler)
-        }
+        SettingsSection(navController = navController)
+        HorizontalDivider()
+        AboutAppSection(
+            context = context,
+            uriHandler = uriHandler
+        )
+        HorizontalDivider()
+        OtherAppsSection(uriHandler = uriHandler)
+        HorizontalDivider()
+        SupportProjectSection(uriHandler = uriHandler)
     }
 }
 

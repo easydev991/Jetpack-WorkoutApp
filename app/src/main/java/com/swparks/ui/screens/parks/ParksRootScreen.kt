@@ -3,6 +3,7 @@ package com.swparks.ui.screens.parks
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -52,10 +53,10 @@ fun ParksRootScreen(
         }
     ) { paddingValues ->
         LazyColumn(
-            modifier = Modifier,
+            modifier = Modifier.padding(paddingValues),
             contentPadding = PaddingValues(
                 start = dimensionResource(R.dimen.spacing_regular),
-                top = paddingValues.calculateTopPadding(),
+                top = dimensionResource(R.dimen.spacing_small),
                 end = dimensionResource(R.dimen.spacing_regular),
                 bottom = dimensionResource(R.dimen.spacing_regular)
             ),

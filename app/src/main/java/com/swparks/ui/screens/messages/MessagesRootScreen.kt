@@ -1,6 +1,7 @@
 package com.swparks.ui.screens.messages
 
 import android.util.Log
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,11 +29,13 @@ fun MessagesRootScreen(modifier: Modifier = Modifier) {
         }
     ) { paddingValues ->
         IncognitoProfileView(
-            modifier = modifier.padding(
-                top = paddingValues.calculateTopPadding(),
-                start = dimensionResource(R.dimen.spacing_regular),
-                end = dimensionResource(R.dimen.spacing_regular)
-            ),
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(paddingValues)
+                .padding(
+                    start = dimensionResource(R.dimen.spacing_regular),
+                    end = dimensionResource(R.dimen.spacing_regular)
+                ),
             onClickAuth = {
                 Log.d("MessagesRootScreen", "Кнопка авторизации нажата")
             }
