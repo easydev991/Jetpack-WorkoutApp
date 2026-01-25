@@ -168,6 +168,7 @@
     <string name="description">Описание</string>
     <string name="organized_by">Организатор</string>
     <string name="close">Закрыть</string>
+    <string name="logout">Выйти</string>
 
     <plurals name="ageInYears">
         <item quantity="one">%1$d год</item>
@@ -228,4 +229,22 @@
 
     <string name="error_label">Ошибка!</string>
     <string name="try_again_button">Попробовать снова</string>
+
+    <!-- Login screen placeholders -->
+    <string name="login_or_email">Логин или email</string>
+    <string name="password">Пароль</string>
+
+    <!-- Login screen buttons -->
+    <string name="sign_in">Войти</string>
+    <string name="reset_password">Восстановить пароль</string>
+
+    <!-- Login screen error messages -->
+    <string name="login_empty">Логин не может быть пустым</string>
+
+    <!-- Login screen alerts -->
+    <string name="alert_no_connection">Нет подключения к интернету. Проверьте настройки сети и попробуйте снова.</string>
+    <string name="alert_forgot_password_title">Забыли пароль</string>
+    <string name="alert_forgot_password_message">Для восстановления пароля введите логин или email</string>
+    <string name="alert_reset_password_success_title">Готово</string>
+    <string name="alert_reset_password_success_message">Инструкция для восстановления пароля выслана на email, указанный при регистрации</string>
 </resources>

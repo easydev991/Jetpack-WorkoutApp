@@ -2,6 +2,7 @@ package com.swparks.ui.viewmodel
 
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.ILogoutUseCase
+import com.swparks.model.LoginCredentials
 import com.swparks.model.LoginSuccess
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -23,7 +24,8 @@ class AuthViewModelTest {
     private lateinit var logoutUseCase: ILogoutUseCase
     private lateinit var authViewModel: AuthViewModel
 
-    private val testToken = "test_auth_token_12345"
+    private val testCredentials =
+        LoginCredentials(login = "user@test.com", password = "password123")
     private val testLoginSuccess = LoginSuccess(userId = 1L)
 
     @Before
@@ -45,24 +47,24 @@ class AuthViewModelTest {
     @Test
     fun login_whenCalled_thenInvokesLoginUseCase() = runTest {
         // When
-        authViewModel.login(testToken)
+        authViewModel.login(testCredentials)
         advanceUntilIdle()
 
         // Then
-        coVerify(exactly = 1) { loginUseCase(testToken) }
+        coVerify(exactly = 1) { loginUseCase(testCredentials) }
     }
 
     @Test
     fun login_whenCalledTwice_thenInvokesLoginUseCaseTwice() = runTest {
         // When
-        authViewModel.login(testToken)
+        authViewModel.login(testCredentials)
         advanceUntilIdle()
 
-        authViewModel.login(testToken)
+        authViewModel.login(testCredentials)
         advanceUntilIdle()
 
         // Then
-        coVerify(exactly = 2) { loginUseCase(testToken) }
+        coVerify(exactly = 2) { loginUseCase(testCredentials) }
     }
 
     @Test

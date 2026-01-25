@@ -168,6 +168,7 @@
     <string name="description">Description</string>
     <string name="organized_by">Organized by</string>
     <string name="close">Close</string>
+    <string name="logout">Logout</string>
 
     <plurals name="ageInYears">
         <item quantity="one">%1$d year old</item>
@@ -214,4 +215,22 @@
 
     <string name="error_label">Error!</string>
     <string name="try_again_button">Try again</string>
+
+    <!-- Login screen placeholders -->
+    <string name="login_or_email">Login or email</string>
+    <string name="password">Password</string>
+
+    <!-- Login screen buttons -->
+    <string name="sign_in">Sign in</string>
+    <string name="reset_password">Reset password</string>
+
+    <!-- Login screen error messages -->
+    <string name="login_empty">Login cannot be empty</string>
+
+    <!-- Login screen alerts -->
+    <string name="alert_no_connection">No internet connection. Please check your network settings and try again.</string>
+    <string name="alert_forgot_password_title">Forgot password</string>
+    <string name="alert_forgot_password_message">To recover your password, enter your login or email</string>
+    <string name="alert_reset_password_success_title">Done</string>
+    <string name="alert_reset_password_success_message">Instructions for recovering your password have been sent to email specified during registration</string>
 </resources>

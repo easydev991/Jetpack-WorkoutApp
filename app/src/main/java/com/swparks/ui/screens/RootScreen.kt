@@ -11,9 +11,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.swparks.data.preferences.AppSettingsDataStore
 import com.swparks.model.Park
+import com.swparks.model.SocialUpdates
+import com.swparks.model.User
 import com.swparks.navigation.AppState
 import com.swparks.navigation.BottomNavigationBar
 import com.swparks.navigation.Screen
+import com.swparks.ui.screens.auth.LoginScreen
 import com.swparks.ui.screens.events.EventsScreen
 import com.swparks.ui.screens.messages.MessagesRootScreen
 import com.swparks.ui.screens.more.MoreScreen
@@ -26,6 +29,16 @@ import com.swparks.viewmodel.ThemeIconViewModel
 
 @Composable
 fun RootScreen(appState: AppState) {
+    // Создаем AppContainer для доступа к use cases
+    val context = LocalContext.current
+    val appContainer = remember {
+        com.swparks.data.DefaultAppContainer(context.applicationContext)
+    }
+
+    // Состояние для хранения авторизованного пользователя
+    val currentUser = remember { androidx.compose.runtime.mutableStateOf<User?>(null) }
+    val isLoggingOut = remember { androidx.compose.runtime.mutableStateOf(false) }
+
     Scaffold(
         bottomBar = {
             BottomNavigationBar(appState = appState)
@@ -61,7 +74,19 @@ fun RootScreen(appState: AppState) {
 
             // Вкладка "Профиль"
             composable(route = Screen.Profile.route) {
-                ProfileRootScreen()
+                ProfileRootScreen(
+                    user = currentUser.value,
+                    appContainer = appContainer,
+                    navController = appState.navController,
+                    isLoggingOut = isLoggingOut.value,
+                    onLogout = {
+                        isLoggingOut.value = true
+                    },
+                    onLogoutComplete = {
+                        currentUser.value = null
+                        isLoggingOut.value = false
+                    }
+                )
             }
 
             // Вкладка "Ещё"
@@ -179,7 +204,23 @@ fun RootScreen(appState: AppState) {
 
             // Экраны авторизации (модальные окна)
             composable(route = Screen.Login.route) {
-                // TODO: Реализовать LoginScreen как модальное окно
+                LoginScreen(
+                    onDismiss = {
+                        appState.navController.popBackStack()
+                    },
+                    onLoginSuccess = { result: Result<SocialUpdates> ->
+                        result.onSuccess { socialUpdates ->
+                            // Обновляем состояние с данными пользователя
+                            currentUser.value = socialUpdates.user
+                            // Закрываем LoginScreen
+                            appState.navController.popBackStack()
+                        }
+                        result.onFailure { error ->
+                            // Ошибка загрузки данных пользователя
+                            // LoginScreen остается открытым
+                        }
+                    }
+                )
             }
 
             composable(route = Screen.Register.route) {

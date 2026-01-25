@@ -14,8 +14,10 @@ import com.swparks.data.repository.SWRepositoryImp
 import com.swparks.data.serializer.EncryptedStringSerializer
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.ILogoutUseCase
+import com.swparks.domain.usecase.IResetPasswordUseCase
 import com.swparks.domain.usecase.LoginUseCase
 import com.swparks.domain.usecase.LogoutUseCase
+import com.swparks.domain.usecase.ResetPasswordUseCase
 import com.swparks.network.SWApi
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -24,10 +26,13 @@ import retrofit2.Retrofit
 
 interface AppContainer {
     val swRepository: SWRepository
+    val secureTokenRepository: SecureTokenRepository
 
     // Use cases для авторизации
     val loginUseCase: ILoginUseCase
     val logoutUseCase: ILogoutUseCase
+    val resetPasswordUseCase: IResetPasswordUseCase
+
 
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
@@ -63,7 +68,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
     }
 
     // Создаем SecureTokenRepository для безопасного хранения токена
-    private val secureTokenRepository: SecureTokenRepository by lazy {
+    override val secureTokenRepository: SecureTokenRepository by lazy {
         SecureTokenRepository(context.dataStore, encryptedStringSerializer)
     }
 
@@ -112,12 +117,21 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
     // ==================== Use cases для авторизации ====================
 
+    // Создаем TokenEncoder для генерации токена
+    private val tokenEncoder: TokenEncoder by lazy {
+        TokenEncoder()
+    }
+
     override val loginUseCase: ILoginUseCase by lazy {
-        LoginUseCase(secureTokenRepository, swRepository)
+        LoginUseCase(tokenEncoder, secureTokenRepository, swRepository)
     }
 
     override val logoutUseCase: ILogoutUseCase by lazy {
         LogoutUseCase(secureTokenRepository, swRepository)
+    }
+
+    override val resetPasswordUseCase: IResetPasswordUseCase by lazy {
+        ResetPasswordUseCase(swRepository)
     }
 
     // ==================== API клиенты для разных функциональных областей ====================

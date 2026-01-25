@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.ILogoutUseCase
+import com.swparks.model.LoginCredentials
 import com.swparks.model.LoginSuccess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,12 +41,12 @@ class AuthViewModel(
     /**
      * Выполняет вход в систему.
      *
-     * @param token Токен авторизации или null для очистки
+     * @param credentials Учетные данные пользователя
      */
-    fun login(token: String?) {
+    fun login(credentials: LoginCredentials) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
-            loginUseCase(token)
+            loginUseCase(credentials)
                 .onSuccess { loginSuccess ->
                     _uiState.value = AuthUiState.Success(loginSuccess)
                 }
