@@ -23,7 +23,7 @@ fun ProfileRootScreen(modifier: Modifier = Modifier) {
             CenterAlignedTopAppBar(
                 title = {
                     Text(text = stringResource(id = R.string.profile))
-                }
+                },
             )
         }
     ) { paddingValues ->

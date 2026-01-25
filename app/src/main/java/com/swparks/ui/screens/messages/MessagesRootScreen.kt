@@ -23,7 +23,7 @@ fun MessagesRootScreen(modifier: Modifier = Modifier) {
             CenterAlignedTopAppBar(
                 title = {
                     Text(text = stringResource(id = R.string.messages))
-                }
+                },
             )
         }
     ) { paddingValues ->

@@ -76,7 +76,7 @@
 ### 10.3 Ручное тестирование
 
 - [x] Проверить правильное отображение TopAppBar в ThemeIconScreen (исправлен contentWindowInsets в RootScreen)
-- [x] Проверить корректную работу безопасной зоны на всех экранах (удален windowInsets = WindowInsets(top = 0) из TopAppBar)
+- [x] Проверить безопасные зоны на всех экранах с TopAppBar (убран windowInsets = WindowInsets(top = 0) — теперь safe zone обрабатывается автоматически как в JetpackDays)
 - [ ] Проверить работу кнопки "Поделиться приложением" через Intent-подход (как в JetpackDays)
 - [ ] Проверить открытие GitHub через Intent-подход (как в JetpackDays)
 - [ ] Проверить открытие RuStore для оценки

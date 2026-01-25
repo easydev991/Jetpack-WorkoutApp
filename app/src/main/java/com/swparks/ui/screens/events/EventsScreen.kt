@@ -57,7 +57,7 @@ fun PastEventsScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(text = stringResource(id = R.string.events_title))
-                }
+                },
             )
         },
         modifier = modifier

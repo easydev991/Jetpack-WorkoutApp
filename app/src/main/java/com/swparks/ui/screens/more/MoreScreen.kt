@@ -52,7 +52,7 @@ fun MoreScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(text = stringResource(id = R.string.more))
-                }
+                },
             )
         }
     ) {
