@@ -418,7 +418,8 @@ private fun HandleLoginUiState(
 
             is LoginUiState.ResetError -> {
                 // Ошибка восстановления - отображается под полем логина через resetError
-                onResetError()
+                // НЕ очищаем ошибку - она должна отобразиться пользователю
+                // Ошибка очищается при следующем вводе данных (onLoginChange)
             }
         }
     }
