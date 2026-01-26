@@ -11,7 +11,6 @@ import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.exception.ServerException
 import com.swparks.model.ApiBlacklistOption
 import com.swparks.model.ApiFriendAction
-import com.swparks.model.ChangePasswordRequest
 import com.swparks.model.DialogResponse
 import com.swparks.model.EditJournalSettingsRequest
 import com.swparks.model.Event
@@ -22,12 +21,10 @@ import com.swparks.model.JournalEntryResponse
 import com.swparks.model.JournalResponse
 import com.swparks.model.LoginSuccess
 import com.swparks.model.MainUserForm
-import com.swparks.model.MarkAsReadRequest
 import com.swparks.model.MessageResponse
 import com.swparks.model.Park
 import com.swparks.model.ParkForm
 import com.swparks.model.RegistrationRequest
-import com.swparks.model.ResetPasswordRequest
 import com.swparks.model.SocialUpdates
 import com.swparks.model.TextEntryOption
 import com.swparks.model.User
@@ -183,8 +180,15 @@ class SWRepositoryImp(
         return try {
             val responseBody = e.response()?.errorBody()?.string()
             if (responseBody != null) {
+                Log.e("SWRepository", "Тело ответа сервера: $responseBody")
                 val errorResponse = json.decodeFromString<ErrorResponse>(responseBody)
+                Log.e(
+                    "SWRepository",
+                    "Десериализованный ErrorResponse: message=${errorResponse.message}, errors=${errorResponse.errors}"
+                )
                 val errorMessage = errorResponse.realMessage ?: "Ошибка сервера: $statusCode"
+                Log.e("SWRepository", "realMessage: ${errorResponse.realMessage}")
+                Log.e("SWRepository", "errorMessage для ServerException: $errorMessage")
                 ServerException(message = errorMessage, cause = e)
             } else {
                 val errorMessage = APIError.fromStatusCode(statusCode).errorMessage
@@ -247,7 +251,7 @@ class SWRepositoryImp(
 
     override suspend fun resetPassword(login: String): Result<Unit> =
         try {
-            swApi.resetPassword(ResetPasswordRequest(login))
+            swApi.resetPassword(login)
             Result.success(Unit)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "восстановлении пароля"))
@@ -257,7 +261,7 @@ class SWRepositoryImp(
 
     override suspend fun changePassword(current: String, new: String): Result<Unit> =
         try {
-            swApi.changePassword(ChangePasswordRequest(current, new))
+            swApi.changePassword(current, new)
             Result.success(Unit)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "смене пароля"))
@@ -672,7 +676,7 @@ class SWRepositoryImp(
 
     override suspend fun markAsRead(userId: Long): Result<Unit> =
         try {
-            swApi.markAsRead(MarkAsReadRequest(userId))
+            swApi.markAsRead(userId)
             Result.success(Unit)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "отметке сообщений прочитанными"))

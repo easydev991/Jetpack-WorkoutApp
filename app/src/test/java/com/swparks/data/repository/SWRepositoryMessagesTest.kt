@@ -6,7 +6,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import com.swparks.domain.exception.NetworkException
 import com.swparks.model.DialogResponse
-import com.swparks.model.MarkAsReadRequest
 import com.swparks.model.MessageResponse
 import com.swparks.network.SWApi
 import io.mockk.coEvery
@@ -198,7 +197,7 @@ class SWRepositoryMessagesTest {
     fun markAsRead_whenApiReturnsSuccess_thenReturnsSuccess() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.markAsRead(any<MarkAsReadRequest>()) } returns mockk(relaxed = true)
+        coEvery { mockApi.markAsRead(any()) } returns mockk(relaxed = true)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -210,14 +209,14 @@ class SWRepositoryMessagesTest {
 
         // Then
         assertTrue(result.isSuccess)
-        coVerify { mockApi.markAsRead(any<MarkAsReadRequest>()) }
+        coVerify { mockApi.markAsRead(2L) }
     }
 
     @Test
     fun markAsRead_whenApiThrowsException_thenReturnsFailure() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.markAsRead(any<MarkAsReadRequest>()) } throws IOException("Network error")
+        coEvery { mockApi.markAsRead(any()) } throws IOException("Network error")
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())

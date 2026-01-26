@@ -1,6 +1,5 @@
 package com.swparks.network
 
-import com.swparks.model.ChangePasswordRequest
 import com.swparks.model.Country
 import com.swparks.model.DialogResponse
 import com.swparks.model.EditJournalSettingsRequest
@@ -8,17 +7,17 @@ import com.swparks.model.Event
 import com.swparks.model.JournalEntryResponse
 import com.swparks.model.JournalResponse
 import com.swparks.model.LoginSuccess
-import com.swparks.model.MarkAsReadRequest
 import com.swparks.model.MessageResponse
 import com.swparks.model.Park
 import com.swparks.model.RegistrationRequest
-import com.swparks.model.ResetPasswordRequest
 import com.swparks.model.User
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.POST
@@ -40,13 +39,16 @@ interface SWApi {
     suspend fun login(): LoginSuccess
 
     // Сброс пароля
+    @FormUrlEncoded
     @POST("auth/reset")
-    suspend fun resetPassword(@Body request: ResetPasswordRequest): LoginSuccess
+    suspend fun resetPassword(@Field("username_or_email") usernameOrEmail: String): LoginSuccess
 
     // Смена пароля
+    @FormUrlEncoded
     @POST("auth/changepass")
     suspend fun changePassword(
-        @Body request: ChangePasswordRequest
+        @Field("password") password: String,
+        @Field("new_password") newPassword: String
     ): Response<Unit>
 
     // Получить профиль пользователя
@@ -299,15 +301,17 @@ interface SWApi {
     suspend fun getMessages(@Path("dialogId") dialogId: Long): List<MessageResponse>
 
     // Отправить сообщение пользователю
+    @FormUrlEncoded
     @POST("messages/{userId}")
     suspend fun sendMessageTo(
         @Path("userId") userId: Long,
-        @Body message: String
+        @Field("message") message: String
     ): Response<Unit>
 
     // Отметить сообщения как прочитанные
+    @FormUrlEncoded
     @POST("messages/mark_as_read")
-    suspend fun markAsRead(@Body request: MarkAsReadRequest): Response<Unit>
+    suspend fun markAsRead(@Field("from_user_id") fromUserId: Long): Response<Unit>
 
     // Удалить выбранный диалог
     @DELETE("dialogs/{dialogId}")

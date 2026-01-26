@@ -1,6 +1,5 @@
 package com.swparks.network
 
-import com.swparks.model.ChangePasswordRequest
 import com.swparks.model.Comment
 import com.swparks.model.Country
 import com.swparks.model.DialogResponse
@@ -9,12 +8,10 @@ import com.swparks.model.Event
 import com.swparks.model.JournalEntryResponse
 import com.swparks.model.JournalResponse
 import com.swparks.model.LoginSuccess
-import com.swparks.model.MarkAsReadRequest
 import com.swparks.model.MessageResponse
 import com.swparks.model.Park
 import com.swparks.model.Photo
 import com.swparks.model.RegistrationRequest
-import com.swparks.model.ResetPasswordRequest
 import com.swparks.model.User
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -231,11 +228,11 @@ class MockSWApi : SWApi {
     }
 
 
-    override suspend fun resetPassword(request: ResetPasswordRequest): LoginSuccess {
+    override suspend fun resetPassword(usernameOrEmail: String): LoginSuccess {
         return createMockLoginSuccess()
     }
 
-    override suspend fun changePassword(request: ChangePasswordRequest): Response<Unit> {
+    override suspend fun changePassword(password: String, newPassword: String): Response<Unit> {
         return Response.success(Unit)
     }
 
@@ -500,7 +497,7 @@ class MockSWApi : SWApi {
         return Response.success(Unit)
     }
 
-    override suspend fun markAsRead(request: MarkAsReadRequest): Response<Unit> {
+    override suspend fun markAsRead(fromUserId: Long): Response<Unit> {
         return Response.success(Unit)
     }
 

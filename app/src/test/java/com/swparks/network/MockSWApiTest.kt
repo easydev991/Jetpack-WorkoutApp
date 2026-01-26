@@ -1,10 +1,7 @@
 package com.swparks.network
 
-import com.swparks.model.ChangePasswordRequest
 import com.swparks.model.EditJournalSettingsRequest
 import com.swparks.model.JournalAccess
-import com.swparks.model.MarkAsReadRequest
-import com.swparks.model.ResetPasswordRequest
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -163,10 +160,10 @@ class MockSWApiTest {
     @Test
     fun resetPassword_whenCalled_thenReturnsMockLoginSuccess() = runTest {
         // Given
-        val request = ResetPasswordRequest("test_login")
+        val usernameOrEmail = "test_login"
 
         // When
-        val result = mockApi.resetPassword(request)
+        val result = mockApi.resetPassword(usernameOrEmail)
 
         // Then
         assertNotNull(result)
@@ -176,10 +173,11 @@ class MockSWApiTest {
     @Test
     fun changePassword_whenCalled_thenReturnsSuccessResponse() = runTest {
         // Given
-        val request = ChangePasswordRequest(password = "old", newPassword = "new")
+        val password = "old"
+        val newPassword = "new"
 
         // When
-        val result = mockApi.changePassword(request)
+        val result = mockApi.changePassword(password, newPassword)
 
         // Then
         assertTrue(result.isSuccessful)
@@ -493,10 +491,10 @@ class MockSWApiTest {
     @Test
     fun markAsRead_whenCalled_thenReturnsSuccessResponse() = runTest {
         // Given
-        val request = MarkAsReadRequest(fromUserId = 1L)
+        val fromUserId = 1L
 
         // When
-        val result = mockApi.markAsRead(request)
+        val result = mockApi.markAsRead(fromUserId)
 
         // Then
         assertTrue(result.isSuccessful)
