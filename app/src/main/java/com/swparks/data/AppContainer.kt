@@ -8,6 +8,7 @@ import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFact
 import com.swparks.data.crypto.CryptoManager
 import com.swparks.data.crypto.CryptoManagerImpl
 import com.swparks.data.interceptor.AuthInterceptor
+import com.swparks.data.interceptor.RetryInterceptor
 import com.swparks.data.interceptor.TokenInterceptor
 import com.swparks.data.repository.SWRepository
 import com.swparks.data.repository.SWRepositoryImp
@@ -19,6 +20,8 @@ import com.swparks.domain.usecase.LoginUseCase
 import com.swparks.domain.usecase.LogoutUseCase
 import com.swparks.domain.usecase.ResetPasswordUseCase
 import com.swparks.network.SWApi
+import com.swparks.util.AndroidLogger
+import com.swparks.util.Logger
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -55,6 +58,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
         ignoreUnknownKeys = true
     }
 
+    private val logger: Logger = AndroidLogger()
+
     // ==================== Криптография и хранение токена ====================
 
     // Создаем CryptoManager для шифрования токена
@@ -79,6 +84,11 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
     // ==================== Interceptors ====================
 
+    // Создаем RetryInterceptor для автоматического повторения запросов при временных ошибках
+    private val retryInterceptor: RetryInterceptor by lazy {
+        RetryInterceptor(logger)
+    }
+
     // Создаем TokenInterceptor для добавления токена в заголовки
     private val tokenInterceptor: TokenInterceptor by lazy {
         TokenInterceptor(secureTokenRepository)
@@ -89,9 +99,11 @@ class DefaultAppContainer(context: Context) : AppContainer {
         AuthInterceptor(preferencesRepository)
     }
 
-    // Создаем OkHttpClient с обоими interceptors
+    // Создаем OkHttpClient с interceptor chain
+    // Порядок важен: retry → token → auth
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
+            .addInterceptor(retryInterceptor)  // ← ОБЯЗАТЕЛЬНО ПЕРВЫМ!
             .addInterceptor(tokenInterceptor)
             .addInterceptor(authInterceptor)
             .build()

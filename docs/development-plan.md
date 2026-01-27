@@ -69,7 +69,7 @@
 
 **Data Layer:** AppContainer (DI), SWRepository (57 endpoints), UserPreferencesRepository (DataStore), SecureTokenRepository (защищенный токен с шифрованием Tink)
 
-**Network Layer:** SWApi (57 endpoints), AuthInterceptor (обработка 401), TokenInterceptor (добавление токена в заголовок)
+**Network Layer:** SWApi (57 endpoints), RetryInterceptor (повтор запросов при временных ошибках), AuthInterceptor (обработка 401), TokenInterceptor (добавление токена в заголовок)
 
 **Security:** CryptoManager (AES-128-GCM-HKDF), EncryptedStringSerializer
 
@@ -550,6 +550,7 @@ app/src/main/java/com/swparks/
 │   │   └── FlexibleDateDeserializer.kt
 │   ├── interceptor/              # Interceptor'ы для OkHttp
 │   │   ├── AuthInterceptor.kt    # Обработка 401
+│   │   ├── RetryInterceptor.kt    # Повтор запросов при временных ошибках
 │   │   └── TokenInterceptor.kt   # Добавление токена в заголовок
 │   ├── serialization/            # Сериализаторы для JSON
 │   │   ├── IntStringSerializer.kt

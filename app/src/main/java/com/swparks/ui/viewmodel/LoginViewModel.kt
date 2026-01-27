@@ -9,7 +9,6 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.JetpackWorkoutApplication
 import com.swparks.data.SecureTokenRepository
 import com.swparks.data.repository.SWRepository
-import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
 import com.swparks.model.LoginCredentials
@@ -115,11 +114,9 @@ class LoginViewModel(
      * Аналогично iOS-реализации (LoginScreen.swift:111-117):
      * 1. Авторизуется через loginUseCase
      * 2. Сохраняет токен через secureTokenRepository
-     * 3. Получает данные пользователя через swRepository.getSocialUpdates(userId) с retry логикой
+     * 3. Получает данные пользователя через swRepository.getSocialUpdates(userId)
+     *    RetryInterceptor обрабатывает временные ошибки сервера автоматически
      * 4. Возвращает Result<SocialUpdates> для передачи в ProfileScreen
-     *
-     * Retry логика добавлена для обработки временных ошибок сервера (502, 503, 504),
-     * которые могут возникать при повторной авторизации после выхода.
      *
      * @return Result<SocialUpdates> с данными пользователя или ошибкой
      */
@@ -134,8 +131,8 @@ class LoginViewModel(
 
             // Токен уже сохранен в loginUseCase (через SecureTokenRepository)
 
-            // 3. Загрузка данных пользователя с retry логикой
-            val socialUpdates = loadUserDataWithRetry(userId)
+            // 3. Загрузка данных пользователя (RetryInterceptor обрабатывает retry автоматически)
+            val socialUpdates = swRepository.getSocialUpdates(userId)
             socialUpdates.onSuccess {
                 logger.i("LoginViewModel", "Данные пользователя успешно загружены")
             }
@@ -148,82 +145,12 @@ class LoginViewModel(
                 "Ошибка сети при загрузке данных пользователя: ${e.message}",
                 e
             )
-            Result.failure(
-                NetworkException(
-                    "Ошибка сети при загрузке данных пользователя: ${e.message}",
-                    e
-                )
-            )
+            Result.failure(e)
         } catch (e: Exception) {
             // Общий catch для обработки всех неожиданных ошибок
             logger.e("LoginViewModel", "Ошибка при загрузке данных пользователя: ${e.message}", e)
             Result.failure(e)
         }
-    }
-
-    /**
-     * Загружает данные пользователя с retry логикой.
-     *
-     * Повторяет запрос до 3 раз при ошибках сервера (502, 503, 504)
-     * или ошибках сети. Это помогает обработать временные проблемы
-     * при повторной авторизации после выхода.
-     *
-     * @param userId Идентификатор пользователя
-     * @return Result<SocialUpdates> с данными пользователя или ошибкой
-     */
-    @Suppress("TooGenericExceptionCaught")
-    private suspend fun loadUserDataWithRetry(userId: Long): Result<SocialUpdates> {
-        var lastError: Exception? = null
-
-        repeat(MAX_RETRIES) { attempt ->
-            try {
-                val socialUpdates = swRepository.getSocialUpdates(userId).getOrThrow()
-                logger.i("LoginViewModel", "Данные пользователя загружены с попытки ${attempt + 1}")
-                return Result.success(socialUpdates)
-            } catch (e: retrofit2.HttpException) {
-                val statusCode = e.code()
-                if (statusCode == HTTP_BAD_GATEWAY ||
-                    statusCode == HTTP_SERVICE_UNAVAILABLE ||
-                    statusCode == HTTP_GATEWAY_TIMEOUT
-                ) {
-                    logger.w(
-                        "LoginViewModel",
-                        "Ошибка сервера $statusCode при загрузке данных пользователя, " +
-                                "попытка ${attempt + 1}/$MAX_RETRIES"
-                    )
-                    lastError = e
-                    if (attempt < MAX_RETRIES - 1) {
-                        kotlinx.coroutines.delay(RETRY_DELAY_MS)
-                    }
-                } else {
-                    // Для других кодов ошибок HTTP выкидываем исключение сразу
-                    throw e
-                }
-            } catch (e: IOException) {
-                logger.w(
-                    "LoginViewModel",
-                    "Ошибка сети при загрузке данных пользователя, " +
-                            "попытка ${attempt + 1}/$MAX_RETRIES: ${e.message}"
-                )
-                lastError = e
-                if (attempt < MAX_RETRIES - 1) {
-                    kotlinx.coroutines.delay(RETRY_DELAY_MS)
-                }
-            }
-        }
-
-        // Если все попытки неудачны, возвращаем последнюю ошибку
-        val errorMessage = when (lastError) {
-            is retrofit2.HttpException -> "Не удалось загрузить данные пользователя " +
-                    "после $MAX_RETRIES попыток. Ошибка сервера ${lastError.code()}"
-
-            is IOException -> "Не удалось загрузить данные пользователя. " +
-                    "Проверьте интернет-соединение."
-
-            else -> "Не удалось загрузить данные пользователя после $MAX_RETRIES попыток"
-        }
-        logger.e("LoginViewModel", errorMessage, lastError)
-        return Result.failure(NetworkException(errorMessage, lastError))
     }
 
     /**
@@ -266,12 +193,6 @@ class LoginViewModel(
     }
 
     companion object {
-        private const val MAX_RETRIES = 3
-        private const val RETRY_DELAY_MS = 1000L
-        private const val HTTP_BAD_GATEWAY = 502
-        private const val HTTP_SERVICE_UNAVAILABLE = 503
-        private const val HTTP_GATEWAY_TIMEOUT = 504
-
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application =

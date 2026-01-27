@@ -238,6 +238,30 @@ class UsersRepository(
   - Endpoint-функции для всех API запросов
   - Конвертеры для сериализации/десериализации JSON
 
+- **OkHttp Interceptors** - цепочка интерсепторов для обработки всех HTTP запросов:
+  - **RetryInterceptor** - автоматически повторяет запросы при временных ошибках сервера (502, 503, 504) и сетевых ошибках (IOException)
+    - Количество попыток: 3 (MAX_RETRIES)
+    - Задержка между попытками: 1000 мс (RETRY_DELAY_MS)
+    - НЕ повторяет запросы для других кодов ошибок (404, 401, 500 и т.д.)
+    - Логирует попытки retry на русском языке
+  - **TokenInterceptor** - добавляет токен авторизации в заголовки всех запросов
+  - **AuthInterceptor** - обрабатывает ошибки 401 (Unauthorized) и перебрасывает на экран входа
+
+**Порядок интерсепторов в OkHttpClient:**
+
+```
+OkHttpClient.Builder()
+    .addInterceptor(retryInterceptor)  // ← ПЕРВЫЙ: retry для временных ошибок
+    .addInterceptor(tokenInterceptor)  // ← ВТОРОЙ: добавление токена
+    .addInterceptor(authInterceptor)  // ← ТРЕТИЙ: обработка 401
+    .build()
+```
+
+**Почему порядок важен:**
+- RetryInterceptor должен быть **ПЕРВЫМ**, чтобы retry выполнялся ДО добавления токена
+- Если tokenInterceptor будет первым - токен добавится только к первой попытке
+- authInterceptor должен быть последним для обработки 401
+
 #### 3. Repository Implementations
 
 **Принципы репозиториев:**
