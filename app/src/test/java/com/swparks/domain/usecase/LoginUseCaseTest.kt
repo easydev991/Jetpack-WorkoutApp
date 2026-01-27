@@ -34,7 +34,7 @@ class LoginUseCaseTest {
     fun setup() {
         tokenEncoder = mockk(relaxed = true)
         secureTokenRepository = mockk(relaxed = true)
-        swRepository = mockk(relaxed = true)
+        swRepository = mockk()
         loginUseCase = LoginUseCase(tokenEncoder, secureTokenRepository, swRepository)
     }
 
@@ -46,7 +46,10 @@ class LoginUseCaseTest {
     @Test
     fun invoke_whenValidCredentials_thenSavesTokenAndCallsLogin() = runTest {
         // Given
-        coEvery { swRepository.login(any()) } returns Result.success(LoginSuccess(testUserId))
+        coEvery {
+            swRepository.login(any())
+        } returns Result.success(LoginSuccess(testUserId))
+
         coEvery { tokenEncoder.encode(testCredentials) } returns testToken
 
         // When
@@ -56,7 +59,7 @@ class LoginUseCaseTest {
         assertTrue(result.isSuccess)
         assertEquals(testUserId, result.getOrNull()?.userId)
         coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(testToken) }
-        coVerify(exactly = 1) { swRepository.login(null) }
+        coVerify(exactly = 1) { swRepository.login(testToken) }
         coVerify(exactly = 1) { tokenEncoder.encode(testCredentials) }
     }
 
@@ -64,7 +67,10 @@ class LoginUseCaseTest {
     fun invoke_whenEmptyCredentials_thenSavesEmptyToken() = runTest {
         // Given
         val emptyCredentials = LoginCredentials(login = "", password = "")
-        coEvery { swRepository.login(any()) } returns Result.success(LoginSuccess(testUserId))
+        coEvery {
+            swRepository.login(any())
+        } returns Result.success(LoginSuccess(testUserId))
+
         coEvery { tokenEncoder.encode(emptyCredentials) } returns null
 
         // When
@@ -73,6 +79,7 @@ class LoginUseCaseTest {
         // Then
         assertTrue(result.isSuccess)
         coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(null) }
+        coVerify(exactly = 1) { swRepository.login(null) }
         coVerify(exactly = 1) { tokenEncoder.encode(emptyCredentials) }
     }
 
@@ -80,7 +87,10 @@ class LoginUseCaseTest {
     fun invoke_whenCredentialsIsNullToken_thenSavesNullToken() = runTest {
         // Given
         val nullTokenCredentials = LoginCredentials(login = "test", password = " ")
-        coEvery { swRepository.login(any()) } returns Result.success(LoginSuccess(testUserId))
+        coEvery {
+            swRepository.login(any())
+        } returns Result.success(LoginSuccess(testUserId))
+
         coEvery { tokenEncoder.encode(nullTokenCredentials) } returns null
 
         // When
@@ -89,6 +99,7 @@ class LoginUseCaseTest {
         // Then
         assertTrue(result.isSuccess)
         coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(null) }
+        coVerify(exactly = 1) { swRepository.login(null) }
         coVerify(exactly = 1) { tokenEncoder.encode(nullTokenCredentials) }
     }
 }

@@ -224,28 +224,19 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "регистрации"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), сохраняем статус авторизации как false
-            if (e.code() == APIError.INVALID_CREDENTIALS.statusCode) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "регистрации"))
         }
 
     override suspend fun login(token: String?): Result<LoginSuccess> =
         try {
             val response = swApi.login()
-            // Сохраняем токен авторизации при успешном входе
-            if (token != null) {
-                savePreference(true)
-            }
+            // Сохраняем флаг авторизации при успешном входе
+            // Токен уже сохранен в SecureTokenRepository, здесь сохраняем только статус
+            savePreference(true)
             Result.success(response)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "авторизации"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), сохраняем статус авторизации как false
-            if (e.code() == APIError.INVALID_CREDENTIALS.statusCode) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "авторизации"))
         }
 
@@ -266,10 +257,6 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "смене пароля"))
         } catch (e: HttpException) {
-            // Если вернулась ошибка авторизации (401), сохраняем статус авторизации как false
-            if (e.code() == APIError.INVALID_CREDENTIALS.statusCode) {
-                savePreference(false)
-            }
             Result.failure(handleHttpException(e, "смене пароля"))
         }
 

@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
@@ -31,9 +29,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.swparks.R
 import com.swparks.model.SocialUpdates
 import com.swparks.ui.ds.ButtonConfig
@@ -60,7 +58,7 @@ import com.swparks.ui.viewmodel.LoginViewModel
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    viewModel: LoginViewModel = viewModel(factory = LoginViewModel.Factory),
+    viewModel: LoginViewModel,
     onDismiss: () -> Unit = {},
     onLoginSuccess: (Result<SocialUpdates>) -> Unit = {}
 ) {
@@ -73,6 +71,7 @@ fun LoginScreen(
     LaunchedEffect(Unit) { screenState.focusRequester.requestFocus() }
 
     Scaffold(
+        modifier = modifier, // Применяем модификатор к всему Scaffold
         topBar = {
             LoginModalAppBar(
                 onDismiss = onDismiss,
@@ -80,11 +79,12 @@ fun LoginScreen(
             )
         }
     ) { paddingValues ->
-        Box(modifier = modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize()) {
             LoginContent(
                 viewModel = viewModel,
                 loginError = loginError,
                 resetError = resetError,
+                isLoading = uiState is LoginUiState.Loading,
                 focusRequester = screenState.focusRequester,
                 onResetPasswordClick = { showForgotPasswordAlertIfNeeded(viewModel, screenState) },
                 modifier = Modifier.padding(paddingValues)
@@ -106,7 +106,7 @@ fun LoginScreen(
             // НЕ закрываем LoginScreen - это сделает RootScreen
             onLoginSuccess(Result.success(socialUpdates))
         },
-        onResetSuccess = { screenState.showResetSuccessAlert = true },
+        onResetSuccess = { screenState.setShowResetSuccessAlert(true) },
         onResetError = { viewModel.clearErrors() }
     )
 
@@ -115,9 +115,12 @@ fun LoginScreen(
         showNoInternetAlert = screenState.showNoInternetAlert,
         showForgotPasswordAlert = screenState.showForgotPasswordAlert,
         showResetSuccessAlert = screenState.showResetSuccessAlert,
-        onDismissNoInternetAlert = { screenState.showNoInternetAlert = false },
-        onDismissForgotPasswordAlert = { screenState.showForgotPasswordAlert = false },
-        onDismissResetSuccessAlert = { screenState.showResetSuccessAlert = false }
+        onDismissNoInternetAlert = { screenState.setShowNoInternetAlert(false) },
+        onDismissForgotPasswordAlert = {
+            screenState.setShowForgotPasswordAlert(false)
+            screenState.focusRequester.requestFocus()
+        },
+        onDismissResetSuccessAlert = { screenState.setShowResetSuccessAlert(false) }
     )
 }
 
@@ -165,7 +168,12 @@ private fun LoginModalAppBar(
     isLoading: Boolean,
 ) {
     CenterAlignedTopAppBar(
-        title = { Text(stringResource(id = R.string.sign_in)) },
+        title = {
+            Text(
+                text = stringResource(id = R.string.sign_in),
+                modifier = Modifier.testTag("loginTitle")
+            )
+        },
         navigationIcon = {
             IconButton(
                 onClick = onDismiss,
@@ -189,6 +197,7 @@ private fun LoginContent(
     viewModel: LoginViewModel,
     loginError: String?,
     resetError: String?,
+    isLoading: Boolean,
     focusRequester: FocusRequester,
     onResetPasswordClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -197,7 +206,6 @@ private fun LoginContent(
         modifier =
             modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(
                     top = dimensionResource(R.dimen.spacing_regular),
                     start = dimensionResource(R.dimen.spacing_regular),
@@ -211,6 +219,7 @@ private fun LoginContent(
             viewModel = viewModel,
             loginError = loginError,
             resetError = resetError,
+            isLoading = isLoading,
             focusRequester = focusRequester
         )
 
@@ -220,6 +229,7 @@ private fun LoginContent(
         ButtonsColumn(
             viewModel = viewModel,
             loginError = loginError,
+            isLoading = isLoading,
             onResetPasswordClick = onResetPasswordClick
         )
     }
@@ -231,24 +241,27 @@ private fun LoginFieldsColumn(
     viewModel: LoginViewModel,
     loginError: String?,
     resetError: String?,
+    isLoading: Boolean,
     focusRequester: FocusRequester
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))) {
         LoginField(
             value = viewModel.credentials.login,
-            onValueChange = viewModel::onLoginChange,
+            onValueChange = if (!isLoading) viewModel::onLoginChange else { _ -> },
             isError = resetError != null,
             supportingText = resetError ?: "",
-            modifier = Modifier.focusRequester(focusRequester)
+            modifier = Modifier.focusRequester(focusRequester),
+            enabled = !isLoading
         )
 
         PasswordField(
             config =
                 PasswordFieldConfig(
                     value = viewModel.credentials.password,
-                    onValueChange = viewModel::onPasswordChange,
+                    onValueChange = if (!isLoading) viewModel::onPasswordChange else { _ -> },
                     isError = loginError != null,
-                    supportingText = loginError ?: ""
+                    supportingText = loginError ?: "",
+                    enabled = !isLoading
                 )
         )
     }
@@ -259,16 +272,17 @@ private fun LoginFieldsColumn(
 private fun ButtonsColumn(
     viewModel: LoginViewModel,
     loginError: String?,
+    isLoading: Boolean,
     onResetPasswordClick: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))) {
         LoginButton(
-            enabled = viewModel.credentials.canLogIn(isError = loginError != null),
+            enabled = viewModel.credentials.canLogIn(isError = loginError != null) && !isLoading,
             onClick = { viewModel.login() }
         )
 
         ResetPasswordButton(
-            enabled = viewModel.credentials.canRestorePassword,
+            enabled = !isLoading,
             onClick = onResetPasswordClick
         )
     }
@@ -292,6 +306,7 @@ private data class PasswordFieldConfig(
     val onValueChange: (String) -> Unit,
     val isError: Boolean,
     val supportingText: String,
+    val enabled: Boolean = true,
     val modifier: Modifier = Modifier
 )
 
@@ -302,6 +317,7 @@ private fun LoginField(
     onValueChange: (String) -> Unit,
     isError: Boolean,
     supportingText: String,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     SWTextField(
@@ -314,6 +330,7 @@ private fun LoginField(
                 singleLine = true,
                 isError = isError,
                 supportingText = supportingText,
+                enabled = enabled,
                 onTextChange = onValueChange
             )
     )
@@ -332,6 +349,7 @@ private fun PasswordField(config: PasswordFieldConfig) {
                 singleLine = true,
                 isError = config.isError,
                 supportingText = config.supportingText,
+                enabled = config.enabled,
                 onTextChange = config.onValueChange
             )
     )
@@ -343,7 +361,9 @@ private fun LoginButton(enabled: Boolean, onClick: () -> Unit, modifier: Modifie
     SWButton(
         config =
             ButtonConfig(
-                modifier = modifier.fillMaxWidth(),
+                modifier = modifier
+                    .fillMaxWidth()
+                    .testTag("signInButton"),
                 size = SWButtonSize.LARGE,
                 mode = SWButtonMode.FILLED,
                 text = stringResource(id = R.string.sign_in),
@@ -363,7 +383,9 @@ private fun ResetPasswordButton(
     SWButton(
         config =
             ButtonConfig(
-                modifier = modifier.fillMaxWidth(),
+                modifier = modifier
+                    .fillMaxWidth()
+                    .testTag("resetPasswordButton"),
                 size = SWButtonSize.LARGE,
                 mode = SWButtonMode.TINTED,
                 text = stringResource(id = R.string.reset_password),

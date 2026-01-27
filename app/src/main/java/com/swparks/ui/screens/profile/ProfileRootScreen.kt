@@ -15,10 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.NavController
 import com.swparks.R
 import com.swparks.model.User
-import com.swparks.navigation.Screen
 import com.swparks.ui.ds.IncognitoProfileView
 import com.swparks.ui.ds.SWButton
 import com.swparks.ui.ds.SWButtonMode
@@ -35,10 +33,10 @@ fun ProfileRootScreen(
     modifier: Modifier = Modifier,
     user: User?,
     appContainer: com.swparks.data.DefaultAppContainer? = null,
-    navController: NavController? = null,
     isLoggingOut: Boolean = false,
     onLogout: () -> Unit = {},
-    onLogoutComplete: () -> Unit = {}
+    onLogoutComplete: () -> Unit = {},
+    onShowLoginSheet: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -59,9 +57,7 @@ fun ProfileRootScreen(
                         start = dimensionResource(R.dimen.spacing_regular),
                         end = dimensionResource(R.dimen.spacing_regular)
                     ),
-                onClickAuth = {
-                    navController?.navigate(Screen.Login.route)
-                }
+                onClickAuth = onShowLoginSheet
             )
         } else {
             // Авторизован - показываем профиль и кнопку выхода

@@ -92,13 +92,13 @@ class SWRepositoryAuthTest {
     }
 
     @Test
-    fun login_whenTokenIsNull_thenDoesNotSavePreference() = runTest {
+    fun login_whenTokenIsNull_thenSavesPreference() = runTest {
         // Given
         val mockSuccess = LoginSuccess(userId = 123L)
         val mockApi = mockk<SWApi>()
         coEvery { mockApi.login() } returns mockSuccess
 
-        val mockDataStore = mockk<DataStore<Preferences>>()
+        val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
         val repository = SWRepositoryImp(mockApi, mockDataStore)

@@ -192,6 +192,28 @@ class LoginViewModel(
         _resetError.value = null
     }
 
+    /**
+     * Сбрасывает состояние ViewModel для новой сессии авторизации.
+     *
+     * Вызывается при каждом открытии LoginSheet, чтобы очистить:
+     * - учетные данные (логин и пароль)
+     * - состояние UI (в Idle)
+     * - ошибки авторизации и восстановления пароля
+     *
+     * Это предотвращает повторное использование старых данных и авто-логин при повторном открытии.
+     */
+    fun resetForNewSession() {
+        // Сбросить учетные данные
+        _login.value = ""
+        _password.value = ""
+
+        // Сбросить состояние UI в Idle
+        _uiState.value = LoginUiState.Idle
+
+        // Очистить ошибки
+        clearErrors()
+    }
+
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {

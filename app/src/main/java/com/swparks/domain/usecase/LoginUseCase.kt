@@ -41,8 +41,8 @@ class LoginUseCase(
         val token = tokenEncoder.encode(credentials)
         secureTokenRepository.saveAuthToken(token)
 
-        // Затем вызываем login в SWRepository
+        // Затем вызываем login в SWRepository и передаем токен для сохранения флага авторизации
         // Токен будет автоматически добавлен в заголовок Authorization через TokenInterceptor
-        return swRepository.login(null)
+        return swRepository.login(token)
     }
 }
