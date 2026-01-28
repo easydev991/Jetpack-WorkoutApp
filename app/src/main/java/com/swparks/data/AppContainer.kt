@@ -10,9 +10,11 @@ import com.swparks.data.crypto.CryptoManagerImpl
 import com.swparks.data.interceptor.AuthInterceptor
 import com.swparks.data.interceptor.RetryInterceptor
 import com.swparks.data.interceptor.TokenInterceptor
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.data.repository.SWRepositoryImp
 import com.swparks.data.serializer.EncryptedStringSerializer
+import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.ILogoutUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
@@ -22,6 +24,7 @@ import com.swparks.domain.usecase.ResetPasswordUseCase
 import com.swparks.network.SWApi
 import com.swparks.util.AndroidLogger
 import com.swparks.util.Logger
+import com.swparks.viewmodel.ProfileViewModel
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -30,6 +33,8 @@ import retrofit2.Retrofit
 interface AppContainer {
     val swRepository: SWRepository
     val secureTokenRepository: SecureTokenRepository
+    val countriesRepository: CountriesRepository
+
 
     // Use cases для авторизации
     val loginUseCase: ILoginUseCase
@@ -127,6 +132,12 @@ class DefaultAppContainer(context: Context) : AppContainer {
         )
     }
 
+// ==================== Справочник стран и городов ====================
+
+    override val countriesRepository: CountriesRepository by lazy {
+        CountriesRepositoryImpl(context = context, swApi = retrofitService, logger = logger)
+    }
+
     // ==================== Use cases для авторизации ====================
 
     // Создаем TokenEncoder для генерации токена
@@ -145,6 +156,9 @@ class DefaultAppContainer(context: Context) : AppContainer {
     override val resetPasswordUseCase: IResetPasswordUseCase by lazy {
         ResetPasswordUseCase(swRepository)
     }
+
+    /** Factory метод для создания ProfileViewModel */
+    fun profileViewModelFactory() = ProfileViewModel(countriesRepository = countriesRepository)
 
     // ==================== API клиенты для разных функциональных областей ====================
     // Все фабричные методы возвращают один и тот же экземпляр SWApi для консистентности

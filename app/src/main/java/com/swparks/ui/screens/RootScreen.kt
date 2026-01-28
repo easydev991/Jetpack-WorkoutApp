@@ -81,9 +81,15 @@ fun RootScreen(appState: AppState) {
 
                 // Вкладка "Профиль"
                 composable(route = Screen.Profile.route) {
+                    // Создаем ProfileViewModel
+                    val profileViewModel = remember {
+                        appContainer.profileViewModelFactory()
+                    }
+
                     ProfileRootScreen(
                         user = currentUser.value,
                         appContainer = appContainer,
+                        viewModel = profileViewModel,
                         isLoggingOut = isLoggingOut.value,
                         onLogout = {
                             isLoggingOut.value = true

@@ -10,6 +10,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
@@ -24,6 +28,8 @@ import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.ds.UserProfileCardView
 import com.swparks.ui.ds.UserProfileData
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
+import com.swparks.viewmodel.ProfileUiState
+import com.swparks.viewmodel.ProfileViewModel
 import java.time.LocalDate
 import java.time.Period
 
@@ -33,11 +39,21 @@ fun ProfileRootScreen(
     modifier: Modifier = Modifier,
     user: User?,
     appContainer: com.swparks.data.DefaultAppContainer? = null,
+    viewModel: ProfileViewModel? = null,
     isLoggingOut: Boolean = false,
     onLogout: () -> Unit = {},
     onLogoutComplete: () -> Unit = {},
     onShowLoginSheet: () -> Unit = {}
 ) {
+    // Загружаем профиль при изменении пользователя
+    LaunchedEffect(user) {
+        viewModel?.loadProfile(user)
+    }
+
+    // Получаем UI State из ViewModel
+    val uiState by viewModel?.uiState?.collectAsState()
+        ?: remember { mutableStateOf(ProfileUiState.Loading) }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -73,17 +89,50 @@ fun ProfileRootScreen(
                     ),
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
             ) {
-                UserProfileCardView(
-                    data = UserProfileData(
-                        modifier = Modifier,
-                        imageStringURL = user.image,
-                        userName = user.fullName ?: user.name,
-                        gender = user.genderOption?.let { stringResource(id = it.description) }
-                            ?: "",
-                        age = remember { calculateAge(user.birthDate) },
-                        shortAddress = "${getCountryName(user.countryID)}, ${getCityName(user.cityID)}"
-                    )
-                )
+                when (val state = uiState) {
+                    is ProfileUiState.Loading -> {
+                        // Показываем заглушку, пока загружаются данные
+                        UserProfileCardView(
+                            data = UserProfileData(
+                                modifier = Modifier,
+                                imageStringURL = user.image,
+                                userName = user.fullName ?: user.name,
+                                gender = user.genderOption?.let { stringResource(id = it.description) }
+                                    ?: "",
+                                age = remember { calculateAge(user.birthDate) },
+                                shortAddress = "Загрузка..."
+                            )
+                        )
+                    }
+
+                    is ProfileUiState.Success -> {
+                        UserProfileCardView(
+                            data = UserProfileData(
+                                modifier = Modifier,
+                                imageStringURL = user.image,
+                                userName = user.fullName ?: user.name,
+                                gender = user.genderOption?.let { stringResource(id = it.description) }
+                                    ?: "",
+                                age = remember { calculateAge(user.birthDate) },
+                                shortAddress = "${state.country?.name ?: ""}, ${state.city?.name ?: ""}"
+                            )
+                        )
+                    }
+
+                    is ProfileUiState.Error -> {
+                        UserProfileCardView(
+                            data = UserProfileData(
+                                modifier = Modifier,
+                                imageStringURL = user.image,
+                                userName = user.fullName ?: user.name,
+                                gender = user.genderOption?.let { stringResource(id = it.description) }
+                                    ?: "",
+                                age = remember { calculateAge(user.birthDate) },
+                                shortAddress = state.message
+                            )
+                        )
+                    }
+                }
 
                 LogoutButton(
                     onClick = {
@@ -93,7 +142,7 @@ fun ProfileRootScreen(
                 )
 
                 // Выполняем logout при изменении флага
-                androidx.compose.runtime.LaunchedEffect(isLoggingOut) {
+                LaunchedEffect(isLoggingOut) {
                     if (isLoggingOut) {
                         appContainer?.logoutUseCase?.invoke()
                         onLogoutComplete()
@@ -125,20 +174,6 @@ private fun calculateAge(birthDateString: String?): Int {
         Log.e("ProfileRootScreen", "Ошибка при вычислении возраста: ${e.message}")
         0
     }
-}
-
-/**
- * Возвращает название страны по ID
- */
-private fun getCountryName(countryId: Int?): String {
-    return if (countryId != null) "Страна #$countryId" else ""
-}
-
-/**
- * Возвращает название города по ID
- */
-private fun getCityName(cityId: Int?): String {
-    return if (cityId != null) "Город #$cityId" else ""
 }
 
 /**

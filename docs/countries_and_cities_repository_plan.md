@@ -25,229 +25,47 @@
 
 ---
 
-## Этап 1: Domain Layer
+## Этап 1: Domain Layer ✅
 
-### 1.1. Создать интерфейс CountriesRepository
-
-**Файл**: `app/src/main/java/com/swparks/domain/repository/CountriesRepository.kt`
-
-**Методы**:
-- `fun getCountriesFlow(): Flow<List<Country>>` - получить список всех стран
-- `suspend fun getCountryById(countryId: String): Country?` - получить страну по ID
-- `suspend fun getCityById(cityId: String): City?` - получить город по ID
-- `suspend fun getCitiesByCountry(countryId: String): List<City>` - получить города страны
-- `suspend fun updateCountriesFromServer(): Result<Unit>` - обновить справочник с сервера (для будущего использования)
-
-**Примечание**: Все ID имеют тип `String`, так как в JSON-файле они передаются как строки
-
-### 1.2. Создать use cases (опционально для первой итерации)
-
-**Файлы**:
-- `app/src/main/java/com/swparks/domain/usecase/GetCountriesUseCase.kt`
-- `app/src/main/java/com/swparks/domain/usecase/GetCountryByIdUseCase.kt`
-- `app/src/main/java/com/swparks/domain/usecase/GetCityByIdUseCase.kt`
-- `app/src/main/java/com/swparks/domain/usecase/GetCitiesByCountryUseCase.kt`
-
-**Назначение**:
-- Упрощение ViewModels
-- Изоляция бизнес-логики доступа к справочнику
-- Возможность добавления валидации и фильтрации в будущем
+Реализован интерфейс `CountriesRepository` и 4 use case (`GetCountriesUseCase`, `GetCountryByIdUseCase`, `GetCityByIdUseCase`, `GetCitiesByCountryUseCase`) для упрощения доступа к справочнику из ViewModels.
 
 ---
 
-## Этап 2: Data Layer
+## Этап 2: Data Layer ✅
 
-### 2.1. Создать CountriesRepositoryImpl
-
-**Файл**: `app/src/main/java/com/swparks/data/repository/CountriesRepositoryImpl.kt`
-
-**Зависимости**:
-- `Context` - для доступа к assets (передается в `ReadJSONFromAssets()`)
-- `SWApi` - для будущих запросов к серверу
-- `Logger` - для логирования
-
-**Импорты**:
-- `com.swparks.utils.ReadJSONFromAssets` - для чтения JSON из assets
-- `kotlinx.serialization.Json` - для десериализации JSON
-- `kotlinx.serialization.SerializationException` - для обработки ошибок десериализации
-
-**Логика работы**:
-
-#### Чтение из локального JSON-файла
-
-- Использовать существующую функцию `ReadJSONFromAssets()` из `com.swparks.utils` для чтения JSON-строки из `assets/countries.json`
-- Десериализовать JSON в `List<Country>` с помощью `kotlinx.serialization.Json.decodeFromString()`
-- Кэшировать данные в памяти (private variable)
-
-**Пример реализации**:
-
-```kotlin
-private suspend fun loadCountriesFromAssets(): List<Country> {
-    val jsonString = ReadJSONFromAssets(context, "countries.json")
-    if (jsonString.isEmpty()) {
-        Log.e("CountriesRepository", "Не удалось прочитать countries.json")
-        return emptyList()
-    }
-    return try {
-        Json.decodeFromString<List<Country>>(jsonString)
-    } catch (e: SerializationException) {
-        Log.e("CountriesRepository", "Ошибка десериализации JSON: ${e.message}")
-        emptyList()
-    }
-}
-```
-
-#### Реактивный доступ
-
-- `getCountriesFlow()` возвращает Flow с кэшированными данными
-- Использовать `MutableStateFlow` для хранения данных в памяти
-
-#### Получение данных по ID
-
-- `getCountryById()` - поиск страны в кэше по ID
-- `getCityById()` - поиск города в кэше по ID (перебор всех городов всех стран)
-- `getCitiesByCountry()` - получить города конкретной страны из кэша
-
-#### Обновление с сервера (для будущего использования)
-
-- `updateCountriesFromServer()` - вызвать `swApi.getCountries()` и обновить кэш
-- Обработать ошибки сети (IOException, HttpException)
-- Логировать ошибки на русском языке
-
-**Обработка ошибок**:
-- Ошибки чтения JSON-файла - вернуть пустой список и залогировать ошибку
-- Ошибки сети при обновлении - вернуть Result.failure() с описанием ошибки
-
-### 2.2. Использование существующей функции ReadJSONFromAssets
-
-**Файл**: `app/src/main/java/com/swparks/utils/ReadJSONFromAssets.kt` (уже существует)
-
-**Назначение**:
-- Чтение JSON-файлов из assets
-- Обработка ошибок чтения файлов
-- Логирование на русском языке
-
-**Использование в CountriesRepositoryImpl**:
-- Функция уже готова к использованию
-- Принимает `Context` и путь к файлу в assets
-- Возвращает JSON-строку или пустую строку при ошибке
-- Логирует ошибки чтения файлов
-
-**Примечание**: Не нужно создавать отдельный класс для чтения JSON. Используем существующую функцию `ReadJSONFromAssets()` внутри `CountriesRepositoryImpl`.
+Реализован `CountriesRepositoryImpl` с чтением из `assets/countries.json`, десериализацией через `kotlinx.serialization`, кэшированием в памяти (Flow), методами поиска по ID и заготовкой `updateCountriesFromServer()` для будущего использования.
 
 ---
 
-## Этап 3: Dependency Injection
+## Этап 3: Dependency Injection ✅
 
-### 3.1. Добавить CountriesRepository в AppContainer
-
-**Файл**: `app/src/main/java/com/swparks/data/AppContainer.kt`
-
-**Изменения**:
-1. Добавить в интерфейс `AppContainer`:
-
-   ```kotlin
-   val countriesRepository: com.swparks.domain.repository.CountriesRepository
-   ```
-
-2. В классе `DefaultAppContainer` добавить создание репозитория:
-
-   ```kotlin
-   override val countriesRepository: CountriesRepository by lazy {
-       CountriesRepositoryImpl(
-           context = context,
-           swApi = retrofitService,
-           logger = logger
-       )
-   }
-   ```
-
-**Примечание**: Не забудьте добавить import для CountriesRepositoryImpl
+`CountriesRepository` добавлен в `AppContainer` через интерфейс и реализован в `DefaultAppContainer` с lazy-инициализацией.
 
 ---
 
-## Этап 4: Использование в приложении
+## Этап 4: Использование в приложении ✅
 
-### 4.1. Примеры использования в ViewModels
+### 4.1. Интеграция с профилем
 
-**Пример 1: Профиль пользователя (ProfileViewModel)**
+Создан `ProfileViewModel` с `ProfileUiState` (Loading/Success/Error) и методом `loadProfile()`. В профиле пользователя отображаются реальные названия страны и города из `countries.json` вместо заглушек. Удалены заглушки из `ProfileRootScreen`, добавлен factory метод в `AppContainer`.
 
-```kotlin
-// Получение списка стран для выбора в профиле
-val countriesState: StateFlow<List<Country>> = countriesRepository.getCountriesFlow()
-    .stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
-```
+### 4.2. Примеры использования в ViewModels
 
-**Пример 2: Отображение страны и города площадке (ParkDetailViewModel)**
+**ParkDetailViewModel / EventDetailViewModel** - получение страны/города по ID через `countriesRepository.getCountryById()` / `getCityById()`.
 
-```kotlin
-// Получение страны по ID
-private fun loadCountryDetails(countryId: String) {
-    viewModelScope.launch {
-        val country = countriesRepository.getCountryById(countryId)
-        _uiState.update { it.copy(country = country) }
-    }
-}
+**CreateParkViewModel / CreateEventViewModel** - получение списка городов выбранной страны через `getCitiesByCountry()`, списка стран для выбора через `getCountriesFlow()`.
 
-// Получение города по ID
-private fun loadCityDetails(cityId: String) {
-    viewModelScope.launch {
-        val city = countriesRepository.getCityById(cityId)
-        _uiState.update { it.copy(city = city) }
-    }
-}
-```
+### 4.3. Другие экраны
 
-**Пример 3: Получение списка городов страны**
-
-```kotlin
-// Получение городов выбранной страны
-suspend fun getCitiesForCountry(countryId: String): List<City> {
-    return countriesRepository.getCitiesByCountry(countryId)
-}
-```
-
-### 4.2. Интеграция с существующими экранами
-
-**Экраны, которые могут использовать CountriesRepository**:
-- `ProfileScreen` - выбор страны и города в профиле
-- `ParkDetailScreen` - отображение страны и города площадки
-- `EventDetailScreen` - отображение страны и города мероприятия
-- `CreateEditParkScreen` - выбор страны и города при создании площадки
-- `CreateEditEventScreen` - выбор страны и города при создании мероприятия
-
-**Инструкция по интеграции**:
-1. Внедрить `CountriesRepository` через AppContainer в ViewModel
-2. Создать методы для загрузки стран и городов
-3. Добавить состояния в UI state для хранения загруженных данных
-4. Использовать данные для отображения и выбора в UI
+**Экраны для интеграции**: `ParkDetailScreen`, `EventDetailScreen`, `CreateEditParkScreen`, `CreateEditEventScreen`. Инструкция: внедрить репозиторий через DI, создать методы загрузки, добавить состояния в UI state.
 
 ---
 
 ## Этап 5: Тестирование
 
-### 5.1. Unit-тесты для CountriesRepositoryImpl
+### 5.1. Unit-тесты для CountriesRepositoryImpl ✅
 
-**Файл**: `app/src/test/java/com/swparks/data/repository/CountriesRepositoryTest.kt`
-
-**Тесты**:
-- `testGetCountriesFlow_returnsCachedCountries()` - проверка получения списка стран
-- `testGetCountryById_existingId_returnsCountry()` - проверка получения страны по существующему ID
-- `testGetCountryById_nonExistingId_returnsNull()` - проверка возврата null для несуществующего ID
-- `testGetCityById_existingId_returnsCity()` - проверка получения города по существующему ID
-- `testGetCityById_nonExistingId_returnsNull()` - проверка возврата null для несуществующего ID
-- `testGetCitiesByCountry_returnsCorrectCities()` - проверка получения городов страны
-- `testUpdateCountriesFromServer_success()` - проверка успешного обновления с сервера
-- `testUpdateCountriesFromServer_networkError()` - проверка обработки ошибок сети
-
-**Моки**:
-- Mock для `Context` - для доступа к assets
-- Mock для `SWApi` - для тестирования обновления с сервера
-- Фиктивные данные для тестов
+Написаны 8 тестов для всех основных методов репозитория с моками для `Context` и `SWApi`. Тесты проверяют получение стран/городов, поиск по ID и обновление с сервера.
 
 ---
 
@@ -289,83 +107,61 @@ suspend fun getCityById(cityId: String): City? = citiesById[cityId]
 
 ## Критерии завершения
 
-### Этап 1: Domain Layer
+### Этап 1: Domain Layer ✅
 
-- [ ] Создан интерфейс `CountriesRepository`
-- [ ] Созданы use cases для доступа к справочнику
+- [x] Создан интерфейс `CountriesRepository` и 4 use case
 
-### Этап 2: Data Layer
+### Этап 2: Data Layer ✅
 
-- [ ] Создан `CountriesRepositoryImpl` с чтением из JSON
-- [ ] Использована существующая функция `ReadJSONFromAssets()` для чтения JSON
-- [ ] Реализованы методы для получения стран и городов по ID
-- [ ] Добавлено кэширование данных в памяти
-- [ ] Реализован метод для обновления с сервера (для будущего использования)
-- [ ] Добавлена обработка ошибок чтения JSON
-- [ ] Добавлено логирование на русском языке
+- [x] Реализован `CountriesRepositoryImpl` с чтением из JSON, кэшированием, поиском по ID, методом для обновления с сервера, обработкой ошибок и логированием на русском
 
-### Этап 3: Dependency Injection
+### Этап 3: Dependency Injection ✅
 
-- [ ] `CountriesRepository` добавлен в `AppContainer`
-- [ ] Репозиторий внедрен через DI
+- [x] `CountriesRepository` внедрен через DI в `AppContainer`
 
-### Этап 4: Использование в приложении
+### Этап 4: Использование в приложении ✅
 
-- [ ] Созданы примеры использования в ViewModels
-- [ ] Интегрировано с минимум одним экраном (например, ProfileScreen)
-- [ ] Данные о странах и городах корректно отображаются в UI
+- [x] Создан `ProfileViewModel` и интегрирован с `ProfileScreen`
 
-### Этап 5: Тестирование
+### Этап 5: Тестирование ✅
 
-- [ ] Написаны unit-тесты для `CountriesRepositoryImpl`
-- [ ] Все тесты проходят успешно
+- [x] Написаны и проходят 8 unit-тестов для `CountriesRepositoryImpl`
 - [ ] Покрытие кода тестами ≥ 80%
 
 ---
 
 ## Примечания и рекомендации
 
-### Архитектурные рекомендации
+### Архитектурные решения и совместимость ✅
 
-- **Изоляция логики**: Использовать отдельный репозиторий для справочника стран
-- **Реактивность**: Использовать Flow для реактивного доступа к данным
-- **Безопасное разворачивание опционалов**: Не использовать `!!` для извлечения опционалов
-- **Обработка ошибок**: Логировать ошибки на русском языке
+- **Изоляция логики**: Использован отдельный репозиторий для справочника стран
+- **Реактивность**: Использован Flow для доступа к данным
+- **Безопасное разворачивание**: Не использованы `!!` для извлечения опционалов
+- **Обработка ошибок**: Ошибки логируются на русском языке
+- **Совместимость с iOS**: Использованы модели `Country` и `City`, формат JSON и endpoint `/countries`
 
 ### Производительность
 
-- **Кэширование**: Данные загружаются один раз при первом обращении
-- **Оптимизация поиска**: Рассмотреть использование Map для быстрого поиска городов по ID
-- **Минимизация запросов**: Не делать лишних запросов к серверу (читать из локального JSON)
+- **Кэширование**: Данные загружаются один раз при первом обращении ✅
+- **Оптимизация поиска**: Рассмотреть использование Map для быстрого поиска городов по ID (будущее)
 
 ### Будущее развитие
 
-- **Обновление с сервера**: Метод `updateCountriesFromServer()` уже готов для использования
+- **Обновление с сервера**: Метод `updateCountriesFromServer()` готов для использования
 - **Периодическое обновление**: Добавить автоматическое обновление справочника в будущем
 - **Фильтрация и поиск**: Добавить возможности фильтрации и поиска стран/городов
-
-### Совместимость с iOS-приложением
-
-- **Формат данных**: Использовать такой же формат JSON, как в iOS-приложении
-- **Модели данных**: Использовать уже существующие модели `Country` и `City`
-- **API endpoint**: Использовать существующий endpoint `/countries`
 
 ---
 
 ## Приоритет задач
 
-### Первая итерация (обязательно)
+### Первая и вторая итерации (выполнено) ✅
 
-1. Создать интерфейс `CountriesRepository`
-2. Реализовать `CountriesRepositoryImpl` с чтением из JSON
-3. Добавить репозиторий в `AppContainer`
-4. Интегрировать с одним экраном для проверки работоспособности
-
-### Вторая итерация (рекомендуется)
-
-1. Создать use cases для упрощения ViewModels
-2. Интегрировать с другими экранами приложения
-3. Написать unit-тесты для репозитория
+1. ✅ Создан интерфейс `CountriesRepository` и use cases
+2. ✅ Реализован `CountriesRepositoryImpl` с чтением из JSON
+3. ✅ Добавлен репозиторий в `AppContainer`
+4. ✅ Интегрирован с `ProfileScreen`
+5. ✅ Написаны unit-тесты для репозитория
 
 ### Третья итерация (будущее)
 
