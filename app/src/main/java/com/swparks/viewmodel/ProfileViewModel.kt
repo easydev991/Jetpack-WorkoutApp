@@ -37,6 +37,34 @@ class ProfileViewModel(
     private val swRepository: SWRepository,
 ) : ViewModel() {
 
+    /**
+     * Загружает профиль пользователя с сервера по userId.
+     * Используется после успешной авторизации для загрузки свежих данных.
+     *
+     * @param userId ID пользователя для загрузки профиля
+     */
+    fun loadUserProfileFromServer(userId: Long) {
+        viewModelScope.launch {
+            try {
+                // Загружаем пользователя с сервера
+                swRepository.getUser(userId)
+                    .onSuccess { user ->
+                        // Пользователь уже сохранен в кэше через SWRepository.getUser()
+                        // Теперь загружаем страну и город
+                        loadProfile(user)
+                        Log.i("ProfileViewModel", "Профиль загружен с сервера: ${user.id}")
+                    }
+                    .onFailure { error ->
+                        _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${error.message}") }
+                        Log.e("ProfileViewModel", "Ошибка загрузки профиля с сервера: ${error.message}")
+                    }
+            } catch (e: Exception) {
+                _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${e.message}") }
+                Log.e("ProfileViewModel", "Ошибка загрузки профиля: ${e.message}")
+            }
+        }
+    }
+
     // Подписываемся на текущего пользователя из кэша
     val currentUser: StateFlow<User?> = swRepository.getCurrentUserFlow()
         .stateIn(
@@ -53,23 +81,23 @@ class ProfileViewModel(
         // Автоматически загружаем данные при изменении currentUser
         viewModelScope.launch {
             currentUser.collect { user ->
-                loadProfile()
+                // Передаем user как параметр, чтобы избежать race condition
+                loadProfile(user)
             }
         }
     }
 
     /**
      * Загружает данные профиля с информацией о стране и городе
-     * Использует currentUser из StateFlow для получения данных пользователя
+     * @param user Пользователь для которого загружаем профиль
      */
-    fun loadProfile() {
-        viewModelScope.launch {
-            val user = currentUser.value
-            if (user == null) {
-                _uiState.update { ProfileUiState.Error("Пользователь не авторизован") }
-                return@launch
-            }
+    fun loadProfile(user: User?) {
+        if (user == null) {
+            _uiState.update { ProfileUiState.Error("Пользователь не авторизован") }
+            return
+        }
 
+        viewModelScope.launch {
             try {
                 // Получаем страну пользователя
                 val country =
@@ -88,6 +116,17 @@ class ProfileViewModel(
             } catch (e: Exception) {
                 _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${e.message}") }
             }
+        }
+    }
+
+    /**
+     * Принудительная перезагрузка профиля текущего пользователя.
+     * Загружает профиль пользователя с сервера.
+     */
+    fun reloadProfile() {
+        val currentUser = currentUser.value
+        if (currentUser != null) {
+            loadUserProfileFromServer(currentUser.id)
         }
     }
 }

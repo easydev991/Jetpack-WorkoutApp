@@ -103,6 +103,13 @@ class AppState(
             restoreState = true
         }
     }
+
+    /**
+     * Навигация на вкладку профиля
+     */
+    fun navigateToProfile() {
+        navigateToTopLevelDestination(PROFILE)
+    }
 }
 
 /**

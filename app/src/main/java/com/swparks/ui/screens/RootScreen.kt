@@ -48,6 +48,13 @@ fun RootScreen(appState: AppState) {
     // Состояние для LoginSheet
     var showLoginSheet by remember { mutableStateOf(false) }
 
+    // Создаем ProfileViewModel ЕДИН РАЗ на уровне RootScreen
+    // Это предотвращает пересоздание ViewModel при навигации между вкладками
+    // и гарантирует, что ProfileViewModel всегда подписан на currentUser Flow
+    val profileViewModel = remember {
+        appContainer.profileViewModelFactory()
+    }
+
     // Загружаем parks для использования в TopBar и в ParksRootScreen
     val parks = remember {
         val oldParks = ReadJSONFromAssets(context, "parks.json")
@@ -123,11 +130,7 @@ fun RootScreen(appState: AppState) {
 
             // Вкладка "Профиль"
             composable(route = Screen.Profile.route) {
-                // Создаем ProfileViewModel
-                val profileViewModel = remember {
-                    appContainer.profileViewModelFactory()
-                }
-
+                // Используем единый ProfileViewModel, созданный на уровне RootScreen
                 ProfileRootScreen(
                     appContainer = appContainer,
                     viewModel = profileViewModel,
@@ -277,10 +280,13 @@ fun RootScreen(appState: AppState) {
         LoginSheetHost(
             show = showLoginSheet,
             onDismissed = { showLoginSheet = false },
-            onLoginSuccess = {
-                // Успешная авторизация - закрываем LoginSheet
-                // Данные пользователя загрузятся в ProfileViewModel при открытии профиля
+            onLoginSuccess = { userId ->
+                // Успешная авторизация - загружаем профиль с сервера
+                profileViewModel.loadUserProfileFromServer(userId)
+                // Закрываем LoginSheet
                 showLoginSheet = false
+                // Навигируем на вкладку профиля, чтобы гарантированно обновить UI
+                appState.navigateToProfile()
             }
         )
     }

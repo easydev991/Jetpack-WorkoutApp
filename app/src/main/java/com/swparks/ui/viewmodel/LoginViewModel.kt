@@ -94,6 +94,7 @@ class LoginViewModel(
             loginUseCase(credentials)
                 .onSuccess { result ->
                     _uiState.value = LoginUiState.LoginSuccess(
+                        userId = result.userId,
                         socialUpdates = null // Загрузка выполняется в ProfileViewModel
                     )
                     _loginError.value = null

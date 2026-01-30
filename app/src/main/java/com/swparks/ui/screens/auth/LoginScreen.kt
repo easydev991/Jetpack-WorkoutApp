@@ -54,7 +54,7 @@ import com.swparks.ui.viewmodel.LoginViewModel
  * @param modifier Модификатор для расположения экрана
  * @param viewModel ViewModel для управления состоянием экрана
  * @param onDismiss Callback для закрытия модального окна
- * @param onLoginSuccess Callback для уведомления об успешной авторизации
+ * @param onLoginSuccess Callback для уведомления об успешной авторизации с userId
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,7 +62,7 @@ fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel,
     onDismiss: () -> Unit = {},
-    onLoginSuccess: () -> Unit = {}
+    onLoginSuccess: (userId: Long) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val loginError by viewModel.loginErrorState.collectAsState()
@@ -102,10 +102,9 @@ fun LoginScreen(
     // Обработка состояний UI
     HandleLoginUiState(
         uiState = uiState,
-        onLoginSuccess = {
-            // Успешная авторизация - уведомляем для закрытия LoginScreen
-            // Данные пользователя загрузятся в ProfileViewModel при открытии профиля
-            onLoginSuccess()
+        onLoginSuccess = { userId ->
+            // Успешная авторизация - уведомляем для закрытия LoginScreen и загрузки профиля
+            onLoginSuccess(userId)
         },
         onResetSuccess = { screenState.setShowResetSuccessAlert(true) },
         onResetError = { viewModel.clearErrors() }
@@ -400,7 +399,7 @@ private fun ResetPasswordButton(
 @Composable
 private fun HandleLoginUiState(
     uiState: LoginUiState,
-    onLoginSuccess: () -> Unit = {},
+    onLoginSuccess: (userId: Long) -> Unit = {},
     onResetSuccess: () -> Unit = {},
     onResetError: () -> Unit = {}
 ) {
@@ -415,9 +414,8 @@ private fun HandleLoginUiState(
             }
 
             is LoginUiState.LoginSuccess -> {
-                // Успешная авторизация - уведомляем для закрытия LoginScreen
-                // Данные пользователя загрузятся в ProfileViewModel при открытии профиля
-                onLoginSuccess()
+                // Успешная авторизация - уведомляем для закрытия LoginScreen и загрузки профиля
+                onLoginSuccess(uiState.userId)
             }
 
             is LoginUiState.LoginError -> {
@@ -433,6 +431,7 @@ private fun HandleLoginUiState(
                 // Ошибка восстановления - отображается под полем логина через resetError
                 // НЕ очищаем ошибку - она должна отобразиться пользователю
                 // Ошибка очищается при следующем вводе данных (onLoginChange)
+                onResetError()
             }
         }
     }

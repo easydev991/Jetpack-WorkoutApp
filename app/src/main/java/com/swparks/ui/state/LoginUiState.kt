@@ -27,9 +27,10 @@ sealed class LoginUiState {
     /**
      * Успешная авторизация с загруженными данными пользователя.
      *
+     * @param userId ID авторизованного пользователя
      * @param socialUpdates Данные пользователя или null, если данные еще загружаются
      */
-    data class LoginSuccess(val socialUpdates: SocialUpdates?) : LoginUiState()
+    data class LoginSuccess(val userId: Long, val socialUpdates: SocialUpdates?) : LoginUiState()
 
     /**
      * Успешное восстановление пароля.

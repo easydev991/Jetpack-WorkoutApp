@@ -36,14 +36,14 @@ import kotlin.math.abs
  *
  * @param show Флаг для показа/скрытия листа
  * @param onDismissed Callback при закрытии листа
- * @param onLoginSuccess Callback при успешной авторизации
+ * @param onLoginSuccess Callback при успешной авторизации с userId
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginSheetHost(
     show: Boolean,
     onDismissed: () -> Unit,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: (userId: Long) -> Unit
 ) {
     var allowHide by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -89,12 +89,12 @@ fun LoginSheetHost(
                         onDismissed()
                     }
                 },
-                onLoginSuccess = {
+                onLoginSuccess = { userId ->
                     scope.launch {
                         allowHide = true
                         sheetState.hide()
                         allowHide = false
-                        onLoginSuccess()
+                        onLoginSuccess(userId)
                     }
                 },
                 modifier = Modifier.disableAllGestures() // Блокируем все жесты для всего контента sheet
