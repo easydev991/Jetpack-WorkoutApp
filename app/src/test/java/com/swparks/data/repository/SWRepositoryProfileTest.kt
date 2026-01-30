@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
+import com.swparks.data.database.UserDao
 import com.swparks.domain.exception.NetworkException
 import com.swparks.model.MainUserForm
 import com.swparks.network.SWApi
@@ -33,6 +34,7 @@ import java.io.IOException
 @OptIn(ExperimentalCoroutinesApi::class)
 class SWRepositoryProfileTest {
     private val testDispatcher = StandardTestDispatcher()
+    private val mockUserDao = mockk<UserDao>(relaxed = true)
 
 
     @Before
@@ -68,7 +70,7 @@ class SWRepositoryProfileTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.getUser(123L)
@@ -88,7 +90,10 @@ class SWRepositoryProfileTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        // Mock userDao to return null (no cached data)
+        every { mockUserDao.getUserByIdFlow(any()) } returns flowOf(null)
+
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.getUser(123L)
@@ -120,7 +125,7 @@ class SWRepositoryProfileTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
         val form = MainUserForm(
             name = "testuser",
             fullname = "Test User",
@@ -161,7 +166,7 @@ class SWRepositoryProfileTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
         val form = MainUserForm(
             name = "testuser",
             fullname = "Test User",
@@ -190,7 +195,7 @@ class SWRepositoryProfileTest {
         val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.deleteUser()
@@ -209,7 +214,7 @@ class SWRepositoryProfileTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.deleteUser()
@@ -239,7 +244,7 @@ class SWRepositoryProfileTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.getSocialUpdates(1L)
@@ -278,7 +283,13 @@ class SWRepositoryProfileTest {
 
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        // Mock userDao to return null for current user and empty lists for others (no cached data)
+        every { mockUserDao.getCurrentUserFlow() } returns flowOf(null)
+        every { mockUserDao.getFriendsFlow() } returns flowOf(emptyList())
+        every { mockUserDao.getFriendRequestsFlow() } returns flowOf(emptyList())
+        every { mockUserDao.getBlacklistFlow() } returns flowOf(emptyList())
+
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.getSocialUpdates(1L)
@@ -298,7 +309,7 @@ class SWRepositoryProfileTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.findUsers("search")
@@ -318,7 +329,7 @@ class SWRepositoryProfileTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.findUsers("search")

@@ -26,14 +26,15 @@ class UserTest {
         journalCount: Int? = null,
         friendsCount: Int? = null,
         parksCount: String? = null,
-        addedParks: List<Park>? = null
+        addedParks: List<Park>? = null,
+        birthDate: String? = null
     ) = User(
         id = 1L,
         name = "testuser",
         image = "https://example.com/image.jpg",
         cityID = null,
         countryID = null,
-        birthDate = null,
+        birthDate = birthDate,
         email = null,
         fullName = null,
         genderCode = genderCode,
@@ -206,5 +207,76 @@ class UserTest {
 
         // When & Then
         assertFalse(user.hasAddedParks)
+    }
+
+    // Тесты для свойства age
+    @Test
+    fun age_whenBirthDateIsNull_thenReturnsZero() {
+        // Given
+        val user = createTestUser(birthDate = null)
+
+        // When & Then
+        assertEquals(0, user.age)
+    }
+
+    @Test
+    fun age_whenBirthDateIsBlank_thenReturnsZero() {
+        // Given
+        val user = createTestUser(birthDate = "")
+
+        // When & Then
+        assertEquals(0, user.age)
+    }
+
+    @Test
+    fun age_whenBirthDateIsValid_thenReturnsPositiveAge() {
+        // Given
+        val currentYear = java.time.LocalDate.now().year
+        val user = createTestUser(birthDate = "$currentYear-01-01")
+
+        // When & Then
+        assertTrue(user.age >= 0)
+    }
+
+    @Test
+    fun age_whenBirthDateIsPastYear_thenReturnsCorrectAge() {
+        // Given
+        val currentYear = java.time.LocalDate.now().year
+        val birthYear = currentYear - 30
+        val user = createTestUser(birthDate = "$birthYear-01-01")
+
+        // When
+        val age = user.age
+
+        // Then - возраст должен быть 29 или 30 в зависимости от текущей даты
+        assertTrue(age == 29 || age == 30)
+    }
+
+    @Test
+    fun age_whenBirthDateIsInFuture_thenReturnsZero() {
+        // Given
+        val futureYear = java.time.LocalDate.now().year + 10
+        val user = createTestUser(birthDate = "$futureYear-01-01")
+
+        // When & Then
+        assertEquals(0, user.age)
+    }
+
+    @Test
+    fun age_whenBirthDateIsInvalidFormat_thenReturnsZero() {
+        // Given
+        val user = createTestUser(birthDate = "not-a-date")
+
+        // When & Then
+        assertEquals(0, user.age)
+    }
+
+    @Test
+    fun age_whenBirthDateIsPartialFormat_thenReturnsZero() {
+        // Given
+        val user = createTestUser(birthDate = "1990-11")
+
+        // When & Then
+        assertEquals(0, user.age)
     }
 }

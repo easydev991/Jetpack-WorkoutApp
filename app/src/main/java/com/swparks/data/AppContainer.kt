@@ -4,9 +4,12 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.room.Room
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.swparks.data.crypto.CryptoManager
 import com.swparks.data.crypto.CryptoManagerImpl
+import com.swparks.data.database.SWDatabase
+import com.swparks.data.database.UserDao
 import com.swparks.data.interceptor.AuthInterceptor
 import com.swparks.data.interceptor.RetryInterceptor
 import com.swparks.data.interceptor.TokenInterceptor
@@ -41,6 +44,8 @@ interface AppContainer {
     val logoutUseCase: ILogoutUseCase
     val resetPasswordUseCase: IResetPasswordUseCase
 
+    /** Фабрика для ProfileViewModel (единый контейнер обеспечивает одну БД с LoginViewModel). */
+    fun profileViewModelFactory(): ProfileViewModel
 
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
@@ -64,6 +69,26 @@ class DefaultAppContainer(context: Context) : AppContainer {
     }
 
     private val logger: Logger = AndroidLogger()
+
+    // ==================== Room Database ====================
+
+    /**
+     * Room Database для локального хранения данных
+     * Использует fallbackToDestructiveMigration для разработки - пересоздает БД при изменении схемы
+     */
+    val database: SWDatabase by lazy {
+        Room.databaseBuilder(
+            context.applicationContext,
+            SWDatabase::class.java,
+            "sw_database"
+        ).fallbackToDestructiveMigration(dropAllTables = true)
+            .build()
+    }
+
+    /**
+     * DAO для работы с пользователями
+     */
+    val userDao: UserDao by lazy { database.userDao() }
 
     // ==================== Криптография и хранение токена ====================
 
@@ -128,7 +153,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
     override val swRepository: SWRepository by lazy {
         SWRepositoryImp(
             swApi = retrofitService,
-            dataStore = context.dataStore
+            dataStore = context.dataStore,
+            userDao = userDao
         )
     }
 
@@ -146,11 +172,20 @@ class DefaultAppContainer(context: Context) : AppContainer {
     }
 
     override val loginUseCase: ILoginUseCase by lazy {
-        LoginUseCase(tokenEncoder, secureTokenRepository, swRepository)
+        LoginUseCase(
+            tokenEncoder,
+            secureTokenRepository,
+            swRepository,
+            preferencesRepository
+        )
     }
 
     override val logoutUseCase: ILogoutUseCase by lazy {
-        LogoutUseCase(secureTokenRepository, swRepository)
+        LogoutUseCase(
+            secureTokenRepository,
+            swRepository,
+            preferencesRepository
+        )
     }
 
     override val resetPasswordUseCase: IResetPasswordUseCase by lazy {
@@ -158,7 +193,10 @@ class DefaultAppContainer(context: Context) : AppContainer {
     }
 
     /** Factory метод для создания ProfileViewModel */
-    fun profileViewModelFactory() = ProfileViewModel(countriesRepository = countriesRepository)
+    override fun profileViewModelFactory() = ProfileViewModel(
+        countriesRepository = countriesRepository,
+        swRepository = swRepository
+    )
 
     // ==================== API клиенты для разных функциональных областей ====================
     // Все фабричные методы возвращают один и тот же экземпляр SWApi для консистентности

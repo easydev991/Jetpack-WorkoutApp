@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
+import com.swparks.data.database.UserDao
 import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.exception.ServerException
 import com.swparks.model.LoginSuccess
@@ -38,6 +39,7 @@ import java.io.IOException
 @OptIn(ExperimentalCoroutinesApi::class)
 class SWRepositoryAuthTest {
     private val testDispatcher = StandardTestDispatcher()
+    private val mockUserDao = mockk<UserDao>(relaxed = true)
 
     @Before
     fun setup() {
@@ -61,7 +63,7 @@ class SWRepositoryAuthTest {
         val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.login("test_token")
@@ -81,7 +83,7 @@ class SWRepositoryAuthTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.login("test_token")
@@ -101,7 +103,7 @@ class SWRepositoryAuthTest {
         val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.login(null)
@@ -121,7 +123,7 @@ class SWRepositoryAuthTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.resetPassword("test_login")
@@ -140,7 +142,7 @@ class SWRepositoryAuthTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.resetPassword("test_login")
@@ -161,7 +163,7 @@ class SWRepositoryAuthTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.changePassword("current", "new")
@@ -182,7 +184,7 @@ class SWRepositoryAuthTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.changePassword("current", "new")
@@ -202,7 +204,7 @@ class SWRepositoryAuthTest {
         val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.register(
@@ -231,7 +233,7 @@ class SWRepositoryAuthTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.register(
@@ -267,7 +269,7 @@ class SWRepositoryAuthTest {
             val mockDataStore = mockk<DataStore<Preferences>>()
             every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-            val repository = SWRepositoryImp(mockApi, mockDataStore)
+            val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
             // When
             val result = repository.resetPassword("1")
@@ -294,7 +296,7 @@ class SWRepositoryAuthTest {
             val mockDataStore = mockk<DataStore<Preferences>>()
             every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-            val repository = SWRepositoryImp(mockApi, mockDataStore)
+            val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
             // When
             val result = repository.resetPassword("test")
@@ -320,7 +322,7 @@ class SWRepositoryAuthTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.resetPassword("test")
@@ -346,7 +348,7 @@ class SWRepositoryAuthTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.resetPassword("test")
@@ -371,7 +373,7 @@ class SWRepositoryAuthTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.resetPassword("test")
@@ -398,7 +400,7 @@ class SWRepositoryAuthTest {
             val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
             every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-            val repository = SWRepositoryImp(mockApi, mockDataStore)
+            val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
             // When
             val result = repository.login("test_token")
@@ -425,7 +427,7 @@ class SWRepositoryAuthTest {
             val mockDataStore = mockk<DataStore<Preferences>>()
             every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-            val repository = SWRepositoryImp(mockApi, mockDataStore)
+            val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
             // When
             val result = repository.register(
@@ -460,7 +462,7 @@ class SWRepositoryAuthTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
 
         // When
         val result = repository.resetPassword("test")

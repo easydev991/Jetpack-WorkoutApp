@@ -7,6 +7,9 @@ import com.swparks.data.APIError
 import com.swparks.data.ErrorResponse
 import com.swparks.data.NetworkUtils
 import com.swparks.data.UserPreferencesRepository
+import com.swparks.data.database.UserDao
+import com.swparks.data.database.toDomain
+import com.swparks.data.database.toEntity
 import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.exception.ServerException
 import com.swparks.model.ApiBlacklistOption
@@ -29,8 +32,15 @@ import com.swparks.model.SocialUpdates
 import com.swparks.model.TextEntryOption
 import com.swparks.model.User
 import com.swparks.network.SWApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import retrofit2.HttpException
@@ -49,6 +59,16 @@ interface SWRepository {
     suspend fun getPastEvents(): List<Event>
     val isAuthorized: Flow<Boolean>
     suspend fun savePreference(isAuthorized: Boolean)
+
+    // Flow методы для локального кэша
+    fun getCurrentUserFlow(): Flow<User?>
+    fun getFriendsFlow(): Flow<List<User>>
+    fun getFriendRequestsFlow(): Flow<List<User>>
+    fun getBlacklistFlow(): Flow<List<User>>
+    fun getFriendsCountFlow(): Flow<Int>
+
+    // Методы очистки данных пользователя
+    suspend fun clearUserData()
 
     // 3.1. Авторизация
     suspend fun register(request: RegistrationRequest): Result<LoginSuccess>
@@ -145,7 +165,8 @@ interface SWRepository {
 )
 class SWRepositoryImp(
     private val swApi: SWApi,
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>,
+    private val userDao: UserDao
 ) : SWRepository {
     private val preferencesRepository: UserPreferencesRepository by lazy {
         UserPreferencesRepository(dataStore)
@@ -270,10 +291,23 @@ class SWRepositoryImp(
 
     override suspend fun getUser(userId: Long): Result<User> =
         try {
-            val user = swApi.getUser(userId)
-            Result.success(user)
+            // 1. Загружаем с сервера
+            val remoteUser = swApi.getUser(userId)
+
+            // 2. Сохраняем в кэш
+            val currentUserId = preferencesRepository.getCurrentUserIdSync()
+            userDao.insert(remoteUser.toEntity(isCurrentUser = (userId == currentUserId)))
+
+            Result.success(remoteUser)
         } catch (e: IOException) {
-            Result.failure(handleIOException(e, "загрузке пользователя"))
+            // 3. Ошибка сети - берем из кэша
+            val cachedUser = userDao.getUserByIdFlow(userId).first()
+            if (cachedUser != null) {
+                Log.i("SWRepository", "Профиль загружен из кэша")
+                Result.success(cachedUser.toDomain())
+            } else {
+                Result.failure(handleIOException(e, "загрузке пользователя"))
+            }
         } catch (e: HttpException) {
             Result.failure(handleHttpException(e, "загрузке пользователя"))
         }
@@ -338,6 +372,12 @@ class SWRepositoryImp(
                 val requests = requestsDeferred.await()
                 val blacklist = blacklistDeferred.await()
 
+                // Сохраняем в кэш
+                userDao.insert(user.toEntity(isCurrentUser = true))
+                userDao.insertAll(friends.map { it.toEntity(isFriend = true) })
+                userDao.insertAll(requests.map { it.toEntity(isFriendRequest = true) })
+                userDao.insertAll(blacklist.map { it.toEntity(isBlacklisted = true) })
+
                 val socialUpdates = SocialUpdates(
                     user = user,
                     friends = friends,
@@ -346,7 +386,25 @@ class SWRepositoryImp(
                 )
                 Result.success(socialUpdates)
             } catch (e: IOException) {
-                Result.failure(handleIOException(e, "загрузке социальных обновлений"))
+                // Ошибка сети - возвращаем кэшированные данные
+                val cachedUser = userDao.getCurrentUserFlow().first()?.toDomain()
+                val cachedFriends = userDao.getFriendsFlow().first().map { it.toDomain() }
+                val cachedRequests = userDao.getFriendRequestsFlow().first().map { it.toDomain() }
+                val cachedBlacklist = userDao.getBlacklistFlow().first().map { it.toDomain() }
+
+                if (cachedUser != null) {
+                    Log.i("SWRepository", "Социальные обновления загружены из кэша")
+                    Result.success(
+                        SocialUpdates(
+                            user = cachedUser,
+                            friends = cachedFriends,
+                            friendRequests = cachedRequests,
+                            blacklist = cachedBlacklist
+                        )
+                    )
+                } else {
+                    Result.failure(handleIOException(e, "загрузке социальных обновлений"))
+                }
             } catch (e: HttpException) {
                 Result.failure(handleHttpException(e, "загрузке социальных обновлений"))
             }
@@ -885,4 +943,39 @@ class SWRepositoryImp(
 
             }
         }
+
+    // ==================== Flow методы для локального кэша ====================
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getCurrentUserFlow(): Flow<User?> =
+        preferencesRepository.currentUserId
+            .flatMapLatest { userId ->
+                if (userId != null) {
+                    Log.d("SWRepository", "Текущий пользователь изменился: $userId")
+                    userDao.getUserByIdFlow(userId).map { entity -> entity?.toDomain() }
+                } else {
+                    Log.d("SWRepository", "Текущий пользователь отсутствует")
+                    flowOf(null)
+                }
+            }
+            .flowOn(Dispatchers.IO)
+
+    override fun getFriendsFlow(): Flow<List<User>> = userDao.getFriendsFlow()
+        .map { users -> users.map { it.toDomain() } }
+
+    override fun getFriendRequestsFlow(): Flow<List<User>> = userDao.getFriendRequestsFlow()
+        .map { users -> users.map { it.toDomain() } }
+
+    override fun getBlacklistFlow(): Flow<List<User>> = userDao.getBlacklistFlow()
+        .map { users -> users.map { it.toDomain() } }
+
+    override fun getFriendsCountFlow(): Flow<Int> = userDao.getFriendsCountFlow()
+
+    override suspend fun clearUserData() {
+        // Удаляем все данные пользователя (профиль, друзья, заявки, черный список)
+        userDao.clearAll()
+        // Очищаем ID текущего пользователя
+        preferencesRepository.clearCurrentUserId()
+        Log.i("SWRepository", "Все данные пользователя удалены")
+    }
 }

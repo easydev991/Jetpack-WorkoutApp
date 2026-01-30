@@ -14,9 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.swparks.JetpackWorkoutApplication
 import com.swparks.data.preferences.AppSettingsDataStore
 import com.swparks.model.Park
-import com.swparks.model.User
 import com.swparks.navigation.AppState
 import com.swparks.navigation.BottomNavigationBar
 import com.swparks.navigation.Screen
@@ -33,14 +33,13 @@ import com.swparks.viewmodel.ThemeIconViewModel
 
 @Composable
 fun RootScreen(appState: AppState) {
-    // Создаем AppContainer для доступа к use cases
+    // Используем единый AppContainer из Application — иначе ProfileViewModel и LoginViewModel
+    // работают с разными экземплярами БД/DataStore, и после авторизации UI профиля не обновляется
     val context = LocalContext.current
     val appContainer = remember {
-        com.swparks.data.DefaultAppContainer(context.applicationContext)
+        (context.applicationContext as JetpackWorkoutApplication).container
     }
 
-    // Состояние для хранения авторизованного пользователя
-    val currentUser = remember { mutableStateOf<User?>(null) }
     val isLoggingOut = remember { mutableStateOf(false) }
     // Состояние для LoginSheet
     var showLoginSheet by remember { mutableStateOf(false) }
@@ -87,7 +86,6 @@ fun RootScreen(appState: AppState) {
                     }
 
                     ProfileRootScreen(
-                        user = currentUser.value,
                         appContainer = appContainer,
                         viewModel = profileViewModel,
                         isLoggingOut = isLoggingOut.value,
@@ -95,7 +93,6 @@ fun RootScreen(appState: AppState) {
                             isLoggingOut.value = true
                         },
                         onLogoutComplete = {
-                            currentUser.value = null
                             isLoggingOut.value = false
                         },
                         onShowLoginSheet = { showLoginSheet = true }
@@ -228,11 +225,9 @@ fun RootScreen(appState: AppState) {
             // LoginSheetHost поверх NavHost
             LoginSheetHost(
                 show = showLoginSheet,
-                isLoading = false,
                 onDismissed = { showLoginSheet = false },
                 onLoginSuccess = { result ->
-                    result.onSuccess { socialUpdates ->
-                        currentUser.value = socialUpdates.user
+                    result.onSuccess {
                         showLoginSheet = false
                     }
                 }

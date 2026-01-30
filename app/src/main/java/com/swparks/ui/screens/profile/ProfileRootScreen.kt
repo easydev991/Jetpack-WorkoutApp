@@ -1,6 +1,5 @@
 package com.swparks.ui.screens.profile
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,14 +12,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
-import com.swparks.model.User
 import com.swparks.ui.ds.IncognitoProfileView
 import com.swparks.ui.ds.SWButton
 import com.swparks.ui.ds.SWButtonMode
@@ -30,29 +26,23 @@ import com.swparks.ui.ds.UserProfileData
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.viewmodel.ProfileUiState
 import com.swparks.viewmodel.ProfileViewModel
-import java.time.LocalDate
-import java.time.Period
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileRootScreen(
     modifier: Modifier = Modifier,
-    user: User?,
-    appContainer: com.swparks.data.DefaultAppContainer? = null,
-    viewModel: ProfileViewModel? = null,
+    viewModel: ProfileViewModel,
+    appContainer: com.swparks.data.AppContainer? = null,
     isLoggingOut: Boolean = false,
     onLogout: () -> Unit = {},
     onLogoutComplete: () -> Unit = {},
     onShowLoginSheet: () -> Unit = {}
 ) {
-    // Загружаем профиль при изменении пользователя
-    LaunchedEffect(user) {
-        viewModel?.loadProfile(user)
-    }
+    // Получаем currentUser из ViewModel
+    val currentUser by viewModel.currentUser.collectAsState()
 
     // Получаем UI State из ViewModel
-    val uiState by viewModel?.uiState?.collectAsState()
-        ?: remember { mutableStateOf(ProfileUiState.Loading) }
+    val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -63,6 +53,7 @@ fun ProfileRootScreen(
             )
         }
     ) { paddingValues ->
+        val user = currentUser
         if (user == null) {
             // Не авторизован - показываем IncognitoProfileView
             IncognitoProfileView(
@@ -99,7 +90,7 @@ fun ProfileRootScreen(
                                 userName = user.fullName ?: user.name,
                                 gender = user.genderOption?.let { stringResource(id = it.description) }
                                     ?: "",
-                                age = remember { calculateAge(user.birthDate) },
+                                age = user.age,
                                 shortAddress = "Загрузка..."
                             )
                         )
@@ -113,7 +104,7 @@ fun ProfileRootScreen(
                                 userName = user.fullName ?: user.name,
                                 gender = user.genderOption?.let { stringResource(id = it.description) }
                                     ?: "",
-                                age = remember { calculateAge(user.birthDate) },
+                                age = user.age,
                                 shortAddress = "${state.country?.name ?: ""}, ${state.city?.name ?: ""}"
                             )
                         )
@@ -127,7 +118,7 @@ fun ProfileRootScreen(
                                 userName = user.fullName ?: user.name,
                                 gender = user.genderOption?.let { stringResource(id = it.description) }
                                     ?: "",
-                                age = remember { calculateAge(user.birthDate) },
+                                age = user.age,
                                 shortAddress = state.message
                             )
                         )
@@ -150,29 +141,6 @@ fun ProfileRootScreen(
                 }
             }
         }
-    }
-}
-
-/**
- * Вычисляет возраст из даты рождения
- *
- * @param birthDateString Дата рождения в формате "YYYY-MM-DD"
- * @return Возраст в годах, или 0 если дата отсутствует или неверна
- */
-private fun calculateAge(birthDateString: String?): Int {
-    if (birthDateString.isNullOrBlank()) {
-        return 0
-    }
-    return try {
-        val birthDate = LocalDate.parse(birthDateString)
-        val currentDate = LocalDate.now()
-        Period.between(birthDate, currentDate).years
-    } catch (e: java.time.format.DateTimeParseException) {
-        Log.e("ProfileRootScreen", "Ошибка при вычислении возраста: ${e.message}")
-        0
-    } catch (e: IllegalArgumentException) {
-        Log.e("ProfileRootScreen", "Ошибка при вычислении возраста: ${e.message}")
-        0
     }
 }
 
@@ -201,32 +169,32 @@ private fun LogoutButton(
 @Composable
 fun ProfileRootScreenPreview() {
     JetpackWorkoutAppTheme {
-        ProfileRootScreen(user = null)
+        // Для preview используем простой placeholder viewModel без реальных данных
+        // В реальном приложении неавторизованный пользователь будет показан через currentUser = null
+        IncognitoProfileView(
+            modifier = Modifier.fillMaxWidth(),
+            onClickAuth = {}
+        )
     }
 }
 
 @Preview(showBackground = true, locale = "ru")
 @Composable
 fun ProfileRootScreenLoggedInPreview() {
-    val testUser = User(
-        id = 1,
-        name = "testuser",
-        image = "",
-        cityID = null,
-        countryID = null,
-        birthDate = "1990-11-25",
-        email = "test@example.com",
-        fullName = "Test User",
-        genderCode = 0,
-        friendRequestCount = "0",
-        friendsCount = 5,
-        parksCount = "2",
-        addedParks = null,
-        journalCount = 1,
-        lang = "ru"
-    )
+    // Preview для авторизованного пользователя требует mock-реализацию ProfileViewModel
+    // В реальном приложении Preview будет работать через test doubles
     JetpackWorkoutAppTheme {
-        ProfileRootScreen(user = testUser)
+        // Для простоты показываем статический вид
+        UserProfileCardView(
+            data = UserProfileData(
+                modifier = Modifier,
+                imageStringURL = "",
+                userName = "Test User",
+                gender = "Мужской",
+                age = 34,
+                shortAddress = "Россия, Москва"
+            )
+        )
     }
 }
 

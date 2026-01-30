@@ -1,13 +1,17 @@
 package com.swparks.domain.usecase
 
+import android.util.Log
 import com.swparks.data.SecureTokenRepository
 import com.swparks.data.TokenEncoder
+import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.repository.SWRepository
 import com.swparks.model.LoginCredentials
 import com.swparks.model.LoginSuccess
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -22,6 +26,7 @@ class LoginUseCaseTest {
     private lateinit var tokenEncoder: TokenEncoder
     private lateinit var secureTokenRepository: SecureTokenRepository
     private lateinit var swRepository: SWRepository
+    private lateinit var preferencesRepository: UserPreferencesRepository
     private lateinit var loginUseCase: LoginUseCase
 
     private val testCredentials =
@@ -32,10 +37,14 @@ class LoginUseCaseTest {
 
     @Before
     fun setup() {
+        mockkStatic(Log::class)
+        every { Log.i(any(), any()) } returns 0
         tokenEncoder = mockk(relaxed = true)
         secureTokenRepository = mockk(relaxed = true)
         swRepository = mockk()
-        loginUseCase = LoginUseCase(tokenEncoder, secureTokenRepository, swRepository)
+        preferencesRepository = mockk(relaxed = true)
+        loginUseCase =
+            LoginUseCase(tokenEncoder, secureTokenRepository, swRepository, preferencesRepository)
     }
 
     @After
@@ -61,6 +70,7 @@ class LoginUseCaseTest {
         coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(testToken) }
         coVerify(exactly = 1) { swRepository.login(testToken) }
         coVerify(exactly = 1) { tokenEncoder.encode(testCredentials) }
+        coVerify(exactly = 1) { preferencesRepository.saveCurrentUserId(testUserId) }
     }
 
     @Test
@@ -81,6 +91,7 @@ class LoginUseCaseTest {
         coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(null) }
         coVerify(exactly = 1) { swRepository.login(null) }
         coVerify(exactly = 1) { tokenEncoder.encode(emptyCredentials) }
+        coVerify(exactly = 1) { preferencesRepository.saveCurrentUserId(testUserId) }
     }
 
     @Test
@@ -101,5 +112,6 @@ class LoginUseCaseTest {
         coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(null) }
         coVerify(exactly = 1) { swRepository.login(null) }
         coVerify(exactly = 1) { tokenEncoder.encode(nullTokenCredentials) }
+        coVerify(exactly = 1) { preferencesRepository.saveCurrentUserId(testUserId) }
     }
 }

@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
+import com.swparks.data.database.UserDao
 import com.swparks.domain.exception.NetworkException
 import com.swparks.model.TextEntryOption
 import com.swparks.network.SWApi
@@ -31,6 +32,7 @@ import java.io.IOException
 @OptIn(ExperimentalCoroutinesApi::class)
 class SWRepositoryCommentsTest {
     private val testDispatcher = StandardTestDispatcher()
+    private val mockUserDao = mockk<UserDao>(relaxed = true)
 
     @Before
     fun setup() {
@@ -58,7 +60,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
         val option = TextEntryOption.Park(id = 123L)
 
         // When
@@ -80,7 +82,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
         val option = TextEntryOption.Event(id = 456L)
 
         // When
@@ -106,7 +108,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
         val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L)
 
         // When
@@ -137,7 +139,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
         val option = TextEntryOption.Park(id = 123L)
 
         // When
@@ -163,7 +165,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
         val option = TextEntryOption.Park(id = 123L)
 
         // When
@@ -195,7 +197,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
         val option = TextEntryOption.Event(id = 456L)
 
         // When
@@ -228,7 +230,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
         val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L)
 
         // When
@@ -261,7 +263,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
         val option = TextEntryOption.Park(id = 123L)
 
         // When
@@ -283,7 +285,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
         val option = TextEntryOption.Park(id = 123L)
 
         // When
@@ -305,7 +307,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
         val option = TextEntryOption.Event(id = 456L)
 
         // When
@@ -331,7 +333,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
         val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L)
 
         // When
@@ -359,7 +361,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
         val option = TextEntryOption.Park(id = 123L)
 
         // When

@@ -7,6 +7,14 @@ import com.swparks.model.SocialUpdates
  */
 sealed class LoginUiState {
     /**
+     * Признак занятости UI: идет загрузка или загружаются данные пользователя после авторизации.
+     * true для Loading или LoginSuccess с null socialUpdates
+     */
+    val isBusy: Boolean
+        get() =
+            this is Loading || (this is LoginSuccess && socialUpdates == null)
+
+    /**
      * Начальное состояние.
      */
     data object Idle : LoginUiState()

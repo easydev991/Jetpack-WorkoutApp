@@ -8,6 +8,7 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,14 +27,13 @@ import kotlin.math.abs
  *
  * LoginScreen открывается как ModalBottomSheet на весь экран поверх текущего UI.
  * Закрытие листа разрешено только:
- * - по нажатию на крестик в левом верхнем углу (только если !isLoading)
+ * - по нажатию на крестик в левом верхнем углу (только если !uiState.isBusy: не идёт логин и не загружаются данные)
  * - автоматически после успешной авторизации
  *
  * Закрытие по тапу вне области, свайпу вниз, системной кнопке/жесту "назад" — запрещено.
  * Все жесты блокируются на уровне контента через Modifier.
  *
  * @param show Флаг для показа/скрытия листа
- * @param isLoading Флаг загрузки (блокирует закрытие по кресту)
  * @param onDismissed Callback при закрытии листа
  * @param onLoginSuccess Callback при успешной авторизации
  */
@@ -41,7 +41,6 @@ import kotlin.math.abs
 @Composable
 fun LoginSheetHost(
     show: Boolean,
-    isLoading: Boolean,
     onDismissed: () -> Unit,
     onLoginSuccess: (Result<SocialUpdates>) -> Unit
 ) {
@@ -50,6 +49,7 @@ fun LoginSheetHost(
 
     // Создаем ViewModel на уровне хоста
     val loginViewModel: LoginViewModel = viewModel(factory = LoginViewModel.Factory)
+    val uiState by loginViewModel.uiState.collectAsState()
 
     // Сбрасываем состояние при каждом открытии sheet
     LaunchedEffect(show) {
@@ -80,7 +80,7 @@ fun LoginSheetHost(
             LoginScreen(
                 viewModel = loginViewModel,
                 onDismiss = {
-                    if (isLoading) return@LoginScreen
+                    if (uiState.isBusy) return@LoginScreen
                     scope.launch {
                         allowHide = true
                         sheetState.hide()

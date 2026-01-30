@@ -3,6 +3,8 @@ package com.swparks.model
 import com.swparks.data.datetime.FlexibleDateDeserializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.time.LocalDate
+import java.time.Period
 
 /**
  * Модель пользователя
@@ -88,4 +90,27 @@ data class User(
      * Добавил ли какие-нибудь площадки
      */
     val hasAddedParks = addedParks?.isNotEmpty() ?: false
+
+    /**
+     * Возраст пользователя
+     * Вычисляется на основе даты рождения
+     * Возвращает 0 если дата отсутствует, неверна или в будущем
+     */
+    val age: Int
+        get() {
+            if (birthDate.isNullOrBlank()) {
+                return 0
+            }
+            return try {
+                val birthLocalDate = LocalDate.parse(birthDate)
+                val currentDate = LocalDate.now()
+                val years = Period.between(birthLocalDate, currentDate).years
+                // Если дата рождения в будущем - возвращаем 0
+                if (years < 0) 0 else years
+            } catch (e: java.time.format.DateTimeParseException) {
+                0
+            } catch (e: IllegalArgumentException) {
+                0
+            }
+        }
 }

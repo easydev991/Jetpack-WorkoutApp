@@ -75,7 +75,7 @@ fun LoginScreen(
         topBar = {
             LoginModalAppBar(
                 onDismiss = onDismiss,
-                isLoading = uiState is LoginUiState.Loading
+                isLoading = uiState.isBusy
             )
         }
     ) { paddingValues ->
@@ -84,14 +84,14 @@ fun LoginScreen(
                 viewModel = viewModel,
                 loginError = loginError,
                 resetError = resetError,
-                isLoading = uiState is LoginUiState.Loading,
+                isLoading = uiState.isBusy,
                 focusRequester = screenState.focusRequester,
                 onResetPasswordClick = { showForgotPasswordAlertIfNeeded(viewModel, screenState) },
                 modifier = Modifier.padding(paddingValues)
             )
 
             // Оверлей загрузки
-            if (uiState is LoginUiState.Loading) {
+            if (uiState.isBusy) {
                 LoadingOverlayView()
             }
         }

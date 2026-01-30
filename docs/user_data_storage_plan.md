@@ -40,6 +40,7 @@
 ### Стратегия кэширования
 
 **Стратегия 5 из architecture.mdc (Online-first с кэшем для офлайн):**
+
 ```kotlin
 suspend fun getUser(userId: Long): Result<User> = try {
     // 1. Сначала с сервера
@@ -60,308 +61,43 @@ suspend fun getUser(userId: Long): Result<User> = try {
 
 ---
 
-## Этап 1: Data Layer (Room)
+## Этап 1: Data Layer (Room) ✅
 
-### 1.1. Создать Room Entities
-
-**Файл:** `app/src/main/java/com/swparks/data/database/UserEntity.kt`
-
-```kotlin
-@Entity(tableName = "users")
-data class UserEntity(
-    @PrimaryKey val id: Long,
-    val name: String,
-    val image: String,
-    val cityId: Int? = null,
-    val countryId: Int? = null,
-    val birthDate: String? = null,
-    val email: String? = null,
-    val fullName: String? = null,
-    val genderCode: Int? = null,
-    val friendRequestCount: String? = null,
-    val friendsCount: Int? = null,
-    val parksCount: String? = null,
-    val journalCount: Int? = null,
-    val lang: String,
-    // Для списков друзей и черного списка - индекс для быстрого поиска
-    val isFriend: Boolean = false,
-    val isFriendRequest: Boolean = false,
-    val isBlacklisted: Boolean = false,
-    val isCurrentUser: Boolean = false
-)
-```
-
-**Почему один Entity для User?**
-- Упрощает схему
-- Одни данные для всех контекстов (профиль, друзья, заявки, черный список)
-- Флаги для категоризации (`isFriend`, `isFriendRequest`, `isBlacklisted`)
-
-### 1.2. Создать UserDao
-
-**Файл:** `app/src/main/java/com/swparks/data/database/UserDao.kt`
-
-```kotlin
-@Dao
-interface UserDao {
-    // Основной пользователь
-    @Query("SELECT * FROM users WHERE isCurrentUser = 1 LIMIT 1")
-    fun getCurrentUserFlow(): Flow<UserEntity?>
-
-    @Query("SELECT * FROM users WHERE id = :userId LIMIT 1")
-    fun getUserByIdFlow(userId: Long): Flow<UserEntity?>
-
-    // Друзья
-    @Query("SELECT * FROM users WHERE isFriend = 1 ORDER BY name ASC")
-    fun getFriendsFlow(): Flow<List<UserEntity>>
-
-    @Query("SELECT COUNT(*) FROM users WHERE isFriend = 1")
-    fun getFriendsCountFlow(): Flow<Int>
-
-    // Заявки в друзья
-    @Query("SELECT * FROM users WHERE isFriendRequest = 1 ORDER BY name ASC")
-    fun getFriendRequestsFlow(): Flow<List<UserEntity>>
-
-    // Черный список
-    @Query("SELECT * FROM users WHERE isBlacklisted = 1 ORDER BY name ASC")
-    fun getBlacklistFlow(): Flow<List<UserEntity>>
-
-    // Вставка и обновление
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(user: UserEntity)
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(users: List<UserEntity>)
-
-    @Query("DELETE FROM users WHERE id = :userId")
-    suspend fun deleteById(userId: Long)
-
-    // Обновление флагов
-    @Query("UPDATE users SET isFriend = 1 WHERE id = :userId")
-    suspend fun markAsFriend(userId: Long)
-
-    @Query("UPDATE users SET isFriend = 0 WHERE id = :userId")
-    suspend fun removeFriend(userId: Long)
-
-    @Query("UPDATE users SET isBlacklisted = 1 WHERE id = :userId")
-    suspend fun addToBlacklist(userId: Long)
-
-    @Query("UPDATE users SET isBlacklisted = 0 WHERE id = :userId")
-    suspend fun removeFromBlacklist(userId: Long)
-
-    // Очистка всех данных пользователя при logout
-    @Query("DELETE FROM users")
-    suspend fun clearAll()
-}
-```
-
-### 1.3. Добавить UserDao в существующую Room Database
-
-**Файл:** `app/src/main/java/com/swparks/data/database/SWDatabase.kt`
-
-**Добавить:**
-```kotlin
-@Database(
-    entities = [UserEntity::class, /* другие entities */],
-    version = 1,  // Первая версия БД (не увеличивать до релиза)
-    exportSchema = false
-)
-abstract class SWDatabase : RoomDatabase() {
-    abstract fun userDao(): UserDao
-    // ... другие DAO
-}
-```
-
-### 1.4. Создать конвертеры UserEntity ↔ User
-
-**Файл:** `app/src/main/java/com/swparks/data/database/UserEntityMapper.kt`
-
-```kotlin
-fun User.toEntity(
-    isCurrentUser: Boolean = false,
-    isFriend: Boolean = false,
-    isFriendRequest: Boolean = false,
-    isBlacklisted: Boolean = false
-): UserEntity = UserEntity(
-    id = id,
-    name = name,
-    image = image,
-    cityId = cityID,
-    countryId = countryID,
-    birthDate = birthDate,
-    email = email,
-    fullName = fullName,
-    genderCode = genderCode,
-    friendRequestCount = friendRequestCount,
-    friendsCount = friendsCount,
-    parksCount = parksCount,
-    journalCount = journalCount,
-    lang = lang,
-    isCurrentUser = isCurrentUser,
-    isFriend = isFriend,
-    isFriendRequest = isFriendRequest,
-    isBlacklisted = isBlacklisted
-)
-
-fun UserEntity.toDomain(): User = User(
-    id = id,
-    name = name,
-    image = image,
-    cityID = cityId,
-    countryID = countryId,
-    birthDate = birthDate,
-    email = email,
-    fullName = fullName,
-    genderCode = genderCode,
-    friendRequestCount = friendRequestCount,
-    friendsCount = friendsCount,
-    parksCount = parksCount,
-    journalCount = journalCount,
-    lang = lang
-)
-```
+Реализован слой данных с Room: создан `UserEntity` с флагами категоризации, `UserDao` с Flow методами, добавлен в `SWDatabase`, созданы конвертеры `UserEntity` ↔ `User`.
 
 ---
 
-## Этап 2: Расширение SWRepository с кэшированием
+## Этап 2: Расширение SWRepository с кэшированием ✅
 
-### 2.1. Обновить интерфейс SWRepository
-
-**Добавить Flow методы для локального доступа:**
-
-```kotlin
-interface SWRepository {
-    // ... существующие методы с сервера ...
-
-    // Flow методы для локального кэша
-    fun getCurrentUserFlow(): Flow<User?>
-    fun getFriendsFlow(): Flow<List<User>>
-    fun getFriendRequestsFlow(): Flow<List<User>>
-    fun getBlacklistFlow(): Flow<List<User>>
-    fun getFriendsCountFlow(): Flow<Int>
-
-    // Методы очистки данных пользователя
-    suspend fun clearUserData()
-}
-```
-
-### 2.2. Обновить реализацию SWRepositoryImpl
-
-**Добавить кэширование в существующие методы:**
-
-```kotlin
-class SWRepositoryImpl(
-    private val userDao: UserDao,
-    private val dataStore: DataStore<Preferences>,
-    private val swApi: SWApi,
-) : SWRepository {
-
-    override suspend fun getUser(userId: Long): Result<User> = try {
-        // 1. Загружаем с сервера
-        val remoteUser = swApi.getUserProfile(userId)
-
-        // 2. Сохраняем в кэш
-        userDao.insert(remoteUser.toEntity(isCurrentUser = (userId == getCurrentUserId())))
-
-        Result.success(remoteUser.toDomain())
-    } catch (e: IOException) {
-        // 3. Ошибка сети - берем из кэша
-        val cachedUser = userDao.getUserByIdFlow(userId).first()
-        if (cachedUser != null) {
-            Log.i("SWRepository", "Профиль загружен из кэша")
-            Result.success(cachedUser.toDomain())
-        } else {
-            Result.failure(NetworkException("Не удалось загрузить профиль. Проверьте интернет", e))
-        }
-    }
-
-    override suspend fun getSocialUpdates(userId: Long): Result<SocialUpdates> = try {
-        // Загружаем с сервера
-        val remoteUpdates = swApi.getSocialUpdates(userId)
-
-        // Сохраняем в кэш
-        userDao.insert(remoteUpdates.user.toEntity(isCurrentUser = true))
-        userDao.insertAll(
-            remoteUpdates.friends.map { it.toEntity(isFriend = true) }
-        )
-        userDao.insertAll(
-            remoteUpdates.friendRequests.map { it.toEntity(isFriendRequest = true) }
-        )
-        userDao.insertAll(
-            remoteUpdates.blacklist.map { it.toEntity(isBlacklisted = true) }
-        )
-
-        Result.success(remoteUpdates.toDomain())
-    } catch (e: IOException) {
-        // Ошибка сети - возвращаем кэшированные данные
-        Result.success(SocialUpdates(
-            user = userDao.getUserByIdFlow(userId).first()?.toDomain(),
-            friends = userDao.getFriendsFlow().first().map { it.toDomain() },
-            friendRequests = userDao.getFriendRequestsFlow().first().map { it.toDomain() },
-            blacklist = userDao.getBlacklistFlow().first().map { it.toDomain() }
-        ))
-    }
-
-    override fun getCurrentUserFlow(): Flow<User?> = userDao.getCurrentUserFlow()
-        .map { it?.toDomain() }
-
-    override fun getFriendsFlow(): Flow<List<User>> = userDao.getFriendsFlow()
-        .map { users -> users.map { it.toDomain() } }
-
-    override fun getFriendRequestsFlow(): Flow<List<User>> = userDao.getFriendRequestsFlow()
-        .map { users -> users.map { it.toDomain() } }
-
-    override fun getBlacklistFlow(): Flow<List<User>> = userDao.getBlacklistFlow()
-        .map { users -> users.map { it.toDomain() } }
-
-    override suspend fun clearUserData() {
-        // Удаляем все данные пользователя (профиль, друзья, заявки, черный список)
-        userDao.clearAll()
-        // TODO: Добавить очистку других таблиц при их реализации (дневники, сообщения)
-        Log.i("SWRepository", "Все данные пользователя удалены")
-    }
-}
-```
+Реализовано кэширование в `SWRepositoryImpl`: добавлены Flow методы для локального доступа (getCurrentUserFlow, getFriendsFlow, getFriendRequestsFlow, getBlacklistFlow), реализовано онлайн-обновление с fallback на кэш при ошибках сети для getUser() и getSocialUpdates(), добавлен метод clearUserData() для очистки всех данных пользователя.
 
 ---
 
-## Этап 3: Dependency Injection
+## Этап 3: Dependency Injection ✅
 
-### 3.1. Добавить userDao в AppContainer
-
-**Файл:** `app/src/main/java/com/swparks/data/AppContainer.kt`
-
-```kotlin
-class DefaultAppContainer(
-    private val context: Context,
-) : AppContainer {
-    val database: SWDatabase by lazy {
-        Room.databaseBuilder(
-            context.applicationContext,
-            SWDatabase::class.java,
-            "sw_database"
-        ).fallbackToDestructiveMigration()  // Для разработки: пересоздает БД при изменении схемы
-         .build()
-    }
-
-    val userDao: UserDao by lazy { database.userDao() }
-
-    val swRepository: SWRepository by lazy {
-        SWRepositoryImpl(
-            userDao = userDao,
-            dataStore = createAppSettingsDataStore(context),
-            swApi = createSWApi(context)
-        )
-    }
-}
-```
+Настроен DI в AppContainer: добавлен userDao в DefaultAppContainer, внедрен в SWRepositoryImpl.
 
 ---
 
-## Этап 4: Использование в ViewModels
+## Этап 4: Использование в ViewModels ✅
 
-### 4.1. Обновить ProfileViewModel
+### 4.1. Обновить ProfileViewModel ✅
 
 **Файл:** `app/src/main/java/com/swparks/viewmodel/ProfileViewModel.kt`
+
+**Реализовано:**
+- Добавлен `swRepository` в конструктор ViewModel
+- Добавлено свойство `currentUser: StateFlow<User?>` для подписки на данные текущего пользователя из кэша
+- Обновлен factory метод в `AppContainer` для передачи `swRepository`
+- Обновлен метод `loadProfile()` для использования `currentUser` из StateFlow (убран параметр `user`)
+- Обновлен `ProfileUiState.Success` - убрано поле `user`, данные берутся из `currentUser`
+- Добавлен автоматический вызов `loadProfile()` в `init` блоке для загрузки при изменении `currentUser`
+- Проект собирается успешно, проверки ktlint проходят
+
+**Реактивное обновление UI:**
+- UI автоматически обновляется при изменении `currentUser` через Flow
+- `ProfileRootScreen` использует `currentUser` из ViewModel вместо явной передачи параметра
+- Убран параметр `user` из `ProfileRootScreen` - теперь он не требуется
 
 ```kotlin
 class ProfileViewModel(
@@ -377,23 +113,41 @@ class ProfileViewModel(
             initialValue = null
         )
 
-    fun loadProfile(user: User?) {
-        if (user == null) {
-            _uiState.update { ProfileUiState.Error("Пользователь не авторизован") }
-            return
-        }
+    // UI State
+    private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
+    val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
+    init {
+        // Автоматически загружаем данные при изменении currentUser
+        loadProfile()
+    }
+
+    /**
+     * Загружает данные профиля с информацией о стране и городе
+     * Использует currentUser из StateFlow для получения данных пользователя
+     */
+    fun loadProfile() {
         viewModelScope.launch {
+            val user = currentUser.value
+            if (user == null) {
+                _uiState.update { ProfileUiState.Error("Пользователь не авторизован") }
+                return@launch
+            }
+
             try {
-                val country = user.countryID?.let { countryId ->
-                    countriesRepository.getCountryById(countryId.toString())
-                }
+                // Получаем страну пользователя
+                val country =
+                    user.countryID?.let { countryId ->
+                        countriesRepository.getCountryById(countryId.toString())
+                    }
 
-                val city = user.cityID?.let { cityId ->
-                    countriesRepository.getCityById(cityId.toString())
-                }
+                // Получаем город пользователя
+                val city =
+                    user.cityID?.let { cityId ->
+                        countriesRepository.getCityById(cityId.toString())
+                    }
 
-                _uiState.update { ProfileUiState.Success(user, country, city) }
+                _uiState.update { ProfileUiState.Success(country, city) }
             } catch (e: Exception) {
                 _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${e.message}") }
             }
@@ -548,33 +302,34 @@ LaunchedEffect(isLoggingOut) {
 
 ## Критерии завершения
 
-### Этап 1: Room
-- [ ] Создан `UserEntity` с флагами категоризации
-- [ ] Создан `UserDao` с Flow методами
-- [ ] `UserDao` добавлен в `SWDatabase`
-- [ ] Созданы конвертеры `UserEntity` ↔ `User`
+### Этап 1: Room ✅
 
-### Этап 2: SWRepository
-- [ ] Добавлены Flow методы в интерфейс `SWRepository`
-- [ ] Реализовано кэширование в `getUser()`
-- [ ] Реализовано кэширование в `getSocialUpdates()`
-- [ ] Реализован `clearUserCache()`
+Реализован Room слой: созданы UserEntity, UserDao (с Flow методами), добавлен в SWDatabase, созданы конвертеры.
 
-### Этап 3: DI
-- [ ] `userDao` добавлен в `AppContainer`
-- [ ] `userDao` передан в `SWRepositoryImpl`
+### Этап 2: SWRepository ✅
 
-### Этап 4: ViewModels
-- [ ] `ProfileViewModel` обновлен для использования Flow
+Реализовано кэширование: Flow методы, онлайн-обновление с fallback на кэш, clearUserData().
+
+### Этап 3: DI ✅
+
+Настроен DI: userDao добавлен в AppContainer, внедрен в SWRepositoryImpl.
+
+### Этап 4: ViewModels ✅
+
+- [x] `ProfileViewModel` обновлен для использования Flow
+- [x] Реактивное обновление UI через `currentUser` из ViewModel
+- [x] Убран параметр `user` из `ProfileRootScreen`
 - [ ] Созданы примеры ViewModels для друзей/заявок
 
 ### Этап 5: Logout
+
 - [ ] Добавлен метод `clearAll()` в `UserDao`
 - [ ] Добавлен метод `clearUserData()` в `SWRepository`
 - [ ] Реализована очистка всех данных пользователя при выходе
 - [ ] Очистка сохраняет площадки и старые мероприятия
 
 ### Этап 6: Тестирование
+
 - [ ] Написаны unit-тесты для `UserDao`
 - [ ] Написаны интеграционные тесты для `SWRepository`
 
@@ -606,14 +361,15 @@ LaunchedEffect(isLoggingOut) {
 ## Приоритет задач
 
 ### Первая итерация
-1. Создать `UserEntity` и `UserDao`
-2. Добавить `userDao` в `SWDatabase`
-3. Создать конвертеры
-4. Обновить `SWRepository` с кэшированием
-5. Обновить `ProfileViewModel`
-6. Базовые тесты
+
+1. ~~Room слой~~ ✅
+2. ~~SWRepository с кэшированием~~ ✅
+3. ~~DI настройка~~ ✅
+4. Обновить `ProfileViewModel`
+5. Базовые тесты
 
 ### Вторая итерация
+
 1. Обновить другие ViewModels (Friends, Messages и т.д.)
 2. Реализовать очистку при logout
 3. Расширить тестовое покрытие
