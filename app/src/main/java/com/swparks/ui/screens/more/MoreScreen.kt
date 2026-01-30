@@ -11,7 +11,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -39,29 +38,30 @@ private object Links {
     const val workoutShop = "https://workoutshop.ru"
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoreScreen(
-    navController: NavHostController? = null
+    navController: NavHostController? = null,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(text = stringResource(id = R.string.more))
-                },
-            )
-        }
-    ) {
-        ScreenContent(
-            modifier = Modifier.padding(it),
-            context = context,
-            uriHandler = uriHandler,
-            navController = navController
-        )
-    }
+    
+    ScreenContent(
+        modifier = modifier,
+        context = context,
+        uriHandler = uriHandler,
+        navController = navController
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MoreTopAppBar() {
+    CenterAlignedTopAppBar(
+        title = {
+            Text(text = stringResource(id = R.string.more))
+        },
+    )
 }
 
 @Composable

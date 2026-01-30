@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,7 +26,6 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.viewmodel.ProfileUiState
 import com.swparks.viewmodel.ProfileViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileRootScreen(
     modifier: Modifier = Modifier,
@@ -44,104 +42,102 @@ fun ProfileRootScreen(
     // Получаем UI State из ViewModel
     val uiState by viewModel.uiState.collectAsState()
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(text = stringResource(id = R.string.profile))
-                },
-            )
-        }
-    ) { paddingValues ->
-        val user = currentUser
-        if (user == null) {
-            // Не авторизован - показываем IncognitoProfileView
-            IncognitoProfileView(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .padding(paddingValues)
-                    .padding(
-                        start = dimensionResource(R.dimen.spacing_regular),
-                        end = dimensionResource(R.dimen.spacing_regular)
-                    ),
-                onClickAuth = onShowLoginSheet
-            )
-        } else {
-            // Авторизован - показываем профиль и кнопку выхода
-            Column(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .padding(paddingValues)
-                    .padding(
-                        start = dimensionResource(R.dimen.spacing_regular),
-                        end = dimensionResource(R.dimen.spacing_regular),
-                        top = dimensionResource(R.dimen.spacing_regular),
-                        bottom = dimensionResource(R.dimen.spacing_regular)
-                    ),
-                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
-            ) {
-                when (val state = uiState) {
-                    is ProfileUiState.Loading -> {
-                        // Показываем заглушку, пока загружаются данные
-                        UserProfileCardView(
-                            data = UserProfileData(
-                                modifier = Modifier,
-                                imageStringURL = user.image,
-                                userName = user.fullName ?: user.name,
-                                gender = user.genderOption?.let { stringResource(id = it.description) }
-                                    ?: "",
-                                age = user.age,
-                                shortAddress = "Загрузка..."
-                            )
+    val user = currentUser
+    if (user == null) {
+        // Не авторизован - показываем IncognitoProfileView
+        IncognitoProfileView(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(
+                    start = dimensionResource(R.dimen.spacing_regular),
+                    end = dimensionResource(R.dimen.spacing_regular)
+                ),
+            onClickAuth = onShowLoginSheet
+        )
+    } else {
+        // Авторизован - показываем профиль и кнопку выхода
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(
+                    start = dimensionResource(R.dimen.spacing_regular),
+                    end = dimensionResource(R.dimen.spacing_regular),
+                    top = dimensionResource(R.dimen.spacing_regular),
+                    bottom = dimensionResource(R.dimen.spacing_regular)
+                ),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
+        ) {
+            when (val state = uiState) {
+                is ProfileUiState.Loading -> {
+                    // Показываем заглушку, пока загружаются данные
+                    UserProfileCardView(
+                        data = UserProfileData(
+                            modifier = Modifier,
+                            imageStringURL = user.image,
+                            userName = user.fullName ?: user.name,
+                            gender = user.genderOption?.let { stringResource(id = it.description) }
+                                ?: "",
+                            age = user.age,
+                            shortAddress = "Загрузка..."
                         )
-                    }
-
-                    is ProfileUiState.Success -> {
-                        UserProfileCardView(
-                            data = UserProfileData(
-                                modifier = Modifier,
-                                imageStringURL = user.image,
-                                userName = user.fullName ?: user.name,
-                                gender = user.genderOption?.let { stringResource(id = it.description) }
-                                    ?: "",
-                                age = user.age,
-                                shortAddress = "${state.country?.name ?: ""}, ${state.city?.name ?: ""}"
-                            )
-                        )
-                    }
-
-                    is ProfileUiState.Error -> {
-                        UserProfileCardView(
-                            data = UserProfileData(
-                                modifier = Modifier,
-                                imageStringURL = user.image,
-                                userName = user.fullName ?: user.name,
-                                gender = user.genderOption?.let { stringResource(id = it.description) }
-                                    ?: "",
-                                age = user.age,
-                                shortAddress = state.message
-                            )
-                        )
-                    }
+                    )
                 }
 
-                LogoutButton(
-                    onClick = {
-                        onLogout()
-                    },
-                    enabled = !isLoggingOut
-                )
+                is ProfileUiState.Success -> {
+                    UserProfileCardView(
+                        data = UserProfileData(
+                            modifier = Modifier,
+                            imageStringURL = user.image,
+                            userName = user.fullName ?: user.name,
+                            gender = user.genderOption?.let { stringResource(id = it.description) }
+                                ?: "",
+                            age = user.age,
+                            shortAddress = "${state.country?.name ?: ""}, ${state.city?.name ?: ""}"
+                        )
+                    )
+                }
 
-                // Выполняем logout при изменении флага
-                LaunchedEffect(isLoggingOut) {
-                    if (isLoggingOut) {
-                        appContainer?.logoutUseCase?.invoke()
-                        onLogoutComplete()
-                    }
+                is ProfileUiState.Error -> {
+                    UserProfileCardView(
+                        data = UserProfileData(
+                            modifier = Modifier,
+                            imageStringURL = user.image,
+                            userName = user.fullName ?: user.name,
+                            gender = user.genderOption?.let { stringResource(id = it.description) }
+                                ?: "",
+                            age = user.age,
+                            shortAddress = state.message
+                        )
+                    )
+                }
+            }
+
+            LogoutButton(
+                onClick = {
+                    onLogout()
+                },
+                enabled = !isLoggingOut
+            )
+
+            // Выполняем logout при изменении флага
+            LaunchedEffect(isLoggingOut) {
+                if (isLoggingOut) {
+                    appContainer?.logoutUseCase?.invoke()
+                    onLogoutComplete()
                 }
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProfileTopAppBar() {
+    CenterAlignedTopAppBar(
+        title = {
+            Text(text = stringResource(id = R.string.profile))
+        },
+    )
 }
 
 /**
