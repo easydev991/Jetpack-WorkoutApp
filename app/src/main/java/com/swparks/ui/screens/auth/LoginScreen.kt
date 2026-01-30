@@ -33,7 +33,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
-import com.swparks.model.SocialUpdates
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.SWButton
@@ -49,10 +48,13 @@ import com.swparks.ui.viewmodel.LoginViewModel
  *
  * Позволяет пользователю войти в систему или восстановить пароль.
  *
+ * ВАЖНО: Этот экран выполняет ТОЛЬКО авторизацию.
+ * Загрузка данных пользователя выполняется в ProfileViewModel при открытии профиля.
+ *
  * @param modifier Модификатор для расположения экрана
  * @param viewModel ViewModel для управления состоянием экрана
  * @param onDismiss Callback для закрытия модального окна
- * @param onLoginSuccess Callback для передачи данных пользователя после успешной авторизации
+ * @param onLoginSuccess Callback для уведомления об успешной авторизации
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,7 +62,7 @@ fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel,
     onDismiss: () -> Unit = {},
-    onLoginSuccess: (Result<SocialUpdates>) -> Unit = {}
+    onLoginSuccess: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val loginError by viewModel.loginErrorState.collectAsState()
@@ -100,11 +102,10 @@ fun LoginScreen(
     // Обработка состояний UI
     HandleLoginUiState(
         uiState = uiState,
-        viewModel = viewModel,
-        onLoginSuccess = { socialUpdates ->
-            // Передаем данные пользователя через callback
-            // НЕ закрываем LoginScreen - это сделает RootScreen
-            onLoginSuccess(Result.success(socialUpdates))
+        onLoginSuccess = {
+            // Успешная авторизация - уведомляем для закрытия LoginScreen
+            // Данные пользователя загрузятся в ProfileViewModel при открытии профиля
+            onLoginSuccess()
         },
         onResetSuccess = { screenState.setShowResetSuccessAlert(true) },
         onResetError = { viewModel.clearErrors() }
@@ -399,8 +400,7 @@ private fun ResetPasswordButton(
 @Composable
 private fun HandleLoginUiState(
     uiState: LoginUiState,
-    viewModel: LoginViewModel,
-    onLoginSuccess: (SocialUpdates) -> Unit = {},
+    onLoginSuccess: () -> Unit = {},
     onResetSuccess: () -> Unit = {},
     onResetError: () -> Unit = {}
 ) {
@@ -415,18 +415,9 @@ private fun HandleLoginUiState(
             }
 
             is LoginUiState.LoginSuccess -> {
-                // Успешная авторизация - загружаем данные пользователя
-                // Аналог iOS: LoginScreen.swift:111-117
-                viewModel.loginAndLoadUserData()
-                    .onSuccess { socialUpdates ->
-                        // Передаем данные пользователя через callback
-                        onLoginSuccess(socialUpdates)
-                    }
-                    .onFailure { error ->
-                        // Ошибка загрузки данных пользователя
-                        // Не закрываем LoginScreen, показываем ошибку пользователю
-                        // TODO: Можно добавить показ error state
-                    }
+                // Успешная авторизация - уведомляем для закрытия LoginScreen
+                // Данные пользователя загрузятся в ProfileViewModel при открытии профиля
+                onLoginSuccess()
             }
 
             is LoginUiState.LoginError -> {

@@ -31,8 +31,10 @@ class AuthInterceptorTest {
         testDispatcher = UnconfinedTestDispatcher()
         Dispatchers.setMain(testDispatcher)
         mockkStatic(Log::class)
-        every { Log.e(any(), any()) } returns 0
-        every { Log.i(any(), any()) } returns 0
+        every { Log.e(any<String>(), any<String>()) } returns 0
+        every { Log.i(any<String>(), any<String>()) } returns 0
+        every { Log.d(any<String>(), any<String>()) } returns 0
+        every { Log.w(any<String>(), any<String>()) } returns 0
     }
 
     @After
@@ -61,8 +63,72 @@ class AuthInterceptorTest {
         // Then
         verify {
             Log.e("AuthInterceptor", "Ошибка авторизации (401): токен недействителен или истек")
+            Log.i("AuthInterceptor", "Токен авторизации очищен")
         }
         verify { mockPreferencesRepository.clearToken() }
+    }
+
+    @Test
+    fun intercept_whenResponseCodeIs401_onLoginEndpoint_thenDoesNotClearToken() = runTest {
+        // Given
+        val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
+        val interceptor = AuthInterceptor(mockPreferencesRepository)
+
+        val chain = mockk<Interceptor.Chain>()
+        val request = Request.Builder().url("https://example.com/api/login").build()
+        val response = mockk<Response>()
+
+        every { chain.request() } returns request
+        every { chain.proceed(request) } returns response
+        every { response.code } returns 401
+
+        // When
+        interceptor.intercept(chain)
+
+        // Then
+        verify(exactly = 0) { mockPreferencesRepository.clearToken() }
+    }
+
+    @Test
+    fun intercept_whenResponseCodeIs401_onRegisterEndpoint_thenDoesNotClearToken() = runTest {
+        // Given
+        val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
+        val interceptor = AuthInterceptor(mockPreferencesRepository)
+
+        val chain = mockk<Interceptor.Chain>()
+        val request = Request.Builder().url("https://example.com/api/register").build()
+        val response = mockk<Response>()
+
+        every { chain.request() } returns request
+        every { chain.proceed(request) } returns response
+        every { response.code } returns 401
+
+        // When
+        interceptor.intercept(chain)
+
+        // Then
+        verify(exactly = 0) { mockPreferencesRepository.clearToken() }
+    }
+
+    @Test
+    fun intercept_whenResponseCodeIs401_onResetPasswordEndpoint_thenDoesNotClearToken() = runTest {
+        // Given
+        val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
+        val interceptor = AuthInterceptor(mockPreferencesRepository)
+
+        val chain = mockk<Interceptor.Chain>()
+        val request = Request.Builder().url("https://example.com/api/reset-password").build()
+        val response = mockk<Response>()
+
+        every { chain.request() } returns request
+        every { chain.proceed(request) } returns response
+        every { response.code } returns 401
+
+        // When
+        interceptor.intercept(chain)
+
+        // Then
+        verify(exactly = 0) { mockPreferencesRepository.clearToken() }
     }
 
     @Test

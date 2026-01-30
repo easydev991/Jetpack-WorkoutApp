@@ -6,6 +6,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
+import kotlinx.coroutines.CancellationException
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
@@ -222,5 +223,27 @@ class RetryInterceptorTest {
 
         // Then
         verify(exactly = 2) { mockChain.proceed(mockRequest) } // Точно 2 попытки!
+    }
+
+    @Test
+    fun test_cancellation_exception_should_not_retry() {
+        // Given
+        val mockChain = mockk<Interceptor.Chain>()
+        val mockRequest = mockk<Request>()
+        val exception = CancellationException("Coroutine cancelled")
+
+        every { mockChain.request() } returns mockRequest
+        every { mockChain.proceed(mockRequest) } throws exception
+
+        // When
+        try {
+            retryInterceptor.intercept(mockChain)
+        } catch (e: CancellationException) {
+            // Ожидаем CancellationException
+        }
+
+        // Then
+        verify(exactly = 1) { mockChain.proceed(mockRequest) } // Только 1 попытка!
+        verify(exactly = 0) { logger.w("RetryInterceptor", any()) } // Никаких предупреждений!
     }
 }

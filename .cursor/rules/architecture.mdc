@@ -527,6 +527,51 @@ ParksListScreen(
 - Обрабатывают пользовательские события
 - Используют `viewModelScope` для корутин (автоматическая отмена при очистке)
 - **НЕ содержат бизнес-логику** (делегируют use cases и репозиториям)
+- **Все сетевые операции должны выполняться ТОЛЬКО в viewModelScope**, а не в LaunchedEffect из Compose
+
+**ВАЖНО:** ViewModels должны использовать ТОЛЬКО `viewModelScope` для запуска сетевых операций. Использование `LaunchedEffect` в Compose для запуска корутин запрещено, потому что:
+
+1. Compose scope привязан к жизненному циклу экрана - при навигации корутина отменяется
+2. Отмена корутины может быть обработана как ошибка сети (IOException)
+3. RetryInterceptor будет ретраить отмененные запросы, что неправильно
+4. AuthInterceptor может сработать на ложную ошибку и удалить токен
+
+**Пример ПРАВИЛЬНО:**
+
+```kotlin
+class LoginViewModel(
+    private val loginUseCase: ILoginUseCase,
+) : ViewModel() {
+    
+    fun login() {
+        // ✅ ПРАВИЛЬНО: Используем viewModelScope
+        viewModelScope.launch {
+            loginUseCase(credentials)
+                .onSuccess { ... }
+                .onFailure { ... }
+        }
+    }
+    }
+}
+```
+
+**Пример НЕПРАВИЛЬНО:**
+
+```kotlin
+// ❌ НЕПРАВИЛЬНО: НЕ запускать сетевые операции из Compose scope
+@Composable
+fun LoginScreen(
+    viewModel: LoginViewModel,
+    onLoginSuccess: () -> Unit,
+) {
+    LaunchedEffect(viewModel.uiState) {
+        if (viewModel.uiState is LoginUiState.Success) {
+            // ❌ НЕПРАВИЛЬНО: Сетевая операция в Compose scope
+            viewModel.loginAndLoadUserData()
+        }
+    }
+}
+```
 
 **Примеры ViewModels:**
 

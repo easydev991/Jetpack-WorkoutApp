@@ -1,6 +1,7 @@
 package com.swparks.data.interceptor
 
 import com.swparks.util.Logger
+import kotlinx.coroutines.CancellationException
 import okhttp3.Interceptor
 import okhttp3.Response
 import java.io.IOException
@@ -61,6 +62,10 @@ class RetryInterceptor(private val logger: Logger) : Interceptor {
                     return response
                 }
 
+            } catch (e: CancellationException) {
+                // Отмена корутины - НЕ ретраить, пробрасываем дальше
+                // Это означает, что пользователь ушел или экран закрыт
+                throw e
             } catch (e: IOException) {
                 // Сетевая ошибка - retry
                 lastException = e
@@ -78,9 +83,6 @@ class RetryInterceptor(private val logger: Logger) : Interceptor {
 
         // Все попытки исчерпаны
         // Возвращаем последний response или выбрасываем исключение
-        return response ?: throw (
-                lastException
-                    ?: IOException("Не удалось выполнить запрос после $MAX_RETRIES попыток")
-                )
+        return response ?: throw (lastException as Throwable)
     }
 }

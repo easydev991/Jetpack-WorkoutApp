@@ -277,10 +277,10 @@ fun RootScreen(appState: AppState) {
         LoginSheetHost(
             show = showLoginSheet,
             onDismissed = { showLoginSheet = false },
-            onLoginSuccess = { result ->
-                result.onSuccess {
-                    showLoginSheet = false
-                }
+            onLoginSuccess = {
+                // Успешная авторизация - закрываем LoginSheet
+                // Данные пользователя загрузятся в ProfileViewModel при открытии профиля
+                showLoginSheet = false
             }
         )
     }

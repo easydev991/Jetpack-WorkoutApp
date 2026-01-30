@@ -1,14 +1,10 @@
 package com.swparks.ui.viewmodel
 
 
-import com.swparks.data.SecureTokenRepository
-import com.swparks.data.repository.SWRepository
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
 import com.swparks.model.LoginCredentials
 import com.swparks.model.LoginSuccess
-import com.swparks.model.SocialUpdates
-import com.swparks.model.User
 import com.swparks.ui.state.LoginUiState
 import com.swparks.util.Logger
 import com.swparks.util.NoOpLogger
@@ -38,42 +34,19 @@ class LoginViewModelTest {
 
     private lateinit var loginUseCase: ILoginUseCase
     private lateinit var resetPasswordUseCase: IResetPasswordUseCase
-    private lateinit var secureTokenRepository: SecureTokenRepository
-    private lateinit var swRepository: SWRepository
     private lateinit var loginViewModel: LoginViewModel
 
     private val testLoginSuccess = LoginSuccess(userId = 123L)
-    private val testUser = User(
-        id = 123L,
-        name = "Test User",
-        image = "",
-        cityID = null,
-        countryID = null,
-        birthDate = null,
-        email = null,
-        fullName = null,
-        genderCode = null,
-        friendRequestCount = null,
-        friendsCount = null,
-        parksCount = null,
-        addedParks = null,
-        journalCount = null,
-        lang = "ru"
-    )
     private val testLogger: Logger = NoOpLogger()
 
     @Before
     fun setup() {
         loginUseCase = mockk(relaxed = true)
         resetPasswordUseCase = mockk(relaxed = true)
-        secureTokenRepository = mockk(relaxed = true)
-        swRepository = mockk(relaxed = true)
         loginViewModel = LoginViewModel(
             testLogger,
             loginUseCase,
-            resetPasswordUseCase,
-            secureTokenRepository,
-            swRepository
+            resetPasswordUseCase
         )
     }
 
@@ -303,76 +276,6 @@ class LoginViewModelTest {
 
         // Then
         assertFalse(canLogIn)
-    }
-
-    @Test
-    fun loginAndLoadUserData_whenSuccessful_thenReturnsSocialUpdates() = runTest {
-        // Given
-        val credentials = LoginCredentials(login = "user@test.com", password = "password123")
-        loginViewModel.onLoginChange("user@test.com")
-        loginViewModel.onPasswordChange("password123")
-
-        val testSocialUpdates = SocialUpdates(
-            user = testUser,
-            friends = emptyList(),
-            friendRequests = emptyList(),
-            blacklist = emptyList()
-        )
-
-        coEvery { loginUseCase(credentials) } returns Result.success(testLoginSuccess)
-        coEvery { swRepository.getSocialUpdates(123L) } returns Result.success(testSocialUpdates)
-
-        // When
-        val result = loginViewModel.loginAndLoadUserData()
-
-        // Then
-        assertTrue(result.isSuccess)
-        val socialUpdates = result.getOrThrow()
-        assertTrue(socialUpdates.user.id == 123L)
-        assertTrue(socialUpdates.user.name == "Test User")
-        coVerify(exactly = 1) { loginUseCase(credentials) }
-        coVerify(exactly = 1) { swRepository.getSocialUpdates(123L) }
-    }
-
-    @Test
-    fun loginAndLoadUserData_whenLoginFails_thenReturnsError() = runTest {
-        // Given
-        val credentials = LoginCredentials(login = "user@test.com", password = "password123")
-        loginViewModel.onLoginChange("user@test.com")
-        loginViewModel.onPasswordChange("password123")
-        val errorMessage = "Неверные учетные данные"
-        coEvery { loginUseCase(credentials) } returns Result.failure(Exception(errorMessage))
-
-        // When
-        val result = loginViewModel.loginAndLoadUserData()
-
-        // Then
-        assertTrue(result.isFailure)
-        assertTrue(result.exceptionOrNull()?.message == errorMessage)
-        coVerify(exactly = 1) { loginUseCase(credentials) }
-        coVerify(exactly = 0) { swRepository.getSocialUpdates(any()) }
-    }
-
-    @Test
-    fun loginAndLoadUserData_whenLoadSocialUpdatesFails_thenReturnsError() = runTest {
-        // Given
-        val credentials = LoginCredentials(login = "user@test.com", password = "password123")
-        loginViewModel.onLoginChange("user@test.com")
-        loginViewModel.onPasswordChange("password123")
-        val errorMessage = "Ошибка сети"
-        coEvery { loginUseCase(credentials) } returns Result.success(testLoginSuccess)
-        coEvery { swRepository.getSocialUpdates(123L) } returns Result.failure(
-            Exception(errorMessage)
-        )
-
-        // When
-        val result = loginViewModel.loginAndLoadUserData()
-
-        // Then
-        assertTrue(result.isFailure)
-        assertTrue(result.exceptionOrNull()?.message == errorMessage)
-        coVerify(exactly = 1) { loginUseCase(credentials) }
-        coVerify(exactly = 1) { swRepository.getSocialUpdates(123L) }
     }
 
     @Test

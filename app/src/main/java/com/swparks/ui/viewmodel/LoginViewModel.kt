@@ -7,19 +7,15 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.JetpackWorkoutApplication
-import com.swparks.data.SecureTokenRepository
-import com.swparks.data.repository.SWRepository
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
 import com.swparks.model.LoginCredentials
-import com.swparks.model.SocialUpdates
 import com.swparks.ui.state.LoginUiState
 import com.swparks.util.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.io.IOException
 
 /**
  * ViewModel для управления экраном авторизации.
@@ -27,18 +23,17 @@ import java.io.IOException
  * Управляет состоянием UI экрана входа в систему, включая учетные данные,
  * обработку ошибок авторизации и восстановления пароля.
  *
+ * ВАЖНО: Эта ViewModel выполняет ТОЛЬКО авторизацию.
+ * Загрузка данных пользователя выполняется в ProfileViewModel при открытии профиля.
+ *
  * @param logger Логгер для записи сообщений
  * @param loginUseCase Use case для входа в систему
  * @param resetPasswordUseCase Use case для восстановления пароля
- * @param secureTokenRepository Репозиторий для безопасного хранения токена
- * @param swRepository Репозиторий для работы с API сервера
  */
 class LoginViewModel(
     private val logger: Logger,
     private val loginUseCase: ILoginUseCase,
     private val resetPasswordUseCase: IResetPasswordUseCase,
-    private val secureTokenRepository: SecureTokenRepository,
-    private val swRepository: SWRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
@@ -88,6 +83,9 @@ class LoginViewModel(
      * Если учетные данные валидны, вызывает loginUseCase.
      * При успешном входе обновляет состояние на LoginSuccess.
      * При ошибке авторизации сохраняет ошибку в loginError для отображения под полем пароля.
+     *
+     * ВАЖНО: Этот метод выполняет ТОЛЬКО авторизацию и сохраняет токен.
+     * Загрузка данных пользователя выполняется в ProfileViewModel при открытии профиля.
      */
     fun login() {
         viewModelScope.launch {
@@ -96,7 +94,7 @@ class LoginViewModel(
             loginUseCase(credentials)
                 .onSuccess { result ->
                     _uiState.value = LoginUiState.LoginSuccess(
-                        socialUpdates = null // SocialUpdates будут загружены отдельно
+                        socialUpdates = null // Загрузка выполняется в ProfileViewModel
                     )
                     _loginError.value = null
                 }
@@ -105,51 +103,6 @@ class LoginViewModel(
                     _uiState.value = LoginUiState.LoginError(errorMessage)
                     _loginError.value = errorMessage
                 }
-        }
-    }
-
-    /**
-     * Выполняет авторизацию и загружает данные пользователя.
-     *
-     * Аналогично iOS-реализации (LoginScreen.swift:111-117):
-     * 1. Авторизуется через loginUseCase
-     * 2. Сохраняет токен через secureTokenRepository
-     * 3. Получает данные пользователя через swRepository.getSocialUpdates(userId)
-     *    RetryInterceptor обрабатывает временные ошибки сервера автоматически
-     * 4. Возвращает Result<SocialUpdates> для передачи в ProfileScreen
-     *
-     * @return Result<SocialUpdates> с данными пользователя или ошибкой
-     */
-    @Suppress("TooGenericExceptionCaught")
-    suspend fun loginAndLoadUserData(): Result<SocialUpdates> {
-        return try {
-            // 1. Авторизация через loginUseCase
-            val authResult = loginUseCase(credentials).getOrThrow()
-            val userId = authResult.userId
-
-            logger.i("LoginViewModel", "Авторизация успешна, userId: $userId")
-
-            // Токен уже сохранен в loginUseCase (через SecureTokenRepository)
-
-            // 3. Загрузка данных пользователя (RetryInterceptor обрабатывает retry автоматически)
-            val socialUpdates = swRepository.getSocialUpdates(userId)
-            socialUpdates.onSuccess {
-                logger.i("LoginViewModel", "Данные пользователя успешно загружены")
-            }
-
-            // 4. Вернуть результат для передачи в ProfileScreen
-            socialUpdates
-        } catch (e: IOException) {
-            logger.e(
-                "LoginViewModel",
-                "Ошибка сети при загрузке данных пользователя: ${e.message}",
-                e
-            )
-            Result.failure(e)
-        } catch (e: Exception) {
-            // Общий catch для обработки всех неожиданных ошибок
-            logger.e("LoginViewModel", "Ошибка при загрузке данных пользователя: ${e.message}", e)
-            Result.failure(e)
         }
     }
 
@@ -223,9 +176,7 @@ class LoginViewModel(
                 LoginViewModel(
                     logger = application.logger,
                     loginUseCase = application.container.loginUseCase,
-                    resetPasswordUseCase = application.container.resetPasswordUseCase,
-                    secureTokenRepository = application.container.secureTokenRepository,
-                    swRepository = application.container.swRepository
+                    resetPasswordUseCase = application.container.resetPasswordUseCase
                 )
             }
         }

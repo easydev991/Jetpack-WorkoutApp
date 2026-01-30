@@ -17,7 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.swparks.model.SocialUpdates
 import com.swparks.ui.viewmodel.LoginViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -33,6 +32,8 @@ import kotlin.math.abs
  * Закрытие по тапу вне области, свайпу вниз, системной кнопке/жесту "назад" — запрещено.
  * Все жесты блокируются на уровне контента через Modifier.
  *
+ * ВАЖНО: Загрузка данных пользователя выполняется в ProfileViewModel при открытии профиля.
+ *
  * @param show Флаг для показа/скрытия листа
  * @param onDismissed Callback при закрытии листа
  * @param onLoginSuccess Callback при успешной авторизации
@@ -42,7 +43,7 @@ import kotlin.math.abs
 fun LoginSheetHost(
     show: Boolean,
     onDismissed: () -> Unit,
-    onLoginSuccess: (Result<SocialUpdates>) -> Unit
+    onLoginSuccess: () -> Unit
 ) {
     var allowHide by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -88,12 +89,12 @@ fun LoginSheetHost(
                         onDismissed()
                     }
                 },
-                onLoginSuccess = { result ->
+                onLoginSuccess = {
                     scope.launch {
                         allowHide = true
                         sheetState.hide()
                         allowHide = false
-                        onLoginSuccess(result)
+                        onLoginSuccess()
                     }
                 },
                 modifier = Modifier.disableAllGestures() // Блокируем все жесты для всего контента sheet
