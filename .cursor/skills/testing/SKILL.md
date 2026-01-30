@@ -112,7 +112,6 @@ ParksRepositoryImplTest                            1      15       16
 - Быстрее выполняются (не нужны реальный Repository/БД)
 - Более стабильны и изолированы
 - В Jetpack-WorkoutApp все ViewModels тестируются через unit-тесты (AuthViewModelTest, EventsViewModelTest)
-- В JetpackDays часть интеграционных тестов ViewModels работала (DetailScreenViewModelIntegrationTest), но часть была отключена (@Ignore) из-за сложностей с асинхронностью
 
 **Когда использовать интеграционные тесты ViewModels:**
 

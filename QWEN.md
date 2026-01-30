@@ -108,33 +108,33 @@ Presentation (UI, ViewModel)
 
 #### Utilities
 
-- **Logger** - интерфейс (аналог JetpackDays - AndroidLogger, NoOpLogger)
+- **Logger** - интерфейс
 - **Analytics** (опционально) - `FirebaseAnalyticsHelper` для screen_view и событий (только release)
 - **Crash** (опционально) - `CrashlyticsHelper` для отчетов о крашах (только release)
 - **NetworkUtils** (опционально) - утилиты для работы с сетью
 - **ImageUtils** (опционально) - утилиты для работы с изображениями
 
-### Отличия от JetpackDays
+### Отличия от nowinandroid
 
 #### Сетевые функции
 
-- **SWApi** - HTTP клиент для работы с сервером workout.su (отсутствует в JetpackDays)
-- **Retrofit + Kotlinx Serialization** - для API запросов (отсутствует в JetpackDays)
-- **Авторизация** - Login/Logout с токеном авторизации (отсутствует в JetpackDays)
+- **SWApi** - HTTP клиент для работы с сервером workout.su (отсутствует в nowinandroid)
+- **Retrofit + Kotlinx Serialization** - для API запросов (отсутствует в nowinandroid)
+- **Авторизация** - Login/Logout с токеном авторизации (отсутствует в nowinandroid)
 
 #### Масштаб проекта
 
-- **Больше экранов** - ~30+ экранов vs ~7 в JetpackDays
-- **Больше моделей** - 14+ моделей vs ~7 в JetpackDays
-- **Сложные бизнес-потоки** - авторизация, друзья, сообщения, дневники (отсутствуют в JetpackDays)
+- **Больше экранов** - ~30+ экранов vs ~7 в nowinandroid
+- **Больше моделей** - 14+ моделей vs ~7 в nowinandroid
+- **Сложные бизнес-потоки** - авторизация, друзья, сообщения, дневники (отсутствуют в nowinandroid)
 
 ### Референсы
 
 #### Архитектура и структура
 
-- **JetpackDays** - референсный проект для базовой архитектуры (MVVM, Clean Architecture, ручной DI)
-- Подход к слоистой архитектуре идентичен JetpackDays
-- Dependency Injection через factory методы (без Hilt) - как в JetpackDays
+- **nowinandroid** - референсный проект для базовой архитектуры (MVVM, Clean Architecture, ручной DI)
+- Подход к слоистой архитектуре идентичен nowinandroid
+- Dependency Injection через factory методы (без Hilt) - как в nowinandroid
 
 #### Функционал и экраны
 
@@ -676,7 +676,7 @@ sealed class DetailScreenState {
 
 - **android** (или **андроид**, или **площадки***) - текущий проект **Jetpack-WorkoutApp**, Android-версия приложения (a.k.a swparks)
 - **ios** (или **iOS**) - проект **SwiftUI-WorkoutApp**, iOS-версия приложения, которая уже полностью реализована и работает исправно
-- **JetpackDays** (или **days**) - референсный проект для архитектуры, навигации и технических решений Android-разработки
+- **nowinandroid** (или **nia**) - референсный проект для архитектуры, навигации и технических решений Android-разработки
 
 #### Назначение
 

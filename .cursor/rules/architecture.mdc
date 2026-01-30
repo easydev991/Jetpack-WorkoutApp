@@ -585,42 +585,41 @@ ParksListScreen(
 - Сжатие изображений перед загрузкой
 - Форматирование для разных размеров экранов
 
-## Отличия от JetpackDays
+## Отличия от nowinandroid
 
 ### Сетевые функции
 
-- **SWApi** - HTTP клиент для работы с сервером workout.su (отсутствует в JetpackDays)
-- **Retrofit + Kotlinx Serialization** - для API запросов (отсутствует в JetpackDays)
-- **Авторизация** - Login/Logout с токеном авторизации (отсутствует в JetpackDays)
+- **SWApi** - HTTP клиент для работы с сервером workout.su (отсутствует в nowinandroid)
+- **Retrofit + Kotlinx Serialization** - для API запросов (отсутствует в nowinandroid)
+- **Авторизация** - Login/Logout с токеном авторизации (отсутствует в nowinandroid)
 
 ### Масштаб проекта
 
-- **Больше экранов** - ~30+ экранов vs ~7 в JetpackDays
-- **Больше моделей** - 14+ моделей vs ~7 в JetpackDays
-- **Сложные бизнес-потоки** - авторизация, друзья, сообщения, дневники (отсутствуют в JetpackDays)
-- **Сетевая синхронизация** - API, токены, кэширование (отсутствует в JetpackDays)
-- **Real-time коммуникация** - HTTP запросы для сообщений и друзей (отсутствует в JetpackDays)
+- **Больше экранов** - ~30+ экранов vs ~7 в nowinandroid
+- **Больше моделей** - 14+ моделей vs ~7 в nowinandroid
+- **Сложные бизнес-потоки** - авторизация, друзья, сообщения, дневники (отсутствуют в nowinandroid)
+- **Сетевая синхронизация** - API, токены, кэширование (отсутствует в nowinandroid)
+- **Real-time коммуникация** - HTTP запросы для сообщений и друзей (отсутствует в nowinandroid)
 
-### Архитектурные улучшения (по сравнению с JetpackDays)
+### Архитектурные улучшения (по сравнению с nowinandroid)
 
 - **Гибридный подход** - разные стратегии для разных типов данных
 - **Дифференцированное кэширование** - будущие/прошедшие мероприятия
 - **Комментарии в ответах сущностей** - нет отдельных запросов для комментариев
 - **HTTP запросы для чата** - без WebSocket для первой итерации
 - **Reactive UI state** - StateFlow вместо прямого доступа к данным
-- **Centralized navigation** - единый NavHost и AppState (в JetpackDays нет)
+- **Centralized navigation** - единый NavHost и AppState
 
 ## Референсы
 
 ### Архитектура и структура
 
-- **Now in Android (android/nowinandroid)** - референс для архитектурного подхода
+- **nowinandroid** - референс для архитектурного подхода
   - [Architecture Learning Journey](https://github.com/android/nowinandroid/blob/main/docs/ArchitectureLearningJourney.md)
   - Три слоя: Data, Domain, UI
   - Реактивное программирование с Kotlin Flows
   - Unidirectional data flow
-- **JetpackDays** - референсный проект для базовой архитектуры (MVVM, Clean Architecture, ручной DI)
-- Подход к слоистой архитектуре идентичен Now in Android с адаптацией под swparks
+- Подход к слоистой архитектуре идентичен nowinandroid с адаптацией под swparks
 
 ### Функционал и экраны
 

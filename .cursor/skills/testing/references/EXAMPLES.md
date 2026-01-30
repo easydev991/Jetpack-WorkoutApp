@@ -462,7 +462,7 @@ class ParkTest {
 
 **Важно:** Рекомендуется использовать unit-тесты с MockK, но интеграционные тесты возможны для проверки взаимодействия с реальным Repository/БД.
 
-Примеры из проекта JetpackDays с работающими интеграционными тестами ViewModels:
+Примеры с работающими интеграционными тестами ViewModels:
 
 ```kotlin
 package com.dayscounter.viewmodel
