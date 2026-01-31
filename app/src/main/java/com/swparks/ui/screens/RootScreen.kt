@@ -78,7 +78,12 @@ fun RootScreen(appState: AppState) {
                 }
 
                 Screen.Profile.route -> {
-                    ProfileTopAppBar()
+                    ProfileTopAppBar(
+                        onSearchUsersClick = {
+                            // TODO: В будущем реализовать навигацию к экрану поиска пользователей
+                            // Для сейчас просто логируем нажатие
+                        }
+                    )
                 }
 
                 Screen.More.route -> {

@@ -1,12 +1,22 @@
 package com.swparks.ui.screens.profile
 
+import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -16,11 +26,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
 import com.swparks.data.AppContainer
+import com.swparks.ui.ds.ButtonConfig
+import com.swparks.ui.ds.FormRowView
 import com.swparks.ui.ds.IncognitoProfileView
+import com.swparks.ui.ds.SWButton
+import com.swparks.ui.ds.SWButtonMode
+import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.ds.UserProfileCardView
 import com.swparks.ui.ds.UserProfileData
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
@@ -56,10 +72,11 @@ fun ProfileRootScreen(
             onClickAuth = onShowLoginSheet
         )
     } else {
-        // Авторизован - показываем профиль и кнопку выхода
+        // Авторизован - показываем профиль и кнопки навигации
         Column(
             modifier = modifier
-                .fillMaxWidth()
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(
                     start = dimensionResource(R.dimen.spacing_regular),
                     end = dimensionResource(R.dimen.spacing_regular),
@@ -68,9 +85,9 @@ fun ProfileRootScreen(
                 ),
             verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
         ) {
+            // Карточка профиля пользователя
             when (val state = uiState) {
                 is ProfileUiState.Loading -> {
-                    // Показываем заглушку, пока загружаются данные
                     UserProfileCardView(
                         data = UserProfileData(
                             modifier = Modifier,
@@ -113,10 +130,67 @@ fun ProfileRootScreen(
                 }
             }
 
+            // Кнопка "Изменить профиль"
+            EditProfileButton(
+                onClick = {
+                    Log.i("ProfileRootScreen", "Нажата кнопка: Изменить профиль")
+                }
+            )
+
+            // Кнопка "Друзья"
+            if (user.hasFriends || (user.friendRequestCount?.toIntOrNull() ?: 0) > 0) {
+                FriendsButton(
+                    friendsCount = user.friendsCount ?: 0,
+                    friendRequestsCount = user.friendRequestCount?.toIntOrNull() ?: 0,
+                    onClick = {
+                        Log.i("ProfileRootScreen", "Нажата кнопка: Друзья")
+                    }
+                )
+            }
+
+            // Кнопка "Где тренируется"
+            if (user.hasUsedParks) {
+                UsedParksButton(
+                    parksCount = user.parksCount?.toIntOrNull() ?: 0,
+                    onClick = {
+                        Log.i("ProfileRootScreen", "Нажата кнопка: Где тренируется")
+                    }
+                )
+            }
+
+            // Кнопка "Добавленные площадки"
+            if (user.hasAddedParks) {
+                AddedParksButton(
+                    addedParksCount = user.addedParks?.size ?: 0,
+                    onClick = {
+                        Log.i("ProfileRootScreen", "Нажата кнопка: Добавленные площадки")
+                    }
+                )
+            }
+
+            // Кнопка "Дневники" (всегда показываем для главного пользователя)
+            JournalsButton(
+                journalsCount = user.journalCount ?: 0,
+                onClick = {
+                    Log.i("ProfileRootScreen", "Нажата кнопка: Дневники")
+                }
+            )
+
+            // Кнопка "Черный список" - временно скрыта
+            // TODO: Реализовать после интеграции с реальным списком черного списка
+            // BlacklistButton(
+            //     onClick = {
+            //         Log.i("ProfileRootScreen", "Нажата кнопка: Черный список")
+            //     }
+            // )
+
+            // Spacer прижимает кнопку выхода к низу экрана
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Кнопка "Выйти"
             LogoutButton(
                 onClick = {
                     scope.launch {
-                        // Вызываем usecase напрямую
                         appContainer?.logoutUseCase?.invoke()
                     }
                 }
@@ -127,12 +201,145 @@ fun ProfileRootScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileTopAppBar() {
+fun ProfileTopAppBar(onSearchUsersClick: () -> Unit = {}) {
     CenterAlignedTopAppBar(
         title = {
             Text(text = stringResource(id = R.string.profile))
         },
+        actions = {
+            IconButton(onClick = onSearchUsersClick) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = stringResource(id = R.string.profile)
+                )
+            }
+        }
     )
+}
+
+/**
+ * Кнопка "Изменить профиль"
+ */
+@Composable
+private fun EditProfileButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    SWButton(
+        config = ButtonConfig(
+            modifier = modifier.fillMaxWidth(),
+            size = SWButtonSize.LARGE,
+            mode = SWButtonMode.TINTED,
+            text = stringResource(id = R.string.edit_profile),
+            onClick = onClick
+        )
+    )
+}
+
+/**
+ * Кнопка "Друзья"
+ */
+@Composable
+private fun FriendsButton(
+    friendsCount: Int,
+    friendRequestsCount: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
+        FormRowView(
+            leadingText = stringResource(id = R.string.friends),
+            trailingText = pluralStringResource(
+                id = R.plurals.friendsCount,
+                count = friendsCount,
+                friendsCount
+            ),
+            badgeValue = if (friendRequestsCount > 0) friendRequestsCount else null,
+            enabled = true
+        )
+    }
+}
+
+/**
+ * Кнопка "Где тренируется"
+ */
+@Composable
+private fun UsedParksButton(
+    parksCount: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
+        FormRowView(
+            leadingText = stringResource(id = R.string.where_trains),
+            trailingText = pluralStringResource(
+                id = R.plurals.parksCount,
+                count = parksCount,
+                parksCount
+            ),
+            enabled = true
+        )
+    }
+}
+
+/**
+ * Кнопка "Добавленные площадки"
+ */
+@Composable
+private fun AddedParksButton(
+    addedParksCount: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
+        FormRowView(
+            leadingText = stringResource(id = R.string.male_added_parks),
+            trailingText = pluralStringResource(
+                id = R.plurals.parksCount,
+                count = addedParksCount,
+                addedParksCount
+            ),
+            enabled = true
+        )
+    }
+}
+
+/**
+ * Кнопка "Дневники"
+ */
+@Composable
+private fun JournalsButton(
+    journalsCount: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
+        FormRowView(
+            leadingText = stringResource(id = R.string.journals),
+            trailingText = pluralStringResource(
+                id = R.plurals.journalsCount,
+                count = journalsCount,
+                journalsCount
+            ),
+            enabled = true
+        )
+    }
 }
 
 /**
