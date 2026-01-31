@@ -1,5 +1,6 @@
 package com.swparks.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -80,8 +81,7 @@ fun RootScreen(appState: AppState) {
                 Screen.Profile.route -> {
                     ProfileTopAppBar(
                         onSearchUsersClick = {
-                            // TODO: В будущем реализовать навигацию к экрану поиска пользователей
-                            // Для сейчас просто логируем нажатие
+                            Log.i("RootScreen", "Нажата кнопка: Поиск пользователей")
                         }
                     )
                 }
