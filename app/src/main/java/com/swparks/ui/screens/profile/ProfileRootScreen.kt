@@ -177,6 +177,7 @@ fun ProfileRootScreen(
             )
 
             // Кнопка "Черный список" - временно скрыта
+            // @Suppress("ForbiddenComment")
             // TODO: Реализовать после интеграции с реальным списком черного списка
             // BlacklistButton(
             //     onClick = {
