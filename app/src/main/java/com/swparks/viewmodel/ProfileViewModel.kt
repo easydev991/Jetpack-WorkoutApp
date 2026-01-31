@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /** UI State для экрана профиля */
 sealed class ProfileUiState {
@@ -37,6 +39,9 @@ class ProfileViewModel(
     private val swRepository: SWRepository,
 ) : ViewModel() {
 
+    // Mutex для предотвращения параллельных загрузок профиля
+    private val loadProfileMutex = Mutex()
+
     // Флаг для предотвращения дубликатной загрузки профиля
     private var isExplicitlyLoadingProfile = false
 
@@ -47,31 +52,33 @@ class ProfileViewModel(
      * @param userId ID пользователя для загрузки профиля
      */
     fun loadUserProfileFromServer(userId: Long) {
-        // Устанавливаем флаг, чтобы init не пытался загружать параллельно
+        // Устанавливаем флаг ДО запуска корутины, чтобы init не успел сработать
         isExplicitlyLoadingProfile = true
 
         viewModelScope.launch {
-            try {
-                // Загружаем пользователя с сервера
-                swRepository.getUser(userId)
-                    .onSuccess { user ->
-                        // Пользователь уже сохранен в кэше через SWRepository.getUser()
-                        // Теперь загружаем страну и город
-                        loadProfile(user)
-                        Log.i("ProfileViewModel", "Профиль загружен с сервера: ${user.id}")
+            loadProfileMutex.withLock {
+                try {
+                    // Загружаем пользователя с сервера
+                    swRepository.getUser(userId)
+                        .onSuccess { user ->
+                            // Пользователь уже сохранен в кэше через SWRepository.getUser()
+                            // Загружаем страну и город (без блокировки Mutex, так как мы уже внутри withLock)
+                            loadProfileInternal(user)
+                            Log.i("ProfileViewModel", "Профиль загружен с сервера: ${user.id}")
 
-                        // Сбрасываем флаг после успешной загрузки
-                        isExplicitlyLoadingProfile = false
-                    }
-                    .onFailure { error ->
-                        _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${error.message}") }
-                        Log.e("ProfileViewModel", "Ошибка загрузки профиля с сервера: ${error.message}")
-                        isExplicitlyLoadingProfile = false
-                    }
-            } catch (e: Exception) {
-                _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${e.message}") }
-                Log.e("ProfileViewModel", "Ошибка загрузки профиля: ${e.message}")
-                isExplicitlyLoadingProfile = false
+                            // Сбрасываем флаг после успешной загрузки
+                            isExplicitlyLoadingProfile = false
+                        }
+                        .onFailure { error ->
+                            _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${error.message}") }
+                            Log.e("ProfileViewModel", "Ошибка загрузки профиля с сервера: ${error.message}")
+                            isExplicitlyLoadingProfile = false
+                        }
+                } catch (e: Exception) {
+                    _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${e.message}") }
+                    Log.e("ProfileViewModel", "Ошибка загрузки профиля: ${e.message}")
+                    isExplicitlyLoadingProfile = false
+                }
             }
         }
     }
@@ -114,24 +121,56 @@ class ProfileViewModel(
         }
 
         viewModelScope.launch {
-            try {
-                // Получаем страну пользователя
-                val country =
-                    user.countryID?.let { countryId ->
-                        countriesRepository.getCountryById(countryId.toString())
-                    }
+            loadProfileMutex.withLock {
+                try {
+                    // Получаем страну пользователя
+                    val country =
+                        user.countryID?.let { countryId ->
+                            countriesRepository.getCountryById(countryId.toString())
+                        }
 
-                // Получаем город пользователя
-                val city =
-                    user.cityID?.let { cityId ->
-                        countriesRepository.getCityById(cityId.toString())
-                    }
+                    // Получаем город пользователя
+                    val city =
+                        user.cityID?.let { cityId ->
+                            countriesRepository.getCityById(cityId.toString())
+                        }
 
-                _uiState.update { ProfileUiState.Success(country, city) }
-                Log.i("ProfileViewModel", "Профиль загружен: ${user.id}")
-            } catch (e: Exception) {
-                _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${e.message}") }
+                    _uiState.update { ProfileUiState.Success(country, city) }
+                    Log.i("ProfileViewModel", "Профиль загружен: ${user.id}")
+                } catch (e: Exception) {
+                    _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${e.message}") }
+                }
             }
+        }
+    }
+
+    /**
+     * Внутренний метод загрузки профиля без блокировки Mutex
+     * Должен вызываться только внутри Mutex.withLock
+     */
+    private suspend fun loadProfileInternal(user: User?) {
+        if (user == null) {
+            _uiState.update { ProfileUiState.Error("Пользователь не авторизован") }
+            return
+        }
+
+        try {
+            // Получаем страну пользователя
+            val country =
+                user.countryID?.let { countryId ->
+                    countriesRepository.getCountryById(countryId.toString())
+                }
+
+            // Получаем город пользователя
+            val city =
+                user.cityID?.let { cityId ->
+                    countriesRepository.getCityById(cityId.toString())
+                }
+
+            _uiState.update { ProfileUiState.Success(country, city) }
+            Log.i("ProfileViewModel", "Профиль загружен: ${user.id}")
+        } catch (e: Exception) {
+            _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${e.message}") }
         }
     }
 
