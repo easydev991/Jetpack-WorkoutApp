@@ -149,14 +149,7 @@ request.allHTTPHeaderFields = Dictionary(
 
 ### Этапы 0-13: SWApi, Tink, EncryptedStringSerializer, CryptoManager, SecureTokenRepository, TokenInterceptor, AppContainer, LoginUseCase ✅
 
-**Реализовано:**
-
-- **Этапы 0-5:** SWApi исправлен, зависимости Tink, EncryptedStringSerializer, CryptoManager (тесты + реализация)
-- **Этапы 6-7:** SecureTokenRepository с шифрованием через Tink и кодированием в Base64 (тесты + реализация)
-- **Этап 8:** Unit-тесты для TokenInterceptor (все кейсы)
-- **Этап 9:** TokenInterceptor для добавления заголовка `Authorization: Basic {token}`
-- **Этапы 10-11:** Создание компонентов в AppContainer и добавление интерцепторов в OkHttpClient
-- **Этапы 12-13:** LoginUseCase сохраняет токен и вызывает login (тесты + реализация)
+**Реализовано:** SWApi исправлен, зависимости Tink, EncryptedStringSerializer, CryptoManager, SecureTokenRepository с шифрованием через Tink и Base64, TokenInterceptor для добавления заголовка `Authorization: Basic {token}`, AppContainer с интерцепторами в OkHttpClient, LoginUseCase сохраняет токен и вызывает login.
 
 **Результат:** Все тесты проходят успешно, консистентно с iOS-реализацией.
 
@@ -164,21 +157,7 @@ request.allHTTPHeaderFields = Dictionary(
 
 ### Этапы 14-16: LogoutUseCase, AuthViewModel ✅
 
-**Реализовано:**
-
-- **Этап 14:** Unit-тесты для LogoutUseCase (`LogoutUseCaseTest.kt`) ✅
-- **Этап 15:** LogoutUseCase с очисткой токена и сбросом флага isAuthorized (`LogoutUseCase.kt`) ✅
-- **Этап 16:** AuthViewModel с интерфейсами ILoginUseCase и ILogoutUseCase, обновление AppContainer (`AuthViewModel.kt`, `AuthViewModelTest.kt`) ✅
-
-**Файлы:**
-
-- `app/src/test/java/com/swparks/domain/usecase/LogoutUseCaseTest.kt` - Unit тесты для LogoutUseCase
-- `app/src/main/java/com/swparks/domain/usecase/LogoutUseCase.kt` - Реализация LogoutUseCase
-- `app/src/main/java/com/swparks/ui/viewmodel/AuthViewModel.kt` - ViewModel авторизации
-- `app/src/main/java/com/swparks/domain/usecase/ILoginUseCase.kt` - Интерфейс для LoginUseCase
-- `app/src/main/java/com/swparks/domain/usecase/ILogoutUseCase.kt` - Интерфейс для LogoutUseCase
-- `app/src/test/java/com/swparks/ui/viewmodel/AuthViewModelTest.kt` - Unit тесты для AuthViewModel
-- Обновлены `app/src/main/java/com/swparks/domain/usecase/LoginUseCase.kt`, `LogoutUseCase.kt`, `AppContainer.kt`
+**Реализовано:** Unit-тесты и реализация LogoutUseCase с очисткой токена и сбросом флага isAuthorized, AuthViewModel с интерфейсами ILoginUseCase и ILogoutUseCase, обновление AppContainer.
 
 **Результат:** Все тесты проходят успешно ✅
 

@@ -17,14 +17,15 @@
 - ✅ Реализован репозиторий SWRepository
 - ✅ Реализована базовая навигация через RootScreen
 - ✅ Реализована архитектура безопасности для токена (CryptoManager, SecureTokenRepository, TokenInterceptor, AuthInterceptor)
-- ✅ Реализованы Use Cases для авторизации (LoginUseCase, LogoutUseCase, IconManager)
-- ✅ Реализован AuthViewModel
+- ✅ Реализованы Use Cases для авторизации (LoginUseCase, LogoutUseCase, IconManager, ResetPasswordUseCase, GetCountriesUseCase, GetCitiesByCountryUseCase, GetCountryByIdUseCase, GetCityByIdUseCase)
+- ✅ Реализованы ViewModels: AuthViewModel, LoginViewModel, ThemeIconViewModel, EventsViewModel, ProfileViewModel, MainActivityViewModel
 - ✅ Все баги API исправлены (7 из 7)
 - ✅ MoreScreen и ThemeIconScreen полностью реализованы (вкладка "Ещё")
-- ⚠️ EventsScreen имеет ViewModel с базовым функционалом
+- ✅ LoginScreen полностью реализован с полной обработкой ошибок и интеграцией с навигацией
+- ⚠️ EventsScreen имеет ViewModel с базовым функционалом (загрузка прошедших мероприятий)
 - ⚠️ ParksRootScreen отображает данные из assets, но без бизнес-логики
-- ⚠️ ProfileRootScreen, MessagesRootScreen - заглушки
-- ❌ Экраны авторизации не реализованы
+- ⚠️ ProfileRootScreen имеет ViewModel с базовым функционалом (отображение профиля пользователя)
+- ⚠️ MessagesRootScreen - заглушка
 - ❌ Большинство детальных экранов не имеют функционала
 - ✅ Namespace изменен на `com.swparks`
 
@@ -43,11 +44,12 @@
 #### Реализованные экраны
 
 - ✅ **RootScreen** - корневой экран с навигацией по вкладкам
-- ⚠️ **ParksRootScreen** - экран раздела площадок (отображают данные из assets)
-- ⚠️ **EventsScreen** - экран раздела мероприятий (есть ViewModel, минимальный функционал)
+- ⚠️ **ParksRootScreen** - экран раздела площадок (отображает данные из assets, без бизнес-логики)
+- ⚠️ **EventsScreen** - экран раздела мероприятий (есть ViewModel, минимальный функционал - загрузка прошедших мероприятий)
 - ✅ **MoreScreen** - экран раздела настроек (полностью реализован)
 - ✅ **ThemeIconScreen** - экран темы и иконки (полностью реализован)
-- ❌ **ProfileRootScreen** - экран раздела профиля (только заглушка)
+- ⚠️ **ProfileRootScreen** - экран раздела профиля (есть ViewModel с базовым функционалом - отображение профиля и кнопка выхода)
+- ✅ **LoginScreen** - экран авторизации (полностью реализован)
 - ❌ **MessagesRootScreen** - экран раздела сообщений (только заглушка)
 
 #### Реализованные модели данных
@@ -73,9 +75,9 @@
 
 **Security:** CryptoManager (AES-128-GCM-HKDF), EncryptedStringSerializer
 
-**Domain Layer:** LoginUseCase, LogoutUseCase, IconManager, ServerException, NetworkException
+**Domain Layer:** LoginUseCase, LogoutUseCase, ResetPasswordUseCase, IconManager, GetCountriesUseCase, GetCitiesByCountryUseCase, GetCountryByIdUseCase, GetCityByIdUseCase, ServerException, NetworkException
 
-**Presentation Layer:** AuthViewModel, EventsViewModel, ThemeIconViewModel, MainActivityViewModel
+**Presentation Layer:** AuthViewModel, LoginViewModel, EventsViewModel, ProfileViewModel, ThemeIconViewModel, MainActivityViewModel
 
 **Утилиты:** FlexibleDateDeserializer, NetworkUtils, JsonUtils, ReadJSONFromAssets
 
@@ -120,24 +122,18 @@
 
 **Экраны для реализации:**
 
-- ✅ `MoreScreen` - экран настроек (раздел "Ещё")
-- ✅ `ThemeIconScreen` - экран темы и иконки приложения, и для Android 12+ тоггл для динамических цветов
+- ✅ `MoreScreen` - экран настроек (раздел "Ещё") - **ЗАВЕРШЕН**
+- ✅ `ThemeIconScreen` - экран темы и иконки приложения, и для Android 12+ тоггл для динамических цветов - **ЗАВЕРШЕН**
 
-**Использование референса:**
-
-- Один комбинированный экран для выбора темы и иконки (не нужно делать 2 отдельных экрана), и для Android 12+ тоггл для динамических цветов
-- Отличаются только фактические иконки приложения
-- Локализация та же (русская и английская)
+**Детальный план:** `docs/screens/1_More_Screen.md`
 
 **Статус реализации:** ✅ **ЗАВЕРШЕНО**
 
-- ✅ ThemeIconScreen: полный стек (Domain: AppTheme, AppIcon, IconManager; Data: AppSettingsDataStore; UI: ThemeIconUiState, ThemeIconViewModel, ThemeIconScreen)
-- ✅ MoreScreen: 4 секции, все функции (shareApp, openGitHub, sendFeedback)
+- ✅ ThemeIconScreen: полный стек (Domain, Data, UI)
+- ✅ MoreScreen: 4 секции, все функции
 - ✅ Иконки: activity-aliases (11 штук), PNG и adaptive icons
-- ✅ Unit-тесты: SettingsModelsTest.kt, ThemeIconViewModelTest.kt
-- ✅ UI-тесты: ThemeIconScreenTest.kt, MoreScreenTest.kt (22 теста)
-
-**Детальный план:** `docs/screens/1_More_Screen.md`
+- ✅ Unit-тесты (SettingsModelsTest.kt, ThemeIconViewModelTest.kt)
+- ✅ UI-тесты (22 теста: ThemeIconScreenTest.kt, MoreScreenTest.kt)
 
 ---
 
@@ -147,33 +143,17 @@
 
 - Требуется для всех экранов с бизнес-логикой
 - Экран входа должен показываться при запуске для неавторизованных пользователей
-- Базовая инфраструктура уже реализована (API, Use Cases, AuthViewModel)
 
 **Экраны для реализации:**
 
-- `LoginScreen` - экран входа (с кнопкой восстановления пароля)
+- ✅ `LoginScreen` - экран входа (с кнопкой восстановления пароля) - **ЗАВЕРШЕН**
 
-**Основные функции:**
+**Детальный план:** `docs/screens/2_Login_Screen.md`
 
-- Вход в сервис workout.su под существующей учетной записью
-- Восстановление пароля от учетной записи (через email)
-- Сохранение токена авторизации в DataStore с шифрованием Tink
-- Проверка авторизации при запуске приложения
-- Выход из учетной записи с очисткой токена и флага авторизации
+**Статус реализации:** ⚠️ **ЧАСТИЧНО ЗАВЕРШЕНО**
 
-**Технические задачи:**
-
-- ✅ API endpoints для авторизации и восстановления пароля (57 endpoints)
-- ✅ Безопасное хранение токена авторизации (CryptoManager, SecureTokenRepository, TokenInterceptor)
-- ✅ LoginUseCase, LogoutUseCase, AuthViewModel
-- ⚠️ Реализовать LoginScreen (с кнопкой восстановления пароля)
-- ⚠️ Реализовать проверку авторизации при запуске и защиту экранов
-
-**Детальные планы:**
-
-- ✅ `docs/auth-token-plan.md` - план безопасной работы с токеном (ЗАВЕРШЕН)
-- ✅ `docs/api-implementation-plan.md` - план реализации API (57 endpoints - ЗАВЕРШЕН)
-- 📄 `docs/screens/2_Login_Screen.md` - экран входа (НЕ СОЗДАН)
+- ✅ LoginScreen полностью реализован (Domain, Data, UI слои, 68 unit-тестов, 13 UI-тестов)
+- ❌ Проверка авторизации при запуске и защита экранов (требуется реализация)
 
 ---
 
@@ -776,11 +756,11 @@ app/src/main/java/com/swparks/
 
 ### Тестирование
 
-**Unit-тесты:** Data layer (20+ тестов), Domain layer (4 теста), Model (14+ тестов), ViewModel (3 теста), Utils (2 теста), MockSWApi
+**Unit-тесты:** Data layer (20+ тестов), Domain layer (8+ тестов), Model (14+ тестов), ViewModel (5+ тестов), Utils (2 теста), MockSWApi
 
 **Интеграционные тесты:** CryptoManagerIntegrationTest
 
-**Всего:** 40+ тестов
+**Всего:** 50+ тестов
 
 **Инструменты:** MockK, Turbine, изолированное тестирование без реальных HTTP запросов
 
@@ -822,3 +802,14 @@ app/src/main/java/com/swparks/
   - Этап авторизации (Auth) перемещен сразу после вкладки "Ещё" (новый номер этапа: 2)
   - Обновлена нумерация всех этапов с 2 по 7
   - Обновлены ссылки на детальные документы экранов с учетом новой нумерации
+- 2026-01-31: Актуализация статуса этапа авторизации (Auth):
+  - ✅ LoginScreen полностью реализован с полной обработкой ошибок и интеграцией с навигацией
+  - ✅ Реализован LoginViewModel с методами login(), resetPassword(), resetForNewSession()
+  - ✅ Реализованы новые Use Cases: ResetPasswordUseCase, GetCountriesUseCase, GetCitiesByCountryUseCase, GetCountryByIdUseCase, GetCityByIdUseCase
+  - ✅ Модальные алерты для ошибок сети, восстановления пароля, успешных операций
+  - ✅ Навигация через ModalBottomSheet с запретом dismiss-жестов и back press
+  - ✅ Unit-тесты (68 тестов): LoginViewModelTest, AuthViewModelTest, LoginUiStateTest, LoginCredentialsTest, LoginUseCaseTest, ResetPasswordUseCaseTest, SWRepositoryAuthTest, AuthInterceptorTest, LoginSuccessTest
+  - ✅ UI-тесты (13 тестов): LoginScreenTest - проверка отображения всех элементов экрана, валидация полей, работа кнопок и алертов
+  - ⚠️ ProfileRootScreen имеет ViewModel с базовым функционалом (отображение профиля и кнопка выхода)
+  - Обновлено количество unit-тестов для Domain layer (8+ тестов) и ViewModels (5+ тестов)
+  - Обновлен список реализованных экранов: LoginScreen полностью реализован, ProfileRootScreen имеет базовый функционал

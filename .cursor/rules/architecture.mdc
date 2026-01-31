@@ -90,24 +90,27 @@ Presentation (UI, ViewModel)
   - Хранить в Room персистентно
   - Обновлять с сервера периодически
 
-### Стратегия 3: Online-first без кэша (дневники)
+### Стратегия 3: Online-first с кэшем (дневники)
 
-**Для дневников - персональные данные пользователя:**
+**Для дневников пользователя:**
 
-- **Чтение:** Всегда с сервера
-- **Создание/редактирование:** Сразу на сервер
-- **Офлайн режим:** Невозможен ❌ (показать ошибку сети)
-- **Комментарии к дневникам:** Приходят в том же ответе, что и дневник
+- **Хранение:** Персистентно в Room (Offline-first чтение)
+- **Чтение:** Из локального БД (Room Flow)
+- **Синхронизация:** При открытии экрана - запрос к серверу -> обновление БД
+- **Офлайн режим:** Чтение работает ✅ (показываем данные из кэша)
+- **Комментарии:** Сохраняются вместе с дневником
 
-### Стратегия 4: Online-first HTTP запросы (сообщения, друзья)
+### Стратегия 4: Online-first с fallback-кэшем (диалоги/сообщения)
 
-**Для первой итерации - HTTP запросы без polling:**
+**Для списка диалогов и чатов:**
 
-- **Чтение:** При открытии экрана - запрос к серверу
-- **Отправка сообщений:** Сразу на сервер, затем запрос обновления
-- **Отметка прочитанным:** Сразу на сервер
-- **Офлайн режим:** Невозможен ❌ (показать ошибку сети)
-- **TODO:** Polling можно добавить в будущем для real-time updates
+- **Источник правды:** Сервер (всегда пытаемся загрузить свежие данные)
+- **Кэш:** Room (хранит последние загруженные сообщения/диалоги)
+- **Логика чтения:**
+  1. Загрузка с сервера
+  2. Если успех -> Обновляем Room -> UI показывает данные из Room
+  3. Если ошибка -> UI показывает данные из Room + Alert "Ошибка синхронизации"
+- **Офлайн режим:** Чтение доступно (старые сообщения) ✅
 
 ### Стратегия 5: Online-first с кэшем для офлайн (профиль)
 
@@ -122,6 +125,7 @@ Presentation (UI, ViewModel)
 **Для авторизации - всегда онлайн:**
 
 - **Авторизация:** Всегда на сервер
+- **Обработка успеха:** Одноразовые события (One-off events) через `Channel` / `SharedFlow`
 - **Выход:** Удаление токена и всех локальных данных пользователя (без запроса на сервер)
 - **Офлайн режим:** Невозможен ❌
 
@@ -157,48 +161,28 @@ class ParksRepository(
             Log.e("ParksRepository", "Ошибка загрузки площадок с сервера: ${e.message}")
         }
     }
-
-    // Создание: сразу на сервер, потом в кэш
-    suspend fun createPark(park: Park): Result<Park> = try {
-        val remotePark = swApi.createPark(park.toRequest())
-        parksDao.insert(remotePark.toEntity())
-        Result.success(remotePark.toDomain())
-    } catch (e: IOException) {
-        Result.failure(NetworkException("Не удалось создать площадку. Проверьте интернет-соединение", e))
-    }
 }
 ```
 
-**Стратегия 5: Online-first с кэшем для офлайн (профиль)**
+**Стратегия 4: Fallback cache (Диалоги)**
 
 ```kotlin
-class UsersRepository(
-    private val userDao: UserDao,
-    private val swApi: SWApi,
+class MessagesRepository(
+    private val dialogsDao: DialogsDao,
+    private val swApi: SWApi
 ) {
-    // Чтение: с сервера, кэш для офлайн режима
-    suspend fun getUserProfile(userId: Long): Result<User> = try {
-        val remoteUser = swApi.getUserProfile(userId)
-        userDao.insert(remoteUser.toEntity())
-        Result.success(remoteUser.toDomain())
-    } catch (e: IOException) {
-        // Ошибка сети - пытаемся из кэша
-        val cachedUser = userDao.getById(userId)
-        if (cachedUser != null) {
-            Log.i("UsersRepository", "Загружен профиль из кэша (офлайн режим)")
-            Result.success(cachedUser.toDomain())
-        } else {
-            Result.failure(NetworkException("Не удалось загрузить профиль. Проверьте интернет-соединение", e))
-        }
-    }
+    // UI подписывается на этот Flow
+    val dialogs: Flow<List<Dialog>> = dialogsDao.getDialogsFlow()
 
-    // Обновление: сразу на сервер, потом в кэш
-    suspend fun updateUserProfile(user: User): Result<User> = try {
-        val remoteUser = swApi.updateUserProfile(user.id, user.toRequest())
-        userDao.insert(remoteUser.toEntity())
-        Result.success(remoteUser.toDomain())
-    } catch (e: IOException) {
-        Result.failure(NetworkException("Не удалось обновить профиль. Проверьте интернет-соединение", e))
+    // Вызывается при открытии экрана
+    suspend fun refreshDialogs(): Result<Unit> = try {
+        val remoteDialogs = swApi.getDialogs()
+        dialogsDao.insertAll(remoteDialogs.map { it.toEntity() })
+        Result.success(Unit)
+    } catch (e: Exception) {
+        // Ошибка возвращается в UI для показа Toast/Alert
+        // При этом Flow выше продолжит показывать старые данные из кэша
+        Result.failure(e)
     }
 }
 ```
@@ -222,14 +206,15 @@ class UsersRepository(
 #### 1. Локальные источники данных
 
 - **Room** - для кэширования данных офлайн:
-  - Entities: `ParkEntity`, `EventEntity`, `UserEntity` и т.д.
-  - DAO: `ParkDao`, `EventDao`, `UserDao` и т.д.
+  - Entities: `ParkEntity`, `EventEntity`, `UserEntity`, `JournalEntity`, `DialogEntity`
+  - DAO: `ParkDao`, `EventDao`, `UserDao`, `JournalsDao`, `DialogsDao`
   - Database: `SWDatabase`
   - Converters - конвертеры для сложных типов
 
 - **DataStore** - для настроек и предпочтений:
   - Proto DataStore для структурированных данных (настройки приложения)
   - Preferences DataStore для простых настроек (тема, язык, токен авторизации)
+  - **distinctUntilChanged()** - обязателен для Flow в DataStore, чтобы избежать дублирования эмиссии при несвязанных изменениях
 
 #### 2. Сетевые источники данных
 
@@ -240,27 +225,8 @@ class UsersRepository(
 
 - **OkHttp Interceptors** - цепочка интерсепторов для обработки всех HTTP запросов:
   - **RetryInterceptor** - автоматически повторяет запросы при временных ошибках сервера (502, 503, 504) и сетевых ошибках (IOException)
-    - Количество попыток: 3 (MAX_RETRIES)
-    - Задержка между попытками: 1000 мс (RETRY_DELAY_MS)
-    - НЕ повторяет запросы для других кодов ошибок (404, 401, 500 и т.д.)
-    - Логирует попытки retry на русском языке
   - **TokenInterceptor** - добавляет токен авторизации в заголовки всех запросов
   - **AuthInterceptor** - обрабатывает ошибки 401 (Unauthorized) и перебрасывает на экран входа
-
-**Порядок интерсепторов в OkHttpClient:**
-
-```
-OkHttpClient.Builder()
-    .addInterceptor(retryInterceptor)  // ← ПЕРВЫЙ: retry для временных ошибок
-    .addInterceptor(tokenInterceptor)  // ← ВТОРОЙ: добавление токена
-    .addInterceptor(authInterceptor)  // ← ТРЕТИЙ: обработка 401
-    .build()
-```
-
-**Почему порядок важен:**
-- RetryInterceptor должен быть **ПЕРВЫМ**, чтобы retry выполнялся ДО добавления токена
-- Если tokenInterceptor будет первым - токен добавится только к первой попытке
-- authInterceptor должен быть последним для обработки 401
 
 #### 3. Repository Implementations
 
@@ -277,23 +243,15 @@ OkHttpClient.Builder()
 - **ParksRepository** - работа с площадками (Стратегия 1)
 - **EventsRepository** - работа с мероприятиями (Стратегия 2)
 - **UsersRepository** - работа с пользователями (Стратегия 5)
-- **JournalsRepository** - работа с дневниками (Стратегия 3)
-- **MessagesRepository** - работа с сообщениями (Стратегия 4)
-- **FriendsRepository** - работа с друзьями (Стратегия 4)
+- **JournalsRepository** - работа с дневниками (Стратегия 3 - Offline first)
+- **MessagesRepository** - работа с сообщениями (Стратегия 4 - Fallback cache)
+- **FriendsRepository** - работа с друзьями (Стратегия 4 - Fallback cache)
 - **AuthRepository** - работа с авторизацией (Стратегия 6)
 - **UserPreferencesRepository** - хранение настроек, токена, состояния авторизации
 
 #### 4. Data Sources
 
-Репозитории могут зависеть от одного или нескольких источников данных:
-
-**Пример для ParksRepository:**
-
-| Название       | Backed by         | Назначение                                      |
-|----------------|-------------------|-------------------------------------------------|
-| ParksDao       | Room/SQLite       | Персистентные данные площадок                    |
-| SWApi          | Remote API        | Данные площадок с сервера                        |
-| Preferences    | DataStore         | Настройки фильтров и сортировки площадок         |
+Репозитории могут зависеть от одного или нескольких источников данных.
 
 ### Обработка ошибок сети
 
@@ -302,29 +260,6 @@ OkHttpClient.Builder()
 - `IOException` - ошибки сети, показывать пользователю понятное сообщение
 - `HttpException` - ошибки сервера (400, 401, 404, 500 и т.д.)
 - Валидация на сервере может отклонить данные - пользователь получит ошибку
-
-**Пример обработки ошибок:**
-
-```kotlin
-suspend fun createPark(park: Park): Result<Park> = try {
-    val remotePark = swApi.createPark(park.toRequest())
-    parksDao.insert(remotePark.toEntity())
-    Result.success(remotePark.toDomain())
-} catch (e: HttpException) {
-    // Ошибка сервера (400, 401, 404, 500 и т.д.)
-    val errorMessage = when (e.code()) {
-        400 -> "Неверные данные формы"
-        401 -> "Необходима авторизация"
-        404 -> "Ресурс не найден"
-        500 -> "Ошибка сервера"
-        else -> "Неизвестная ошибка"
-    }
-    Result.failure(ServerException(errorMessage, e))
-} catch (e: IOException) {
-    // Ошибка сети
-    Result.failure(NetworkException("Не удалось создать площадку. Проверьте интернет-соединение", e))
-}
-```
 
 ## Domain Layer
 
@@ -337,8 +272,6 @@ suspend fun createPark(park: Park): Result<Park> = try {
 - Устранение дублирования логики
 - Комбинирование и трансформация данных из репозиториев
 
-**Важно:** Domain layer в swparks **не содержит** use cases для обработки событий. События обрабатываются UI layer через прямые вызовы методов репозиториев.
-
 ### Use Cases
 
 **Принципы:**
@@ -346,360 +279,59 @@ suspend fun createPark(park: Park): Result<Park> = try {
 - **Один use case - одна ответственность**
 - Use case вызывает `operator fun invoke` для вызова
 - Используют данные из репозиториев (через suspend функции или Flow)
-- Комбинируют данные из нескольких репозиториев
-- Трансформируют данные для использования в UI
 
 **Примеры Use Cases:**
 
 **Авторизация:**
-
-- `LoginUseCase` - авторизация пользователя
-- `LogoutUseCase` - выход из учетной записи
-- `RecoveryPasswordUseCase` - восстановление пароля
+- `LoginUseCase`
+- `LogoutUseCase`
 
 **Площадки:**
-
-- `GetParksUseCase` - получить список площадок (с фильтрацией)
-- `GetParkDetailUseCase` - получить детальную информацию о площадке (с комментариями)
-- `CreateParkUseCase` - создать новую площадку
-- `UpdateParkUseCase` - обновить площадку
-- `DeleteParkUseCase` - удалить площадку
-
-**Мероприятия:**
-
-- `GetUpcomingEventsUseCase` - получить список будущих мероприятий (всегда с сервера)
-- `GetPastEventsUseCase` - получить список прошедших мероприятий (из кэша с обновлением)
-- `CreateEventUseCase` - создать новое мероприятие
-- `UpdateEventUseCase` - обновить мероприятие
-- `DeleteEventUseCase` - удалить мероприятие
-
-**Профиль:**
-
-- `GetUserProfileUseCase` - получить профиль пользователя
-- `UpdateUserProfileUseCase` - обновить профиль
-- `SearchUsersUseCase` - поиск пользователей по нику
-
-**Друзья:**
-
-- `GetFriendsUseCase` - получить список друзей
-- `GetFriendRequestsUseCase` - получить запросы в друзья
-- `AcceptFriendRequestUseCase` - принять запрос в друзья
-- `RejectFriendRequestUseCase` - отклонить запрос
-- `SendFriendRequestUseCase` - отправить запрос в друзья
-
-**Сообщения:**
-
-- `GetDialogsUseCase` - получить список диалогов
-- `GetMessagesUseCase` - получить сообщения чата
-- `SendMessageUseCase` - отправить сообщение
-- `MarkMessagesAsReadUseCase` - отметить сообщения прочитанными
-- `DeleteDialogUseCase` - удалить диалог
+- `GetParksUseCase`
 
 **Дневники:**
+- `GetJournalsUseCase` - возвращает Flow из БД, инициирует обновление
+- `SyncJournalsUseCase` - принудительное обновление
 
-- `GetJournalsUseCase` - получить список дневников
-- `GetJournalEntriesUseCase` - получить записи дневника
-- `CreateJournalUseCase` - создать дневник
-- `UpdateJournalUseCase` - обновить дневник
-- `DeleteJournalUseCase` - удалить дневник
+## UI Layer (Compose & ViewModels)
 
-**Комментарии:**
+### Обработка событий (One-off events)
 
-- `GetParkCommentsUseCase` - получить комментарии площадки (включены в ответе площадки)
-- `GetEventCommentsUseCase` - получить комментарии мероприятия (включены в ответе мероприятия)
-- `CreateCommentUseCase` - создать комментарий
-- `UpdateCommentUseCase` - обновить комментарий
-- `DeleteCommentUseCase` - удалить комментарий
+Для событий, которые должны обрабатываться **один раз** (навигация, показ Toast/Snackbar, успешная авторизация), используйте `Channel` или `SharedFlow`, а не `StateFlow`.
 
-### Entities
+**Паттерн реализации:**
 
-**Domain entities - модели данных для бизнес-логики:**
+1. **ViewModel:**
 
-- `User`, `LoginSuccess` - пользователи и авторизация
-- `Park`, `ParkType`, `ParkSize` - площадки
-- `Event`, `EventKind` - мероприятия
-- `Comment` - комментарии
-- `Photo` - фотографии
-- `Country`, `City` - географические данные
-- `FriendAction`, `BlacklistAction` - действия над друзьями/черным списком
-- `Gender` - вспомогательные модели
+    ```kotlin
+    // События
+    sealed class LoginEvent {
+        data class Success(val userId: Long) : LoginEvent()
+        data class Error(val message: String) : LoginEvent()
+    }
 
-### Repository Interfaces (опционально)
+    // Канал (буферизированный)
+    private val _events = Channel<LoginEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
 
-**Абстракции репозиториев для тестирования:**
-
-- `ParksRepository` - интерфейс репозитория площадок
-- `EventsRepository` - интерфейс репозитория мероприятий
-- `UsersRepository` - интерфейс репозитория пользователей
-- И т.д.
-
-## UI Layer
-
-### Основные принципы
-
-**UI Layer состоит из:**
-
-- **UI элементы**, созданные с помощью Jetpack Compose
-- **Android ViewModels** для управления состоянием UI
-
-**ViewModels:**
-
-- Получают данные из use cases или репозиториев
-- Трансформируют потоки в UI state
-- UI элементы отражают state
-- Пользовательские взаимодействия передаются как события в ViewModel
-
-### Моделирование UI State
-
-**UI state моделируется как sealed иерархия:**
-
-- Используются sealed interfaces и immutable data classes
-- State объекты эммитятся только через трансформацию потоков данных
-- UI state всегда отражает данные приложения (данные - источник правды)
-- UI элементы обрабатывают все возможные состояния
-
-**Пример: Список площадок на ParksListScreen:**
-
-```kotlin
-sealed class ParksUiState {
-    data object Loading : ParksUiState()
-    data class Success(val parks: List<Park>) : ParksUiState()
-    data class Error(val message: String) : ParksUiState()
-}
-```
-
-### Трансформация потоков в UI State
-
-**ViewModels получают потоки данных (cold flows) из use cases или репозиториев:**
-
-- Потоки комбинируются через `combine` или трансформируются через `map`
-- Создается единый поток UI state
-- Поток конвертируется в hot flow через `stateIn`
-- StateFlow позволяет UI элементам читать последнее известное состояние
-
-**Пример отображения списка площадок:**
-
-```kotlin
-class ParksListViewModel(
-    getParksUseCase: GetParksUseCase,
-) : ViewModel() {
-
-    val uiState: StateFlow<ParksUiState> = getParksUseCase()
-        .map<List<Park>, ParksUiState> { ParksUiState.Success(it) }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = ParksUiState.Loading
-        )
-}
-```
-
-### Обработка пользовательских взаимодействий
-
-**Действия пользователя передаются из UI элементов в ViewModels через обычные вызовы методов:**
-
-- Методы передаются в UI элементы как lambda-выражения
-- ViewModel обрабатывает действия, вызывая репозитории
-
-**Пример фильтрации площадок:**
-
-```kotlin
-// ParksListViewModel
-fun onFilterChange(filter: ParkFilter) {
-    _currentFilter.value = filter
-}
-```
-
-**В UI:**
-
-```kotlin
-ParksListScreen(
-    onFilterChange = { viewModel.onFilterChange(it) }
-)
-```
-
-### ViewModels
-
-**Правила:**
-
-- Получают данные из use cases или репозиториев
-- Трансформируют потоки данных в UI state через `stateIn`
-- Обрабатывают пользовательские события
-- Используют `viewModelScope` для корутин (автоматическая отмена при очистке)
-- **НЕ содержат бизнес-логику** (делегируют use cases и репозиториям)
-- **Все сетевые операции должны выполняться ТОЛЬКО в viewModelScope**, а не в LaunchedEffect из Compose
-
-**ВАЖНО:** ViewModels должны использовать ТОЛЬКО `viewModelScope` для запуска сетевых операций. Использование `LaunchedEffect` в Compose для запуска корутин запрещено, потому что:
-
-1. Compose scope привязан к жизненному циклу экрана - при навигации корутина отменяется
-2. Отмена корутины может быть обработана как ошибка сети (IOException)
-3. RetryInterceptor будет ретраить отмененные запросы, что неправильно
-4. AuthInterceptor может сработать на ложную ошибку и удалить токен
-
-**Пример ПРАВИЛЬНО:**
-
-```kotlin
-class LoginViewModel(
-    private val loginUseCase: ILoginUseCase,
-) : ViewModel() {
-    
     fun login() {
-        // ✅ ПРАВИЛЬНО: Используем viewModelScope
-        viewModelScope.launch {
-            loginUseCase(credentials)
-                .onSuccess { ... }
-                .onFailure { ... }
+        // ...
+        _events.send(LoginEvent.Success(userId))
+        // Сбрасываем стейт UI в Idle/Loading, но не в Success
+        _uiState.value = LoginUiState.Idle
+    }
+    ```
+
+2. **Compose (UI):**
+
+    ```kotlin
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is LoginEvent.Success -> {
+                    onLoginSuccess(event.userId)
+                }
+            }
         }
     }
-    }
-}
-```
-
-**Пример НЕПРАВИЛЬНО:**
-
-```kotlin
-// ❌ НЕПРАВИЛЬНО: НЕ запускать сетевые операции из Compose scope
-@Composable
-fun LoginScreen(
-    viewModel: LoginViewModel,
-    onLoginSuccess: () -> Unit,
-) {
-    LaunchedEffect(viewModel.uiState) {
-        if (viewModel.uiState is LoginUiState.Success) {
-            // ❌ НЕПРАВИЛЬНО: Сетевая операция в Compose scope
-            viewModel.loginAndLoadUserData()
-        }
-    }
-}
-```
-
-**Примеры ViewModels:**
-
-- `AuthViewModel` - авторизация и восстановление пароля
-- `ProfileViewModel`, `EditProfileViewModel` - профиль и редактирование
-- `ParksListViewModel`, `ParksMapViewModel`, `ParkDetailViewModel`, `EditParkViewModel` - площадки
-- `EventsViewModel`, `EventDetailViewModel`, `EditEventViewModel` - мероприятия
-- `DialogsListViewModel`, `ChatViewModel` - сообщения
-- `JournalsListViewModel`, `JournalDetailViewModel`, `EditJournalViewModel` - дневники
-- И другие ViewModels для оставшихся экранов
-
-### Screens
-
-**Compose экраны в `ui/screens/`:**
-
-**Структура папок:**
-
-- `auth/` - экраны авторизации (LoginScreen, RecoveryScreen, WelcomeScreen)
-- `profile/` - экраны профиля (ProfileScreen, EditProfileScreen, FriendsScreen и т.д.)
-- `parks/` - экраны площадок (ParksListScreen, ParksMapScreen, ParkDetailScreen и т.д.)
-- `events/` - экраны мероприятий (EventsScreen, EventDetailScreen, EditEventScreen)
-- `messages/` - экраны сообщений (DialogsListScreen, ChatScreen)
-- `journals/` - экраны дневников (JournalsListScreen, JournalDetailScreen и т.д.)
-- `settings/` - экраны настроек (MoreScreen, ThemeSettingsScreen, AppDataScreen и т.д.)
-- `RootScreen` - корневой экран с навигацией по вкладкам
-
-### Navigation
-
-**Централизованные маршруты навигации:**
-
-- `navigation/Screen.kt` - sealed class Screen со всеми маршрутами навигации
-- `navigation/TopLevelDestination.kt` - data class для верхнеуровневых назначений (вкладок)
-- `navigation/AppState.kt` - класс для управления состоянием навигации
-- Единый NavHost в RootScreen (отдельные NavHost для каждой вкладки - запрещены)
-
-### Theme
-
-**Тема приложения:**
-
-- `ui/theme/` - тема и цвета
-- Material Design 3
-- Поддержка темной и светлой темы
-- Поддержка динамических цветов (Android 12+)
-
-### Design System
-
-**Компоненты дизайн-системы в `ui/ds/`:**
-
-- ✅ Компоненты дизайн-системы уже реализованы и готовы к использованию (23 компонента)
-- Использовать готовые компоненты для верстки экранов
-
-## Обработка изображений
-
-- **Coil** - загрузка и кэширование изображений
-- **Максимальное количество фото** - 15 шт. для площадок и мероприятий
-- Сжатие изображений перед загрузкой
-- Форматирование для разных размеров экранов
-
-## Отличия от nowinandroid
-
-### Сетевые функции
-
-- **SWApi** - HTTP клиент для работы с сервером workout.su (отсутствует в nowinandroid)
-- **Retrofit + Kotlinx Serialization** - для API запросов (отсутствует в nowinandroid)
-- **Авторизация** - Login/Logout с токеном авторизации (отсутствует в nowinandroid)
-
-### Масштаб проекта
-
-- **Больше экранов** - ~30+ экранов vs ~7 в nowinandroid
-- **Больше моделей** - 14+ моделей vs ~7 в nowinandroid
-- **Сложные бизнес-потоки** - авторизация, друзья, сообщения, дневники (отсутствуют в nowinandroid)
-- **Сетевая синхронизация** - API, токены, кэширование (отсутствует в nowinandroid)
-- **Real-time коммуникация** - HTTP запросы для сообщений и друзей (отсутствует в nowinandroid)
-
-### Архитектурные улучшения (по сравнению с nowinandroid)
-
-- **Гибридный подход** - разные стратегии для разных типов данных
-- **Дифференцированное кэширование** - будущие/прошедшие мероприятия
-- **Комментарии в ответах сущностей** - нет отдельных запросов для комментариев
-- **HTTP запросы для чата** - без WebSocket для первой итерации
-- **Reactive UI state** - StateFlow вместо прямого доступа к данным
-- **Centralized navigation** - единый NavHost и AppState
-
-## Референсы
-
-### Архитектура и структура
-
-- **nowinandroid** - референс для архитектурного подхода
-  - [Architecture Learning Journey](https://github.com/android/nowinandroid/blob/main/docs/ArchitectureLearningJourney.md)
-  - Три слоя: Data, Domain, UI
-  - Реактивное программирование с Kotlin Flows
-  - Unidirectional data flow
-- Подход к слоистой архитектуре идентичен nowinandroid с адаптацией под swparks
-
-### Функционал и экраны
-
-- **SwiftUI-WorkoutApp** - iOS-приложение - эталон функциональности и дизайна
-  - [DialogScreen.swift](https://github.com/...) - HTTP запросы для чата без WebSocket
-  - [MessagesClient.swift](https://github.com/...) - протокол сообщений через HTTP
-- При разработке экранов ориентироваться на iOS-версию для консистентности UI и UX
-
-### Компоненты дизайн-системы
-
-- ✅ Компоненты дизайн-системы уже реализованы и готовы к использованию (23 компонента)
-- Использовать готовые компоненты для верстки экранов
-
-## TODO на будущие итерации
-
-### Polling для real-time updates
-
-**Сообщения и друзья - добавить polling:**
-
-- Сейчас: HTTP запросы при открытии экрана и отправке сообщений
-- Будущее: Polling каждые N секунд для real-time updates
-- Оптимизация: Не обновлять, если пользователь не активен в чате
-
-### WebSocket для real-time updates
-
-**Рассмотреть внедрение WebSocket:**
-
-- Если сервер добавит поддержку WebSocket в будущем
-- Миграция с HTTP запросов на WebSocket для сообщений и друзей
-- Экономия трафика и улучшение UX
-
-### Exponential backoff для синхронизации
-
-**Оптимизировать синхронизацию данных:**
-
-- Добавить exponential backoff для повторных попыток при ошибках сети
-- Логирование ошибок синхронизации
-- Уведомление пользователя при постоянных ошибках
+    ```

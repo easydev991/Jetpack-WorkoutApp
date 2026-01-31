@@ -32,20 +32,73 @@ fun functionName_whenCondition_thenExpectedResult() {
 }
 ```
 
-## Пример
+## Примеры тестов из проекта
+
+### Unit тест для Use Case
 
 ```kotlin
-class DaysCalculatorTest {
+class LoginUseCaseTest {
     @Test
-    fun calculateDaysDifference_whenSameDay_thenReturnsZero() {
+    fun invoke_whenValidCredentials_thenSavesTokenAndCallsLogin() = runTest {
         // Given
-        val date = LocalDate.now()
+        val testCredentials = LoginCredentials(login = "user@test.com", password = "password123")
+        coEvery { swRepository.login(any()) } returns Result.success(LoginSuccess(testUserId))
+        coEvery { tokenEncoder.encode(testCredentials) } returns testToken
 
         // When
-        val result = DaysCalculator.calculateDaysDifference(date, date)
+        val result = loginUseCase(testCredentials)
 
         // Then
-        assertEquals(0, result)
+        assertTrue(result.isSuccess)
+        assertEquals(testUserId, result.getOrNull()?.userId)
+        coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(testToken) }
+    }
+}
+```
+
+### Unit тест для ViewModel
+
+```kotlin
+@OptIn(ExperimentalCoroutinesApi::class)
+class LoginViewModelTest {
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    @Test
+    fun login_whenValidCredentials_thenReturnsSuccess() = runTest {
+        // Given
+        val credentials = LoginCredentials(login = "user@test.com", password = "password123")
+        loginViewModel.onLoginChange("user@test.com")
+        loginViewModel.onPasswordChange("password123")
+        coEvery { loginUseCase(credentials) } returns Result.success(testLoginSuccess)
+
+        // When
+        loginViewModel.login()
+        advanceUntilIdle()
+
+        // Then
+        val state = loginViewModel.uiState.value
+        assertTrue(state is LoginUiState.Idle)
+        val event = loginViewModel.loginEvents.first()
+        assertTrue(event is LoginEvent.Success)
+    }
+}
+```
+
+### Unit тест для UI State
+
+```kotlin
+class LoginUiStateTest {
+    @Test
+    fun isBusy_whenLoading_returnsTrue() {
+        val state = LoginUiState.Loading
+        assertTrue("Loading состояние должно быть занятым", state.isBusy)
+    }
+
+    @Test
+    fun isBusy_whenIdle_returnsFalse() {
+        val state = LoginUiState.Idle
+        assertFalse("Idle состояние не должно быть занятым", state.isBusy)
     }
 }
 ```
@@ -62,12 +115,30 @@ class DaysCalculatorTest {
 - Один тест - одна проверка
 - Тесты независимы друг от друга
 - Тесты быстрые и читаемые
+- Использовать Given-When-Then паттерн для структуры теста
+- Добавлять описательные сообщения для утверждений при необходимости
 
 ## Критерии приемки
 
 - **Тесты проходят успешно** (unit-тесты и инструментальные тесты)
 - **Проект собирается** без ошибок
-- **Код соответствует** стандартам проекта
+- **Код соответствует** стандартам проекта (ktlint, detekt)
+
+## Технологии тестирования
+
+### Основные библиотеки
+
+- **JUnit 4** - фреймворк для написания тестов
+- **MockK** - создание моков и верификация вызовов (`mockk`, `coEvery`, `coVerify`)
+- **kotlinx.coroutines.test** - тестирование корутин (`runTest`, `advanceUntilIdle`)
+- **Turbine** - тестирование Flow (для сложных корутин тестов)
+- **Truth** - библиотека утверждений (для более читаемых проверок)
+
+### Инструменты для UI тестов
+
+- **Compose Testing** - `createComposeRule()` для тестирования UI компонентов
+- **ActivityScenario** - для запуска Activity в тестах
+- **MainDispatcherRule** - правило для замены Main диспетчера в тестах
 
 ## Что тестировать
 
@@ -75,8 +146,12 @@ class DaysCalculatorTest {
 
 - **Бизнес-логика** в сервисах и репозиториях
 - **ViewModels** с моками зависимостей
+- **Use Cases** (доменная логика)
 - **Утилиты** и вспомогательные функции
 - **Валидация** пользовательского ввода
+- **UI State** модели (sealed классы)
+- **Модели данных** и их валидация
+- **Интерсепторы** и сериализаторы
 
 ### По необходимости
 
@@ -110,4 +185,49 @@ class DaysCalculatorTest {
 2. Убедись, что все тесты проходят
 3. Проверь, что проект собирается без ошибок
 
-**Важно:** Подробные правила тестирования, включая запрет на интеграционные тесты ViewModels и рабочий подход, см. в `.cursor/rules/testing.mdc`
+## Запуск тестов
+
+### Unit тесты
+
+```bash
+# Все unit тесты
+./gradlew test
+
+# Тесты для конкретного класса
+./gradlew test --tests "com.swparks.domain.usecase.LoginUseCaseTest"
+
+# Тесты для конкретного метода
+./gradlew test --tests "com.swparks.domain.usecase.LoginUseCaseTest.invoke_whenValidCredentials_thenSavesTokenAndCallsLogin"
+```
+
+### Инструментальные тесты
+
+```bash
+# Все instrumented тесты
+./gradlew connectedAndroidTest
+
+# UI тесты
+./gradlew connectedAndroidTest --tests "com.swparks.ui.screens.auth.LoginScreenTest"
+```
+
+## Структура тестовых файлов
+
+### Расположение
+
+- `app/src/test/java/com/swparks/` - unit тесты
+- `app/src/androidTest/java/com/swparks/` - инструментальные тесты
+
+### Организация по пакетам
+
+- `domain/usecase/` - тесты для use cases
+- `ui/viewmodel/` - тесты для view models
+- `ui/state/` - тесты для UI state моделей
+- `data/repository/` - тесты для репозиториев
+- `data/interceptor/` - тесты для интерсепторов
+- `data/serializer/` - тесты для сериализаторов
+- `model/` - тесты для моделей данных
+- `utils/` - тесты для утилит
+
+## Примечание
+
+Дополнительные правила тестирования UI компонентов и интеграционных тестов описаны в документации архитектуры (`architecture.mdc`).
