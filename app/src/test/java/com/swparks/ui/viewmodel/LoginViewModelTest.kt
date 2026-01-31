@@ -5,6 +5,7 @@ import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
 import com.swparks.model.LoginCredentials
 import com.swparks.model.LoginSuccess
+import com.swparks.ui.state.LoginEvent
 import com.swparks.ui.state.LoginUiState
 import com.swparks.util.Logger
 import com.swparks.util.NoOpLogger
@@ -13,6 +14,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -146,8 +148,13 @@ class LoginViewModelTest {
 
         // Then
         val state = loginViewModel.uiState.value
-        assertTrue(state is LoginUiState.LoginSuccess)
+        assertTrue(state is LoginUiState.Idle)
         assertNull(loginViewModel.loginErrorState.value)
+
+        val event = loginViewModel.loginEvents.first()
+        assertTrue(event is LoginEvent.Success)
+        assertTrue((event as LoginEvent.Success).userId == testLoginSuccess.userId)
+
         coVerify(exactly = 1) { loginUseCase(credentials) }
     }
 
@@ -202,7 +209,12 @@ class LoginViewModelTest {
 
         // Then
         val state = loginViewModel.uiState.value
-        assertTrue(state is LoginUiState.ResetSuccess)
+        assertTrue(state is LoginUiState.Idle)
+
+        val event = loginViewModel.loginEvents.first()
+        assertTrue(event is LoginEvent.ResetSuccess)
+        assertTrue((event as LoginEvent.ResetSuccess).email == "user@test.com")
+
         coVerify(exactly = 1) { resetPasswordUseCase("user@test.com") }
     }
 

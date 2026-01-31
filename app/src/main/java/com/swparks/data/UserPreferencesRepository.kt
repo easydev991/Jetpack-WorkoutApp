@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.longPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
@@ -56,6 +57,7 @@ class UserPreferencesRepository(
             }
         }
         .map { it[current_user_id] }
+        .distinctUntilChanged()
 
     suspend fun savePreference(isAuthorized: Boolean) {
         dataStore.edit {

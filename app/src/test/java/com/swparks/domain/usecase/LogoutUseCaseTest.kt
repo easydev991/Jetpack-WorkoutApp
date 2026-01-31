@@ -47,7 +47,6 @@ class LogoutUseCaseTest {
         coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(null) }
         coVerify(exactly = 1) { swRepository.clearUserData() }
         coVerify(exactly = 1) { swRepository.forceLogout() }
-        coVerify(exactly = 1) { preferencesRepository.clearCurrentUserId() }
     }
 
     @Test

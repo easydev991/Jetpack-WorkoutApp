@@ -35,13 +35,15 @@ import kotlinx.coroutines.launch
  * @param show Флаг для показа/скрытия листа
  * @param onDismissed Callback при закрытии листа
  * @param onLoginSuccess Callback при успешной авторизации с userId
+ * @param onResetSuccess Callback при успешном сбросе пароля с email (опционально)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginSheetHost(
     show: Boolean,
     onDismissed: () -> Unit,
-    onLoginSuccess: (userId: Long) -> Unit
+    onLoginSuccess: (userId: Long) -> Unit,
+    onResetSuccess: (String) -> Unit = {} // Новый параметр (опционально)
 ) {
     var allowHide by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -95,6 +97,7 @@ fun LoginSheetHost(
                         onLoginSuccess(userId)
                     }
                 },
+                onResetSuccess = onResetSuccess, // Передаем обработчик (если нужен проброс наверх)
                 modifier = Modifier.disableAllGestures() // Блокируем все жесты для всего контента sheet
             )
         }

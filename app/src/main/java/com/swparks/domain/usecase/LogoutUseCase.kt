@@ -21,10 +21,14 @@ class LogoutUseCase(
     private val swRepository: SWRepository,
     private val preferencesRepository: UserPreferencesRepository
 ) : ILogoutUseCase {
+    private companion object {
+        const val TAG = "LogoutUseCase"
+    }
+
     /**
      * Выполняет выход из учётной записи.
      *
-     * Очищает токен авторизации, сбрасывает флаг isAuthorized и userId.
+     * Очищает токен авторизации, сбрасывает флаг isAuthorized.
      * Очищает все данные пользователя из локального хранилища.
      */
     override suspend operator fun invoke() {
@@ -37,8 +41,6 @@ class LogoutUseCase(
         // Сбрасываем флаг isAuthorized
         swRepository.forceLogout()
 
-        // Очищаем userId (избыточно, так как clearUserData уже сделал это)
-        preferencesRepository.clearCurrentUserId()
-        Log.i("LogoutUseCase", "Текущий пользователь очищен")
+        Log.i(TAG, "Текущий пользователь очищен")
     }
 }

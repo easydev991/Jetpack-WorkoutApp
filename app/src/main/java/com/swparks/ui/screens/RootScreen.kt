@@ -44,7 +44,6 @@ fun RootScreen(appState: AppState) {
         (context.applicationContext as JetpackWorkoutApplication).container
     }
 
-    val isLoggingOut = remember { mutableStateOf(false) }
     // Состояние для LoginSheet
     var showLoginSheet by remember { mutableStateOf(false) }
 
@@ -134,13 +133,6 @@ fun RootScreen(appState: AppState) {
                 ProfileRootScreen(
                     appContainer = appContainer,
                     viewModel = profileViewModel,
-                    isLoggingOut = isLoggingOut.value,
-                    onLogout = {
-                        isLoggingOut.value = true
-                    },
-                    onLogoutComplete = {
-                        isLoggingOut.value = false
-                    },
                     onShowLoginSheet = { showLoginSheet = true },
                     modifier = Modifier
                         .fillMaxSize()

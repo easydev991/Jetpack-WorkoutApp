@@ -168,6 +168,10 @@ class SWRepositoryImp(
     private val dataStore: DataStore<Preferences>,
     private val userDao: UserDao
 ) : SWRepository {
+    private companion object {
+        const val TAG = "SWRepositoryImp"
+    }
+
     private val preferencesRepository: UserPreferencesRepository by lazy {
         UserPreferencesRepository(dataStore)
     }
@@ -184,7 +188,7 @@ class SWRepositoryImp(
      * Обрабатывает IOException и возвращает NetworkException с сообщением для пользователя
      */
     private fun handleIOException(e: IOException, operation: String): NetworkException {
-        Log.e("SWRepository", "Ошибка сети при $operation: ${e.message}")
+        Log.e(TAG, "Ошибка сети при $operation: ${e.message}")
         return NetworkException(
             message = "Не удалось выполнить операцию. Проверьте интернет-соединение",
             cause = e
@@ -196,20 +200,20 @@ class SWRepositoryImp(
      */
     private fun handleHttpException(e: HttpException, operation: String): Exception {
         val statusCode = e.code()
-        Log.e("SWRepository", "Ошибка сервера $statusCode при $operation")
+        Log.e(TAG, "Ошибка сервера $statusCode при $operation")
 
         return try {
             val responseBody = e.response()?.errorBody()?.string()
             if (responseBody != null) {
-                Log.e("SWRepository", "Тело ответа сервера: $responseBody")
+                Log.e(TAG, "Тело ответа сервера: $responseBody")
                 val errorResponse = json.decodeFromString<ErrorResponse>(responseBody)
                 Log.e(
-                    "SWRepository",
+                    TAG,
                     "Десериализованный ErrorResponse: message=${errorResponse.message}, errors=${errorResponse.errors}"
                 )
                 val errorMessage = errorResponse.realMessage ?: "Ошибка сервера: $statusCode"
-                Log.e("SWRepository", "realMessage: ${errorResponse.realMessage}")
-                Log.e("SWRepository", "errorMessage для ServerException: $errorMessage")
+                Log.e(TAG, "realMessage: ${errorResponse.realMessage}")
+                Log.e(TAG, "errorMessage для ServerException: $errorMessage")
                 ServerException(message = errorMessage, cause = e)
             } else {
                 val errorMessage = APIError.fromStatusCode(statusCode).errorMessage
@@ -217,7 +221,7 @@ class SWRepositoryImp(
             }
         } catch (se: SerializationException) {
             // Если не удалось десериализовать ответ сервера
-            Log.e("SWRepository", "Не удалось десериализовать ответ об ошибке: ${se.message}")
+            Log.e(TAG, "Не удалось десериализовать ответ об ошибке: ${se.message}")
             ServerException(message = "Ошибка обработки ответа сервера", cause = se)
         }
     }
@@ -284,7 +288,7 @@ class SWRepositoryImp(
     // Принудительный логаут (при ошибке 401)
     override suspend fun forceLogout() {
         savePreference(false)
-        Log.i("SWRepository", "Принудительный логаут выполнен")
+        Log.i(TAG, "Принудительный логаут выполнен")
     }
 
     // 3.2. Профиль
@@ -303,7 +307,7 @@ class SWRepositoryImp(
             // 3. Ошибка сети - берем из кэша
             val cachedUser = userDao.getUserByIdFlow(userId).first()
             if (cachedUser != null) {
-                Log.i("SWRepository", "Профиль загружен из кэша")
+                Log.i(TAG, "Профиль загружен из кэша")
                 Result.success(cachedUser.toDomain())
             } else {
                 Result.failure(handleIOException(e, "загрузке пользователя"))
@@ -393,7 +397,7 @@ class SWRepositoryImp(
                 val cachedBlacklist = userDao.getBlacklistFlow().first().map { it.toDomain() }
 
                 if (cachedUser != null) {
-                    Log.i("SWRepository", "Социальные обновления загружены из кэша")
+                    Log.i(TAG, "Социальные обновления загружены из кэша")
                     Result.success(
                         SocialUpdates(
                             user = cachedUser,
@@ -951,10 +955,10 @@ class SWRepositoryImp(
         preferencesRepository.currentUserId
             .flatMapLatest { userId ->
                 if (userId != null) {
-                    Log.d("SWRepository", "Текущий пользователь изменился: $userId")
+                    Log.d(TAG, "Текущий пользователь изменился: $userId")
                     userDao.getUserByIdFlow(userId).map { entity -> entity?.toDomain() }
                 } else {
-                    Log.d("SWRepository", "Текущий пользователь отсутствует")
+                    Log.d(TAG, "Текущий пользователь отсутствует")
                     flowOf(null)
                 }
             }
@@ -974,8 +978,8 @@ class SWRepositoryImp(
     override suspend fun clearUserData() {
         // Удаляем все данные пользователя (профиль, друзья, заявки, черный список)
         userDao.clearAll()
+        Log.i(TAG, "Все данные пользователя удалены")
         // Очищаем ID текущего пользователя
         preferencesRepository.clearCurrentUserId()
-        Log.i("SWRepository", "Все данные пользователя удалены")
     }
 }

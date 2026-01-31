@@ -8,9 +8,9 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -25,17 +25,17 @@ import com.swparks.ui.ds.UserProfileData
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.viewmodel.ProfileUiState
 import com.swparks.viewmodel.ProfileViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileRootScreen(
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel,
     appContainer: com.swparks.data.AppContainer? = null,
-    isLoggingOut: Boolean = false,
-    onLogout: () -> Unit = {},
-    onLogoutComplete: () -> Unit = {},
     onShowLoginSheet: () -> Unit = {}
 ) {
+    val scope = rememberCoroutineScope()
+
     // Получаем currentUser из ViewModel
     val currentUser by viewModel.currentUser.collectAsState()
 
@@ -114,18 +114,12 @@ fun ProfileRootScreen(
 
             LogoutButton(
                 onClick = {
-                    onLogout()
-                },
-                enabled = !isLoggingOut
-            )
-
-            // Выполняем logout при изменении флага
-            LaunchedEffect(isLoggingOut) {
-                if (isLoggingOut) {
-                    appContainer?.logoutUseCase?.invoke()
-                    onLogoutComplete()
+                    scope.launch {
+                        // Вызываем usecase напрямую
+                        appContainer?.logoutUseCase?.invoke()
+                    }
                 }
-            }
+            )
         }
     }
 }

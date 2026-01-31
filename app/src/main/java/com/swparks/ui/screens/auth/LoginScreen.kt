@@ -40,6 +40,7 @@ import com.swparks.ui.ds.SWButtonMode
 import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.ds.SWTextField
 import com.swparks.ui.ds.TextFieldConfig
+import com.swparks.ui.state.LoginEvent
 import com.swparks.ui.state.LoginUiState
 import com.swparks.ui.viewmodel.LoginViewModel
 
@@ -55,6 +56,7 @@ import com.swparks.ui.viewmodel.LoginViewModel
  * @param viewModel ViewModel для управления состоянием экрана
  * @param onDismiss Callback для закрытия модального окна
  * @param onLoginSuccess Callback для уведомления об успешной авторизации с userId
+ * @param onResetSuccess Callback для уведомления об успешном сбросе пароля с email
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,7 +64,8 @@ fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel,
     onDismiss: () -> Unit = {},
-    onLoginSuccess: (userId: Long) -> Unit = {}
+    onLoginSuccess: (userId: Long) -> Unit = {},
+    onResetSuccess: (String) -> Unit = {} // Новый параметр
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val loginError by viewModel.loginErrorState.collectAsState()
@@ -99,17 +102,26 @@ fun LoginScreen(
         }
     }
 
-    // Обработка состояний UI
-    HandleLoginUiState(
-        uiState = uiState,
-        onLoginSuccess = { userId ->
-            // Успешная авторизация - уведомляем для закрытия LoginScreen и загрузки профиля
-            onLoginSuccess(userId)
-        },
-        onResetSuccess = { screenState.setShowResetSuccessAlert(true) },
-        onResetError = { viewModel.clearErrors() },
-        onShowNoInternetAlert = { screenState.setShowNoInternetAlert(true) }
-    )
+    // НОВАЯ ОБРАБОТКА СОБЫТИЙ (вместо uiState.Success)
+    LaunchedEffect(Unit) {
+        viewModel.loginEvents.collect { event ->
+            when (event) {
+                is LoginEvent.Success -> {
+                    onLoginSuccess(event.userId)
+                }
+
+                is LoginEvent.ResetSuccess -> {
+                    // Показываем локальный алерт
+                    screenState.setShowResetSuccessAlert(true)
+                    // И уведомляем родителя (если нужно)
+                    onResetSuccess(event.email)
+                }
+            }
+        }
+    }
+
+    // Обработка ОШИБОК (остается на uiState)
+    HandleLoginErrorsOnly(uiState, screenState, viewModel)
 
     // Алерты
     LoginScreenAlerts(
@@ -399,53 +411,25 @@ private fun ResetPasswordButton(
     )
 }
 
-/** Обработка состояний UI. */
+/** Обработка ошибок (только для LoginError и ResetError). */
 @Composable
-private fun HandleLoginUiState(
+private fun HandleLoginErrorsOnly(
     uiState: LoginUiState,
-    onLoginSuccess: (userId: Long) -> Unit = {},
-    onResetSuccess: () -> Unit = {},
-    onResetError: () -> Unit = {},
-    onShowNoInternetAlert: () -> Unit = {}
+    screenState: LoginScreenState,
+    viewModel: LoginViewModel
 ) {
     LaunchedEffect(uiState) {
         when (uiState) {
-            is LoginUiState.Idle -> {
-                // Начальное состояние - ничего не делаем
-            }
-
-            is LoginUiState.Loading -> {
-                // Состояние загрузки - показываем оверлей
-            }
-
-            is LoginUiState.LoginSuccess -> {
-                // Успешная авторизация - уведомляем для закрытия LoginScreen и загрузки профиля
-                onLoginSuccess(uiState.userId)
-            }
-
             is LoginUiState.LoginError -> {
-                // Проверяем, является ли это ошибкой сети
-                if (uiState.exception is NetworkException) {
-                    onShowNoInternetAlert()
-                }
-                // Ошибка авторизации - отображается под полем пароля через loginError
-            }
-
-            is LoginUiState.ResetSuccess -> {
-                // Успешное восстановление пароля
-                onResetSuccess()
+                if (uiState.exception is NetworkException) screenState.setShowNoInternetAlert(true)
             }
 
             is LoginUiState.ResetError -> {
-                // Проверяем, является ли это ошибкой сети
-                if (uiState.exception is NetworkException) {
-                    onShowNoInternetAlert()
-                }
-                // Ошибка восстановления - отображается под полем логина через resetError
-                // НЕ очищаем ошибку - она должна отобразиться пользователю
-                // Ошибка очищается при следующем вводе данных (onLoginChange)
-                onResetError()
+                if (uiState.exception is NetworkException) screenState.setShowNoInternetAlert(true)
+                viewModel.clearErrors()
             }
+
+            else -> {} // Success и Loading здесь игнорируем
         }
     }
 }

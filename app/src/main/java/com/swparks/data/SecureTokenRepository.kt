@@ -31,7 +31,7 @@ class SecureTokenRepository(
 ) {
     private companion object {
         val encrypted_token = stringPreferencesKey("encrypted_token")
-        private const val tag = "SecureTokenRepository"
+        const val TAG = "SecureTokenRepository"
     }
 
     /**
@@ -43,7 +43,7 @@ class SecureTokenRepository(
         .catch {
             if (it is IOException) {
                 Log.e(
-                    tag,
+                    TAG,
                     "Ошибка при загрузке токена",
                     it
                 )
@@ -72,9 +72,11 @@ class SecureTokenRepository(
         dataStore.edit { preferences ->
             if (encryptedToken.isEmpty()) {
                 preferences.remove(encrypted_token)
+                Log.i(TAG, "Токен авторизации удален")
             } else {
                 val encryptedTokenBase64 = Base64.encodeToString(encryptedToken, Base64.NO_WRAP)
                 preferences[encrypted_token] = encryptedTokenBase64
+                Log.i(TAG, "Токен авторизации сохранен")
             }
         }
     }
@@ -98,7 +100,7 @@ class SecureTokenRepository(
                 null
             }
         } catch (e: IOException) {
-            Log.e(tag, "Ошибка при чтении токена синхронно", e)
+            Log.e(TAG, "Ошибка при чтении токена синхронно", e)
             null
         }
     }
@@ -114,9 +116,9 @@ class SecureTokenRepository(
                 dataStore.edit { preferences ->
                     preferences.remove(encrypted_token)
                 }
-                Log.i(tag, "Токен авторизации успешно очищен")
+                Log.i(TAG, "Токен авторизации успешно очищен")
             } catch (e: IOException) {
-                Log.e(tag, "Ошибка при очистке токена", e)
+                Log.e(TAG, "Ошибка при очистке токена", e)
             }
         }
     }

@@ -10,11 +10,14 @@ import com.swparks.JetpackWorkoutApplication
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
 import com.swparks.model.LoginCredentials
+import com.swparks.ui.state.LoginEvent
 import com.swparks.ui.state.LoginUiState
 import com.swparks.util.Logger
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -45,6 +48,10 @@ class LoginViewModel(
 
     private val _resetError = MutableStateFlow<String?>(null)
     val resetErrorState: StateFlow<String?> = _resetError.asStateFlow()
+
+    // Добавляем канал для одноразовых событий
+    private val _loginEvents = Channel<LoginEvent>(Channel.BUFFERED)
+    val loginEvents = _loginEvents.receiveAsFlow()
 
     private val _login = mutableStateOf("")
     private val _password = mutableStateOf("")
@@ -81,7 +88,7 @@ class LoginViewModel(
      * Выполняет вход в систему.
      *
      * Если учетные данные валидны, вызывает loginUseCase.
-     * При успешном входе обновляет состояние на LoginSuccess.
+     * При успешном входе отправляет событие LoginEvent.Success через канал.
      * При ошибке авторизации сохраняет ошибку в loginError для отображения под полем пароля.
      *
      * ВАЖНО: Этот метод выполняет ТОЛЬКО авторизацию и сохраняет токен.
@@ -93,7 +100,10 @@ class LoginViewModel(
 
             loginUseCase(credentials)
                 .onSuccess { result ->
-                    _uiState.value = LoginUiState.LoginSuccess(userId = result.userId)
+                    // ОТПРАВЛЯЕМ СОБЫТИЕ и сбрасываем UI в Idle
+                    _loginEvents.send(LoginEvent.Success(userId = result.userId))
+
+                    _uiState.value = LoginUiState.Idle
                     _loginError.value = null
                 }
                 .onFailure { exception ->
@@ -109,7 +119,7 @@ class LoginViewModel(
      *
      * Если логин пустой, не выполняет запрос (UI покажет алерт).
      * Если логин указан, вызывает resetPasswordUseCase.
-     * При успешном восстановлении обновляет состояние на ResetSuccess.
+     * При успешном восстановлении отправляет событие LoginEvent.ResetSuccess через канал.
      * При ошибке восстановления сохраняет ошибку в resetError для отображения под полем логина.
      */
     fun resetPassword() {
@@ -122,7 +132,10 @@ class LoginViewModel(
 
             resetPasswordUseCase(credentials.login)
                 .onSuccess {
-                    _uiState.value = LoginUiState.ResetSuccess
+                    // ОТПРАВЛЯЕМ СОБЫТИЕ и сбрасываем UI в Idle
+                    _loginEvents.send(LoginEvent.ResetSuccess(email = credentials.login))
+
+                    _uiState.value = LoginUiState.Idle
                     _resetError.value = null
                 }
                 .onFailure { exception ->
