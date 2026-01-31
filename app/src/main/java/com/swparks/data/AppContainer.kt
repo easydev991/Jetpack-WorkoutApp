@@ -183,8 +183,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
     override val logoutUseCase: ILogoutUseCase by lazy {
         LogoutUseCase(
             secureTokenRepository,
-            swRepository,
-            preferencesRepository
+            swRepository
         )
     }
 

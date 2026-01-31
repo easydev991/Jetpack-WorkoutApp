@@ -2,7 +2,6 @@ package com.swparks.domain.usecase
 
 import android.util.Log
 import com.swparks.data.SecureTokenRepository
-import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.repository.SWRepository
 
 /**
@@ -13,13 +12,11 @@ import com.swparks.data.repository.SWRepository
  * Очищает все данные пользователя из локального хранилища (через SWRepository.clearUserData()).
  *
  * @param secureTokenRepository Репозиторий для безопасного хранения токена
- * @param preferencesRepository Репозиторий для хранения настроек и userId
  * @param swRepository Репозиторий для работы с API
  */
 class LogoutUseCase(
     private val secureTokenRepository: SecureTokenRepository,
-    private val swRepository: SWRepository,
-    private val preferencesRepository: UserPreferencesRepository
+    private val swRepository: SWRepository
 ) : ILogoutUseCase {
     private companion object {
         const val TAG = "LogoutUseCase"
