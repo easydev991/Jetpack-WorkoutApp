@@ -12,7 +12,6 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
-import com.swparks.model.SocialUpdates
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.LoginViewModel
 import com.swparks.util.NoOpLogger
@@ -44,7 +43,7 @@ class LoginScreenTest {
      */
     private fun setContent(
         onDismiss: () -> Unit = {},
-        onLoginSuccess: (Result<SocialUpdates>) -> Unit = {}
+        onLoginSuccess: (userId: Long) -> Unit = {}
     ) {
         // Для инструментальных тестов создаем LoginViewModel с NoOpLogger
         // и используем фабричный метод, но с тестовыми зависимостями
@@ -56,9 +55,7 @@ class LoginScreenTest {
         val viewModel = LoginViewModel(
             logger = NoOpLogger(),
             loginUseCase = container.loginUseCase,
-            resetPasswordUseCase = container.resetPasswordUseCase,
-            secureTokenRepository = container.secureTokenRepository,
-            swRepository = container.swRepository
+            resetPasswordUseCase = container.resetPasswordUseCase
         )
 
         composeTestRule.setContent {

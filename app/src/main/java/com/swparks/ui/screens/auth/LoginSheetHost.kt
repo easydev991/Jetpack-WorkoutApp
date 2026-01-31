@@ -1,6 +1,5 @@
 package com.swparks.ui.screens.auth
 
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
@@ -15,11 +14,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.swparks.ui.ds.disableAllGestures
 import com.swparks.ui.viewmodel.LoginViewModel
 import kotlinx.coroutines.launch
-import kotlin.math.abs
 
 /**
  * Хост для LoginScreen в виде полноэкранного модального листа.
@@ -99,26 +97,6 @@ fun LoginSheetHost(
                 },
                 modifier = Modifier.disableAllGestures() // Блокируем все жесты для всего контента sheet
             )
-        }
-    }
-}
-
-/**
- * Модификатор для блокировки всех вертикальных жестов (свайп вниз/вверх) и горизонтальных жестов.
- *
- * Перехватывает все жесты и блокирует их для предотвращения случайных действий.
- * Используется для предотвращения случайного закрытия ModalBottomSheet жестами.
- *
- * @param threshold Минимальное расстояние свайпа для активации блокировки
- */
-fun Modifier.disableAllGestures(
-    threshold: Float = 0.5f
-): Modifier = pointerInput(Unit) {
-    detectDragGestures { change, dragAmount ->
-        // Блокируем все жесты (как вертикальные, так и горизонтальные)
-        // Порог чувствительности для игнорирования случайных касаний
-        if (abs(dragAmount.x) > threshold || abs(dragAmount.y) > threshold) {
-            change.consume()
         }
     }
 }
