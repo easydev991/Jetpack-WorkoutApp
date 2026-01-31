@@ -13,16 +13,22 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
@@ -52,6 +58,9 @@ fun ProfileRootScreen(
     onShowLoginSheet: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
+
+    // Состояние для показа/скрытия AlertDialog логаута
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     // Получаем currentUser из ViewModel
     val currentUser by viewModel.currentUser.collectAsState()
@@ -191,8 +200,38 @@ fun ProfileRootScreen(
             // Кнопка "Выйти"
             LogoutButton(
                 onClick = {
-                    scope.launch {
-                        appContainer?.logoutUseCase?.invoke()
+                    showLogoutDialog = true
+                }
+            )
+        }
+
+        // AlertDialog для подтверждения логаута
+        if (showLogoutDialog) {
+            AlertDialog(
+                onDismissRequest = { showLogoutDialog = false },
+                title = {
+                    Text(text = stringResource(id = R.string.logout_confirmation_title))
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                appContainer?.logoutUseCase?.invoke()
+                            }
+                            showLogoutDialog = false
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text(text = stringResource(id = R.string.logout))
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showLogoutDialog = false }
+                    ) {
+                        Text(text = stringResource(id = android.R.string.cancel))
                     }
                 }
             )

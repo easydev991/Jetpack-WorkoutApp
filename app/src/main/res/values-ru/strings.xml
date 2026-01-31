@@ -170,6 +170,8 @@
     <string name="close">Закрыть</string>
     <string name="logout">Выйти</string>
 
+    <string name="logout_confirmation_title">Выйти из учетной записи?</string>
+
     <plurals name="ageInYears">
         <item quantity="one">%1$d год</item>
         <item quantity="few">%1$d года</item>

@@ -170,6 +170,8 @@
     <string name="close">Close</string>
     <string name="logout">Logout</string>
 
+    <string name="logout_confirmation_title">Log out of your profile?</string>
+
     <plurals name="ageInYears">
         <item quantity="one">%1$d year old</item>
         <item quantity="other">%1$d years old</item>
