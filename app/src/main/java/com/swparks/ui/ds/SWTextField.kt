@@ -12,6 +12,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -33,6 +35,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * @param enabled Доступность текстфилда для ввода текста
  * @param supportingText Текст-подсказка внизу
  * @param onTextChange Возвращает текст при вводе
+ * @param focusRequester Объект для управления фокусом текстового поля
  */
 data class TextFieldConfig(
     val modifier: Modifier = Modifier,
@@ -43,7 +46,8 @@ data class TextFieldConfig(
     val isError: Boolean = false,
     val enabled: Boolean = true,
     val supportingText: String = "",
-    val onTextChange: (String) -> Unit
+    val onTextChange: (String) -> Unit,
+    val focusRequester: FocusRequester? = null
 )
 
 /**
@@ -54,7 +58,15 @@ data class TextFieldConfig(
 @Composable
 fun SWTextField(config: TextFieldConfig) {
     OutlinedTextField(
-        modifier = config.modifier.fillMaxWidth(),
+        modifier = config.modifier
+            .fillMaxWidth()
+            .then(
+                if (config.focusRequester != null) {
+                    Modifier.focusRequester(config.focusRequester)
+                } else {
+                    Modifier
+                }
+            ),
         value = config.text,
         onValueChange = config.onTextChange,
         singleLine = config.singleLine,

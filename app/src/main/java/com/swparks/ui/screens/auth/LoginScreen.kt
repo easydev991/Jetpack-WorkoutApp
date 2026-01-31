@@ -252,7 +252,8 @@ private fun LoginFieldsColumn(
             onValueChange = if (!isLoading) viewModel::onLoginChange else { _ -> },
             isError = resetError != null,
             supportingText = resetError ?: "",
-            enabled = !isLoading
+            enabled = !isLoading,
+            focusRequester = focusRequester
         )
 
         PasswordField(
@@ -319,7 +320,8 @@ private fun LoginField(
     onValueChange: (String) -> Unit,
     isError: Boolean,
     supportingText: String,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    focusRequester: FocusRequester? = null
 ) {
     SWTextField(
         config =
@@ -332,7 +334,8 @@ private fun LoginField(
                 isError = isError,
                 supportingText = supportingText,
                 enabled = enabled,
-                onTextChange = onValueChange
+                onTextChange = onValueChange,
+                focusRequester = focusRequester
             )
     )
 }
