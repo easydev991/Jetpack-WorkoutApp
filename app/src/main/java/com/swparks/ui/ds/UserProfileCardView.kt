@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -64,7 +65,8 @@ fun UserProfileCardView(data: UserProfileData) {
         SWAsyncImage(
             config = AsyncImageConfig(
                 imageStringURL = data.imageStringURL,
-                size = 150.dp
+                size = 150.dp,
+                contentScale = ContentScale.Crop
             )
         )
         Column(
