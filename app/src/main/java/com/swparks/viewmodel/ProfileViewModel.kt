@@ -37,6 +37,9 @@ class ProfileViewModel(
     private val swRepository: SWRepository,
 ) : ViewModel() {
 
+    // Флаг для предотвращения дубликатной загрузки профиля
+    private var isExplicitlyLoadingProfile = false
+
     /**
      * Загружает профиль пользователя с сервера по userId.
      * Используется после успешной авторизации для загрузки свежих данных.
@@ -44,6 +47,9 @@ class ProfileViewModel(
      * @param userId ID пользователя для загрузки профиля
      */
     fun loadUserProfileFromServer(userId: Long) {
+        // Устанавливаем флаг, чтобы init не пытался загружать параллельно
+        isExplicitlyLoadingProfile = true
+
         viewModelScope.launch {
             try {
                 // Загружаем пользователя с сервера
@@ -53,14 +59,19 @@ class ProfileViewModel(
                         // Теперь загружаем страну и город
                         loadProfile(user)
                         Log.i("ProfileViewModel", "Профиль загружен с сервера: ${user.id}")
+
+                        // Сбрасываем флаг после успешной загрузки
+                        isExplicitlyLoadingProfile = false
                     }
                     .onFailure { error ->
                         _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${error.message}") }
                         Log.e("ProfileViewModel", "Ошибка загрузки профиля с сервера: ${error.message}")
+                        isExplicitlyLoadingProfile = false
                     }
             } catch (e: Exception) {
                 _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${e.message}") }
                 Log.e("ProfileViewModel", "Ошибка загрузки профиля: ${e.message}")
+                isExplicitlyLoadingProfile = false
             }
         }
     }
@@ -81,6 +92,11 @@ class ProfileViewModel(
         // Автоматически загружаем данные при изменении currentUser
         viewModelScope.launch {
             currentUser.collect { user ->
+                // Если профиль загружается явно через loadUserProfileFromServer, не загружаем повторно
+                if (isExplicitlyLoadingProfile) {
+                    Log.d("ProfileViewModel", "Пропускаем загрузку профиля из-за явной загрузки")
+                    return@collect
+                }
                 // Передаем user как параметр, чтобы избежать race condition
                 loadProfile(user)
             }
@@ -119,14 +135,4 @@ class ProfileViewModel(
         }
     }
 
-    /**
-     * Принудительная перезагрузка профиля текущего пользователя.
-     * Загружает профиль пользователя с сервера.
-     */
-    fun reloadProfile() {
-        val currentUser = currentUser.value
-        if (currentUser != null) {
-            loadUserProfileFromServer(currentUser.id)
-        }
-    }
 }
