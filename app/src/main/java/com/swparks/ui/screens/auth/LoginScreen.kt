@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
+import com.swparks.domain.exception.NetworkException
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.SWButton
@@ -106,7 +107,8 @@ fun LoginScreen(
             onLoginSuccess(userId)
         },
         onResetSuccess = { screenState.setShowResetSuccessAlert(true) },
-        onResetError = { viewModel.clearErrors() }
+        onResetError = { viewModel.clearErrors() },
+        onShowNoInternetAlert = { screenState.setShowNoInternetAlert(true) }
     )
 
     // Алерты
@@ -400,7 +402,8 @@ private fun HandleLoginUiState(
     uiState: LoginUiState,
     onLoginSuccess: (userId: Long) -> Unit = {},
     onResetSuccess: () -> Unit = {},
-    onResetError: () -> Unit = {}
+    onResetError: () -> Unit = {},
+    onShowNoInternetAlert: () -> Unit = {}
 ) {
     LaunchedEffect(uiState) {
         when (uiState) {
@@ -418,6 +421,10 @@ private fun HandleLoginUiState(
             }
 
             is LoginUiState.LoginError -> {
+                // Проверяем, является ли это ошибкой сети
+                if (uiState.exception is NetworkException) {
+                    onShowNoInternetAlert()
+                }
                 // Ошибка авторизации - отображается под полем пароля через loginError
             }
 
@@ -427,6 +434,10 @@ private fun HandleLoginUiState(
             }
 
             is LoginUiState.ResetError -> {
+                // Проверяем, является ли это ошибкой сети
+                if (uiState.exception is NetworkException) {
+                    onShowNoInternetAlert()
+                }
                 // Ошибка восстановления - отображается под полем логина через resetError
                 // НЕ очищаем ошибку - она должна отобразиться пользователю
                 // Ошибка очищается при следующем вводе данных (onLoginChange)
@@ -467,8 +478,8 @@ private fun LoginScreenAlerts(
 private fun NoInternetAlert(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = stringResource(id = R.string.alert_forgot_password_title)) },
-        text = { Text(text = stringResource(id = R.string.alert_no_connection)) },
+        title = { Text(text = stringResource(id = R.string.alert_no_connection_title)) },
+        text = { Text(text = stringResource(id = R.string.alert_no_connection_message)) },
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text(text = stringResource(id = android.R.string.ok))

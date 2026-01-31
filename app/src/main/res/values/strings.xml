@@ -228,7 +228,8 @@
     <string name="login_empty">Login cannot be empty</string>
 
     <!-- Login screen alerts -->
-    <string name="alert_no_connection">No internet connection. Please check your network settings and try again.</string>
+    <string name="alert_no_connection_title">No internet connection</string>
+    <string name="alert_no_connection_message">Please check your network settings and try again.</string>
     <string name="alert_forgot_password_title">Forgot password</string>
     <string name="alert_forgot_password_message">To recover your password, enter your login or email</string>
     <string name="alert_reset_password_success_title">Done</string>

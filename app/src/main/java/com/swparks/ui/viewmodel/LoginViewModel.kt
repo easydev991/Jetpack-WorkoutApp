@@ -98,7 +98,7 @@ class LoginViewModel(
                 }
                 .onFailure { exception ->
                     val errorMessage = exception.message ?: "Неизвестная ошибка авторизации"
-                    _uiState.value = LoginUiState.LoginError(errorMessage)
+                    _uiState.value = LoginUiState.LoginError(errorMessage, exception)
                     _loginError.value = errorMessage
                 }
         }
@@ -128,7 +128,7 @@ class LoginViewModel(
                 .onFailure { exception ->
                     val errorMessage =
                         exception.message ?: "Неизвестная ошибка восстановления пароля"
-                    _uiState.value = LoginUiState.ResetError(errorMessage)
+                    _uiState.value = LoginUiState.ResetError(errorMessage, exception)
                     _resetError.value = errorMessage
                 }
         }

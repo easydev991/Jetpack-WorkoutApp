@@ -36,11 +36,23 @@ sealed class LoginUiState {
 
     /**
      * Ошибка авторизации.
+     *
+     * @param message Сообщение об ошибке для отображения пользователю
+     * @param exception Исключение для определения типа ошибки (NetworkException и т.д.)
      */
-    data class LoginError(val message: String) : LoginUiState()
+    data class LoginError(
+        val message: String,
+        val exception: Throwable? = null
+    ) : LoginUiState()
 
     /**
      * Ошибка восстановления пароля.
+     *
+     * @param message Сообщение об ошибке для отображения пользователю
+     * @param exception Исключение для определения типа ошибки (NetworkException и т.д.)
      */
-    data class ResetError(val message: String) : LoginUiState()
+    data class ResetError(
+        val message: String,
+        val exception: Throwable? = null
+    ) : LoginUiState()
 }

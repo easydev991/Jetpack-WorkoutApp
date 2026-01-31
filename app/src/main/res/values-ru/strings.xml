@@ -242,7 +242,8 @@
     <string name="login_empty">Логин не может быть пустым</string>
 
     <!-- Login screen alerts -->
-    <string name="alert_no_connection">Нет подключения к интернету. Проверьте настройки сети и попробуйте снова.</string>
+    <string name="alert_no_connection_title">Нет подключения к интернету</string>
+    <string name="alert_no_connection_message">Проверьте настройки сети и попробуйте снова</string>
     <string name="alert_forgot_password_title">Забыли пароль</string>
     <string name="alert_forgot_password_message">Для восстановления пароля введите логин или email</string>
     <string name="alert_reset_password_success_title">Готово</string>
