@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.testTag
@@ -396,19 +397,18 @@ private fun ResetPasswordButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    SWButton(
-        config =
-            ButtonConfig(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .testTag("resetPasswordButton"),
-                size = SWButtonSize.LARGE,
-                mode = SWButtonMode.TINTED,
-                text = stringResource(id = R.string.reset_password),
-                enabled = enabled,
-                onClick = onClick
-            )
-    )
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        TextButton(
+            modifier = Modifier.testTag("resetPasswordButton"),
+            onClick = onClick,
+            enabled = enabled
+        ) {
+            Text(stringResource(id = R.string.reset_password))
+        }
+    }
 }
 
 /** Обработка ошибок (только для LoginError и ResetError). */

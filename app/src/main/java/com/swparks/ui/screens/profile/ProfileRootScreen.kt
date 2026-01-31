@@ -1,25 +1,26 @@
 package com.swparks.ui.screens.profile
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
+import com.swparks.data.AppContainer
 import com.swparks.ui.ds.IncognitoProfileView
-import com.swparks.ui.ds.SWButton
-import com.swparks.ui.ds.SWButtonMode
-import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.ds.UserProfileCardView
 import com.swparks.ui.ds.UserProfileData
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
@@ -31,7 +32,7 @@ import kotlinx.coroutines.launch
 fun ProfileRootScreen(
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel,
-    appContainer: com.swparks.data.AppContainer? = null,
+    appContainer: AppContainer? = null,
     onShowLoginSheet: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
@@ -143,16 +144,17 @@ private fun LogoutButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
-    SWButton(
-        config = com.swparks.ui.ds.ButtonConfig(
-            modifier = modifier.fillMaxWidth(),
-            size = SWButtonSize.LARGE,
-            mode = SWButtonMode.TINTED,
-            text = stringResource(id = R.string.logout),
-            enabled = enabled,
-            onClick = onClick
-        )
-    )
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        TextButton(
+            onClick = onClick,
+            enabled = enabled
+        ) {
+            Text(stringResource(id = R.string.logout))
+        }
+    }
 }
 
 @Preview(showBackground = true, locale = "ru")
