@@ -282,7 +282,7 @@ fun RootScreen(appState: AppState) {
             onDismissed = { showLoginSheet = false },
             onLoginSuccess = { userId ->
                 // Успешная авторизация - загружаем профиль с сервера
-                profileViewModel.loadUserProfileFromServer(userId)
+                profileViewModel.loadProfileFromServer(userId)
                 // Закрываем LoginSheet
                 showLoginSheet = false
                 // Навигируем на вкладку профиля, чтобы гарантированно обновить UI

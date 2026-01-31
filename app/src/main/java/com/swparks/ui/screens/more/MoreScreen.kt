@@ -45,7 +45,7 @@ fun MoreScreen(
 ) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
-    
+
     ScreenContent(
         modifier = modifier,
         context = context,

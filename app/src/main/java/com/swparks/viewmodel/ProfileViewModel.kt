@@ -15,8 +15,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 
 /** UI State для экрана профиля */
 sealed class ProfileUiState {
@@ -39,48 +37,8 @@ class ProfileViewModel(
     private val swRepository: SWRepository,
 ) : ViewModel() {
 
-    // Mutex для предотвращения параллельных загрузок профиля
-    private val loadProfileMutex = Mutex()
-
-    // Флаг для предотвращения дубликатной загрузки профиля
-    private var isExplicitlyLoadingProfile = false
-
-    /**
-     * Загружает профиль пользователя с сервера по userId.
-     * Используется после успешной авторизации для загрузки свежих данных.
-     *
-     * @param userId ID пользователя для загрузки профиля
-     */
-    fun loadUserProfileFromServer(userId: Long) {
-        // Устанавливаем флаг ДО запуска корутины, чтобы init не успел сработать
-        isExplicitlyLoadingProfile = true
-
-        viewModelScope.launch {
-            loadProfileMutex.withLock {
-                try {
-                    // Загружаем пользователя с сервера
-                    swRepository.getUser(userId)
-                        .onSuccess { user ->
-                            // Пользователь уже сохранен в кэше через SWRepository.getUser()
-                            // Загружаем страну и город (без блокировки Mutex, так как мы уже внутри withLock)
-                            loadProfileInternal(user)
-                            Log.i("ProfileViewModel", "Профиль загружен с сервера: ${user.id}")
-
-                            // Сбрасываем флаг после успешной загрузки
-                            isExplicitlyLoadingProfile = false
-                        }
-                        .onFailure { error ->
-                            _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${error.message}") }
-                            Log.e("ProfileViewModel", "Ошибка загрузки профиля с сервера: ${error.message}")
-                            isExplicitlyLoadingProfile = false
-                        }
-                } catch (e: Exception) {
-                    _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${e.message}") }
-                    Log.e("ProfileViewModel", "Ошибка загрузки профиля: ${e.message}")
-                    isExplicitlyLoadingProfile = false
-                }
-            }
-        }
+    private companion object {
+        private const val TAG = "ProfileViewModel"
     }
 
     // Подписываемся на текущего пользователя из кэша
@@ -96,82 +54,76 @@ class ProfileViewModel(
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
     init {
-        // Автоматически загружаем данные при изменении currentUser
         viewModelScope.launch {
-            currentUser.collect { user ->
-                // Если профиль загружается явно через loadUserProfileFromServer, не загружаем повторно
-                if (isExplicitlyLoadingProfile) {
-                    Log.d("ProfileViewModel", "Пропускаем загрузку профиля из-за явной загрузки")
-                    return@collect
+            currentUser
+                .collect { user ->
+                    loadProfileAddress(user)
                 }
-                // Передаем user как параметр, чтобы избежать race condition
-                loadProfile(user)
+        }
+    }
+
+    /**
+     * Загружает профиль пользователя с сервера по userId.
+     * Используется после успешной авторизации для загрузки свежих данных.
+     * Сначала загружает пользователя с сервера, затем страну и город.
+     *
+     * @param userId ID пользователя для загрузки профиля
+     */
+    fun loadProfileFromServer(userId: Long) {
+        viewModelScope.launch {
+            try {
+                // Загружаем пользователя с сервера
+                swRepository.getUser(userId)
+                    .onSuccess { user ->
+                        // Пользователь сохранен в кэше через SWRepository.getUser()
+                        // Теперь загружаем страну и город
+                        loadProfileAddress(user)
+                        Log.i(TAG, "Профиль загружен с сервера: ${user.id}")
+                    }
+                    .onFailure { error ->
+                        _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${error.message}") }
+                        Log.e(TAG, "Ошибка загрузки профиля с сервера: ${error.message}")
+                    }
+            } catch (e: Exception) {
+                _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${e.message}") }
+                Log.e(TAG, "Ошибка загрузки профиля: ${e.message}")
             }
         }
     }
 
     /**
-     * Загружает данные профиля с информацией о стране и городе
+     * Загружает данные профиля с информацией о стране и городе.
+     * Используется когда пользователь уже загружен (например, при открытии экрана).
+     *
      * @param user Пользователь для которого загружаем профиль
      */
-    fun loadProfile(user: User?) {
+    private fun loadProfileAddress(user: User?) {
         if (user == null) {
             _uiState.update { ProfileUiState.Error("Пользователь не авторизован") }
+            Log.d(TAG, "Пропускаем загрузку адреса: пользователь null")
             return
         }
 
         viewModelScope.launch {
-            loadProfileMutex.withLock {
-                try {
-                    // Получаем страну пользователя
-                    val country =
-                        user.countryID?.let { countryId ->
-                            countriesRepository.getCountryById(countryId.toString())
-                        }
+            try {
+                // Получаем страну пользователя
+                val country =
+                    user.countryID?.let { countryId ->
+                        countriesRepository.getCountryById(countryId.toString())
+                    }
 
-                    // Получаем город пользователя
-                    val city =
-                        user.cityID?.let { cityId ->
-                            countriesRepository.getCityById(cityId.toString())
-                        }
+                // Получаем город пользователя
+                val city =
+                    user.cityID?.let { cityId ->
+                        countriesRepository.getCityById(cityId.toString())
+                    }
 
-                    _uiState.update { ProfileUiState.Success(country, city) }
-                    Log.i("ProfileViewModel", "Профиль загружен: ${user.id}")
-                } catch (e: Exception) {
-                    _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${e.message}") }
-                }
+                _uiState.update { ProfileUiState.Success(country, city) }
+                Log.i(TAG, "Профиль загружен: ${user.id}")
+            } catch (e: Exception) {
+                _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${e.message}") }
+                Log.e(TAG, "Ошибка загрузки профиля: ${e.message}")
             }
         }
     }
-
-    /**
-     * Внутренний метод загрузки профиля без блокировки Mutex
-     * Должен вызываться только внутри Mutex.withLock
-     */
-    private suspend fun loadProfileInternal(user: User?) {
-        if (user == null) {
-            _uiState.update { ProfileUiState.Error("Пользователь не авторизован") }
-            return
-        }
-
-        try {
-            // Получаем страну пользователя
-            val country =
-                user.countryID?.let { countryId ->
-                    countriesRepository.getCountryById(countryId.toString())
-                }
-
-            // Получаем город пользователя
-            val city =
-                user.cityID?.let { cityId ->
-                    countriesRepository.getCityById(cityId.toString())
-                }
-
-            _uiState.update { ProfileUiState.Success(country, city) }
-            Log.i("ProfileViewModel", "Профиль загружен: ${user.id}")
-        } catch (e: Exception) {
-            _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${e.message}") }
-        }
-    }
-
 }
