@@ -8,6 +8,7 @@ import com.swparks.domain.repository.CountriesRepository
 import com.swparks.model.City
 import com.swparks.model.Country
 import com.swparks.model.User
+import com.swparks.util.setValueIfChanged
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -111,18 +112,18 @@ class ProfileViewModel(
                     user.countryID?.let { countryId ->
                         countriesRepository.getCountryById(countryId.toString())
                     }
-
                 // Получаем город пользователя
                 val city =
                     user.cityID?.let { cityId ->
                         countriesRepository.getCityById(cityId.toString())
                     }
-
-                _uiState.update { ProfileUiState.Success(country, city) }
-                Log.i(TAG, "Профиль загружен: ${user.id}")
+                _uiState.setValueIfChanged(ProfileUiState.Success(country, city)) {
+                    Log.i(TAG, "Адрес для профиля обновлен из countriesRepository")
+                }
             } catch (e: Exception) {
-                _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${e.message}") }
-                Log.e(TAG, "Ошибка загрузки профиля: ${e.message}")
+                val message = "Ошибка загрузки адреса для профиля: ${e.message}"
+                _uiState.update { ProfileUiState.Error(message) }
+                Log.e(TAG, message)
             }
         }
     }

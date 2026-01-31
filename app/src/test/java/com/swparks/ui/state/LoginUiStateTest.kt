@@ -25,18 +25,6 @@ class LoginUiStateTest {
     }
 
     @Test
-    fun isBusy_whenLoginSuccessWithNullSocialUpdates_returnsTrue() {
-        val state = LoginUiState.LoginSuccess(socialUpdates = null)
-        assertTrue("LoginSuccess с null socialUpdates должно быть занятым", state.isBusy)
-    }
-
-    @Test
-    fun isBusy_whenLoginSuccessWithSocialUpdates_returnsFalse() {
-        val state = LoginUiState.LoginSuccess(socialUpdates = createMockSocialUpdates())
-        assertFalse("LoginSuccess с socialUpdates не должно быть занятым", state.isBusy)
-    }
-
-    @Test
     fun isBusy_whenResetSuccess_returnsFalse() {
         val state = LoginUiState.ResetSuccess
         assertFalse("ResetSuccess состояние не должно быть занятым", state.isBusy)
@@ -52,14 +40,6 @@ class LoginUiStateTest {
     fun isBusy_whenResetError_returnsFalse() {
         val state = LoginUiState.ResetError(message = "Error")
         assertFalse("ResetError состояние не должно быть занятым", state.isBusy)
-    }
-
-    @Test
-    fun loginSuccess_whenCreatedWithSocialUpdates_containsCorrectData() {
-        val socialUpdates = createMockSocialUpdates()
-        val state = LoginUiState.LoginSuccess(socialUpdates)
-
-        assertEquals(socialUpdates, state.socialUpdates)
     }
 
     @Test

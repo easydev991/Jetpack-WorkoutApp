@@ -1,7 +1,5 @@
 package com.swparks.ui.state
 
-import com.swparks.model.SocialUpdates
-
 /**
  * UI State для экрана авторизации.
  */
@@ -12,7 +10,7 @@ sealed class LoginUiState {
      */
     val isBusy: Boolean
         get() =
-            this is Loading || (this is LoginSuccess && socialUpdates == null)
+            this is Loading || this is LoginSuccess
 
     /**
      * Начальное состояние.
@@ -30,7 +28,7 @@ sealed class LoginUiState {
      * @param userId ID авторизованного пользователя
      * @param socialUpdates Данные пользователя или null, если данные еще загружаются
      */
-    data class LoginSuccess(val userId: Long, val socialUpdates: SocialUpdates?) : LoginUiState()
+    data class LoginSuccess(val userId: Long) : LoginUiState()
 
     /**
      * Успешное восстановление пароля.
