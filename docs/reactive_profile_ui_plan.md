@@ -11,193 +11,67 @@
 
 ---
 
-## Этап 1: Обновление ProfileViewModel
+## Этап 1-4: Реализация реактивного профиля ✅
 
-### 1.1. Изменить метод loadProfile
+### Выполнено
 
-- [x] Убрать параметр `user: User?` из метода `loadProfile()`
-- [x] Реализовать загрузку профиля из `currentUser: StateFlow<User?>`
-- [x] Добавить проверку на null для `currentUser`
-- [x] Сохранить логику загрузки страны и города из `CountriesRepository`
+**ProfileViewModel:**
+- [x] Метод `loadProfile()` не принимает параметров, использует `currentUser: StateFlow<User?>`
+- [x] Автоматическая загрузка данных при изменении `currentUser` через `init`
+- [x] `ProfileUiState.Success` содержит только `country` и `city` (без `user`)
 
-### 1.2. Обновить подписку на currentUser
+**ProfileRootScreen:**
+- [x] Не принимает параметр `user: User?`, использует `viewModel: ProfileViewModel`
+- [x] Подписка на `currentUser` через `collectAsState()` из ViewModel
+- [x] Убрана явная загрузка профиля через `LaunchedEffect(user)`
+- [x] Все компоненты используют `currentUser` вместо параметра `user`
 
-- [x] Убедиться, что `currentUser: StateFlow<User?>` правильно настроен с `SharingStarted.WhileSubscribed(5000)`
-- [x] Добавить автоматический вызов `loadProfile()` при изменении `currentUser` в `init` блоке ViewModel
-
-### 1.3. Обновить ProfileUiState
-
-- [x] Убрать поле `user: User` из `ProfileUiState.Success` (данные берутся из `currentUser`)
-- [x] Оставить только `country: Country?` и `city: City?` в `Success` состоянии
-- [x] Убедиться, что `Loading` и `Error` состояния корректно работают без пользователя
-
-### Критерии завершения
-
-- Метод `loadProfile()` не принимает параметров
-- ProfileViewModel автоматически загружает данные при изменении `currentUser`
-- UI State содержит только дополнительные данные (страна, город), но не пользователя
-
----
-
-## Этап 2: Обновление ProfileRootScreen
-
-### 2.1. Изменить параметры ProfileRootScreen
-
-- [x] Убрать параметр `user: User?` из сигнатуры `ProfileRootScreen`
-- [x] Сделать параметр `viewModel: ProfileViewModel` обязательным (не nullable)
-- [x] Оставить `appContainer: DefaultAppContainer?` (он нужен только для logout)
-
-### 2.2. Подписка на currentUser из ViewModel
-
-- [x] Добавить сбор `currentUser` через `collectAsState()` из ViewModel
-- [x] Заменить проверку `if (user == null)` на проверку `if (currentUser == null)`
-- [x] Обновить все использования `user` на `currentUser` в UI (с локальной переменной `val user`)
-
-### 2.3. Убрать явную загрузку профиля
-
-- [x] Убрать `LaunchedEffect(user) { viewModel?.loadProfile(user) }`
-- [x] ViewModel автоматически загружает данные при изменении `currentUser`
-- [x] Оставить `LaunchedEffect(isLoggingOut)` для логики выхода
-
-### 2.4. Обновить использование uiState
-
-- [x] В `ProfileUiState.Success` использовать `currentUser` вместо `state.user`
-- [x] В состояниях `Loading` и `Error` также использовать `currentUser`
-- [x] Убрать поле `user` из всех мест в UI
-
-### 2.5. Обновить UserProfileCardView
-
-- [x] Заменить все использования параметра `user` на `currentUser`
-- [x] Сохранить логику вычисления возраста из даты рождения
-- [x] Использовать данные из `currentUser` для имени, пола, фото
-
-### Критерии завершения
-
-- [x] `ProfileRootScreen` не принимает параметр `user`
-- [x] UI автоматически обновляется при изменении `currentUser` в ViewModel
-- [x] Все Preview функции работают корректно без передачи пользователя
-
----
-
-## Этап 3: Обновление мест вызова ProfileRootScreen
-
-### 3.1. Найти все места вызова ProfileRootScreen
-
-- [x] Выполнить поиск по проекту для `ProfileRootScreen(`
-- [x] Собрать список всех мест, где вызывается экран профиля (RootScreen.kt)
-
-### 3.2. Обновить вызовы ProfileRootScreen
-
-- [x] Убрать передачу параметра `user` во всех местах
-- [x] Убедиться, что `viewModel` передается корректно
-- [x] Убедиться, что `appContainer` передается только для логики logout
-
-### 3.3. Проверить навигацию
-
-- [x] Проверить навигацию к `ProfileRootScreen` в `RootScreen.kt`
-- [x] Убрать передачу пользователя через навигацию (если была)
-- [x] Убедиться, что навигация работает корректно
-
-### Критерии завершения
-
-- [x] Все вызовы `ProfileRootScreen` не передают параметр `user`
+**Интеграция:**
+- [x] Все вызовы `ProfileRootScreen` обновлены (убрана передача `user`)
 - [x] Навигация работает корректно без передачи пользователя
-- [x] Проект собирается без ошибок
 
----
-
-## Этап 4: Обновление документации
-
-### 4.1. Обновить user_data_storage_plan.md
-
-- [x] Убрать примечание на строке 94 о том, что `currentUser` не используется в UI
-- [x] Обновить раздел "Этап 4: Использование в ViewModels"
-- [x] Добавить описание, что `currentUser` используется в UI для реактивного обновления
-- [x] Отметить реализацию как выполненную
-
-### 4.2. Обновить критерии завершения
-
-- [x] Отметить "Этап 4: ViewModels" как полностью выполненный
-- [x] Добавить описание, что ProfileRootScreen использует реактивный подход
+**Документация:**
+- [x] Обновлен `user_data_storage_plan.md` (убраны примечания о неиспользовании)
+- [x] Отмечено использование `currentUser` в UI для реактивного обновления
 
 ### Критерии завершения
 
-- Документация соответствует текущей реализации
-- Убраны все примечания о неиспользованном коде
-- План отражает текущее состояние проекта
+- [x] UI автоматически обновляется при изменении `currentUser` в ViewModel
+- [x] Все Preview функции работают корректно
+- [x] Проект собирается без ошибок
 
 ---
 
 ## Этап 5: Тестирование
 
-### 5.1. Ручное тестирование
+### Выполнено
 
-- [ ] Проверить отображение профиля при авторизации (требуется устройство/эмулятор)
-- [ ] Проверить отображение экрана "Войти" при отсутствии пользователя (требуется устройство/эмулятор)
-- [ ] Проверить автоматическое обновление UI при изменении профиля (требуется устройство/эмулятор)
-- [ ] Проверить работу кнопки выхода (требуется устройство/эмулятор)
+**Автоматические тесты:**
+- [x] Unit-тесты: 532 tests, 100% successful, 13.311s
+- [x] Инструментальные тесты: 44 tests, 100% successful, 35.146s
+- [x] **Всего: 576 tests, 100% successful**
 
-### 5.2. Тестирование Preview функций
+**Форматирование и сборка:**
+- [x] `make format` выполнен успешно
+- [x] `./gradlew build` - BUILD SUCCESSFUL
+- [x] Нет новых ошибок ktlint и detekt
 
-- [x] Проверить `ProfileRootScreenPreview` для случая неавторизованного пользователя
-- [x] Проверить `ProfileRootScreenLoggedInPreview` для случая авторизованного пользователя
-- [x] Убедиться, что Preview функции работают корректно
+**Preview функции:**
+- [x] `ProfileRootScreenPreview` (неавторизованный пользователь)
+- [x] `ProfileRootScreenLoggedInPreview` (авторизованный пользователь)
 
-### 5.3. Проверка форматирования и linting
+### Ручное тестирование (требуется устройство/эмулятор)
 
-- [x] Выполнить `make format` для форматирования кода
-- [x] Проверить отсутствие ошибок ktlint (нет новых ошибок, только существующие)
-- [x] Проверить отсутствие ошибок detekt (нет новых ошибок, только существующие)
-
-### 5.4. Сборка проекта
-
-- [x] Выполнить `./gradlew build` для проверки сборки
-- [x] Убедиться, что нет ошибок компиляции (BUILD SUCCESSFUL)
-
-### 5.5. Автоматические тесты
-
-**Unit-тесты:**
-- [x] **532 tests** выполнены успешно
-- [x] **0 failures**, 0 ignored
-- [x] **100% successful**
-- [x] Duration: 13.311s
-- [x] BUILD SUCCESSFUL
-
-**Инструментальные тесты:**
-- [x] **44 tests** выполнены успешно
-- [x] **0 failures**, 0 skipped
-- [x] **100% successful**
-- [x] Duration: 35.146s
-- [x] BUILD SUCCESSFUL
-
-**Детали по пакетам (unit-тесты):**
-- com.swparks.data: 34 tests (100%)
-- com.swparks.data.datetime: 25 tests (100%)
-- com.swparks.data.interceptor: 16 tests (100%)
-- com.swparks.data.repository: 129 tests (100%)
-- com.swparks.data.serialization: 18 tests (100%)
-- com.swparks.data.serializer: 6 tests (100%)
-- com.swparks.domain.model: 10 tests (100%)
-- com.swparks.domain.usecase: 8 tests (100%)
-- com.swparks.model: 187 tests (100%)
-- com.swparks.network: 54 tests (100%)
-- com.swparks.ui.screens.events: 7 tests (100%)
-- com.swparks.ui.viewmodel: 22 tests (100%)
-- com.swparks.utils: 6 tests (100%)
-- com.swparks.viewmodel: 10 tests (100%)
-
-**Детали по пакетам (инструментальные тесты):**
-- com.swparks.data.crypto: 7 tests (100%)
-- com.swparks.ui.screens.auth: 15 tests (100%)
-- com.swparks.ui.screens.more: 11 tests (100%)
-- com.swparks.ui.screens.themeicon: 11 tests (100%)
+- [ ] Проверить отображение профиля при авторизации
+- [ ] Проверить отображение экрана "Войти" при отсутствии пользователя
+- [ ] Проверить автоматическое обновление UI при изменении профиля
+- [ ] Проверить работу кнопки выхода
 
 ### Критерии завершения
 
-- [x] Все автоматические тесты проходят успешно (576 tests total, 100% successful)
+- [x] Все автоматические тесты проходят успешно (576 tests)
 - [x] Проект собирается без ошибок
-- [x] Код отформатирован согласно стандартам проекта
-- [ ] Ручные тесты выполняются пользователем (требуется устройство/эмулятор)
+- [ ] Ручные тесты выполняются пользователем
 
 ---
 
@@ -248,129 +122,44 @@
 
 ---
 
-## Этап 6: Исправление проблемы с обновлением UI после авторизации
+## Этап 6: Исправление проблемы с обновлением UI после авторизации ✅
 
 ### Проблема
 
 После авторизации UI не обновляется автоматически, требуется перезапуск приложения.
 
-**Причина:**
-1. `RootScreen` хранит `currentUser` в локальном состоянии `remember { mutableStateOf<User?>(null) }` (строка 43 в RootScreen.kt)
-2. `LoginSheetHost` обновляет только локальное состояние `currentUser.value = socialUpdates.user` (строка 234)
-3. `ProfileViewModel.currentUser` подписан на `swRepository.getCurrentUserFlow()`, но репозиторий не получает изменения `userId` из `UserPreferencesRepository`
-4. НЕТ реактивной связи между `UserPreferencesRepository` (источник `userId`) и `SWRepository.getCurrentUserFlow()`
+**Причины:**
+- Локальное состояние `currentUser` в `RootScreen` (нарушение реактивности)
+- Нет реактивной связи между `UserPreferencesRepository` и репозиторием
+- Два контейнера создавали разные экземпляры Room БД
 
-**Логи подтверждают проблему:**
+### Выполнено
 
-```
-12:52:56.577  UserPreferencesRepository: Сохранен текущий userId: 280084
-12:52:56.577  LoginViewModel: Авторизация успешна, userId: 280084
-12:52:57.761  LoginViewModel: Данные пользователя успешно загружены
-12:52:57.761  ProfileRootScreen: currentUser is null, showing IncognitoProfileView
-```
+**Data Layer:**
+- [x] `UserPreferencesRepository.currentUserId` возвращает `Flow<Long?>` с эмитом изменений
+- [x] `SWRepository.getCurrentUserFlow()` использует `flatMapLatest` для реактивного обновления `userId` → `User?`
+- [x] При изменении `userId` загружается из `UserDao.getUserByIdFlow()`, при `null` → `flowOf(null)`
+- [x] Логирование: "Текущий пользователь изменился: $userId" / "Текущий пользователь отсутствует"
+- [x] `UserDao` имеет `@Insert(REPLACE)` и `getUserByIdFlow(userId)`
 
-### 6.1. Проверить и обновить `UserPreferencesRepository`
+**Domain Layer:**
+- [x] `LoginUseCase` сохраняет `userId` в `UserPreferencesRepository`
+- [x] Полный объект `User` сохраняется в БД через `getSocialUpdates()`
+- [x] `LogoutUseCase` очищает `userId` через `clearCurrentUserId()`
 
-**Файл:** `app/src/main/java/com/swparks/data/UserPreferencesRepository.kt`
-
-- [x] Убедиться, что `saveCurrentUserId()` эмитит изменения в Flow (DataStore.data эмитит при edit)
-- [x] Свойство `currentUserId: Flow<Long?>` возвращает поток и используется в SWRepository
-- [x] Логирование при сохранении/очистке `userId` уже есть (на русском языке)
-
-### 6.2. Обновить `SWRepository.getCurrentUserFlow()` для реактивности
-
-**Файл:** `app/src/main/java/com/swparks/data/repository/SWRepository.kt` (SWRepositoryImp)
-
-- [x] Изменить `getCurrentUserFlow()` на подписку к `preferencesRepository.getCurrentUserId()`
-- [x] Использовать `flatMapLatest` для преобразования `userId` → `Flow<User?>`
-- [x] При изменении `userId` загружать пользователя из `UserDao.getUserByIdFlow(userId)`
-- [x] При `userId = null` возвращать `flowOf(null)`
-- [x] Логировать на русском: "Текущий пользователь изменился: $userId" / "Текущий пользователь отсутствует"
-
-**Пример реализации:**
-
-```kotlin
-fun getCurrentUserFlow(): Flow<User?> {
-    return userPreferencesRepository.getCurrentUserId()
-        .flatMapLatest { userId ->
-            if (userId != null) {
-                Log.d(TAG, "Текущий пользователь изменился: $userId")
-                userDao.getUserById(userId)
-                    .map { entity -> entity?.toDomain() }
-            } else {
-                Log.d(TAG, "Текущий пользователь отсутствует")
-                flowOf(null)
-            }
-        }
-        .flowOn(Dispatchers.IO)
-}
-```
-
-### 6.3. Убрать локальное состояние `currentUser` из `RootScreen`
-
-**Файл:** `app/src/main/java/com/swparks/ui/screens/RootScreen.kt`
-
-- [x] Убрать строку `val currentUser = remember { mutableStateOf<User?>(null) }`
-- [x] Убрать обновление `currentUser.value` в `onLogoutComplete`
-- [x] Убрать обновление `currentUser.value` в `LoginSheetHost` (onLoginSuccess только закрывает sheet)
-- [x] Передача `user` в `ProfileRootScreen` не использовалась — данные из ViewModel
-- [x] `ProfileViewModel` получает пользователя через `swRepository.getCurrentUserFlow().stateIn(...)`
-
-### 6.4. Убедиться, что `LoginUseCase` сохраняет пользователя
-
-**Файл:** `app/src/main/java/com/swparks/domain/usecase/LoginUseCase.kt`
-
-- [x] После успешной авторизации сохраняется `userId` в `UserPreferencesRepository.saveCurrentUserId(userId)`
-- [x] Полный объект `User` сохраняется в БД в `getSocialUpdates()` (вызывается из LoginViewModel после логина)
-- [x] Добавлено логирование: "Пользователь сохранён: $userId"
-
-### 6.5. Обновить `LogoutUseCase` для очистки реактивного состояния
-
-**Файл:** `app/src/main/java/com/swparks/domain/usecase/LogoutUseCase.kt`
-
-- [x] При выходе вызывается `UserPreferencesRepository.clearCurrentUserId()`
-- [x] `getCurrentUserFlow()` возвращает `null` после очистки `userId` (реактивно через Flow)
-- [x] Добавлено логирование: "Текущий пользователь очищен"
-
-### 6.6. Убедиться, что `UserDao` поддерживает сохранение пользователя
-
-**Файл:** `app/src/main/java/com/swparks/data/database/UserDao.kt`
-
-- [x] `@Insert(onConflict = OnConflictStrategy.REPLACE)` для сохранения пользователя
-- [x] `getUserByIdFlow(userId: Long)` возвращает `Flow<UserEntity?>`
-
-### 6.7. Обновить `ProfileViewModel` для работы с реактивным Flow
-
-**Файл:** `app/src/main/java/com/swparks/viewmodel/ProfileViewModel.kt`
-
-- [x] `currentUser` инициализируется как `swRepository.getCurrentUserFlow().stateIn(...)`
-- [x] Используется `SharingStarted.WhileSubscribed(5000)`
-- [x] Загрузка страны/города выполняется в `loadProfile()` при изменении currentUser (init)
-- [x] Добавлено логирование: "Профиль загружен: ${user.id}"
+**UI Layer:**
+- [x] `RootScreen`: убрано локальное состояние `currentUser`
+- [x] Используется единый контейнер: `(context.applicationContext as JetpackWorkoutApplication).container`
+- [x] `AppContainer`: добавлен метод `profileViewModelFactory()`
+- [x] `ProfileRootScreen`: параметр `appContainer` приведен к `AppContainer?`
+- [x] `ProfileViewModel.currentUser` через `swRepository.getCurrentUserFlow().stateIn(...)` с `SharingStarted.WhileSubscribed(5000)`
 
 ### Критерии завершения
 
-- [x] `UserPreferencesRepository.currentUserId` возвращает `Flow<Long?>` и эмитит изменения
-- [x] `SWRepository.getCurrentUserFlow()` реактивно обновляется при изменении `userId`
-- [x] При авторизации `userId` сохраняется в `UserPreferencesRepository`, Flow автоматически обновляется
-- [x] `ProfileViewModel.currentUser` получает пользователя через реактивный Flow
-- [x] UI профиля обновляется без перезапуска приложения после авторизации (реализовано)
-- [x] При выходе `userId` очищается, Flow эмитит `null`, UI показывает экран входа
-- [x] Локальное состояние `currentUser` в `RootScreen` убрано
+- [x] UI профиля обновляется без перезапуска приложения
+- [x] При выходе Flow эмитит `null`, UI показывает экран входа
 - [x] Изменения схемы БД не требуются
 - [x] Проект собирается без ошибок
-
-### Дополнительное исправление (два контейнера)
-
-**Проблема:** После этапа 6 UI всё равно не обновлялся — в логах были «Текущий пользователь изменился: 280084» и «Данные пользователя успешно загружены», но не было «Профиль загружен: …».
-
-**Причина:** В `RootScreen` создавался **новый** `DefaultAppContainer` через `remember { DefaultAppContainer(context.applicationContext) }`, а `LoginViewModel` использовал `application.container` из `JetpackWorkoutApplication`. Получались два контейнера и **две разные экземпляры Room БД**: пользователь сохранялся в БД контейнера приложения, а `ProfileViewModel` читал из БД контейнера RootScreen.
-
-**Исправление:**
-
-- В `RootScreen` использовать единый контейнер: `(context.applicationContext as JetpackWorkoutApplication).container`.
-- В интерфейс `AppContainer` добавлен метод `profileViewModelFactory(): ProfileViewModel`.
-- В `ProfileRootScreen` параметр `appContainer` приведён к типу `AppContainer?` (вместо `DefaultAppContainer?`).
 
 ---
 
@@ -483,24 +272,23 @@ val isBusy: Boolean
 
 ### Критерии завершения
 
-- [x] Свойство `isBusy` вынесено в `LoginUiState` как вычисляемое свойство
-- [x] Дублирующая логика удалена из View компонентов
-- [x] Написаны и проходят все тесты для `isBusy` (13 тестов: 10 для isBusy + 3 дополнительных)
-- [x] Все автоматические тесты проекта проходят успешно (586 tests)
-- [x] Код соответствует принципу DRY - логика в одном месте
+- [x] Логика `isBusy` вынесена в одно место (LoginUiState)
+- [x] Дублирующий код удален из View компонентов
+- [x] Все автоматические тесты проходят (586 tests)
+- [x] Код соответствует принципу DRY
 
 ---
 
 ## Итоговая статистика тестов
 
-### Автоматические тесты (после рефакторинга isBusy)
+### Автоматические тесты (итого)
 
-- **Unit-тесты:** 542 tests (было 532, добавлено 10 новых тестов), 100% successful, 13.621s
+- **Unit-тесты:** 542 tests, 100% successful, 13.621s
 - **Инструментальные тесты:** 44 tests, 100% successful, 60.313s
-- **Всего:** 586 tests (было 576, добавлено 10 новых тестов), 100% successful
+- **Всего:** 586 tests, 100% successful
 
 **Изменения:**
-- Добавлен 1 новый тестовый файл: `LoginUiStateTest.kt` (13 тестов)
-- Добавлен 1 новый тестовый пакет: `com.swparks.ui.state`
+- Добавлен новый тестовый файл: `LoginUiStateTest.kt` (13 тестов)
+- Добавлен новый тестовый пакет: `com.swparks.ui.state`
 - Все тесты успешно проходят
 - Рефакторинг улучшил качество кода (убрано дублирование)

@@ -75,9 +75,9 @@
 
 **Security:** CryptoManager (AES-128-GCM-HKDF), EncryptedStringSerializer
 
-**Domain Layer:** LoginUseCase, LogoutUseCase, ResetPasswordUseCase, IconManager, GetCountriesUseCase, GetCitiesByCountryUseCase, GetCountryByIdUseCase, GetCityByIdUseCase, ServerException, NetworkException
+**Domain Layer:** LoginUseCase, LogoutUseCase, ResetPasswordUseCase, GetCountriesUseCase, GetCitiesByCountryUseCase, GetCountryByIdUseCase, GetCityByIdUseCase, IconManager, ServerException, NetworkException
 
-**Presentation Layer:** AuthViewModel, LoginViewModel, EventsViewModel, ProfileViewModel, ThemeIconViewModel, MainActivityViewModel
+**UI layer:** AuthViewModel, LoginViewModel, EventsViewModel, ProfileViewModel, ThemeIconViewModel, MainActivityViewModel
 
 **Утилиты:** FlexibleDateDeserializer, NetworkUtils, JsonUtils, ReadJSONFromAssets
 
@@ -543,7 +543,13 @@ app/src/main/java/com/swparks/
 │       ├── ILoginUseCase.kt
 │       ├── ILogoutUseCase.kt
 │       ├── LoginUseCase.kt
-│       └── LogoutUseCase.kt
+│       ├── LogoutUseCase.kt
+│       ├── ResetPasswordUseCase.kt
+│       ├── GetCountriesUseCase.kt
+│       ├── GetCitiesByCountryUseCase.kt
+│       ├── GetCountryByIdUseCase.kt
+│       ├── GetCityByIdUseCase.kt
+│       └── IconManager.kt
 ├── model/             # Модели данных (30+ моделей)
 │   ├── User, LoginSuccess, MainUserForm, RegistrationRequest
 │   ├── ResetPasswordRequest, ChangePasswordRequest
@@ -563,14 +569,21 @@ app/src/main/java/com/swparks/
 ├── ui/
 │   ├── ds/            # Компоненты дизайн-системы (27 компонентов)
 │   ├── screens/       # Экраны приложения
-│   │   ├── events/   # Мероприятия (EventsScreen, EventsViewModel)
-│   │   ├── profile/  # Профиль (ProfileRootScreen - заглушка)
+│   │   ├── auth/     # Авторизация (LoginScreen - полностью реализован)
+│   │   ├── profile/  # Профиль (ProfileRootScreen - базовый функционал)
 │   │   ├── messages/ # Сообщения (MessagesRootScreen - заглушка)
-│   │   ├── more/     # Настройки (MoreScreen - заглушка)
-│   │   ├── parks/    # Площадки (ParksRootScreen - заглушка)
+│   │   ├── more/     # Настройки (MoreScreen - полностью реализован)
+│   │   ├── themeicon/ # Тема и иконка (ThemeIconScreen - полностью реализован)
+│   │   ├── events/   # Мероприятия (EventsScreen - базовый функционал)
+│   │   ├── parks/    # Площадки (ParksRootScreen - отображает данные из assets)
 │   │   └── RootScreen.kt
 │   ├── viewmodel/     # ViewModels
-│   │   └── AuthViewModel.kt
+│   │   ├── AuthViewModel.kt
+│   │   ├── LoginViewModel.kt
+│   │   ├── ProfileViewModel.kt
+│   │   ├── EventsViewModel.kt
+│   │   ├── ThemeIconViewModel.kt
+│   │   └── MainActivityViewModel.kt
 │   └── theme/         # Тема и цвета
 ├── navigation/        # Навигация
 │   ├── AppState.kt
@@ -591,6 +604,7 @@ app/src/test/java/com/swparks/                       # Unit-тесты
 │   │   └── CryptoManagerIntegrationTest.kt
 │   ├── interceptor/                                 # Тесты интерцепторов
 │   │   ├── AuthInterceptorTest.kt
+│   │   ├── RetryInterceptorTest.kt
 │   │   └── TokenInterceptorTest.kt
 │   ├── repository/                                 # Тесты репозитория
 │   │   ├── SWRepositoryTest.kt
@@ -601,35 +615,52 @@ app/src/test/java/com/swparks/                       # Unit-тесты
 │   │   ├── SWRepositoryEventsTest.kt
 │   │   ├── SWRepositoryMessagesTest.kt
 │   │   ├── SWRepositoryJournalsTest.kt
-│   │   └── SWRepositoryCommentsTest.kt
+│   │   ├── SWRepositoryCommentsTest.kt
+│   │   ├── CountriesRepositoryTest.kt
+│   │   ├── SecureTokenRepositoryTest.kt
+│   │   └── UserPreferencesRepositoryTest.kt
 │   ├── serialization/                              # Тесты сериализаторов
 │   │   ├── IntStringSerializerTest.kt
 │   │   └── LongStringSerializerTest.kt
 │   ├── serializer/                                 # Тесты сериализаторов
 │   │   └── EncryptedStringSerializerTest.kt
-│   ├── datetime/                                   # Тесты десериализации дат
-│   │   └── FlexibleDateDeserializerTest.kt
-│   ├── SecureTokenRepositoryTest.kt               # Тесты защищенного репозитория
-│   └── UserPreferencesRepositoryTest.kt            # Тесты репозитория настроек
+│   ├── TokenEncoderTest.kt                         # Тесты кодировщика токена
+│   └── ErrorResponseTest.kt                        # Тесты ошибок API
 ├── domain/                                        # Тесты Domain layer
 │   └── usecase/                                   # Тесты use cases
 │       ├── LoginUseCaseTest.kt
-│       └── LogoutUseCaseTest.kt
+│       ├── LogoutUseCaseTest.kt
+│       ├── ResetPasswordUseCaseTest.kt
+│       └── SettingsModelsTest.kt
 ├── model/                                         # Тесты моделей данных
 │   ├── LoginSuccessTest.kt
-│   ├── UserTest.kt, MainUserFormTest.kt
+│   ├── UserTest.kt, MainUserFormTest.kt, LoginCredentialsTest.kt
 │   ├── ParkTest.kt, ParkFormTest.kt, ParkDeserializationTest.kt
 │   ├── EventTest.kt, EventFormTest.kt, EventDeserializationTest.kt
 │   ├── CommentTest.kt
 │   ├── JournalResponseTest.kt, JournalEntryResponseTest.kt
 │   ├── DialogResponseTest.kt, MessageResponseTest.kt
+├── ui/                                            # Тесты UI layer
+│   ├── state/                                      # Тесты UI state
+│   │   └── LoginUiStateTest.kt
+│   └── viewmodel/                                   # Тесты ViewModels
+│       ├── LoginViewModelTest.kt
+│       ├── AuthViewModelTest.kt
+│       ├── ThemeIconViewModelTest.kt
+│       └── EventsViewModelTest.kt
+├── network/                                       # Тесты сети
+│   └── MockSWApiTest.kt                            # Тесты Mock API
 └── utils/                                         # Тесты утилит
     ├── JsonUtilsTest.kt
     └── ReadJSONFromAssetsTest.kt
 
-app/src/androidTest/java/com/swparks/               # Интеграционные тесты
+app/src/androidTest/java/com/swparks/               # Интеграционные и UI тесты
 └── data/crypto/
     └── CryptoManagerIntegrationTest.kt               # Интеграционные тесты шифрования
+└── ui/screens/
+    ├── auth/LoginScreenTest.kt                        # UI тесты авторизации
+    ├── themeicon/ThemeIconScreenTest.kt               # UI тесты темы и иконки
+    └── more/MoreScreenTest.kt                        # UI тесты настроек
 ```
 
 ### Целевая структура (референс: nowinandroid)
@@ -756,11 +787,13 @@ app/src/main/java/com/swparks/
 
 ### Тестирование
 
-**Unit-тесты:** Data layer (20+ тестов), Domain layer (8+ тестов), Model (14+ тестов), ViewModel (5+ тестов), Utils (2 теста), MockSWApi
+**Unit-тесты:** Data layer (18+ тестов), Domain layer (4+ тестов), Model (14+ тестов), ViewModel (4+ тестов), UI state (1 тест), Utils (2 теста), Network (1 тест), MockSWApi
 
 **Интеграционные тесты:** CryptoManagerIntegrationTest
 
-**Всего:** 50+ тестов
+**UI-тесты:** LoginScreenTest, ThemeIconScreenTest, MoreScreenTest
+
+**Всего:** 52 теста (48 unit + 4 UI + 1 интеграционный)
 
 **Инструменты:** MockK, Turbine, изолированное тестирование без реальных HTTP запросов
 
@@ -813,3 +846,15 @@ app/src/main/java/com/swparks/
   - ⚠️ ProfileRootScreen имеет ViewModel с базовым функционалом (отображение профиля и кнопка выхода)
   - Обновлено количество unit-тестов для Domain layer (8+ тестов) и ViewModels (5+ тестов)
   - Обновлен список реализованных экранов: LoginScreen полностью реализован, ProfileRootScreen имеет базовый функционал
+- 2026-01-31: Актуализация документации и структуры проекта:
+  - ✅ Обновлен список Use Cases в Domain layer (добавлены GetCountriesUseCase, GetCitiesByCountryUseCase, GetCountryByIdUseCase, GetCityByIdUseCase)
+  - ✅ Обновлена структура проекта в разделе "Текущая структура":
+    - Добавлен список всех Use Cases в domain/usecase/
+    - Обновлен список ViewModels в ui/viewmodel/
+    - Обновлен список экранов в ui/screens/ с указанием статуса реализации
+  - ✅ Обновлена структура тестов:
+    - Добавлен CountriesRepositoryTest
+    - Добавлены UI state тесты (LoginUiStateTest.kt)
+    - Добавлены UI тесты (ThemeIconScreenTest.kt, MoreScreenTest.kt, LoginScreenTest.kt)
+    - Добавлены дополнительные UI viewmodel тесты (ThemeIconViewModelTest.kt, EventsViewModelTest.kt)
+    - Добавлены дополнительные тесты (TokenEncoderTest.kt, ErrorResponseTest.kt, RetryInterceptorTest.kt)

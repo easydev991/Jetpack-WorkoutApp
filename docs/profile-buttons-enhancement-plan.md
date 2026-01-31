@@ -35,9 +35,9 @@
 
 ## План реализации
 
-### Шаги 1-4: Добавление кнопок навигации (ВЫПОЛНЕНО ✅)
+### Шаги 1-5: Добавление кнопок навигации и AlertDialog (ВЫПОЛНЕНО ✅)
 
-Реализованы все кнопки навигации на экране профиля:
+Реализован полный UI экрана профиля с кнопками навигации и AlertDialog для логаута:
 - ✅ Вертикальная прокрутка (verticalScroll) и Column с равными отступами
 - ✅ Кнопка "Изменить профиль" (SWButton, TINTED)
 - ✅ Кнопка "Друзья" с количеством друзей и бейджем заявок (FormRowView)
@@ -46,6 +46,7 @@
 - ✅ Кнопка "Дневники" с количеством дневников (FormRowView)
 - ✅ Кнопка "Черный список" - временно скрыта (TODO)
 - ✅ Кнопка поиска пользователей в топ-баре (иконка лупы)
+- ✅ Кнопка "Выйти" с AlertDialog подтверждением
 - ✅ Условное отображение кнопок на основе данных пользователя
 - ✅ Логирование всех нажатий кнопок в консоль на русском языке
 
@@ -80,7 +81,7 @@
 
 ## Критерии завершения
 
-### UI структуры (Шаги 1-4 - ВЫПОЛНЕНО ✅)
+### UI структуры (ВЫПОЛНЕНО ✅)
 
 - [x] Вертикальная прокрутка, Column с отступами, Spacer для прижимания кнопки выхода
 - [x] Все кнопки из iOS-приложения отображаются корректно
@@ -88,22 +89,14 @@
 - [x] Кнопка "Друзья" показывает бейдж с количеством заявок
 - [x] Кнопка "Черный список" скрыта с TODO
 - [x] В топ-баре есть кнопка поиска пользователей
+- [x] При нажатии на "Выйти" показывается AlertDialog с подтверждением
+- [x] Логаут выполняется только при подтверждении в AlertDialog
 
-### Качество кода (Шаги 1-4 - ВЫПОЛНЕНО ✅)
+### Качество кода (ВЫПОЛНЕНО ✅)
 
 - [x] Код отформатирован (`make format`)
 - [x] Проект собирается без ошибок
-
-### AlertDialog для логаута (Шаг 5 - НЕ ВЫПОЛНЕНО)
-
-- [ ] Добавлены строковые ресурсы для AlertDialog (logout_confirmation_title)
-- [ ] В ProfileRootScreen добавлено состояние `showLogoutDialog`
-- [ ] При нажатии на кнопку "Выйти" показывается AlertDialog с вопросом
-- [ ] AlertDialog имеет 2 кнопки: "Выйти" (красного цвета) и "Отмена"
-- [ ] При нажатии на "Выйти" выполняется логаут (вызывается logoutUseCase)
-- [ ] При нажатии на "Отмена" или вне диалога - диалог закрывается без логаута
-- [ ] Код отформатирован (`make format`)
-- [ ] Нет ошибок линтера
+- [x] Нет новых ошибок линтера (предупреждения - предсуществующие)
 
 ## Примечания
 
@@ -129,102 +122,18 @@
 
 ## Задачи для следующих этапов
 
-### Шаг 5: Добавление AlertDialog для логаута
+### Шаг 5: Добавление AlertDialog для логаута (ВЫПОЛНЕНО ✅)
 
-**Текущее состояние:**
-- Кнопка "Выйти" реализована, но логаут происходит сразу без подтверждения
-- В iOS-приложении есть AlertDialog с вопросом "Log out of your profile?" / "Выйти из учетной записи?"
+**Что было сделано:**
 
-**Что нужно сделать:**
+- [x] 5.1 Добавлены строковые ресурсы (logout_confirmation_title) в values/strings.xml и values-ru/strings.xml
+- [x] 5.2 Добавлен AlertDialog с вопросом "Выйти из учетной записи?" при нажатии на кнопку "Выйти"
+- [x] AlertDialog имеет 2 кнопки: "Выйти" (красного цвета, MaterialTheme.colorScheme.error) и "Отмена" (android.R.string.cancel)
+- [x] Логаут выполняется только при подтверждении через appContainer?.logoutUseCase?.invoke()
+- [x] Добавлено состояние showLogoutDialog для управления отображением диалога
+- [x] 5.3 Компонент LogoutButton остался без изменений, логика в ProfileRootScreen
 
-#### 5.1 Добавить строковые ресурсы для AlertDialog
-
-Добавить в `app/src/main/res/values/strings.xml` и `app/src/main/res/values-ru/strings.xml`:
-
-```xml
-<!-- values/strings.xml -->
-<string name="logout_confirmation_title">Log out of your profile?</string>
-
-<!-- values-ru/strings.xml -->
-<string name="logout_confirmation_title">Выйти из учетной записи?</string>
-```
-
-#### 5.2 Обновить LogoutButton для показа AlertDialog
-
-Изменить логику `LogoutButton` в `ProfileRootScreen.kt`:
-
-1. Добавить состояние для показа/скрытия AlertDialog:
-
-```kotlin
-@Composable
-fun ProfileRootScreen(
-    // ... существующие параметры
-) {
-    var showLogoutDialog by remember { mutableStateOf(false) }
-    // ... остальной код
-}
-```
-
-2. Изменить `onClick` в `LogoutButton`:
-
-```kotlin
-// Кнопка "Выйти"
-LogoutButton(
-    onClick = {
-        showLogoutDialog = true
-    }
-)
-```
-
-3. Добавить AlertDialog в ProfileRootScreen:
-
-```kotlin
-// В ProfileRootScreen после Column
-if (showLogoutDialog) {
-    AlertDialog(
-        onDismissRequest = { showLogoutDialog = false },
-        title = {
-            Text(text = stringResource(id = R.string.logout_confirmation_title))
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    scope.launch {
-                        appContainer?.logoutUseCase?.invoke()
-                    }
-                    showLogoutDialog = false
-                },
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Text(text = stringResource(id = R.string.logout))
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = { showLogoutDialog = false }
-            ) {
-                Text(text = stringResource(id = android.R.string.cancel))
-            }
-        }
-    )
-}
-```
-
-#### 5.3 Обновить LogoutButton компонент
-
-Компонент `LogoutButton` останется без изменений, так как логика показа AlertDialog будет в `ProfileRootScreen`.
-
-**Критерии завершения:**
-- [ ] Добавлены строковые ресурсы для AlertDialog (logout_confirmation_title)
-- [ ] В ProfileRootScreen добавлено состояние `showLogoutDialog`
-- [ ] При нажатии на кнопку "Выйти" показывается AlertDialog с вопросом
-- [ ] AlertDialog имеет 2 кнопки: "Выйти" (красного цвета) и "Отмена"
-- [ ] При нажатии на "Выйти" выполняется логаут (вызывается logoutUseCase)
-- [ ] При нажатии на "Отмена" или вне диалога - диалог закрывается без логаута
-- [ ] Код отформатирован (`make format`)
-- [ ] Нет ошибок линтера
+**Критерии завершения:** ✅ все выполнены
 
 ## Рефакторинг
 
@@ -270,15 +179,13 @@ AlertDialog(
 ## История изменений
 
 - 2026-01-31: Создание плана добавления кнопок навигации на экран профиля
-- 2026-01-31: Реализация Шагов 1-4 - все кнопки добавлены на экран профиля:
+- 2026-01-31: Реализация UI экрана профиля с кнопками навигации и AlertDialog:
+  - ✅ Все кнопки из iOS-приложения реализованы
   - ✅ Вертикальная прокрутка, Column с отступами, Spacer
   - ✅ Кнопки: "Изменить профиль", "Друзья", "Где тренируется", "Добавленные площадки", "Дневники"
+  - ✅ Кнопка "Выйти" с AlertDialog подтверждением
   - ✅ Условное отображение кнопок на основе данных пользователя
   - ✅ Кнопка поиска пользователей в топ-баре
   - ✅ Логирование всех нажатий кнопок в консоль
+  - ✅ Строковые ресурсы для AlertDialog (logout_confirmation_title)
   - ✅ Код отформатирован, проект собирается без ошибок
-- 2026-01-31: Добавлена задача Шаг 5 - Добавление AlertDialog для логаута:
-  - [ ] Добавить строковые ресурсы (logout_confirmation_title)
-  - [ ] Добавить состояние showLogoutDialog
-  - [ ] Показать AlertDialog с 2 кнопками при нажатии на "Выйти"
-  - [ ] Выполнять логаут только при подтверждении в AlertDialog

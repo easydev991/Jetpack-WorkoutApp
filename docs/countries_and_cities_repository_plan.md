@@ -27,33 +27,25 @@
 
 ## Этап 1: Domain Layer ✅
 
-Реализован интерфейс `CountriesRepository` и 4 use case (`GetCountriesUseCase`, `GetCountryByIdUseCase`, `GetCityByIdUseCase`, `GetCitiesByCountryUseCase`) для упрощения доступа к справочнику из ViewModels.
+Интерфейс `CountriesRepository` и 4 use case для доступа к справочнику.
 
 ---
 
 ## Этап 2: Data Layer ✅
 
-Реализован `CountriesRepositoryImpl` с чтением из `assets/countries.json`, десериализацией через `kotlinx.serialization`, кэшированием в памяти (Flow), методами поиска по ID и заготовкой `updateCountriesFromServer()` для будущего использования.
+`CountriesRepositoryImpl`: чтение из `assets/countries.json`, кэширование в памяти (Flow), поиск по ID, метод для обновления с сервера.
 
 ---
 
 ## Этап 3: Dependency Injection ✅
 
-`CountriesRepository` добавлен в `AppContainer` через интерфейс и реализован в `DefaultAppContainer` с lazy-инициализацией.
+Репозиторий внедрен в `AppContainer` через интерфейс с lazy-инициализацией.
 
 ---
 
 ## Этап 4: Использование в приложении ✅
 
-### 4.1. Интеграция с профилем
-
-Создан `ProfileViewModel` с `ProfileUiState` (Loading/Success/Error) и методом `loadProfile()`. В профиле пользователя отображаются реальные названия страны и города из `countries.json` вместо заглушек. Удалены заглушки из `ProfileRootScreen`, добавлен factory метод в `AppContainer`.
-
-### 4.2. Примеры использования в ViewModels
-
-**ParkDetailViewModel / EventDetailViewModel** - получение страны/города по ID через `countriesRepository.getCountryById()` / `getCityById()`.
-
-**CreateParkViewModel / CreateEventViewModel** - получение списка городов выбранной страны через `getCitiesByCountry()`, списка стран для выбора через `getCountriesFlow()`.
+Интеграция с профилем и ViewModels (`ParkDetailViewModel`, `EventDetailViewModel`, `CreateParkViewModel`, `CreateEventViewModel`).
 
 ### 4.3. Другие экраны
 
@@ -65,7 +57,7 @@
 
 ### 5.1. Unit-тесты для CountriesRepositoryImpl ✅
 
-Написаны 8 тестов для всех основных методов репозитория с моками для `Context` и `SWApi`. Тесты проверяют получение стран/городов, поиск по ID и обновление с сервера.
+8 тестов для основных методов репозитория.
 
 ---
 
@@ -113,11 +105,11 @@ suspend fun getCityById(cityId: String): City? = citiesById[cityId]
 
 ### Этап 2: Data Layer ✅
 
-- [x] Реализован `CountriesRepositoryImpl` с чтением из JSON, кэшированием, поиском по ID, методом для обновления с сервера, обработкой ошибок и логированием на русском
+- [x] Реализован `CountriesRepositoryImpl`
 
 ### Этап 3: Dependency Injection ✅
 
-- [x] `CountriesRepository` внедрен через DI в `AppContainer`
+- [x] Репозиторий внедрен через DI
 
 ### Этап 4: Использование в приложении ✅
 
@@ -125,7 +117,7 @@ suspend fun getCityById(cityId: String): City? = citiesById[cityId]
 
 ### Этап 5: Тестирование ✅
 
-- [x] Написаны и проходят 8 unit-тестов для `CountriesRepositoryImpl`
+- [x] Написаны 8 unit-тестов для репозитория
 - [ ] Покрытие кода тестами ≥ 80%
 
 ---
@@ -134,11 +126,7 @@ suspend fun getCityById(cityId: String): City? = citiesById[cityId]
 
 ### Архитектурные решения и совместимость ✅
 
-- **Изоляция логики**: Использован отдельный репозиторий для справочника стран
-- **Реактивность**: Использован Flow для доступа к данным
-- **Безопасное разворачивание**: Не использованы `!!` для извлечения опционалов
-- **Обработка ошибок**: Ошибки логируются на русском языке
-- **Совместимость с iOS**: Использованы модели `Country` и `City`, формат JSON и endpoint `/countries`
+Отдельный репозиторий, Flow для доступа к данным, безопасное разворачивание опционалов, логирование на русском, совместимость с iOS.
 
 ### Производительность
 
@@ -158,7 +146,7 @@ suspend fun getCityById(cityId: String): City? = citiesById[cityId]
 ### Первая и вторая итерации (выполнено) ✅
 
 1. ✅ Создан интерфейс `CountriesRepository` и use cases
-2. ✅ Реализован `CountriesRepositoryImpl` с чтением из JSON
+2. ✅ Реализован `CountriesRepositoryImpl`
 3. ✅ Добавлен репозиторий в `AppContainer`
 4. ✅ Интегрирован с `ProfileScreen`
 5. ✅ Написаны unit-тесты для репозитория
