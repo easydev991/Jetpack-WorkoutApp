@@ -28,7 +28,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -125,6 +124,7 @@ fun LoginScreen(
 }
 
 /** Состояние экрана авторизации. */
+@Suppress("AssignedValueIsNeverRead")
 @Composable
 private fun rememberLoginScreenState(): LoginScreenState {
     var showNoInternetAlert by rememberSaveable { mutableStateOf(false) }
@@ -250,7 +250,6 @@ private fun LoginFieldsColumn(
             onValueChange = if (!isLoading) viewModel::onLoginChange else { _ -> },
             isError = resetError != null,
             supportingText = resetError ?: "",
-            modifier = Modifier.focusRequester(focusRequester),
             enabled = !isLoading
         )
 
@@ -313,12 +312,12 @@ private data class PasswordFieldConfig(
 /** Поле для ввода логина или email. */
 @Composable
 private fun LoginField(
+    modifier: Modifier = Modifier,
     value: String,
     onValueChange: (String) -> Unit,
     isError: Boolean,
     supportingText: String,
-    enabled: Boolean = true,
-    modifier: Modifier = Modifier
+    enabled: Boolean = true
 ) {
     SWTextField(
         config =

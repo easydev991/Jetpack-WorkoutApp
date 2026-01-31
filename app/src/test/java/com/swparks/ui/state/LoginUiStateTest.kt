@@ -1,7 +1,5 @@
 package com.swparks.ui.state
 
-import com.swparks.model.SocialUpdates
-import com.swparks.model.User
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -58,33 +56,4 @@ class LoginUiStateTest {
         assertEquals(message, state.message)
     }
 
-    /**
-     * Создает мок SocialUpdates для тестов.
-     */
-    private fun createMockSocialUpdates(): SocialUpdates {
-        val user = User(
-            id = 1L,
-            name = "test_user",
-            image = "https://example.com/avatar.jpg",
-            cityID = null,
-            countryID = null,
-            birthDate = null,
-            email = "test@example.com",
-            fullName = "Test User",
-            genderCode = null,
-            friendRequestCount = null,
-            friendsCount = null,
-            parksCount = null,
-            addedParks = null,
-            journalCount = null,
-            lang = "ru"
-        )
-
-        return SocialUpdates(
-            user = user,
-            friends = emptyList(),
-            friendRequests = emptyList(),
-            blacklist = emptyList()
-        )
-    }
 }

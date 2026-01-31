@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Data Access Object для работы с пользователями в Room
  */
+@Suppress("TooManyFunctions")
 @Dao
 interface UserDao {
     // Основной пользователь

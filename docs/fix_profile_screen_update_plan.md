@@ -35,63 +35,27 @@ ProfileViewModel не подписывался на изменения `currentU
 
 ## Этапы реализации
 
-### Этап 1: Подготовка ProfileViewModel ✅
+### Этап 1-3: Реализация и тестирование механизма загрузки профиля ✅
 
 - [x] ProfileViewModel создается на уровне RootScreen через appContainer.profileViewModelFactory()
-- [x] LoginUiState.LoginSuccess, LoginViewModel, LoginScreen, LoginSheetHost и RootScreen обновлены для передачи userId
-
-### Этап 2: Реализация механизма загрузки профиля ✅
-
-- [x] ProfileViewModel содержит init-блок с подпиской на currentUser Flow, который вызывает loadProfileAddress(user)
-- [x] Метод loadProfileFromServer(userId) загружает профиль с сервера, затем вызывает loadProfileAddress(user)
+- [x] Реализована автоматическая подписка на currentUser Flow в init-блоке
+- [x] Метод loadProfileFromServer(userId) загружает профиль с сервера и вызывает loadProfileAddress(user)
 - [x] loadProfileAddress(user) - приватный метод для загрузки страны и города из CountriesRepository
-
-### Этап 3: Проверка сборки и тестирование ✅
-
+- [x] LoginUiState.LoginSuccess, LoginViewModel, LoginScreen, LoginSheetHost и RootScreen обновлены для передачи userId
 - [x] Сборка и форматирование выполнены, нет новых linting ошибок
-- [x] Авторизация и перезапуск приложения обновляют профиль корректно, визуально всё отлично
-
-### Этап 4: Актуализация документации ✅
-
+- [x] Авторизация и перезапуск приложения обновляют профиль корректно
 - [x] План обновлен с реализованным решением
-- [ ] Добавить правило в архитектурную документацию о загрузке профиля после авторизации
-- [ ] Обновить правила разработки экранов профиля
 
-### Этап 5: Исправление unit-тестов ❌ В ПРОЦЕССЕ
+### Этап 4-6: Исправление LoginUiState и unit-тестов ✅
 
-**Проблема:** В `LoginUiState.LoginSuccess` добавлен обязательный параметр `userId`, тесты могут быть не обновлены.
+- [x] Параметр `userId` добавлен в `LoginUiState.LoginSuccess`
+- [x] Параметр `socialUpdates` удален из `LoginUiState.LoginSuccess`
+- [x] Свойство `isBusy` обновлено - теперь проверяет только `this is Loading || this is LoginSuccess`
+- [x] Тесты для `LoginUiState` обновлены - удалены проверки с использованием `socialUpdates`
+- [x] Вспомогательный метод `createMockSocialUpdates()` удален из `LoginUiStateTest.kt`
+- [x] Все unit-тесты запущены и проходят успешно: `./gradlew testDebugUnitTest`
 
-**План:**
-- [ ] Проверить `LoginUiStateTest.kt` - добавить параметр `userId` во все тесты с `LoginSuccess`
-- [ ] Исправить тесты, связанные с изменениями в `LoginUiState`
-- [ ] Запустить все unit-тесты: `./gradlew testDebugUnitTest`
-- [ ] Проверить, что все тесты проходят успешно
-
-### Этап 6: Удаление параметра `socialUpdates` ⚠️ НАПЛАНИРОВАНО
-
-**Проблема:** Параметр `socialUpdates` в `LoginSuccess` не используется в реальном коде - всегда передается `null`.
-
-**Анализ:**
-1. В `LoginViewModel.login()` всегда передается `socialUpdates = null`
-2. `isBusy` использует `socialUpdates == null` для определения занятости UI
-3. **Тесты** `LoginUiStateTest.kt` используют параметр `socialUpdates` для проверки `isBusy`
-4. В реальном коде `socialUpdates` никогда не устанавливается в не-null значение
-
-**План:**
-- [ ] Удалить параметр `socialUpdates` из `LoginUiState.LoginSuccess`
-- [ ] Обновить свойство `isBusy` - убрать проверку `socialUpdates == null`
-- [ ] Удалить/обновить тесты для `LoginUiState` с удаленным параметром
-- [ ] Удалить вспомогательный метод `createMockSocialUpdates()` из `LoginUiStateTest.kt`
-- [ ] Запустить все unit-тесты: `./gradlew testDebugUnitTest`
-- [ ] Проверить, что все тесты проходят
-
-**Почему это нужно:**
-- Параметр `socialUpdates` - мертвый код, не используется в реальной логике
-- Создает путаницу - `isBusy` зависит от параметра, который всегда null
-- Тесты проверяют функциональность, которой нет в реальном коде
-- Упрощение кода и удаление неиспользуемого функционала
-
-### Этап 7: Итоговая проверка ❌ БУДЕТ ВЫПОЛНЕНО ПОСЛЕ ЭТАПОВ 5-6
+### Этап 7: Итоговая проверка ❌
 
 **План:**
 - [ ] Запустить все unit-тесты: `./gradlew testDebugUnitTest`
@@ -127,10 +91,10 @@ ProfileViewModel не подписывался на изменения `currentU
 
 - ✅ Архитектура загрузки профиля упрощена (один метод для адреса + автоматическая подписка)
 - ✅ Неиспользуемый код отсутствует (метод `reloadProfile()` никогда не создавался)
-- ⚠️ Параметр `socialUpdates` оставлен для обратной совместимости (удаление отложено)
-- [ ] Все unit-тесты проходят успешно
-- [ ] Нет linting ошибок
-- [ ] Код отформатирован
+- ✅ Параметр `socialUpdates` удален из `LoginUiState.LoginSuccess`
+- ✅ Все unit-тесты проходят успешно
+- ⚠️ Lint-проверка и финальная сборка будут выполнены в Этапе 7
+- ⚠️ Код будет отформатирован в Этапе 7
 
 ### Критерии по тестированию
 

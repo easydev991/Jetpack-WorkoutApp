@@ -32,7 +32,6 @@ import com.swparks.util.AppConstants
 
 private object Links {
     const val rateApp = AppConstants.APP_RATE_URL
-    const val termsOfUse = "https://workout.su/pravila"
     const val officialSite = "https://workout.su"
     const val appDeveloper = "https://t.me/easy_dev991"
     const val workoutShop = "https://workoutshop.ru"
@@ -40,8 +39,8 @@ private object Links {
 
 @Composable
 fun MoreScreen(
-    navController: NavHostController? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    navController: NavHostController? = null
 ) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current

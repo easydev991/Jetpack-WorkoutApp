@@ -151,10 +151,10 @@ fun RootScreen(appState: AppState) {
             // Вкладка "Ещё"
             composable(route = Screen.More.route) {
                 MoreScreen(
-                    navController = appState.navController,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
+                        .padding(paddingValues),
+                    navController = appState.navController
                 )
             }
 

@@ -19,9 +19,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-private const val STATE_TIMEOUT_MS = 5000L
-private const val TAG = "ThemeIconViewModel"
-
 /**
  * ViewModel для экрана Theme and Icon Screen. Управляет настройками темы и иконки приложения.
  *
@@ -36,6 +33,9 @@ class ThemeIconViewModel(
     private val iconManager: IconManager,
 ) : ViewModel() {
     companion object {
+        private const val STATE_TIMEOUT_MS = 5000L
+        private const val TAG = "ThemeIconViewModel"
+
         /**
          * Factory для создания ThemeIconViewModel. Используется для ручного DI вместо Hilt.
          *

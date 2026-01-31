@@ -39,6 +39,7 @@ class ProfileViewModel(
 ) : ViewModel() {
 
     private companion object {
+        private const val STATE_TIMEOUT_MS = 5000L
         private const val TAG = "ProfileViewModel"
     }
 
@@ -46,7 +47,7 @@ class ProfileViewModel(
     val currentUser: StateFlow<User?> = swRepository.getCurrentUserFlow()
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.WhileSubscribed(STATE_TIMEOUT_MS),
             initialValue = null
         )
 

@@ -5,8 +5,8 @@ package com.swparks.ui.state
  */
 sealed class LoginUiState {
     /**
-     * Признак занятости UI: идет загрузка или загружаются данные пользователя после авторизации.
-     * true для Loading или LoginSuccess с null socialUpdates
+     * Признак занятости UI: идет загрузка.
+     * true для Loading или LoginSuccess
      */
     val isBusy: Boolean
         get() =
@@ -26,7 +26,6 @@ sealed class LoginUiState {
      * Успешная авторизация с загруженными данными пользователя.
      *
      * @param userId ID авторизованного пользователя
-     * @param socialUpdates Данные пользователя или null, если данные еще загружаются
      */
     data class LoginSuccess(val userId: Long) : LoginUiState()
 
