@@ -194,7 +194,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
     /** Factory метод для создания ProfileViewModel */
     override fun profileViewModelFactory() = ProfileViewModel(
         countriesRepository = countriesRepository,
-        swRepository = swRepository
+        swRepository = swRepository,
+        logger = logger
     )
 
     // ==================== API клиенты для разных функциональных областей ====================

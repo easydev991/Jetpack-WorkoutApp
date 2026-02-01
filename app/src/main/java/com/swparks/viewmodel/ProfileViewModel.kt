@@ -1,6 +1,5 @@
 package com.swparks.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.swparks.data.repository.SWRepository
@@ -8,6 +7,7 @@ import com.swparks.domain.repository.CountriesRepository
 import com.swparks.model.City
 import com.swparks.model.Country
 import com.swparks.model.User
+import com.swparks.util.Logger
 import com.swparks.util.setValueIfChanged
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -32,10 +32,15 @@ sealed class ProfileUiState {
  * ViewModel для экрана профиля
  *
  * Управляет данными пользователя и справочником стран/городов
+ *
+ * @param countriesRepository Репозиторий для работы с данными стран и городов
+ * @param swRepository Репозиторий для работы с данными пользователя и API
+ * @param logger Логгер для записи сообщений
  */
 class ProfileViewModel(
     private val countriesRepository: CountriesRepository,
     private val swRepository: SWRepository,
+    private val logger: Logger,
 ) : ViewModel() {
 
     private companion object {
@@ -80,15 +85,15 @@ class ProfileViewModel(
                         // Пользователь сохранен в кэше через SWRepository.getUser()
                         // Теперь загружаем страну и город
                         loadProfileAddress(user)
-                        Log.i(TAG, "Профиль загружен с сервера: ${user.id}")
+                        logger.i(TAG, "Профиль загружен с сервера: ${user.id}")
                     }
                     .onFailure { error ->
                         _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${error.message}") }
-                        Log.e(TAG, "Ошибка загрузки профиля с сервера: ${error.message}")
+                        logger.e(TAG, "Ошибка загрузки профиля с сервера: ${error.message}")
                     }
             } catch (e: Exception) {
                 _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${e.message}") }
-                Log.e(TAG, "Ошибка загрузки профиля: ${e.message}")
+                logger.e(TAG, "Ошибка загрузки профиля: ${e.message}")
             }
         }
     }
@@ -102,7 +107,7 @@ class ProfileViewModel(
     private fun loadProfileAddress(user: User?) {
         if (user == null) {
             _uiState.update { ProfileUiState.Error("Пользователь не авторизован") }
-            Log.d(TAG, "Пропускаем загрузку адреса: пользователь null")
+            logger.d(TAG, "Пропускаем загрузку адреса: пользователь null")
             return
         }
 
@@ -119,12 +124,12 @@ class ProfileViewModel(
                         countriesRepository.getCityById(cityId.toString())
                     }
                 _uiState.setValueIfChanged(ProfileUiState.Success(country, city)) {
-                    Log.i(TAG, "Адрес для профиля обновлен из countriesRepository")
+                    logger.i(TAG, "Адрес для профиля обновлен из countriesRepository")
                 }
             } catch (e: Exception) {
                 val message = "Ошибка загрузки адреса для профиля: ${e.message}"
                 _uiState.update { ProfileUiState.Error(message) }
-                Log.e(TAG, message)
+                logger.e(TAG, message)
             }
         }
     }

@@ -37,6 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
 import com.swparks.data.AppContainer
+import com.swparks.navigation.AppState
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.FormRowView
 import com.swparks.ui.ds.IncognitoProfileView
@@ -48,7 +49,6 @@ import com.swparks.ui.ds.UserProfileData
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.viewmodel.ProfileUiState
 import com.swparks.viewmodel.ProfileViewModel
-import com.swparks.navigation.AppState
 import kotlinx.coroutines.launch
 
 @Composable

@@ -50,7 +50,7 @@ class AppState(
         mutableStateOf<androidx.navigation.NavDestination?>(null)
 
     // ==================== Состояние авторизации ====================
-    
+
     /**
      * Текущий авторизованный пользователь
      * Используем mutableStateOf для обеспечения рекомпозиции в Compose
@@ -58,14 +58,14 @@ class AppState(
      */
     var currentUser by mutableStateOf<User?>(null)
         private set
-    
+
     /**
      * Флаг авторизации пользователя
      * Вычисляемое свойство, которое автоматически пересчитывается при изменении currentUser
      */
     val isAuthorized: Boolean
         get() = currentUser != null
-    
+
     /**
      * Безопасное обновление текущего пользователя
      * Используется вместо прямого присваивания для контроля изменений
@@ -73,9 +73,9 @@ class AppState(
     fun updateCurrentUser(user: User?) {
         currentUser = user
     }
-    
+
     // ============================================================
-    
+
     /**
      * Текущий пункт назначения навигации
      */

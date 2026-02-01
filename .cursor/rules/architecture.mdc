@@ -38,6 +38,43 @@ alwaysApply: true
 - **View**: Compose UI
 - **ViewModel**: UI state management
 
+## AppState - Глобальное состояние приложения
+
+**AppState** используется для управления глобальным состоянием приложения, включая навигацию и авторизацию.
+
+### Свойства AppState
+
+- **currentUser: User?** - текущий авторизованный пользователь (с использованием `mutableStateOf` для обеспечения рекомпозиции)
+- **isAuthorized: Boolean** - флаг авторизации пользователя (вычисляемое свойство)
+- **updateCurrentUser(user: User?)** - метод для безопасного обновления текущего пользователя
+- **navController** - контроллер навигации
+
+### Синхронизация авторизации
+
+Синхронизация состояния авторизации выполняется в `RootScreen`:
+
+1. **ProfileViewModel** - источник истины (подписан на репозитории)
+2. **RootScreen** - синхронизирует данные между `ProfileViewModel` и `AppState`
+3. **AppState** - глобальное состояние, доступное из любого экрана
+
+```kotlin
+// RootScreen
+val currentUser by profileViewModel.currentUser.collectAsState()
+
+LaunchedEffect(currentUser) {
+    appState.updateCurrentUser(currentUser)
+}
+```
+
+### Использование в UI
+
+AppState используется для:
+- Мгновенного обновления UI при login/logout (через `mutableStateOf` и `collectAsState()`)
+- Проверки авторизации на любом экране без прокидывания ProfileViewModel
+- Управления навигацией
+
+**ВАЖНО:** Для обеспечения рекомпозиции в Compose обязательно используйте `mutableStateOf` для свойств AppState, которые должны вызывать обновление UI (например, `currentUser`).
+
 ## Clean Architecture
 
 ```

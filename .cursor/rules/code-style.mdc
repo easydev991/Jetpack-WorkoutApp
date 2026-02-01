@@ -16,7 +16,47 @@ alwaysApply: true
 - `State`/`MutableState` для UI состояния
 - Однонаправленный поток данных (состояние flows down, события flows up)
 - `ViewModel` для состояния UI
+- `AppState` для глобального состояния приложения (навигация, авторизация)
 - `CompositionLocal` только для темы/глобальной конфигурации
+
+### AppState для глобального состояния
+
+AppState используется для управления глобальным состоянием, которое должно быть доступно из любого экрана:
+
+**Свойства AppState:**
+- `currentUser: User?` - текущий авторизованный пользователь (с использованием `mutableStateOf`)
+- `isAuthorized: Boolean` - флаг авторизации (вычисляемое свойство)
+- `navController` - контроллер навигации
+
+**Правильное использование в UI:**
+
+```kotlin
+@Composable
+fun SomeScreen(appState: AppState) {
+    if (appState.isAuthorized) {
+        // Показываем контент для авторизованных пользователей
+        Text("Привет, ${appState.currentUser?.fullName}")
+    } else {
+        // Показываем заглушку или кнопку входа
+        Button(onClick = { appState.navigateToProfile() }) {
+            Text("Войти")
+        }
+    }
+}
+```
+
+**ВАЖНО:**
+- Для свойств AppState, которые должны вызывать рекомпозицию (например, `currentUser`), используйте `mutableStateOf`
+- Обычные `var` в Compose НЕ вызывают рекомпозицию - UI не будет обновляться
+
+```kotlin
+// ✅ Правильно - с mutableStateOf
+var currentUser by mutableStateOf<User?>(null)
+    private set
+
+// ❌ Плохо - обычный var не вызывает рекомпозицию
+var currentUser: User? = null
+```
 
 ```kotlin
 @Preview

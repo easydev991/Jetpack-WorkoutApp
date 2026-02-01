@@ -255,7 +255,7 @@ fun RootScreen(appState: AppState) {
                 // TODO: Реализовать SelectCityScreen
             }
 
-            // Экраны настроек (будут добавлены позже)
+            // Экраны настроек
             composable(route = Screen.ThemeIcon.route) {
                 val context = LocalContext.current
                 val appSettingsDataStore = remember { AppSettingsDataStore(context) }
@@ -275,14 +275,6 @@ fun RootScreen(appState: AppState) {
                 )
             }
 
-            // Экраны авторизации (модальные окна)
-            composable(route = Screen.Login.route) {
-                // LoginScreen теперь показывается через LoginSheetHost
-            }
-
-            composable(route = Screen.Register.route) {
-                // TODO: Реализовать RegisterScreen как модальное окно
-            }
         }
 
         // LoginSheetHost поверх NavHost

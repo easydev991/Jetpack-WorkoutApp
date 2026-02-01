@@ -111,8 +111,4 @@ sealed class Screen(
 
     // Экраны настроек
     object ThemeIcon : Screen("theme_icon")
-
-    // Экраны авторизации (модальные окна)
-    object Login : Screen("login")
-    object Register : Screen("register")
 }
