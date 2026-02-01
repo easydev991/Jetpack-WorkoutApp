@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
 
 /**
  * Bottom navigation bar с верхнеуровневыми назначениями
@@ -38,8 +39,13 @@ fun BottomNavigationBar(
                     )
                 },
                 label = {
-                    Text(text = stringResource(id = destination.iconTextId))
+                    Text(
+                        text = stringResource(id = destination.iconTextId),
+                        maxLines = 1,
+                        overflow = Ellipsis
+                    )
                 },
+                alwaysShowLabel = false
             )
         }
     }
