@@ -15,11 +15,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.swparks.R
+import com.swparks.model.User
 import com.swparks.navigation.TopLevelDestinations.EVENTS
 import com.swparks.navigation.TopLevelDestinations.MESSAGES
 import com.swparks.navigation.TopLevelDestinations.MORE
@@ -39,7 +41,7 @@ fun rememberAppState(
 }
 
 /**
- * Состояние приложения для навигации
+ * Состояние приложения для навигации и авторизации
  */
 class AppState(
     val navController: NavHostController,
@@ -47,6 +49,33 @@ class AppState(
     private val previousDestination =
         mutableStateOf<androidx.navigation.NavDestination?>(null)
 
+    // ==================== Состояние авторизации ====================
+    
+    /**
+     * Текущий авторизованный пользователь
+     * Используем mutableStateOf для обеспечения рекомпозиции в Compose
+     * private set запрещает прямое присваивание, заставляя использовать updateCurrentUser()
+     */
+    var currentUser by mutableStateOf<User?>(null)
+        private set
+    
+    /**
+     * Флаг авторизации пользователя
+     * Вычисляемое свойство, которое автоматически пересчитывается при изменении currentUser
+     */
+    val isAuthorized: Boolean
+        get() = currentUser != null
+    
+    /**
+     * Безопасное обновление текущего пользователя
+     * Используется вместо прямого присваивания для контроля изменений
+     */
+    fun updateCurrentUser(user: User?) {
+        currentUser = user
+    }
+    
+    // ============================================================
+    
     /**
      * Текущий пункт назначения навигации
      */

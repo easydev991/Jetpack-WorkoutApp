@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -19,6 +21,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
 import com.swparks.model.Park
+import com.swparks.navigation.AppState
 import com.swparks.ui.ds.ParkRowData
 import com.swparks.ui.ds.ParkRowView
 
@@ -57,6 +60,7 @@ fun ParksRootScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ParksTopAppBar(
+    appState: AppState,
     parksCount: Int,
     onFilterClick: () -> Unit = {}
 ) {
@@ -78,4 +82,27 @@ fun ParksTopAppBar(
             }
         }
     )
+}
+
+/**
+ * Пример кнопки создания площадки (показывается для авторизованных пользователей)
+ */
+@Composable
+fun CreateParkFab(
+    appState: AppState,
+    onClick: () -> Unit = {}
+) {
+    if (appState.isAuthorized) {
+        androidx.compose.material3.FloatingActionButton(
+            onClick = {
+                Log.i("ParksScreen", "Нажата кнопка создания площадки")
+                onClick()
+            }
+        ) {
+            Icon(
+                imageVector = androidx.compose.material.icons.Icons.Default.Add,
+                contentDescription = "Создать площадку"
+            )
+        }
+    }
 }

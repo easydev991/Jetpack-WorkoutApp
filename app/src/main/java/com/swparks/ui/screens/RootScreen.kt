@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,6 +57,14 @@ fun RootScreen(appState: AppState) {
         appContainer.profileViewModelFactory()
     }
 
+    // Подписываемся на Flow из ProfileViewModel для реактивного обновления
+    val currentUser by profileViewModel.currentUser.collectAsState()
+
+    // Синхронизируем currentUser с AppState при каждом изменении
+    LaunchedEffect(currentUser) {
+        appState.updateCurrentUser(currentUser)
+    }
+
     // Загружаем parks для использования в TopBar и в ParksRootScreen
     val parks = remember {
         val oldParks = ReadJSONFromAssets(context, "parks.json")
@@ -66,6 +76,7 @@ fun RootScreen(appState: AppState) {
             when (appState.currentTopLevelDestination?.route) {
                 Screen.Parks.route -> {
                     ParksTopAppBar(
+                        appState = appState,
                         parksCount = parks.size
                     )
                 }
@@ -80,6 +91,7 @@ fun RootScreen(appState: AppState) {
 
                 Screen.Profile.route -> {
                     ProfileTopAppBar(
+                        appState = appState,
                         onSearchUsersClick = {
                             Log.i("RootScreen", "Нажата кнопка: Поиск пользователей")
                         }

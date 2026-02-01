@@ -48,6 +48,7 @@ import com.swparks.ui.ds.UserProfileData
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.viewmodel.ProfileUiState
 import com.swparks.viewmodel.ProfileViewModel
+import com.swparks.navigation.AppState
 import kotlinx.coroutines.launch
 
 @Composable
@@ -241,17 +242,22 @@ fun ProfileRootScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileTopAppBar(onSearchUsersClick: () -> Unit = {}) {
+fun ProfileTopAppBar(
+    appState: AppState,
+    onSearchUsersClick: () -> Unit = {}
+) {
     CenterAlignedTopAppBar(
         title = {
             Text(text = stringResource(id = R.string.profile))
         },
         actions = {
-            IconButton(onClick = onSearchUsersClick) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = stringResource(id = R.string.profile)
-                )
+            if (appState.isAuthorized) {
+                IconButton(onClick = onSearchUsersClick) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = stringResource(id = R.string.profile)
+                    )
+                }
             }
         }
     )
