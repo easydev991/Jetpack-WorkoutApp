@@ -78,6 +78,7 @@ fun FormRowView(
             style = MaterialTheme.typography.bodyLarge
         )
         Row(
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_micro)),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (trailingText.isNotBlank()) {
@@ -92,8 +93,8 @@ fun FormRowView(
                 CircleBadgeView(
                     value = badgeValue,
                     modifier = Modifier.padding(
-                        start = dimensionResource(id = R.dimen.spacing_regular),
-                        end = dimensionResource(id = R.dimen.spacing_xxsmall)
+                        start = dimensionResource(id = R.dimen.spacing_small),
+                        end = dimensionResource(id = R.dimen.spacing_micro)
                     )
                 )
             }

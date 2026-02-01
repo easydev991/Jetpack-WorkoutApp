@@ -2,6 +2,7 @@ package com.swparks.ui.ds
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -25,14 +26,19 @@ fun CircleBadgeView(
     modifier: Modifier = Modifier,
     value: Int
 ) {
-    val badgeColor = MaterialTheme.colorScheme.primary
-    Text(
-        text = if (value > 99) "99+" else "$value",
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.primaryContainer,
-        modifier = modifier
-            .circleBackground(badgeColor, dimensionResource(id = R.dimen.spacing_micro))
-    )
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        val badgeColor = MaterialTheme.colorScheme.primary
+        Text(
+            text = if (value > 99) "99+" else "$value",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier
+                .circleBackground(badgeColor, dimensionResource(id = R.dimen.spacing_micro))
+        )
+    }
 }
 
 @Preview(showBackground = true)
