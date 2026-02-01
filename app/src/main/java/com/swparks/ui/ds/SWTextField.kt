@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -47,7 +49,9 @@ data class TextFieldConfig(
     val enabled: Boolean = true,
     val supportingText: String = "",
     val onTextChange: (String) -> Unit,
-    val focusRequester: FocusRequester? = null
+    val focusRequester: FocusRequester? = null,
+    val keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    val keyboardActions: KeyboardActions = KeyboardActions.Default
 )
 
 /**
@@ -85,7 +89,9 @@ fun SWTextField(config: TextFieldConfig) {
             PasswordVisualTransformation()
         else VisualTransformation.None,
         isError = config.isError,
-        enabled = config.enabled
+        enabled = config.enabled,
+        keyboardOptions = config.keyboardOptions,
+        keyboardActions = config.keyboardActions
     )
 }
 

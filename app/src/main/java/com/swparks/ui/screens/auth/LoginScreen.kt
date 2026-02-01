@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
@@ -32,6 +34,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import com.swparks.R
 import com.swparks.domain.exception.NetworkException
 import com.swparks.ui.ds.ButtonConfig
@@ -276,7 +279,12 @@ private fun LoginFieldsColumn(
                     onValueChange = if (!isLoading) viewModel::onPasswordChange else { _ -> },
                     isError = loginError != null,
                     supportingText = loginError ?: "",
-                    enabled = !isLoading
+                    enabled = !isLoading,
+                    onDone = {
+                        if (viewModel.credentials.canLogIn(isError = loginError != null) && !isLoading) {
+                            viewModel.login()
+                        }
+                    }
                 )
         )
     }
@@ -322,7 +330,8 @@ private data class PasswordFieldConfig(
     val isError: Boolean,
     val supportingText: String,
     val enabled: Boolean = true,
-    val modifier: Modifier = Modifier
+    val modifier: Modifier = Modifier,
+    val onDone: () -> Unit = {}
 )
 
 /** Поле для ввода логина или email. */
@@ -367,7 +376,9 @@ private fun PasswordField(config: PasswordFieldConfig) {
                 isError = config.isError,
                 supportingText = config.supportingText,
                 enabled = config.enabled,
-                onTextChange = config.onValueChange
+                onTextChange = config.onValueChange,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { config.onDone() })
             )
     )
 }
