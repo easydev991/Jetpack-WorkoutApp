@@ -13,7 +13,7 @@ import com.swparks.model.User
  * @param isFriend Является ли другом
  * @param isFriendRequest Есть ли заявка в друзья
  * @param isBlacklisted Добавлен ли в черный список
- * @return [UserEntity] с соответствующими флагами
+ * @return [UserEntity] с соответствующими флагами и добавленными площадками
  */
 fun User.toEntity(
     isCurrentUser: Boolean = false,
@@ -33,6 +33,7 @@ fun User.toEntity(
     friendRequestCount = friendRequestCount,
     friendsCount = friendsCount,
     parksCount = parksCount,
+    addedParks = addedParks,
     journalCount = journalCount,
     lang = lang,
     isCurrentUser = isCurrentUser,
@@ -44,7 +45,7 @@ fun User.toEntity(
 /**
  * Конвертировать [UserEntity] в [User]
  *
- * @return [User] без флагов категоризации
+ * @return [User] без флагов категоризации и с восстановленными добавленными площадками
  */
 fun UserEntity.toDomain(): User = User(
     id = id,
@@ -59,6 +60,7 @@ fun UserEntity.toDomain(): User = User(
     friendRequestCount = friendRequestCount,
     friendsCount = friendsCount,
     parksCount = parksCount,
+    addedParks = addedParks,
     journalCount = journalCount,
     lang = lang
 )

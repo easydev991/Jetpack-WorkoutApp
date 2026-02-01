@@ -104,7 +104,10 @@ class AppStateTest {
         // Given
         val testUser = createTestUser()
         appState.updateCurrentUser(testUser)
-        assertTrue("Предварительная проверка: пользователь должен быть авторизован", appState.isAuthorized)
+        assertTrue(
+            "Предварительная проверка: пользователь должен быть авторизован",
+            appState.isAuthorized
+        )
 
         // When
         appState.updateCurrentUser(null)
@@ -135,7 +138,10 @@ class AppStateTest {
         assertTrue("После первого обновления ID должен быть 1", afterFirstUpdate?.id == 1L)
         assertTrue("После второго обновления ID должен быть 2", afterSecondUpdate?.id == 2L)
         assertTrue("После третьего обновления ID должен быть 3", afterThirdUpdate?.id == 3L)
-        assertTrue("Финальный currentUser должен быть третьим пользователем", appState.currentUser?.id == 3L)
+        assertTrue(
+            "Финальный currentUser должен быть третьим пользователем",
+            appState.currentUser?.id == 3L
+        )
     }
 
     @Test
@@ -147,7 +153,10 @@ class AppStateTest {
         appState.updateCurrentUser(testUser)
 
         // Then
-        assertTrue("isAuthorized должен возвращать true при наличии пользователя", appState.isAuthorized)
+        assertTrue(
+            "isAuthorized должен возвращать true при наличии пользователя",
+            appState.isAuthorized
+        )
     }
 
     @Test
@@ -169,7 +178,10 @@ class AppStateTest {
         assertTrue("Первое обновление должно сохранить пользователя", firstValue?.id == 5L)
         assertTrue("Второе обновление должно сохранить пользователя", secondValue?.id == 5L)
         assertTrue("Третье обновление должно сохранить пользователя", thirdValue?.id == 5L)
-        assertTrue("Пользователь должен быть авторизован после всех обновлений", appState.isAuthorized)
+        assertTrue(
+            "Пользователь должен быть авторизован после всех обновлений",
+            appState.isAuthorized
+        )
     }
 
     @Test
@@ -196,15 +208,30 @@ class AppStateTest {
 
         // Then - проверяем переходы состояний
         assertNull("После первого null currentUser должен быть null", afterFirstNull)
-        assertFalse("После первого null пользователь не должен быть авторизован", authorizedAfterFirstNull)
+        assertFalse(
+            "После первого null пользователь не должен быть авторизован",
+            authorizedAfterFirstNull
+        )
 
-        assertTrue("После установки пользователя currentUser должен быть не null", afterUser != null)
+        assertTrue(
+            "После установки пользователя currentUser должен быть не null",
+            afterUser != null
+        )
         assertTrue("После установки пользователь должен быть авторизован", authorizedAfterUser)
 
         assertNull("После второго null currentUser должен быть null", afterSecondNull)
-        assertFalse("После второго null пользователь не должен быть авторизован", authorizedAfterSecondNull)
+        assertFalse(
+            "После второго null пользователь не должен быть авторизован",
+            authorizedAfterSecondNull
+        )
 
-        assertTrue("После повторной установки пользователя currentUser должен быть не null", afterSecondUser != null)
-        assertTrue("После повторной установки пользователь должен быть авторизован", authorizedAfterSecondUser)
+        assertTrue(
+            "После повторной установки пользователя currentUser должен быть не null",
+            afterSecondUser != null
+        )
+        assertTrue(
+            "После повторной установки пользователь должен быть авторизован",
+            authorizedAfterSecondUser
+        )
     }
 }

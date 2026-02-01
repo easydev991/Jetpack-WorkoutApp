@@ -2,6 +2,8 @@ package com.swparks.data.database
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.TypeConverters
+import com.swparks.model.Park
 
 /**
  * Entity для хранения данных пользователя в Room
@@ -18,6 +20,7 @@ import androidx.room.PrimaryKey
  * @property friendRequestCount Количество заявок на добавление в друзья
  * @property friendsCount Количество друзей
  * @property parksCount Количество площадок, где тренируется
+ * @property addedParks Добавленные пользователем площадки
  * @property journalCount Количество дневников
  * @property lang Язык
  * @property isFriend Флаг - является ли пользователем другом
@@ -26,6 +29,7 @@ import androidx.room.PrimaryKey
  * @property isCurrentUser Флаг - является ли текущим авторизованным пользователем
  */
 @Entity(tableName = "users")
+@TypeConverters(UserConverters::class)
 data class UserEntity(
     @PrimaryKey val id: Long,
     val name: String,
@@ -39,6 +43,7 @@ data class UserEntity(
     val friendRequestCount: String? = null,
     val friendsCount: Int? = null,
     val parksCount: String? = null,
+    val addedParks: List<Park>? = null,
     val journalCount: Int? = null,
     val lang: String,
     // Флаги для категоризации пользователей
