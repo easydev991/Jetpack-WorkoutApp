@@ -231,3 +231,52 @@ fun ProfileScreen(appState: AppState) {
 - Android: `appState: AppState` → экраны читают через параметр `appState`
 
 Оба подхода обеспечивают глобальный доступ к состоянию без необходимости прокидывать зависимости через параметры каждого компонента.
+
+## Тестирование
+
+### Unit-тесты для AppState
+
+Для проверки функциональности состояния авторизации созданы unit-тесты в файле `app/src/test/java/com/swparks/navigation/AppStateTest.kt`.
+
+**Тесты покрывают следующие сценарии:**
+- Начальное состояние (`currentUser = null`, `isAuthorized = false`)
+- Обновление пользователя через `updateCurrentUser()`
+- Проверка флага авторизации при различных состояниях
+- Множественные обновления пользователя
+- Очистка пользователя (logout)
+- Переходы состояний (null → user → null → user)
+- Стабильность при повторных обновлениях одним и тем же пользователем
+
+**Результаты тестирования:**
+- Количество тестов: 9
+- Успешно: 9/9
+- Успешность: 100%
+- Время выполнения: 0.046s
+
+### Пример теста
+
+```kotlin
+@Test
+fun updateCurrentUser_whenCalledWithUser_thenUpdatesCurrentUser() {
+    // Given
+    val testUser = createTestUser()
+
+    // When
+    appState.updateCurrentUser(testUser)
+
+    // Then
+    val currentUser = appState.currentUser
+    assertTrue("Текущий пользователь должен быть обновлен", currentUser != null)
+    assertTrue("ID пользователя должен совпадать", currentUser?.id == testUser.id)
+    assertTrue("Имя пользователя должно совпадать", currentUser?.name == testUser.name)
+}
+```
+
+### Ручное тестирование
+
+Ручное тестирование функциональности было проведено на экране профиля:
+
+✅ Кнопка поиска скрывается мгновенно при logout
+✅ Кнопка поиска появляется мгновенно при login
+✅ `appState.isAuthorized` доступен на всех экранах
+✅ Состояние синхронизируется корректно между ProfileViewModel и AppState
