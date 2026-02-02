@@ -17,7 +17,8 @@ fun BottomNavigationBar(
     appState: AppState,
     modifier: Modifier = Modifier,
 ) {
-    val currentDestination = appState.currentDestination
+    val currentDestination = appState.currentTopLevelDestination
+
 
     NavigationBar(
         modifier = modifier,

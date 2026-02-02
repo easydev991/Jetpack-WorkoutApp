@@ -29,6 +29,7 @@ import com.swparks.ui.screens.messages.MessagesRootScreen
 import com.swparks.ui.screens.messages.MessagesTopAppBar
 import com.swparks.ui.screens.more.MoreScreen
 import com.swparks.ui.screens.more.MoreTopAppBar
+import com.swparks.ui.screens.parks.ParksAddedByUserScreen
 import com.swparks.ui.screens.parks.ParksRootScreen
 import com.swparks.ui.screens.parks.ParksTopAppBar
 import com.swparks.ui.screens.profile.ProfileRootScreen
@@ -73,37 +74,41 @@ fun RootScreen(appState: AppState) {
 
     Scaffold(
         topBar = {
-            when (appState.currentTopLevelDestination?.route) {
-                Screen.Parks.route -> {
-                    ParksTopAppBar(
-                        appState = appState,
-                        parksCount = parks.size
-                    )
-                }
+            // Показываем TopAppBar только для корневых экранов вкладок
+            // Для дочерних экранов (parentTab != null) TopAppBar показывается внутри самого экрана
+            if (appState.isCurrentRouteTopLevel) {
+                when (appState.currentTopLevelDestination?.route) {
+                    Screen.Parks.route -> {
+                        ParksTopAppBar(
+                            appState = appState,
+                            parksCount = parks.size
+                        )
+                    }
 
-                Screen.Events.route -> {
-                    EventsTopAppBar()
-                }
+                    Screen.Events.route -> {
+                        EventsTopAppBar()
+                    }
 
-                Screen.Messages.route -> {
-                    MessagesTopAppBar()
-                }
+                    Screen.Messages.route -> {
+                        MessagesTopAppBar()
+                    }
 
-                Screen.Profile.route -> {
-                    ProfileTopAppBar(
-                        appState = appState,
-                        onSearchUsersClick = {
-                            Log.i("RootScreen", "Нажата кнопка: Поиск пользователей")
-                        }
-                    )
-                }
+                    Screen.Profile.route -> {
+                        ProfileTopAppBar(
+                            appState = appState,
+                            onSearchUsersClick = {
+                                Log.i("RootScreen", "Нажата кнопка: Поиск пользователей")
+                            }
+                        )
+                    }
 
-                Screen.More.route -> {
-                    MoreTopAppBar()
-                }
+                    Screen.More.route -> {
+                        MoreTopAppBar()
+                    }
 
-                null -> {}
-                else -> {}
+                    null -> {}
+                    else -> {}
+                }
             }
         },
         bottomBar = {
@@ -153,6 +158,7 @@ fun RootScreen(appState: AppState) {
                 ProfileRootScreen(
                     appContainer = appContainer,
                     viewModel = profileViewModel,
+                    appState = appState,
                     onShowLoginSheet = { showLoginSheet = true },
                     modifier = Modifier
                         .fillMaxSize()
@@ -215,7 +221,17 @@ fun RootScreen(appState: AppState) {
             }
 
             composable(route = Screen.UserParks.route) {
-                // TODO: Реализовать UserParksScreen
+                val currentUser by profileViewModel.currentUser.collectAsState()
+                val addedParks = currentUser?.addedParks ?: emptyList()
+                ParksAddedByUserScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    parks = addedParks,
+                    onBackClick = { appState.navController.popBackStack() },
+                    onParkClick = { park ->
+                        Log.d("RootScreen", "Нажата площадка: ${park.name}")
+                    },
+                    parentPaddingValues = paddingValues
+                )
             }
 
             composable(route = Screen.UserTrainingParks.route) {
@@ -274,7 +290,8 @@ fun RootScreen(appState: AppState) {
                 )[ThemeIconViewModel::class.java]
                 ThemeIconScreen(
                     viewModel = viewModel,
-                    onBackClick = { appState.navController.popBackStack() }
+                    onBackClick = { appState.navController.popBackStack() },
+                    parentPaddingValues = paddingValues
                 )
             }
 

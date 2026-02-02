@@ -3,6 +3,7 @@ package com.swparks.ui.screens.themeicon
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -45,6 +46,7 @@ data class ThemeIconScreenParams(
     val onDynamicColorsChange: (Boolean) -> Unit = {},
     val onIconChange: (AppIcon) -> Unit = {},
     val onBackClick: () -> Unit = {},
+    val parentPaddingValues: PaddingValues = PaddingValues(0.dp, 0.dp),
 )
 
 /** Экран для выбора темы и иконки приложения. */
@@ -53,6 +55,7 @@ data class ThemeIconScreenParams(
 fun ThemeIconScreen(
     viewModel: ThemeIconViewModel,
     onBackClick: () -> Unit,
+    parentPaddingValues: PaddingValues = PaddingValues(0.dp, 0.dp),
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -66,6 +69,7 @@ fun ThemeIconScreen(
                 onDynamicColorsChange = { viewModel.updateDynamicColors(it) },
                 onIconChange = { viewModel.updateIcon(it) },
                 onBackClick = onBackClick,
+                parentPaddingValues = parentPaddingValues,
             ),
     )
 }
@@ -101,6 +105,7 @@ internal fun ThemeIconScreenContent(
                 Modifier
                     .fillMaxWidth()
                     .verticalScroll(scrollState)
+                    .padding(params.parentPaddingValues)
                     .padding(paddingValues)
                     .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),

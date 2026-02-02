@@ -38,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
 import com.swparks.data.AppContainer
 import com.swparks.navigation.AppState
+import com.swparks.navigation.Screen
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.FormRowView
 import com.swparks.ui.ds.IncognitoProfileView
@@ -56,6 +57,7 @@ fun ProfileRootScreen(
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel,
     appContainer: AppContainer? = null,
+    appState: AppState? = null,
     onShowLoginSheet: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
@@ -173,7 +175,9 @@ fun ProfileRootScreen(
                 AddedParksButton(
                     addedParksCount = user.addedParks?.size ?: 0,
                     onClick = {
-                        Log.i("ProfileRootScreen", "Нажата кнопка: Добавленные площадки")
+                        appState?.navController?.navigate(
+                            Screen.UserParks.createRoute(user.id)
+                        )
                     }
                 )
             }

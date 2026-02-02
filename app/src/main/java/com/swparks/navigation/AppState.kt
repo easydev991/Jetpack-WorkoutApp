@@ -93,13 +93,46 @@ class AppState(
 
     /**
      * Текущее верхнеуровневое назначение (вкладка)
+     * Учитывает подэкраны — если мы на UserParks, вернет PROFILE
      */
     val currentTopLevelDestination: TopLevelDestination?
         @Composable get() {
-            return topLevelDestinations.firstOrNull { destination ->
-                currentDestination?.route == destination.route
-            }
+            val route = currentDestination?.route ?: return null
+            return findTopLevelDestinationForRoute(route)
         }
+
+    /**
+     * Проверяет, является ли текущий маршрут корневым (верхнеуровневым) экраном
+     * или дочерним (подэкраном внутри вкладки)
+     * Возвращает true только для корневых экранов без parentTab
+     */
+    val isCurrentRouteTopLevel: Boolean
+        @Composable get() {
+            val route = currentDestination?.route ?: return false
+            val baseRoute = route.substringBefore("/")
+            val screen = Screen.allScreens.find {
+                it.route.substringBefore("/") == baseRoute
+            }
+            return screen?.parentTab == null
+        }
+
+    /**
+     * Находит TopLevelDestination для маршрута (учитывает parentTab)
+     */
+    private fun findTopLevelDestinationForRoute(route: String): TopLevelDestination? {
+        val baseRoute = route.substringBefore("/")
+
+        // Сначала ищем точное совпадение с вкладкой
+        topLevelDestinations.find {
+            it.route.substringBefore("/") == baseRoute
+        }?.let { return it }
+
+        // Если не нашли, ищем через parentTab (для подэкранов)
+        val parentTabRoute = Screen.findParentTab(route)?.route?.substringBefore("/")
+        return topLevelDestinations.find {
+            it.route.substringBefore("/") == parentTabRoute
+        }
+    }
 
     /**
      * Список верхнеуровневых назначений (вкладок)
@@ -114,22 +147,35 @@ class AppState(
 
     /**
      * UI логика для навигации к верхнеуровневому назначению.
-     * Верхнеуровневые назначения имеют только одну копию назначения в стеке,
-     * сохраняют и восстанавливают состояние при навигации.
+     * При повторном нажатии на текущую вкладку сбрасывает стек на корень.
      *
      * @param topLevelDestination: Назначение, к которому нужно перейти.
      */
     fun navigateToTopLevelDestination(topLevelDestination: TopLevelDestination) {
-        navController.navigate(topLevelDestination.route) {
-            // Очищаем стек до стартовой точки назначения в графе,
-            // чтобы избежать накопления большого стека при выборе элементов
-            popUpTo(navController.graph.findStartDestination().id) {
-                saveState = true
+        val currentRoute = navController.currentBackStackEntry?.destination?.route
+        val currentTab = currentRoute?.let { findTopLevelDestinationForRoute(it) }
+        val isReselect = currentTab?.route == topLevelDestination.route
+
+        if (isReselect) {
+            // Повторное нажатие на текущую вкладку — сбрасываем стек до корня
+            navController.navigate(topLevelDestination.route) {
+                // Удаляем весь стек выше корня вкладки (включительно),
+                // затем создаем заново
+                popUpTo(topLevelDestination.route) {
+                    inclusive = true  // Удаляем и сам корень вкладки
+                }
+                launchSingleTop = true
+                // restoreState = false — не восстанавливаем, а создаем заново
             }
-            // Избегаем множественных копий одного назначения при повторном выборе
-            launchSingleTop = true
-            // Восстанавливаем состояние при повторном выборе элемента
-            restoreState = true
+        } else {
+            // Переход на другую вкладку — стандартная логика
+            navController.navigate(topLevelDestination.route) {
+                popUpTo(navController.graph.findStartDestination().id) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
         }
     }
 
