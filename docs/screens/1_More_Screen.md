@@ -84,7 +84,7 @@
 
 **ViewModels:** `ThemeIconViewModel.kt`
 
-**UI Components:** `ThemeIconScreen.kt`, `DaysRadioButton.kt`, `IconPreviewItem.kt`
+**UI Components:** `ThemeIconScreen.kt`, `RadioButton.kt`, `IconPreviewItem.kt`
 
 **Тема:** `DynamicColors.kt`
 

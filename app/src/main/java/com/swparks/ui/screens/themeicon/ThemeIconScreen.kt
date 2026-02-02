@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.swparks.R
 import com.swparks.domain.model.AppIcon
 import com.swparks.domain.model.AppTheme
-import com.swparks.ui.screen.components.common.DaysRadioButton
+import com.swparks.ui.screen.components.common.RadioButton
 import com.swparks.ui.screen.components.themeicon.IconPreviewItem
 import com.swparks.ui.theme.DynamicColors
 import com.swparks.viewmodel.ThemeIconViewModel
@@ -141,7 +141,7 @@ private fun ThemeSection(
 
     Column(modifier = Modifier.selectableGroup()) {
         // Светлая тема
-        DaysRadioButton(
+        RadioButton(
             text = stringResource(R.string.light),
             selected = theme == AppTheme.LIGHT,
             onClick = { onThemeChange(AppTheme.LIGHT) },
@@ -149,7 +149,7 @@ private fun ThemeSection(
         )
 
         // Тёмная тема
-        DaysRadioButton(
+        RadioButton(
             text = stringResource(R.string.dark),
             selected = theme == AppTheme.DARK,
             onClick = { onThemeChange(AppTheme.DARK) },
@@ -157,7 +157,7 @@ private fun ThemeSection(
         )
 
         // Системная тема
-        DaysRadioButton(
+        RadioButton(
             text = stringResource(R.string.system),
             selected = theme == AppTheme.SYSTEM,
             onClick = { onThemeChange(AppTheme.SYSTEM) },

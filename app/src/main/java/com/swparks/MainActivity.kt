@@ -61,15 +61,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    @Preview(showBackground = true, locale = "ru")
-    @Composable
-    fun AppPreview() {
-        val appState = rememberAppState(rememberNavController())
-        JetpackWorkoutAppTheme {
-            RootScreen(
-                appState = appState
-            )
-        }
-    }
 }

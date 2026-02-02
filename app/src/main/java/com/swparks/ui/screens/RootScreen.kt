@@ -119,10 +119,13 @@ fun RootScreen(appState: AppState) {
             // Вкладка "Площадки"
             composable(route = Screen.Parks.route) {
                 ParksRootScreen(
-                    parks = parks,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
+                        .padding(paddingValues),
+                    parks = parks,
+                    onParkClick = {
+                        Log.d("ParksRootScreen", "Нажата площадка: ${it.name}")
+                    }
                 )
             }
 
