@@ -42,8 +42,7 @@ class UserTest {
         friendsCount = friendsCount,
         parksCount = parksCount,
         addedParks = addedParks,
-        journalCount = journalCount,
-        lang = "ru"
+        journalCount = journalCount
     )
 
     @Test

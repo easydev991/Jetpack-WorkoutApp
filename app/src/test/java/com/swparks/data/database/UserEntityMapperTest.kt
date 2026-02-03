@@ -45,7 +45,6 @@ class UserEntityMapperTest {
         assertEquals(user.friendsCount, entity.friendsCount)
         assertEquals(user.parksCount, entity.parksCount)
         assertEquals(user.journalCount, entity.journalCount)
-        assertEquals(user.lang, entity.lang)
 
         // Проверяем addedParks
         assertNotNull(entity.addedParks)
@@ -110,7 +109,6 @@ class UserEntityMapperTest {
                 createTestPark(id = 2, name = "Park 2")
             ),
             journalCount = 3,
-            lang = "ru",
             isCurrentUser = true,
             isFriend = false,
             isFriendRequest = false,
@@ -134,7 +132,6 @@ class UserEntityMapperTest {
         assertEquals(entity.friendsCount, user.friendsCount)
         assertEquals(entity.parksCount, user.parksCount)
         assertEquals(entity.journalCount, user.journalCount)
-        assertEquals(entity.lang, user.lang)
 
         // Проверяем addedParks
         assertNotNull(user.addedParks)
@@ -163,7 +160,6 @@ class UserEntityMapperTest {
             parksCount = "5",
             addedParks = null,
             journalCount = 3,
-            lang = "ru",
             isCurrentUser = false,
             isFriend = false,
             isFriendRequest = false,
@@ -196,7 +192,6 @@ class UserEntityMapperTest {
             parksCount = "5",
             addedParks = emptyList(),
             journalCount = 3,
-            lang = "ru",
             isCurrentUser = false,
             isFriend = false,
             isFriendRequest = false,
@@ -244,7 +239,6 @@ class UserEntityMapperTest {
         assertEquals(originalUser.friendsCount, restoredUser.friendsCount)
         assertEquals(originalUser.parksCount, restoredUser.parksCount)
         assertEquals(originalUser.journalCount, restoredUser.journalCount)
-        assertEquals(originalUser.lang, restoredUser.lang)
 
         // Проверяем addedParks
         assertEquals(originalUser.addedParks?.size, restoredUser.addedParks?.size)
@@ -278,8 +272,7 @@ class UserEntityMapperTest {
             friendsCount = 10,
             parksCount = "5",
             addedParks = addedParks,
-            journalCount = 3,
-            lang = "ru"
+            journalCount = 3
         )
     }
 

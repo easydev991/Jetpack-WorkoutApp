@@ -54,7 +54,6 @@ class SWRepositoryFriendsTest {
             id = id,
             name = "testuser$id",
             image = "",
-            lang = "ru",
             cityID = 1,
             countryID = 1
         )
@@ -141,7 +140,7 @@ class SWRepositoryFriendsTest {
     }
 
     @Test
-    fun respondToFriendRequest_whenAcceptTrue_thenCallsAccept() = runTest {
+    fun respondToFriendRequest_whenAcceptTrue_thenUpdatesCache() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
         coEvery { mockApi.acceptFriendRequest(2L) } returns mockk(relaxed = true)
@@ -157,11 +156,13 @@ class SWRepositoryFriendsTest {
         // Then
         assertTrue(result.isSuccess)
         coVerify { mockApi.acceptFriendRequest(2L) }
+        coVerify { mockUserDao.markAsFriend(2L) }
+        coVerify { mockUserDao.removeFriendRequest(2L) }
         coVerify(exactly = 0) { mockApi.declineFriendRequest(any()) }
     }
 
     @Test
-    fun respondToFriendRequest_whenAcceptFalse_thenCallsDecline() = runTest {
+    fun respondToFriendRequest_whenAcceptFalse_thenUpdatesCache() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
         coEvery { mockApi.declineFriendRequest(2L) } returns mockk(relaxed = true)
@@ -177,11 +178,13 @@ class SWRepositoryFriendsTest {
         // Then
         assertTrue(result.isSuccess)
         coVerify { mockApi.declineFriendRequest(2L) }
+        coVerify { mockUserDao.removeFriendRequest(2L) }
         coVerify(exactly = 0) { mockApi.acceptFriendRequest(any()) }
+        coVerify(exactly = 0) { mockUserDao.markAsFriend(any()) }
     }
 
     @Test
-    fun respondToFriendRequest_whenApiThrowsException_thenReturnsFailure() = runTest {
+    fun respondToFriendRequest_whenApiFails_thenDoesNotUpdateCache() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
         coEvery { mockApi.acceptFriendRequest(any()) } throws IOException("Network error")
@@ -196,7 +199,9 @@ class SWRepositoryFriendsTest {
 
         // Then
         assertTrue(result.isFailure)
-        assertTrue(result.exceptionOrNull() is NetworkException)
+        coVerify { mockApi.acceptFriendRequest(2L) }
+        coVerify(exactly = 0) { mockUserDao.markAsFriend(any()) }
+        coVerify(exactly = 0) { mockUserDao.removeFriendRequest(any()) }
     }
 
     @Test

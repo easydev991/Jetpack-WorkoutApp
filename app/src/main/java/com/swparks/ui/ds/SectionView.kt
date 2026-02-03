@@ -21,7 +21,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * Обертка для добавления мелкого заголовка контенту
  *
  * @param modifier Модификатор
- * @param titleID Идентификатор локализованной строки для заголовка
+ * @param titleID Идентификатор локализованной строки для заголовка (null - без заголовка)
  * @param addPaddingToTitle Нужно ли добавлять паддинг слева от заголовка
  * @param titleBottomPadding Паддинг снизу от заголовка, по умолчанию 2
  * @param content Контент
@@ -29,7 +29,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
 @Composable
 fun SectionView(
     modifier: Modifier = Modifier,
-    @StringRes titleID: Int,
+    @StringRes titleID: Int? = null,
     addPaddingToTitle: Boolean = true,
     titleBottomPadding: Dp = dimensionResource(id = R.dimen.spacing_small),
     content: @Composable () -> Unit
@@ -38,14 +38,16 @@ fun SectionView(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(titleBottomPadding)
     ) {
-        Text(
-            text = stringResource(id = titleID).uppercase(),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(
-                start = if (addPaddingToTitle) dimensionResource(id = R.dimen.spacing_small) else 0.dp
+        if (titleID != null) {
+            Text(
+                text = stringResource(id = titleID).uppercase(),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(
+                    start = if (addPaddingToTitle) dimensionResource(id = R.dimen.spacing_small) else 0.dp
+                )
             )
-        )
+        }
         content()
     }
 }

@@ -74,6 +74,7 @@ sealed class Screen(
     }
 
     object Friends : Screen("friends", parentTab = Messages)
+    object MyFriends : Screen("my_friends", parentTab = Profile)
     object UserSearch : Screen("user_search", parentTab = Messages)
 
     // Экраны профиля
@@ -129,7 +130,7 @@ sealed class Screen(
                 EventGallery, AddEventComment,
 
                 // Экраны сообщений
-                Chat, Friends, UserSearch,
+                Chat, Friends, MyFriends, UserSearch,
 
                 // Экраны профиля
                 EditProfile, UserParks, UserTrainingParks, Blacklist,

@@ -52,8 +52,7 @@ class MockSWApi : SWApi {
         friendsCount = 5,
         parksCount = "2",
         addedParks = emptyList(),
-        journalCount = 3,
-        lang = "ru"
+        journalCount = 3
     )
 
     /**

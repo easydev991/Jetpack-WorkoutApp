@@ -450,9 +450,13 @@ class SWRepositoryImp(
         try {
             if (accept) {
                 swApi.acceptFriendRequest(userId)
+                // При принятии: помечаем как друга
+                userDao.markAsFriend(userId)
             } else {
                 swApi.declineFriendRequest(userId)
             }
+            // В обоих случаях: снимаем флаг заявки
+            userDao.removeFriendRequest(userId)
             Result.success(Unit)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "обработке заявки в друзья"))

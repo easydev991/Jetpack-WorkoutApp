@@ -68,7 +68,7 @@ class SWRepositoryTest {
     }
 
     private fun createMockUser(id: Long = 1L): User {
-        return User(id = id, name = "testuser", image = "", lang = "ru")
+        return User(id = id, name = "testuser", image = "")
     }
 
     private fun createMockPark(id: Long = 1L): Park {

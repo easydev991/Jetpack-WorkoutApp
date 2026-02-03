@@ -152,13 +152,34 @@ class MoreScreenTest {
     }
 
     @Test
-    fun moreScreen_whenDisplayed_thenShowsMoreTitle() {
+    fun moreScreen_whenDisplayed_thenShowsMoreContent() {
         // When
         setContent()
 
-        // Then
+        // Then - Проверяем отображение содержимого экрана (без AppBar, который находится в RootScreen)
+        // Секция "Settings"
         composeTestRule
-            .onNodeWithText(context.getString(R.string.more), ignoreCase = true)
+            .onNodeWithText(context.getString(R.string.settings), ignoreCase = true)
+            .assertIsDisplayed()
+
+        // Кнопка "App Theme and Icon"
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.app_theme_and_icon), ignoreCase = true)
+            .assertIsDisplayed()
+
+        // Секция "About App"
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.about_app), ignoreCase = true)
+            .assertIsDisplayed()
+
+        // Секция "Other Apps"
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.other_apps), ignoreCase = true)
+            .assertIsDisplayed()
+
+        // Секция "Support Project"
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.support_project), ignoreCase = true)
             .assertIsDisplayed()
     }
 }

@@ -28,7 +28,7 @@ import java.time.Period
 data class User(
     val id: Long,
     val name: String,
-    val image: String,
+    val image: String?,
     @SerialName("city_id")
     val cityID: Int? = null,
     @SerialName("country_id")
@@ -50,8 +50,7 @@ data class User(
     @SerialName("added_areas")
     val addedParks: List<Park>? = null,
     @SerialName("journal_count")
-    val journalCount: Int? = null,
-    val lang: String
+    val journalCount: Int? = null
 ) {
     val genderOption: Gender? = if (genderCode != null) {
         Gender.entries.firstOrNull { it.rawValue == genderCode }

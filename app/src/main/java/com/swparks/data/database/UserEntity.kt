@@ -33,7 +33,7 @@ import com.swparks.model.Park
 data class UserEntity(
     @PrimaryKey val id: Long,
     val name: String,
-    val image: String,
+    val image: String? = null,
     val cityId: Int? = null,
     val countryId: Int? = null,
     val birthDate: String? = null,
@@ -45,7 +45,6 @@ data class UserEntity(
     val parksCount: String? = null,
     val addedParks: List<Park>? = null,
     val journalCount: Int? = null,
-    val lang: String,
     // Флаги для категоризации пользователей
     val isFriend: Boolean = false,
     val isFriendRequest: Boolean = false,

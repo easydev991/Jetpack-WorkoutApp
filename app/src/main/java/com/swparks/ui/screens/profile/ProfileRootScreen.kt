@@ -108,7 +108,7 @@ fun ProfileRootScreen(
                             gender = user.genderOption?.let { stringResource(id = it.description) }
                                 ?: "",
                             age = user.age,
-                            shortAddress = "Загрузка..."
+                            shortAddress = stringResource(R.string.loading)
                         )
                     )
                 }
@@ -155,7 +155,7 @@ fun ProfileRootScreen(
                     friendsCount = user.friendsCount ?: 0,
                     friendRequestsCount = user.friendRequestCount?.toIntOrNull() ?: 0,
                     onClick = {
-                        Log.i("ProfileRootScreen", "Нажата кнопка: Друзья")
+                        appState?.navController?.navigate(Screen.MyFriends.route)
                     }
                 )
             }

@@ -55,7 +55,7 @@ class EventsViewModelTest {
     }
 
     private fun createMockUser(id: Long = 1L): User {
-        return User(id = id, name = "testuser", image = "", lang = "ru")
+        return User(id = id, name = "testuser", image = "")
     }
 
     @Test

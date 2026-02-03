@@ -103,6 +103,13 @@ interface UserDao {
     suspend fun removeFriend(userId: Long)
 
     /**
+     * Удалить заявку на добавление в друга
+     * @param userId Идентификатор пользователя
+     */
+    @Query("UPDATE users SET isFriendRequest = 0 WHERE id = :userId")
+    suspend fun removeFriendRequest(userId: Long)
+
+    /**
      * Добавить пользователя в черный список
      * @param userId Идентификатор пользователя
      */

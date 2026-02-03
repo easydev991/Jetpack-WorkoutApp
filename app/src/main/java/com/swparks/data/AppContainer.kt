@@ -27,6 +27,7 @@ import com.swparks.domain.usecase.ResetPasswordUseCase
 import com.swparks.network.SWApi
 import com.swparks.util.AndroidLogger
 import com.swparks.util.Logger
+import com.swparks.viewmodel.FriendsListViewModel
 import com.swparks.viewmodel.ProfileViewModel
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -46,6 +47,9 @@ interface AppContainer {
 
     /** Фабрика для ProfileViewModel (единый контейнер обеспечивает одну БД с LoginViewModel). */
     fun profileViewModelFactory(): ProfileViewModel
+
+    /** Фабрика для FriendsListViewModel */
+    fun friendsListViewModelFactory(): FriendsListViewModel
 
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
@@ -194,6 +198,13 @@ class DefaultAppContainer(context: Context) : AppContainer {
     /** Factory метод для создания ProfileViewModel */
     override fun profileViewModelFactory() = ProfileViewModel(
         countriesRepository = countriesRepository,
+        swRepository = swRepository,
+        logger = logger
+    )
+
+    /** Factory метод для создания FriendsListViewModel */
+    override fun friendsListViewModelFactory() = FriendsListViewModel(
+        userDao = userDao,
         swRepository = swRepository,
         logger = logger
     )

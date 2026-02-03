@@ -35,8 +35,7 @@ class AppStateTest {
         friendsCount = null,
         parksCount = null,
         addedParks = null,
-        journalCount = null,
-        lang = "ru"
+        journalCount = null
     )
 
     @Before

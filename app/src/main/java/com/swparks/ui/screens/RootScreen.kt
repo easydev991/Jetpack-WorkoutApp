@@ -32,6 +32,7 @@ import com.swparks.ui.screens.more.MoreTopAppBar
 import com.swparks.ui.screens.parks.ParksAddedByUserScreen
 import com.swparks.ui.screens.parks.ParksRootScreen
 import com.swparks.ui.screens.parks.ParksTopAppBar
+import com.swparks.ui.screens.profile.MyFriendsScreen
 import com.swparks.ui.screens.profile.ProfileRootScreen
 import com.swparks.ui.screens.profile.ProfileTopAppBar
 import com.swparks.ui.screens.themeicon.ThemeIconScreen
@@ -230,6 +231,18 @@ fun RootScreen(appState: AppState) {
                     onParkClick = { park ->
                         Log.d("RootScreen", "Нажата площадка: ${park.name}")
                     },
+                    parentPaddingValues = paddingValues
+                )
+            }
+
+            composable(route = Screen.MyFriends.route) {
+                val viewModel = remember(appContainer) {
+                    appContainer.friendsListViewModelFactory()
+                }
+                MyFriendsScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    viewModel = viewModel,
+                    onBackClick = { appState.navController.popBackStack() },
                     parentPaddingValues = paddingValues
                 )
             }

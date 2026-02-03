@@ -9,8 +9,7 @@ class CommentTest {
     private fun createTestUser(id: Long = 1L) = User(
         id = id,
         name = "testuser",
-        image = "https://example.com/image.jpg",
-        lang = "ru"
+        image = "https://example.com/image.jpg"
     )
 
     private fun createTestComment(

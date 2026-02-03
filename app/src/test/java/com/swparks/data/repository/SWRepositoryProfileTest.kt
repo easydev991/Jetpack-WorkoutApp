@@ -54,7 +54,6 @@ class SWRepositoryProfileTest {
             id = id,
             name = "testuser",
             image = "",
-            lang = "ru",
             cityID = 1,
             countryID = 1
         )

@@ -35,7 +35,6 @@ fun User.toEntity(
     parksCount = parksCount,
     addedParks = addedParks,
     journalCount = journalCount,
-    lang = lang,
     isCurrentUser = isCurrentUser,
     isFriend = isFriend,
     isFriendRequest = isFriendRequest,
@@ -61,6 +60,5 @@ fun UserEntity.toDomain(): User = User(
     friendsCount = friendsCount,
     parksCount = parksCount,
     addedParks = addedParks,
-    journalCount = journalCount,
-    lang = lang
+    journalCount = journalCount
 )

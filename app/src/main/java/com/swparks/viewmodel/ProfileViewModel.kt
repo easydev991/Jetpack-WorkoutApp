@@ -70,30 +70,37 @@ class ProfileViewModel(
     }
 
     /**
-     * Загружает профиль пользователя с сервера по userId.
+     * Загружает профиль пользователя и социальные данные с сервера по userId.
      * Используется после успешной авторизации для загрузки свежих данных.
-     * Сначала загружает пользователя с сервера, затем страну и город.
+     * Загружает пользователя, друзей, заявки и черный список параллельно,
+     * затем страну и город.
      *
-     * @param userId ID пользователя для загрузки профиля
+     * @param userId ID пользователя для загрузки профиля и социальных данных
      */
     fun loadProfileFromServer(userId: Long) {
         viewModelScope.launch {
             try {
-                // Загружаем пользователя с сервера
-                swRepository.getUser(userId)
-                    .onSuccess { user ->
-                        // Пользователь сохранен в кэше через SWRepository.getUser()
+                // Загружаем профиль и социальные данные с сервера
+                swRepository.getSocialUpdates(userId)
+                    .onSuccess { socialUpdates ->
+                        // Данные сохранены в кэше через SWRepository.getSocialUpdates()
                         // Теперь загружаем страну и город
-                        loadProfileAddress(user)
-                        logger.i(TAG, "Профиль загружен с сервера: ${user.id}")
+                        loadProfileAddress(socialUpdates.user)
+                        logger.i(
+                            TAG,
+                            "Профиль и социальные данные загружены с сервера: ${socialUpdates.user.id}"
+                        )
                     }
                     .onFailure { error ->
-                        _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${error.message}") }
-                        logger.e(TAG, "Ошибка загрузки профиля с сервера: ${error.message}")
+                        _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля и социальных данных: ${error.message}") }
+                        logger.e(
+                            TAG,
+                            "Ошибка загрузки профиля и социальных данных: ${error.message}"
+                        )
                     }
             } catch (e: Exception) {
-                _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля: ${e.message}") }
-                logger.e(TAG, "Ошибка загрузки профиля: ${e.message}")
+                _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля и социальных данных: ${e.message}") }
+                logger.e(TAG, "Ошибка загрузки профиля и социальных данных: ${e.message}")
             }
         }
     }
