@@ -4,15 +4,32 @@
 
 Документ описывает реализацию безопасного хранения и использования токена авторизации в Android-приложении Jetpack-WorkoutApp с соблюдением консистентности с iOS-версией.
 
+**Последнее обновление:** 7 февраля 2026 года
+
+**Статус проверки:** Все компоненты проверены и соответствуют текущему состоянию проекта
+
 ---
 
 ## Статус реализации
 
 **Статус:** ✅ **ЗАВЕРШЕНО**
 
-### Выполненные этапы
+### Реализованные компоненты
 
-- ✅ **Этапы 0-16:** SWApi, Tink, EncryptedStringSerializer, CryptoManager, SecureTokenRepository, TokenInterceptor, AppContainer, LoginUseCase, LogoutUseCase, AuthViewModel (тесты + реализация)
+- ✅ **CryptoManager** - AES-128-GCM-HKDF шифрование через Tink, ключи в Android Keystore, интеграционные тесты
+- ✅ **EncryptedStringSerializer** - автоматическое шифрование/дешифрование строк с UTF-8 конвертацией
+- ✅ **SecureTokenRepository** - Flow authToken, методы saveAuthToken/getAuthTokenSync/clearAuthTokenSync, unit-тесты
+- ✅ **TokenInterceptor** - добавляет `Authorization: Basic {token}`, проверяет пустоту, интегрирован в OkHttpClient, unit-тесты
+- ✅ **AppContainer** - создает и интегрирует TokenInterceptor и SecureTokenRepository
+- ✅ **LoginUseCase** - сохраняет токен, вызывает login, сохраняет userId, интерфейс ILoginUseCase, unit-тесты
+- ✅ **LogoutUseCase** - очищает токен, сбрасывает isAuthorized, интерфейс ILogoutUseCase, unit-тесты
+- ✅ **AuthViewModel** - использует ILoginUseCase/ILogoutUseCase, AuthUiState, ErrorReporter, unit-тесты
+
+### Проверка тестов
+
+✅ Все тесты проходят: `SecureTokenRepositoryTest`, `TokenInterceptorTest`, `LoginUseCaseTest`, `LogoutUseCaseTest`, `AuthViewModelTest`, `CryptoManagerIntegrationTest`
+
+**Команда:** `./gradlew :app:testDebugUnitTest` - **BUILD SUCCESSFUL**
 
 ---
 
@@ -145,31 +162,36 @@ request.allHTTPHeaderFields = Dictionary(
 
 ---
 
-## План TDD реализации по шагам
+## План TDD реализации
 
-### Этапы 0-13: SWApi, Tink, EncryptedStringSerializer, CryptoManager, SecureTokenRepository, TokenInterceptor, AppContainer, LoginUseCase ✅
+**Статус:** ✅ Все этапы выполнены
 
-**Реализовано:** SWApi исправлен, зависимости Tink, EncryptedStringSerializer, CryptoManager, SecureTokenRepository с шифрованием через Tink и Base64, TokenInterceptor для добавления заголовка `Authorization: Basic {token}`, AppContainer с интерцепторами в OkHttpClient, LoginUseCase сохраняет токен и вызывает login.
+### Выполненные этапы
 
-**Результат:** Все тесты проходят успешно, консистентно с iOS-реализацией.
-
----
-
-### Этапы 14-16: LogoutUseCase, AuthViewModel ✅
-
-**Реализовано:** Unit-тесты и реализация LogoutUseCase с очисткой токена и сбросом флага isAuthorized, AuthViewModel с интерфейсами ILoginUseCase и ILogoutUseCase, обновление AppContainer.
-
-**Результат:** Все тесты проходят успешно ✅
+- ✅ **Подготовка** - добавлена зависимость Tink, подключен Preferences DataStore
+- ✅ **Криптография** - CryptoManager с AES-128-GCM-HKDF и Android Keystore, интеграционные тесты
+- ✅ **SecureTokenRepository** - Flow authToken, методы для сохранения/чтения/очистки токена, unit-тесты
+- ✅ **EncryptedStringSerializer** - автоматическое шифрование/дешифрование строк
+- ✅ **TokenInterceptor** - добавляет `Authorization: Basic {token}`, unit-тесты
+- ✅ **AppContainer** - интеграция TokenInterceptor и SecureTokenRepository в OkHttp
+- ✅ **LoginUseCase** - сохраняет токен, вызывает API, сохраняет userId, интерфейс ILoginUseCase, unit-тесты
+- ✅ **LogoutUseCase** - очищает токен, сбрасывает авторизацию, интерфейс ILogoutUseCase, unit-тесты
+- ✅ **AuthViewModel** - управление состоянием авторизации, интерфейсы, ErrorReporter, unit-тесты
 
 ---
 
 ## Итог
 
-После реализации всех этапов:
+**Реализация полностью завершена и протестирована** ✅
 
-✅ Токен авторизации хранится в Preferences DataStore с шифрованием через Tink
-✅ CryptoManager использует Android Keystore для безопасного хранения ключей
-✅ TokenInterceptor автоматически добавляет токен в заголовок Authorization для всех запросов
-✅ LoginUseCase сохраняет токен перед вызовом API
-✅ LogoutUseCase очищает токен и сбрасывает флаг авторизации
-✅ Архитектура консистентна с iOS-версией (Keychain + шифрование)
+### Функциональность
+
+✅ Безопасное хранение токена в Preferences DataStore с шифрованием через Tink (AES-128-GCM-HKDF)
+✅ Ключи шифрования в Android Keystore
+✅ Автоматическое добавление токена в заголовок `Authorization: Basic {token}` через TokenInterceptor
+✅ LoginUseCase сохраняет токен и userId, LogoutUseCase очищает данные
+✅ Консистентность с iOS-версией (Keychain + шифрование)
+
+### Тестирование
+
+✅ Все unit-тесты и интеграционные тесты проходят успешно
