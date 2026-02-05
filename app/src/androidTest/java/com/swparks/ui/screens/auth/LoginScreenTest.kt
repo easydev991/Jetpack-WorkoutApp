@@ -56,7 +56,6 @@ class LoginScreenTest {
             logger = NoOpLogger(),
             loginUseCase = container.loginUseCase,
             resetPasswordUseCase = container.resetPasswordUseCase,
-            errorReporter = container.errorReporter
         )
 
         composeTestRule.setContent {

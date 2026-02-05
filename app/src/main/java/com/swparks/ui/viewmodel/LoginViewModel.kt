@@ -9,11 +9,9 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.JetpackWorkoutApplication
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
-import com.swparks.model.AppError
 import com.swparks.model.LoginCredentials
 import com.swparks.ui.state.LoginEvent
 import com.swparks.ui.state.LoginUiState
-import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,8 +37,7 @@ import kotlinx.coroutines.launch
 class LoginViewModel(
     private val logger: Logger,
     private val loginUseCase: ILoginUseCase,
-    private val resetPasswordUseCase: IResetPasswordUseCase,
-    private val errorReporter: ErrorReporter,
+    private val resetPasswordUseCase: IResetPasswordUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
@@ -115,13 +112,7 @@ class LoginViewModel(
                     _uiState.value = LoginUiState.LoginError(errorMessage, exception)
                     _loginError.value = errorMessage
 
-                    // Дополнительная обработка через ErrorReporter
-                    errorReporter.handleError(
-                        AppError.Network(
-                            message = "Не удалось войти. Проверьте подключение к интернету.",
-                            throwable = exception
-                        )
-                    )
+                    // Не отправляем в errorReporter - ошибка отображается под полем пароля
                 }
         }
     }
@@ -156,13 +147,7 @@ class LoginViewModel(
                     _uiState.value = LoginUiState.ResetError(errorMessage, exception)
                     _resetError.value = errorMessage
 
-                    // Дополнительная обработка через ErrorReporter
-                    errorReporter.handleError(
-                        AppError.Network(
-                            message = "Не удалось восстановить пароль. Проверьте подключение к интернету.",
-                            throwable = exception
-                        )
-                    )
+                    // Не отправляем в errorReporter - ошибка отображается под полем логина
                 }
         }
     }
@@ -207,8 +192,7 @@ class LoginViewModel(
                 LoginViewModel(
                     logger = application.logger,
                     loginUseCase = application.container.loginUseCase,
-                    resetPasswordUseCase = application.container.resetPasswordUseCase,
-                    errorReporter = application.container.errorReporter
+                    resetPasswordUseCase = application.container.resetPasswordUseCase
                 )
             }
         }

@@ -3,22 +3,17 @@ package com.swparks.ui.viewmodel
 
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
-import com.swparks.model.AppError
 import com.swparks.model.LoginCredentials
 import com.swparks.model.LoginSuccess
 import com.swparks.ui.state.LoginEvent
 import com.swparks.ui.state.LoginUiState
-import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
 import com.swparks.util.NoOpLogger
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
-import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -41,7 +36,6 @@ class LoginViewModelTest {
 
     private lateinit var loginUseCase: ILoginUseCase
     private lateinit var resetPasswordUseCase: IResetPasswordUseCase
-    private lateinit var errorReporter: ErrorReporter
     private lateinit var loginViewModel: LoginViewModel
 
     private val testLoginSuccess = LoginSuccess(userId = 123L)
@@ -51,14 +45,10 @@ class LoginViewModelTest {
     fun setup() {
         loginUseCase = mockk(relaxed = true)
         resetPasswordUseCase = mockk(relaxed = true)
-        errorReporter = mockk(relaxed = true) {
-            every { errorFlow } returns MutableSharedFlow<AppError>()
-        }
         loginViewModel = LoginViewModel(
             testLogger,
             loginUseCase,
-            resetPasswordUseCase,
-            errorReporter
+            resetPasswordUseCase
         )
     }
 
@@ -251,7 +241,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun canLogIn_whenCredentialsValidAndNoError_thenReturnsTrue() {
+    fun login_whenValidCredentialsButNoError_thenCanLogInReturnsTrue() {
         // Given
         loginViewModel.onLoginChange("user@test.com")
         loginViewModel.onPasswordChange("password123")
@@ -266,7 +256,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun canLogIn_whenCredentialsInvalid_thenReturnsFalse() {
+    fun login_whenInvalidCredentials_thenCanLogInReturnsFalse() {
         // Given
         loginViewModel.onLoginChange("user@test.com")
         loginViewModel.onPasswordChange("123") // Пароль слишком короткий
@@ -281,7 +271,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun canLogIn_whenHasError_thenReturnsFalse() = runTest {
+    fun login_whenHasError_thenCanLogInReturnsFalse() = runTest {
         // Given
         val credentials = LoginCredentials(login = "user@test.com", password = "password123")
         loginViewModel.onLoginChange("user@test.com")
@@ -301,7 +291,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun canRestorePassword_whenLoginNotEmpty_thenReturnsTrue() {
+    fun resetPassword_whenLoginNotEmpty_thenCanRestorePasswordReturnsTrue() {
         // Given
         loginViewModel.onLoginChange("user@test.com")
 
@@ -313,7 +303,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun canRestorePassword_whenLoginEmpty_thenReturnsFalse() {
+    fun resetPassword_whenLoginEmpty_thenCanRestorePasswordReturnsFalse() {
         // Given
         loginViewModel.onLoginChange("")
 
@@ -325,38 +315,44 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun login_whenNetworkError_thenReportsErrorViaErrorReporter() = runTest {
+    fun login_whenServer400Error_thenSetsErrorUnderField() = runTest {
         // Given
         val credentials = LoginCredentials(login = "user@test.com", password = "password123")
         loginViewModel.onLoginChange("user@test.com")
         loginViewModel.onPasswordChange("password123")
-        val networkException = Exception("Network error")
-        coEvery { loginUseCase(credentials) } returns Result.failure(networkException)
-        every { errorReporter.handleError(any()) } returns true
+        val serverException = Exception("Не найден пользователь с таким логином или e-mail")
+        coEvery { loginUseCase(credentials) } returns Result.failure(serverException)
 
         // When
         loginViewModel.login()
         advanceUntilIdle()
 
         // Then
-        verify(exactly = 1) { errorReporter.handleError(any<AppError.Network>()) }
+        val state = loginViewModel.uiState.value
+        assertTrue(state is LoginUiState.LoginError)
+        val errorState = state as LoginUiState.LoginError
+        assertTrue(errorState.message == "Не найден пользователь с таким логином или e-mail")
+        assertTrue(loginViewModel.loginErrorState.value == "Не найден пользователь с таким логином или e-mail")
         coVerify(exactly = 1) { loginUseCase(credentials) }
     }
 
     @Test
-    fun resetPassword_whenNetworkError_thenReportsErrorViaErrorReporter() = runTest {
+    fun resetPassword_whenServer400Error_thenSetsErrorUnderField() = runTest {
         // Given
         loginViewModel.onLoginChange("user@test.com")
-        val networkException = Exception("Network error")
-        coEvery { resetPasswordUseCase("user@test.com") } returns Result.failure(networkException)
-        every { errorReporter.handleError(any()) } returns true
+        val serverException = Exception("Не найден пользователь с таким логином или e-mail")
+        coEvery { resetPasswordUseCase("user@test.com") } returns Result.failure(serverException)
 
         // When
         loginViewModel.resetPassword()
         advanceUntilIdle()
 
         // Then
-        verify(exactly = 1) { errorReporter.handleError(any<AppError.Network>()) }
+        val state = loginViewModel.uiState.value
+        assertTrue(state is LoginUiState.ResetError)
+        val errorState = state as LoginUiState.ResetError
+        assertTrue(errorState.message == "Не найден пользователь с таким логином или e-mail")
+        assertTrue(loginViewModel.resetErrorState.value == "Не найден пользователь с таким логином или e-mail")
         coVerify(exactly = 1) { resetPasswordUseCase("user@test.com") }
     }
 }

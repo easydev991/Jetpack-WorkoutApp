@@ -438,7 +438,7 @@ private fun HandleLoginErrorsOnly(
 
             is LoginUiState.ResetError -> {
                 if (uiState.exception is NetworkException) screenState.setShowNoInternetAlert(true)
-                viewModel.clearErrors()
+                // НЕ вызываем clearErrors() - сбрасываем только алерт, ошибку оставляем
             }
 
             else -> {} // Success и Loading здесь игнорируем
