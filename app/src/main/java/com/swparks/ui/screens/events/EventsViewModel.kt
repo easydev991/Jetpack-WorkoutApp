@@ -10,7 +10,9 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.JetpackWorkoutApplication
 import com.swparks.data.repository.SWRepository
+import com.swparks.model.AppError
 import com.swparks.model.Event
+import com.swparks.util.ErrorReporter
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
@@ -21,7 +23,19 @@ sealed interface EventsUIState {
     object Loading : EventsUIState
 }
 
-class EventsViewModel(private val swRepository: SWRepository) : ViewModel() {
+/**
+ * ViewModel для экрана списка мероприятий.
+ *
+ * Управляет загрузкой и отображением списка прошедших мероприятий.
+ * Обрабатывает сетевые ошибки и ошибки сервера через ErrorReporter.
+ *
+ * @param swRepository Репозиторий для загрузки мероприятий
+ * @param errorReporter Интерфейс для обработки и отправки ошибок в UI-слой
+ */
+class EventsViewModel(
+    private val swRepository: SWRepository,
+    private val errorReporter: ErrorReporter,
+) : ViewModel() {
     var eventsUIState: EventsUIState by mutableStateOf(EventsUIState.Loading)
         private set
 
@@ -29,6 +43,13 @@ class EventsViewModel(private val swRepository: SWRepository) : ViewModel() {
         getPastEvents()
     }
 
+    /**
+     * Загружает список прошедших мероприятий.
+     *
+     * При успешной загрузке обновляет состояние UI списком мероприятий.
+     * При ошибке сети или сервера отправляет ошибку через ErrorReporter
+     * и сохраняет сообщение об ошибке в UI state.
+     */
     fun getPastEvents() {
         viewModelScope.launch {
             eventsUIState = EventsUIState.Loading
@@ -36,9 +57,22 @@ class EventsViewModel(private val swRepository: SWRepository) : ViewModel() {
                 val pastEvents = swRepository.getPastEvents()
                 EventsUIState.Success(events = pastEvents)
             } catch (e: IOException) {
+                errorReporter.handleError(
+                    AppError.Network(
+                        message = "Не удалось загрузить мероприятия. Проверьте подключение к интернету.",
+                        throwable = e
+                    )
+                )
                 EventsUIState.Error(message = e.message)
             } catch (e: HttpException) {
-                EventsUIState.Error(message = e.message())
+                val errorMessage = e.message()
+                errorReporter.handleError(
+                    AppError.Server(
+                        code = e.code(),
+                        message = "Ошибка сервера при загрузке мероприятий: $errorMessage"
+                    )
+                )
+                EventsUIState.Error(message = errorMessage)
             }
         }
     }
@@ -49,7 +83,11 @@ class EventsViewModel(private val swRepository: SWRepository) : ViewModel() {
                 val application =
                     this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as JetpackWorkoutApplication
                 val swRepository = application.container.swRepository
-                EventsViewModel(swRepository = swRepository)
+                val errorReporter = application.container.errorReporter
+                EventsViewModel(
+                    swRepository = swRepository,
+                    errorReporter = errorReporter
+                )
             }
         }
     }

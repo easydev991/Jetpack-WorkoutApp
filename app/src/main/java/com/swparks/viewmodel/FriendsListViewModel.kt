@@ -6,6 +6,8 @@ import com.swparks.data.database.UserDao
 import com.swparks.data.database.UserEntity
 import com.swparks.data.database.toDomain
 import com.swparks.data.repository.SWRepository
+import com.swparks.model.AppError
+import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,11 +25,14 @@ import kotlinx.coroutines.launch
  * @param userDao DAO для работы с пользователями в локальной БД
  * @param swRepository Репозиторий для работы с API и загрузки социальных данных
  * @param logger Логгер для записи сообщений
+ * @param errorReporter Обработчик ошибок для отправки ошибок в UI
  */
+@Suppress("UnusedPrivateProperty")
 class FriendsListViewModel(
     private val userDao: UserDao,
     private val swRepository: SWRepository,
     private val logger: Logger,
+    private val errorReporter: ErrorReporter,
 ) : ViewModel() {
 
     private companion object {
@@ -111,7 +116,12 @@ class FriendsListViewModel(
                     logger.i(TAG, "Заявка успешно принята: userId=$userId")
                 }
                 .onFailure { error ->
-                    logger.e(TAG, "Ошибка принятия заявки: ${error.message}")
+                    errorReporter.handleError(
+                        AppError.Network(
+                            message = "Не удалось принять заявку. Проверьте подключение к интернету.",
+                            throwable = error
+                        )
+                    )
                 }
             _uiState.value = lastSuccessState.value ?: FriendsListUiState.Success()
         }
@@ -132,7 +142,12 @@ class FriendsListViewModel(
                     logger.i(TAG, "Заявка успешно отклонена: userId=$userId")
                 }
                 .onFailure { error ->
-                    logger.e(TAG, "Ошибка отклонения заявки: ${error.message}")
+                    errorReporter.handleError(
+                        AppError.Network(
+                            message = "Не удалось отклонить заявку. Проверьте подключение к интернету.",
+                            throwable = error
+                        )
+                    )
                 }
             _uiState.value = lastSuccessState.value ?: FriendsListUiState.Success()
         }

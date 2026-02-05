@@ -3,12 +3,15 @@ package com.swparks.viewmodel
 import com.swparks.data.database.UserDao
 import com.swparks.data.database.UserEntity
 import com.swparks.data.repository.SWRepository
+import com.swparks.model.AppError
 import com.swparks.ui.viewmodel.MainDispatcherRule
+import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -19,6 +22,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.io.IOException
 
 /**
  * Unit тесты для FriendsListViewModel
@@ -32,6 +36,7 @@ class FriendsListViewModelTest {
     private lateinit var userDao: UserDao
     private lateinit var swRepository: SWRepository
     private lateinit var logger: Logger
+    private lateinit var errorReporter: ErrorReporter
     private lateinit var friendsListViewModel: FriendsListViewModel
 
     @Before
@@ -41,10 +46,12 @@ class FriendsListViewModelTest {
 
         swRepository = mockk(relaxed = true)
         logger = mockk(relaxed = true)
+        errorReporter = mockk(relaxed = true)
         friendsListViewModel = FriendsListViewModel(
             userDao,
             swRepository,
-            logger
+            logger,
+            errorReporter
         )
     }
 
@@ -77,7 +84,8 @@ class FriendsListViewModelTest {
         val viewModel = FriendsListViewModel(
             userDao,
             swRepository,
-            logger
+            logger,
+            errorReporter
         )
         advanceUntilIdle()
 
@@ -142,29 +150,33 @@ class FriendsListViewModelTest {
 
         // Then
         coVerify(exactly = 1) {
-            logger.i(any(), eq("Заявка успешно принята: userId=$testUserId"))
+            logger.i(any(), "Заявка успешно принята: userId=$testUserId")
         }
     }
 
     @Test
-    fun onAcceptFriendRequest_whenRepositoryFails_thenLogsError() = runTest {
+    fun onAcceptFriendRequest_whenRepositoryFails_thenReportsError() = runTest {
         // Given
         val testUserId = 123L
-        val testException = Exception("Test error")
+        val testError = IOException("Нет подключения к сети")
         coEvery {
             swRepository.respondToFriendRequest(
                 testUserId,
                 accept = true
             )
-        } returns Result.failure(testException)
+        } returns Result.failure(testError)
 
         // When
         friendsListViewModel.onAcceptFriendRequest(testUserId)
         advanceUntilIdle()
 
         // Then
-        coVerify(exactly = 1) {
-            logger.e(any(), eq("Ошибка принятия заявки: ${testException.message}"))
+        verify {
+            errorReporter.handleError(
+                match<AppError> {
+                    it is AppError.Network && it.message.contains("Не удалось принять заявку")
+                }
+            )
         }
     }
 
@@ -178,7 +190,33 @@ class FriendsListViewModelTest {
 
         // Then
         coVerify(exactly = 1) {
-            logger.i(any(), eq("Нажатие на друга: userId=$testUserId"))
+            logger.i(any(), "Нажатие на друга: userId=$testUserId")
+        }
+    }
+
+    @Test
+    fun onDeclineFriendRequest_whenRepositoryFails_thenReportsError() = runTest {
+        // Given
+        val testUserId = 456L
+        val testError = IOException("Нет подключения к сети")
+        coEvery {
+            swRepository.respondToFriendRequest(
+                testUserId,
+                accept = false
+            )
+        } returns Result.failure(testError)
+
+        // When
+        friendsListViewModel.onDeclineFriendRequest(testUserId)
+        advanceUntilIdle()
+
+        // Then
+        verify {
+            errorReporter.handleError(
+                match<AppError> {
+                    it is AppError.Network && it.message.contains("Не удалось отклонить заявку")
+                }
+            )
         }
     }
 }

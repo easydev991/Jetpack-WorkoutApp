@@ -55,7 +55,8 @@ class LoginScreenTest {
         val viewModel = LoginViewModel(
             logger = NoOpLogger(),
             loginUseCase = container.loginUseCase,
-            resetPasswordUseCase = container.resetPasswordUseCase
+            resetPasswordUseCase = container.resetPasswordUseCase,
+            errorReporter = container.errorReporter
         )
 
         composeTestRule.setContent {

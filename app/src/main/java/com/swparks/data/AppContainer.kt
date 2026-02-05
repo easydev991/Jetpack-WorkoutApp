@@ -26,6 +26,8 @@ import com.swparks.domain.usecase.LogoutUseCase
 import com.swparks.domain.usecase.ResetPasswordUseCase
 import com.swparks.network.SWApi
 import com.swparks.util.AndroidLogger
+import com.swparks.util.ErrorHandler
+import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
 import com.swparks.viewmodel.FriendsListViewModel
 import com.swparks.viewmodel.ProfileViewModel
@@ -39,6 +41,9 @@ interface AppContainer {
     val secureTokenRepository: SecureTokenRepository
     val countriesRepository: CountriesRepository
 
+    // Сервисы для обработки ошибок
+    val logger: Logger
+    val errorReporter: ErrorReporter
 
     // Use cases для авторизации
     val loginUseCase: ILoginUseCase
@@ -72,7 +77,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
         ignoreUnknownKeys = true
     }
 
-    private val logger: Logger = AndroidLogger()
+    override val logger: Logger = AndroidLogger()
+    override val errorReporter: ErrorReporter = ErrorHandler(logger)
 
     // ==================== Room Database ====================
 
@@ -199,14 +205,16 @@ class DefaultAppContainer(context: Context) : AppContainer {
     override fun profileViewModelFactory() = ProfileViewModel(
         countriesRepository = countriesRepository,
         swRepository = swRepository,
-        logger = logger
+        logger = logger,
+        errorReporter = errorReporter  // ✅ Добавлено
     )
 
     /** Factory метод для создания FriendsListViewModel */
     override fun friendsListViewModelFactory() = FriendsListViewModel(
         userDao = userDao,
         swRepository = swRepository,
-        logger = logger
+        logger = logger,
+        errorReporter = errorReporter  // ✅ Добавлено
     )
 
     // ==================== API клиенты для разных функциональных областей ====================

@@ -9,9 +9,11 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.JetpackWorkoutApplication
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
+import com.swparks.model.AppError
 import com.swparks.model.LoginCredentials
 import com.swparks.ui.state.LoginEvent
 import com.swparks.ui.state.LoginUiState
+import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,11 +34,13 @@ import kotlinx.coroutines.launch
  * @param logger Логгер для записи сообщений
  * @param loginUseCase Use case для входа в систему
  * @param resetPasswordUseCase Use case для восстановления пароля
+ * @param errorReporter Интерфейс для обработки и отправки ошибок в UI-слой
  */
 class LoginViewModel(
     private val logger: Logger,
     private val loginUseCase: ILoginUseCase,
     private val resetPasswordUseCase: IResetPasswordUseCase,
+    private val errorReporter: ErrorReporter,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
@@ -110,6 +114,14 @@ class LoginViewModel(
                     val errorMessage = exception.message ?: "Неизвестная ошибка авторизации"
                     _uiState.value = LoginUiState.LoginError(errorMessage, exception)
                     _loginError.value = errorMessage
+
+                    // Дополнительная обработка через ErrorReporter
+                    errorReporter.handleError(
+                        AppError.Network(
+                            message = "Не удалось войти. Проверьте подключение к интернету.",
+                            throwable = exception
+                        )
+                    )
                 }
         }
     }
@@ -143,6 +155,14 @@ class LoginViewModel(
                         exception.message ?: "Неизвестная ошибка восстановления пароля"
                     _uiState.value = LoginUiState.ResetError(errorMessage, exception)
                     _resetError.value = errorMessage
+
+                    // Дополнительная обработка через ErrorReporter
+                    errorReporter.handleError(
+                        AppError.Network(
+                            message = "Не удалось восстановить пароль. Проверьте подключение к интернету.",
+                            throwable = exception
+                        )
+                    )
                 }
         }
     }
@@ -187,7 +207,8 @@ class LoginViewModel(
                 LoginViewModel(
                     logger = application.logger,
                     loginUseCase = application.container.loginUseCase,
-                    resetPasswordUseCase = application.container.resetPasswordUseCase
+                    resetPasswordUseCase = application.container.resetPasswordUseCase,
+                    errorReporter = application.container.errorReporter
                 )
             }
         }

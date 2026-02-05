@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -19,6 +22,7 @@ import androidx.navigation.compose.composable
 import com.swparks.JetpackWorkoutApplication
 import com.swparks.data.preferences.AppSettingsDataStore
 import com.swparks.model.Park
+import com.swparks.model.toUiText
 import com.swparks.navigation.AppState
 import com.swparks.navigation.BottomNavigationBar
 import com.swparks.navigation.Screen
@@ -47,6 +51,29 @@ fun RootScreen(appState: AppState) {
     val context = LocalContext.current
     val appContainer = remember {
         (context.applicationContext as JetpackWorkoutApplication).container
+    }
+
+    // Состояние для Snackbar
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Собираем ошибки из ErrorReporter и показываем в Snackbar
+    LaunchedEffect(Unit) {
+        appContainer.errorReporter.errorFlow.collect { error ->
+            // Логируем ошибку для отладки
+            Log.e(
+                "RootScreen",
+                "Ошибка из ErrorReporter: ${error.javaClass.simpleName}: ${error.message}"
+            )
+
+            // Преобразуем ошибку в локализованное сообщение для пользователя
+            val message = error.toUiText(context)
+
+            // Показываем Snackbar
+            snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Long
+            )
+        }
     }
 
     // Состояние для LoginSheet
@@ -115,6 +142,7 @@ fun RootScreen(appState: AppState) {
         bottomBar = {
             BottomNavigationBar(appState = appState)
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { paddingValues ->
         NavHost(

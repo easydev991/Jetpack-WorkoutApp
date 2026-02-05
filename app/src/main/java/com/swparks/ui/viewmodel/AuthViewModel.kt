@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.ILogoutUseCase
+import com.swparks.model.AppError
 import com.swparks.model.LoginCredentials
 import com.swparks.model.LoginSuccess
+import com.swparks.util.ErrorReporter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,14 +27,16 @@ sealed class AuthUiState {
  * ViewModel для управления авторизацией пользователей.
  *
  * Использует LoginUseCase и LogoutUseCase для авторизации и выхода из системы.
- * Управляет состоянием UI авторизации.
+ * Управляет состоянием UI авторизации. Обрабатывает ошибки через ErrorReporter.
  *
  * @param loginUseCase Use case для входа в систему
  * @param logoutUseCase Use case для выхода из системы
+ * @param errorReporter Интерфейс для обработки и отправки ошибок в UI-слой
  */
 class AuthViewModel(
     private val loginUseCase: ILoginUseCase,
-    private val logoutUseCase: ILogoutUseCase
+    private val logoutUseCase: ILogoutUseCase,
+    private val errorReporter: ErrorReporter,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
@@ -51,8 +55,15 @@ class AuthViewModel(
                     _uiState.value = AuthUiState.Success(loginSuccess)
                 }
                 .onFailure { exception ->
-                    _uiState.value = AuthUiState.Error(
-                        message = exception.message ?: "Неизвестная ошибка авторизации"
+                    val errorMessage = exception.message ?: "Неизвестная ошибка авторизации"
+                    _uiState.value = AuthUiState.Error(message = errorMessage)
+
+                    // Отправляем ошибку через ErrorReporter
+                    errorReporter.handleError(
+                        AppError.Network(
+                            message = "Не удалось войти. Проверьте подключение к интернету.",
+                            throwable = exception
+                        )
                     )
                 }
         }

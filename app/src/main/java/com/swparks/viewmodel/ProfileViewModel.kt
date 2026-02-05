@@ -7,6 +7,7 @@ import com.swparks.domain.repository.CountriesRepository
 import com.swparks.model.City
 import com.swparks.model.Country
 import com.swparks.model.User
+import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
 import com.swparks.util.setValueIfChanged
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,11 +37,14 @@ sealed class ProfileUiState {
  * @param countriesRepository Репозиторий для работы с данными стран и городов
  * @param swRepository Репозиторий для работы с данными пользователя и API
  * @param logger Логгер для записи сообщений
+ * @param errorReporter Обработчик ошибок для отправки ошибок в UI
  */
+@Suppress("UnusedPrivateProperty", "TooGenericExceptionCaught", "MaxLineLength")
 class ProfileViewModel(
     private val countriesRepository: CountriesRepository,
     private val swRepository: SWRepository,
     private val logger: Logger,
+    private val errorReporter: ErrorReporter,
 ) : ViewModel() {
 
     private companion object {
@@ -92,11 +96,10 @@ class ProfileViewModel(
                         )
                     }
                     .onFailure { error ->
-                        _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля и социальных данных: ${error.message}") }
-                        logger.e(
-                            TAG,
+                        val errorMessage =
                             "Ошибка загрузки профиля и социальных данных: ${error.message}"
-                        )
+                        _uiState.update { ProfileUiState.Error(errorMessage) }
+                        logger.e(TAG, errorMessage)
                     }
             } catch (e: Exception) {
                 _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля и социальных данных: ${e.message}") }
