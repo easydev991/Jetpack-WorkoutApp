@@ -1,11 +1,13 @@
 package com.swparks.ui.screens
 
+import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.swparks.R
 import com.swparks.data.AppContainer
 import com.swparks.model.AppError
 import com.swparks.navigation.rememberAppState
@@ -13,6 +15,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.IOException
 
 /**
  * Инструментальные тесты для RootScreen.
@@ -26,6 +29,7 @@ class RootScreenTest {
     val composeTestRule = createComposeRule()
 
     private lateinit var appContainer: AppContainer
+    private lateinit var context: Context
 
     @Before
     fun setup() {
@@ -33,6 +37,7 @@ class RootScreenTest {
         val application =
             ApplicationProvider.getApplicationContext<com.swparks.JetpackWorkoutApplication>()
         appContainer = application.container
+        context = application
     }
 
     @Test
@@ -47,20 +52,22 @@ class RootScreenTest {
         // Ждем, когда UI будет готов
         composeTestRule.waitForIdle()
 
-        // When - отправляем ошибку через ErrorReporter
-        val errorMessage = "Нет подключения к интернету"
+        // When - отправляем ошибку через ErrorReporter (с IOException для получения конкретного сообщения)
         appContainer.errorReporter.handleError(
-            AppError.Network(message = errorMessage)
+            AppError.Network(message = "", throwable = IOException())
         )
+
+        // Ожидаемое сообщение из строковых ресурсов
+        val expectedMessage = context.getString(R.string.error_network_io)
 
         // Ждем, когда Snackbar появится (даем время на анимацию и отрисовку)
         composeTestRule.waitUntil(5000) {
-            composeTestRule.onAllNodesWithText(errorMessage).fetchSemanticsNodes().isNotEmpty()
+            composeTestRule.onAllNodesWithText(expectedMessage).fetchSemanticsNodes().isNotEmpty()
         }
 
         // Then - проверяем, что Snackbar отображается с правильным сообщением
         composeTestRule
-            .onNodeWithText(errorMessage)
+            .onNodeWithText(expectedMessage)
             .assertIsDisplayed()
     }
 
@@ -77,19 +84,21 @@ class RootScreenTest {
         composeTestRule.waitForIdle()
 
         // When - отправляем ошибку валидации через ErrorReporter
-        val errorMessage = "Пароль слишком короткий"
         appContainer.errorReporter.handleError(
-            AppError.Validation(message = errorMessage, field = "password")
+            AppError.Validation(message = "", field = "password")
         )
+
+        // Ожидаемое сообщение из строковых ресурсов
+        val expectedMessage = context.getString(R.string.error_validation_password)
 
         // Ждем, когда Snackbar появится (даем время на анимацию и отрисовку)
         composeTestRule.waitUntil(5000) {
-            composeTestRule.onAllNodesWithText(errorMessage).fetchSemanticsNodes().isNotEmpty()
+            composeTestRule.onAllNodesWithText(expectedMessage).fetchSemanticsNodes().isNotEmpty()
         }
 
         // Then - проверяем, что Snackbar отображается с правильным сообщением
         composeTestRule
-            .onNodeWithText(errorMessage)
+            .onNodeWithText(expectedMessage)
             .assertIsDisplayed()
     }
 
@@ -101,24 +110,25 @@ class RootScreenTest {
                 appState = rememberAppState()
             )
         }
-
         // Ждем, когда UI будет готов
         composeTestRule.waitForIdle()
 
         // When - отправляем ошибку сервера через ErrorReporter
-        val errorMessage = "Ошибка сервера 500"
         appContainer.errorReporter.handleError(
-            AppError.Server(message = errorMessage, code = 500)
+            AppError.Server(message = "", code = 500)
         )
+
+        // Ожидаемое сообщение из строковых ресурсов
+        val expectedMessage = context.getString(R.string.error_server_internal)
 
         // Ждем, когда Snackbar появится (даем время на анимацию и отрисовку)
         composeTestRule.waitUntil(5000) {
-            composeTestRule.onAllNodesWithText(errorMessage).fetchSemanticsNodes().isNotEmpty()
+            composeTestRule.onAllNodesWithText(expectedMessage).fetchSemanticsNodes().isNotEmpty()
         }
 
         // Then - проверяем, что Snackbar отображается с правильным сообщением
         composeTestRule
-            .onNodeWithText(errorMessage)
+            .onNodeWithText(expectedMessage)
             .assertIsDisplayed()
     }
 
@@ -135,7 +145,7 @@ class RootScreenTest {
         composeTestRule.waitForIdle()
 
         // When - отправляем общую ошибку через ErrorReporter
-        val errorMessage = "Произошла непредвиденная ошибка"
+        val errorMessage = "An unexpected error occurred"
         appContainer.errorReporter.handleError(
             AppError.Generic(message = errorMessage)
         )
