@@ -33,6 +33,7 @@
 
     <string name="user_will_be_blocked">Добавить пользователя в чёрный список?</string>
     <string name="user_will_be_unblocked">Удалить пользователя из чёрного списка?</string>
+    <string name="user_unblocked_successfully">Пользователь %1$s разблокирован</string>
 
     <string name="small_park">Маленькая</string>
     <string name="medium_park">Средняя</string>
@@ -75,6 +76,7 @@
     <string name="female_added_parks">Добавила площадки</string>
     <string name="journals">Дневники</string>
     <string name="black_list">Чёрный список</string>
+    <string name="blacklist_empty">Нет пользователей в чёрном списке</string>
 
     <string name="journals_title">Дневники тренировок</string>
     <string name="empty_journals">Дневников пока нет</string>
@@ -251,6 +253,7 @@
     <string name="alert_forgot_password_message">Для восстановления пароля введите логин или email</string>
     <string name="alert_reset_password_success_title">Готово</string>
     <string name="alert_reset_password_success_message">Инструкция для восстановления пароля выслана на email, указанный при регистрации</string>
+    <string name="alert_ok">Ок</string>
 
     <!-- Сообщения об ошибках -->
     <string name="error_network_io">Ошибка сети. Проверьте подключение к интернету.</string>

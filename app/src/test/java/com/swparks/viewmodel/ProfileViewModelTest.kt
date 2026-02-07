@@ -1,6 +1,7 @@
 package com.swparks.viewmodel
 
 import android.util.Log
+import app.cash.turbine.test
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.model.City
 import com.swparks.model.Country
@@ -288,6 +289,61 @@ class ProfileViewModelTest {
             "Начальное состояние должно быть Loading или Error",
             state is ProfileUiState.Loading || state is ProfileUiState.Error
         )
+    }
+
+    @Test
+    fun blacklist_whenCacheUpdates_shouldUpdateAutomatically() = runTest {
+        // Given
+        val testUser = createTestUser()
+        val initialBlacklist = listOf(
+            User(id = 2, name = "Blacklisted User 1", image = null, fullName = "User 1")
+        )
+        val updatedBlacklist = listOf(
+            User(id = 2, name = "Blacklisted User 1", image = null, fullName = "User 1"),
+            User(id = 3, name = "Blacklisted User 2", image = null, fullName = "User 2")
+        )
+
+        // Используем MutableStateFlow для эмуляции обновлений
+        val blacklistFlow = kotlinx.coroutines.flow.MutableStateFlow(initialBlacklist)
+        coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
+        coEvery { swRepository.getBlacklistFlow() } returns blacklistFlow
+
+        profileViewModel = createViewModel()
+
+        // Then - проверяем через Turbine для корректной работы с Flow
+        profileViewModel.blacklist.test {
+            awaitItem() // Получаем значение (может быть initialValue или initialBlacklist)
+
+            // When - эмулируем обновление данных в базе
+            blacklistFlow.value = updatedBlacklist
+
+            // Then - черный список должен обновиться автоматически
+            assertEquals(
+                "Черный список должен обновиться автоматически",
+                updatedBlacklist,
+                awaitItem()
+            )
+        }
+    }
+
+    @Test
+    fun blacklist_whenEmpty_shouldBeEmpty() = runTest {
+        // Given
+        val testUser = createTestUser()
+        coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
+        coEvery { swRepository.getBlacklistFlow() } returns flowOf(emptyList())
+
+        // When
+        profileViewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then
+        profileViewModel.blacklist.test {
+            // Получаем хотя бы одно значение
+            val value = awaitItem()
+            // Проверяем что это пустой список или initialValue тоже пустой
+            assertTrue("Blacklist должен быть пустым", value.isEmpty())
+        }
     }
 
     /**

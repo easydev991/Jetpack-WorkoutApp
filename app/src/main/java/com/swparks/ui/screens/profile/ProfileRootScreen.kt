@@ -78,6 +78,9 @@ fun ProfileRootScreen(
     // Получаем состояние обновления (isRefreshing)
     val isRefreshing by viewModel.isRefreshing.collectAsState()
 
+    // Получаем черный список пользователя
+    val blacklist by viewModel.blacklist.collectAsState()
+
     val user = currentUser
     if (user == null) {
         // Не авторизован - показываем IncognitoProfileView
@@ -195,14 +198,15 @@ fun ProfileRootScreen(
                     }
                 )
 
-                // Кнопка "Черный список" - временно скрыта
-                // @Suppress("ForbiddenComment")
-                // TODO: Реализовать после интеграции с реальным списком черного списка
-                // BlacklistButton(
-                //     onClick = {
-                //         Log.i("ProfileRootScreen", "Нажата кнопка: Черный список")
-                //     }
-                // )
+                // Кнопка "Черный список" - показываем только если черный список не пустой
+                if (blacklist.isNotEmpty()) {
+                    BlacklistButton(
+                        blacklistCount = blacklist.size,
+                        onClick = {
+                            appState?.navController?.navigate(Screen.Blacklist.route)
+                        }
+                    )
+                }
 
                 // Spacer прижимает кнопку выхода к низу экрана
                 Spacer(modifier = Modifier.weight(1f))
@@ -392,6 +396,32 @@ private fun JournalsButton(
                 id = R.plurals.journalsCount,
                 count = journalsCount,
                 journalsCount
+            ),
+            enabled = true
+        )
+    }
+}
+
+/**
+ * Кнопка "Черный список"
+ */
+@Composable
+private fun BlacklistButton(
+    blacklistCount: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
+        FormRowView(
+            leadingText = stringResource(id = R.string.black_list),
+            trailingText = pluralStringResource(
+                id = R.plurals.peopleCount,
+                count = blacklistCount,
+                blacklistCount
             ),
             enabled = true
         )

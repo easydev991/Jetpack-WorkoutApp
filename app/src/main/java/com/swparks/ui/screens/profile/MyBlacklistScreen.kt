@@ -1,0 +1,256 @@
+package com.swparks.ui.screens.profile
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
+import com.swparks.R
+import com.swparks.model.BlacklistAction
+import com.swparks.model.User
+import com.swparks.ui.ds.UserRowView
+import com.swparks.viewmodel.BlacklistUiState
+import com.swparks.viewmodel.BlacklistViewModel
+
+/**
+ * Экран черного списка текущего пользователя
+ *
+ * @param modifier Модификатор
+ * @param viewModel ViewModel для управления состоянием экрана
+ * @param onBackClick Callback для навигации назад
+ * @param parentPaddingValues Паддинги для учета BottomNavigationBar
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MyBlacklistScreen(
+    modifier: Modifier = Modifier,
+    viewModel: BlacklistViewModel,
+    onBackClick: () -> Unit,
+    parentPaddingValues: PaddingValues
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val itemToRemove by viewModel.itemToRemove.collectAsState()
+    val showRemoveDialog by viewModel.showRemoveDialog.collectAsState()
+    val isRemoving by viewModel.isRemoving.collectAsState()
+    val showSuccessAlert by viewModel.showSuccessAlert.collectAsState()
+    val unblockedUserName by viewModel.unblockedUserName.collectAsState()
+    MyBlacklistScreenContent(
+        modifier = modifier,
+        uiState = uiState,
+        onBackClick = onBackClick,
+        parentPaddingValues = parentPaddingValues,
+        onShowRemoveDialog = { viewModel.showRemoveDialog(it) },
+        onRemoveFromBlacklist = { viewModel.removeFromBlacklist(it) },
+        onCancelRemove = { viewModel.cancelRemove() },
+        onDismissSuccessAlert = { viewModel.dismissSuccessAlert() },
+        itemToRemove = itemToRemove,
+        showRemoveDialog = showRemoveDialog,
+        isRemoving = isRemoving,
+        showSuccessAlert = showSuccessAlert,
+        unblockedUserName = unblockedUserName
+    )
+}
+
+/**
+ * Stateless контент экрана черного списка
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MyBlacklistScreenContent(
+    modifier: Modifier = Modifier,
+    uiState: BlacklistUiState,
+    onBackClick: () -> Unit,
+    parentPaddingValues: PaddingValues,
+    onShowRemoveDialog: (User) -> Unit,
+    onRemoveFromBlacklist: (User) -> Unit,
+    onCancelRemove: () -> Unit,
+    onDismissSuccessAlert: () -> Unit,
+    itemToRemove: User?,
+    showRemoveDialog: Boolean,
+    isRemoving: Boolean,
+    showSuccessAlert: Boolean,
+    unblockedUserName: String?
+) {
+    Scaffold(
+        modifier = modifier,
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(stringResource(R.string.black_list))
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back)
+                        )
+                    }
+                }
+            )
+        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(parentPaddingValues)
+                .padding(innerPadding)
+        ) {
+            when (uiState) {
+                is BlacklistUiState.Loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+
+                is BlacklistUiState.Error -> {
+                    Text(
+                        text = uiState.message,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+
+                is BlacklistUiState.Success -> {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        // Данные
+                        SuccessContent(
+                            blacklist = uiState.blacklist,
+                            onShowRemoveDialog = onShowRemoveDialog,
+                            enabled = !uiState.isLoading && !isRemoving
+                        )
+                        // Индикатор загрузки при обновлении данных или удалении из черного списка
+                        if (uiState.isLoading || isRemoving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .matchParentSize()
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Диалог подтверждения удаления из черного списка
+    if (showRemoveDialog && itemToRemove != null) {
+        AlertDialog(
+            onDismissRequest = onCancelRemove,
+            text = {
+                Text(stringResource(BlacklistAction.UNBLOCK.alertMessage))
+            },
+            confirmButton = {
+                TextButton(onClick = { onRemoveFromBlacklist(itemToRemove) }) {
+                    Text(stringResource(BlacklistAction.UNBLOCK.description))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onCancelRemove) {
+                    Text(stringResource(R.string.close))
+                }
+            }
+        )
+    }
+
+    // Алерт об успешной разблокировке
+    if (showSuccessAlert) {
+        AlertDialog(
+            onDismissRequest = onDismissSuccessAlert,
+            title = {
+                Text(stringResource(R.string.alert_reset_password_success_title))
+            },
+            text = {
+                val userName = unblockedUserName ?: ""
+                Text(stringResource(R.string.user_unblocked_successfully, userName))
+            },
+            confirmButton = {
+                TextButton(onClick = onDismissSuccessAlert) {
+                    Text(stringResource(R.string.alert_ok))
+                }
+            }
+        )
+    }
+}
+
+/**
+ * Контент с данными черного списка
+ */
+@Composable
+private fun SuccessContent(
+    modifier: Modifier = Modifier,
+    blacklist: List<User>,
+    onShowRemoveDialog: (User) -> Unit,
+    enabled: Boolean = true
+) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(
+            start = dimensionResource(R.dimen.spacing_regular),
+            top = dimensionResource(R.dimen.spacing_small),
+            end = dimensionResource(R.dimen.spacing_regular),
+            bottom = dimensionResource(R.dimen.spacing_regular)
+        ),
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
+    ) {
+        // Секция черного списка
+        if (blacklist.isNotEmpty()) {
+            items(count = blacklist.size) { index ->
+                val user = blacklist[index]
+                Box {
+                    Surface(
+                        modifier = Modifier.clickable(enabled = enabled) { onShowRemoveDialog(user) },
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        UserRowView(
+                            modifier = Modifier,
+                            imageStringURL = user.image,
+                            name = user.name,
+                            address = null
+                        )
+                    }
+                }
+            }
+        }
+
+        // Если список пустой
+        if (blacklist.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(dimensionResource(R.dimen.spacing_large)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.blacklist_empty),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}

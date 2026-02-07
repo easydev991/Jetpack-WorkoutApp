@@ -29,6 +29,7 @@ import com.swparks.util.AndroidLogger
 import com.swparks.util.ErrorHandler
 import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
+import com.swparks.viewmodel.BlacklistViewModel
 import com.swparks.viewmodel.FriendsListViewModel
 import com.swparks.viewmodel.ProfileViewModel
 import kotlinx.serialization.json.Json
@@ -55,6 +56,9 @@ interface AppContainer {
 
     /** Фабрика для FriendsListViewModel */
     fun friendsListViewModelFactory(): FriendsListViewModel
+
+    /** Фабрика для BlacklistViewModel */
+    fun blacklistViewModelFactory(): BlacklistViewModel
 
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
@@ -212,6 +216,13 @@ class DefaultAppContainer(context: Context) : AppContainer {
     /** Factory метод для создания FriendsListViewModel */
     override fun friendsListViewModelFactory() = FriendsListViewModel(
         userDao = userDao,
+        swRepository = swRepository,
+        logger = logger,
+        errorReporter = errorReporter
+    )
+
+    /** Factory метод для создания BlacklistViewModel */
+    override fun blacklistViewModelFactory() = BlacklistViewModel(
         swRepository = swRepository,
         logger = logger,
         errorReporter = errorReporter

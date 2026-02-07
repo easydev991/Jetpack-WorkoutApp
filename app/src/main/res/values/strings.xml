@@ -28,6 +28,7 @@
 
     <string name="user_will_be_blocked">Block this user?</string>
     <string name="user_will_be_unblocked">Unblock this user?</string>
+    <string name="user_unblocked_successfully">User %1$s unblocked</string>
 
     <string name="small_park">Small</string>
     <string name="medium_park">Medium</string>
@@ -70,6 +71,7 @@
     <string name="female_added_parks">Added parks</string>
     <string name="journals">Journals</string>
     <string name="black_list">Black list</string>
+    <string name="blacklist_empty">No users in blacklist</string>
 
     <string name="journals_title">Workout journals</string>
     <string name="empty_journals">No journals here yet</string>
@@ -237,6 +239,7 @@
     <string name="alert_forgot_password_message">To recover your password, enter your login or email</string>
     <string name="alert_reset_password_success_title">Done</string>
     <string name="alert_reset_password_success_message">Instructions for recovering your password have been sent to email specified during registration</string>
+    <string name="alert_ok">OK</string>
 
     <!-- Error messages -->
     <string name="error_network_io">Network error. Check your internet connection.</string>

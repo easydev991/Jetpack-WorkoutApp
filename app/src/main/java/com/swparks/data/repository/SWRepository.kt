@@ -485,6 +485,11 @@ class SWRepositoryImp(
                 ApiBlacklistOption.ADD -> swApi.addToBlacklist(user.id)
                 ApiBlacklistOption.REMOVE -> swApi.deleteFromBlacklist(user.id)
             }
+            // Обновляем локальную базу данных после успешного ответа от сервера
+            when (option) {
+                ApiBlacklistOption.ADD -> userDao.addToBlacklist(user.id)
+                ApiBlacklistOption.REMOVE -> userDao.removeFromBlacklist(user.id)
+            }
             Result.success(Unit)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "действии с черным списком"))

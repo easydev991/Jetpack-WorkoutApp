@@ -73,6 +73,14 @@ class ProfileViewModel(
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
+    // Черный список пользователя
+    val blacklist: StateFlow<List<User>> = swRepository.getBlacklistFlow()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(STATE_TIMEOUT_MS),
+            initialValue = emptyList()
+        )
+
     init {
         viewModelScope.launch {
             currentUser
@@ -138,6 +146,7 @@ class ProfileViewModel(
         swRepository.getSocialUpdates(userId)
             .onSuccess { socialUpdates ->
                 // Данные сохранены в кэше через SWRepository.getSocialUpdates()
+                // Черный список обновляется автоматически через Flow
                 // Теперь загружаем страну и город
                 loadProfileAddress(socialUpdates.user)
                 logger.i(TAG, "Профиль успешно загружен: ${socialUpdates.user.id}")

@@ -27,7 +27,6 @@ import kotlinx.coroutines.launch
  * @param logger Логгер для записи сообщений
  * @param errorReporter Обработчик ошибок для отправки ошибок в UI
  */
-@Suppress("UnusedPrivateProperty")
 class FriendsListViewModel(
     private val userDao: UserDao,
     private val swRepository: SWRepository,

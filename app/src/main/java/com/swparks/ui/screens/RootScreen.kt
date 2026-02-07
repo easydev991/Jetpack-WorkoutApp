@@ -36,6 +36,7 @@ import com.swparks.ui.screens.more.MoreTopAppBar
 import com.swparks.ui.screens.parks.ParksAddedByUserScreen
 import com.swparks.ui.screens.parks.ParksRootScreen
 import com.swparks.ui.screens.parks.ParksTopAppBar
+import com.swparks.ui.screens.profile.MyBlacklistScreen
 import com.swparks.ui.screens.profile.MyFriendsScreen
 import com.swparks.ui.screens.profile.ProfileRootScreen
 import com.swparks.ui.screens.profile.ProfileTopAppBar
@@ -85,6 +86,11 @@ fun RootScreen(appState: AppState) {
     // и гарантирует, что ProfileViewModel всегда подписан на currentUser Flow
     val profileViewModel = remember {
         appContainer.profileViewModelFactory()
+    }
+
+    // Экран черного списка
+    remember {
+        appContainer.blacklistViewModelFactory()
     }
 
     // Подписываемся на Flow из ProfileViewModel для реактивного обновления
@@ -281,7 +287,15 @@ fun RootScreen(appState: AppState) {
             }
 
             composable(route = Screen.Blacklist.route) {
-                // TODO: Реализовать BlacklistScreen
+                val viewModel = remember(appContainer) {
+                    appContainer.blacklistViewModelFactory()
+                }
+                MyBlacklistScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    viewModel = viewModel,
+                    onBackClick = { appState.navController.popBackStack() },
+                    parentPaddingValues = paddingValues
+                )
             }
 
             composable(route = Screen.JournalsList.route) {
