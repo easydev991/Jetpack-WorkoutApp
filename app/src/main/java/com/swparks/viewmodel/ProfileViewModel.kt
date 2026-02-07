@@ -64,6 +64,10 @@ class ProfileViewModel(
     private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
+    // Состояние обновления данных (pull-to-refresh)
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     init {
         viewModelScope.launch {
             currentUser
@@ -76,36 +80,68 @@ class ProfileViewModel(
     /**
      * Загружает профиль пользователя и социальные данные с сервера по userId.
      * Используется после успешной авторизации для загрузки свежих данных.
-     * Загружает пользователя, друзей, заявки и черный список параллельно,
-     * затем страну и город.
      *
      * @param userId ID пользователя для загрузки профиля и социальных данных
      */
     fun loadProfileFromServer(userId: Long) {
         viewModelScope.launch {
             try {
-                // Загружаем профиль и социальные данные с сервера
-                swRepository.getSocialUpdates(userId)
-                    .onSuccess { socialUpdates ->
-                        // Данные сохранены в кэше через SWRepository.getSocialUpdates()
-                        // Теперь загружаем страну и город
-                        loadProfileAddress(socialUpdates.user)
-                        logger.i(
-                            TAG,
-                            "Профиль и социальные данные загружены с сервера: ${socialUpdates.user.id}"
-                        )
-                    }
-                    .onFailure { error ->
-                        val errorMessage =
-                            "Ошибка загрузки профиля и социальных данных: ${error.message}"
-                        _uiState.update { ProfileUiState.Error(errorMessage) }
-                        logger.e(TAG, errorMessage)
-                    }
+                logger.i(TAG, "Начало загрузки профиля с сервера: $userId")
+                loadSocialUpdates(userId, updateUiState = true)
             } catch (e: Exception) {
-                _uiState.update { ProfileUiState.Error("Ошибка загрузки профиля и социальных данных: ${e.message}") }
-                logger.e(TAG, "Ошибка загрузки профиля и социальных данных: ${e.message}")
+                val errorMessage = "Ошибка загрузки профиля и социальных данных: ${e.message}"
+                _uiState.update { ProfileUiState.Error(errorMessage) }
+                logger.e(TAG, errorMessage)
             }
         }
+    }
+
+    /**
+     * Обновляет данные профиля пользователя с сервера (для pull-to-refresh).
+     * Использует текущего пользователя из репозитория.
+     */
+    fun refreshProfile() {
+        val user = currentUser.value ?: run {
+            logger.w(TAG, "Пропускаем обновление профиля: пользователь не авторизован")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                _isRefreshing.update { true }
+                logger.i(TAG, "Начало обновления профиля: ${user.id}")
+
+                loadSocialUpdates(user.id, updateUiState = false)
+            } catch (e: Exception) {
+                val errorMessage = "Ошибка обновления профиля: ${e.message}"
+                logger.e(TAG, errorMessage)
+            } finally {
+                _isRefreshing.update { false }
+            }
+        }
+    }
+
+    /**
+     * Загружает социальные данные пользователя с сервера.
+     *
+     * @param userId ID пользователя
+     * @param updateUiState Если true, обновляет UI State при ошибке (для loadProfileFromServer)
+     */
+    private suspend fun loadSocialUpdates(userId: Long, updateUiState: Boolean) {
+        swRepository.getSocialUpdates(userId)
+            .onSuccess { socialUpdates ->
+                // Данные сохранены в кэше через SWRepository.getSocialUpdates()
+                // Теперь загружаем страну и город
+                loadProfileAddress(socialUpdates.user)
+                logger.i(TAG, "Профиль успешно загружен: ${socialUpdates.user.id}")
+            }
+            .onFailure { error ->
+                val errorMessage = "Ошибка загрузки профиля и социальных данных: ${error.message}"
+                if (updateUiState) {
+                    _uiState.update { ProfileUiState.Error(errorMessage) }
+                }
+                logger.e(TAG, errorMessage)
+            }
     }
 
     /**

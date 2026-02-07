@@ -22,6 +22,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -52,6 +55,7 @@ import com.swparks.viewmodel.ProfileUiState
 import com.swparks.viewmodel.ProfileViewModel
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileRootScreen(
     modifier: Modifier = Modifier,
@@ -71,6 +75,9 @@ fun ProfileRootScreen(
     // Получаем UI State из ViewModel
     val uiState by viewModel.uiState.collectAsState()
 
+    // Получаем состояние обновления (isRefreshing)
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
+
     val user = currentUser
     if (user == null) {
         // Не авторизован - показываем IncognitoProfileView
@@ -85,129 +92,146 @@ fun ProfileRootScreen(
         )
     } else {
         // Авторизован - показываем профиль и кнопки навигации
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(
-                    start = dimensionResource(R.dimen.spacing_regular),
-                    end = dimensionResource(R.dimen.spacing_regular),
-                    top = dimensionResource(R.dimen.spacing_regular),
-                    bottom = dimensionResource(R.dimen.spacing_regular)
-                ),
-            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
+        val pullRefreshState = rememberPullToRefreshState()
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { viewModel.refreshProfile() },
+            state = pullRefreshState,
+            modifier = modifier.fillMaxSize(),
+            indicator = {
+                PullToRefreshDefaults.Indicator(
+                    state = pullRefreshState,
+                    isRefreshing = isRefreshing,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = dimensionResource(R.dimen.spacing_regular))
+                )
+            }
         ) {
-            // Карточка профиля пользователя
-            when (val state = uiState) {
-                is ProfileUiState.Loading -> {
-                    UserProfileCardView(
-                        data = UserProfileData(
-                            modifier = Modifier,
-                            imageStringURL = user.image,
-                            userName = user.fullName ?: user.name,
-                            gender = user.genderOption?.let { stringResource(id = it.description) }
-                                ?: "",
-                            age = user.age,
-                            shortAddress = stringResource(R.string.loading)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(
+                        start = dimensionResource(R.dimen.spacing_regular),
+                        end = dimensionResource(R.dimen.spacing_regular),
+                        top = dimensionResource(R.dimen.spacing_regular),
+                        bottom = dimensionResource(R.dimen.spacing_regular)
+                    ),
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
+            ) {
+                // Карточка профиля пользователя
+                when (val state = uiState) {
+                    is ProfileUiState.Loading -> {
+                        UserProfileCardView(
+                            data = UserProfileData(
+                                modifier = Modifier,
+                                imageStringURL = user.image,
+                                userName = user.fullName ?: user.name,
+                                gender = user.genderOption?.let { stringResource(id = it.description) }
+                                    ?: "",
+                                age = user.age,
+                                shortAddress = stringResource(R.string.loading)
+                            )
                         )
+                    }
+
+                    is ProfileUiState.Success -> {
+                        UserProfileCardView(
+                            data = UserProfileData(
+                                modifier = Modifier,
+                                imageStringURL = user.image,
+                                userName = user.fullName ?: user.name,
+                                gender = user.genderOption?.let { stringResource(id = it.description) }
+                                    ?: "",
+                                age = user.age,
+                                shortAddress = "${state.country?.name ?: ""}, ${state.city?.name ?: ""}"
+                            )
+                        )
+                    }
+
+                    is ProfileUiState.Error -> {
+                        UserProfileCardView(
+                            data = UserProfileData(
+                                modifier = Modifier,
+                                imageStringURL = user.image,
+                                userName = user.fullName ?: user.name,
+                                gender = user.genderOption?.let { stringResource(id = it.description) }
+                                    ?: "",
+                                age = user.age,
+                                shortAddress = state.message
+                            )
+                        )
+                    }
+                }
+
+                // Кнопка "Изменить профиль"
+                EditProfileButton(
+                    onClick = {
+                        Log.i("ProfileRootScreen", "Нажата кнопка: Изменить профиль")
+                    }
+                )
+
+                // Кнопка "Друзья"
+                if (user.hasFriends || (user.friendRequestCount?.toIntOrNull() ?: 0) > 0) {
+                    FriendsButton(
+                        friendsCount = user.friendsCount ?: 0,
+                        friendRequestsCount = user.friendRequestCount?.toIntOrNull() ?: 0,
+                        onClick = {
+                            appState?.navController?.navigate(Screen.MyFriends.route)
+                        }
                     )
                 }
 
-                is ProfileUiState.Success -> {
-                    UserProfileCardView(
-                        data = UserProfileData(
-                            modifier = Modifier,
-                            imageStringURL = user.image,
-                            userName = user.fullName ?: user.name,
-                            gender = user.genderOption?.let { stringResource(id = it.description) }
-                                ?: "",
-                            age = user.age,
-                            shortAddress = "${state.country?.name ?: ""}, ${state.city?.name ?: ""}"
-                        )
+                // Кнопка "Где тренируется"
+                if (user.hasUsedParks) {
+                    UsedParksButton(
+                        parksCount = user.parksCount?.toIntOrNull() ?: 0,
+                        onClick = {
+                            Log.i("ProfileRootScreen", "Нажата кнопка: Где тренируется")
+                        }
                     )
                 }
 
-                is ProfileUiState.Error -> {
-                    UserProfileCardView(
-                        data = UserProfileData(
-                            modifier = Modifier,
-                            imageStringURL = user.image,
-                            userName = user.fullName ?: user.name,
-                            gender = user.genderOption?.let { stringResource(id = it.description) }
-                                ?: "",
-                            age = user.age,
-                            shortAddress = state.message
-                        )
+                // Кнопка "Добавленные площадки"
+                if (user.hasAddedParks) {
+                    AddedParksButton(
+                        addedParksCount = user.addedParks?.size ?: 0,
+                        onClick = {
+                            appState?.navController?.navigate(
+                                Screen.UserParks.createRoute(user.id)
+                            )
+                        }
                     )
                 }
-            }
 
-            // Кнопка "Изменить профиль"
-            EditProfileButton(
-                onClick = {
-                    Log.i("ProfileRootScreen", "Нажата кнопка: Изменить профиль")
-                }
-            )
-
-            // Кнопка "Друзья"
-            if (user.hasFriends || (user.friendRequestCount?.toIntOrNull() ?: 0) > 0) {
-                FriendsButton(
-                    friendsCount = user.friendsCount ?: 0,
-                    friendRequestsCount = user.friendRequestCount?.toIntOrNull() ?: 0,
+                // Кнопка "Дневники" (всегда показываем для главного пользователя)
+                JournalsButton(
+                    journalsCount = user.journalCount ?: 0,
                     onClick = {
-                        appState?.navController?.navigate(Screen.MyFriends.route)
+                        Log.i("ProfileRootScreen", "Нажата кнопка: Дневники")
+                    }
+                )
+
+                // Кнопка "Черный список" - временно скрыта
+                // @Suppress("ForbiddenComment")
+                // TODO: Реализовать после интеграции с реальным списком черного списка
+                // BlacklistButton(
+                //     onClick = {
+                //         Log.i("ProfileRootScreen", "Нажата кнопка: Черный список")
+                //     }
+                // )
+
+                // Spacer прижимает кнопку выхода к низу экрана
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Кнопка "Выйти"
+                LogoutButton(
+                    onClick = {
+                        showLogoutDialog = true
                     }
                 )
             }
-
-            // Кнопка "Где тренируется"
-            if (user.hasUsedParks) {
-                UsedParksButton(
-                    parksCount = user.parksCount?.toIntOrNull() ?: 0,
-                    onClick = {
-                        Log.i("ProfileRootScreen", "Нажата кнопка: Где тренируется")
-                    }
-                )
-            }
-
-            // Кнопка "Добавленные площадки"
-            if (user.hasAddedParks) {
-                AddedParksButton(
-                    addedParksCount = user.addedParks?.size ?: 0,
-                    onClick = {
-                        appState?.navController?.navigate(
-                            Screen.UserParks.createRoute(user.id)
-                        )
-                    }
-                )
-            }
-
-            // Кнопка "Дневники" (всегда показываем для главного пользователя)
-            JournalsButton(
-                journalsCount = user.journalCount ?: 0,
-                onClick = {
-                    Log.i("ProfileRootScreen", "Нажата кнопка: Дневники")
-                }
-            )
-
-            // Кнопка "Черный список" - временно скрыта
-            // @Suppress("ForbiddenComment")
-            // TODO: Реализовать после интеграции с реальным списком черного списка
-            // BlacklistButton(
-            //     onClick = {
-            //         Log.i("ProfileRootScreen", "Нажата кнопка: Черный список")
-            //     }
-            // )
-
-            // Spacer прижимает кнопку выхода к низу экрана
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Кнопка "Выйти"
-            LogoutButton(
-                onClick = {
-                    showLogoutDialog = true
-                }
-            )
         }
 
         // AlertDialog для подтверждения логаута
