@@ -206,7 +206,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
         countriesRepository = countriesRepository,
         swRepository = swRepository,
         logger = logger,
-        errorReporter = errorReporter  // ✅ Добавлено
+        errorReporter = errorReporter
     )
 
     /** Factory метод для создания FriendsListViewModel */
@@ -214,7 +214,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
         userDao = userDao,
         swRepository = swRepository,
         logger = logger,
-        errorReporter = errorReporter  // ✅ Добавлено
+        errorReporter = errorReporter
     )
 
     // ==================== API клиенты для разных функциональных областей ====================

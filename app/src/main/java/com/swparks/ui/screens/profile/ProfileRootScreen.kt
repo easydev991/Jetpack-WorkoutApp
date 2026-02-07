@@ -121,49 +121,31 @@ fun ProfileRootScreen(
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
             ) {
                 // Карточка профиля пользователя
-                when (val state = uiState) {
-                    is ProfileUiState.Loading -> {
-                        UserProfileCardView(
-                            data = UserProfileData(
-                                modifier = Modifier,
-                                imageStringURL = user.image,
-                                userName = user.fullName ?: user.name,
-                                gender = user.genderOption?.let { stringResource(id = it.description) }
-                                    ?: "",
-                                age = user.age,
-                                shortAddress = stringResource(R.string.loading)
-                            )
-                        )
-                    }
-
-                    is ProfileUiState.Success -> {
-                        UserProfileCardView(
-                            data = UserProfileData(
-                                modifier = Modifier,
-                                imageStringURL = user.image,
-                                userName = user.fullName ?: user.name,
-                                gender = user.genderOption?.let { stringResource(id = it.description) }
-                                    ?: "",
-                                age = user.age,
-                                shortAddress = "${state.country?.name ?: ""}, ${state.city?.name ?: ""}"
-                            )
-                        )
-                    }
-
-                    is ProfileUiState.Error -> {
-                        UserProfileCardView(
-                            data = UserProfileData(
-                                modifier = Modifier,
-                                imageStringURL = user.image,
-                                userName = user.fullName ?: user.name,
-                                gender = user.genderOption?.let { stringResource(id = it.description) }
-                                    ?: "",
-                                age = user.age,
-                                shortAddress = state.message
-                            )
-                        )
-                    }
+                // Извлекаем country и city из состояния (Success и Error имеют эти поля)
+                val (country, city) = when (val state = uiState) {
+                    is ProfileUiState.Success -> state.country to state.city
+                    is ProfileUiState.Error -> state.country to state.city
+                    ProfileUiState.Loading -> null to null
                 }
+
+                // shortAddress вычисляется на основе состояния: Loading показывает "Загрузка...", Success и Error показывают страну и город
+                val shortAddress = if (uiState is ProfileUiState.Loading) {
+                    stringResource(R.string.loading)
+                } else {
+                    "${country?.name ?: ""}, " + (city?.name ?: "")
+                }
+
+                UserProfileCardView(
+                    data = UserProfileData(
+                        modifier = Modifier,
+                        imageStringURL = user.image,
+                        userName = user.fullName ?: user.name,
+                        gender = user.genderOption?.let { stringResource(id = it.description) }
+                            ?: "",
+                        age = user.age,
+                        shortAddress = shortAddress
+                    )
+                )
 
                 // Кнопка "Изменить профиль"
                 EditProfileButton(

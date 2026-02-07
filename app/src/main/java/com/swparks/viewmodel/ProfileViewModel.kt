@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.repository.CountriesRepository
+import com.swparks.model.AppError
 import com.swparks.model.City
 import com.swparks.model.Country
 import com.swparks.model.User
@@ -26,7 +27,11 @@ sealed class ProfileUiState {
         val city: City? = null,
     ) : ProfileUiState()
 
-    data class Error(val message: String) : ProfileUiState()
+    data class Error(
+        val message: String,
+        val country: Country? = null,
+        val city: City? = null
+    ) : ProfileUiState()
 }
 
 /**
@@ -90,6 +95,7 @@ class ProfileViewModel(
                 loadSocialUpdates(userId, updateUiState = true)
             } catch (e: Exception) {
                 val errorMessage = "Ошибка загрузки профиля и социальных данных: ${e.message}"
+                errorReporter.handleError(AppError.Generic(errorMessage, e))
                 _uiState.update { ProfileUiState.Error(errorMessage) }
                 logger.e(TAG, errorMessage)
             }
@@ -114,6 +120,7 @@ class ProfileViewModel(
                 loadSocialUpdates(user.id, updateUiState = false)
             } catch (e: Exception) {
                 val errorMessage = "Ошибка обновления профиля: ${e.message}"
+                errorReporter.handleError(AppError.Generic(errorMessage, e))
                 logger.e(TAG, errorMessage)
             } finally {
                 _isRefreshing.update { false }
@@ -137,6 +144,7 @@ class ProfileViewModel(
             }
             .onFailure { error ->
                 val errorMessage = "Ошибка загрузки профиля и социальных данных: ${error.message}"
+                errorReporter.handleError(AppError.Generic(errorMessage, error))
                 if (updateUiState) {
                     _uiState.update { ProfileUiState.Error(errorMessage) }
                 }
@@ -152,7 +160,8 @@ class ProfileViewModel(
      */
     private fun loadProfileAddress(user: User?) {
         if (user == null) {
-            _uiState.update { ProfileUiState.Error("Пользователь не авторизован") }
+            val errorMessage = "Пользователь не авторизован"
+            _uiState.update { ProfileUiState.Error(errorMessage) }
             logger.d(TAG, "Пропускаем загрузку адреса: пользователь null")
             return
         }
@@ -174,7 +183,17 @@ class ProfileViewModel(
                 }
             } catch (e: Exception) {
                 val message = "Ошибка загрузки адреса для профиля: ${e.message}"
-                _uiState.update { ProfileUiState.Error(message) }
+                errorReporter.handleError(AppError.Generic(message, e))
+
+                // Сохраняем предыдущие данные из текущего состояния, если они есть
+                val currentState = _uiState.value
+                val (previousCountry, previousCity) = when (currentState) {
+                    is ProfileUiState.Success -> currentState.country to currentState.city
+                    is ProfileUiState.Error -> currentState.country to currentState.city
+                    else -> null to null
+                }
+
+                _uiState.update { ProfileUiState.Error(message, previousCountry, previousCity) }
                 logger.e(TAG, message)
             }
         }
