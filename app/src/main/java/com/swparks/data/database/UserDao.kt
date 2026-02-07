@@ -136,6 +136,42 @@ interface UserDao {
     @Query("UPDATE users SET isCurrentUser = 0 WHERE isCurrentUser = 1")
     suspend fun clearCurrentUserFlags()
 
+    /**
+     * Увеличить счетчик друзей текущего пользователя на 1
+     */
+    @Query(
+        """
+        UPDATE users SET friendsCount = COALESCE(friendsCount, 0) + 1 
+        WHERE isCurrentUser = 1
+        """
+    )
+    suspend fun incrementFriendsCount()
+
+    /**
+     * Уменьшить счетчик друзей текущего пользователя на 1
+     */
+    @Query(
+        """
+        UPDATE users SET friendsCount = 
+        CASE WHEN friendsCount > 0 THEN friendsCount - 1 ELSE 0 END 
+        WHERE isCurrentUser = 1
+        """
+    )
+    suspend fun decrementFriendsCount()
+
+    /**
+     * Уменьшить счетчик заявок в друзья текущего пользователя на 1
+     */
+    @Query(
+        """
+        UPDATE users SET friendRequestCount = 
+        CASE WHEN CAST(friendRequestCount AS INTEGER) > 0 
+        THEN CAST(friendRequestCount AS INTEGER) - 1 ELSE 0 END 
+        WHERE isCurrentUser = 1
+        """
+    )
+    suspend fun decrementFriendRequestCount()
+
     // Очистка всех данных пользователя при logout
 
     /**
