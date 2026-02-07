@@ -258,6 +258,12 @@ app/
 - Навигационное состояние управляется через AppState с использованием rememberAppState и NavHostController
 - Для каждой вкладки реализованы соответствующие иконки (выбранные и не выбранные), текстовые подписи и заголовки
 - Используется BottomNavigationBar для отображения навигационной панели в нижней части экрана
+- **Pull-to-Refresh**: Реализован на экране профиля (`ProfileRootScreen`) с использованием Material3 `PullToRefreshBox`:
+  - Использует экспериментальный API `@OptIn(ExperimentalMaterial3Api::class)`
+  - Состояние обновления управляется через `ProfileViewModel.isRefreshing: StateFlow<Boolean>`
+  - Метод обновления данных: `ProfileViewModel.refreshProfile()` вызывает `swRepository.getSocialUpdates(userId)`
+  - Логика протестирована в `ProfileViewModelTest` (7 unit-тестов)
+  - Базовые UI тесты для профиля в `ProfileRootScreenTest` (8 тестов)
 
 ## Разрешения
 
