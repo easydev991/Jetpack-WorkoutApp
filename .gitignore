@@ -152,7 +152,9 @@ proguard/
 *~
 
 # Documentation
-/.qwen
+# Игнорируем только .env в .qwen/
+.qwen/.env
+.qwen/.DS_Store
 
 # Ruby
 .rbenv-version
