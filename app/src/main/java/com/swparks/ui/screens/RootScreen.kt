@@ -68,10 +68,11 @@ fun RootScreen(appState: AppState) {
             // Преобразуем ошибку в локализованное сообщение для пользователя
             val message = error.toUiText(context)
 
-            // Показываем Snackbar
+            // Показываем Snackbar с кнопкой закрытия
             snackbarHostState.showSnackbar(
                 message = message,
-                duration = SnackbarDuration.Long
+                withDismissAction = true,
+                duration = SnackbarDuration.Short
             )
         }
     }
