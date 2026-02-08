@@ -6,7 +6,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.mutablePreferencesOf
 import app.cash.turbine.test
-import com.swparks.data.database.UserDao
+import com.swparks.data.database.dao.UserDao
 import com.swparks.model.Event
 import com.swparks.model.EventType
 import com.swparks.model.LoginSuccess

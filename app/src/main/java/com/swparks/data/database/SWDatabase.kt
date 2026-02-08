@@ -3,7 +3,9 @@ package com.swparks.data.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.swparks.data.database.dao.JournalDao
+import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.JournalEntity
+import com.swparks.data.database.entity.UserEntity
 
 /**
  * Room Database для локального хранения данных приложения

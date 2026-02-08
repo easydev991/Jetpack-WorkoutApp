@@ -1,4 +1,4 @@
-package com.swparks.data.database
+package com.swparks.data.database.entity
 
 import com.swparks.model.User
 

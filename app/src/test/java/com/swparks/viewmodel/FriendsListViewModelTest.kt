@@ -1,7 +1,7 @@
 package com.swparks.viewmodel
 
-import com.swparks.data.database.UserDao
-import com.swparks.data.database.UserEntity
+import com.swparks.data.database.dao.UserDao
+import com.swparks.data.database.entity.UserEntity
 import com.swparks.data.repository.SWRepository
 import com.swparks.model.AppError
 import com.swparks.ui.viewmodel.MainDispatcherRule

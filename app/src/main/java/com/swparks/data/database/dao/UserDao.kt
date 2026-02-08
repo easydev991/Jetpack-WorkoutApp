@@ -1,9 +1,10 @@
-package com.swparks.data.database
+package com.swparks.data.database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.swparks.data.database.entity.UserEntity
 import kotlinx.coroutines.flow.Flow
 
 /**

@@ -1,8 +1,9 @@
-package com.swparks.data.database
+package com.swparks.data.database.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
+import com.swparks.data.database.UserConverters
 import com.swparks.model.Park
 
 /**

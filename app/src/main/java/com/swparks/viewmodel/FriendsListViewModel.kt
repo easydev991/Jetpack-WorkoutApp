@@ -2,9 +2,9 @@ package com.swparks.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.swparks.data.database.UserDao
-import com.swparks.data.database.UserEntity
-import com.swparks.data.database.toDomain
+import com.swparks.data.database.dao.UserDao
+import com.swparks.data.database.entity.UserEntity
+import com.swparks.data.database.entity.toDomain
 import com.swparks.data.repository.SWRepository
 import com.swparks.model.AppError
 import com.swparks.util.ErrorReporter

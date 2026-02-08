@@ -1,5 +1,8 @@
 package com.swparks.data.database
 
+import com.swparks.data.database.entity.UserEntity
+import com.swparks.data.database.entity.toDomain
+import com.swparks.data.database.entity.toEntity
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

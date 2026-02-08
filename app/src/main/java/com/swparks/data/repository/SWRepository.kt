@@ -7,9 +7,9 @@ import com.swparks.data.APIError
 import com.swparks.data.ErrorResponse
 import com.swparks.data.NetworkUtils
 import com.swparks.data.UserPreferencesRepository
-import com.swparks.data.database.UserDao
-import com.swparks.data.database.toDomain
-import com.swparks.data.database.toEntity
+import com.swparks.data.database.dao.UserDao
+import com.swparks.data.database.entity.toDomain
+import com.swparks.data.database.entity.toEntity
 import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.exception.ServerException
 import com.swparks.model.ApiBlacklistOption

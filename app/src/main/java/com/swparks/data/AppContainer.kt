@@ -9,7 +9,7 @@ import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFact
 import com.swparks.data.crypto.CryptoManager
 import com.swparks.data.crypto.CryptoManagerImpl
 import com.swparks.data.database.SWDatabase
-import com.swparks.data.database.UserDao
+import com.swparks.data.database.dao.UserDao
 import com.swparks.data.interceptor.AuthInterceptor
 import com.swparks.data.interceptor.RetryInterceptor
 import com.swparks.data.interceptor.TokenInterceptor

@@ -44,7 +44,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  */
 data class ListRowData(
     val modifier: Modifier = Modifier,
-    @DrawableRes val leadingIconID: Int? = null,
+    @param:DrawableRes val leadingIconID: Int? = null,
     val leadingText: String,
     val trailingText: String = "",
     val showChevron: Boolean = false,

@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
-import com.swparks.data.database.UserDao
+import com.swparks.data.database.dao.UserDao
 import com.swparks.domain.exception.NetworkException
 import com.swparks.model.TextEntryOption
 import com.swparks.network.SWApi
