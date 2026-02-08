@@ -160,14 +160,6 @@ private fun ContentScreen(
                     enabled = !isRefreshing
                 )
             }
-            // Индикатор загрузки поверх контента при обновлении
-            if (isRefreshing) {
-                androidx.compose.material3.CircularProgressIndicator(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .matchParentSize()
-                )
-            }
         }
     }
 }
@@ -217,7 +209,10 @@ private fun JournalsList(
                             JournalAction.DELETE
                         ),
                         onClickAction = { action ->
-                            Log.i("JournalsListScreen", "Действие: $action для дневника: ${journal.id}")
+                            Log.i(
+                                "JournalsListScreen",
+                                "Действие: $action для дневника: ${journal.id}"
+                            )
                         }
                     )
                 )

@@ -31,31 +31,6 @@ object DateFormatter {
      * - Если дата в этом году: формат "d MMM, HH:mm" (например, "21 нояб, 10:30")
      * - Если дата в другом году: формат "d MMM yyyy" (например, "21 нояб 2023")
      *
-     * @param dateString Дата в формате ISO8601 (например, "2023-11-21T21:19:18+03:00")
-     * @param locale Локаль для форматирования (по умолчанию - текущая локаль устройства)
-     * @param showTimeInThisYear Показывать время для дат в этом году (по умолчанию - true)
-     * @return Отформатированная строка даты или пустая строка при ошибке
-     */
-    fun formatDate(
-        dateString: String?,
-        locale: Locale = Locale.getDefault(),
-        showTimeInThisYear: Boolean = true
-    ): String {
-        if (dateString.isNullOrEmpty()) {
-            return ""
-        }
-
-        return try {
-            val date = parseIsoDate(dateString)
-            formatDateWithYesterdayString(date, locale, showTimeInThisYear, null)
-        } catch (e: Exception) {
-            ""
-        }
-    }
-
-    /**
-     * Форматирует дату из ISO8601 строки в читаемый формат с контекстом
-     *
      * @param context Контекст приложения для получения локали и локализованных строк
      * @param dateString Дата в формате ISO8601
      * @param showTimeInThisYear Показывать время для дат в этом году (по умолчанию - true)
@@ -66,134 +41,49 @@ object DateFormatter {
         dateString: String?,
         showTimeInThisYear: Boolean = true
     ): String {
+
         if (dateString.isNullOrEmpty()) {
             return ""
         }
 
         return try {
             val date = parseIsoDate(dateString)
-            val locale =
-                context.resources.configuration.locales.get(0)
+            val localDate = date.toLocalDate()
+            val locale = context.resources.configuration.locales.get(0)
             val yesterdayString = context.getString(com.swparks.R.string.yesterday)
-            formatDateWithYesterdayString(date, locale, showTimeInThisYear, yesterdayString)
+
+            return when {
+                localDate.isToday() -> {
+                    // Сегодня: показываем только время
+                    val timeFormatter = SimpleDateFormat(MEDIUM_TIME, locale)
+                    timeFormatter.format(date)
+                }
+
+                localDate.isYesterday() -> {
+                    // Вчера: показываем локализованную строку и время
+                    val timeFormatter = SimpleDateFormat(MEDIUM_TIME, locale)
+                    "$yesterdayString, ${timeFormatter.format(date)}"
+                }
+
+                localDate.isThisYear() -> {
+                    // В этом году: показываем дату и (опционально) время
+                    if (showTimeInThisYear) {
+                        val dateTimeFormatter = SimpleDateFormat(DAY_MONTH_MEDIUM_TIME, locale)
+                        dateTimeFormatter.format(date)
+                    } else {
+                        val dateOnlyFormatter = SimpleDateFormat(DAY_MONTH, locale)
+                        dateOnlyFormatter.format(date)
+                    }
+                }
+
+                else -> {
+                    // Другой год: показываем полную дату
+                    val formatter = SimpleDateFormat(DAY_MONTH_YEAR, locale)
+                    formatter.format(date)
+                }
+            }
         } catch (e: Exception) {
             ""
-        }
-    }
-
-    /**
-     * Форматирует объект Date в читаемый формат
-     *
-     * @param date Объект Date
-     * @param locale Локаль для форматирования
-     * @param showTimeInThisYear Показывать время для дат в этом году
-     * @param yesterdayString Локализованная строка для "Вчера" (опционально)
-     * @return Отформатированная строка даты
-     */
-    @VisibleForTesting
-    internal fun formatDateWithYesterdayString(
-        date: Date,
-        locale: Locale,
-        showTimeInThisYear: Boolean,
-        yesterdayString: String? = null
-    ): String {
-        val localDate = date.toLocalDate()
-        val formatter = SimpleDateFormat(DAY_MONTH_YEAR, locale)
-
-        return when {
-            localDate.isToday() -> {
-                // Сегодня: показываем только время
-                val timeFormatter = SimpleDateFormat(MEDIUM_TIME, locale)
-                timeFormatter.format(date)
-            }
-            localDate.isYesterday() -> {
-                // Вчера: показываем локализованную строку или "Вчера, HH:mm"
-                val timeFormatter = SimpleDateFormat(MEDIUM_TIME, locale)
-                if (yesterdayString != null) {
-                    "$yesterdayString, ${timeFormatter.format(date)}"
-                } else {
-                    "Вчера, ${timeFormatter.format(date)}"
-                }
-            }
-            localDate.isThisYear() -> {
-                // В этом году: показываем дату и (опционально) время
-                if (showTimeInThisYear) {
-                    val dateTimeFormatter = SimpleDateFormat(DAY_MONTH_MEDIUM_TIME, locale)
-                    dateTimeFormatter.format(date)
-                } else {
-                    val dateOnlyFormatter = SimpleDateFormat(DAY_MONTH, locale)
-                    dateOnlyFormatter.format(date)
-                }
-            }
-            else -> {
-                // Другой год: показываем полную дату
-                formatter.format(date)
-            }
-        }
-    }
-
-    /**
-     * Форматирует объект Date в читаемый формат
-     *
-     * @param date Объект Date
-     * @param locale Локаль для форматирования
-     * @param showTimeInThisYear Показывать время для дат в этом году
-     * @return Отформатированная строка даты
-     */
-    @VisibleForTesting
-    internal fun formatDate(
-        date: Date,
-        locale: Locale,
-        showTimeInThisYear: Boolean
-    ): String {
-        return formatDateWithYesterdayString(date, locale, showTimeInThisYear, null)
-    }
-
-    /**
-     * Форматирует объект Date в читаемый формат с локализацией
-     *
-     * @param date Объект Date
-     * @param context Контекст приложения для получения локализованных строк
-     * @param locale Локаль для форматирования
-     * @param showTimeInThisYear Показывать время для дат в этом году
-     * @return Отформатированная строка даты
-     */
-    @VisibleForTesting
-    internal fun formatDate(
-        date: Date,
-        context: Context,
-        locale: Locale,
-        showTimeInThisYear: Boolean
-    ): String {
-        val localDate = date.toLocalDate()
-        val formatter = SimpleDateFormat(DAY_MONTH_YEAR, locale)
-        val yesterdayString = context.getString(com.swparks.R.string.yesterday)
-
-        return when {
-            localDate.isToday() -> {
-                // Сегодня: показываем только время
-                val timeFormatter = SimpleDateFormat(MEDIUM_TIME, locale)
-                timeFormatter.format(date)
-            }
-            localDate.isYesterday() -> {
-                // Вчера: показываем локализованную строку и время
-                val timeFormatter = SimpleDateFormat(MEDIUM_TIME, locale)
-                "$yesterdayString, ${timeFormatter.format(date)}"
-            }
-            localDate.isThisYear() -> {
-                // В этом году: показываем дату и (опционально) время
-                if (showTimeInThisYear) {
-                    val dateTimeFormatter = SimpleDateFormat(DAY_MONTH_MEDIUM_TIME, locale)
-                    dateTimeFormatter.format(date)
-                } else {
-                    val dateOnlyFormatter = SimpleDateFormat(DAY_MONTH, locale)
-                    dateOnlyFormatter.format(date)
-                }
-            }
-            else -> {
-                // Другой год: показываем полную дату
-                formatter.format(date)
-            }
         }
     }
 

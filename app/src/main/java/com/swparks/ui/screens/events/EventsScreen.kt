@@ -71,7 +71,10 @@ fun PastEventsScreen(
                 data = EventRowData(
                     imageStringURL = event.preview,
                     name = event.title,
-                    dateString = DateFormatter.formatDate(context = context, dateString = event.beginDate),
+                    dateString = DateFormatter.formatDate(
+                        context = context,
+                        dateString = event.beginDate
+                    ),
                     address = "${event.countryID}, ${event.cityID}",
                     onClick = {
                         Log.d("EventsScreen", "Нажато мероприятие: ${event.title}")
