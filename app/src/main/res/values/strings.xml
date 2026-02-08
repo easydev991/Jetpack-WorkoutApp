@@ -167,6 +167,7 @@
     <string name="date_time">Date and time</string>
     <string name="date">Date</string>
     <string name="time">Time</string>
+    <string name="yesterday">Yesterday</string>
     <string name="when">When</string>
     <string name="where">Where</string>
     <string name="participants">Participants</string>

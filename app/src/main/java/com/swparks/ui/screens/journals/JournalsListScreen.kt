@@ -31,6 +31,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
@@ -43,6 +44,7 @@ import com.swparks.ui.ds.JournalRowView
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.state.JournalsUiState
 import com.swparks.ui.viewmodel.IJournalsViewModel
+import com.swparks.util.DateFormatter
 
 /**
  * Экран списка дневников пользователя
@@ -178,6 +180,7 @@ private fun JournalsList(
     journals: List<Journal>,
     enabled: Boolean = true
 ) {
+    val context = LocalContext.current
     LazyColumn(
         contentPadding = PaddingValues(
             start = dimensionResource(R.dimen.spacing_regular),
@@ -203,7 +206,10 @@ private fun JournalsList(
                         modifier = Modifier.fillMaxWidth(),
                         imageStringURL = journal.lastMessageImage,
                         title = journal.title ?: "",
-                        dateString = journal.lastMessageDate ?: "",
+                        dateString = DateFormatter.formatDate(
+                            context = context,
+                            dateString = journal.lastMessageDate
+                        ),
                         bodyText = journal.lastMessageText ?: "",
                         mode = JournalRowMode.ROOT,
                         actions = listOf(

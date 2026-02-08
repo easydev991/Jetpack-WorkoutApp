@@ -167,6 +167,7 @@
     <string name="date_time">Дата и время</string>
     <string name="date">Дата</string>
     <string name="time">Время</string>
+    <string name="yesterday">Вчера</string>
     <string name="when">Когда</string>
     <string name="where">Где</string>
     <string name="participants">Участники</string>
