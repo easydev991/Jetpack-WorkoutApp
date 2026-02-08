@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -23,6 +24,7 @@ import com.swparks.ui.ds.ErrorContentView
 import com.swparks.ui.ds.EventRowData
 import com.swparks.ui.ds.EventRowView
 import com.swparks.ui.ds.LoadingOverlayView
+import com.swparks.util.DateFormatter
 
 @Composable
 fun EventsScreen(
@@ -49,6 +51,8 @@ fun PastEventsScreen(
     events: List<Event>,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(
@@ -67,7 +71,7 @@ fun PastEventsScreen(
                 data = EventRowData(
                     imageStringURL = event.preview,
                     name = event.title,
-                    dateString = event.beginDate,
+                    dateString = DateFormatter.formatDate(context = context, dateString = event.beginDate),
                     address = "${event.countryID}, ${event.cityID}",
                     onClick = {
                         Log.d("EventsScreen", "Нажато мероприятие: ${event.title}")
