@@ -1,6 +1,7 @@
 package com.swparks.model
 
 import com.swparks.data.datetime.FlexibleDateDeserializer
+import com.swparks.domain.model.Journal
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -36,3 +37,20 @@ data class JournalResponse(
     val journalAccessOption: JournalAccess? = viewAccess?.let { JournalAccess.from(it) }
     val commentAccessOption: JournalAccess? = commentAccess?.let { JournalAccess.from(it) }
 }
+
+/**
+ * Маппер для преобразования [JournalResponse] в доменную модель [Journal]
+ */
+fun JournalResponse.toDomain(): Journal = Journal(
+    id = id,
+    title = title,
+    lastMessageImage = lastMessageImage,
+    createDate = createDate,
+    modifyDate = modifyDate,
+    lastMessageDate = lastMessageDate,
+    lastMessageText = lastMessageText,
+    entriesCount = count,
+    ownerId = ownerId?.toLong(),
+    viewAccess = journalAccessOption,
+    commentAccess = commentAccessOption
+)
