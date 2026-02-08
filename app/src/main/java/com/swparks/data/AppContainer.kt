@@ -32,6 +32,7 @@ import com.swparks.util.Logger
 import com.swparks.viewmodel.BlacklistViewModel
 import com.swparks.viewmodel.FriendsListViewModel
 import com.swparks.viewmodel.ProfileViewModel
+import com.swparks.viewmodel.UserTrainingParksViewModel
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -59,6 +60,9 @@ interface AppContainer {
 
     /** Фабрика для BlacklistViewModel */
     fun blacklistViewModelFactory(): BlacklistViewModel
+
+    /** Фабрика для UserTrainingParksViewModel */
+    fun userTrainingParksViewModelFactory(userId: Long): UserTrainingParksViewModel
 
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
@@ -224,6 +228,14 @@ class DefaultAppContainer(context: Context) : AppContainer {
     /** Factory метод для создания BlacklistViewModel */
     override fun blacklistViewModelFactory() = BlacklistViewModel(
         swRepository = swRepository,
+        logger = logger,
+        errorReporter = errorReporter
+    )
+
+    /** Factory метод для создания UserTrainingParksViewModel */
+    override fun userTrainingParksViewModelFactory(userId: Long) = UserTrainingParksViewModel(
+        swRepository = swRepository,
+        userId = userId,
         logger = logger,
         errorReporter = errorReporter
     )

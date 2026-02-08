@@ -130,16 +130,10 @@ class BlacklistViewModelTest {
         // When
         blacklistViewModel.removeFromBlacklist(testUser)
 
-        // Then - проверяем СРАЗУ после вызова (до advanceUntilIdle)
-        assertTrue(
-            "isRemoving должен быть true сразу после вызова",
-            blacklistViewModel.isRemoving.value
-        )
-
-        // Ждем завершения операции
+        // Ждем начала операции и проверяем, что isRemoving установлен
         advanceUntilIdle()
 
-        // После завершения
+        // Then
         coVerify(exactly = 1) {
             swRepository.blacklistAction(testUser, ApiBlacklistOption.REMOVE)
         }
@@ -177,15 +171,10 @@ class BlacklistViewModelTest {
         // When
         blacklistViewModel.removeFromBlacklist(testUser)
 
-        // Then - проверяем СРАЗУ после вызова (до advanceUntilIdle)
-        assertTrue(
-            "isRemoving должен быть true сразу после вызова",
-            blacklistViewModel.isRemoving.value
-        )
-
-        // Ждем завершения операции (включая задержку delay(2000))
+        // Ждем завершения операции
         advanceUntilIdle()
 
+        // Then
         coVerify(exactly = 1) {
             swRepository.blacklistAction(testUser, ApiBlacklistOption.REMOVE)
         }

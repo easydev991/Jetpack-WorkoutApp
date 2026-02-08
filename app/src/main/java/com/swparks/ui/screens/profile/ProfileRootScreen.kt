@@ -173,7 +173,9 @@ fun ProfileRootScreen(
                     UsedParksButton(
                         parksCount = user.parksCount?.toIntOrNull() ?: 0,
                         onClick = {
-                            Log.i("ProfileRootScreen", "Нажата кнопка: Где тренируется")
+                            appState?.navController?.navigate(
+                                Screen.UserTrainingParks.createRoute(user.id)
+                            )
                         }
                     )
                 }

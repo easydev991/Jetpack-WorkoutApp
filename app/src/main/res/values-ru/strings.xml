@@ -77,6 +77,7 @@
     <string name="journals">Дневники</string>
     <string name="black_list">Чёрный список</string>
     <string name="blacklist_empty">Нет пользователей в чёрном списке</string>
+    <string name="no_parks_found">Площадки не найдены</string>
 
     <string name="journals_title">Дневники тренировок</string>
     <string name="empty_journals">Дневников пока нет</string>

@@ -72,6 +72,7 @@
     <string name="journals">Journals</string>
     <string name="black_list">Black list</string>
     <string name="blacklist_empty">No users in blacklist</string>
+    <string name="no_parks_found">No parks found</string>
 
     <string name="journals_title">Workout journals</string>
     <string name="empty_journals">No journals here yet</string>

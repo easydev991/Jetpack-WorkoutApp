@@ -40,6 +40,7 @@ import com.swparks.ui.screens.profile.MyBlacklistScreen
 import com.swparks.ui.screens.profile.MyFriendsScreen
 import com.swparks.ui.screens.profile.ProfileRootScreen
 import com.swparks.ui.screens.profile.ProfileTopAppBar
+import com.swparks.ui.screens.profile.UserTrainingParksScreen
 import com.swparks.ui.screens.themeicon.ThemeIconScreen
 import com.swparks.utils.ReadJSONFromAssets
 import com.swparks.utils.WorkoutAppJson
@@ -282,8 +283,21 @@ fun RootScreen(appState: AppState) {
                 )
             }
 
-            composable(route = Screen.UserTrainingParks.route) {
-                // TODO: Реализовать UserTrainingParksScreen
+            composable(
+                route = Screen.UserTrainingParks.route
+            ) { navBackStackEntry ->
+                val userId = navBackStackEntry.arguments?.getString("userId")?.toLongOrNull()
+                if (userId != null) {
+                    val viewModel = remember(appContainer) {
+                        appContainer.userTrainingParksViewModelFactory(userId)
+                    }
+                    UserTrainingParksScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        viewModel = viewModel,
+                        onBackClick = { appState.navController.popBackStack() },
+                        parentPaddingValues = paddingValues
+                    )
+                }
             }
 
             composable(route = Screen.Blacklist.route) {
