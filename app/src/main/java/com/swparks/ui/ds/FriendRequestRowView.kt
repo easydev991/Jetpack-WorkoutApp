@@ -28,6 +28,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * @param address Адрес в формате "Россия, Москва"
  * @param onClickAccept Действие по нажатию на кнопку "Принять"
  * @param onClickDecline Действие по нажатию на кнопку "Отклонить"
+ * @param enabled Доступность кнопок для нажатий
  */
 data class FriendRequestData(
     val modifier: Modifier = Modifier,
@@ -35,7 +36,8 @@ data class FriendRequestData(
     val name: String,
     val address: String?,
     val onClickAccept: () -> Unit,
-    val onClickDecline: () -> Unit
+    val onClickDecline: () -> Unit,
+    val enabled: Boolean = true
 )
 
 /**
@@ -57,7 +59,8 @@ fun FriendRequestRowView(data: FriendRequestData) {
                         name = data.name,
                         address = data.address,
                         onClickAccept = data.onClickAccept,
-                        onClickDecline = data.onClickDecline
+                        onClickDecline = data.onClickDecline,
+                        enabled = data.enabled
                     )
                 }
             )
@@ -81,7 +84,8 @@ private fun FriendRequestContent(
     name: String,
     address: String?,
     onClickAccept: () -> Unit,
-    onClickDecline: () -> Unit
+    onClickDecline: () -> Unit,
+    enabled: Boolean = true
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall_plus))
@@ -92,7 +96,8 @@ private fun FriendRequestContent(
         )
         FriendRequestButtons(
             onClickAccept = onClickAccept,
-            onClickDecline = onClickDecline
+            onClickDecline = onClickDecline,
+            enabled = enabled
         )
     }
 }
@@ -122,7 +127,8 @@ private fun FriendRequestHeader(
 @Composable
 private fun FriendRequestButtons(
     onClickAccept: () -> Unit,
-    onClickDecline: () -> Unit
+    onClickDecline: () -> Unit,
+    enabled: Boolean = true
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall)),
@@ -133,6 +139,7 @@ private fun FriendRequestButtons(
                 modifier = Modifier.weight(1f),
                 size = SWButtonSize.SMALL,
                 text = stringResource(id = R.string.accept_friend_request),
+                enabled = enabled,
                 onClick = onClickAccept
             )
         )
@@ -142,6 +149,7 @@ private fun FriendRequestButtons(
                 size = SWButtonSize.SMALL,
                 mode = SWButtonMode.TINTED,
                 text = stringResource(id = R.string.decline_friend_request),
+                enabled = enabled,
                 onClick = onClickDecline
             )
         )

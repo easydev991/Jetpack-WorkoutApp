@@ -13,9 +13,6 @@ sealed class FriendsListUiState {
         val friends: List<User> = emptyList()
     ) : FriendsListUiState()
 
-    /** Состояние индикатора загрузки (выполнение запроса к серверу) */
-    data object Busy : FriendsListUiState()
-
     /** Состояние ошибки с сообщением */
     data class Error(val message: String) : FriendsListUiState()
 }

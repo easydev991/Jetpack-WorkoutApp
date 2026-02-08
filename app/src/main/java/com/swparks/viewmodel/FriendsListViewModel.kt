@@ -49,9 +49,9 @@ class FriendsListViewModel(
     private val _uiState = MutableStateFlow<FriendsListUiState>(FriendsListUiState.Loading)
     val uiState: StateFlow<FriendsListUiState> = _uiState.asStateFlow()
 
-    // Последнее состояние Success для использования в Busy
-    private val _lastSuccessState = MutableStateFlow<FriendsListUiState?>(null)
-    val lastSuccessState: StateFlow<FriendsListUiState?> = _lastSuccessState.asStateFlow()
+    // Индикатор загрузки при выполнении запросов к серверу (принятие/отклонение заявки)
+    private val _isProcessing = MutableStateFlow(false)
+    val isProcessing: StateFlow<Boolean> = _isProcessing.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -60,12 +60,10 @@ class FriendsListViewModel(
                 // Преобразуем UserEntity в User
                 val requestsUsers = requests.map { it.toDomain() }
                 val friendsUsers = friendList.map { it.toDomain() }
-                val currentState = FriendsListUiState.Success(
+                FriendsListUiState.Success(
                     friendRequests = requestsUsers,
                     friends = friendsUsers
                 )
-                _lastSuccessState.value = currentState
-                currentState
             }
                 .collect { state -> _uiState.value = state }
         }
@@ -107,7 +105,7 @@ class FriendsListViewModel(
      */
     fun onAcceptFriendRequest(userId: Long) {
         viewModelScope.launch {
-            _uiState.value = FriendsListUiState.Busy
+            _isProcessing.value = true
 
             logger.i(TAG, "Принятие заявки на добавление в друга: userId=$userId")
             swRepository.respondToFriendRequest(userId, accept = true)
@@ -122,7 +120,7 @@ class FriendsListViewModel(
                         )
                     )
                 }
-            _uiState.value = lastSuccessState.value ?: FriendsListUiState.Success()
+            _isProcessing.value = false
         }
     }
 
@@ -133,7 +131,7 @@ class FriendsListViewModel(
      */
     fun onDeclineFriendRequest(userId: Long) {
         viewModelScope.launch {
-            _uiState.value = FriendsListUiState.Busy
+            _isProcessing.value = true
 
             logger.i(TAG, "Отклонение заявки на добавление в друга: userId=$userId")
             swRepository.respondToFriendRequest(userId, accept = false)
@@ -148,7 +146,7 @@ class FriendsListViewModel(
                         )
                     )
                 }
-            _uiState.value = lastSuccessState.value ?: FriendsListUiState.Success()
+            _isProcessing.value = false
         }
     }
 

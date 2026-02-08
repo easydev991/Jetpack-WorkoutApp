@@ -53,17 +53,17 @@ fun MyFriendsScreen(
     parentPaddingValues: PaddingValues
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val lastSuccessState by viewModel.lastSuccessState.collectAsState()
+    val isProcessing by viewModel.isProcessing.collectAsState()
 
     MyFriendsScreenContent(
         modifier = modifier,
         uiState = uiState,
-        lastSuccessState = lastSuccessState,
         onBackClick = onBackClick,
         parentPaddingValues = parentPaddingValues,
         onAcceptFriendRequest = { viewModel.onAcceptFriendRequest(it) },
         onDeclineFriendRequest = { viewModel.onDeclineFriendRequest(it) },
-        onFriendClick = { viewModel.onFriendClick(it) }
+        onFriendClick = { viewModel.onFriendClick(it) },
+        isProcessing = isProcessing
     )
 }
 
@@ -75,12 +75,12 @@ fun MyFriendsScreen(
 fun MyFriendsScreenContent(
     modifier: Modifier = Modifier,
     uiState: FriendsListUiState,
-    lastSuccessState: FriendsListUiState?,
     onBackClick: () -> Unit,
     parentPaddingValues: PaddingValues,
     onAcceptFriendRequest: (Long) -> Unit,
     onDeclineFriendRequest: (Long) -> Unit,
-    onFriendClick: (Long) -> Unit
+    onFriendClick: (Long) -> Unit,
+    isProcessing: Boolean = false
 ) {
     Scaffold(
         modifier = modifier,
@@ -114,29 +114,6 @@ fun MyFriendsScreenContent(
                     )
                 }
 
-                is FriendsListUiState.Busy -> {
-                    // Показываем индикатор загрузки с текущими данными
-                    val successState = (lastSuccessState as? FriendsListUiState.Success)
-                        ?: FriendsListUiState.Success()
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        // Данные с кнопками
-                        SuccessContent(
-                            friendRequests = successState.friendRequests,
-                            friends = successState.friends,
-                            onAcceptFriendRequest = onAcceptFriendRequest,
-                            onDeclineFriendRequest = onDeclineFriendRequest,
-                            onFriendClick = onFriendClick,
-                            modifier = Modifier
-                        )
-                        // Индикатор загрузки поверх
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .matchParentSize()
-                        )
-                    }
-                }
-
                 is FriendsListUiState.Error -> {
                     Text(
                         text = uiState.message,
@@ -145,14 +122,26 @@ fun MyFriendsScreenContent(
                 }
 
                 is FriendsListUiState.Success -> {
-                    SuccessContent(
-                        friendRequests = uiState.friendRequests,
-                        friends = uiState.friends,
-                        onAcceptFriendRequest = onAcceptFriendRequest,
-                        onDeclineFriendRequest = onDeclineFriendRequest,
-                        onFriendClick = onFriendClick,
-                        modifier = Modifier.fillMaxSize()
-                    )
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        // Данные с блокировкой кнопок при обработке запроса
+                        SuccessContent(
+                            friendRequests = uiState.friendRequests,
+                            friends = uiState.friends,
+                            onAcceptFriendRequest = onAcceptFriendRequest,
+                            onDeclineFriendRequest = onDeclineFriendRequest,
+                            onFriendClick = onFriendClick,
+                            modifier = Modifier.fillMaxSize(),
+                            enabled = !isProcessing
+                        )
+                        // Индикатор загрузки поверх при обработке запроса
+                        if (isProcessing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .matchParentSize()
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -169,7 +158,8 @@ private fun SuccessContent(
     onAcceptFriendRequest: (Long) -> Unit,
     onDeclineFriendRequest: (Long) -> Unit,
     onFriendClick: (Long) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     LazyColumn(
         modifier = modifier,
@@ -204,7 +194,8 @@ private fun SuccessContent(
                                     name = user.name,
                                     address = null,
                                     onClickAccept = { onAcceptFriendRequest(user.id) },
-                                    onClickDecline = { onDeclineFriendRequest(user.id) }
+                                    onClickDecline = { onDeclineFriendRequest(user.id) },
+                                    enabled = enabled
                                 )
                             )
                         }
@@ -230,7 +221,7 @@ private fun SuccessContent(
                         friends.forEach { user ->
                             Box(
                                 modifier = Modifier
-                                    .clickable {
+                                    .clickable(enabled = enabled) {
                                         onFriendClick(user.id)
                                     }
                             ) {

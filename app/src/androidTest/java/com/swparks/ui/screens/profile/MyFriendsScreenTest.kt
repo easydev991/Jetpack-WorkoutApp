@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
@@ -34,7 +36,7 @@ class MyFriendsScreenTest {
 
     private fun setContent(
         uiState: FriendsListUiState = FriendsListUiState.Success(),
-        lastSuccessState: FriendsListUiState? = null,
+        isProcessing: Boolean = false,
         onBackClick: () -> Unit = {},
         onAcceptFriendRequest: (Long) -> Unit = {},
         onDeclineFriendRequest: (Long) -> Unit = {},
@@ -44,12 +46,12 @@ class MyFriendsScreenTest {
             JetpackWorkoutAppTheme {
                 MyFriendsScreenContent(
                     uiState = uiState,
-                    lastSuccessState = lastSuccessState,
                     onBackClick = onBackClick,
                     parentPaddingValues = PaddingValues(),
                     onAcceptFriendRequest = onAcceptFriendRequest,
                     onDeclineFriendRequest = onDeclineFriendRequest,
-                    onFriendClick = onFriendClick
+                    onFriendClick = onFriendClick,
+                    isProcessing = isProcessing
                 )
             }
         }
@@ -387,41 +389,6 @@ class MyFriendsScreenTest {
     }
 
     @Test
-    fun myFriendsScreen_displaysBusyStateWithLastSuccessState() {
-        // Given
-        val testUser = User(
-            id = 1L,
-            name = "Silverfrog19",
-            image = null
-        )
-        val successState = FriendsListUiState.Success(
-            friendRequests = listOf(testUser),
-            friends = emptyList()
-        )
-        val busyState = FriendsListUiState.Busy
-
-        // When
-        setContent(
-            uiState = busyState,
-            lastSuccessState = successState
-        )
-
-        // Then - Имя пользователя из последнего успешного состояния отображается
-        composeTestRule
-            .onNodeWithText(testUser.name)
-            .assertIsDisplayed()
-
-        // Кнопки "Принять" и "Отклонить" отображаются
-        composeTestRule
-            .onNodeWithText(context.getString(R.string.accept_friend_request), ignoreCase = true)
-            .assertIsDisplayed()
-
-        composeTestRule
-            .onNodeWithText(context.getString(R.string.decline_friend_request), ignoreCase = true)
-            .assertIsDisplayed()
-    }
-
-    @Test
     fun myFriendsScreen_displaysEmptyState_whenNoData() {
         // Given
         val state = FriendsListUiState.Success(
@@ -556,5 +523,109 @@ class MyFriendsScreenTest {
         composeTestRule
             .onAllNodesWithText(friendsTitle, ignoreCase = true)
             .assertCountEquals(1) // Только AppBar заголовок
+    }
+
+    @Test
+    fun myFriendsScreen_acceptButtonDisabled_whenProcessing() {
+        // Given
+        val testUser = User(
+            id = 1L,
+            name = "Silverfrog19",
+            image = null
+        )
+        val state = FriendsListUiState.Success(
+            friendRequests = listOf(testUser),
+            friends = emptyList()
+        )
+
+        // When
+        setContent(
+            uiState = state,
+            isProcessing = true
+        )
+
+        // Then - Кнопка "Принять" отображается, но отключена
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.accept_friend_request), ignoreCase = true)
+            .assertIsDisplayed()
+            .assertIsNotEnabled()
+    }
+
+    @Test
+    fun myFriendsScreen_declineButtonDisabled_whenProcessing() {
+        // Given
+        val testUser = User(
+            id = 1L,
+            name = "Silverfrog19",
+            image = null
+        )
+        val state = FriendsListUiState.Success(
+            friendRequests = listOf(testUser),
+            friends = emptyList()
+        )
+
+        // When
+        setContent(
+            uiState = state,
+            isProcessing = true
+        )
+
+        // Then - Кнопка "Отклонить" отображается, но отключена
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.decline_friend_request), ignoreCase = true)
+            .assertIsDisplayed()
+            .assertIsNotEnabled()
+    }
+
+    @Test
+    fun myFriendsScreen_friendRowNotClickable_whenProcessing() {
+        // Given
+        val testUser = User(
+            id = 2L,
+            name = "WorkoutMaster",
+            image = null
+        )
+        val state = FriendsListUiState.Success(
+            friendRequests = emptyList(),
+            friends = listOf(testUser)
+        )
+
+        // When
+        setContent(
+            uiState = state,
+            isProcessing = true
+        )
+
+        // Then - Строка друга отображается
+        composeTestRule
+            .onNodeWithText(testUser.name)
+            .assertIsDisplayed()
+            .assertIsNotEnabled()
+    }
+
+    @Test
+    fun myFriendsScreen_buttonsEnabled_whenNotBusy() {
+        // Given
+        val testUser = User(
+            id = 1L,
+            name = "Silverfrog19",
+            image = null
+        )
+        val state = FriendsListUiState.Success(
+            friendRequests = listOf(testUser),
+            friends = emptyList()
+        )
+
+        // When
+        setContent(uiState = state)
+
+        // Then - Кнопки доступны для нажатия
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.accept_friend_request), ignoreCase = true)
+            .assertIsEnabled()
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.decline_friend_request), ignoreCase = true)
+            .assertIsEnabled()
     }
 }
