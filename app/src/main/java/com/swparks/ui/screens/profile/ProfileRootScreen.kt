@@ -196,7 +196,9 @@ fun ProfileRootScreen(
                 JournalsButton(
                     journalsCount = user.journalCount ?: 0,
                     onClick = {
-                        Log.i("ProfileRootScreen", "Нажата кнопка: Дневники")
+                        appState?.navController?.navigate(
+                            Screen.JournalsList.createRoute(user.id)
+                        )
                     }
                 )
 

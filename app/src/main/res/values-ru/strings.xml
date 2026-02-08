@@ -80,7 +80,8 @@
     <string name="no_parks_found">Площадки не найдены</string>
 
     <string name="journals_title">Дневники тренировок</string>
-    <string name="empty_journals">Дневников пока нет</string>
+    <string name="journals_list_title">Дневники</string>
+    <string name="journals_empty">Дневников пока нет</string>
     <string name="create_journal">Создать дневник</string>
     <string name="new_journal">Новый дневник</string>
     <string name="first_entry_placeholder">Создай первую запись в дневнике</string>

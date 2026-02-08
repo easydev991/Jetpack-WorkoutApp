@@ -29,6 +29,7 @@ import com.swparks.navigation.Screen
 import com.swparks.ui.screens.auth.LoginSheetHost
 import com.swparks.ui.screens.events.EventsScreen
 import com.swparks.ui.screens.events.EventsTopAppBar
+import com.swparks.ui.screens.journals.JournalsListScreen
 import com.swparks.ui.screens.messages.MessagesRootScreen
 import com.swparks.ui.screens.messages.MessagesTopAppBar
 import com.swparks.ui.screens.more.MoreScreen
@@ -312,8 +313,20 @@ fun RootScreen(appState: AppState) {
                 )
             }
 
-            composable(route = Screen.JournalsList.route) {
-                // TODO: Реализовать JournalsListScreen
+            composable(route = Screen.JournalsList.route) { navBackStackEntry ->
+                val userId = navBackStackEntry.arguments?.getString("userId")?.toLongOrNull()
+                if (userId != null) {
+                    val viewModel = remember(appContainer) {
+                        appContainer.journalsViewModelFactory(userId)
+                    }
+                    JournalsListScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        userId = userId,
+                        viewModel = viewModel,
+                        onBackClick = { appState.navController.popBackStack() },
+                        parentPaddingValues = paddingValues
+                    )
+                }
             }
 
             composable(route = Screen.JournalDetail.route) {

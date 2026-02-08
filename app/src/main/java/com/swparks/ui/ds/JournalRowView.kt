@@ -73,11 +73,6 @@ enum class JournalAction(
  *
  * @property messageMaxLines Лимит строк для основного текста вьюшки
  */
-/**
- * Тип вьюшки
- *
- * @property messageMaxLines Лимит строк для основного текста вьюшки
- */
 enum class JournalRowMode(val messageMaxLines: Int) {
     /**
      * Дневник
@@ -149,13 +144,15 @@ fun JournalRowView(data: JournalRowData) {
             modifier = Modifier.padding(dimensionResource(id = R.dimen.spacing_small))
         ) {
             Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
+                verticalAlignment = Alignment.Top,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 JournalHeader(
                     imageStringURL = data.imageStringURL,
                     title = data.title,
-                    dateString = data.dateString
+                    dateString = data.dateString,
+                    modifier = Modifier.weight(1f)
                 )
                 JournalActionsMenu(
                     config = JournalActionsMenuConfig(
@@ -183,11 +180,13 @@ fun JournalRowView(data: JournalRowData) {
 private fun JournalHeader(
     imageStringURL: String?,
     title: String,
-    dateString: String
+    dateString: String,
+    modifier: Modifier = Modifier
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_small))
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_small)),
+        modifier = modifier
     ) {
         SWAsyncImage(
             config = AsyncImageConfig(
@@ -198,12 +197,13 @@ private fun JournalHeader(
             )
         )
         Column(
-            verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_xxsmall))
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_xxsmall)),
+            modifier = Modifier.weight(1f)
         ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
@@ -211,6 +211,7 @@ private fun JournalHeader(
                 text = dateString,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -331,7 +332,7 @@ fun JournalRowViewPreview() {
                 JournalRowView(
                     data = JournalRowData(
                         imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
-                        title = "NineNineOne",
+                        title = "Тестирую дневники из мобильного приложения",
                         dateString = "20 февраля, 10:00",
                         bodyText = "Сегодня была тренировка на стадионе. Для начала небольшая " +
                                 "пробежка для разминки, затем пара подходов подтягиваний турнике, " +

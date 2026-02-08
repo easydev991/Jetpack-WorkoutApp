@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.swparks.domain.model.Journal
+import com.swparks.model.JournalAccess
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -81,5 +82,48 @@ private fun parseDateToTimestamp(dateString: String?): Long {
         // Если не удалось распарсить дату, возвращаем 0
         Log.e("JournalMapper", "Не удалось распарсить дату: $dateString")
         0L
+    }
+}
+
+/**
+ * Маппер для преобразования [JournalEntity] в доменную модель [Journal]
+ *
+ * Конвертирует даты из Long timestamp обратно в String (ISO формат)
+ * и мапит уровни доступа из Int в JournalAccess
+ */
+fun JournalEntity.toDomain(): Journal = Journal(
+    id = id,
+    title = title,
+    lastMessageImage = lastMessageImage,
+    createDate = createDate,
+    modifyDate = parseTimestampToDate(modifyDate),
+    lastMessageDate = lastMessageDate,
+    lastMessageText = lastMessageText,
+    entriesCount = entriesCount,
+    ownerId = ownerId,
+    viewAccess = viewAccess?.let { JournalAccess.from(it) },
+    commentAccess = commentAccess?.let { JournalAccess.from(it) }
+)
+
+/**
+ * Вспомогательная функция для конвертации timestamp в строку даты
+ *
+ * @param timestamp Timestamp (Long)
+ * @return Строка даты в ISO формате или null если timestamp равен 0
+ */
+private fun parseTimestampToDate(timestamp: Long): String? {
+    if (timestamp == 0L) {
+        return null
+    }
+
+    return try {
+        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply {
+            timeZone = java.util.TimeZone.getTimeZone("UTC")
+        }
+        format.format(java.util.Date(timestamp))
+    } catch (_: Exception) {
+        // Если не удалось конвертировать timestamp, возвращаем null
+        Log.e("JournalMapper", "Не удалось конвертировать timestamp в дату: $timestamp")
+        null
     }
 }

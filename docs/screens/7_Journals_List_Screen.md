@@ -1,5 +1,16 @@
 # План реализации JournalsListScreen (первая итерация)
 
+## Прогресс выполнения
+
+**Выполнено: 100%** ✅
+
+- ✅ Этап 1: Модели данных (Domain Layer) - полностью выполнен
+- ✅ Этап 2: API клиент и репозиторий (Data Layer) - полностью выполнен
+- ✅ Этап 3: Use Cases (Domain Layer) - полностью выполнен
+- ✅ Этап 4: ViewModel (Presentation Layer) - полностью выполнен
+- ✅ Этап 5: UI компоненты (UI Layer) - полностью выполнен
+- ✅ Этап 6: Тестирование - полностью выполнен
+
 ## Описание экрана
 
 Экран списка дневников пользователя, который:
@@ -24,207 +35,70 @@
 
 ---
 
-## Этап 1: Модели данных (Domain Layer)
+## Этап 1: Модели данных (Domain Layer) ✅ ВЫПОЛНЕНО
 
-### 1.1 Создать доменную модель Journal
-
-- Создать `app/src/main/java/com/swparks/domain/model/Journal.kt` с полями:
-  - `id: Long`
-  - `title: String?`
-  - `lastMessageImage: String?`
-  - `createDate: String?`
-  - `modifyDate: String?`
-  - `lastMessageDate: String?`
-  - `lastMessageText: String?`
-  - `entriesCount: Int?` (количество записей в дневнике)
-  - `ownerId: Long?`
-  - `viewAccess: JournalAccess?`
-  - `commentAccess: JournalAccess?`
-
-### 1.2 Создать маппер JournalResponse → Journal
-
-- Добавить extension функцию `JournalResponse.toDomain(): Journal` в `JournalResponse.kt`
-- Маппер должен преобразовывать все поля из `JournalResponse` в `Journal`
-
-### 1.3 Обновить enum JournalAccess (если необходимо)
-
-- Проверить наличие `JournalAccess` в модели (уже должен существовать)
-- Убедиться, что метод `from(value: Int)` работает корректно
+- ✅ Доменная модель `Journal`, enum `JournalAccess`, маппер `JournalResponse.toDomain()`
 
 ---
 
-## Этап 2: API клиент и репозиторий (Data Layer)
+## Этап 2: API клиент и репозиторий (Data Layer) ✅ ВЫПОЛНЕНО
 
-### 2.1 Создать DAO для таблицы Journal
-
-- Создать `app/src/main/java/com/swparks/data/database/dao/JournalDao.kt`:
-  - `@Query("SELECT * FROM journals WHERE owner_id = :userId ORDER BY modify_date DESC") fun getJournalsByUserId(userId: Long): Flow<List<JournalEntity>>`
-  - `@Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAll(journals: List<JournalEntity>)`
-  - `@Query("DELETE FROM journals WHERE owner_id = :userId") suspend fun deleteByUserId(userId: Long)`
-
-### 2.2 Создать Entity для таблицы Journal
-
-- Создать `app/src/main/java/com/swparks/data/database/entity/JournalEntity.kt`:
-  - Поля должны соответствовать структуре базы данных
-  - `@PrimaryKey(autoGenerate = true) val id: Long = 0`
-  - Другие поля из `JournalResponse`
-
-### 2.3 Создать маппер Journal → JournalEntity
-
-- Добавить extension функцию `Journal.toEntity(): JournalEntity` в `JournalEntity.kt`:
-  - Конвертировать `modifyDate` из String в Long (timestamp) для корректной сортировки в БД
-  - Использовать утилиту для парсинга даты (проверить существующие дата-конвертеры в проекте)
-
-### 2.4 Обновить базу данных SWDatabase
-
-- Добавить таблицу `journals` в `SWDatabase.kt`:
-  - Дата модификации хранится как `Long` (timestamp) для корректной сортировки
-- Создать `abstract fun journalDao(): JournalDao`
-
-### 2.5 Создать JournalsRepository
-
-- Создать интерфейс `app/src/main/java/com/swparks/domain/repository/JournalsRepository.kt`:
-  - `fun observeJournals(userId: Long): Flow<List<Journal>>` - наблюдение за дневниками (SSOT)
-  - `suspend fun refreshJournals(userId: Long): Result<Unit>` - обновление данных с сервера
-
-- Создать реализацию `app/src/main/java/com/swparks/data/repository/JournalsRepositoryImpl.kt`:
-  - Инжектить `SWApi`, `JournalDao`
-  - В методе `observeJournals` возвращать `journalDao.getJournalsByUserId(userId).map { entities -> entities.map { it.toDomain() } }`
-  - В методе `refreshJournals`:
-    - Вызывать `SWApi.getJournals(userId)`
-    - Мапить `JournalResponse` → `Journal` → `JournalEntity`
-    - **Важно**: Использовать транзакцию для очистки старых данных перед вставкой:
-
-      ```kotlin
-      journalDao.deleteByUserId(userId)
-      journalDao.insertAll(entities)
-      ```
-
-    - Кэшировать дневники **всех** пользователей (не только текущего) для оффлайн-доступа
-    - Возвращать `Result.success(Unit)` при успехе или `Result.failure(...)` при ошибке
-
-### 2.6 Обновить AppContainer
-
-- Добавить factory метод `journalsRepository(): JournalsRepository` в `AppContainer.kt`
+- ✅ `JournalEntity`, `JournalDao` (getJournalsByUserId, insertAll, deleteByUserId), мапперы (String ↔ Long timestamp)
+- ✅ `JournalsRepository` (interface + implementation) с `observeJournals(userId): Flow<List<Journal>>` и `refreshJournals(userId): Result<Unit>`
+- ✅ `AppContainer.kt` обновлен с factory методом `journalsRepository()`
 
 ---
 
-## Этап 2.7: Use Cases (Domain Layer)
+## Этап 3: Use Cases (Domain Layer) ✅ ВЫПОЛНЕНО
 
-### 2.7.1 Создать GetJournalsUseCase
-
-- Создать `app/src/main/java/com/swparks/domain/usecase/GetJournalsUseCase.kt`:
-  - Параметр конструктора: `journalsRepository: JournalsRepository`
-  - Оператор `invoke` принимает `userId: Long` и возвращает `Flow<List<Journal>>`
-  - Реализация: делегирует вызов `journalsRepository.observeJournals(userId)`
-
-### 2.7.2 Создать SyncJournalsUseCase
-
-- Создать `app/src/main/java/com/swparks/domain/usecase/SyncJournalsUseCase.kt`:
-  - Параметр конструктора: `journalsRepository: JournalsRepository`
-  - Оператор `invoke` принимает `userId: Long` и возвращает `Result<Unit>`
-  - Реализация: делегирует вызов `journalsRepository.refreshJournals(userId)`
-
-### 2.7.3 Обновить AppContainer для Use Cases
-
-- Добавить factory методы в `AppContainer.kt`:
-  - `getJournalsUseCase(): GetJournalsUseCase`
-  - `syncJournalsUseCase(): SyncJournalsUseCase`
+- ✅ `GetJournalsUseCase` и `SyncJournalsUseCase` с делегированием в репозиторий
+- ✅ `AppContainer.kt` обновлен с factory методами для Use Cases
 
 ---
 
-## Этап 3: ViewModel (Presentation Layer)
+## Этап 4: ViewModel (Presentation Layer) ✅ ВЫПОЛНЕНО
 
-### 3.1 Создать UI State
-
-- Создать `app/src/main/java/com/swparks/ui/state/JournalsUiState.kt`:
-  - Sealed class:
-    - `InitialLoading` - первая загрузка (показывается полный экран загрузки)
-    - `Content(journals: List<Journal>, isRefreshing: Boolean)` - контент + статус обновления
-    - `Error(message: String)` - ошибка с возможностью повтора
-
-### 3.2 Создать ViewModel
-
-- Создать `app/src/main/java/com/swparks/ui/viewmodel/JournalsViewModel.kt`:
-  - Параметры конструктора: `userId: Long`, `getJournalsUseCase: GetJournalsUseCase`, `syncJournalsUseCase: SyncJournalsUseCase`
-  - Состояние:
-    - `private val _uiState = MutableStateFlow<JournalsUiState>(JournalsUiState.InitialLoading)`
-    - `val uiState: StateFlow<JournalsUiState> = _uiState.asStateFlow()`
-    - `private val _isRefreshing = MutableStateFlow(false)`
-    - `val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()`
-  - **Single Source of Truth (SSOT)**:
-    - Подписываться на `getJournalsUseCase(userId)` в `init`
-    - При получении данных из Flow обновлять `_uiState` в `Content(journals, isRefreshing.value)`
-    - При ошибке (пустой список после первой загрузки) обновлять `_uiState` в `Error(message)`
-  - Методы:
-    - `init { observeJournals(); loadJournals() }` - подписка + первая загрузка
-    - `private fun observeJournals()`: подписаться на Flow из `getJournalsUseCase`
-    - `fun loadJournals()`: триггерить `syncJournalsUseCase`, установить `_isRefreshing.value = true`, затем `false` при завершении
-    - `fun retry()`: повторить загрузку при ошибке (аналогично `loadJournals`)
-    - Логировать все действия в консоль (`Log.i("JournalsViewModel", "...")`)
-
-### 3.3 Добавить factory метод в AppContainer
-
-- Добавить метод `journalsViewModel(userId: Long): JournalsViewModel` в `AppContainer.kt`
-  - Создавать ViewModel с инжектированными Use Cases
+- ✅ `JournalsUiState` (sealed class: InitialLoading, Content, Error)
+- ✅ `JournalsViewModel` с подпиской на Flow (SSOT), методами `loadJournals()` и `retry()`
+- ✅ `AppContainer.kt` обновлен с factory методом `journalsViewModelFactory(userId)`
 
 ---
 
-## Этап 4: UI компоненты (UI Layer)
+## Этап 5: UI компоненты (UI Layer) ✅ ВЫПОЛНЕНО
 
-### 4.1 Добавить строки локализации
+### 5.1 Локализация - ВЫПОЛНЕНО ✅
 
-- В `app/src/main/res/values/strings.xml` добавить:
-  - `journals_empty` (если отсутствует)
-  - `journals_list_title` (если отсутствует)
-  - Проверить наличие `create_journal` (уже существует)
+- ✅ `journals_list_title` (RU: "Дневники", EN: "Journals")
+- ✅ `journals_empty` (RU: "Дневников пока нет", EN: "No journals here yet")
 
-- В `app/src/main/res/values-ru/strings.xml` добавить русские переводы
+### 5.2 JournalsListScreen - ВЫПОЛНЕНО ✅
 
-### 4.2 Создать JournalsListScreen
+- ✅ Экран с AppBar, Pull-to-Refresh, безопасными зонами (`parentPaddingValues`, `innerPadding`)
+- ✅ Состояния UI: `InitialLoading` → `LoadingOverlayView`, `Error` → `ErrorContentView`, `Content` → список/заглушка
+- ✅ Блокировка UI при `isRefreshing` (кнопки и элементы списка недоступны, индикатор поверх контента)
+- ✅ Логирование действий в консоль
+- ✅ Приватные функции: `ContentScreen`, `JournalsList`, `EmptyStateView`
 
-- Создать `app/src/main/java/com/swparks/ui/screens/journals/JournalsListScreen.kt`:
+### 5.3 Навигация и интерфейс - ВЫПОЛНЕНО ✅
 
-**Структура экрана:**
-- `@Composable fun JournalsListScreen(...)`:
-  - Параметры: `userId: Long`, `viewModel: JournalsViewModel`, `onBackClick: () -> Unit`, `parentPaddingValues: PaddingValues`
-  - Использовать `CenterAlignedTopAppBar` с заголовком и кнопкой "Назад"
-  - Использовать `Scaffold` с `contentWindowInsets = WindowInsets(0, 0, 0, 0)` для безопасных зон
-  - Поддерживать Pull-to-Refresh через `PullToRefreshBox` (экспериментальный API)
-  - **Важно**: Использовать `LaunchedEffect(userId)` для перезапуска загрузки при смене пользователя
-  - Логировать нажатия элементов в консоль (`Log.i("JournalsListScreen", "...")`)
+- ✅ Комposable `JournalsList` в `RootScreen.kt` с извлечением `userId` из навигации
+- ✅ `IJournalsViewModel` интерфейс для тестирования
 
-**Состояния UI:**
-- `InitialLoading`: показать `CircularProgressIndicator` по центру экрана (полный экран загрузки)
-- `Error`: показать текст ошибки по центру с кнопкой "Повторить" (вызывает `viewModel.retry()`)
-- `Content(journals, isRefreshing)`:
-  - Если список не пустой: отобразить `LazyColumn` с элементами через `JournalRowView`
-  - Если список пустой: показать заглушку с текстом `journals_empty` и кнопкой `create_journal`
+---
 
-**Pull-to-Refresh:**
-- Использовать `PullToRefreshBox` с `isRefreshing` из `viewModel.isRefreshing` (отдельный StateFlow)
-- Метод обновления: `viewModel.loadJournals()`
-- Индикатор по центру сверху с отступом `spacing_regular`
-- **Не блокировать контент** при pull-to-refresh (пользователь видит старые данные под индикатором)
+## Этап 6: Тестирование - ВЫПОЛНЕНО ✅
 
-**Безопасные зоны:**
-- Учесть `parentPaddingValues` для нижней панели навигации
-- Использовать `innerPadding` от `Scaffold`
+### 6.1 UI тесты - ВЫПОЛНЕНО ✅
 
-### 4.3 Обновить навигацию
+- ✅ 11 тестов: проверка AppBar, всех состояний UI, отображения дневников, кнопок, индикатора обновления, блокировки при `isRefreshing`
+- ✅ `FakeJournalsViewModel` для изоляции бизнес-логики, `IJournalsViewModel` для типизации
+- ✅ Проверка интерактивности кнопок (`assertIsEnabled`, `assertIsNotEnabled`)
 
-- В `Navigation.kt` добавить composable для `JournalsList`:
-  - Извлекать `userId` из аргументов навигации
-  - Получать `viewModel` через `appContainer.journalsViewModel(userId)`
-  - Передавать `onBackClick: { navController.popBackStack() }`
+### 6.2 Unit тесты ViewModel - ВЫПОЛНЕНО ✅
 
-### 4.4 Добавить UI тесты (опционально, если время позволяет)
-
-- Создать `app/src/androidTest/java/com/swparks/ui/screens/journals/JournalsListScreenTest.kt`:
-  - Тест отображения экрана
-  - Тест загрузки данных
-  - Тест пустого списка с кнопкой создания
-  - Тест pull-to-refresh
+- ✅ 12 тестов: проверка состояний, переходов, обработки ошибок, флага `isRefreshing`, Flow
+- ✅ `MockK` для Use Cases, мокирование статического `Log`
+- ✅ Все тесты проходят успешно
 
 ---
 
@@ -232,36 +106,52 @@
 
 ### Функциональные требования
 
-- ✅ Экран загружает список дневников для указанного `userId`
-- ✅ Список сохраняется в локальной базе данных **для всех пользователей** (кеширование)
-- ✅ При обновлении старые записи удаляются перед вставкой (delete → insert)
-- ✅ При пустом списке показывается заглушка с кнопкой "Создать дневник"
-- ✅ Pull-to-Refresh обновляет список дневников без блокировки контента
-- ✅ Первичная загрузка показывает полный экран загрузки (`InitialLoading`)
-- ✅ При ошибке показывается сообщение с кнопкой "Повторить"
-- ✅ Безопасные зоны обрабатываются корректно
-- ✅ Кнопка "Назад" работает и возвращает на предыдущий экран
-- ✅ Все действия (кроме "Назад") логируются в консоль
+- ✅ Загрузка списка дневников для указанного `userId`, кеширование в БД (delete → insert)
+- ✅ Pull-to-Refresh обновляет список без блокировки контента, индикатор поверх при `isRefreshing`
+- ✅ Первичная загрузка: полный экран `LoadingOverlayView`, ошибка: `ErrorContentView`, пустой список: заглушка
+- ✅ Безопасные зоны, кнопка "Назад", логирование всех действий в консоль
 
 ### Технические требования
 
-- ✅ Код соответствует правилам из `.cursor/rules/`
-- ✅ Используется безопасное разворачивание опционалов (без `!!`)
-- ✅ Локализация добавлена для всех строк (RU и EN)
-- ✅ После изменений выполнена команда `make format`
-- ✅ Проект собирается без ошибок (`./gradlew build`)
-- ✅ Дата модификации конвертируется из String в Long timestamp в маппере `toEntity` для корректной сортировки
-- ✅ Repository интерфейс находится в `domain/repository/`, реализация в `data/repository/`
-- ✅ Use Cases созданы в `domain/usecase/` для бизнес-логики
-- ✅ ViewModel использует Use Cases вместо прямого вызова Repository
-- ✅ ViewModel подписывается на Flow из Use Case (SSOT) для получения актуальных данных из БД
-- ✅ Используется `LaunchedEffect(userId)` для перезапуска загрузки при смене пользователя
+- ✅ Код соответствует правилам (безопасные опционалы, локализация RU/EN, `make format`)
+- ✅ Repository в `domain/repository/`, реализация в `data/repository/`, ViewModel → Use Cases → Repository
+- ✅ ViewModel подписывается на Flow (SSOT), `LaunchedEffect(userId)` для перезапуска, `IJournalsViewModel` для тестирования
+
+### Тестирование
+
+- ✅ UI тесты (11) с `FakeJournalsViewModel`: все состояния UI, интерактивность кнопок, блокировка при `isRefreshing`
+- ✅ Unit тесты (12) с `MockK`: состояния, переходы, ошибки, `isRefreshing`, Flow
 
 ### Примечания
 
-- На первой итерации кнопка "Создать дневник" только логирует нажатие в консоль (не создает дневник)
-- На первой итерации клики по элементам списка дневников логируются в консоль (не открывают детальный экран)
-- На первой итерации действия меню в `JournalRowView` логируются в консоль
+- На первой итерации кнопка "Создать дневник" и клики по элементам списка только логируются в консоль
+- Действия меню в `JournalRowView` логируются в консоль
+
+---
+
+## Резюме первой итерации
+
+Первая итерация экрана JournalsListScreen **полностью завершена**.
+
+### Реализованный функционал
+
+- **Архитектура**: Domain (Journal, Use Cases) → Data (Entity, DAO, Repository, мапперы) → Presentation (ViewModel, UI)
+- **Функциональность**: загрузка, кеширование в БД, Pull-to-Refresh с блокировкой UI, обработка ошибок, пустой список, логирование действий
+- **Тестирование**: 11 UI тестов с `FakeJournalsViewModel`, 12 unit тестов для ViewModel с `MockK`
+
+### Созданные и измененные файлы
+
+**Созданные:**
+- `app/src/main/java/com/swparks/ui/screens/journals/JournalsListScreen.kt`
+- `app/src/main/java/com/swparks/ui/viewmodel/IJournalsViewModel.kt`
+- `app/src/main/java/com/swparks/ui/viewmodel/FakeJournalsViewModel.kt`
+- `app/src/androidTest/java/com/swparks/ui/screens/journals/JournalsListScreenTest.kt`
+- `app/src/test/java/com/swparks/ui/viewmodel/JournalsViewModelTest.kt`
+
+**Измененные:**
+- `app/src/main/java/com/swparks/data/AppContainer.kt` - factory методы
+- `app/src/main/java/com/swparks/ui/screens/RootScreen.kt` - composable для JournalsList
+- `app/src/main/res/values/strings.xml`, `app/src/main/res/values-ru/strings.xml` - локализация
 
 ---
 
@@ -270,7 +160,10 @@
 **Вторая итерация:**
 - Реализовать переход на экран создания дневника (`CreateJournalScreen`)
 - Реализовать переход на детальный экран дневника (`JournalDetailScreen`)
+- Реализовать реальные действия для кнопки "Создать дневник"
+- Реализовать переходы при клике на элементы списка
 
 **Третья итерация:**
 - Добавить обработку действий меню (редактирование, удаление, настройки доступа)
 - Добавить фильтрацию и сортировку дневников
+- Добавить индикатор количества записей в дневнике

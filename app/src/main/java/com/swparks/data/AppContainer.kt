@@ -14,17 +14,23 @@ import com.swparks.data.interceptor.AuthInterceptor
 import com.swparks.data.interceptor.RetryInterceptor
 import com.swparks.data.interceptor.TokenInterceptor
 import com.swparks.data.repository.CountriesRepositoryImpl
+import com.swparks.data.repository.JournalsRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.data.repository.SWRepositoryImp
 import com.swparks.data.serializer.EncryptedStringSerializer
 import com.swparks.domain.repository.CountriesRepository
+import com.swparks.domain.usecase.GetJournalsUseCase
+import com.swparks.domain.usecase.IGetJournalsUseCase
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.ILogoutUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
+import com.swparks.domain.usecase.ISyncJournalsUseCase
 import com.swparks.domain.usecase.LoginUseCase
 import com.swparks.domain.usecase.LogoutUseCase
 import com.swparks.domain.usecase.ResetPasswordUseCase
+import com.swparks.domain.usecase.SyncJournalsUseCase
 import com.swparks.network.SWApi
+import com.swparks.ui.viewmodel.JournalsViewModel
 import com.swparks.util.AndroidLogger
 import com.swparks.util.ErrorHandler
 import com.swparks.util.ErrorReporter
@@ -42,6 +48,7 @@ interface AppContainer {
     val swRepository: SWRepository
     val secureTokenRepository: SecureTokenRepository
     val countriesRepository: CountriesRepository
+    val journalsRepository: com.swparks.domain.repository.JournalsRepository
 
     // Сервисы для обработки ошибок
     val logger: Logger
@@ -51,6 +58,10 @@ interface AppContainer {
     val loginUseCase: ILoginUseCase
     val logoutUseCase: ILogoutUseCase
     val resetPasswordUseCase: IResetPasswordUseCase
+
+    // Use cases для дневников
+    val getJournalsUseCase: IGetJournalsUseCase
+    val syncJournalsUseCase: ISyncJournalsUseCase
 
     /** Фабрика для ProfileViewModel (единый контейнер обеспечивает одну БД с LoginViewModel). */
     fun profileViewModelFactory(): ProfileViewModel
@@ -63,6 +74,9 @@ interface AppContainer {
 
     /** Фабрика для UserTrainingParksViewModel */
     fun userTrainingParksViewModelFactory(userId: Long): UserTrainingParksViewModel
+
+    /** Фабрика для JournalsViewModel */
+    fun journalsViewModelFactory(userId: Long): JournalsViewModel
 
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
@@ -107,6 +121,11 @@ class DefaultAppContainer(context: Context) : AppContainer {
      * DAO для работы с пользователями
      */
     val userDao: UserDao by lazy { database.userDao() }
+
+    /**
+     * DAO для работы с дневниками
+     */
+    private val journalDao: com.swparks.data.database.dao.JournalDao by lazy { database.journalDao() }
 
     // ==================== Криптография и хранение токена ====================
 
@@ -182,6 +201,10 @@ class DefaultAppContainer(context: Context) : AppContainer {
         CountriesRepositoryImpl(context = context, swApi = retrofitService, logger = logger)
     }
 
+    override val journalsRepository: com.swparks.domain.repository.JournalsRepository by lazy {
+        JournalsRepositoryImpl(swApi = retrofitService, journalDao = journalDao)
+    }
+
     // ==================== Use cases для авторизации ====================
 
     // Создаем TokenEncoder для генерации токена
@@ -207,6 +230,16 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
     override val resetPasswordUseCase: IResetPasswordUseCase by lazy {
         ResetPasswordUseCase(swRepository)
+    }
+
+    // ==================== Use cases для дневников ====================
+
+    override val getJournalsUseCase: IGetJournalsUseCase by lazy {
+        GetJournalsUseCase(journalsRepository)
+    }
+
+    override val syncJournalsUseCase: ISyncJournalsUseCase by lazy {
+        SyncJournalsUseCase(journalsRepository)
     }
 
     /** Factory метод для создания ProfileViewModel */
@@ -238,6 +271,13 @@ class DefaultAppContainer(context: Context) : AppContainer {
         userId = userId,
         logger = logger,
         errorReporter = errorReporter
+    )
+
+    /** Factory метод для создания JournalsViewModel */
+    override fun journalsViewModelFactory(userId: Long) = JournalsViewModel(
+        userId = userId,
+        getJournalsUseCase = getJournalsUseCase,
+        syncJournalsUseCase = syncJournalsUseCase
     )
 
     // ==================== API клиенты для разных функциональных областей ====================

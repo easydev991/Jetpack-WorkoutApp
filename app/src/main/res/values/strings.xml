@@ -75,7 +75,8 @@
     <string name="no_parks_found">No parks found</string>
 
     <string name="journals_title">Workout journals</string>
-    <string name="empty_journals">No journals here yet</string>
+    <string name="journals_list_title">Journals</string>
+    <string name="journals_empty">No journals here yet</string>
     <string name="create_journal">Create a journal</string>
     <string name="new_journal">New journal</string>
     <string name="first_entry_placeholder">Create the first entry</string>
