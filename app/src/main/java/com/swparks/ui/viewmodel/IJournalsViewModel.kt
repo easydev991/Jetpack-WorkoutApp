@@ -1,6 +1,7 @@
 package com.swparks.ui.viewmodel
 
 import com.swparks.ui.state.JournalsUiState
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -21,6 +22,16 @@ interface IJournalsViewModel {
     val isRefreshing: StateFlow<Boolean>
 
     /**
+     * Индикатор удаления дневника.
+     */
+    val isDeleting: StateFlow<Boolean>
+
+    /**
+     * Поток событий UI (например, для Snackbar).
+     */
+    val events: SharedFlow<JournalsEvent>
+
+    /**
      * Повторить загрузку при ошибке.
      */
     fun retry()
@@ -29,4 +40,23 @@ interface IJournalsViewModel {
      * Загрузить дневники с сервера.
      */
     fun loadJournals()
+
+    /**
+     * Удалить дневник.
+     *
+     * @param journalId Идентификатор дневника
+     */
+    fun deleteJournal(journalId: Long)
+}
+
+/**
+ * События UI для экрана списка дневников.
+ */
+sealed interface JournalsEvent {
+    /**
+     * Показать Snackbar с сообщением.
+     *
+     * @property message Текст сообщения
+     */
+    data class ShowSnackbar(val message: String) : JournalsEvent
 }

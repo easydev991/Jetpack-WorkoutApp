@@ -2,9 +2,11 @@ package com.swparks.viewmodel
 
 import android.util.Log
 import app.cash.turbine.test
+import com.swparks.data.model.Park
 import com.swparks.data.repository.SWRepository
-import com.swparks.model.Park
 import com.swparks.ui.viewmodel.MainDispatcherRule
+import com.swparks.ui.viewmodel.UserTrainingParksUiState
+import com.swparks.ui.viewmodel.UserTrainingParksViewModel
 import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
 import io.mockk.coEvery

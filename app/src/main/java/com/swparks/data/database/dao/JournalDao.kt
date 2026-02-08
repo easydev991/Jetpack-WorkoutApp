@@ -36,4 +36,12 @@ interface JournalDao {
      */
     @Query("DELETE FROM journals WHERE ownerId = :userId")
     suspend fun deleteByUserId(userId: Long)
+
+    /**
+     * Удалить дневник по ID
+     *
+     * @param journalId Идентификатор дневника
+     */
+    @Query("DELETE FROM journals WHERE id = :journalId")
+    suspend fun deleteById(journalId: Long)
 }

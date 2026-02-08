@@ -1,11 +1,14 @@
 package com.swparks.ui.viewmodel
 
 import android.util.Log
+import app.cash.turbine.test
 import com.swparks.domain.model.Journal
+import com.swparks.domain.usecase.IDeleteJournalUseCase
 import com.swparks.domain.usecase.IGetJournalsUseCase
 import com.swparks.domain.usecase.ISyncJournalsUseCase
-import com.swparks.model.JournalAccess
+import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalsUiState
+import com.swparks.util.ErrorReporter
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -38,6 +41,8 @@ class JournalsViewModelTest {
 
     private lateinit var getJournalsUseCase: IGetJournalsUseCase
     private lateinit var syncJournalsUseCase: ISyncJournalsUseCase
+    private lateinit var deleteJournalUseCase: IDeleteJournalUseCase
+    private lateinit var errorReporter: ErrorReporter
     private lateinit var viewModel: JournalsViewModel
 
     private val testUserId = 1L
@@ -65,6 +70,8 @@ class JournalsViewModelTest {
 
         getJournalsUseCase = mockk(relaxed = true)
         syncJournalsUseCase = mockk(relaxed = true)
+        deleteJournalUseCase = mockk(relaxed = true)
+        errorReporter = mockk(relaxed = true)
     }
 
     @After
@@ -82,7 +89,9 @@ class JournalsViewModelTest {
         viewModel = JournalsViewModel(
             testUserId,
             getJournalsUseCase,
-            syncJournalsUseCase
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            errorReporter
         )
 
         // Then
@@ -103,7 +112,9 @@ class JournalsViewModelTest {
         viewModel = JournalsViewModel(
             testUserId,
             getJournalsUseCase,
-            syncJournalsUseCase
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            errorReporter
         )
         advanceUntilIdle()
 
@@ -120,7 +131,9 @@ class JournalsViewModelTest {
         viewModel = JournalsViewModel(
             testUserId,
             getJournalsUseCase,
-            syncJournalsUseCase
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            errorReporter
         )
         advanceUntilIdle()
 
@@ -148,7 +161,9 @@ class JournalsViewModelTest {
         viewModel = JournalsViewModel(
             testUserId,
             getJournalsUseCase,
-            syncJournalsUseCase
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            errorReporter
         )
         advanceUntilIdle()
 
@@ -181,7 +196,9 @@ class JournalsViewModelTest {
         viewModel = JournalsViewModel(
             testUserId,
             getJournalsUseCase,
-            syncJournalsUseCase
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            errorReporter
         )
         advanceUntilIdle()
 
@@ -206,7 +223,9 @@ class JournalsViewModelTest {
         viewModel = JournalsViewModel(
             testUserId,
             getJournalsUseCase,
-            syncJournalsUseCase
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            errorReporter
         )
         advanceUntilIdle()
 
@@ -231,7 +250,9 @@ class JournalsViewModelTest {
         viewModel = JournalsViewModel(
             testUserId,
             getJournalsUseCase,
-            syncJournalsUseCase
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            errorReporter
         )
         advanceUntilIdle()
 
@@ -255,7 +276,9 @@ class JournalsViewModelTest {
         viewModel = JournalsViewModel(
             testUserId,
             getJournalsUseCase,
-            syncJournalsUseCase
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            errorReporter
         )
         advanceUntilIdle()
 
@@ -281,7 +304,9 @@ class JournalsViewModelTest {
         viewModel = JournalsViewModel(
             testUserId,
             getJournalsUseCase,
-            syncJournalsUseCase
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            errorReporter
         )
         advanceUntilIdle()
 
@@ -310,7 +335,9 @@ class JournalsViewModelTest {
         viewModel = JournalsViewModel(
             testUserId,
             getJournalsUseCase,
-            syncJournalsUseCase
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            errorReporter
         )
         advanceUntilIdle()
 
@@ -337,7 +364,9 @@ class JournalsViewModelTest {
         viewModel = JournalsViewModel(
             testUserId,
             getJournalsUseCase,
-            syncJournalsUseCase
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            errorReporter
         )
         advanceUntilIdle()
 
@@ -373,7 +402,9 @@ class JournalsViewModelTest {
         viewModel = JournalsViewModel(
             testUserId,
             getJournalsUseCase,
-            syncJournalsUseCase
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            errorReporter
         )
         advanceUntilIdle()
 
@@ -388,6 +419,195 @@ class JournalsViewModelTest {
             "Количество дневников должно быть 3",
             3,
             contentState.journals.size
+        )
+    }
+
+    /**
+     * Тест 13: Успешное удаление дневника эмитит событие Snackbar с сообщением об успехе
+     */
+    @Test
+    fun testDeleteJournal_success_emitsSnackbarEvent() = runTest {
+        // Given
+        val testJournalId = 1L
+        coEvery {
+            deleteJournalUseCase(testUserId, testJournalId)
+        } returns Result.success(Unit)
+
+        // When
+        viewModel = JournalsViewModel(
+            testUserId,
+            getJournalsUseCase,
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            errorReporter
+        )
+        advanceUntilIdle()
+
+        // Then - подписываемся на события перед вызовом deleteJournal
+        viewModel.events.test {
+            viewModel.deleteJournal(testJournalId)
+            advanceUntilIdle()
+
+            // Проверяем, что события эмитятся корректно
+            val event = awaitItem()
+            assertTrue(
+                "Должно быть событие ShowSnackbar",
+                event is JournalsEvent.ShowSnackbar
+            )
+            val snackbarEvent = event as JournalsEvent.ShowSnackbar
+            assertEquals(
+                "Сообщение об успешном удалении",
+                "Дневник удален",
+                snackbarEvent.message
+            )
+        }
+    }
+
+    /**
+     * Тест 14: Ошибка при удалении дневника эмитит событие Snackbar с текстом ошибки
+     */
+    @Test
+    fun testDeleteJournal_failure_emitsSnackbarEventWithError() = runTest {
+        // Given
+        val testJournalId = 1L
+        val errorMessage = "Ошибка доступа"
+        coEvery {
+            deleteJournalUseCase(testUserId, testJournalId)
+        } returns Result.failure(Exception(errorMessage))
+
+        // When
+        viewModel = JournalsViewModel(
+            testUserId,
+            getJournalsUseCase,
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            errorReporter
+        )
+        advanceUntilIdle()
+
+        // Then - подписываемся на события перед вызовом deleteJournal
+        viewModel.events.test {
+            viewModel.deleteJournal(testJournalId)
+            advanceUntilIdle()
+
+            // Проверяем, что событие содержит текст ошибки
+            val event = awaitItem()
+            assertTrue(
+                "Должно быть событие ShowSnackbar",
+                event is JournalsEvent.ShowSnackbar
+            )
+            val snackbarEvent = event as JournalsEvent.ShowSnackbar
+            assertEquals(
+                "Сообщение об ошибке",
+                errorMessage,
+                snackbarEvent.message
+            )
+        }
+    }
+
+    /**
+     * Тест 15: deleteJournal вызывает use case с правильными параметрами
+     */
+    @Test
+    fun testDeleteJournal_callsUseCaseWithCorrectParameters() = runTest {
+        // Given
+        val testJournalId = 123L
+        coEvery {
+            deleteJournalUseCase(testUserId, testJournalId)
+        } returns Result.success(Unit)
+
+        // When
+        viewModel = JournalsViewModel(
+            testUserId,
+            getJournalsUseCase,
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            errorReporter
+        )
+        advanceUntilIdle()
+
+        viewModel.deleteJournal(testJournalId)
+        advanceUntilIdle()
+
+        // Then - проверяем, что use case был вызван с правильными параметрами
+        coVerify(exactly = 1) {
+            deleteJournalUseCase(
+                userId = testUserId,
+                journalId = testJournalId
+            )
+        }
+    }
+
+    /**
+     * Тест 16: Удаление дневника без сообщения об ошибке (null message)
+     */
+    @Test
+    fun testDeleteJournal_failureWithoutMessage_emitsGenericError() = runTest {
+        // Given
+        val testJournalId = 1L
+        coEvery {
+            deleteJournalUseCase(testUserId, testJournalId)
+        } returns Result.failure(Exception())
+
+        // When
+        viewModel = JournalsViewModel(
+            testUserId,
+            getJournalsUseCase,
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            errorReporter
+        )
+        advanceUntilIdle()
+
+        // Then - подписываемся на события перед вызовом deleteJournal
+        viewModel.events.test {
+            viewModel.deleteJournal(testJournalId)
+            advanceUntilIdle()
+
+            // Проверяем, что используется сообщение об ошибке по умолчанию
+            val event = awaitItem()
+            assertTrue(
+                "Должно быть событие ShowSnackbar",
+                event is JournalsEvent.ShowSnackbar
+            )
+            val snackbarEvent = event as JournalsEvent.ShowSnackbar
+            assertEquals(
+                "Сообщение об ошибке по умолчанию",
+                "Ошибка удаления",
+                snackbarEvent.message
+            )
+        }
+    }
+
+    /**
+     * Тест 17: isDeleting возвращается в false после завершения удаления
+     */
+    @Test
+    fun testDeleteJournal_isDeletingReturnsToFalseAfterCompletion() = runTest {
+        // Given
+        val testJournalId = 1L
+        coEvery {
+            deleteJournalUseCase(testUserId, testJournalId)
+        } returns Result.success(Unit)
+
+        // When
+        viewModel = JournalsViewModel(
+            testUserId,
+            getJournalsUseCase,
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            errorReporter
+        )
+        advanceUntilIdle()
+
+        // Then - проверяем, что флаг устанавливается в false после завершения
+        viewModel.deleteJournal(testJournalId)
+        advanceUntilIdle()
+
+        val isDeleting = viewModel.isDeleting.value
+        assertTrue(
+            "Флаг удаления должен быть false после завершения операции",
+            !isDeleting
         )
     }
 }

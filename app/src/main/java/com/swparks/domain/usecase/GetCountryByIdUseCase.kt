@@ -1,7 +1,7 @@
 package com.swparks.domain.usecase
 
+import com.swparks.data.model.Country
 import com.swparks.domain.repository.CountriesRepository
-import com.swparks.model.Country
 
 /**
  * Интерфейс для use case получения страны по идентификатору. Создан для удобства тестирования

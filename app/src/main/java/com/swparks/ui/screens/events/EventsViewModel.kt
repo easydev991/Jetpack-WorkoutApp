@@ -9,9 +9,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.JetpackWorkoutApplication
+import com.swparks.data.model.Event
 import com.swparks.data.repository.SWRepository
-import com.swparks.model.AppError
-import com.swparks.model.Event
+import com.swparks.util.AppError
 import com.swparks.util.ErrorReporter
 import kotlinx.coroutines.launch
 import retrofit2.HttpException

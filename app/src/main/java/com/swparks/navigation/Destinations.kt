@@ -107,6 +107,12 @@ sealed class Screen(
         fun createRoute(journalId: Long) = "add_journal_entry/$journalId"
     }
 
+    object JournalEntries :
+        Screen("journal_entries/{journalId}?title={journalTitle}", parentTab = Profile) {
+        fun createRoute(journalId: Long, journalTitle: String) =
+            "journal_entries/$journalId?title=${android.net.Uri.encode(journalTitle)}"
+    }
+
     object ChangePassword : Screen("change_password", parentTab = Profile)
     object SelectCountry : Screen("select_country", parentTab = Profile)
     object SelectCity : Screen("select_city", parentTab = Profile)
@@ -135,7 +141,7 @@ sealed class Screen(
                 // Экраны профиля
                 EditProfile, UserParks, UserTrainingParks, Blacklist,
                 JournalsList, JournalDetail, CreateJournal, EditJournal,
-                AddJournalEntry, ChangePassword, SelectCountry, SelectCity,
+                AddJournalEntry, JournalEntries, ChangePassword, SelectCountry, SelectCity,
 
                 // Экраны настроек
                 ThemeIcon

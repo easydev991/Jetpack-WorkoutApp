@@ -1,6 +1,5 @@
 package com.swparks.util
 
-import com.swparks.model.AppError
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi

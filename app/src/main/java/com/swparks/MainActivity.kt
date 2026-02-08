@@ -16,7 +16,7 @@ import com.swparks.data.preferences.AppSettingsDataStore
 import com.swparks.navigation.rememberAppState
 import com.swparks.ui.screens.RootScreen
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
-import com.swparks.viewmodel.MainActivityViewModel
+import com.swparks.ui.viewmodel.MainActivityViewModel
 
 /**
  * Главная Activity приложения.

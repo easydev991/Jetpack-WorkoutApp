@@ -25,10 +25,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
-import com.swparks.model.Park
+import com.swparks.data.model.Park
 import com.swparks.ui.screen.components.ParksListView
-import com.swparks.viewmodel.UserTrainingParksUiState
-import com.swparks.viewmodel.UserTrainingParksViewModel
+import com.swparks.ui.viewmodel.UserTrainingParksUiState
+import com.swparks.ui.viewmodel.UserTrainingParksViewModel
 
 /**
  * Экран для отображения списка площадок, на которых тренируется пользователь

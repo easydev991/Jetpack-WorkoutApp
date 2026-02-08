@@ -1,11 +1,11 @@
 package com.swparks.data.repository
 
 import android.content.Context
+import com.swparks.data.model.City
+import com.swparks.data.model.Country
 import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.exception.ServerException
 import com.swparks.domain.repository.CountriesRepository
-import com.swparks.model.City
-import com.swparks.model.Country
 import com.swparks.network.SWApi
 import com.swparks.util.Logger
 import com.swparks.utils.ReadJSONFromAssets

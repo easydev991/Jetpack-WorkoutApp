@@ -1,11 +1,12 @@
 package com.swparks.model
 
+import com.swparks.data.model.Park
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * Тесты десериализации модели [Park] с использованием IntStringSerializer и LongStringSerializer
+ * Тесты десериализации модели [com.swparks.data.model.Park] с использованием IntStringSerializer и LongStringSerializer
  */
 class ParkDeserializationTest {
 

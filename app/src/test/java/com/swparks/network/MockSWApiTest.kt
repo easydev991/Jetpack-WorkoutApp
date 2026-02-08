@@ -1,7 +1,7 @@
 package com.swparks.network
 
-import com.swparks.model.EditJournalSettingsRequest
-import com.swparks.model.JournalAccess
+import com.swparks.ui.model.EditJournalSettingsRequest
+import com.swparks.ui.model.JournalAccess
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

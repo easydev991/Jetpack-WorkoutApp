@@ -4,9 +4,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.swparks.model.User
+import com.swparks.data.model.User
+import com.swparks.ui.state.FriendsListUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
-import com.swparks.viewmodel.FriendsListUiState
 
 @Preview(showBackground = true, locale = "ru", name = "Success State")
 @Composable

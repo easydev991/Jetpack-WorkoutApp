@@ -1,7 +1,7 @@
 package com.swparks.domain.usecase
 
+import com.swparks.data.model.Country
 import com.swparks.domain.repository.CountriesRepository
-import com.swparks.model.Country
 import kotlinx.coroutines.flow.Flow
 
 /** Интерфейс для use case получения списка стран. Создан для удобства тестирования ViewModels. */

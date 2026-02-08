@@ -4,10 +4,11 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
+import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.domain.exception.NetworkException
-import com.swparks.model.TextEntryOption
 import com.swparks.network.SWApi
+import com.swparks.ui.model.TextEntryOption
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -33,6 +34,7 @@ import java.io.IOException
 class SWRepositoryCommentsTest {
     private val testDispatcher = StandardTestDispatcher()
     private val mockUserDao = mockk<UserDao>(relaxed = true)
+    private val mockJournalDao = mockk<JournalDao>(relaxed = true)
 
     @Before
     fun setup() {
@@ -60,7 +62,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
         val option = TextEntryOption.Park(id = 123L)
 
         // When
@@ -82,7 +84,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
         val option = TextEntryOption.Event(id = 456L)
 
         // When
@@ -108,7 +110,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
         val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L)
 
         // When
@@ -139,7 +141,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
         val option = TextEntryOption.Park(id = 123L)
 
         // When
@@ -165,7 +167,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
         val option = TextEntryOption.Park(id = 123L)
 
         // When
@@ -197,7 +199,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
         val option = TextEntryOption.Event(id = 456L)
 
         // When
@@ -230,7 +232,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
         val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L)
 
         // When
@@ -263,7 +265,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
         val option = TextEntryOption.Park(id = 123L)
 
         // When
@@ -285,7 +287,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
         val option = TextEntryOption.Park(id = 123L)
 
         // When
@@ -307,7 +309,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
         val option = TextEntryOption.Event(id = 456L)
 
         // When
@@ -333,7 +335,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
         val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L)
 
         // When
@@ -361,7 +363,7 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
         val option = TextEntryOption.Park(id = 123L)
 
         // When

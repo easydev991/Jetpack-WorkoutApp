@@ -1,7 +1,7 @@
 package com.swparks.domain.usecase
 
+import com.swparks.data.model.City
 import com.swparks.domain.repository.CountriesRepository
-import com.swparks.model.City
 
 /**
  * Интерфейс для use case получения города по идентификатору. Создан для удобства тестирования

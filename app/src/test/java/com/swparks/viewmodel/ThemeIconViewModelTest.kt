@@ -5,6 +5,7 @@ import com.swparks.data.preferences.AppSettingsDataStore
 import com.swparks.domain.model.AppIcon
 import com.swparks.domain.model.AppTheme
 import com.swparks.domain.usecase.IconManager
+import com.swparks.ui.viewmodel.ThemeIconViewModel
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify

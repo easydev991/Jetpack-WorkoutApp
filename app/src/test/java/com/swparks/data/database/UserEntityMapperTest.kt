@@ -3,6 +3,8 @@ package com.swparks.data.database
 import com.swparks.data.database.entity.UserEntity
 import com.swparks.data.database.entity.toDomain
 import com.swparks.data.database.entity.toEntity
+import com.swparks.data.model.Park
+import com.swparks.data.model.User
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -259,9 +261,9 @@ class UserEntityMapperTest {
     private fun createTestUser(
         id: Long,
         name: String,
-        addedParks: List<com.swparks.model.Park>? = null
-    ): com.swparks.model.User {
-        return com.swparks.model.User(
+        addedParks: List<Park>? = null
+    ): User {
+        return User(
             id = id,
             name = name,
             image = "https://example.com/avatar.jpg",
@@ -282,8 +284,8 @@ class UserEntityMapperTest {
     /**
      * Вспомогательный метод для создания тестовой площадки
      */
-    private fun createTestPark(id: Long, name: String): com.swparks.model.Park {
-        return com.swparks.model.Park(
+    private fun createTestPark(id: Long, name: String): Park {
+        return Park(
             id = id,
             name = name,
             sizeID = 1,

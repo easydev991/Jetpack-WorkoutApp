@@ -1,6 +1,5 @@
 package com.swparks.util
 
-import com.swparks.model.AppError
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow

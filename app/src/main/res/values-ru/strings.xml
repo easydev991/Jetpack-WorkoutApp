@@ -84,6 +84,8 @@
     <string name="journals_empty">Дневников пока нет</string>
     <string name="create_journal">Создать дневник</string>
     <string name="new_journal">Новый дневник</string>
+    <string name="entries_empty">Записей пока нет</string>
+    <string name="create_entry">Создать запись</string>
     <string name="first_entry_placeholder">Создай первую запись в дневнике</string>
     <string name="new_entry">Новая запись</string>
     <string name="new_entry_placeholder">Создай новую запись в дневнике</string>
@@ -99,6 +101,10 @@
     <string name="only_me_access">Только я</string>
     <string name="delete_journal">Удалить дневник?</string>
     <string name="delete_journal_entry">Удалить запись из дневника?</string>
+    <string name="delete_journal_title">Удалить дневник</string>
+    <string name="delete_journal_message">Вы уверены, что хотите удалить этот дневник?</string>
+    <string name="journal_deleted">Дневник удален</string>
+    <string name="error_delete_journal">Ошибка удаления дневника</string>
 
     <string name="about_app">О приложении</string>
     <string name="send_feedback">Отправить обратную связь </string>
@@ -156,6 +162,9 @@
     <string name="report">Пожаловаться</string>
     <string name="delete_ground">Удалить площадку?</string>
     <string name="delete">Удалить</string>
+    <string name="cancel">Отмена</string>
+    <string name="delete_entry_title">Удалить запись</string>
+    <string name="delete_entry_message">Вы уверены, что хотите удалить эту запись?</string>
     <string name="address">Адрес</string>
     <string name="park_address">Адрес площадки</string>
     <string name="park_type">Тип площадки</string>

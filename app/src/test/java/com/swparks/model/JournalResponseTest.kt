@@ -1,5 +1,7 @@
 package com.swparks.model
 
+import com.swparks.data.model.JournalResponse
+import com.swparks.ui.model.JournalAccess
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

@@ -1,5 +1,6 @@
 package com.swparks.model
 
+import com.swparks.ui.model.EventForm
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

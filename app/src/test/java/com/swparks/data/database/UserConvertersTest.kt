@@ -1,6 +1,7 @@
 package com.swparks.data.database
 
 import android.util.Log
+import com.swparks.data.model.Park
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
@@ -59,7 +60,7 @@ class UserConvertersTest {
     @Test
     fun fromParksList_whenEmptyParks_returnsEmptyJsonArray() {
         // Given
-        val parks = emptyList<com.swparks.model.Park>()
+        val parks = emptyList<Park>()
 
         // When
         val result = UserConverters.fromParksList(parks)
@@ -159,8 +160,8 @@ class UserConvertersTest {
     /**
      * Вспомогательный метод для создания тестовой площадки
      */
-    private fun createTestPark(id: Long, name: String): com.swparks.model.Park {
-        return com.swparks.model.Park(
+    private fun createTestPark(id: Long, name: String): Park {
+        return Park(
             id = id,
             name = name,
             sizeID = 1,

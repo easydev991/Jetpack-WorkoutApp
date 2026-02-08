@@ -51,8 +51,8 @@ import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.ds.UserProfileCardView
 import com.swparks.ui.ds.UserProfileData
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
-import com.swparks.viewmodel.ProfileUiState
-import com.swparks.viewmodel.ProfileViewModel
+import com.swparks.ui.viewmodel.ProfileUiState
+import com.swparks.ui.viewmodel.ProfileViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

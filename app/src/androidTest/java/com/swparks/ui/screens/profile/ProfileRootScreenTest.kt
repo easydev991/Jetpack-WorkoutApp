@@ -7,14 +7,14 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
+import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.repository.CountriesRepository
-import com.swparks.model.Gender
-import com.swparks.model.User
+import com.swparks.ui.model.Gender
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
+import com.swparks.ui.viewmodel.ProfileViewModel
 import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
-import com.swparks.viewmodel.ProfileViewModel
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic

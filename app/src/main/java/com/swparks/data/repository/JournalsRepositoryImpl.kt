@@ -4,9 +4,9 @@ import android.util.Log
 import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.entity.toDomain
 import com.swparks.data.database.entity.toEntity
+import com.swparks.data.model.toDomain
 import com.swparks.domain.model.Journal
 import com.swparks.domain.repository.JournalsRepository
-import com.swparks.model.toDomain
 import com.swparks.network.SWApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

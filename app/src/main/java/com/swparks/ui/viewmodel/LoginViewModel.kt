@@ -9,7 +9,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.JetpackWorkoutApplication
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
-import com.swparks.model.LoginCredentials
+import com.swparks.ui.model.LoginCredentials
 import com.swparks.ui.state.LoginEvent
 import com.swparks.ui.state.LoginUiState
 import com.swparks.util.Logger

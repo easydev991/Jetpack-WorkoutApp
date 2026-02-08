@@ -1,7 +1,7 @@
 package com.swparks.navigation
 
 import androidx.navigation.NavHostController
-import com.swparks.model.User
+import com.swparks.data.model.User
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import org.junit.After

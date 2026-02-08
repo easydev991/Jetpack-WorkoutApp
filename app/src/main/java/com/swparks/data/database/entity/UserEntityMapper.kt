@@ -1,6 +1,6 @@
 package com.swparks.data.database.entity
 
-import com.swparks.model.User
+import com.swparks.data.model.User
 
 /**
  * Конвертеры между [User] и [UserEntity]

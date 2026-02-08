@@ -28,13 +28,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
-import com.swparks.model.User
+import com.swparks.data.model.User
 import com.swparks.ui.ds.FriendRequestData
 import com.swparks.ui.ds.FriendRequestRowView
 import com.swparks.ui.ds.SectionView
 import com.swparks.ui.ds.UserRowView
-import com.swparks.viewmodel.FriendsListUiState
-import com.swparks.viewmodel.FriendsListViewModel
+import com.swparks.ui.state.FriendsListUiState
+import com.swparks.ui.viewmodel.FriendsListViewModel
 
 /**
  * Экран списка друзей текущего пользователя

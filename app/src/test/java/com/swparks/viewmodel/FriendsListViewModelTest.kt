@@ -3,8 +3,10 @@ package com.swparks.viewmodel
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.UserEntity
 import com.swparks.data.repository.SWRepository
-import com.swparks.model.AppError
+import com.swparks.ui.state.FriendsListUiState
+import com.swparks.ui.viewmodel.FriendsListViewModel
 import com.swparks.ui.viewmodel.MainDispatcherRule
+import com.swparks.util.AppError
 import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
 import io.mockk.coEvery

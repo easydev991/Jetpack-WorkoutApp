@@ -1,9 +1,9 @@
 package com.swparks.ui.screens.events
 
+import com.swparks.data.model.Event
+import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
-import com.swparks.model.AppError
-import com.swparks.model.Event
-import com.swparks.model.User
+import com.swparks.util.AppError
 import com.swparks.util.ErrorReporter
 import io.mockk.coEvery
 import io.mockk.coVerify

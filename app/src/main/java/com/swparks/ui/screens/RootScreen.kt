@@ -1,5 +1,6 @@
 package com.swparks.ui.screens
 
+import android.app.Application
 import android.util.Log
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,15 +21,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.swparks.JetpackWorkoutApplication
+import com.swparks.data.model.Park
 import com.swparks.data.preferences.AppSettingsDataStore
-import com.swparks.model.Park
-import com.swparks.model.toUiText
 import com.swparks.navigation.AppState
 import com.swparks.navigation.BottomNavigationBar
 import com.swparks.navigation.Screen
 import com.swparks.ui.screens.auth.LoginSheetHost
 import com.swparks.ui.screens.events.EventsScreen
 import com.swparks.ui.screens.events.EventsTopAppBar
+import com.swparks.ui.screens.journals.JournalEntriesScreen
 import com.swparks.ui.screens.journals.JournalsListScreen
 import com.swparks.ui.screens.messages.MessagesRootScreen
 import com.swparks.ui.screens.messages.MessagesTopAppBar
@@ -43,9 +44,10 @@ import com.swparks.ui.screens.profile.ProfileRootScreen
 import com.swparks.ui.screens.profile.ProfileTopAppBar
 import com.swparks.ui.screens.profile.UserTrainingParksScreen
 import com.swparks.ui.screens.themeicon.ThemeIconScreen
+import com.swparks.ui.viewmodel.ThemeIconViewModel
+import com.swparks.util.toUiText
 import com.swparks.utils.ReadJSONFromAssets
 import com.swparks.utils.WorkoutAppJson
-import com.swparks.viewmodel.ThemeIconViewModel
 
 @Composable
 fun RootScreen(appState: AppState) {
@@ -324,6 +326,11 @@ fun RootScreen(appState: AppState) {
                         userId = userId,
                         viewModel = viewModel,
                         onBackClick = { appState.navController.popBackStack() },
+                        onJournalClick = { journalId, journalTitle ->
+                            appState.navController.navigate(
+                                Screen.JournalEntries.createRoute(journalId, journalTitle)
+                            )
+                        },
                         parentPaddingValues = paddingValues
                     )
                 }
@@ -345,6 +352,29 @@ fun RootScreen(appState: AppState) {
                 // TODO: Реализовать AddJournalEntryScreen
             }
 
+            composable(route = Screen.JournalEntries.route) { navBackStackEntry ->
+                val journalId = navBackStackEntry.arguments?.getString("journalId")?.toLongOrNull()
+                // Получаем journalTitle из query-параметра
+                val journalTitle = navBackStackEntry.arguments?.getString("journalTitle")?.let {
+                    android.net.Uri.decode(it)
+                } ?: ""
+                // Получаем userId из currentUser
+                val userId = appState.currentUser?.id
+                if (journalId != null && userId != null) {
+                    val viewModel = remember(appContainer) {
+                        appContainer.journalEntriesViewModelFactory(userId, journalId)
+                    }
+                    JournalEntriesScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        journalId = journalId,
+                        journalTitle = journalTitle,
+                        viewModel = viewModel,
+                        onBackClick = { appState.navController.popBackStack() },
+                        parentPaddingValues = paddingValues
+                    )
+                }
+            }
+
             composable(route = Screen.ChangePassword.route) {
                 // TODO: Реализовать ChangePasswordScreen
             }
@@ -364,7 +394,7 @@ fun RootScreen(appState: AppState) {
                 val factory = remember(appSettingsDataStore) {
                     ThemeIconViewModel.factory(
                         appSettingsDataStore,
-                        context.applicationContext as android.app.Application
+                        context.applicationContext as Application
                     )
                 }
                 val viewModel = androidx.lifecycle.ViewModelProvider(

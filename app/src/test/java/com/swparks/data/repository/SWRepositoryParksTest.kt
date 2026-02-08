@@ -4,11 +4,12 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
+import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.UserDao
+import com.swparks.data.model.Park
 import com.swparks.domain.exception.NetworkException
-import com.swparks.model.Park
-import com.swparks.model.ParkForm
 import com.swparks.network.SWApi
+import com.swparks.ui.model.ParkForm
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -35,6 +36,7 @@ import java.io.IOException
 class SWRepositoryParksTest {
     private val testDispatcher = StandardTestDispatcher()
     private val mockUserDao = mockk<UserDao>(relaxed = true)
+    private val mockJournalDao = mockk<JournalDao>(relaxed = true)
 
     @Before
     fun setup() {
@@ -73,7 +75,7 @@ class SWRepositoryParksTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
 
         // When
         val result = repository.getAllParks()
@@ -93,7 +95,7 @@ class SWRepositoryParksTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
 
         // When
         val result = repository.getAllParks()
@@ -113,7 +115,7 @@ class SWRepositoryParksTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
 
         // When
         val result = repository.getPark(123L)
@@ -133,7 +135,7 @@ class SWRepositoryParksTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
 
         // When
         val result = repository.getPark(123L)
@@ -164,7 +166,7 @@ class SWRepositoryParksTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
         val form = ParkForm(
             address = "Test Address",
             latitude = "0.0",
@@ -213,7 +215,7 @@ class SWRepositoryParksTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
         val form = ParkForm(
             address = "Test Address",
             latitude = "0.0",
@@ -260,7 +262,7 @@ class SWRepositoryParksTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
         val form = ParkForm(
             address = "Test Address",
             latitude = "0.0",
@@ -287,7 +289,7 @@ class SWRepositoryParksTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
 
         // When
         val result = repository.deletePark(1L)
@@ -306,7 +308,7 @@ class SWRepositoryParksTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
 
         // When
         val result = repository.deletePark(1L)
@@ -326,7 +328,7 @@ class SWRepositoryParksTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
 
         // When
         val result = repository.getParksForUser(1L)
@@ -346,7 +348,7 @@ class SWRepositoryParksTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
 
         // When
         val result = repository.getParksForUser(1L)
@@ -365,7 +367,7 @@ class SWRepositoryParksTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
 
         // When
         val result = repository.changeTrainHereStatus(true, 1L)
@@ -385,7 +387,7 @@ class SWRepositoryParksTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
 
         // When
         val result = repository.changeTrainHereStatus(false, 1L)
@@ -405,7 +407,7 @@ class SWRepositoryParksTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
 
         // When
         val result = repository.changeTrainHereStatus(true, 1L)
@@ -425,7 +427,7 @@ class SWRepositoryParksTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
 
         // When
         val result = repository.getUpdatedParks("2024-01-01")
@@ -445,7 +447,7 @@ class SWRepositoryParksTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao)
+        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
 
         // When
         val result = repository.getUpdatedParks("2024-01-01")

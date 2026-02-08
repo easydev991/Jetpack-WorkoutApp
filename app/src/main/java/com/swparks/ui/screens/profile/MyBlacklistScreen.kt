@@ -29,11 +29,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
-import com.swparks.model.BlacklistAction
-import com.swparks.model.User
+import com.swparks.data.model.User
 import com.swparks.ui.ds.UserRowView
-import com.swparks.viewmodel.BlacklistUiState
-import com.swparks.viewmodel.BlacklistViewModel
+import com.swparks.ui.model.BlacklistAction
+import com.swparks.ui.state.BlacklistUiState
+import com.swparks.ui.viewmodel.BlacklistViewModel
 
 /**
  * Экран черного списка текущего пользователя

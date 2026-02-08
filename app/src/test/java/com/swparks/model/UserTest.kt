@@ -1,5 +1,8 @@
 package com.swparks.model
 
+import com.swparks.data.model.Park
+import com.swparks.data.model.User
+import com.swparks.ui.model.Gender
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

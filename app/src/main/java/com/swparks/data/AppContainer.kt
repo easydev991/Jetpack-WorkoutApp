@@ -9,36 +9,50 @@ import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFact
 import com.swparks.data.crypto.CryptoManager
 import com.swparks.data.crypto.CryptoManagerImpl
 import com.swparks.data.database.SWDatabase
+import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.interceptor.AuthInterceptor
 import com.swparks.data.interceptor.RetryInterceptor
 import com.swparks.data.interceptor.TokenInterceptor
 import com.swparks.data.repository.CountriesRepositoryImpl
+import com.swparks.data.repository.JournalEntriesRepositoryImpl
 import com.swparks.data.repository.JournalsRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.data.repository.SWRepositoryImp
 import com.swparks.data.serializer.EncryptedStringSerializer
 import com.swparks.domain.repository.CountriesRepository
+import com.swparks.domain.repository.JournalEntriesRepository
+import com.swparks.domain.usecase.CanDeleteJournalEntryUseCase
+import com.swparks.domain.usecase.DeleteJournalEntryUseCase
+import com.swparks.domain.usecase.DeleteJournalUseCase
+import com.swparks.domain.usecase.GetJournalEntriesUseCase
 import com.swparks.domain.usecase.GetJournalsUseCase
+import com.swparks.domain.usecase.ICanDeleteJournalEntryUseCase
+import com.swparks.domain.usecase.IDeleteJournalEntryUseCase
+import com.swparks.domain.usecase.IDeleteJournalUseCase
+import com.swparks.domain.usecase.IGetJournalEntriesUseCase
 import com.swparks.domain.usecase.IGetJournalsUseCase
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.ILogoutUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
+import com.swparks.domain.usecase.ISyncJournalEntriesUseCase
 import com.swparks.domain.usecase.ISyncJournalsUseCase
 import com.swparks.domain.usecase.LoginUseCase
 import com.swparks.domain.usecase.LogoutUseCase
 import com.swparks.domain.usecase.ResetPasswordUseCase
+import com.swparks.domain.usecase.SyncJournalEntriesUseCase
 import com.swparks.domain.usecase.SyncJournalsUseCase
 import com.swparks.network.SWApi
+import com.swparks.ui.viewmodel.BlacklistViewModel
+import com.swparks.ui.viewmodel.FriendsListViewModel
+import com.swparks.ui.viewmodel.JournalEntriesViewModel
 import com.swparks.ui.viewmodel.JournalsViewModel
+import com.swparks.ui.viewmodel.ProfileViewModel
+import com.swparks.ui.viewmodel.UserTrainingParksViewModel
 import com.swparks.util.AndroidLogger
 import com.swparks.util.ErrorHandler
 import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
-import com.swparks.viewmodel.BlacklistViewModel
-import com.swparks.viewmodel.FriendsListViewModel
-import com.swparks.viewmodel.ProfileViewModel
-import com.swparks.viewmodel.UserTrainingParksViewModel
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -49,6 +63,7 @@ interface AppContainer {
     val secureTokenRepository: SecureTokenRepository
     val countriesRepository: CountriesRepository
     val journalsRepository: com.swparks.domain.repository.JournalsRepository
+    val journalEntriesRepository: JournalEntriesRepository
 
     // Сервисы для обработки ошибок
     val logger: Logger
@@ -62,6 +77,11 @@ interface AppContainer {
     // Use cases для дневников
     val getJournalsUseCase: IGetJournalsUseCase
     val syncJournalsUseCase: ISyncJournalsUseCase
+    val deleteJournalUseCase: IDeleteJournalUseCase
+    val getJournalEntriesUseCase: IGetJournalEntriesUseCase
+    val syncJournalEntriesUseCase: ISyncJournalEntriesUseCase
+    val deleteJournalEntryUseCase: IDeleteJournalEntryUseCase
+    val canDeleteJournalEntryUseCase: ICanDeleteJournalEntryUseCase
 
     /** Фабрика для ProfileViewModel (единый контейнер обеспечивает одну БД с LoginViewModel). */
     fun profileViewModelFactory(): ProfileViewModel
@@ -77,6 +97,9 @@ interface AppContainer {
 
     /** Фабрика для JournalsViewModel */
     fun journalsViewModelFactory(userId: Long): JournalsViewModel
+
+    /** Фабрика для JournalEntriesViewModel */
+    fun journalEntriesViewModelFactory(userId: Long, journalId: Long): JournalEntriesViewModel
 
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
@@ -191,7 +214,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
         SWRepositoryImp(
             swApi = retrofitService,
             dataStore = context.dataStore,
-            userDao = userDao
+            userDao = userDao,
+            journalDao = journalDao
         )
     }
 
@@ -203,6 +227,20 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
     override val journalsRepository: com.swparks.domain.repository.JournalsRepository by lazy {
         JournalsRepositoryImpl(swApi = retrofitService, journalDao = journalDao)
+    }
+
+    /**
+     * DAO для работы с записями дневника
+     */
+    private val journalEntryDao: JournalEntryDao by lazy { database.journalEntryDao() }
+
+    /**
+     * Репозиторий для работы с записями дневника
+     * Примечание: репозиторий не зависит от конкретных userId или journalId,
+     * эти параметры передаются в методах репозитория
+     */
+    override val journalEntriesRepository: JournalEntriesRepository by lazy {
+        JournalEntriesRepositoryImpl(swApi = retrofitService, journalEntryDao = journalEntryDao)
     }
 
     // ==================== Use cases для авторизации ====================
@@ -242,6 +280,30 @@ class DefaultAppContainer(context: Context) : AppContainer {
         SyncJournalsUseCase(journalsRepository)
     }
 
+    // ==================== Use cases для записей дневника ====================
+    // Примечание: Use Case'ы являются stateless-компонентами и не зависят от конкретных
+    // userId и journalId при создании. Эти параметры передаются в методах invoke() Use Case'ов.
+
+    override val getJournalEntriesUseCase: IGetJournalEntriesUseCase by lazy {
+        GetJournalEntriesUseCase(journalEntriesRepository)
+    }
+
+    override val syncJournalEntriesUseCase: ISyncJournalEntriesUseCase by lazy {
+        SyncJournalEntriesUseCase(journalEntriesRepository)
+    }
+
+    override val deleteJournalEntryUseCase: IDeleteJournalEntryUseCase by lazy {
+        DeleteJournalEntryUseCase(journalEntriesRepository)
+    }
+
+    override val canDeleteJournalEntryUseCase: ICanDeleteJournalEntryUseCase by lazy {
+        CanDeleteJournalEntryUseCase(journalEntriesRepository)
+    }
+
+    override val deleteJournalUseCase: IDeleteJournalUseCase by lazy {
+        DeleteJournalUseCase(swRepository)
+    }
+
     /** Factory метод для создания ProfileViewModel */
     override fun profileViewModelFactory() = ProfileViewModel(
         countriesRepository = countriesRepository,
@@ -277,8 +339,22 @@ class DefaultAppContainer(context: Context) : AppContainer {
     override fun journalsViewModelFactory(userId: Long) = JournalsViewModel(
         userId = userId,
         getJournalsUseCase = getJournalsUseCase,
-        syncJournalsUseCase = syncJournalsUseCase
+        syncJournalsUseCase = syncJournalsUseCase,
+        deleteJournalUseCase = deleteJournalUseCase,
+        errorReporter = errorReporter
     )
+
+    /** Factory метод для создания JournalEntriesViewModel */
+    override fun journalEntriesViewModelFactory(userId: Long, journalId: Long) =
+        JournalEntriesViewModel(
+            userId = userId,
+            journalId = journalId,
+            getJournalEntriesUseCase = getJournalEntriesUseCase,
+            syncJournalEntriesUseCase = syncJournalEntriesUseCase,
+            deleteJournalEntryUseCase = deleteJournalEntryUseCase,
+            canDeleteJournalEntryUseCase = canDeleteJournalEntryUseCase,
+            errorReporter = errorReporter
+        )
 
     // ==================== API клиенты для разных функциональных областей ====================
     // Все фабричные методы возвращают один и тот же экземпляр SWApi для консистентности

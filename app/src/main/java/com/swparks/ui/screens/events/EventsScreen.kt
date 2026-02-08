@@ -19,7 +19,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.swparks.R
-import com.swparks.model.Event
+import com.swparks.data.model.Event
 import com.swparks.ui.ds.ErrorContentView
 import com.swparks.ui.ds.EventRowData
 import com.swparks.ui.ds.EventRowView

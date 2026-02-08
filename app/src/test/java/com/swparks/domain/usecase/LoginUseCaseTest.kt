@@ -4,9 +4,9 @@ import android.util.Log
 import com.swparks.data.SecureTokenRepository
 import com.swparks.data.TokenEncoder
 import com.swparks.data.UserPreferencesRepository
+import com.swparks.data.model.LoginSuccess
 import com.swparks.data.repository.SWRepository
-import com.swparks.model.LoginCredentials
-import com.swparks.model.LoginSuccess
+import com.swparks.ui.model.LoginCredentials
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

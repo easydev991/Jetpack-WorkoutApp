@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.swparks.domain.model.Journal
-import com.swparks.model.JournalAccess
+import com.swparks.ui.model.JournalAccess
 import java.text.SimpleDateFormat
 import java.util.Locale
 

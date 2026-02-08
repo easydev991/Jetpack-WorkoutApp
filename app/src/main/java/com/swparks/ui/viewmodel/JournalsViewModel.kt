@@ -3,11 +3,17 @@ package com.swparks.ui.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.swparks.domain.usecase.IDeleteJournalUseCase
 import com.swparks.domain.usecase.IGetJournalsUseCase
 import com.swparks.domain.usecase.ISyncJournalsUseCase
 import com.swparks.ui.state.JournalsUiState
+import com.swparks.util.AppError
+import com.swparks.util.ErrorReporter
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
@@ -20,11 +26,15 @@ import kotlinx.coroutines.launch
  * @param userId Идентификатор пользователя
  * @param getJournalsUseCase Use case для получения потока дневников
  * @param syncJournalsUseCase Use case для синхронизации дневников с сервером
+ * @param deleteJournalUseCase Use case для удаления дневника
+ * @param errorReporter Обработчик ошибок для отправки ошибок в систему мониторинга
  */
 class JournalsViewModel(
     private val userId: Long,
     private val getJournalsUseCase: IGetJournalsUseCase,
-    private val syncJournalsUseCase: ISyncJournalsUseCase
+    private val syncJournalsUseCase: ISyncJournalsUseCase,
+    private val deleteJournalUseCase: IDeleteJournalUseCase,
+    private val errorReporter: ErrorReporter
 ) : ViewModel(), IJournalsViewModel {
 
     private companion object {
@@ -38,6 +48,14 @@ class JournalsViewModel(
     // Индикатор обновления (pull-to-refresh) (реализует интерфейс IJournalsViewModel)
     private val _isRefreshing = MutableStateFlow(false)
     override val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    // Индикатор удаления дневника (реализует интерфейс IJournalsViewModel)
+    private val _isDeleting = MutableStateFlow(false)
+    override val isDeleting: StateFlow<Boolean> = _isDeleting.asStateFlow()
+
+    // Поток событий UI (реализует интерфейс IJournalsViewModel)
+    private val _events = MutableSharedFlow<JournalsEvent>()
+    override val events: SharedFlow<JournalsEvent> = _events.asSharedFlow()
 
     init {
         Log.i(TAG, "Инициализация JournalsViewModel для пользователя: $userId")
@@ -105,5 +123,47 @@ class JournalsViewModel(
     override fun retry() {
         Log.i(TAG, "Повтор загрузки дневников")
         loadJournals()
+    }
+
+    /**
+     * Удалить дневник.
+     *
+     * Удаляет дневник через use case и отправляет событие для Snackbar
+     * с результатом операции (успех или ошибка).
+     *
+     * @param journalId Идентификатор дневника
+     */
+    @Suppress("TooGenericExceptionCaught")
+    override fun deleteJournal(journalId: Long) {
+        viewModelScope.launch {
+            try {
+                Log.i(TAG, "Удаление дневника: journalId=$journalId")
+                _isDeleting.value = true
+
+                val result = deleteJournalUseCase(userId, journalId)
+                result
+                    .onSuccess {
+                        Log.i(TAG, "Дневник успешно удален")
+                        _events.emit(JournalsEvent.ShowSnackbar("Дневник удален"))
+                    }
+                    .onFailure { error ->
+                        Log.e(TAG, "Ошибка при удалении дневника: ${error.message}")
+                        errorReporter.handleError(
+                            AppError.Generic(
+                                error.message ?: "Ошибка удаления дневника", error
+                            )
+                        )
+                        _events.emit(
+                            JournalsEvent.ShowSnackbar(error.message ?: "Ошибка удаления")
+                        )
+                    }
+            } catch (e: Exception) {
+                Log.e(TAG, "Исключение при удалении дневника: ${e.message}")
+                errorReporter.handleError(AppError.Generic("Ошибка удаления дневника", e))
+                _events.emit(JournalsEvent.ShowSnackbar("Ошибка удаления"))
+            } finally {
+                _isDeleting.value = false
+            }
+        }
     }
 }

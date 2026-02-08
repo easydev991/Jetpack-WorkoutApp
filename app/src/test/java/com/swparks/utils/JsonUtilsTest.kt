@@ -1,6 +1,6 @@
 package com.swparks.utils
 
-import com.swparks.model.Event
+import com.swparks.data.model.Event
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

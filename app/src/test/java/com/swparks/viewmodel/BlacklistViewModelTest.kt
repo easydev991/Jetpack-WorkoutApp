@@ -1,8 +1,10 @@
 package com.swparks.viewmodel
 
+import com.swparks.data.model.ApiBlacklistOption
+import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
-import com.swparks.model.ApiBlacklistOption
-import com.swparks.model.User
+import com.swparks.ui.state.BlacklistUiState
+import com.swparks.ui.viewmodel.BlacklistViewModel
 import com.swparks.ui.viewmodel.MainDispatcherRule
 import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger

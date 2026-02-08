@@ -9,8 +9,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swparks.R
 import com.swparks.data.AppContainer
-import com.swparks.model.AppError
 import com.swparks.navigation.rememberAppState
+import com.swparks.util.AppError
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

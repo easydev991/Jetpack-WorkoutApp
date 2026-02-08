@@ -1,7 +1,7 @@
 package com.swparks.domain.repository
 
-import com.swparks.model.City
-import com.swparks.model.Country
+import com.swparks.data.model.City
+import com.swparks.data.model.Country
 import kotlinx.coroutines.flow.Flow
 
 /**

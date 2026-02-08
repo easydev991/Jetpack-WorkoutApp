@@ -1,12 +1,13 @@
 package com.swparks.model
 
+import com.swparks.data.model.Event
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
- * Тесты десериализации модели [Event] с использованием IntStringSerializer и LongStringSerializer
+ * Тесты десериализации модели [com.swparks.data.model.Event] с использованием IntStringSerializer и LongStringSerializer
  */
 class EventDeserializationTest {
 

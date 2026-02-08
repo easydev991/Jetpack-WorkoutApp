@@ -1,5 +1,6 @@
 package com.swparks.model
 
+import com.swparks.ui.model.LoginCredentials
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

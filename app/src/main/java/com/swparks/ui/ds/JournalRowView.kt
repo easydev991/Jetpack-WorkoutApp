@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -222,7 +223,9 @@ private fun JournalHeader(
 private fun JournalActionsMenu(config: JournalActionsMenuConfig) {
     Box {
         IconButton(
-            modifier = Modifier.size(dimensionResource(id = R.dimen.icon_size_menu)),
+            modifier = Modifier
+                .size(dimensionResource(id = R.dimen.icon_size_menu))
+                .testTag("MenuButton"),
             enabled = config.enabled,
             onClick = config.onMenuShow
         ) {

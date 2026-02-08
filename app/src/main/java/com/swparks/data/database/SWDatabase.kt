@@ -3,8 +3,10 @@ package com.swparks.data.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.swparks.data.database.dao.JournalDao
+import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.JournalEntity
+import com.swparks.data.database.entity.JournalEntryEntity
 import com.swparks.data.database.entity.UserEntity
 
 /**
@@ -12,11 +14,13 @@ import com.swparks.data.database.entity.UserEntity
  *
  * @property userDao DAO для работы с пользователями
  * @property journalDao DAO для работы с дневниками
+ * @property journalEntryDao DAO для работы с записями дневника
  */
 @Database(
     entities = [
         UserEntity::class,
-        JournalEntity::class
+        JournalEntity::class,
+        JournalEntryEntity::class
     ],
     version = 1,
     exportSchema = false
@@ -33,4 +37,10 @@ abstract class SWDatabase : RoomDatabase() {
      * @return JournalDao
      */
     abstract fun journalDao(): JournalDao
+
+    /**
+     * Получить DAO для работы с записями дневника
+     * @return JournalEntryDao
+     */
+    abstract fun journalEntryDao(): JournalEntryDao
 }

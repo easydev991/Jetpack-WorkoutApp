@@ -2,7 +2,7 @@ package com.swparks.data.database
 
 import android.util.Log
 import androidx.room.TypeConverter
-import com.swparks.model.Park
+import com.swparks.data.model.Park
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 

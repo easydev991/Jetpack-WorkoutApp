@@ -1,5 +1,11 @@
 package com.swparks.model
 
+import com.swparks.data.model.Comment
+import com.swparks.data.model.Park
+import com.swparks.data.model.ParkSize
+import com.swparks.data.model.ParkType
+import com.swparks.data.model.Photo
+import com.swparks.data.model.User
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

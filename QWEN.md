@@ -236,6 +236,40 @@ app/
 - **AuthInterceptor**: обрабатывает ошибки 401 и очищает токен при необходимости
 - **RetryInterceptor**: автоматически повторяет запросы при временных сетевых ошибках
 
+## Запрет удаления первой записи в дневнике ✅
+
+Реализован запрет удаления первой записи в дневнике (с минимальным id) аналогично iOS-проекту. Сервер не позволяет удалить самую первую запись, поэтому кнопка удаления скрыта для первой записи в контекстном меню.
+
+### Выполненные изменения
+
+- **Data Layer:**
+  - Добавлен метод `getMinEntryId(journalId: Long): Long?` в `JournalEntryDao`
+  - Реализован метод `canDeleteEntry(entryId: Long, journalId: Long): Boolean` в `JournalEntriesRepository`
+  
+- **Domain Layer:**
+  - Создан интерфейс `ICanDeleteJournalEntryUseCase`
+  - Создан `CanDeleteJournalEntryUseCase`
+  
+- **Presentation Layer:**
+  - Добавлено в `JournalEntriesUiState` поле `firstEntryId: Long?`
+  - Добавлен метод `canDeleteEntry(entryId: Long): Boolean` в `IJournalEntriesViewModel` и `JournalEntriesViewModel`
+  - Обновлен `AppContainer` с добавлением `ICanDeleteJournalEntryUseCase`
+  
+- **UI Layer:**
+  - Обновлен `JournalEntriesScreen` - кнопка удаления скрыта для первой записи
+  - Обновлен `FakeJournalEntriesViewModel` с методом `canDeleteEntry()`
+
+### Тесты
+
+- Repository: 3 unit-теста для `canDeleteEntry()`
+- Use Case: 3 unit-теста для `CanDeleteJournalEntryUseCase`
+- ViewModel: 2 unit-теста для `canDeleteEntry()`
+- UI: 1 тест для проверки скрытия кнопки удаления
+
+**Всего добавлено:** 9 тестов
+
+---
+
 ## Смена иконки приложения
 
 Приложение поддерживает 11 разных иконок для персонализации:

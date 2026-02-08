@@ -2,12 +2,14 @@ package com.swparks.viewmodel
 
 import android.util.Log
 import app.cash.turbine.test
+import com.swparks.data.model.City
+import com.swparks.data.model.Country
+import com.swparks.data.model.SocialUpdates
+import com.swparks.data.model.User
 import com.swparks.domain.repository.CountriesRepository
-import com.swparks.model.City
-import com.swparks.model.Country
-import com.swparks.model.SocialUpdates
-import com.swparks.model.User
 import com.swparks.ui.viewmodel.MainDispatcherRule
+import com.swparks.ui.viewmodel.ProfileUiState
+import com.swparks.ui.viewmodel.ProfileViewModel
 import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
 import io.mockk.coEvery

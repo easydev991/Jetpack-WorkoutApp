@@ -34,7 +34,7 @@ import com.swparks.domain.model.AppTheme
 import com.swparks.ui.screen.components.common.RadioButton
 import com.swparks.ui.screen.components.themeicon.IconPreviewItem
 import com.swparks.ui.theme.DynamicColors
-import com.swparks.viewmodel.ThemeIconViewModel
+import com.swparks.ui.viewmodel.ThemeIconViewModel
 
 /** Параметры для ThemeIconScreenContent. */
 @Suppress("DataClassContainsFunctions")

@@ -7,31 +7,32 @@ import com.swparks.data.APIError
 import com.swparks.data.ErrorResponse
 import com.swparks.data.NetworkUtils
 import com.swparks.data.UserPreferencesRepository
+import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.toDomain
 import com.swparks.data.database.entity.toEntity
+import com.swparks.data.model.ApiBlacklistOption
+import com.swparks.data.model.ApiFriendAction
+import com.swparks.data.model.DialogResponse
+import com.swparks.data.model.Event
+import com.swparks.data.model.JournalEntryResponse
+import com.swparks.data.model.JournalResponse
+import com.swparks.data.model.LoginSuccess
+import com.swparks.data.model.MessageResponse
+import com.swparks.data.model.Park
+import com.swparks.data.model.SocialUpdates
+import com.swparks.data.model.User
 import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.exception.ServerException
-import com.swparks.model.ApiBlacklistOption
-import com.swparks.model.ApiFriendAction
-import com.swparks.model.DialogResponse
-import com.swparks.model.EditJournalSettingsRequest
-import com.swparks.model.Event
-import com.swparks.model.EventForm
-import com.swparks.model.EventType
-import com.swparks.model.JournalAccess
-import com.swparks.model.JournalEntryResponse
-import com.swparks.model.JournalResponse
-import com.swparks.model.LoginSuccess
-import com.swparks.model.MainUserForm
-import com.swparks.model.MessageResponse
-import com.swparks.model.Park
-import com.swparks.model.ParkForm
-import com.swparks.model.RegistrationRequest
-import com.swparks.model.SocialUpdates
-import com.swparks.model.TextEntryOption
-import com.swparks.model.User
 import com.swparks.network.SWApi
+import com.swparks.ui.model.EditJournalSettingsRequest
+import com.swparks.ui.model.EventForm
+import com.swparks.ui.model.EventType
+import com.swparks.ui.model.JournalAccess
+import com.swparks.ui.model.MainUserForm
+import com.swparks.ui.model.ParkForm
+import com.swparks.ui.model.RegistrationRequest
+import com.swparks.ui.model.TextEntryOption
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -166,7 +167,8 @@ interface SWRepository {
 class SWRepositoryImp(
     private val swApi: SWApi,
     private val dataStore: DataStore<Preferences>,
-    private val userDao: UserDao
+    private val userDao: UserDao,
+    private val journalDao: JournalDao
 ) : SWRepository {
     private companion object {
         const val TAG = "SWRepositoryImp"
@@ -828,11 +830,37 @@ class SWRepositoryImp(
 
     override suspend fun deleteJournal(journalId: Long, userId: Long?): Result<Unit> =
         try {
-            swApi.deleteJournal(
+            val response = swApi.deleteJournal(
                 userId = userId ?: 1L, // Note: передавать реальный userId
                 journalId = journalId
             )
-            Result.success(Unit)
+
+            when {
+                response.isSuccessful -> {
+                    Log.i(TAG, "Дневник успешно удален на сервере")
+                    journalDao.deleteById(journalId)
+                    Result.success(Unit)
+                }
+
+                response.code() == 404 -> {
+                    // Дневник уже удален на сервере — синхронизируем локальный кэш
+                    Log.i(TAG, "Дневник уже удален на сервере (404), удаляем из локального кэша")
+                    journalDao.deleteById(journalId)
+                    Result.success(Unit)
+                }
+
+                else -> {
+                    val statusCode = response.code()
+                    val errorBody = response.errorBody()?.string()
+                    Log.e(TAG, "Ошибка при удалении дневника: код=$statusCode, тело=$errorBody")
+                    Result.failure(
+                        handleHttpException(
+                            HttpException(response),
+                            "удалении дневника"
+                        )
+                    )
+                }
+            }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "удалении дневника"))
         } catch (e: HttpException) {

@@ -1,5 +1,6 @@
 package com.swparks.model
 
+import com.swparks.data.model.LoginSuccess
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

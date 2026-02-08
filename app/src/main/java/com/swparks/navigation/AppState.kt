@@ -21,7 +21,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.swparks.R
-import com.swparks.model.User
+import com.swparks.data.model.User
 import com.swparks.navigation.TopLevelDestinations.EVENTS
 import com.swparks.navigation.TopLevelDestinations.MESSAGES
 import com.swparks.navigation.TopLevelDestinations.MORE

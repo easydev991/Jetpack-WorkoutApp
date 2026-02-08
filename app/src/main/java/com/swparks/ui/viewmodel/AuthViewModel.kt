@@ -2,11 +2,11 @@ package com.swparks.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.swparks.data.model.LoginSuccess
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.ILogoutUseCase
-import com.swparks.model.AppError
-import com.swparks.model.LoginCredentials
-import com.swparks.model.LoginSuccess
+import com.swparks.ui.model.LoginCredentials
+import com.swparks.util.AppError
 import com.swparks.util.ErrorReporter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

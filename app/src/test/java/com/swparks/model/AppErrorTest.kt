@@ -1,5 +1,6 @@
 package com.swparks.model
 
+import com.swparks.util.AppError
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull

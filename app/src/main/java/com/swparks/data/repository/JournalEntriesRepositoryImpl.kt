@@ -1,0 +1,110 @@
+package com.swparks.data.repository
+
+import android.util.Log
+import com.swparks.data.database.dao.JournalEntryDao
+import com.swparks.data.database.entity.toDomain
+import com.swparks.data.database.entity.toEntity
+import com.swparks.data.model.JournalEntryResponse
+import com.swparks.domain.exception.NetworkException
+import com.swparks.domain.model.JournalEntry
+import com.swparks.domain.repository.JournalEntriesRepository
+import com.swparks.network.SWApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import java.io.IOException
+import com.swparks.domain.model.toDomain as journalEntryToDomain
+
+/**
+ * Реализация репозитория для работы с записями в дневнике
+ *
+ * Кэширует записи в локальной базе данных для офлайн-доступа
+ * и обновляет их с сервера при вызове метода refreshJournalEntries
+ *
+ * @property swApi API клиент для работы с сервером
+ * @property journalEntryDao DAO для работы с записями в Room
+ */
+class JournalEntriesRepositoryImpl(
+    private val swApi: SWApi,
+    private val journalEntryDao: JournalEntryDao
+) : JournalEntriesRepository {
+    private companion object {
+        const val TAG = "JournalEntriesRepository"
+        const val HTTP_NOT_FOUND = 404
+    }
+
+    override fun observeJournalEntries(userId: Long, journalId: Long): Flow<List<JournalEntry>> {
+        // Примечание: userId сохраняется для будущей синхронизации
+        return journalEntryDao.getJournalEntriesByJournalId(journalId)
+            .map { entities ->
+                entities.map { it.toDomain() }
+            }
+    }
+
+    override suspend fun refreshJournalEntries(userId: Long, journalId: Long): Result<Unit> = try {
+        Log.i(TAG, "Загружаем записи дневника: userId=$userId, journalId=$journalId")
+
+        // Загружаем записи с сервера
+        val responses = swApi.getJournalEntries(userId, journalId)
+        Log.i(TAG, "Получено ${responses.size} записей с сервера")
+
+        // Мапим JournalEntryResponse -> JournalEntry -> JournalEntryEntity
+        val entities = responses.map { response: JournalEntryResponse ->
+            val entry = response.journalEntryToDomain()
+            entry.toEntity()
+        }
+
+        // Удаляем старые записи и вставляем новые
+        journalEntryDao.deleteByJournalId(journalId)
+        journalEntryDao.insertAll(entities)
+
+        Log.i(TAG, "Успешно сохранено ${entities.size} записей в БД")
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Log.e(TAG, "Ошибка при загрузке записей: ${e.message}", e)
+        Result.failure(e)
+    }
+
+    override suspend fun deleteJournalEntry(
+        userId: Long,
+        journalId: Long,
+        entryId: Long
+    ): Result<Unit> = try {
+        Log.i(TAG, "Удаление записи: userId=$userId, journalId=$journalId, entryId=$entryId")
+
+        val response = swApi.deleteJournalEntry(userId, journalId, entryId)
+
+        when {
+            response.isSuccessful -> {
+                Log.i(TAG, "Запись успешно удалена на сервере")
+                journalEntryDao.deleteById(entryId)
+                Result.success(Unit)
+            }
+
+            response.code() == HTTP_NOT_FOUND -> {
+                // Запись уже удалена на сервере — синхронизируем локальный кэш
+                Log.i(TAG, "Запись уже удалена на сервере (404), удаляем из локального кэша")
+                journalEntryDao.deleteById(entryId)
+                Result.success(Unit)
+            }
+
+            else -> {
+                val errorMessage = "Ошибка удаления записи: код ${response.code()}"
+                Log.e(TAG, errorMessage)
+                Result.failure(NetworkException(errorMessage))
+            }
+        }
+    } catch (e: IOException) {
+        val errorMessage = "Ошибка сети при удалении записи"
+        Log.e(TAG, "$errorMessage: ${e.message}")
+        Result.failure(NetworkException(errorMessage, e))
+    } catch (e: Exception) {
+        val errorMessage = "Неизвестная ошибка при удалении записи"
+        Log.e(TAG, "$errorMessage: ${e.message}", e)
+        Result.failure(NetworkException(errorMessage, e))
+    }
+
+    override suspend fun canDeleteEntry(entryId: Long, journalId: Long): Boolean {
+        val minEntryId = journalEntryDao.getMinEntryId(journalId)
+        return minEntryId == null || entryId != minEntryId
+    }
+}

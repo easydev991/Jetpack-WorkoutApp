@@ -1,10 +1,10 @@
 package com.swparks.ui.viewmodel
 
+import com.swparks.data.model.LoginSuccess
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.ILogoutUseCase
-import com.swparks.model.AppError
-import com.swparks.model.LoginCredentials
-import com.swparks.model.LoginSuccess
+import com.swparks.ui.model.LoginCredentials
+import com.swparks.util.AppError
 import com.swparks.util.ErrorReporter
 import io.mockk.coEvery
 import io.mockk.coVerify

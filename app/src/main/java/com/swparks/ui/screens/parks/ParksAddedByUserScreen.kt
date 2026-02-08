@@ -15,7 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
-import com.swparks.model.Park
+import com.swparks.data.model.Park
 import com.swparks.ui.screen.components.ParksListView
 
 /**
