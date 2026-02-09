@@ -50,7 +50,7 @@ class ProfileViewModel(
     private val swRepository: SWRepository,
     private val logger: Logger,
     private val errorReporter: ErrorReporter,
-) : ViewModel() {
+) : ViewModel(), IProfileViewModel {
 
     private companion object {
         private const val STATE_TIMEOUT_MS = 5000L
@@ -58,7 +58,7 @@ class ProfileViewModel(
     }
 
     // Подписываемся на текущего пользователя из кэша
-    val currentUser: StateFlow<User?> = swRepository.getCurrentUserFlow()
+    override val currentUser: StateFlow<User?> = swRepository.getCurrentUserFlow()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STATE_TIMEOUT_MS),
@@ -67,14 +67,14 @@ class ProfileViewModel(
 
     // UI State
     private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
-    val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
+    override val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
     // Состояние обновления данных (pull-to-refresh)
     private val _isRefreshing = MutableStateFlow(false)
-    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+    override val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     // Черный список пользователя
-    val blacklist: StateFlow<List<User>> = swRepository.getBlacklistFlow()
+    override val blacklist: StateFlow<List<User>> = swRepository.getBlacklistFlow()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STATE_TIMEOUT_MS),
@@ -96,7 +96,7 @@ class ProfileViewModel(
      *
      * @param userId ID пользователя для загрузки профиля и социальных данных
      */
-    fun loadProfileFromServer(userId: Long) {
+    override fun loadProfileFromServer(userId: Long) {
         viewModelScope.launch {
             try {
                 logger.i(TAG, "Начало загрузки профиля с сервера: $userId")
@@ -114,7 +114,7 @@ class ProfileViewModel(
      * Обновляет данные профиля пользователя с сервера (для pull-to-refresh).
      * Использует текущего пользователя из репозитория.
      */
-    fun refreshProfile() {
+    override fun refreshProfile() {
         val user = currentUser.value ?: run {
             logger.w(TAG, "Пропускаем обновление профиля: пользователь не авторизован")
             return

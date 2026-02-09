@@ -177,7 +177,7 @@ fun RootScreen(appState: AppState) {
             // Вкладка "Мероприятия"
             composable(route = Screen.Events.route) {
                 EventsScreen(
-                    contentModifier = Modifier
+                    modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
                 )

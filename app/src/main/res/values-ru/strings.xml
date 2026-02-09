@@ -14,6 +14,7 @@
     <string name="more_title">Ещё</string>
     <string name="settings">Настройки</string>
     <string name="loading">Загрузка…</string>
+    <string name="loading_content_description">Подождите, идет загрузка</string>
 
     <string name="auth_invitation">Авторизуйтесь, чтобы иметь доступ ко всем возможностям</string>
     <string name="authorization">Авторизация</string>

@@ -44,21 +44,19 @@ MyFriendsScreenContent(
 
 В безымянном компоненте:
 1. Передай `enabled = !isProcessing` в компоненты с контентом
-2. Покажи `CircularProgressIndicator` поверх контента при загрузке
+2. Используй `LoadingOverlayView` из дизайн-системы поверх контента при загрузке
 
 ```kotlin
 Box(modifier = Modifier.fillMaxSize()) {
     Content(enabled = !isProcessing)
 
     if (isProcessing) {
-        CircularProgressIndicator(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .matchParentSize()
-        )
+        LoadingOverlayView()
     }
 }
 ```
+
+**Примечание:** `LoadingOverlayView` автоматически занимает весь размер родительского Box и блокирует все жесты. Компонент находится в `com.swparks.ui.ds`.
 
 ### Шаг 4: Компоненты списка - параметр enabled
 
@@ -97,15 +95,15 @@ Box(
 
 ### 1. Начальная загрузка данных
 
-Используй обычный `CircularProgressIndicator` в центре экрана в блоке `when` для `UiState.Loading`.
+Используй обычный `CircularProgressIndicator` или `LoadingIndicator` в центре экрана в блоке `when` для `UiState.Loading`.
 
 ### 2. Обновление данных или действия пользователя
 
-Используй `CircularProgressIndicator` с `matchParentSize()` поверх контента в `Box` с `isProcessing`.
+Используй `LoadingOverlayView` из дизайн-системы поверх контента в `Box` с `isProcessing`. Этот компонент автоматически блокирует все жесты и занимает весь размер родительского контейнера.
 
 ### 3. Индикатор внутри кнопки
 
-Для кнопок с операциями CRUD используй встроенный индикатор или параметр `enabled`.
+Для кнопок с операциями CRUD используй встроенный `CircularProgressIndicator` или параметр `enabled`.
 
 ## Ссылки на примеры
 
@@ -121,11 +119,11 @@ Box(
 
 ### 1. Box с fillMaxSize для контента
 
-Всегда используй `Box` с `Modifier.fillMaxSize()` для контента, чтобы `CircularProgressIndicator` с `matchParentSize()` мог отобразиться поверх.
+Всегда используй `Box` с `Modifier.fillMaxSize()` для контента, чтобы `LoadingOverlayView` мог отобразиться поверх и корректно заблокировать все жесты.
 
-### 2. matchParentSize() для индикатора
+### 2. LoadingOverlayView автоматически занимает родительский размер
 
-Используй `matchParentSize()` вместо `fillMaxSize()` для индикатора, чтобы он занимал только размер родительского `Box`.
+`LoadingOverlayView` из дизайн-системы автоматически занимает размер родительского `Box` и блокирует все жесты. Нет необходимости использовать `matchParentSize()` или `fillMaxSize()`.
 
 ### 3. try-finally для надежной блокировки
 
@@ -141,8 +139,8 @@ Box(
 - [ ] Обернул асинхронные операции в `try-finally` для надежной блокировки
 - [ ] Собрал состояние загрузки в Composable экрана через `collectAsState()`
 - [ ] Передал `enabled = !isProcessing` в безымянный компонент
-- [ ] Добавил `CircularProgressIndicator` с `matchParentSize()` поверх контента
+- [ ] Добавил `LoadingOverlayView()` из дизайн-системы поверх контента при загрузке
 - [ ] Передал `enabled` в интерактивные элементы списка (кнопки, кликабельные области)
-- [ ] Проверил, что индикатор отображается поверх контента при загрузке
+- [ ] Проверил, что оверлей отображается поверх контента при загрузке
 - [ ] Проверил, что кнопки заблокированы и не нажимаются во время обработки
-- [ ] Протестировал обработку ошибок (пользователь видит ошибку, индикатор скрывается)
+- [ ] Протестировал обработку ошибок (пользователь видит ошибку, оверлей скрывается)

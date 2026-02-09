@@ -33,26 +33,26 @@ class FriendsListViewModel(
     private val swRepository: SWRepository,
     private val logger: Logger,
     private val errorReporter: ErrorReporter,
-) : ViewModel() {
+) : ViewModel(), IFriendsListViewModel {
 
     private companion object {
         private const val TAG = "FriendsListViewModel"
     }
 
     // Flow для заявок на добавление в друзья
-    val friendRequests: Flow<List<UserEntity>> =
+    override val friendRequests: Flow<List<UserEntity>> =
         userDao.getFriendRequestsFlow()
 
     // Flow для списка друзей
-    val friends: Flow<List<UserEntity>> = userDao.getFriendsFlow()
+    override val friends: Flow<List<UserEntity>> = userDao.getFriendsFlow()
 
     // UI State
     private val _uiState = MutableStateFlow<FriendsListUiState>(FriendsListUiState.Loading)
-    val uiState: StateFlow<FriendsListUiState> = _uiState.asStateFlow()
+    override val uiState: StateFlow<FriendsListUiState> = _uiState.asStateFlow()
 
     // Индикатор загрузки при выполнении запросов к серверу (принятие/отклонение заявки)
     private val _isProcessing = MutableStateFlow(false)
-    val isProcessing: StateFlow<Boolean> = _isProcessing.asStateFlow()
+    override val isProcessing: StateFlow<Boolean> = _isProcessing.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -104,7 +104,7 @@ class FriendsListViewModel(
      *
      * @param userId ID пользователя
      */
-    fun onAcceptFriendRequest(userId: Long) {
+    override fun onAcceptFriendRequest(userId: Long) {
         viewModelScope.launch {
             _isProcessing.value = true
 
@@ -130,7 +130,7 @@ class FriendsListViewModel(
      *
      * @param userId ID пользователя
      */
-    fun onDeclineFriendRequest(userId: Long) {
+    override fun onDeclineFriendRequest(userId: Long) {
         viewModelScope.launch {
             _isProcessing.value = true
 
@@ -156,7 +156,7 @@ class FriendsListViewModel(
      *
      * @param userId ID пользователя
      */
-    fun onFriendClick(userId: Long) {
+    override fun onFriendClick(userId: Long) {
         logger.i(TAG, "Нажатие на друга: userId=$userId")
     }
 }

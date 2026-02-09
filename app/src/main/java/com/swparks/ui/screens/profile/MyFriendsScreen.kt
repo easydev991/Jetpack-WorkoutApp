@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -31,10 +30,11 @@ import com.swparks.R
 import com.swparks.data.model.User
 import com.swparks.ui.ds.FriendRequestData
 import com.swparks.ui.ds.FriendRequestRowView
+import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.SectionView
 import com.swparks.ui.ds.UserRowView
 import com.swparks.ui.state.FriendsListUiState
-import com.swparks.ui.viewmodel.FriendsListViewModel
+import com.swparks.ui.viewmodel.IFriendsListViewModel
 
 /**
  * Экран списка друзей текущего пользователя
@@ -48,7 +48,7 @@ import com.swparks.ui.viewmodel.FriendsListViewModel
 @Composable
 fun MyFriendsScreen(
     modifier: Modifier = Modifier,
-    viewModel: FriendsListViewModel,
+    viewModel: IFriendsListViewModel,
     onBackClick: () -> Unit,
     parentPaddingValues: PaddingValues
 ) {
@@ -109,9 +109,7 @@ fun MyFriendsScreenContent(
         ) {
             when (uiState) {
                 is FriendsListUiState.Loading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    LoadingOverlayView()
                 }
 
                 is FriendsListUiState.Error -> {
@@ -135,11 +133,7 @@ fun MyFriendsScreenContent(
                         )
                         // Индикатор загрузки поверх при обработке запроса
                         if (isProcessing) {
-                            CircularProgressIndicator(
-                                modifier = Modifier
-                                    .align(Alignment.Center)
-                                    .matchParentSize()
-                            )
+                            LoadingOverlayView()
                         }
                     }
                 }

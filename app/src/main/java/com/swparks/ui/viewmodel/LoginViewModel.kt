@@ -38,26 +38,26 @@ class LoginViewModel(
     private val logger: Logger,
     private val loginUseCase: ILoginUseCase,
     private val resetPasswordUseCase: IResetPasswordUseCase
-) : ViewModel() {
+) : ViewModel(), ILoginViewModel {
 
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
-    val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+    override val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
     private val _loginError = MutableStateFlow<String?>(null)
-    val loginErrorState: StateFlow<String?> = _loginError.asStateFlow()
+    override val loginErrorState: StateFlow<String?> = _loginError.asStateFlow()
 
 
     private val _resetError = MutableStateFlow<String?>(null)
-    val resetErrorState: StateFlow<String?> = _resetError.asStateFlow()
+    override val resetErrorState: StateFlow<String?> = _resetError.asStateFlow()
 
     // Добавляем канал для одноразовых событий
     private val _loginEvents = Channel<LoginEvent>(Channel.BUFFERED)
-    val loginEvents = _loginEvents.receiveAsFlow()
+    override val loginEvents = _loginEvents.receiveAsFlow()
 
     private val _login = mutableStateOf("")
     private val _password = mutableStateOf("")
 
-    val credentials: LoginCredentials
+    override val credentials: LoginCredentials
         get() = LoginCredentials(
             login = _login.value,
             password = _password.value
@@ -69,7 +69,7 @@ class LoginViewModel(
      *
      * @param value Новый логин пользователя
      */
-    fun onLoginChange(value: String) {
+    override fun onLoginChange(value: String) {
         _login.value = value
         clearErrors()
     }
@@ -80,7 +80,7 @@ class LoginViewModel(
      *
      * @param value Новый пароль пользователя
      */
-    fun onPasswordChange(value: String) {
+    override fun onPasswordChange(value: String) {
         _password.value = value
         clearErrors()
     }
@@ -95,7 +95,7 @@ class LoginViewModel(
      * ВАЖНО: Этот метод выполняет ТОЛЬКО авторизацию и сохраняет токен.
      * Загрузка данных пользователя выполняется в ProfileViewModel при открытии профиля.
      */
-    fun login() {
+    override fun login() {
         viewModelScope.launch {
             _uiState.value = LoginUiState.Loading
 
@@ -125,7 +125,7 @@ class LoginViewModel(
      * При успешном восстановлении отправляет событие LoginEvent.ResetSuccess через канал.
      * При ошибке восстановления сохраняет ошибку в resetError для отображения под полем логина.
      */
-    fun resetPassword() {
+    override fun resetPassword() {
         if (!credentials.canRestorePassword) {
             return
         }
@@ -156,7 +156,7 @@ class LoginViewModel(
      * Очищает все ошибки (loginError и resetError).
      * Возвращает состояние UI в Idle.
      */
-    fun clearErrors() {
+    override fun clearErrors() {
         _loginError.value = null
         _resetError.value = null
     }
@@ -171,7 +171,7 @@ class LoginViewModel(
      *
      * Это предотвращает повторное использование старых данных и авто-логин при повторном открытии.
      */
-    fun resetForNewSession() {
+    override fun resetForNewSession() {
         // Сбросить учетные данные
         _login.value = ""
         _password.value = ""

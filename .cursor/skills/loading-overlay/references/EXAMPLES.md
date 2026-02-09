@@ -111,11 +111,7 @@ fun MyFriendsScreenContent(
                             enabled = !isProcessing
                         )
                         if (isProcessing) {
-                            CircularProgressIndicator(
-                                modifier = Modifier
-                                    .align(Alignment.Center)
-                                    .matchParentSize()
-                            )
+                            LoadingOverlayView()
                         }
                     }
                 }
@@ -284,17 +280,13 @@ fun SaveButton(
 
 ## Ключевые моменты реализации
 
-### 1. Box с fillMaxSize и matchParentSize()
+### 1. Box с fillMaxSize и LoadingOverlayView
 
 ```kotlin
 Box(modifier = Modifier.fillMaxSize()) {
     Content(enabled = !isProcessing)
     if (isProcessing) {
-        CircularProgressIndicator(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .matchParentSize()  // Только размер родителя, не всего экрана
-        )
+        LoadingOverlayView()  // Автоматически занимает размер родителя и блокирует жесты
     }
 }
 ```

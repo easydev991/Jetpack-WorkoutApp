@@ -24,18 +24,19 @@ import com.swparks.ui.ds.ErrorContentView
 import com.swparks.ui.ds.EventRowData
 import com.swparks.ui.ds.EventRowView
 import com.swparks.ui.ds.LoadingOverlayView
+import com.swparks.ui.viewmodel.IEventsViewModel
 import com.swparks.util.DateFormatter
 
 @Composable
 fun EventsScreen(
-    viewModel: EventsViewModel = viewModel(factory = EventsViewModel.Factory),
-    contentModifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: IEventsViewModel = viewModel<EventsViewModel>(factory = EventsViewModel.Factory),
 ) {
     when (val uiState = viewModel.eventsUIState) {
         is EventsUIState.Loading -> LoadingOverlayView()
         is EventsUIState.Success -> PastEventsScreen(
             events = uiState.events,
-            modifier = contentModifier
+            modifier = modifier
         )
 
         is EventsUIState.Error -> ErrorContentView(

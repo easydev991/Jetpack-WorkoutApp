@@ -464,7 +464,7 @@ class JournalEntriesScreenTest {
 
         // Then - Кликаем на кнопку меню записи (кнопка с testTag "MenuButton")
         composeTestRule
-            .onNodeWithTag("MenuButton")
+            .onNodeWithTag("MenuButton", useUnmergedTree = true)
             .performClick()
 
         // Кликаем на действие Delete в открытом меню (по тексту элемента меню)
@@ -680,19 +680,13 @@ class JournalEntriesScreenTest {
             .onNodeWithText("Вторая запись (можно удалить)")
             .assertIsDisplayed()
 
-        // Кликаем на кнопку меню первой записи
-        composeTestRule
-            .onNodeWithTag("JournalEntry_${firstEntryId}")
-            .performClick()
-
         // Проверяем, что для первой записи кнопка "Удалить" отсутствует в меню
-        // Открываем меню
+        // Открываем меню первой записи - кликаем на текст имени автора первой записи
         composeTestRule
-            .onNodeWithTag("MenuButton", useUnmergedTree = true)
+            .onNodeWithText("Иван Иванов")
             .performClick()
 
         // Проверяем, что кнопка удаления не отображается для первой записи
-        // (тест просто проверяет, что элемент не найден)
         composeTestRule
             .onNodeWithText(context.getString(R.string.delete))
             .assertDoesNotExist()

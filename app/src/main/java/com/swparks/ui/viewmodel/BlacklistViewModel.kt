@@ -30,7 +30,7 @@ class BlacklistViewModel(
     private val swRepository: SWRepository,
     private val logger: Logger,
     private val errorReporter: ErrorReporter
-) : ViewModel() {
+) : ViewModel(), IBlacklistViewModel {
 
     private companion object {
         private const val TAG = "BlacklistViewModel"
@@ -38,27 +38,27 @@ class BlacklistViewModel(
 
     // UI State
     private val _uiState = MutableStateFlow<BlacklistUiState>(BlacklistUiState.Loading)
-    val uiState: StateFlow<BlacklistUiState> = _uiState.asStateFlow()
+    override val uiState: StateFlow<BlacklistUiState> = _uiState.asStateFlow()
 
     // Элемент для удаления из черного списка
     private val _itemToRemove = MutableStateFlow<User?>(null)
-    val itemToRemove: StateFlow<User?> = _itemToRemove.asStateFlow()
+    override val itemToRemove: StateFlow<User?> = _itemToRemove.asStateFlow()
 
     // Состояние диалога подтверждения удаления
     private val _showRemoveDialog = MutableStateFlow(false)
-    val showRemoveDialog: StateFlow<Boolean> = _showRemoveDialog.asStateFlow()
+    override val showRemoveDialog: StateFlow<Boolean> = _showRemoveDialog.asStateFlow()
 
     // Индикатор загрузки при удалении из черного списка
     private val _isRemoving = MutableStateFlow(false)
-    val isRemoving: StateFlow<Boolean> = _isRemoving.asStateFlow()
+    override val isRemoving: StateFlow<Boolean> = _isRemoving.asStateFlow()
 
     // Состояние алерта об успешной разблокировке
     private val _showSuccessAlert = MutableStateFlow(false)
-    val showSuccessAlert: StateFlow<Boolean> = _showSuccessAlert.asStateFlow()
+    override val showSuccessAlert: StateFlow<Boolean> = _showSuccessAlert.asStateFlow()
 
     // Имя разблокированного пользователя для алерта
     private val _unblockedUserName = MutableStateFlow<String?>(null)
-    val unblockedUserName: StateFlow<String?> = _unblockedUserName.asStateFlow()
+    override val unblockedUserName: StateFlow<String?> = _unblockedUserName.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -80,7 +80,7 @@ class BlacklistViewModel(
      *
      * @param user Пользователь для удаления
      */
-    fun showRemoveDialog(user: User) {
+    override fun showRemoveDialog(user: User) {
         _itemToRemove.value = user
         _showRemoveDialog.value = true
     }
@@ -90,7 +90,7 @@ class BlacklistViewModel(
      *
      * @param user Пользователь для удаления
      */
-    fun removeFromBlacklist(user: User) {
+    override fun removeFromBlacklist(user: User) {
         viewModelScope.launch {
             try {
                 // Закрываем диалог перед началом операции, чтобы индикатор загрузки был виден
@@ -148,7 +148,7 @@ class BlacklistViewModel(
     /**
      * Отмена удаления пользователя из черного списка
      */
-    fun cancelRemove() {
+    override fun cancelRemove() {
         _showRemoveDialog.value = false
         _itemToRemove.value = null
     }
@@ -156,7 +156,7 @@ class BlacklistViewModel(
     /**
      * Закрытие алерта об успешной разблокировке
      */
-    fun dismissSuccessAlert() {
+    override fun dismissSuccessAlert() {
         _showSuccessAlert.value = false
         _unblockedUserName.value = null
     }

@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,10 +29,11 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
 import com.swparks.data.model.User
+import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.UserRowView
 import com.swparks.ui.model.BlacklistAction
 import com.swparks.ui.state.BlacklistUiState
-import com.swparks.ui.viewmodel.BlacklistViewModel
+import com.swparks.ui.viewmodel.IBlacklistViewModel
 
 /**
  * Экран черного списка текущего пользователя
@@ -47,7 +47,7 @@ import com.swparks.ui.viewmodel.BlacklistViewModel
 @Composable
 fun MyBlacklistScreen(
     modifier: Modifier = Modifier,
-    viewModel: BlacklistViewModel,
+    viewModel: IBlacklistViewModel,
     onBackClick: () -> Unit,
     parentPaddingValues: PaddingValues
 ) {
@@ -121,9 +121,7 @@ fun MyBlacklistScreenContent(
         ) {
             when (uiState) {
                 is BlacklistUiState.Loading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    LoadingOverlayView()
                 }
 
                 is BlacklistUiState.Error -> {
@@ -143,11 +141,7 @@ fun MyBlacklistScreenContent(
                         )
                         // Индикатор загрузки при обновлении данных или удалении из черного списка
                         if (uiState.isLoading || isRemoving) {
-                            CircularProgressIndicator(
-                                modifier = Modifier
-                                    .align(Alignment.Center)
-                                    .matchParentSize()
-                            )
+                            LoadingOverlayView()
                         }
                     }
                 }

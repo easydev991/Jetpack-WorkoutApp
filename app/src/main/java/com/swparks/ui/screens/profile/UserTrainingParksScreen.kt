@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,9 +25,10 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
 import com.swparks.data.model.Park
+import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.screen.components.ParksListView
+import com.swparks.ui.viewmodel.IUserTrainingParksViewModel
 import com.swparks.ui.viewmodel.UserTrainingParksUiState
-import com.swparks.ui.viewmodel.UserTrainingParksViewModel
 
 /**
  * Экран для отображения списка площадок, на которых тренируется пользователь
@@ -42,7 +42,7 @@ import com.swparks.ui.viewmodel.UserTrainingParksViewModel
 @Composable
 fun UserTrainingParksScreen(
     modifier: Modifier = Modifier,
-    viewModel: UserTrainingParksViewModel,
+    viewModel: IUserTrainingParksViewModel,
     onBackClick: () -> Unit,
     parentPaddingValues: androidx.compose.foundation.layout.PaddingValues
 ) {
@@ -101,21 +101,11 @@ private fun TopAppBar(onBackClick: () -> Unit) {
 @Composable
 private fun UserTrainingParksContent(uiState: UserTrainingParksUiState) {
     when (uiState) {
-        UserTrainingParksUiState.Loading -> LoadingContent()
+        UserTrainingParksUiState.Loading -> LoadingOverlayView()
 
         is UserTrainingParksUiState.Success -> SuccessContent(uiState.parks)
 
         is UserTrainingParksUiState.Error -> ErrorContent(uiState.message)
-    }
-}
-
-@Composable
-private fun LoadingContent() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator()
     }
 }
 

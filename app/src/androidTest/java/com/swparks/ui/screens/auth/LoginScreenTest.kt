@@ -13,8 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
-import com.swparks.ui.viewmodel.LoginViewModel
-import com.swparks.util.NoOpLogger
+import com.swparks.ui.viewmodel.FakeLoginViewModel
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -42,22 +41,10 @@ class LoginScreenTest {
      * Настраивает LoginScreen для тестирования.
      */
     private fun setContent(
+        viewModel: FakeLoginViewModel = FakeLoginViewModel(),
         onDismiss: () -> Unit = {},
         onLoginSuccess: (userId: Long) -> Unit = {}
     ) {
-        // Для инструментальных тестов создаем LoginViewModel с NoOpLogger
-        // и используем фабричный метод, но с тестовыми зависимостями
-        val application =
-            androidx.test.core.app.ApplicationProvider.getApplicationContext<com.swparks.JetpackWorkoutApplication>()
-        val container = application.container
-
-        // Создаем ViewModel с реальными зависимостями, но с NoOpLogger
-        val viewModel = LoginViewModel(
-            logger = NoOpLogger(),
-            loginUseCase = container.loginUseCase,
-            resetPasswordUseCase = container.resetPasswordUseCase,
-        )
-
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
                 LoginScreen(

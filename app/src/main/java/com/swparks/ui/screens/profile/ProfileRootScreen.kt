@@ -51,15 +51,15 @@ import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.ds.UserProfileCardView
 import com.swparks.ui.ds.UserProfileData
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
+import com.swparks.ui.viewmodel.IProfileViewModel
 import com.swparks.ui.viewmodel.ProfileUiState
-import com.swparks.ui.viewmodel.ProfileViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileRootScreen(
     modifier: Modifier = Modifier,
-    viewModel: ProfileViewModel,
+    viewModel: IProfileViewModel,
     appContainer: AppContainer? = null,
     appState: AppState? = null,
     onShowLoginSheet: () -> Unit = {}

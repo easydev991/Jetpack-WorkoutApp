@@ -1,8 +1,5 @@
 package com.swparks.ui.screens.events
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -11,8 +8,11 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.JetpackWorkoutApplication
 import com.swparks.data.model.Event
 import com.swparks.data.repository.SWRepository
+import com.swparks.ui.viewmodel.IEventsViewModel
 import com.swparks.util.AppError
 import com.swparks.util.ErrorReporter
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
@@ -35,9 +35,9 @@ sealed interface EventsUIState {
 class EventsViewModel(
     private val swRepository: SWRepository,
     private val errorReporter: ErrorReporter,
-) : ViewModel() {
-    var eventsUIState: EventsUIState by mutableStateOf(EventsUIState.Loading)
-        private set
+) : ViewModel(), IEventsViewModel {
+    private val _eventsUIState = MutableStateFlow<EventsUIState>(EventsUIState.Loading)
+    override val eventsUIState: StateFlow<EventsUIState> = _eventsUIState
 
     init {
         getPastEvents()
@@ -50,10 +50,10 @@ class EventsViewModel(
      * При ошибке сети или сервера отправляет ошибку через ErrorReporter
      * и сохраняет сообщение об ошибке в UI state.
      */
-    fun getPastEvents() {
+    override fun getPastEvents() {
         viewModelScope.launch {
-            eventsUIState = EventsUIState.Loading
-            eventsUIState = try {
+            _eventsUIState.value = EventsUIState.Loading
+            _eventsUIState.value = try {
                 val pastEvents = swRepository.getPastEvents()
                 EventsUIState.Success(events = pastEvents)
             } catch (e: IOException) {

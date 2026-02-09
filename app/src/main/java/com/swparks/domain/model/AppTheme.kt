@@ -1,5 +1,9 @@
 package com.swparks.domain.model
 
+import com.swparks.domain.model.AppTheme.DARK
+import com.swparks.domain.model.AppTheme.LIGHT
+import com.swparks.domain.model.AppTheme.SYSTEM
+
 
 /**
  * Перечисление доступных тем приложения.

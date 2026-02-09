@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 class ThemeIconViewModel(
     private val dataStore: AppSettingsDataStore,
     private val iconManager: IconManager,
-) : ViewModel() {
+) : ViewModel(), IThemeIconViewModel {
     companion object {
         private const val STATE_TIMEOUT_MS = 5000L
         private const val TAG = "ThemeIconViewModel"
@@ -54,7 +54,7 @@ class ThemeIconViewModel(
     }
 
     /** UI State экрана. Объединяет поток настроек из DataStore. */
-    val uiState: StateFlow<ThemeIconUiState> =
+    override val uiState: StateFlow<ThemeIconUiState> =
         combine(
             dataStore.theme,
             dataStore.useDynamicColors,
@@ -77,7 +77,7 @@ class ThemeIconViewModel(
      *
      * @param theme Новая тема приложения
      */
-    fun updateTheme(theme: AppTheme) {
+    override fun updateTheme(theme: AppTheme) {
         viewModelScope.launch { dataStore.setTheme(theme) }
     }
 
@@ -86,7 +86,7 @@ class ThemeIconViewModel(
      *
      * @param useDynamicColors Использовать динамические цвета
      */
-    fun updateDynamicColors(useDynamicColors: Boolean) {
+    override fun updateDynamicColors(useDynamicColors: Boolean) {
         viewModelScope.launch {
             dataStore.setUseDynamicColors(useDynamicColors)
             Log.d(TAG, "Динамические цвета: $useDynamicColors")
@@ -98,7 +98,7 @@ class ThemeIconViewModel(
      *
      * @param icon Новая иконка приложения
      */
-    fun updateIcon(icon: AppIcon) {
+    override fun updateIcon(icon: AppIcon) {
         viewModelScope.launch {
             try {
                 // Сохраняем выбор в DataStore

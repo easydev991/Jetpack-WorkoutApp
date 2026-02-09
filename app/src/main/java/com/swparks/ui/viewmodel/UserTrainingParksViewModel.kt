@@ -36,7 +36,7 @@ class UserTrainingParksViewModel(
     private val userId: Long,
     private val logger: Logger,
     private val errorReporter: ErrorReporter,
-) : ViewModel() {
+) : ViewModel(), IUserTrainingParksViewModel {
 
     private companion object {
         private const val TAG = "UserTrainingParksViewModel"
@@ -45,11 +45,11 @@ class UserTrainingParksViewModel(
     // UI State
     private val _uiState =
         MutableStateFlow<UserTrainingParksUiState>(UserTrainingParksUiState.Loading)
-    val uiState: StateFlow<UserTrainingParksUiState> = _uiState.asStateFlow()
+    override val uiState: StateFlow<UserTrainingParksUiState> = _uiState.asStateFlow()
 
     // Состояние обновления данных (pull-to-refresh)
     private val _isRefreshing = MutableStateFlow(false)
-    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+    override val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     init {
         loadParks()
@@ -77,7 +77,7 @@ class UserTrainingParksViewModel(
     /**
      * Обновляет список площадок для pull-to-refresh
      */
-    fun refreshParks() {
+    override fun refreshParks() {
         viewModelScope.launch {
             try {
                 _isRefreshing.update { true }

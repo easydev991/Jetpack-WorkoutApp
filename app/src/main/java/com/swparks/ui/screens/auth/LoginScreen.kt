@@ -47,7 +47,7 @@ import com.swparks.ui.ds.SWTextField
 import com.swparks.ui.ds.TextFieldConfig
 import com.swparks.ui.state.LoginEvent
 import com.swparks.ui.state.LoginUiState
-import com.swparks.ui.viewmodel.LoginViewModel
+import com.swparks.ui.viewmodel.ILoginViewModel
 
 /**
  * Экран авторизации.
@@ -67,7 +67,7 @@ import com.swparks.ui.viewmodel.LoginViewModel
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    viewModel: LoginViewModel,
+    viewModel: ILoginViewModel,
     onDismiss: () -> Unit = {},
     onLoginSuccess: (userId: Long) -> Unit = {},
     onResetSuccess: (String) -> Unit = {} // Новый параметр
@@ -213,7 +213,7 @@ private fun LoginModalAppBar(
 /** Контент экрана авторизации. */
 @Composable
 private fun LoginContent(
-    viewModel: LoginViewModel,
+    viewModel: ILoginViewModel,
     loginError: String?,
     resetError: String?,
     isLoading: Boolean,
@@ -257,7 +257,7 @@ private fun LoginContent(
 /** Колонка с текстовыми полями. */
 @Composable
 private fun LoginFieldsColumn(
-    viewModel: LoginViewModel,
+    viewModel: ILoginViewModel,
     loginError: String?,
     resetError: String?,
     isLoading: Boolean,
@@ -294,7 +294,7 @@ private fun LoginFieldsColumn(
 /** Колонка с кнопками. */
 @Composable
 private fun ButtonsColumn(
-    viewModel: LoginViewModel,
+    viewModel: ILoginViewModel,
     loginError: String?,
     isLoading: Boolean,
     onResetPasswordClick: () -> Unit
@@ -314,7 +314,7 @@ private fun ButtonsColumn(
 
 /** Обработчик клика на кнопку восстановления пароля. */
 private fun showForgotPasswordAlertIfNeeded(
-    viewModel: LoginViewModel,
+    viewModel: ILoginViewModel,
     screenState: LoginScreenState
 ) {
     if (viewModel.credentials.login.isEmpty()) {
@@ -428,7 +428,7 @@ private fun ResetPasswordButton(
 private fun HandleLoginErrorsOnly(
     uiState: LoginUiState,
     screenState: LoginScreenState,
-    viewModel: LoginViewModel
+    viewModel: ILoginViewModel
 ) {
     LaunchedEffect(uiState) {
         when (uiState) {

@@ -9,6 +9,7 @@
     <string name="more">More</string>
     <string name="settings">Settings</string>
     <string name="loading">Loading…</string>
+    <string name="loading_content_description">Please wait, loading</string>
 
     <string name="auth_invitation">Log in to have access to all features</string>
     <string name="authorization">Authorization</string>

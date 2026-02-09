@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.swparks.ui.ds.disableAllGestures
+import com.swparks.ui.viewmodel.ILoginViewModel
 import com.swparks.ui.viewmodel.LoginViewModel
 import kotlinx.coroutines.launch
 
@@ -48,8 +49,9 @@ fun LoginSheetHost(
     var allowHide by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    // Создаем ViewModel на уровне хоста
-    val loginViewModel: LoginViewModel = viewModel(factory = LoginViewModel.Factory)
+    // Создаем ViewModel на уровне хоста с явным указанием типа
+    val loginViewModel: ILoginViewModel =
+        viewModel<LoginViewModel>(factory = LoginViewModel.Factory)
     val uiState by loginViewModel.uiState.collectAsState()
 
     // Сбрасываем состояние при каждом открытии sheet

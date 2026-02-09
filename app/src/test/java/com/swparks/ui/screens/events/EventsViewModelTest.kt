@@ -75,9 +75,9 @@ class EventsViewModelTest {
         // После init состояние может быть Loading или уже Success/Error в зависимости от времени
         // выполнения
         assertTrue(
-            viewModel.eventsUIState is EventsUIState.Loading ||
-                    viewModel.eventsUIState is EventsUIState.Success ||
-                    viewModel.eventsUIState is EventsUIState.Error
+            viewModel.eventsUIState.value is EventsUIState.Loading ||
+                    viewModel.eventsUIState.value is EventsUIState.Success ||
+                    viewModel.eventsUIState.value is EventsUIState.Error
         )
         coVerify { mockRepository.getPastEvents() }
     }
@@ -96,8 +96,8 @@ class EventsViewModelTest {
         advanceUntilIdle()
 
         // Then
-        assertTrue(viewModel.eventsUIState is EventsUIState.Success)
-        val successState = viewModel.eventsUIState as EventsUIState.Success
+        assertTrue(viewModel.eventsUIState.value is EventsUIState.Success)
+        val successState = viewModel.eventsUIState.value as EventsUIState.Success
         assertEquals(mockEventsList, successState.events)
     }
 
@@ -115,8 +115,8 @@ class EventsViewModelTest {
         advanceUntilIdle()
 
         // Then
-        assertTrue(viewModel.eventsUIState is EventsUIState.Error)
-        val errorState = viewModel.eventsUIState as EventsUIState.Error
+        assertTrue(viewModel.eventsUIState.value is EventsUIState.Error)
+        val errorState = viewModel.eventsUIState.value as EventsUIState.Error
         assertEquals("Network error", errorState.message)
 
         // Проверяем, что errorReporter.handleError был вызван с AppError.Network
@@ -146,8 +146,8 @@ class EventsViewModelTest {
             advanceUntilIdle()
 
             // Then
-            assertTrue(viewModel.eventsUIState is EventsUIState.Error)
-            val errorState = viewModel.eventsUIState as EventsUIState.Error
+            assertTrue(viewModel.eventsUIState.value is EventsUIState.Error)
+            val errorState = viewModel.eventsUIState.value as EventsUIState.Error
             assertEquals(null, errorState.message)
 
             // Проверяем, что errorReporter.handleError был вызван с AppError.Network
@@ -179,8 +179,8 @@ class EventsViewModelTest {
         advanceUntilIdle()
 
         // Then
-        assertTrue(viewModel.eventsUIState is EventsUIState.Error)
-        val errorState = viewModel.eventsUIState as EventsUIState.Error
+        assertTrue(viewModel.eventsUIState.value is EventsUIState.Error)
+        val errorState = viewModel.eventsUIState.value as EventsUIState.Error
         assertEquals("HTTP 404", errorState.message)
 
         // Проверяем, что errorReporter.handleError был вызван с AppError.Server
@@ -207,7 +207,7 @@ class EventsViewModelTest {
         // Первый вызов с ошибкой
         viewModel.getPastEvents()
         advanceUntilIdle()
-        assertTrue(viewModel.eventsUIState is EventsUIState.Error)
+        assertTrue(viewModel.eventsUIState.value is EventsUIState.Error)
 
         // Когда
         val mockEventsList = listOf(createMockEvent(1L))
@@ -218,8 +218,8 @@ class EventsViewModelTest {
         advanceUntilIdle()
 
         // Then
-        assertTrue(viewModel.eventsUIState is EventsUIState.Success)
-        val successState = viewModel.eventsUIState as EventsUIState.Success
+        assertTrue(viewModel.eventsUIState.value is EventsUIState.Success)
+        val successState = viewModel.eventsUIState.value as EventsUIState.Success
         assertEquals(mockEventsList, successState.events)
     }
 
@@ -236,8 +236,8 @@ class EventsViewModelTest {
         advanceUntilIdle()
 
         // Then
-        assertTrue(viewModel.eventsUIState is EventsUIState.Success)
-        val successState = viewModel.eventsUIState as EventsUIState.Success
+        assertTrue(viewModel.eventsUIState.value is EventsUIState.Success)
+        val successState = viewModel.eventsUIState.value as EventsUIState.Success
         assertEquals(emptyList<Event>(), successState.events)
     }
 }

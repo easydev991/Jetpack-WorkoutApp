@@ -34,7 +34,7 @@ import com.swparks.domain.model.AppTheme
 import com.swparks.ui.screen.components.common.RadioButton
 import com.swparks.ui.screen.components.themeicon.IconPreviewItem
 import com.swparks.ui.theme.DynamicColors
-import com.swparks.ui.viewmodel.ThemeIconViewModel
+import com.swparks.ui.viewmodel.IThemeIconViewModel
 
 /** Параметры для ThemeIconScreenContent. */
 @Suppress("DataClassContainsFunctions")
@@ -53,7 +53,7 @@ data class ThemeIconScreenParams(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemeIconScreen(
-    viewModel: ThemeIconViewModel,
+    viewModel: IThemeIconViewModel,
     onBackClick: () -> Unit,
     parentPaddingValues: PaddingValues = PaddingValues(0.dp, 0.dp),
 ) {
