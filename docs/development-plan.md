@@ -12,7 +12,7 @@
 
 - 🚧 **В активной разработке**
 - ✅ Дизайн-система: 28 компонентов готовых к использованию
-- ✅ Модели данных: 30+ моделей
+- ✅ Модели данных: 17 API моделей + 4 доменные модели + 12 UI моделей
 - ✅ API клиент SWApi: 57 endpoints
 - ✅ Архитектура безопасности токена: шифрование, интерцепторы
 - ✅ Use Cases: авторизация, справочники стран/городов
@@ -40,7 +40,11 @@
 
 #### Реализованные модели данных
 
-**30+ моделей:** User, LoginSuccess, Park, Event, Comment, Photo, FriendAction, BlacklistAction, Country, City, Gender, JournalResponse, JournalEntryResponse, DialogResponse, MessageResponse и др.
+**API модели (data/model/) - 17 файлов:** User, Park, Event, Comment, Photo, JournalResponse, JournalEntryResponse, DialogResponse, MessageResponse, City, Country, Gender, ParkType, ParkSize, EventKind, EventType, SocialUpdates, ApiFriendAction, ApiBlacklistOption
+
+**Доменные модели (domain/model/) - 4 файла:** AppIcon, AppTheme, Journal, JournalEntry
+
+**UI модели (ui/model/) - 12 файлов:** LoginCredentials, ParkForm, EventForm, MainUserForm, RegistrationRequest, ResetPasswordRequest, EditJournalSettingsRequest, FriendAction, BlacklistAction, Gender, JournalAccess, TextEntryOption
 
 #### Реализованная архитектура
 
@@ -268,17 +272,20 @@
 
 ```
 app/src/main/java/com/swparks/
-├── data/              # Data layer (repository, crypto, datetime, interceptor, serialization, database)
-├── domain/            # Domain layer (exception, usecase)
-├── model/             # Модели данных (30+)
+├── data/              # Data layer (repository, crypto, datetime, interceptor, serialization, database, model)
+│   └── model/         # API модели и DTOs (17 файлов)
+├── domain/            # Domain layer (exception, usecase, model)
+│   └── model/         # Доменные модели (4 файла)
 ├── network/           # API клиенты (SWApi - 57 endpoints)
 ├── ui/
 │   ├── ds/            # Компоненты дизайн-системы (28)
+│   ├── model/         # UI формы и запросы (12 файлов)
 │   ├── screens/       # Экраны приложения
 │   ├── viewmodel/     # ViewModels
 │   └── theme/         # Тема
 ├── navigation/        # Навигация
-└── utils/             # Утилиты
+├── util/              # Утилиты (9 файлов)
+└── utils/             # Дополнительные утилиты
 ```
 
 ### Структура тестов
