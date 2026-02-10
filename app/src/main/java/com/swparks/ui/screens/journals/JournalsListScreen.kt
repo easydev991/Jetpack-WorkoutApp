@@ -1,11 +1,12 @@
 package com.swparks.ui.screens.journals
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,6 +18,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -26,7 +28,6 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,11 +36,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.DialogProperties
 import com.swparks.R
 import com.swparks.domain.model.Journal
+import com.swparks.navigation.AppState
 import com.swparks.ui.ds.EmptyStateView
 import com.swparks.ui.ds.ErrorContentView
 import com.swparks.ui.ds.JournalAction
@@ -47,6 +52,9 @@ import com.swparks.ui.ds.JournalRowData
 import com.swparks.ui.ds.JournalRowMode
 import com.swparks.ui.ds.JournalRowView
 import com.swparks.ui.ds.LoadingOverlayView
+import com.swparks.ui.model.JournalAccess
+import com.swparks.ui.model.TextEntryMode
+import com.swparks.ui.screens.common.TextEntrySheetHost
 import com.swparks.ui.state.JournalsUiState
 import com.swparks.ui.viewmodel.IJournalsViewModel
 import com.swparks.util.DateFormatter
@@ -55,6 +63,7 @@ import com.swparks.util.DateFormatter
  * Экран списка дневников пользователя
  *
  * @param modifier Модификатор
+ * @param appState Состояние приложения для проверки авторизации
  * @param userId Идентификатор пользователя
  * @param viewModel ViewModel для управления состоянием экрана
  * @param onBackClick Callback для навигации назад
@@ -65,17 +74,14 @@ import com.swparks.util.DateFormatter
 @Composable
 fun JournalsListScreen(
     modifier: Modifier = Modifier,
+    appState: AppState,
     userId: Long,
     viewModel: IJournalsViewModel,
     onBackClick: () -> Unit,
-    onJournalClick: (journalId: Long, journalTitle: String) -> Unit,
+    onJournalClick: (journalId: Long, journalOwnerId: Long, journalTitle: String, commentAccess: String) -> Unit,
     parentPaddingValues: PaddingValues
 ) {
-    // Перезапуск загрузки при смене пользователя
-    LaunchedEffect(userId) {
-        Log.i("JournalsListScreen", "Перезапуск загрузки для пользователя: $userId")
-    }
-
+    val layoutDirection = LocalLayoutDirection.current
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isDeleting by viewModel.isDeleting.collectAsState()
@@ -84,8 +90,12 @@ fun JournalsListScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var journalToDelete by remember { mutableStateOf<Journal?>(null) }
 
+    // Состояние для TextEntrySheet
+    var showTextEntrySheet by remember { mutableStateOf(false) }
+    var textEntryMode by remember { mutableStateOf<TextEntryMode?>(null) }
+
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.padding(bottom = parentPaddingValues.calculateBottomPadding()),
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -101,12 +111,41 @@ fun JournalsListScreen(
                 }
             )
         },
-        contentWindowInsets = WindowInsets(0, 0, 0, 0)
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        floatingActionButton = {
+            // Показывать FAB только если текущий пользователь авторизован И открывает свой профиль
+            when (uiState) {
+                is JournalsUiState.Content -> {
+                    val currentUser = appState.currentUser
+                    if (!isDeleting && currentUser != null && userId == currentUser.id) {
+                        FloatingActionButton(
+                            onClick = {
+                                // Открыть bottom sheet с режимом создания дневника
+                                textEntryMode = TextEntryMode.NewJournal(userId)
+                                showTextEntrySheet = true
+                            },
+                            modifier = Modifier.testTag("CreateJournalFAB")
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_add_entry),
+                                contentDescription = stringResource(R.string.fab_create_journal_description)
+                            )
+                        }
+                    }
+                }
+
+                else -> {}
+            }
+        }
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(parentPaddingValues)
+                .padding(
+                    start = parentPaddingValues.calculateStartPadding(layoutDirection),
+                    top = parentPaddingValues.calculateTopPadding(),
+                    end = parentPaddingValues.calculateEndPadding(layoutDirection)
+                )
                 .padding(innerPadding)
         ) {
             when (uiState) {
@@ -132,6 +171,11 @@ fun JournalsListScreen(
                         onDeleteClick = { journal ->
                             journalToDelete = journal
                             showDeleteDialog = true
+                        },
+                        onCreateJournalClick = {
+                            // Открыть bottom sheet для создания дневника
+                            textEntryMode = TextEntryMode.NewJournal(userId)
+                            showTextEntrySheet = true
                         }
                     )
                 }
@@ -150,6 +194,24 @@ fun JournalsListScreen(
                 }
             )
         }
+
+        // TextEntrySheet для создания дневника
+        if (showTextEntrySheet && textEntryMode != null) {
+            TextEntrySheetHost(
+                show = showTextEntrySheet,
+                mode = textEntryMode!!,
+                onDismissed = {
+                    showTextEntrySheet = false
+                    textEntryMode = null
+                },
+                onSendSuccess = {
+                    // Обновить список дневников после успешного создания
+                    showTextEntrySheet = false
+                    textEntryMode = null
+                    viewModel.loadJournals()
+                }
+            )
+        }
     }
 }
 
@@ -163,8 +225,9 @@ private fun ContentScreen(
     isRefreshing: Boolean,
     isDeleting: Boolean,
     onRefresh: () -> Unit,
-    onJournalClick: (journalId: Long, journalTitle: String) -> Unit,
-    onDeleteClick: (Journal) -> Unit
+    onJournalClick: (journalId: Long, journalOwnerId: Long, journalTitle: String, commentAccess: String) -> Unit,
+    onDeleteClick: (Journal) -> Unit,
+    onCreateJournalClick: () -> Unit = {}
 ) {
     val pullRefreshState = rememberPullToRefreshState()
 
@@ -189,9 +252,7 @@ private fun ContentScreen(
                 text = stringResource(R.string.journals_empty),
                 buttonTitle = stringResource(R.string.create_journal),
                 enabled = !isRefreshing && !isDeleting,
-                onButtonClick = {
-                    Log.i("JournalsListScreen", "Нажата кнопка: создать дневник")
-                }
+                onButtonClick = onCreateJournalClick
             )
         } else {
             // Список дневников
@@ -219,7 +280,7 @@ private fun ContentScreen(
 private fun JournalsList(
     journals: List<Journal>,
     enabled: Boolean = true,
-    onJournalClick: (journalId: Long, journalTitle: String) -> Unit = { _, _ -> },
+    onJournalClick: (journalId: Long, journalOwnerId: Long, journalTitle: String, commentAccess: String) -> Unit = { _, _, _, _ -> },
     onDeleteClick: (Journal) -> Unit = { }
 ) {
     val context = LocalContext.current
@@ -241,7 +302,8 @@ private fun JournalsList(
                     .fillMaxWidth()
                     .clickable(enabled = enabled) {
                         val journalTitle = journal.title ?: ""
-                        onJournalClick(journal.id, journalTitle)
+                        val commentAccess = journal.commentAccess?.name ?: JournalAccess.NOBODY.name
+                        onJournalClick(journal.id, journal.ownerId!!, journalTitle, commentAccess)
                     }
             ) {
                 JournalRowView(
@@ -260,10 +322,6 @@ private fun JournalsList(
                             JournalAction.DELETE
                         ),
                         onClickAction = { action ->
-                            Log.i(
-                                "JournalsListScreen",
-                                "Действие: $action для дневника: ${journal.id}"
-                            )
                             if (action == JournalAction.DELETE) {
                                 onDeleteClick(journal)
                             }

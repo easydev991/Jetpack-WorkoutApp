@@ -37,7 +37,7 @@ class TextEntryViewModel(
     private val context: Context
 ) : ViewModel(), ITextEntryViewModel {
 
-    private val _uiState = MutableStateFlow(TextEntryUiState(mode))
+    private val _uiState = MutableStateFlow(TextEntryUiState(mode, text = getInitialText(mode)))
     override val uiState: StateFlow<TextEntryUiState> = _uiState.asStateFlow()
 
     private val _events = Channel<TextEntryEvent>(Channel.BUFFERED)
@@ -83,6 +83,11 @@ class TextEntryViewModel(
                 trimmedText != editInfo.oldEntry.trim()
             }
 
+            is TextEntryMode.NewForPark,
+            is TextEntryMode.NewForEvent,
+            is TextEntryMode.NewForJournal,
+            is TextEntryMode.NewJournal -> true
+
             else -> true
         }
 
@@ -117,6 +122,11 @@ class TextEntryViewModel(
                     mode.ownerId,
                     mode.journalId,
                     trimmedText
+                )
+
+                is TextEntryMode.NewJournal -> textEntryUseCase.createJournal(
+                    userId = mode.userId,
+                    title = trimmedText
                 )
 
                 is TextEntryMode.EditPark -> textEntryUseCase.editParkComment(
@@ -172,7 +182,28 @@ class TextEntryViewModel(
      * Сбрасывает состояние ViewModel для новой сессии (при открытии sheet).
      */
     override fun resetState() {
-        _uiState.value = TextEntryUiState(mode)
+        _uiState.value = TextEntryUiState(mode, text = getInitialText(mode))
+    }
+
+    /**
+     * Извлекает начальный текст из режима редактирования.
+     *
+     * @return Текст для предзаполнения поля при редактировании, пустая строка для создания
+     */
+    private fun getInitialText(mode: TextEntryMode): String = when (mode) {
+        is TextEntryMode.EditPark,
+        is TextEntryMode.EditEvent,
+        is TextEntryMode.EditJournalEntry -> {
+            val editInfo = when (mode) {
+                is TextEntryMode.EditPark -> mode.editInfo
+                is TextEntryMode.EditEvent -> mode.editInfo
+                is TextEntryMode.EditJournalEntry -> mode.editInfo
+                else -> return ""
+            }
+            editInfo.oldEntry
+        }
+
+        else -> ""
     }
 
     /**
@@ -184,7 +215,8 @@ class TextEntryViewModel(
         return when (mode) {
             is TextEntryMode.NewForPark,
             is TextEntryMode.NewForEvent,
-            is TextEntryMode.NewForJournal -> trimmedText.isNotEmpty()
+            is TextEntryMode.NewForJournal,
+            is TextEntryMode.NewJournal -> trimmedText.isNotEmpty()
 
             is TextEntryMode.EditPark,
             is TextEntryMode.EditEvent,

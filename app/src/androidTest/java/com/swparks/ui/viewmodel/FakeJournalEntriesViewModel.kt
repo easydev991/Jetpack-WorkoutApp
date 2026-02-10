@@ -1,5 +1,6 @@
 package com.swparks.ui.viewmodel
 
+import com.swparks.domain.model.JournalEntry
 import com.swparks.ui.state.JournalEntriesUiState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +17,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 class FakeJournalEntriesViewModel(
     override val uiState: StateFlow<JournalEntriesUiState>,
     override val isRefreshing: StateFlow<Boolean>,
-    override val isDeleting: StateFlow<Boolean> = MutableStateFlow(false)
+    override val isDeleting: StateFlow<Boolean> = MutableStateFlow(false),
+    override val canCreateEntry: StateFlow<Boolean> = MutableStateFlow(false)
 ) : IJournalEntriesViewModel {
 
     // Поток событий для тестирования
@@ -54,5 +56,22 @@ class FakeJournalEntriesViewModel(
     override suspend fun canDeleteEntry(entryId: Long): Boolean {
         // Заглушка - всегда возвращает true в тестах
         return true
+    }
+
+    /**
+     * Функция-заглушка для обновления списка.
+     * В тестах состояние устанавливается напрямую через конструктор.
+     */
+    override fun refresh() {
+        // Заглушка - не делает ничего в тестах
+    }
+
+    /**
+     * Функция-заглушка для проверки возможности редактирования записи.
+     * В тестах возвращает true если у записи есть автор.
+     */
+    override fun canEditEntry(entry: JournalEntry): Boolean {
+        // Заглушка - проверяет, что у записи есть автор
+        return entry.authorId != null
     }
 }

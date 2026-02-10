@@ -339,10 +339,11 @@ interface SWApi {
     ): Response<Unit>
 
     // Создать новый дневник
+    @FormUrlEncoded
     @POST("users/{userId}/journals")
     suspend fun createJournal(
         @Path("userId") userId: Long,
-        @Body title: String
+        @Field("title") title: String
     ): Response<Unit>
 
     // Получить записи из дневника пользователя
@@ -353,20 +354,22 @@ interface SWApi {
     ): List<JournalEntryResponse>
 
     // Сохранить новую запись в дневнике пользователя
+    @FormUrlEncoded
     @POST("users/{userId}/journals/{journalId}/messages")
     suspend fun saveJournalEntry(
         @Path("userId") userId: Long,
         @Path("journalId") journalId: Long,
-        @Body message: String
+        @Field("message") message: String
     ): Response<Unit>
 
     // Изменить запись в дневнике пользователя
+    @FormUrlEncoded
     @PUT("users/{userId}/journals/{journalId}/messages/{entryId}")
     suspend fun editJournalEntry(
         @Path("userId") userId: Long,
         @Path("journalId") journalId: Long,
         @Path("entryId") entryId: Long,
-        @Body newEntryText: String
+        @Field("message") newEntryText: String
     ): Response<Unit>
 
     // Удалить запись в дневнике пользователя

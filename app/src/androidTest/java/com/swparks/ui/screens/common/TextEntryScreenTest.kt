@@ -378,4 +378,106 @@ class TextEntryScreenTest {
             .onNodeWithContentDescription(closeDescription, ignoreCase = true)
             .assertIsDisplayed()
     }
+
+    @Test
+    fun textEntryScreen_whenEditParkMode_thenTextFieldPrepopulatedWithOldEntry() {
+        // Given
+        val oldText = "Old comment text"
+        val editInfo = EditInfo(parentObjectId = 1L, entryId = 1L, oldEntry = oldText)
+        val mode = TextEntryMode.EditPark(editInfo)
+        val viewModel = FakeTextEntryViewModel(
+            uiState = MutableStateFlow(
+                TextEntryUiState(
+                    mode = mode,
+                    text = oldText,
+                    isSendEnabled = false
+                )
+            )
+        )
+
+        // When
+        setContent(viewModel)
+
+        // Then - Текстовое поле должно содержать старый текст
+        composeTestRule
+            .onNodeWithText(oldText, ignoreCase = false)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun textEntryScreen_whenEditEventMode_thenTextFieldPrepopulatedWithOldEntry() {
+        // Given
+        val oldText = "Old event comment"
+        val editInfo = EditInfo(parentObjectId = 1L, entryId = 1L, oldEntry = oldText)
+        val mode = TextEntryMode.EditEvent(editInfo)
+        val viewModel = FakeTextEntryViewModel(
+            uiState = MutableStateFlow(
+                TextEntryUiState(
+                    mode = mode,
+                    text = oldText,
+                    isSendEnabled = false
+                )
+            )
+        )
+
+        // When
+        setContent(viewModel)
+
+        // Then - Текстовое поле должно содержать старый текст
+        composeTestRule
+            .onNodeWithText(oldText, ignoreCase = false)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun textEntryScreen_whenEditJournalEntryMode_thenTextFieldPrepopulatedWithOldEntry() {
+        // Given
+        val oldText = "Old journal entry"
+        val editInfo = EditInfo(parentObjectId = 1L, entryId = 1L, oldEntry = oldText)
+        val mode = TextEntryMode.EditJournalEntry(ownerId = 1L, editInfo)
+        val viewModel = FakeTextEntryViewModel(
+            uiState = MutableStateFlow(
+                TextEntryUiState(
+                    mode = mode,
+                    text = oldText,
+                    isSendEnabled = false
+                )
+            )
+        )
+
+        // When
+        setContent(viewModel)
+
+        // Then - Текстовое поле должно содержать старый текст
+        composeTestRule
+            .onNodeWithText(oldText, ignoreCase = false)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun textEntryScreen_whenNewMode_thenTextFieldEmpty() {
+        // Given
+        val mode = TextEntryMode.NewForPark(parkId = 1L)
+        val viewModel = FakeTextEntryViewModel(
+            uiState = MutableStateFlow(
+                TextEntryUiState(
+                    mode = mode,
+                    text = "",
+                    isSendEnabled = false
+                )
+            )
+        )
+
+        // When
+        setContent(viewModel)
+
+        // Then - Проверяем, что текстовое поле отображается (placeholder может присутствовать)
+        composeTestRule
+            .onNodeWithText(newCommentTitle, ignoreCase = true)
+            .assertIsDisplayed()
+        // Текстовое поле не должно содержать старый текст
+        composeTestRule
+            .onNodeWithText("Old comment", ignoreCase = false)
+            .assertDoesNotExist()
+    }
 }

@@ -11,9 +11,11 @@ import com.swparks.ui.model.TextEntryOption
  * Добавляет логирование операций.
  *
  * @param swRepository Репозиторий для работы с API
+ * @param createJournalUseCase Use case для создания дневника
  */
 class TextEntryUseCase(
-    private val swRepository: SWRepository
+    private val swRepository: SWRepository,
+    private val createJournalUseCase: ICreateJournalUseCase
 ) : ITextEntryUseCase {
     override suspend fun addJournalEntry(
         ownerId: Long,
@@ -38,6 +40,14 @@ class TextEntryUseCase(
         val result = swRepository.editComment(option, entryId, text)
         result.onSuccess {
             Log.i("TextEntryUseCase", "Запись $entryId обновлена в дневнике $journalId")
+        }
+        return result
+    }
+
+    override suspend fun createJournal(userId: Long, title: String): Result<Unit> {
+        val result = createJournalUseCase(userId, title)
+        result.onSuccess {
+            Log.i("TextEntryUseCase", "Дневник создан для пользователя $userId")
         }
         return result
     }

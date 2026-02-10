@@ -13,6 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.domain.model.JournalEntry
+import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.state.JournalEntriesUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.FakeJournalEntriesViewModel
@@ -39,14 +40,17 @@ class JournalEntriesScreenTest {
     companion object {
         private const val TEST_JOURNAL_ID = 1L
         private const val TEST_JOURNAL_TITLE = "Тренировочный дневник"
+        private const val TEST_JOURNAL_OWNER_ID = 1L
     }
 
     private fun setContent(
         journalId: Long = TEST_JOURNAL_ID,
         journalTitle: String = TEST_JOURNAL_TITLE,
+        journalOwnerId: Long = TEST_JOURNAL_OWNER_ID,
         viewModel: IJournalEntriesViewModel = FakeJournalEntriesViewModel(
             uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = emptyList())),
-            isRefreshing = MutableStateFlow(false)
+            isRefreshing = MutableStateFlow(false),
+            canCreateEntry = MutableStateFlow(false)
         ),
         onBackClick: () -> Unit = {}
     ) {
@@ -56,6 +60,7 @@ class JournalEntriesScreenTest {
                     modifier = androidx.compose.ui.Modifier,
                     journalId = journalId,
                     journalTitle = journalTitle,
+                    journalOwnerId = journalOwnerId,
                     viewModel = viewModel,
                     onBackClick = onBackClick,
                     parentPaddingValues = PaddingValues()
@@ -117,6 +122,7 @@ class JournalEntriesScreenTest {
                     modifier = androidx.compose.ui.Modifier,
                     journalId = TEST_JOURNAL_ID,
                     journalTitle = TEST_JOURNAL_TITLE,
+                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
@@ -146,6 +152,7 @@ class JournalEntriesScreenTest {
                     modifier = androidx.compose.ui.Modifier,
                     journalId = TEST_JOURNAL_ID,
                     journalTitle = TEST_JOURNAL_TITLE,
+                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
@@ -175,6 +182,7 @@ class JournalEntriesScreenTest {
                     modifier = androidx.compose.ui.Modifier,
                     journalId = TEST_JOURNAL_ID,
                     journalTitle = TEST_JOURNAL_TITLE,
+                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
@@ -214,6 +222,7 @@ class JournalEntriesScreenTest {
                     modifier = androidx.compose.ui.Modifier,
                     journalId = TEST_JOURNAL_ID,
                     journalTitle = TEST_JOURNAL_TITLE,
+                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
@@ -330,6 +339,7 @@ class JournalEntriesScreenTest {
                     modifier = androidx.compose.ui.Modifier,
                     journalId = TEST_JOURNAL_ID,
                     journalTitle = TEST_JOURNAL_TITLE,
+                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
@@ -369,6 +379,7 @@ class JournalEntriesScreenTest {
                     modifier = androidx.compose.ui.Modifier,
                     journalId = TEST_JOURNAL_ID,
                     journalTitle = TEST_JOURNAL_TITLE,
+                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
@@ -411,6 +422,7 @@ class JournalEntriesScreenTest {
                     modifier = androidx.compose.ui.Modifier,
                     journalId = TEST_JOURNAL_ID,
                     journalTitle = TEST_JOURNAL_TITLE,
+                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
@@ -429,9 +441,9 @@ class JournalEntriesScreenTest {
      */
     @Test
     fun testContentState_clickDeleteAction_showsDeleteDialog() {
-        // Given
+        // Given - Запись с id = 2L не является первой (firstEntryId = 1L)
         val testEntry = JournalEntry(
-            id = 1L,
+            id = 2L,
             journalId = TEST_JOURNAL_ID,
             authorId = 1L,
             authorName = "Иван Иванов",
@@ -443,7 +455,11 @@ class JournalEntriesScreenTest {
 
         val viewModel = FakeJournalEntriesViewModel(
             uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(entries = listOf(testEntry), isRefreshing = false)
+                JournalEntriesUiState.Content(
+                    entries = listOf(testEntry),
+                    firstEntryId = 1L, // Первая запись имеет id = 1L
+                    isRefreshing = false
+                )
             ),
             isRefreshing = MutableStateFlow(false)
         )
@@ -455,6 +471,7 @@ class JournalEntriesScreenTest {
                     modifier = androidx.compose.ui.Modifier,
                     journalId = TEST_JOURNAL_ID,
                     journalTitle = TEST_JOURNAL_TITLE,
+                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
@@ -505,6 +522,7 @@ class JournalEntriesScreenTest {
                     modifier = androidx.compose.ui.Modifier,
                     journalId = TEST_JOURNAL_ID,
                     journalTitle = TEST_JOURNAL_TITLE,
+                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
@@ -657,6 +675,7 @@ class JournalEntriesScreenTest {
                     modifier = androidx.compose.ui.Modifier,
                     journalId = TEST_JOURNAL_ID,
                     journalTitle = TEST_JOURNAL_TITLE,
+                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
@@ -690,5 +709,484 @@ class JournalEntriesScreenTest {
         composeTestRule
             .onNodeWithText(context.getString(R.string.delete))
             .assertDoesNotExist()
+    }
+
+    /**
+     * Тест 18: Проверка отображения FAB при canCreateEntry == true
+     */
+    @Test
+    fun testFab_shown_whenCanCreateEntryTrue() {
+        // Given
+        val viewModel = FakeJournalEntriesViewModel(
+            uiState = MutableStateFlow(
+                JournalEntriesUiState.Content(
+                    entries = emptyList(),
+                    canCreateEntry = true
+                )
+            ),
+            isRefreshing = MutableStateFlow(false),
+            canCreateEntry = MutableStateFlow(true)
+        )
+
+        // When
+        setContent(viewModel = viewModel)
+
+        // Then - FAB отображается
+        composeTestRule
+            .onNodeWithTag("AddEntryFAB")
+            .assertIsDisplayed()
+            .assertHasClickAction()
+    }
+
+    /**
+     * Тест 19: Проверка скрытия FAB при canCreateEntry == false
+     */
+    @Test
+    fun testFab_hidden_whenCanCreateEntryFalse() {
+        // Given
+        val viewModel = FakeJournalEntriesViewModel(
+            uiState = MutableStateFlow(
+                JournalEntriesUiState.Content(
+                    entries = emptyList(),
+                    canCreateEntry = false
+                )
+            ),
+            isRefreshing = MutableStateFlow(false),
+            canCreateEntry = MutableStateFlow(false)
+        )
+
+        // When
+        setContent(viewModel = viewModel)
+
+        // Then - FAB не отображается
+        composeTestRule
+            .onNodeWithTag("AddEntryFAB")
+            .assertDoesNotExist()
+    }
+
+    /**
+     * Тест 20: Проверка скрытия FAB при isDeleting = true
+     */
+    @Test
+    fun testFab_hidden_whenDeleting() {
+        // Given
+        val viewModel = FakeJournalEntriesViewModel(
+            uiState = MutableStateFlow(
+                JournalEntriesUiState.Content(
+                    entries = emptyList(),
+                    canCreateEntry = true
+                )
+            ),
+            isRefreshing = MutableStateFlow(false),
+            isDeleting = MutableStateFlow(true),
+            canCreateEntry = MutableStateFlow(true)
+        )
+
+        // When
+        setContent(viewModel = viewModel)
+
+        // Then - FAB не отображается при удалении
+        composeTestRule
+            .onNodeWithTag("AddEntryFAB")
+            .assertDoesNotExist()
+    }
+
+    /**
+     * Тест 21: Проверка кнопки EmptyStateView отключена при canCreateEntry == false
+     */
+    @Test
+    fun testEmptyState_buttonDisabled_whenCannotCreateEntry() {
+        // Given
+        val viewModel = FakeJournalEntriesViewModel(
+            uiState = MutableStateFlow(
+                JournalEntriesUiState.Content(
+                    entries = emptyList(),
+                    canCreateEntry = false
+                )
+            ),
+            isRefreshing = MutableStateFlow(false),
+            canCreateEntry = MutableStateFlow(false)
+        )
+
+        // When
+        setContent(viewModel = viewModel)
+
+        // Then - Кнопка EmptyStateView отключена
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.create_entry))
+            .assertIsDisplayed()
+            .assertIsNotEnabled()
+    }
+
+    /**
+     * Тест 22: Проверка отображения действия EDIT для записи с автором
+     */
+    @Test
+    fun testContentEntry_editActionVisible_whenEntryHasAuthor() {
+        // Given
+        val testEntry = JournalEntry(
+            id = 1L,
+            journalId = TEST_JOURNAL_ID,
+            authorId = 1L,
+            authorName = "Иван Иванов",
+            message = "Отличная тренировка!",
+            createDate = "2024-01-15T12:00:00",
+            modifyDate = "2024-01-15T12:00:00",
+            authorImage = null
+        )
+
+        val viewModel = FakeJournalEntriesViewModel(
+            uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = listOf(testEntry))),
+            isRefreshing = MutableStateFlow(false),
+            canCreateEntry = MutableStateFlow(false)
+        )
+
+        // When
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                JournalEntriesScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    journalId = TEST_JOURNAL_ID,
+                    journalTitle = TEST_JOURNAL_TITLE,
+                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    viewModel = viewModel,
+                    onBackClick = {},
+                    parentPaddingValues = PaddingValues()
+                )
+            }
+        }
+
+        // Then - Открываем меню записи
+        composeTestRule
+            .onNodeWithTag("MenuButton", useUnmergedTree = true)
+            .performClick()
+
+        // Проверяем, что действие EDIT доступно
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.edit))
+            .assertIsDisplayed()
+    }
+
+    /**
+     * Тест 23: Проверка отсутствия действия EDIT для записи без автора
+     */
+    @Test
+    fun testContentEntry_editActionNotVisible_whenEntryNoAuthor() {
+        // Given
+        val testEntry = JournalEntry(
+            id = 1L,
+            journalId = TEST_JOURNAL_ID,
+            authorId = null,
+            authorName = "Аноним",
+            message = "Отличная тренировка!",
+            createDate = "2024-01-15T12:00:00",
+            modifyDate = "2024-01-15T12:00:00",
+            authorImage = null
+        )
+
+        val viewModel = FakeJournalEntriesViewModel(
+            uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = listOf(testEntry))),
+            isRefreshing = MutableStateFlow(false),
+            canCreateEntry = MutableStateFlow(false)
+        )
+
+        // When
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                JournalEntriesScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    journalId = TEST_JOURNAL_ID,
+                    journalTitle = TEST_JOURNAL_TITLE,
+                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    viewModel = viewModel,
+                    onBackClick = {},
+                    parentPaddingValues = PaddingValues()
+                )
+            }
+        }
+
+        // Then - Открываем меню записи
+        composeTestRule
+            .onNodeWithTag("MenuButton", useUnmergedTree = true)
+            .performClick()
+
+        // Проверяем, что действие EDIT отсутствует
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.edit))
+            .assertDoesNotExist()
+    }
+
+    /**
+     * Тест 24: Проверка открытия экрана создания записи через FAB
+     */
+    @Test
+    fun testFabClick_opensTextEntrySheet() {
+        // Given
+        var showSheet = false
+        var sheetMode: TextEntryMode? = null
+
+        val viewModel = FakeJournalEntriesViewModel(
+            uiState = MutableStateFlow(
+                JournalEntriesUiState.Content(
+                    entries = emptyList(),
+                    canCreateEntry = true
+                )
+            ),
+            isRefreshing = MutableStateFlow(false),
+            canCreateEntry = MutableStateFlow(true)
+        )
+
+        // When
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                JournalEntriesScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    journalId = TEST_JOURNAL_ID,
+                    journalTitle = TEST_JOURNAL_TITLE,
+                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    viewModel = viewModel,
+                    onBackClick = {},
+                    parentPaddingValues = PaddingValues(),
+                    textEntrySheetHostContent = { show, mode, _, _ ->
+                        showSheet = show
+                        sheetMode = mode
+                    }
+                )
+            }
+        }
+
+        // Then - FAB отображается
+        composeTestRule
+            .onNodeWithTag("AddEntryFAB")
+            .assertIsDisplayed()
+
+        // When - Кликаем на FAB
+        composeTestRule
+            .onNodeWithTag("AddEntryFAB")
+            .performClick()
+
+        // Then - Ждем перерисовки и проверяем, что Sheet открыт с правильным режимом
+        composeTestRule.waitForIdle()
+        assert(showSheet) { "Sheet должен быть открыт" }
+        assert(sheetMode is TextEntryMode.NewForJournal) { "Режим должен быть NewForJournal" }
+    }
+
+    /**
+     * Тест 25: Проверка открытия экрана редактирования записи через действие EDIT
+     */
+    @Test
+    fun testEditAction_opensTextEntrySheet() {
+        // Given
+        var showSheet = false
+        var sheetMode: TextEntryMode? = null
+
+        val testEntry = JournalEntry(
+            id = 1L,
+            journalId = TEST_JOURNAL_ID,
+            authorId = 1L,
+            authorName = "Иван Иванов",
+            message = "Отличная тренировка!",
+            createDate = "2024-01-15T12:00:00",
+            modifyDate = "2024-01-15T12:00:00",
+            authorImage = null
+        )
+
+        val viewModel = FakeJournalEntriesViewModel(
+            uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = listOf(testEntry))),
+            isRefreshing = MutableStateFlow(false),
+            canCreateEntry = MutableStateFlow(false)
+        )
+
+        // When
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                JournalEntriesScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    journalId = TEST_JOURNAL_ID,
+                    journalTitle = TEST_JOURNAL_TITLE,
+                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    viewModel = viewModel,
+                    onBackClick = {},
+                    parentPaddingValues = PaddingValues(),
+                    textEntrySheetHostContent = { show, mode, _, _ ->
+                        showSheet = show
+                        sheetMode = mode
+                    }
+                )
+            }
+        }
+
+        // Then - Открываем меню записи
+        composeTestRule
+            .onNodeWithTag("MenuButton", useUnmergedTree = true)
+            .performClick()
+
+        // Кликаем на действие EDIT
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.edit))
+            .performClick()
+
+        // Then - Ждем перерисовки и проверяем, что Sheet открыт с режимом редактирования
+        composeTestRule.waitForIdle()
+        assert(showSheet) { "Sheet должен быть открыт" }
+        assert(sheetMode is TextEntryMode.EditJournalEntry) { "Режим должен быть EditJournalEntry" }
+    }
+
+    /**
+     * Тест 26: Проверка открытия экрана создания записи через кнопку EmptyStateView
+     */
+    @Test
+    fun testEmptyStateButtonClick_opensTextEntrySheet() {
+        // Given
+        var showSheet = false
+        var sheetMode: TextEntryMode? = null
+
+        val viewModel = FakeJournalEntriesViewModel(
+            uiState = MutableStateFlow(
+                JournalEntriesUiState.Content(
+                    entries = emptyList(),
+                    canCreateEntry = true
+                )
+            ),
+            isRefreshing = MutableStateFlow(false),
+            canCreateEntry = MutableStateFlow(true)
+        )
+
+        // When
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                JournalEntriesScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    journalId = TEST_JOURNAL_ID,
+                    journalTitle = TEST_JOURNAL_TITLE,
+                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    viewModel = viewModel,
+                    onBackClick = {},
+                    parentPaddingValues = PaddingValues(),
+                    textEntrySheetHostContent = { show, mode, _, _ ->
+                        showSheet = show
+                        sheetMode = mode
+                    }
+                )
+            }
+        }
+
+        // Then - Кнопка EmptyStateView отображается
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.create_entry))
+            .assertIsDisplayed()
+
+        // When - Кликаем на кнопку создания записи
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.create_entry))
+            .performClick()
+
+        // Then - Ждем перерисовки и проверяем, что Sheet открыт с правильным режимом
+        composeTestRule.waitForIdle()
+        assert(showSheet) { "Sheet должен быть открыт" }
+        assert(sheetMode is TextEntryMode.NewForJournal) { "Режим должен быть NewForJournal" }
+    }
+
+    /**
+     * Тест 23: Проверка отображения FAB, когда currentUserId == journalOwnerId
+     * Это критически важный тест для бага №1 - FAB должен отображаться для владельца дневника
+     */
+    @Test
+    fun testFab_shown_whenCurrentUserIdEqualsJournalOwnerId() {
+        // Given - Создаем ViewModel, где currentUserId == journalOwnerId (владелец дневника)
+        val viewModel = FakeJournalEntriesViewModel(
+            uiState = MutableStateFlow(
+                JournalEntriesUiState.Content(
+                    entries = emptyList(),
+                    canCreateEntry = true // Владелец может создавать записи
+                )
+            ),
+            isRefreshing = MutableStateFlow(false),
+            canCreateEntry = MutableStateFlow(true)
+        )
+
+        // When
+        setContent(
+            viewModel = viewModel,
+            journalOwnerId = TEST_JOURNAL_OWNER_ID // Владелец дневника
+        )
+
+        // Then - FAB должен отображаться для владельца дневника
+        composeTestRule
+            .onNodeWithTag("AddEntryFAB")
+            .assertIsDisplayed()
+            .assertHasClickAction()
+    }
+
+    /**
+     * Тест 24: Проверка скрытия FAB, когда currentUserId != journalOwnerId
+     * Это критически важный тест для бага №1 - FAB НЕ должен отображаться для не-владельца
+     */
+    @Test
+    fun testFab_hidden_whenCurrentUserIdNotEqualsJournalOwnerId() {
+        // Given - Создаем ViewModel, где currentUserId != journalOwnerId (не владелец)
+        val viewModel = FakeJournalEntriesViewModel(
+            uiState = MutableStateFlow(
+                JournalEntriesUiState.Content(
+                    entries = emptyList(),
+                    canCreateEntry = false // Не владелец не может создавать записи при NOBODY
+                )
+            ),
+            isRefreshing = MutableStateFlow(false),
+            canCreateEntry = MutableStateFlow(false)
+        )
+
+        // When
+        setContent(
+            viewModel = viewModel,
+            journalOwnerId = TEST_JOURNAL_OWNER_ID // Владелец дневника (другой ID)
+        )
+
+        // Then - FAB НЕ должен отображаться для не-владельца
+        composeTestRule
+            .onNodeWithTag("AddEntryFAB")
+            .assertDoesNotExist()
+    }
+
+    /**
+     * Тест 27: Когда firstEntryId = null, все записи можно удалить
+     */
+    @Test
+    fun testFirstEntryIdNull_allEntriesCanBeDeleted() {
+        // Given - Одна запись без установленного firstEntryId
+        val testEntry = JournalEntry(
+            id = 1L,
+            journalId = TEST_JOURNAL_ID,
+            authorId = 1L,
+            authorName = "Тестовая запись",
+            message = "Это тестовая запись",
+            createDate = "2024-01-15T12:00:00",
+            modifyDate = "2024-01-15T12:00:00",
+            authorImage = null
+        )
+
+        val viewModel = FakeJournalEntriesViewModel(
+            uiState = MutableStateFlow(
+                JournalEntriesUiState.Content(
+                    entries = listOf(testEntry),
+                    firstEntryId = null, // Первая запись не установлена
+                    isRefreshing = false
+                )
+            ),
+            isRefreshing = MutableStateFlow(false)
+        )
+
+        // When
+        setContent(viewModel = viewModel)
+
+        // Then - Открываем меню записи
+        composeTestRule
+            .onNodeWithTag("MenuButton", useUnmergedTree = true)
+            .performClick()
+
+        // Проверяем, что пункт меню "Удалить" отображается
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.delete))
+            .assertIsDisplayed()
     }
 }

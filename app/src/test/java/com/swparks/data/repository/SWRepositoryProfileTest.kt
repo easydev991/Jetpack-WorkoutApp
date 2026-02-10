@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import com.swparks.data.database.dao.JournalDao
+import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.model.User
 import com.swparks.domain.exception.NetworkException
@@ -38,6 +39,7 @@ class SWRepositoryProfileTest {
     private val testDispatcher = StandardTestDispatcher()
     private val mockUserDao = mockk<UserDao>(relaxed = true)
     private val mockJournalDao = mockk<JournalDao>(relaxed = true)
+    private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
 
 
     @Before
@@ -72,7 +74,13 @@ class SWRepositoryProfileTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.getUser(123L)
@@ -95,7 +103,13 @@ class SWRepositoryProfileTest {
         // Mock userDao to return null (no cached data)
         every { mockUserDao.getUserByIdFlow(any()) } returns flowOf(null)
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.getUser(123L)
@@ -127,7 +141,13 @@ class SWRepositoryProfileTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
         val form = MainUserForm(
             name = "testuser",
             fullname = "Test User",
@@ -168,7 +188,13 @@ class SWRepositoryProfileTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
         val form = MainUserForm(
             name = "testuser",
             fullname = "Test User",
@@ -197,7 +223,13 @@ class SWRepositoryProfileTest {
         val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.deleteUser()
@@ -216,7 +248,13 @@ class SWRepositoryProfileTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.deleteUser()
@@ -246,7 +284,13 @@ class SWRepositoryProfileTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.getSocialUpdates(1L)
@@ -291,7 +335,13 @@ class SWRepositoryProfileTest {
         every { mockUserDao.getFriendRequestsFlow() } returns flowOf(emptyList())
         every { mockUserDao.getBlacklistFlow() } returns flowOf(emptyList())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.getSocialUpdates(1L)
@@ -311,7 +361,13 @@ class SWRepositoryProfileTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.findUsers("search")
@@ -331,7 +387,13 @@ class SWRepositoryProfileTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.findUsers("search")

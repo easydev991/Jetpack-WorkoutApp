@@ -18,6 +18,7 @@ import org.junit.Test
 class TextEntryUseCaseTest {
 
     private lateinit var swRepository: SWRepository
+    private lateinit var createJournalUseCase: ICreateJournalUseCase
     private lateinit var textEntryUseCase: TextEntryUseCase
 
     private val testOwnerId = 123L
@@ -33,7 +34,8 @@ class TextEntryUseCaseTest {
         mockkStatic(Log::class)
         every { Log.i(any(), any()) } returns 0
         swRepository = mockk()
-        textEntryUseCase = TextEntryUseCase(swRepository)
+        createJournalUseCase = mockk(relaxed = true)
+        textEntryUseCase = TextEntryUseCase(swRepository, createJournalUseCase)
     }
 
     @After

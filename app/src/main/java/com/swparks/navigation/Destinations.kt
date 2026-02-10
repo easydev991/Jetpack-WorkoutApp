@@ -108,9 +108,17 @@ sealed class Screen(
     }
 
     object JournalEntries :
-        Screen("journal_entries/{journalId}?title={journalTitle}", parentTab = Profile) {
-        fun createRoute(journalId: Long, journalTitle: String) =
-            "journal_entries/$journalId?title=${android.net.Uri.encode(journalTitle)}"
+        Screen(
+            "journal_entries/{journalId}?userId={userId}&title={journalTitle}&commentAccess={commentAccess}",
+            parentTab = Profile
+        ) {
+        fun createRoute(
+            journalId: Long,
+            userId: Long,
+            journalTitle: String,
+            commentAccess: String
+        ) =
+            "journal_entries/$journalId?userId=$userId&title=${android.net.Uri.encode(journalTitle)}&commentAccess=$commentAccess"
     }
 
     object ChangePassword : Screen("change_password", parentTab = Profile)

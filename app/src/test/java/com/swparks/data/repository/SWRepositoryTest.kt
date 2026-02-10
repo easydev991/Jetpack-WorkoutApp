@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.mutablePreferencesOf
 import app.cash.turbine.test
 import com.swparks.data.database.dao.JournalDao
+import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.model.Event
 import com.swparks.data.model.LoginSuccess
@@ -40,6 +41,7 @@ class SWRepositoryTest {
     private val isAuthorizedKey = booleanPreferencesKey("isAuthorized")
     private val mockUserDao = mockk<UserDao>(relaxed = true)
     private val mockJournalDao = mockk<JournalDao>(relaxed = true)
+    private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
 
     @Before
     fun setup() {
@@ -98,7 +100,13 @@ class SWRepositoryTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.getPastEvents()
@@ -117,7 +125,13 @@ class SWRepositoryTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When & Then
         try {
@@ -140,7 +154,13 @@ class SWRepositoryTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When & Then
         try {
@@ -159,7 +179,13 @@ class SWRepositoryTest {
         val preferences = mutablePreferencesOf(isAuthorizedKey to true)
         every { mockDataStore.data } returns flowOf(preferences)
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When & Then
         repository.isAuthorized.test {
@@ -176,7 +202,13 @@ class SWRepositoryTest {
         val preferences = mutablePreferencesOf(isAuthorizedKey to false)
         every { mockDataStore.data } returns flowOf(preferences)
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When & Then
         repository.isAuthorized.test {
@@ -192,7 +224,13 @@ class SWRepositoryTest {
         val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When & Then - проверяем, что метод выполнился без ошибок
         repository.savePreference(true)
@@ -210,7 +248,13 @@ class SWRepositoryTest {
         val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.login("test_token")
@@ -231,7 +275,13 @@ class SWRepositoryTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.getUser(123L)
@@ -252,7 +302,13 @@ class SWRepositoryTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.getAllParks()
@@ -273,7 +329,13 @@ class SWRepositoryTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.getEvents(EventType.PAST)
@@ -294,7 +356,13 @@ class SWRepositoryTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.getEvents(EventType.FUTURE)

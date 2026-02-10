@@ -13,8 +13,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.swparks.JetpackWorkoutApplication
+import com.swparks.ui.ds.disableAllGestures
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.state.TextEntryEvent
 import com.swparks.ui.viewmodel.ITextEntryViewModel
@@ -104,6 +106,7 @@ fun TextEntrySheetHost(
             )
         ) {
             TextEntryScreen(
+                modifier = Modifier.disableAllGestures(),
                 viewModel = viewModel,
                 onDismiss = {
                     if (uiState.isLoading) return@TextEntryScreen

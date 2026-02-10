@@ -26,6 +26,7 @@ import com.swparks.data.preferences.AppSettingsDataStore
 import com.swparks.navigation.AppState
 import com.swparks.navigation.BottomNavigationBar
 import com.swparks.navigation.Screen
+import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.screens.auth.LoginSheetHost
 import com.swparks.ui.screens.events.EventsScreen
 import com.swparks.ui.screens.events.EventsTopAppBar
@@ -323,12 +324,18 @@ fun RootScreen(appState: AppState) {
                     }
                     JournalsListScreen(
                         modifier = Modifier.fillMaxSize(),
+                        appState = appState,
                         userId = userId,
                         viewModel = viewModel,
                         onBackClick = { appState.navController.popBackStack() },
-                        onJournalClick = { journalId, journalTitle ->
+                        onJournalClick = { journalId, journalOwnerId, journalTitle, commentAccess ->
                             appState.navController.navigate(
-                                Screen.JournalEntries.createRoute(journalId, journalTitle)
+                                Screen.JournalEntries.createRoute(
+                                    journalId,
+                                    journalOwnerId,
+                                    journalTitle,
+                                    commentAccess
+                                )
                             )
                         },
                         parentPaddingValues = paddingValues
@@ -354,20 +361,39 @@ fun RootScreen(appState: AppState) {
 
             composable(route = Screen.JournalEntries.route) { navBackStackEntry ->
                 val journalId = navBackStackEntry.arguments?.getString("journalId")?.toLongOrNull()
+                // Получаем journalOwnerId (владелец дневника) из query-параметра
+                val journalOwnerId =
+                    navBackStackEntry.arguments?.getString("userId")?.toLongOrNull()
                 // Получаем journalTitle из query-параметра
                 val journalTitle = navBackStackEntry.arguments?.getString("journalTitle")?.let {
                     android.net.Uri.decode(it)
                 } ?: ""
-                // Получаем userId из currentUser
-                val userId = appState.currentUser?.id
-                if (journalId != null && userId != null) {
-                    val viewModel = remember(appContainer) {
-                        appContainer.journalEntriesViewModelFactory(userId, journalId)
+                // Получаем commentAccess из query-параметра
+                val commentAccess = navBackStackEntry.arguments?.getString("commentAccess")
+                    ?: JournalAccess.NOBODY.name
+
+                Log.i("RootScreen", "=== JournalEntries Route ===")
+                Log.i("RootScreen", "journalId=$journalId")
+                Log.i(
+                    "RootScreen",
+                    "journalOwnerId=$journalOwnerId (из query-параметра userId)"
+                )
+                Log.i("RootScreen", "journalTitle=$journalTitle")
+                Log.i("RootScreen", "commentAccess=$commentAccess")
+
+                if (journalId != null && journalOwnerId != null) {
+                    val viewModel = remember(navBackStackEntry, appContainer) {
+                        appContainer.journalEntriesViewModelFactory(
+                            journalOwnerId = journalOwnerId,
+                            journalId = journalId,
+                            savedStateHandle = navBackStackEntry.savedStateHandle
+                        )
                     }
                     JournalEntriesScreen(
                         modifier = Modifier.fillMaxSize(),
                         journalId = journalId,
                         journalTitle = journalTitle,
+                        journalOwnerId = journalOwnerId,
                         viewModel = viewModel,
                         onBackClick = { appState.navController.popBackStack() },
                         parentPaddingValues = paddingValues

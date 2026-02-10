@@ -13,6 +13,7 @@ sealed class TextEntryMode {
     data class NewForPark(val parkId: Long) : TextEntryMode()
     data class NewForEvent(val eventId: Long) : TextEntryMode()
     data class NewForJournal(val ownerId: Long, val journalId: Long) : TextEntryMode()
+    data class NewJournal(val userId: Long) : TextEntryMode()
 
     // Редактирование
     data class EditPark(val editInfo: EditInfo) : TextEntryMode()
@@ -26,6 +27,7 @@ sealed class TextEntryMode {
 fun TextEntryMode.getTitle(): Int = when (this) {
     is TextEntryMode.NewForPark, is TextEntryMode.NewForEvent -> R.string.new_comment_title
     is TextEntryMode.NewForJournal -> R.string.new_entry_title
+    is TextEntryMode.NewJournal -> R.string.new_journal
     is TextEntryMode.EditPark, is TextEntryMode.EditEvent -> R.string.edit_comment_title
     is TextEntryMode.EditJournalEntry -> R.string.edit_entry_title
 }
@@ -35,5 +37,6 @@ fun TextEntryMode.getTitle(): Int = when (this) {
  */
 fun TextEntryMode.getPlaceholder(): Int? = when (this) {
     is TextEntryMode.NewForJournal -> R.string.new_entry_placeholder
+    is TextEntryMode.NewJournal -> R.string.new_journal_placeholder
     else -> null
 }

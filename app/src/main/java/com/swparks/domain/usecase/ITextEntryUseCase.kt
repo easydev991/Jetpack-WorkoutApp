@@ -21,6 +21,11 @@ interface ITextEntryUseCase {
     ): Result<Unit>
 
     /**
+     * Создать новый дневник
+     */
+    suspend fun createJournal(userId: Long, title: String): Result<Unit>
+
+    /**
      * Добавить комментарий к площадке
      */
     suspend fun addParkComment(parkId: Long, text: String): Result<Unit>

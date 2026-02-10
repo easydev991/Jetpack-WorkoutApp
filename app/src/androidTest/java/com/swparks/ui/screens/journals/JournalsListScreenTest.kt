@@ -7,10 +7,13 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
+import com.swparks.data.model.User
 import com.swparks.domain.model.Journal
+import com.swparks.navigation.AppState
 import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalsUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
@@ -44,13 +47,18 @@ class JournalsListScreenTest {
         onBackClick: () -> Unit = {}
     ) {
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = userId, name = "testuser", image = null))
+
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
+                    appState = appState,
                     userId = userId,
                     viewModel = viewModel,
                     onBackClick = onBackClick,
-                    onJournalClick = { _, _ -> },
+                    onJournalClick = { _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -78,13 +86,18 @@ class JournalsListScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
+
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
+                    appState = appState,
                     userId = 1L,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _ -> },
+                    onJournalClick = { _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -107,13 +120,18 @@ class JournalsListScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
+
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
+                    appState = appState,
                     userId = 1L,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _ -> },
+                    onJournalClick = { _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -141,13 +159,18 @@ class JournalsListScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
+
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
+                    appState = appState,
                     userId = 1L,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _ -> },
+                    onJournalClick = { _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -184,13 +207,17 @@ class JournalsListScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
+                    appState = appState,
                     userId = 1L,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _ -> },
+                    onJournalClick = { _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -260,13 +287,18 @@ class JournalsListScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
+
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
+                    appState = appState,
                     userId = 1L,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _ -> },
+                    onJournalClick = { _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -292,13 +324,18 @@ class JournalsListScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
+
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
+                    appState = appState,
                     userId = 1L,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _ -> },
+                    onJournalClick = { _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -335,13 +372,18 @@ class JournalsListScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
+
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
+                    appState = appState,
                     userId = 1L,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _ -> },
+                    onJournalClick = { _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -376,13 +418,18 @@ class JournalsListScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
+
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
+                    appState = appState,
                     userId = 1L,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _ -> },
+                    onJournalClick = { _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -420,13 +467,18 @@ class JournalsListScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
+
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
+                    appState = appState,
                     userId = 1L,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _ -> },
+                    onJournalClick = { _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -436,5 +488,148 @@ class JournalsListScreenTest {
         composeTestRule
             .onNodeWithText("Тренировочный дневник")
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun journalsListScreen_fabIsDisplayed_whenAuthorizedUserAndOwnProfile() {
+        // Given - авторизованный пользователь открывает свой профиль
+        val userId = 1L
+        val state = JournalsUiState.Content(journals = emptyList())
+        val viewModel = FakeJournalsViewModel(
+            uiState = MutableStateFlow(state),
+            isRefreshing = MutableStateFlow(false)
+        )
+
+        // When
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = userId, name = "testuser", image = null))
+
+            JetpackWorkoutAppTheme {
+                JournalsListScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    appState = appState,
+                    userId = userId,
+                    viewModel = viewModel,
+                    onBackClick = {},
+                    onJournalClick = { _, _, _, _ -> },
+                    parentPaddingValues = PaddingValues()
+                )
+            }
+        }
+
+        // Then - FAB для создания дневника отображается
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.fab_create_journal_description))
+            .assertIsDisplayed()
+            .assertHasClickAction()
+    }
+
+    @Test
+    fun journalsListScreen_fabIsHidden_whenNotAuthorizedUser() {
+        // Given - пользователь не авторизован
+        val userId = 1L
+        val state = JournalsUiState.Content(journals = emptyList())
+        val viewModel = FakeJournalsViewModel(
+            uiState = MutableStateFlow(state),
+            isRefreshing = MutableStateFlow(false)
+        )
+
+        // When
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            // currentUser остается null по умолчанию
+
+            JetpackWorkoutAppTheme {
+                JournalsListScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    appState = appState,
+                    userId = userId,
+                    viewModel = viewModel,
+                    onBackClick = {},
+                    onJournalClick = { _, _, _, _ -> },
+                    parentPaddingValues = PaddingValues()
+                )
+            }
+        }
+
+        // Then - FAB для создания дневника не отображается
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.fab_create_journal_description))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun journalsListScreen_fabIsHidden_whenOpeningAnotherUsersProfile() {
+        // Given - авторизованный пользователь открывает чужой профиль
+        val currentUserId = 1L
+        val profileUserId = 2L
+        val state = JournalsUiState.Content(journals = emptyList())
+        val viewModel = FakeJournalsViewModel(
+            uiState = MutableStateFlow(state),
+            isRefreshing = MutableStateFlow(false)
+        )
+
+        // When
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = currentUserId, name = "testuser", image = null))
+
+            JetpackWorkoutAppTheme {
+                JournalsListScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    appState = appState,
+                    userId = profileUserId,
+                    viewModel = viewModel,
+                    onBackClick = {},
+                    onJournalClick = { _, _, _, _ -> },
+                    parentPaddingValues = PaddingValues()
+                )
+            }
+        }
+
+        // Then - FAB для создания дневника не отображается
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.fab_create_journal_description))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun journalsListScreen_fabIsHidden_whenDeleting() {
+        // Given - авторизованный пользователь, режим удаления
+        val userId = 1L
+        val state = JournalsUiState.Content(journals = emptyList())
+        val viewModel = FakeJournalsViewModel(
+            uiState = MutableStateFlow(state),
+            isRefreshing = MutableStateFlow(false),
+            isDeleting = MutableStateFlow(true)
+        )
+
+        // When
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = userId, name = "testuser", image = null))
+
+            JetpackWorkoutAppTheme {
+                JournalsListScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    appState = appState,
+                    userId = userId,
+                    viewModel = viewModel,
+                    onBackClick = {},
+                    onJournalClick = { _, _, _, _ -> },
+                    parentPaddingValues = PaddingValues()
+                )
+            }
+        }
+
+        // Then - FAB для создания дневника не отображается при удалении
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.fab_create_journal_description))
+            .assertDoesNotExist()
     }
 }

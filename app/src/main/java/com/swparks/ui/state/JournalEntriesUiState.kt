@@ -17,11 +17,13 @@ sealed class JournalEntriesUiState {
      * @param entries Список записей в дневнике
      * @param isRefreshing Признак обновления данных (pull-to-refresh)
      * @param firstEntryId Id первой записи (с минимальным id), которую нельзя удалить
+     * @param canCreateEntry Признак возможности создания записей (для отображения FAB)
      */
     data class Content(
         val entries: List<JournalEntry>,
         val isRefreshing: Boolean = false,
-        val firstEntryId: Long? = null
+        val firstEntryId: Long? = null,
+        val canCreateEntry: Boolean = false
     ) : JournalEntriesUiState()
 
     /**

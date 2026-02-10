@@ -168,7 +168,8 @@ class SWRepositoryImp(
     private val swApi: SWApi,
     private val dataStore: DataStore<Preferences>,
     private val userDao: UserDao,
-    private val journalDao: JournalDao
+    private val journalDao: JournalDao,
+    private val journalEntryDao: com.swparks.data.database.dao.JournalEntryDao
 ) : SWRepository {
     private companion object {
         const val TAG = "SWRepositoryImp"
@@ -817,9 +818,15 @@ class SWRepositoryImp(
 
     override suspend fun createJournal(title: String, userId: Long?): Result<Unit> =
         try {
-            swApi.createJournal(
-                userId = userId ?: 1L, // Note: передавать реальный userId
+            val finalUserId = userId ?: 1L
+            Log.i(TAG, "Создание дневника: userId=$finalUserId, title=$title")
+            val response = swApi.createJournal(
+                userId = finalUserId,
                 title = title
+            )
+            Log.i(
+                TAG,
+                "Ответ сервера при создании дневника: код=${response.code()}, успешно=${response.isSuccessful}"
             )
             Result.success(Unit)
         } catch (e: IOException) {
@@ -939,6 +946,17 @@ class SWRepositoryImp(
                     commentId,
                     newComment
                 )
+
+                // Обновляем локальный кэш после успешного редактирования
+                val existingEntry = journalEntryDao.getById(commentId)
+                if (existingEntry != null) {
+                    val updatedEntry = existingEntry.copy(
+                        message = newComment,
+                        modifyDate = System.currentTimeMillis()
+                    )
+                    journalEntryDao.insert(updatedEntry)
+                }
+
                 Result.success(Unit)
             } catch (e: IOException) {
                 Result.failure(handleIOException(e, "редактировании записи в дневнике"))

@@ -80,6 +80,11 @@
     <string name="journals_empty">No journals here yet</string>
     <string name="create_journal">Create a journal</string>
     <string name="new_journal">New journal</string>
+    <string name="new_journal_placeholder">Create the first entry in the journal</string>
+    <string name="journal_created">Journal created</string>
+    <string name="error_create_journal">Error creating journal</string>
+    <string name="error_empty_title">Please enter a title</string>
+    <string name="fab_create_journal_description">Create new journal</string>
     <string name="entries_empty">No entries here yet</string>
     <string name="create_entry">Create entry</string>
     <string name="first_entry_placeholder">Create the first entry</string>
@@ -277,4 +282,9 @@
     <string name="text_entry_empty_error">Text cannot be empty</string>
     <string name="text_entry_success">Entry added successfully</string>
     <string name="text_entry_error">Error adding entry: %s</string>
+
+    <!-- Journal Entries Screen -->
+    <string name="fab_add_entry">Add entry</string>
+    <string name="fab_add_entry_description">Create a new journal entry</string>
+    <string name="entry_deleted">Entry deleted</string>
 </resources>

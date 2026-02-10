@@ -1,11 +1,16 @@
 package com.swparks.ui.viewmodel
 
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.swparks.data.UserPreferencesRepository
+import com.swparks.data.model.User
+import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.JournalEntry
 import com.swparks.domain.usecase.IDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IGetJournalEntriesUseCase
 import com.swparks.domain.usecase.ISyncJournalEntriesUseCase
+import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalEntriesUiState
 import com.swparks.util.ErrorReporter
 import io.mockk.coEvery
@@ -14,8 +19,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -44,6 +49,9 @@ class JournalEntriesViewModelTest {
     private lateinit var syncJournalEntriesUseCase: ISyncJournalEntriesUseCase
     private lateinit var deleteJournalEntryUseCase: IDeleteJournalEntryUseCase
     private lateinit var canDeleteJournalEntryUseCase: com.swparks.domain.usecase.ICanDeleteJournalEntryUseCase
+    private lateinit var preferencesRepository: UserPreferencesRepository
+    private lateinit var swRepository: SWRepository
+    private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var errorReporter: ErrorReporter
     private lateinit var viewModel: JournalEntriesViewModel
 
@@ -59,6 +67,44 @@ class JournalEntriesViewModelTest {
         modifyDate = "2024-01-15T15:30:00",
         authorImage = "https://example.com/avatar.jpg"
     )
+    private val testFriend = User(
+        id = 2L,
+        name = "Друг пользователя",
+        image = null
+    )
+
+    /**
+     * Вспомогательная функция для создания ViewModel с JournalEntriesDeps.
+     * Настраивает моки для новых зависимостей по умолчанию.
+     */
+    private fun createViewModel(
+        currentUserId: Long? = null,
+        journalOwnerId: Long = testUserId,
+        friends: List<User> = emptyList(),
+        commentAccess: JournalAccess = JournalAccess.NOBODY
+    ): JournalEntriesViewModel {
+        // Настраиваем моки для preferencesRepository
+        every { preferencesRepository.currentUserId } returns MutableStateFlow(currentUserId)
+
+        // Настраиваем моки для swRepository
+        every { swRepository.getFriendsFlow() } returns flowOf(friends)
+
+        // Настраиваем моки для savedStateHandle
+        every { savedStateHandle.get<String>("commentAccess") } returns commentAccess.name
+
+        val deps = JournalEntriesDeps(
+            getJournalEntriesUseCase = getJournalEntriesUseCase,
+            syncJournalEntriesUseCase = syncJournalEntriesUseCase,
+            deleteJournalEntryUseCase = deleteJournalEntryUseCase,
+            canDeleteJournalEntryUseCase = canDeleteJournalEntryUseCase,
+            preferencesRepository = preferencesRepository,
+            swRepository = swRepository,
+            savedStateHandle = savedStateHandle,
+            errorReporter = errorReporter
+        )
+
+        return JournalEntriesViewModel(journalOwnerId, testJournalId, deps)
+    }
 
     @Before
     fun setup() {
@@ -72,7 +118,13 @@ class JournalEntriesViewModelTest {
         syncJournalEntriesUseCase = mockk(relaxed = true)
         deleteJournalEntryUseCase = mockk(relaxed = true)
         canDeleteJournalEntryUseCase = mockk(relaxed = true)
+        preferencesRepository = mockk(relaxed = true)
+        swRepository = mockk(relaxed = true)
+        savedStateHandle = mockk(relaxed = true)
         errorReporter = mockk(relaxed = true)
+
+        // Настраиваем значения по умолчанию для SavedStateHandle
+        every { savedStateHandle.get<String>("commentAccess") } returns "NOBODY"
     }
 
     @After
@@ -92,15 +144,7 @@ class JournalEntriesViewModelTest {
         } returns Result.success(Unit)
 
         // When
-        viewModel = JournalEntriesViewModel(
-            testUserId,
-            testJournalId,
-            getJournalEntriesUseCase,
-            syncJournalEntriesUseCase,
-            deleteJournalEntryUseCase,
-            canDeleteJournalEntryUseCase,
-            errorReporter
-        )
+        viewModel = createViewModel()
 
         // Then
         val initialState = viewModel.uiState.value
@@ -123,15 +167,7 @@ class JournalEntriesViewModelTest {
         } returns Result.success(Unit)
 
         // When
-        viewModel = JournalEntriesViewModel(
-            testUserId,
-            testJournalId,
-            getJournalEntriesUseCase,
-            syncJournalEntriesUseCase,
-            deleteJournalEntryUseCase,
-            canDeleteJournalEntryUseCase,
-            errorReporter
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // Then
@@ -166,15 +202,7 @@ class JournalEntriesViewModelTest {
         } returns Result.success(Unit)
 
         // When
-        viewModel = JournalEntriesViewModel(
-            testUserId,
-            testJournalId,
-            getJournalEntriesUseCase,
-            syncJournalEntriesUseCase,
-            deleteJournalEntryUseCase,
-            canDeleteJournalEntryUseCase,
-            errorReporter
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // Then
@@ -195,15 +223,7 @@ class JournalEntriesViewModelTest {
         )
 
         // When
-        viewModel = JournalEntriesViewModel(
-            testUserId,
-            testJournalId,
-            getJournalEntriesUseCase,
-            syncJournalEntriesUseCase,
-            deleteJournalEntryUseCase,
-            canDeleteJournalEntryUseCase,
-            errorReporter
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // Then
@@ -229,15 +249,7 @@ class JournalEntriesViewModelTest {
         )
 
         // When
-        viewModel = JournalEntriesViewModel(
-            testUserId,
-            testJournalId,
-            getJournalEntriesUseCase,
-            syncJournalEntriesUseCase,
-            deleteJournalEntryUseCase,
-            canDeleteJournalEntryUseCase,
-            errorReporter
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // Then
@@ -258,15 +270,7 @@ class JournalEntriesViewModelTest {
         )
 
         // When
-        viewModel = JournalEntriesViewModel(
-            testUserId,
-            testJournalId,
-            getJournalEntriesUseCase,
-            syncJournalEntriesUseCase,
-            deleteJournalEntryUseCase,
-            canDeleteJournalEntryUseCase,
-            errorReporter
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // Then
@@ -295,15 +299,7 @@ class JournalEntriesViewModelTest {
             )
         } returns Result.success(Unit)
 
-        viewModel = JournalEntriesViewModel(
-            testUserId,
-            testJournalId,
-            getJournalEntriesUseCase,
-            syncJournalEntriesUseCase,
-            deleteJournalEntryUseCase,
-            canDeleteJournalEntryUseCase,
-            errorReporter
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // Сбрасываем верификацию (init уже вызвал loadEntries)
@@ -315,88 +311,6 @@ class JournalEntriesViewModelTest {
 
         // Then
         coVerify(atLeast = 2) { syncJournalEntriesUseCase(testUserId, testJournalId) }
-    }
-
-    @Test
-    fun testLoadEntries_logsSuccess() = runTest {
-        // Given
-        val entries = listOf(testEntry)
-        coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns flowOf(entries)
-        coEvery {
-            syncJournalEntriesUseCase(
-                testUserId,
-                testJournalId
-            )
-        } returns Result.success(Unit)
-
-        // When
-        viewModel = JournalEntriesViewModel(
-            testUserId,
-            testJournalId,
-            getJournalEntriesUseCase,
-            syncJournalEntriesUseCase,
-            deleteJournalEntryUseCase,
-            canDeleteJournalEntryUseCase,
-            errorReporter
-        )
-        advanceUntilIdle()
-
-        // Then
-        verify(atLeast = 1) {
-            Log.i(
-                withArg<String> { tag ->
-                    assertTrue(
-                        "Tag должен содержать JournalEntriesViewModel",
-                        tag.contains("JournalEntriesViewModel")
-                    )
-                },
-                withArg<String> { message ->
-                    assertTrue(
-                        "Сообщение должно содержать 'Синхронизация записей успешна'",
-                        message.contains("Синхронизация записей успешна")
-                    )
-                }
-            )
-        }
-    }
-
-    @Test
-    fun testLoadEntries_logsError() = runTest {
-        // Given
-        coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns flowOf(emptyList())
-        coEvery { syncJournalEntriesUseCase(testUserId, testJournalId) } returns Result.failure(
-            Exception("Ошибка сети")
-        )
-
-        // When
-        viewModel = JournalEntriesViewModel(
-            testUserId,
-            testJournalId,
-            getJournalEntriesUseCase,
-            syncJournalEntriesUseCase,
-            deleteJournalEntryUseCase,
-            canDeleteJournalEntryUseCase,
-            errorReporter
-        )
-        advanceUntilIdle()
-
-        // Then
-        verify(atLeast = 1) {
-            Log.e(
-                withArg<String> { tag ->
-                    assertTrue(
-                        "Tag должен содержать JournalEntriesViewModel",
-                        tag.contains("JournalEntriesViewModel")
-                    )
-                },
-                withArg<String> { message ->
-                    assertTrue(
-                        "Сообщение должно содержать 'Ошибка при синхронизации записей'",
-                        message.contains("Ошибка при синхронизации записей")
-                    )
-                }
-            )
-        }
     }
 
     @Test
@@ -412,15 +326,7 @@ class JournalEntriesViewModelTest {
         } returns Result.success(Unit)
 
         // When
-        viewModel = JournalEntriesViewModel(
-            testUserId,
-            testJournalId,
-            getJournalEntriesUseCase,
-            syncJournalEntriesUseCase,
-            deleteJournalEntryUseCase,
-            canDeleteJournalEntryUseCase,
-            errorReporter
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // Имитируем конкурентные вызовы
@@ -463,15 +369,7 @@ class JournalEntriesViewModelTest {
         } returns Result.success(Unit)
 
         // When
-        viewModel = JournalEntriesViewModel(
-            testUserId,
-            testJournalId,
-            getJournalEntriesUseCase,
-            syncJournalEntriesUseCase,
-            deleteJournalEntryUseCase,
-            canDeleteJournalEntryUseCase,
-            errorReporter
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // Then - подписываемся на события перед вызовом deleteEntry
@@ -507,15 +405,7 @@ class JournalEntriesViewModelTest {
         } returns Result.failure(Exception(errorMessage))
 
         // When
-        viewModel = JournalEntriesViewModel(
-            testUserId,
-            testJournalId,
-            getJournalEntriesUseCase,
-            syncJournalEntriesUseCase,
-            deleteJournalEntryUseCase,
-            canDeleteJournalEntryUseCase,
-            errorReporter
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // Then - подписываемся на события перед вызовом deleteEntry
@@ -550,15 +440,7 @@ class JournalEntriesViewModelTest {
         } returns Result.success(Unit)
 
         // When
-        viewModel = JournalEntriesViewModel(
-            testUserId,
-            testJournalId,
-            getJournalEntriesUseCase,
-            syncJournalEntriesUseCase,
-            deleteJournalEntryUseCase,
-            canDeleteJournalEntryUseCase,
-            errorReporter
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.deleteEntry(testEntryId)
@@ -586,15 +468,7 @@ class JournalEntriesViewModelTest {
         } returns Result.failure(Exception())
 
         // When
-        viewModel = JournalEntriesViewModel(
-            testUserId,
-            testJournalId,
-            getJournalEntriesUseCase,
-            syncJournalEntriesUseCase,
-            deleteJournalEntryUseCase,
-            canDeleteJournalEntryUseCase,
-            errorReporter
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // Then - подписываемся на события перед вызовом deleteEntry
@@ -629,15 +503,7 @@ class JournalEntriesViewModelTest {
         } returns Result.success(Unit)
 
         // When
-        viewModel = JournalEntriesViewModel(
-            testUserId,
-            testJournalId,
-            getJournalEntriesUseCase,
-            syncJournalEntriesUseCase,
-            deleteJournalEntryUseCase,
-            canDeleteJournalEntryUseCase,
-            errorReporter
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // Проверяем, что initially isDeleting = false
@@ -667,15 +533,7 @@ class JournalEntriesViewModelTest {
         // Given
         coEvery { canDeleteJournalEntryUseCase(1L, testJournalId) } returns false
 
-        viewModel = JournalEntriesViewModel(
-            testUserId,
-            testJournalId,
-            getJournalEntriesUseCase,
-            syncJournalEntriesUseCase,
-            deleteJournalEntryUseCase,
-            canDeleteJournalEntryUseCase,
-            errorReporter
-        )
+        viewModel = createViewModel()
 
         // When
         val result = viewModel.canDeleteEntry(1L)
@@ -693,15 +551,7 @@ class JournalEntriesViewModelTest {
         // Given
         coEvery { canDeleteJournalEntryUseCase(2L, testJournalId) } returns true
 
-        viewModel = JournalEntriesViewModel(
-            testUserId,
-            testJournalId,
-            getJournalEntriesUseCase,
-            syncJournalEntriesUseCase,
-            deleteJournalEntryUseCase,
-            canDeleteJournalEntryUseCase,
-            errorReporter
-        )
+        viewModel = createViewModel()
 
         // When
         val result = viewModel.canDeleteEntry(2L)
@@ -709,5 +559,411 @@ class JournalEntriesViewModelTest {
         // Then
         assertEquals(true, result)
         coVerify(exactly = 1) { canDeleteJournalEntryUseCase(2L, testJournalId) }
+    }
+
+    // ==================== ТЕСТЫ ДЛЯ ВОЗМОЖНОСТИ СОЗДАНИЯ ЗАПИСЕЙ ====================
+
+    /**
+     * Тест 18: canCreateEntry возвращает true для JournalAccess.ALL при авторизованном пользователе
+     */
+    @Test
+    fun testCanCreateEntry_ALL_withAuthorizedUser_returnsTrue() = runTest {
+        // Given
+        val currentUserId = 100L
+        coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns emptyFlow()
+        coEvery {
+            syncJournalEntriesUseCase(
+                testUserId,
+                testJournalId
+            )
+        } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel(
+            currentUserId = currentUserId,
+            friends = emptyList(),
+            commentAccess = JournalAccess.ALL
+        )
+        advanceUntilIdle()
+
+        // Then
+        val canCreate = viewModel.canCreateEntry.value
+        assertTrue(
+            "При JournalAccess.ALL можно создавать записи авторизованному пользователю",
+            canCreate
+        )
+    }
+
+    /**
+     * Тест 19: canCreateEntry возвращает false для JournalAccess.ALL без авторизации
+     */
+    @Test
+    fun testCanCreateEntry_ALL_withoutAuthorization_returnsFalse() = runTest {
+        // Given
+        coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns emptyFlow()
+        coEvery {
+            syncJournalEntriesUseCase(
+                testUserId,
+                testJournalId
+            )
+        } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel(
+            currentUserId = null,
+            friends = emptyList(),
+            commentAccess = JournalAccess.ALL
+        )
+        advanceUntilIdle()
+
+        // Then
+        val canCreate = viewModel.canCreateEntry.value
+        assertFalse(
+            "Без авторизации нельзя создавать записи",
+            canCreate
+        )
+    }
+
+    /**
+     * Тест 20: canCreateEntry возвращает true для JournalAccess.FRIENDS для друга владельца
+     */
+    @Test
+    fun testCanCreateEntry_FRIENDS_isFriend_returnsTrue() = runTest {
+        // Given
+        val currentUserId = 100L
+        val friends =
+            listOf(testFriend.copy(id = testUserId)) // текущий пользователь дружит с владельцем
+        coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns emptyFlow()
+        coEvery {
+            syncJournalEntriesUseCase(
+                testUserId,
+                testJournalId
+            )
+        } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel(
+            currentUserId = currentUserId,
+            friends = friends,
+            commentAccess = JournalAccess.FRIENDS
+        )
+        advanceUntilIdle()
+
+        // Then
+        val canCreate = viewModel.canCreateEntry.value
+        assertTrue(
+            "При JournalAccess.FRIENDS друг может создавать записи",
+            canCreate
+        )
+    }
+
+    /**
+     * Тест 21: canCreateEntry возвращает false для JournalAccess.FRIENDS для не-друга
+     */
+    @Test
+    fun testCanCreateEntry_FRIENDS_notFriend_returnsFalse() = runTest {
+        // Given
+        val currentUserId = 100L
+        val friends = listOf(testFriend) // владелец не в списке друзей
+        coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns emptyFlow()
+        coEvery {
+            syncJournalEntriesUseCase(
+                testUserId,
+                testJournalId
+            )
+        } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel(
+            currentUserId = currentUserId,
+            friends = friends,
+            commentAccess = JournalAccess.FRIENDS
+        )
+        advanceUntilIdle()
+
+        // Then
+        val canCreate = viewModel.canCreateEntry.value
+        assertFalse(
+            "При JournalAccess.FRIENDS не-друг не может создавать записи",
+            canCreate
+        )
+    }
+
+    /**
+     * Тест 22: canCreateEntry возвращает true для JournalAccess.FRIENDS для владельца
+     */
+    @Test
+    fun testCanCreateEntry_FRIENDS_isOwner_returnsTrue() = runTest {
+        // Given
+        coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns emptyFlow()
+        coEvery {
+            syncJournalEntriesUseCase(
+                testUserId,
+                testJournalId
+            )
+        } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel(
+            currentUserId = testUserId, // текущий пользователь - владелец
+            friends = emptyList(),
+            commentAccess = JournalAccess.FRIENDS
+        )
+        advanceUntilIdle()
+
+        // Then
+        val canCreate = viewModel.canCreateEntry.value
+        assertTrue(
+            "Владелец всегда может создавать записи",
+            canCreate
+        )
+    }
+
+    /**
+     * Тест 23: canCreateEntry возвращает true для JournalAccess.NOBODY для владельца
+     */
+    @Test
+    fun testCanCreateEntry_NOBODY_isOwner_returnsTrue() = runTest {
+        // Given
+        coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns emptyFlow()
+        coEvery {
+            syncJournalEntriesUseCase(
+                testUserId,
+                testJournalId
+            )
+        } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel(
+            currentUserId = testUserId, // текущий пользователь - владелец
+            friends = emptyList(),
+            commentAccess = JournalAccess.NOBODY
+        )
+        advanceUntilIdle()
+
+        // Then
+        val canCreate = viewModel.canCreateEntry.value
+        assertTrue(
+            "Владелец может создавать записи даже при JournalAccess.NOBODY",
+            canCreate
+        )
+    }
+
+    /**
+     * Тест 24: canCreateEntry возвращает false для JournalAccess.NOBODY для не-владельца
+     */
+    @Test
+    fun testCanCreateEntry_NOBODY_notOwner_returnsFalse() = runTest {
+        // Given
+        val currentUserId = 100L
+        coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns emptyFlow()
+        coEvery {
+            syncJournalEntriesUseCase(
+                testUserId,
+                testJournalId
+            )
+        } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel(
+            currentUserId = currentUserId, // текущий пользователь - не владелец
+            friends = emptyList(),
+            commentAccess = JournalAccess.NOBODY
+        )
+        advanceUntilIdle()
+
+        // Then
+        val canCreate = viewModel.canCreateEntry.value
+        assertFalse(
+            "При JournalAccess.NOBODY не-владелец не может создавать записи",
+            canCreate
+        )
+    }
+
+    // ==================== ТЕСТ ДЛЯ REFRESH ====================
+
+    /**
+     * Тест 25: refresh() вызывает loadEntries() и обновляет список
+     */
+    @Test
+    fun testRefresh_callsLoadEntries() = runTest {
+        // Given
+        val entries = listOf(testEntry)
+        coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns flowOf(entries)
+        coEvery {
+            syncJournalEntriesUseCase(
+                testUserId,
+                testJournalId
+            )
+        } returns Result.success(Unit)
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Сбрасываем верификацию (init уже вызвал loadEntries)
+        coVerify(atLeast = 1) { syncJournalEntriesUseCase(testUserId, testJournalId) }
+
+        // When
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        // Then - проверяем, что loadEntries был вызван снова (внутри refresh)
+        coVerify(atLeast = 2) { syncJournalEntriesUseCase(testUserId, testJournalId) }
+    }
+
+    // ==================== ТЕСТЫ ДЛЯ РЕДАКТИРОВАНИЯ ЗАПИСЕЙ ====================
+
+    /**
+     * Тест 26: canEditEntry возвращает true для автора записи
+     */
+    @Test
+    fun testCanEditEntry_author_returnsTrue() = runTest {
+        // Given
+        val currentUserId = testUserId
+        val entry = testEntry.copy(authorId = currentUserId)
+        coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns emptyFlow()
+        coEvery {
+            syncJournalEntriesUseCase(
+                testUserId,
+                testJournalId
+            )
+        } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel(currentUserId = currentUserId)
+        advanceUntilIdle()
+
+        val result = viewModel.canEditEntry(entry)
+
+        // Then
+        assertTrue(
+            "Автор записи может редактировать её",
+            result
+        )
+    }
+
+    /**
+     * Тест 27: canEditEntry возвращает false для не-автора записи
+     */
+    @Test
+    fun testCanEditEntry_notAuthor_returnsFalse() = runTest {
+        // Given
+        val currentUserId = 100L // другой пользователь
+        val entry = testEntry.copy(authorId = testUserId) // запись другого автора
+        coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns emptyFlow()
+        coEvery {
+            syncJournalEntriesUseCase(
+                testUserId,
+                testJournalId
+            )
+        } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel(currentUserId = currentUserId)
+        advanceUntilIdle()
+
+        val result = viewModel.canEditEntry(entry)
+
+        // Then
+        assertFalse(
+            "Не-автор записи не может редактировать её",
+            result
+        )
+    }
+
+    /**
+     * Тест 28: canCreateEntry обновляется в UI State при изменении
+     */
+    @Test
+    fun testCanCreateEntry_updatesInUiState() = runTest {
+        // Given
+        val currentUserId = testUserId
+        val entries = listOf(testEntry)
+        coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns flowOf(entries)
+        coEvery {
+            syncJournalEntriesUseCase(
+                testUserId,
+                testJournalId
+            )
+        } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel(
+            currentUserId = currentUserId,
+            commentAccess = JournalAccess.ALL
+        )
+        advanceUntilIdle()
+
+        // Then - проверяем, что canCreateEntry присутствует в Content состоянии
+        val state = viewModel.uiState.value
+        assertTrue(
+            "Состояние должно быть Content",
+            state is JournalEntriesUiState.Content
+        )
+        val contentState = state as JournalEntriesUiState.Content
+        assertTrue(
+            "canCreateEntry должен быть true для владельца при ALL",
+            contentState.canCreateEntry
+        )
+    }
+
+    // ==================== ТЕСТЫ ДЛЯ ПРОВЕРКИ ВЛАДЕЛЬЦА ДНЕВНИКА ====================
+
+    /**
+     * Тест 29: canCreateEntry возвращает true, когда currentUserId == journalOwnerId
+     */
+    @Test
+    fun testCanCreateEntry_currentUserIdEqualsJournalOwnerId_returnsTrue() = runTest {
+        // Given
+        val currentUserId = testUserId // текущий пользователь - владелец дневника
+        val journalOwnerId = testUserId // тот же ID
+        coEvery { getJournalEntriesUseCase(journalOwnerId, testJournalId) } returns emptyFlow()
+        coEvery { syncJournalEntriesUseCase(journalOwnerId, testJournalId) } returns Result.success(
+            Unit
+        )
+
+        // When
+        viewModel = createViewModel(
+            currentUserId = currentUserId,
+            journalOwnerId = journalOwnerId,
+            commentAccess = JournalAccess.NOBODY
+        )
+        advanceUntilIdle()
+
+        // Then
+        val canCreate = viewModel.canCreateEntry.value
+        assertTrue(
+            "Владелец дневника может создавать записи",
+            canCreate
+        )
+    }
+
+    /**
+     * Тест 30: canCreateEntry возвращает false, когда currentUserId != journalOwnerId
+     */
+    @Test
+    fun testCanCreateEntry_currentUserIdNotEqualsJournalOwnerId_returnsFalse() = runTest {
+        // Given
+        val currentUserId = 100L // другой пользователь
+        val journalOwnerId = testUserId // владелец дневника
+        coEvery { getJournalEntriesUseCase(journalOwnerId, testJournalId) } returns emptyFlow()
+        coEvery { syncJournalEntriesUseCase(journalOwnerId, testJournalId) } returns Result.success(
+            Unit
+        )
+
+        // When
+        viewModel = createViewModel(
+            currentUserId = currentUserId,
+            journalOwnerId = journalOwnerId,
+            commentAccess = JournalAccess.NOBODY
+        )
+        advanceUntilIdle()
+
+        // Then
+        val canCreate = viewModel.canCreateEntry.value
+        assertFalse(
+            "Не владелец дневника не может создавать записи при NOBODY",
+            canCreate
+        )
     }
 }

@@ -85,6 +85,11 @@
     <string name="journals_empty">Дневников пока нет</string>
     <string name="create_journal">Создать дневник</string>
     <string name="new_journal">Новый дневник</string>
+    <string name="new_journal_placeholder">Создай первую запись в дневнике</string>
+    <string name="journal_created">Дневник создан</string>
+    <string name="error_create_journal">Ошибка создания дневника</string>
+    <string name="error_empty_title">Введите название</string>
+    <string name="fab_create_journal_description">Создать новый дневник</string>
     <string name="entries_empty">Записей пока нет</string>
     <string name="create_entry">Создать запись</string>
     <string name="first_entry_placeholder">Создай первую запись в дневнике</string>
@@ -291,4 +296,9 @@
     <string name="text_entry_empty_error">Текст не может быть пустым</string>
     <string name="text_entry_success">Запись успешно добавлена</string>
     <string name="text_entry_error">Ошибка добавления записи: %s</string>
+
+    <!-- Journal Entries Screen -->
+    <string name="fab_add_entry">Добавить запись</string>
+    <string name="fab_add_entry_description">Создать новую запись в дневнике</string>
+    <string name="entry_deleted">Запись удалена</string>
 </resources>

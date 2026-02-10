@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import com.swparks.data.database.dao.JournalDao
+import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.model.ApiBlacklistOption
 import com.swparks.data.model.ApiFriendAction
@@ -38,6 +39,7 @@ class SWRepositoryFriendsTest {
     private val testDispatcher = StandardTestDispatcher()
     private val mockUserDao = mockk<UserDao>(relaxed = true)
     private val mockJournalDao = mockk<JournalDao>(relaxed = true)
+    private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
 
     @Before
     fun setup() {
@@ -71,7 +73,13 @@ class SWRepositoryFriendsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.getFriendsForUser(1L)
@@ -91,7 +99,13 @@ class SWRepositoryFriendsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.getFriendsForUser(1L)
@@ -111,7 +125,13 @@ class SWRepositoryFriendsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.getFriendRequests()
@@ -131,7 +151,13 @@ class SWRepositoryFriendsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.getFriendRequests()
@@ -150,7 +176,13 @@ class SWRepositoryFriendsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.respondToFriendRequest(2L, true)
@@ -172,7 +204,13 @@ class SWRepositoryFriendsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.respondToFriendRequest(2L, false)
@@ -194,7 +232,13 @@ class SWRepositoryFriendsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.respondToFriendRequest(2L, true)
@@ -215,7 +259,13 @@ class SWRepositoryFriendsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.friendAction(2L, ApiFriendAction.ADD)
@@ -235,7 +285,13 @@ class SWRepositoryFriendsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.friendAction(2L, ApiFriendAction.REMOVE)
@@ -255,7 +311,13 @@ class SWRepositoryFriendsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.friendAction(2L, ApiFriendAction.ADD)
@@ -275,7 +337,13 @@ class SWRepositoryFriendsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.blacklistAction(mockUser, ApiBlacklistOption.ADD)
@@ -296,7 +364,13 @@ class SWRepositoryFriendsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.blacklistAction(mockUser, ApiBlacklistOption.REMOVE)
@@ -317,7 +391,13 @@ class SWRepositoryFriendsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.blacklistAction(mockUser, ApiBlacklistOption.ADD)
@@ -337,7 +417,13 @@ class SWRepositoryFriendsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.getBlacklist()
@@ -357,7 +443,13 @@ class SWRepositoryFriendsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(mockApi, mockDataStore, mockUserDao, mockJournalDao)
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao
+        )
 
         // When
         val result = repository.getBlacklist()

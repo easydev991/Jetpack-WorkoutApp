@@ -22,12 +22,29 @@ interface JournalEntryDao {
     fun getJournalEntriesByJournalId(journalId: Long): Flow<List<JournalEntryEntity>>
 
     /**
+     * Получить запись по ID
+     *
+     * @param entryId Идентификатор записи
+     * @return Запись или null, если не найдена
+     */
+    @Query("SELECT * FROM journal_entries WHERE id = :entryId LIMIT 1")
+    suspend fun getById(entryId: Long): JournalEntryEntity?
+
+    /**
      * Вставить или обновить список записей дневника
      *
      * @param entries Список записей для сохранения
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(entries: List<JournalEntryEntity>)
+
+    /**
+     * Вставить или обновить одну запись дневника
+     *
+     * @param entry Запись для сохранения
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(entry: JournalEntryEntity)
 
     /**
      * Удалить все записи дневника

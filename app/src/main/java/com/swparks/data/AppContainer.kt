@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.SavedStateHandle
 import androidx.room.Room
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.swparks.data.crypto.CryptoManager
@@ -23,11 +24,13 @@ import com.swparks.data.serializer.EncryptedStringSerializer
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.repository.JournalEntriesRepository
 import com.swparks.domain.usecase.CanDeleteJournalEntryUseCase
+import com.swparks.domain.usecase.CreateJournalUseCase
 import com.swparks.domain.usecase.DeleteJournalEntryUseCase
 import com.swparks.domain.usecase.DeleteJournalUseCase
 import com.swparks.domain.usecase.GetJournalEntriesUseCase
 import com.swparks.domain.usecase.GetJournalsUseCase
 import com.swparks.domain.usecase.ICanDeleteJournalEntryUseCase
+import com.swparks.domain.usecase.ICreateJournalUseCase
 import com.swparks.domain.usecase.IDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IDeleteJournalUseCase
 import com.swparks.domain.usecase.IGetJournalEntriesUseCase
@@ -48,6 +51,7 @@ import com.swparks.network.SWApi
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.viewmodel.BlacklistViewModel
 import com.swparks.ui.viewmodel.FriendsListViewModel
+import com.swparks.ui.viewmodel.JournalEntriesDeps
 import com.swparks.ui.viewmodel.JournalEntriesViewModel
 import com.swparks.ui.viewmodel.JournalsViewModel
 import com.swparks.ui.viewmodel.ProfileViewModel
@@ -104,7 +108,11 @@ interface AppContainer {
     fun journalsViewModelFactory(userId: Long): JournalsViewModel
 
     /** Фабрика для JournalEntriesViewModel */
-    fun journalEntriesViewModelFactory(userId: Long, journalId: Long): JournalEntriesViewModel
+    fun journalEntriesViewModelFactory(
+        journalOwnerId: Long,
+        journalId: Long,
+        savedStateHandle: SavedStateHandle
+    ): JournalEntriesViewModel
 
     /** Фабрика для TextEntryViewModel */
     fun textEntryViewModelFactory(mode: TextEntryMode): TextEntryViewModel
@@ -224,7 +232,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
             swApi = retrofitService,
             dataStore = appContext.dataStore,
             userDao = userDao,
-            journalDao = journalDao
+            journalDao = journalDao,
+            journalEntryDao = journalEntryDao
         )
     }
 
@@ -313,8 +322,12 @@ class DefaultAppContainer(context: Context) : AppContainer {
         DeleteJournalUseCase(swRepository)
     }
 
+    val createJournalUseCase: ICreateJournalUseCase by lazy {
+        CreateJournalUseCase(swRepository)
+    }
+
     override val textEntryUseCase: ITextEntryUseCase by lazy {
-        TextEntryUseCase(swRepository)
+        TextEntryUseCase(swRepository, createJournalUseCase)
     }
 
     /** Factory метод для создания ProfileViewModel */
@@ -358,15 +371,24 @@ class DefaultAppContainer(context: Context) : AppContainer {
     )
 
     /** Factory метод для создания JournalEntriesViewModel */
-    override fun journalEntriesViewModelFactory(userId: Long, journalId: Long) =
+    override fun journalEntriesViewModelFactory(
+        journalOwnerId: Long,
+        journalId: Long,
+        savedStateHandle: SavedStateHandle
+    ) =
         JournalEntriesViewModel(
-            userId = userId,
+            journalOwnerId = journalOwnerId,
             journalId = journalId,
-            getJournalEntriesUseCase = getJournalEntriesUseCase,
-            syncJournalEntriesUseCase = syncJournalEntriesUseCase,
-            deleteJournalEntryUseCase = deleteJournalEntryUseCase,
-            canDeleteJournalEntryUseCase = canDeleteJournalEntryUseCase,
-            errorReporter = errorReporter
+            deps = JournalEntriesDeps(
+                getJournalEntriesUseCase = getJournalEntriesUseCase,
+                syncJournalEntriesUseCase = syncJournalEntriesUseCase,
+                deleteJournalEntryUseCase = deleteJournalEntryUseCase,
+                canDeleteJournalEntryUseCase = canDeleteJournalEntryUseCase,
+                preferencesRepository = preferencesRepository,
+                swRepository = swRepository,
+                savedStateHandle = savedStateHandle,
+                errorReporter = errorReporter
+            )
         )
 
     /** Factory метод для создания TextEntryViewModel */

@@ -118,6 +118,9 @@ class TextEntryViewModelTest {
         val mode = TextEntryMode.EditPark(editInfo)
         viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
 
+        // Then - проверяем, что текст предзаполнен с oldEntry при создании
+        assertEquals(testOldEntry, viewModel.uiState.value.text)
+
         // When
         viewModel.onTextChanged(testOldEntry)
 
@@ -345,7 +348,66 @@ class TextEntryViewModelTest {
     }
 
     @Test
-    fun resetState_WhenCalled_ThenResetsToInitialState() {
+    fun init_WhenEditModePark_ThenTextPrepopulatedWithOldEntry() {
+        // Given
+        val editInfo = EditInfo(testParkId, testEntryId, testOldEntry)
+        val mode = TextEntryMode.EditPark(editInfo)
+
+        // When
+        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+
+        // Then
+        assertEquals(mode, viewModel.uiState.value.mode)
+        assertEquals(testOldEntry, viewModel.uiState.value.text)
+        assertFalse(viewModel.uiState.value.isSendEnabled) // Кнопка отключена, так как текст равен oldEntry
+    }
+
+    @Test
+    fun init_WhenEditModeEvent_ThenTextPrepopulatedWithOldEntry() {
+        // Given
+        val editInfo = EditInfo(testEventId, testEntryId, testOldEntry)
+        val mode = TextEntryMode.EditEvent(editInfo)
+
+        // When
+        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+
+        // Then
+        assertEquals(mode, viewModel.uiState.value.mode)
+        assertEquals(testOldEntry, viewModel.uiState.value.text)
+        assertFalse(viewModel.uiState.value.isSendEnabled) // Кнопка отключена, так как текст равен oldEntry
+    }
+
+    @Test
+    fun init_WhenEditModeJournalEntry_ThenTextPrepopulatedWithOldEntry() {
+        // Given
+        val editInfo = EditInfo(testJournalId, testEntryId, testOldEntry)
+        val mode = TextEntryMode.EditJournalEntry(testOwnerId, editInfo)
+
+        // When
+        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+
+        // Then
+        assertEquals(mode, viewModel.uiState.value.mode)
+        assertEquals(testOldEntry, viewModel.uiState.value.text)
+        assertFalse(viewModel.uiState.value.isSendEnabled) // Кнопка отключена, так как текст равен oldEntry
+    }
+
+    @Test
+    fun init_WhenNewMode_ThenTextIsEmpty() {
+        // Given
+        val mode = TextEntryMode.NewForPark(testParkId)
+
+        // When
+        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+
+        // Then
+        assertEquals(mode, viewModel.uiState.value.mode)
+        assertEquals("", viewModel.uiState.value.text)
+        assertFalse(viewModel.uiState.value.isSendEnabled) // Кнопка отключена, так как текст пустой
+    }
+
+    @Test
+    fun resetState_WhenCalledForNewMode_ThenResetsToInitialState() {
         // Given
         val mode = TextEntryMode.NewForPark(testParkId)
         viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
@@ -360,6 +422,26 @@ class TextEntryViewModelTest {
         assertEquals("", state.text)
         assertFalse(state.isLoading)
         assertFalse(state.isSendEnabled)
+        assertNull(state.error)
+    }
+
+    @Test
+    fun resetState_WhenCalledForEditMode_ThenResetsToOldEntry() {
+        // Given
+        val editInfo = EditInfo(testParkId, testEntryId, testOldEntry)
+        val mode = TextEntryMode.EditPark(editInfo)
+        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel.onTextChanged(testText)
+
+        // When
+        viewModel.resetState()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals(mode, state.mode)
+        assertEquals(testOldEntry, state.text) // Текст должен сброситься на oldEntry
+        assertFalse(state.isLoading)
+        assertFalse(state.isSendEnabled) // Кнопка отключена, так как текст равен oldEntry
         assertNull(state.error)
     }
 }

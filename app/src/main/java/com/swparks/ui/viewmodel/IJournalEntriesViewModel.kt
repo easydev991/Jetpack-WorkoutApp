@@ -1,5 +1,6 @@
 package com.swparks.ui.viewmodel
 
+import com.swparks.domain.model.JournalEntry
 import com.swparks.ui.state.JournalEntriesUiState
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -57,6 +58,27 @@ interface IJournalEntriesViewModel {
      * @return true если удаление разрешено, false если это первая запись
      */
     suspend fun canDeleteEntry(entryId: Long): Boolean
+
+    /**
+     * Признак возможности создания записей (для отображения FAB).
+     * Вычисляется на основе прав доступа к дневнику.
+     */
+    val canCreateEntry: StateFlow<Boolean>
+
+    /**
+     * Обновить список записей (public метод для refresh).
+     */
+    fun refresh()
+
+    /**
+     * Проверить, можно ли редактировать запись.
+     *
+     * Редактировать записи может только автор записи.
+     *
+     * @param entry Запись в дневнике
+     * @return true если редактирование разрешено (автор записи)
+     */
+    fun canEditEntry(entry: JournalEntry): Boolean
 }
 
 /**

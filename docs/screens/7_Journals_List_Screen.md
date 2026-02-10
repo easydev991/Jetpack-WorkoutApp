@@ -4,6 +4,7 @@
 
 **Первая итерация: 100%** ✅
 **Вторая итерация: 100%** ✅
+**Третья итерация: 100%** ✅
 
 ---
 
@@ -13,7 +14,7 @@
 - Принимает `userId` через навигацию
 - Загружает и кеширует список дневников через API
 - Отображает дневники через `JournalRowView`
-- Поддерживает Pull-to-Refresh, удаление с диалогом подтверждения
+- Поддерживает Pull-to-Refresh, удаление с диалогом подтверждения, создание через FAB
 - Обрабатывает состояния загрузки, ошибки, пустого списка
 - Корректно обрабатывает безопасные зоны экрана
 
@@ -28,91 +29,58 @@
 
 ## Первая итерация: базовый экран ✅
 
-### Реализованный функционал
+**Реализован функционал:**
+- Domain Layer: модель `Journal`, enum `JournalAccess`, маппер
+- Data Layer: `JournalEntity`, `JournalDao`, `JournalsRepository`
+- Use Cases: `GetJournalsUseCase`, `SyncJournalsUseCase`
+- Presentation: `JournalsUiState`, `JournalsViewModel`
+- UI: экран с AppBar, Pull-to-Refresh, состояниями UI
+- Локализация: `journals_list_title`, `journals_empty`
 
-**Domain Layer:**
-- Доменная модель `Journal`, enum `JournalAccess`, маппер `toDomain()`
+**Тестирование:** 11 UI тестов, 12 unit тестов для ViewModel
 
-**Data Layer:**
-- `JournalEntity`, `JournalDao` (getJournalsByUserId, insertAll, deleteByUserId)
-- `JournalsRepository` с `observeJournals()`, `refreshJournals()`
-
-**Domain Layer (Use Cases):**
-- `GetJournalsUseCase`, `SyncJournalsUseCase`
-
-**Presentation Layer:**
-- `JournalsUiState` (InitialLoading, Content, Error)
-- `JournalsViewModel` с Flow подпиской, методами `loadJournals()`, `retry()`
-
-**UI Layer:**
-- Экран с AppBar, Pull-to-Refresh, безопасными зонами
-- Состояния UI с `LoadingOverlayView`, `ErrorContentView`, заглушкой при пустом списке
-- Локализация (RU/EN): `journals_list_title`, `journals_empty`
-
-**Тестирование:**
-- 11 UI тестов с `FakeJournalsViewModel`
-- 12 unit тестов для ViewModel с `MockK`
-
-### Измененные файлы
-
-- `app/src/main/java/com/swparks/ui/screens/journals/JournalsListScreen.kt`
-- `app/src/main/java/com/swparks/ui/viewmodel/IJournalsViewModel.kt`
-- `app/src/main/java/com/swparks/ui/viewmodel/FakeJournalsViewModel.kt`
-- `app/src/androidTest/java/com/swparks/ui/screens/journals/JournalsListScreenTest.kt`
-- `app/src/test/java/com/swparks/ui/viewmodel/JournalsViewModelTest.kt`
-- `app/src/main/java/com/swparks/data/AppContainer.kt`
-- `app/src/main/java/com/swparks/ui/screens/RootScreen.kt`
-- `app/src/main/res/values/strings.xml`, `app/src/main/res/values-ru/strings.xml`
+**Измененные файлы:**
+- `JournalsListScreen.kt`, `IJournalsViewModel.kt`, `FakeJournalsViewModel.kt`
+- `JournalsListScreenTest.kt`, `JournalsViewModelTest.kt`
+- `AppContainer.kt`, `RootScreen.kt`
+- `strings.xml`, `strings-ru/strings.xml`
 
 ---
 
 ## Вторая итерация: удаление дневника ✅
 
-### Реализованный функционал
+**Реализован функционал:**
+- Domain Layer: `DeleteJournalUseCase`
+- Presentation: метод `deleteJournal()`, флаг `isDeleting`, события для Snackbar
+- UI: диалог подтверждения `DeleteConfirmationDialog`, обработка `DELETE` действия
+- Data Layer: `SWRepository.deleteJournal()` синхронизирует локальную БД
+- Локализация: `delete_journal_title`, `delete_journal_message`, `journal_deleted`, `error_delete_journal`
 
-**Domain Layer:**
-- `DeleteJournalUseCase` с интерфейсом и реализацией
+**Тестирование:** 5 unit тестов для удаления
 
-**Presentation Layer:**
-- `JournalsViewModel`: метод `deleteJournal()`, флаг `isDeleting`, события для Snackbar
+**Измененные файлы:**
+- **Созданные:** `IDeleteJournalUseCase.kt`, `DeleteJournalUseCase.kt`, `DeleteJournalUseCaseTest.kt`
+- **Измененные:** `JournalsListScreen.kt`, `IJournalsViewModel.kt`, `JournalsViewModel.kt`, `FakeJournalsViewModel.kt`, `SWRepository.kt`, `AppContainer.kt`, `JournalsViewModelTest.kt`, `strings.xml`, `strings-ru/strings.xml`
 
-**UI Layer:**
-- Диалог подтверждения удаления `DeleteConfirmationDialog`
-- Обработка действия `JournalAction.DELETE`
-- Индикатор загрузки при удалении, блокировка UI
+---
 
-**Локализация:**
-- `delete_journal_title`, `delete_journal_message`, `journal_deleted`, `error_delete_journal` (RU/EN)
+## Третья итерация: создание дневника ✅
 
-**Data Layer:**
-- `SWRepository.deleteJournal()` синхронизирует локальную БД
+**Реализован функционал:**
+- Domain Layer: `CreateJournalUseCase`, модель запроса `CreateJournalRequest`
+- Presentation: новый режим `NewJournal` в `TextEntryMode`, обновление `TextEntryViewModel`
+- UI: FAB для создания дневника, интеграция с `TextEntrySheetHost`, callback `onSendSuccess`
+- API: исправлен метод `createJournal` - использует `@Body CreateJournalRequest` вместо `@Body title: String`
+- FAB отображается только если `appState.currentUser != null && userId == appState.currentUser.id`
+- Локализация: `new_journal_placeholder`, `journal_created`, `error_create_journal`, `error_empty_title`, `fab_create_journal_description`
 
 **Тестирование:**
-- 5 unit тестов для удаления в `JournalsViewModelTest.kt`
-- Базовые UI тесты (уже покрыты в первой итерации)
+- 6 unit тестов для `CreateJournalUseCase`
+- 4 новых UI теста для FAB (авторизованный/неавторизованный пользователь, свой/чужой профиль, удаление)
 
-### Качество кода
-
-- ✅ Все 698 тестов проходят успешно
-- ✅ Билд успешный
-
-### Измененные файлы
-
-**Созданные:**
-- `app/src/main/java/com/swparks/domain/usecase/IDeleteJournalUseCase.kt`
-- `app/src/main/java/com/swparks/domain/usecase/DeleteJournalUseCase.kt`
-- `app/src/test/java/com/swparks/domain/usecase/DeleteJournalUseCaseTest.kt`
-
-**Измененные:**
-- `app/src/main/java/com/swparks/ui/screens/journals/JournalsListScreen.kt`
-- `app/src/main/java/com/swparks/ui/viewmodel/IJournalsViewModel.kt`
-- `app/src/main/java/com/swparks/ui/viewmodel/JournalsViewModel.kt`
-- `app/src/main/java/com/swparks/ui/viewmodel/FakeJournalsViewModel.kt`
-- `app/src/main/java/com/swparks/data/repository/SWRepository.kt`
-- `app/src/main/java/com/swparks/data/AppContainer.kt`
-- `app/src/test/java/com/swparks/ui/viewmodel/JournalsViewModelTest.kt`
-- `app/src/main/res/values/strings.xml`
-- `app/src/main/res/values-ru/strings.xml`
+**Измененные файлы:**
+- **Созданные:** `CreateJournalRequest.kt`, `ICreateJournalUseCase.kt`, `CreateJournalUseCase.kt`, `CreateJournalUseCaseTest.kt`, `TextEntryUseCaseTest.kt`
+- **Измененные:** `SWApi.kt`, `MockSWApi.kt`, `SWRepository.kt`, `TextEntryMode.kt`, `ITextEntryUseCase.kt`, `TextEntryUseCase.kt`, `TextEntryViewModel.kt`, `JournalsListScreen.kt`, `AppContainer.kt`, `RootScreen.kt`, `strings.xml`, `strings-ru/strings.xml`
 
 ---
 
@@ -123,14 +91,7 @@
 
 ---
 
-## Следующие итерации (для справки)
+## Четвертая итерация: TODO
 
-**Третья итерация (не начата):**
-- Реализовать интеграцию с `TextEntryScreen` для создания дневника
-- Реализовать реальные действия для кнопки "Создать дневник"
-- Реализовать переходы при клике на элементы списка
-- Добавить обработку других действий меню (редактирование, настройки доступа)
-
-**Четвертая итерация:**
 - Добавить фильтрацию и сортировку дневников
 - Добавить индикатор количества записей в дневнике
