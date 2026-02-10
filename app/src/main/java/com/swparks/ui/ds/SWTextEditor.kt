@@ -19,7 +19,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  *
  * @param modifier Модификатор
  * @param text Основной текст
- * @param labelID Идентификатор локализованной строки с плейсхолдером
+ * @param labelID Идентификатор локализованной строки с плейсхолдером (null = нет label)
  * @param enabled Доступность текстового поля для ввода текста
  * @param onTextChange Возвращает текст при вводе
  */
@@ -27,7 +27,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
 fun SWTextEditor(
     modifier: Modifier = Modifier,
     text: String,
-    @StringRes labelID: Int,
+    @StringRes labelID: Int? = null,
     enabled: Boolean = true,
     onTextChange: (String) -> Unit
 ) {

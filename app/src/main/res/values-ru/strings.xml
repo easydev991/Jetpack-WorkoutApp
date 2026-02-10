@@ -281,4 +281,14 @@
     <string name="error_server_unavailable">Сервер недоступен. Попробуйте позже.</string>
     <string name="error_server_general">Произошла ошибка на сервере.</string>
     <string name="error_unknown">Произошла неизвестная ошибка.</string>
+
+    <!-- Text Entry Screen -->
+    <string name="new_comment_title">Новый комментарий</string>
+    <string name="new_entry_title">Новая запись</string>
+    <string name="edit_comment_title">Изменить комментарий</string>
+    <string name="send_button_text">Отправить</string>
+    <string name="close_button_content_description">Закрыть</string>
+    <string name="text_entry_empty_error">Текст не может быть пустым</string>
+    <string name="text_entry_success">Запись успешно добавлена</string>
+    <string name="text_entry_error">Ошибка добавления записи: %s</string>
 </resources>

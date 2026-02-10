@@ -37,17 +37,21 @@ import com.swparks.domain.usecase.ILogoutUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
 import com.swparks.domain.usecase.ISyncJournalEntriesUseCase
 import com.swparks.domain.usecase.ISyncJournalsUseCase
+import com.swparks.domain.usecase.ITextEntryUseCase
 import com.swparks.domain.usecase.LoginUseCase
 import com.swparks.domain.usecase.LogoutUseCase
 import com.swparks.domain.usecase.ResetPasswordUseCase
 import com.swparks.domain.usecase.SyncJournalEntriesUseCase
 import com.swparks.domain.usecase.SyncJournalsUseCase
+import com.swparks.domain.usecase.TextEntryUseCase
 import com.swparks.network.SWApi
+import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.viewmodel.BlacklistViewModel
 import com.swparks.ui.viewmodel.FriendsListViewModel
 import com.swparks.ui.viewmodel.JournalEntriesViewModel
 import com.swparks.ui.viewmodel.JournalsViewModel
 import com.swparks.ui.viewmodel.ProfileViewModel
+import com.swparks.ui.viewmodel.TextEntryViewModel
 import com.swparks.ui.viewmodel.UserTrainingParksViewModel
 import com.swparks.util.AndroidLogger
 import com.swparks.util.ErrorHandler
@@ -82,6 +86,7 @@ interface AppContainer {
     val syncJournalEntriesUseCase: ISyncJournalEntriesUseCase
     val deleteJournalEntryUseCase: IDeleteJournalEntryUseCase
     val canDeleteJournalEntryUseCase: ICanDeleteJournalEntryUseCase
+    val textEntryUseCase: ITextEntryUseCase
 
     /** Фабрика для ProfileViewModel (единый контейнер обеспечивает одну БД с LoginViewModel). */
     fun profileViewModelFactory(): ProfileViewModel
@@ -101,6 +106,9 @@ interface AppContainer {
     /** Фабрика для JournalEntriesViewModel */
     fun journalEntriesViewModelFactory(userId: Long, journalId: Long): JournalEntriesViewModel
 
+    /** Фабрика для TextEntryViewModel */
+    fun textEntryViewModelFactory(mode: TextEntryMode): TextEntryViewModel
+
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
     fun provideProfileApi(): SWApi
@@ -116,6 +124,7 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
 )
 
 class DefaultAppContainer(context: Context) : AppContainer {
+    private val appContext: Context = context.applicationContext
     private val baseUrl = "https://workout.su/api/v3/"
     private val jsonFactory = Json {
         isLenient = true
@@ -133,7 +142,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
      */
     val database: SWDatabase by lazy {
         Room.databaseBuilder(
-            context.applicationContext,
+            appContext,
             SWDatabase::class.java,
             "sw_database"
         ).fallbackToDestructiveMigration(dropAllTables = true)
@@ -154,7 +163,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
     // Создаем CryptoManager для шифрования токена
     private val cryptoManager: CryptoManager by lazy {
-        CryptoManagerImpl(context)
+        CryptoManagerImpl(appContext)
     }
 
     // Создаем EncryptedStringSerializer для шифрования/дешифрования токена
@@ -164,12 +173,12 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
     // Создаем SecureTokenRepository для безопасного хранения токена
     override val secureTokenRepository: SecureTokenRepository by lazy {
-        SecureTokenRepository(context.dataStore, encryptedStringSerializer)
+        SecureTokenRepository(appContext.dataStore, encryptedStringSerializer)
     }
 
     // Создаем UserPreferencesRepository для использования в AuthInterceptor
     private val preferencesRepository: UserPreferencesRepository by lazy {
-        UserPreferencesRepository(context.dataStore)
+        UserPreferencesRepository(appContext.dataStore)
     }
 
     // ==================== Interceptors ====================
@@ -213,7 +222,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
     override val swRepository: SWRepository by lazy {
         SWRepositoryImp(
             swApi = retrofitService,
-            dataStore = context.dataStore,
+            dataStore = appContext.dataStore,
             userDao = userDao,
             journalDao = journalDao
         )
@@ -222,7 +231,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
 // ==================== Справочник стран и городов ====================
 
     override val countriesRepository: CountriesRepository by lazy {
-        CountriesRepositoryImpl(context = context, swApi = retrofitService, logger = logger)
+        CountriesRepositoryImpl(context = appContext, swApi = retrofitService, logger = logger)
     }
 
     override val journalsRepository: com.swparks.domain.repository.JournalsRepository by lazy {
@@ -304,6 +313,10 @@ class DefaultAppContainer(context: Context) : AppContainer {
         DeleteJournalUseCase(swRepository)
     }
 
+    override val textEntryUseCase: ITextEntryUseCase by lazy {
+        TextEntryUseCase(swRepository)
+    }
+
     /** Factory метод для создания ProfileViewModel */
     override fun profileViewModelFactory() = ProfileViewModel(
         countriesRepository = countriesRepository,
@@ -355,6 +368,14 @@ class DefaultAppContainer(context: Context) : AppContainer {
             canDeleteJournalEntryUseCase = canDeleteJournalEntryUseCase,
             errorReporter = errorReporter
         )
+
+    /** Factory метод для создания TextEntryViewModel */
+    override fun textEntryViewModelFactory(mode: TextEntryMode) = TextEntryViewModel(
+        textEntryUseCase = textEntryUseCase,
+        errorReporter = errorReporter,
+        mode = mode,
+        context = appContext
+    )
 
     // ==================== API клиенты для разных функциональных областей ====================
     // Все фабричные методы возвращают один и тот же экземпляр SWApi для консистентности

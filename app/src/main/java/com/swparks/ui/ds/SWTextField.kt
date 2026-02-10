@@ -30,7 +30,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  *
  * @param modifier Модификатор
  * @param text Текст
- * @param labelID Идентификатор локализованной строки с плейсхолдером
+ * @param labelID Идентификатор локализованной строки с плейсхолдером (null = нет label)
  * @param secure Нужно ли скрыть текст (например, для пароля)
  * @param singleLine Нужно ли ограничить текст одной строкой
  * @param isError Состояние ошибки
@@ -42,7 +42,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
 data class TextFieldConfig(
     val modifier: Modifier = Modifier,
     val text: String,
-    @param:StringRes val labelID: Int,
+    @param:StringRes val labelID: Int? = null,
     val secure: Boolean = false,
     val singleLine: Boolean = true,
     val isError: Boolean = false,
@@ -74,7 +74,11 @@ fun SWTextField(config: TextFieldConfig) {
         value = config.text,
         onValueChange = config.onTextChange,
         singleLine = config.singleLine,
-        label = { Text(text = stringResource(id = config.labelID)) },
+        label = if (config.labelID != null) {
+            { Text(text = stringResource(id = config.labelID)) }
+        } else {
+            null
+        },
         supportingText = {
             if (config.supportingText.isNotBlank()) {
                 Text(
