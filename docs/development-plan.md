@@ -11,40 +11,29 @@
 ### Android-приложение (Jetpack-WorkoutApp)
 
 - 🚧 **В активной разработке**
-- ✅ Дизайн-система: 28 компонентов готовых к использованию
-- ✅ Модели данных: 17 API моделей + 4 доменные модели + 12 UI моделей
+- ✅ Дизайн-система: 28 компонентов
+- ✅ Модели данных: 17 API + 4 доменные + 14 UI моделей
 - ✅ API клиент SWApi: 57 endpoints
-- ✅ Архитектура безопасности токена: шифрование, интерцепторы
-- ✅ Use Cases: авторизация, справочники стран/городов
-- ✅ ViewModels: AuthViewModel, LoginViewModel, ThemeIconViewModel, EventsViewModel, ProfileViewModel, MainActivityViewModel, FriendsListViewModel
+- ✅ Безопасность токена: шифрование, интерцепторы
+- ✅ Use Cases: авторизация, справочники, дневники (17 use cases)
+- ✅ ViewModels: 13 ViewModels (Auth, Login, ThemeIcon, Events, Profile, MainActivity, FriendsList, Blacklist, UserTrainingParks, Journals, JournalEntries, TextEntry)
 - ✅ Namespace: `com.swparks`
 
 #### Реализованные экраны
 
-**Полностью реализованы:**
-- ✅ RootScreen - навигация по вкладкам
-- ✅ MoreScreen - настройки (4 секции, все функции)
-- ✅ ThemeIconScreen - тема и иконки (11 иконок, activity-aliases)
-- ✅ LoginScreen - авторизация (Domain, Data, UI слои, 68 unit-тестов, 15 UI-тестов)
+**Полностью реализованы:** RootScreen, MoreScreen, ThemeIconScreen, LoginScreen (Domain, Data, UI слои, тесты)
 
-**Частично реализованы:**
-- ⚠️ EventsScreen - базовый функционал (загрузка прошедших мероприятий)
-- ⚠️ ParksRootScreen - отображение данных из assets (без бизнес-логики)
-- ⚠️ ProfileRootScreen - базовый функционал (отображение профиля, кнопка выхода)
-- ⚠️ MyFriendsScreen - без полной бизнес-логики
-- ⚠️ ParksAddedByUserScreen - без полной бизнес-логики
+**Частично реализованы (базовый функционал):** EventsScreen, ParksRootScreen, ParksAddedByUserScreen, ProfileRootScreen, MyFriendsScreen, UserTrainingParksScreen, MyBlacklistScreen, JournalsListScreen, JournalEntriesScreen, JournalSettingsDialog
 
-**Не реализованы:**
-- ❌ MessagesRootScreen - только заглушка
-- ❌ Большинство детальных экранов
+**Не реализованы:** MessagesRootScreen (заглушка), большинство детальных экранов
 
 #### Реализованные модели данных
 
-**API модели (data/model/) - 17 файлов:** User, Park, Event, Comment, Photo, JournalResponse, JournalEntryResponse, DialogResponse, MessageResponse, City, Country, Gender, ParkType, ParkSize, EventKind, EventType, SocialUpdates, ApiFriendAction, ApiBlacklistOption
+**API модели (17):** User, Park, Event, Comment, Photo, JournalResponse, JournalEntryResponse, DialogResponse, MessageResponse, City, Country, Gender, ParkType, ParkSize, EventKind, EventType, SocialUpdates, ApiFriendAction, ApiBlacklistOption
 
-**Доменные модели (domain/model/) - 4 файла:** AppIcon, AppTheme, Journal, JournalEntry
+**Доменные модели (4):** AppIcon, AppTheme, Journal, JournalEntry
 
-**UI модели (ui/model/) - 12 файлов:** LoginCredentials, ParkForm, EventForm, MainUserForm, RegistrationRequest, ResetPasswordRequest, EditJournalSettingsRequest, FriendAction, BlacklistAction, Gender, JournalAccess, TextEntryOption
+**UI модели (14):** LoginCredentials, ParkForm, EventForm, MainUserForm, RegistrationRequest, ResetPasswordRequest, EditJournalSettingsRequest, FriendAction, BlacklistAction, Gender, JournalAccess, TextEntryOption, EditInfo, TextEntryMode
 
 #### Реализованная архитектура
 
@@ -54,9 +43,9 @@
 
 **Security:** CryptoManager (AES-128-GCM-HKDF), EncryptedStringSerializer
 
-**Domain Layer:** LoginUseCase, LogoutUseCase, ResetPasswordUseCase, GetCountriesUseCase, GetCitiesByCountryUseCase, GetCountryByIdUseCase, GetCityByIdUseCase, IconManager, ServerException, NetworkException
+**Domain Layer:** 17 use cases (авторизация, справочники, дневники), IconManager, исключения (ServerException, NetworkException)
 
-**UI layer:** ViewModels (Auth, Login, ThemeIcon, Events, Profile, MainActivity, FriendsList)
+**UI layer:** 13 ViewModels
 
 ---
 
@@ -82,14 +71,9 @@
 
 ### 1. Вкладка "Ещё" (More) - ✅ ЗАВЕРШЕНО
 
-**Экраны:**
-- ✅ MoreScreen - экран настроек
-- ✅ ThemeIconScreen - тема и иконки
+**Экраны:** MoreScreen (настройки), ThemeIconScreen (тема и иконки)
 
-**Статус:**
-- ✅ Полный стек (Domain, Data, UI)
-- ✅ Unit-тесты: SettingsModelsTest.kt, ThemeIconViewModelTest.kt
-- ✅ UI-тесты: ThemeIconScreenTest.kt, MoreScreenTest.kt (22 теста)
+**Статус:** Полный стек (Domain, Data, UI), unit-тесты, UI-тесты (11 тестов)
 
 **Детальный план:** `docs/screens/1_More_Screen.md`
 
@@ -97,13 +81,9 @@
 
 ### 2. Авторизация (Auth) - ⚠️ ЧАСТИЧНО ЗАВЕРШЕНО
 
-**Экраны:**
-- ✅ LoginScreen - экран входа
-- ❌ Проверка авторизации при запуске и защита экранов
+**Экраны:** ✅ LoginScreen, ❌ Интеграция при запуске
 
-**Статус:**
-- ✅ LoginScreen: Domain, Data, UI, 68 unit-тестов, 15 UI-тестов
-- ❌ Интеграция с приложением при запуске (требуется)
+**Статус:** ✅ LoginScreen: Domain, Data, UI, тесты | ❌ Интеграция при запуске (требуется)
 
 **Детальный план:** `docs/screens/2_Login_Screen.md`
 
@@ -279,28 +259,20 @@ app/src/main/java/com/swparks/
 ├── network/           # API клиенты (SWApi - 57 endpoints)
 ├── ui/
 │   ├── ds/            # Компоненты дизайн-системы (28)
-│   ├── model/         # UI формы и запросы (12 файлов)
+│   ├── model/         # UI формы и запросы (14 файлов)
 │   ├── screens/       # Экраны приложения
 │   ├── viewmodel/     # ViewModels
 │   └── theme/         # Тема
 ├── navigation/        # Навигация
-├── util/              # Утилиты (9 файлов)
+├── util/              # Утилиты
 └── utils/             # Дополнительные утилиты
 ```
 
 ### Структура тестов
 
 ```
-app/src/test/java/com/swparks/          # Unit-тесты (55+ тестов)
-├── data/                                # Data layer тесты
-├── domain/                              # Domain layer тесты
-├── model/                               # Модели тесты
-├── ui/                                  # UI layer тесты
-├── network/                             # Сеть тесты
-└── utils/                               # Утилиты тесты
-
-app/src/androidTest/java/com/swparks/    # Интеграционные и UI тесты (56+ тестов)
-└── ui/screens/                          # UI тесты экранов
+app/src/test/java/com/swparks/          # Unit-тесты (766+)
+app/src/androidTest/java/com/swparks/    # Интеграционные и UI тесты
 ```
 
 ---
@@ -337,13 +309,9 @@ app/src/androidTest/java/com/swparks/    # Интеграционные и UI т
 
 ## Примечания
 
-- iOS-приложение является эталоном функционала и дизайна
-- Компоненты дизайн-системы реализованы и готовы
-- Namespace: `com.swparks`
-- Реализован полный API (57 endpoints), баги исправлены
-- Архитектура безопасности токена реализована
 - Использовать безопасное разворачивание опционалов (избегать `!!`)
 - После изменений кода выполнять `make format`
+- iOS-приложение - эталон функционала и дизайна
 
 ### Реализованный API
 
@@ -359,39 +327,24 @@ app/src/androidTest/java/com/swparks/    # Интеграционные и UI т
 
 ### Безопасность авторизации
 
-✅ **Полностью реализована**
-
-- CryptoManager (AES-128-GCM-HKDF)
-- SecureTokenRepository (защищенное хранение в DataStore)
-- TokenInterceptor (автоматическое добавление токена)
-- AuthInterceptor (обработка 401)
-- LoginUseCase, LogoutUseCase, AuthViewModel
+✅ **Полностью реализована:** CryptoManager (AES-128-GCM-HKDF), SecureTokenRepository (DataStore), TokenInterceptor, AuthInterceptor (401), Login/Logout use cases, AuthViewModel
 
 ### Тестирование
 
-**55+ unit-тестов:** Data layer (20+), Domain layer (8+), Model (14+), ViewModel (5+), UI state (1), Utils (2), Network (1)
+**766+ unit-тестов:** Data, Domain, Model, ViewModel, UI state, Utils, Network
 
-**1 интеграционный тест:** CryptoManagerIntegrationTest
+**2 интеграционных теста:** CryptoManagerIntegrationTest, JournalEntryDaoTest
 
-**56+ UI-тестов:**
-- LoginScreenTest: 15 тестов
-- MoreScreenTest: 11 тестов
-- ThemeIconScreenTest: 11 тестов
-- MyFriendsScreenTest: 19 тестов
-- RootScreenTest: несколько тестов
+**UI-тесты:** LoginScreen, MoreScreen (11), ThemeIconScreen (11), MyFriendsScreen, MyBlacklistScreen, ProfileRootScreen, RootScreen, JournalsListScreen, JournalEntriesScreen, JournalSettingsDialog, TextEntryScreen
 
 ---
 
 ## История изменений
 
 - **2025-01:** Первоначальный план разработки
-- **2026-01-18:** Полная актуализация - организация по вкладкам, TDD подход
+- **2026-01-18:** Актуализация - организация по вкладкам, TDD подход
 - **2026-01-22:** Обновление на основе фактического состояния (API, архитектура, модели)
-- **2026-01-25:** Актуализация вкладки "Ещё" (More) - MoreScreen и ThemeIconScreen полностью реализованы
-- **2026-01-31:** Актуализация авторизации (Auth) - LoginScreen полностью реализован, 68 unit-тестов, 15 UI-тестов
-- **2026-02-07:** Обновление общего статуса:
-  - Добавлен новый компонент дизайн-системы (28 компонентов)
-  - Добавлены новые экраны: MyFriendsScreen (19 UI-тестов), ParksAddedByUserScreen
-  - EventsViewModel перемещен, добавлен FriendsListViewModel
-  - Добавлен database слой с тестами
-  - Обновлена статистика: 55+ unit-тестов, 1 интеграционный, 56+ UI-тестов
+- **2026-01-25:** Вкладка "Ещё" (More) завершена - MoreScreen и ThemeIconScreen
+- **2026-01-31:** Авторизация (Auth) - LoginScreen завершен
+- **2026-02-07:** Дизайн-система (28 компонентов), новые экраны (MyFriendsScreen, ParksAddedByUserScreen), database слой
+- **2026-02-11:** Дневники (Journals) - 13 ViewModels, 10 экранов (с тестами), 17 use cases, 766+ unit-тестов, 2 интеграционных теста
