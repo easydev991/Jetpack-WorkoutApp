@@ -27,12 +27,14 @@ import com.swparks.domain.usecase.CanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.CreateJournalUseCase
 import com.swparks.domain.usecase.DeleteJournalEntryUseCase
 import com.swparks.domain.usecase.DeleteJournalUseCase
+import com.swparks.domain.usecase.EditJournalSettingsUseCase
 import com.swparks.domain.usecase.GetJournalEntriesUseCase
 import com.swparks.domain.usecase.GetJournalsUseCase
 import com.swparks.domain.usecase.ICanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.ICreateJournalUseCase
 import com.swparks.domain.usecase.IDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IDeleteJournalUseCase
+import com.swparks.domain.usecase.IEditJournalSettingsUseCase
 import com.swparks.domain.usecase.IGetJournalEntriesUseCase
 import com.swparks.domain.usecase.IGetJournalsUseCase
 import com.swparks.domain.usecase.ILoginUseCase
@@ -86,6 +88,7 @@ interface AppContainer {
     val getJournalsUseCase: IGetJournalsUseCase
     val syncJournalsUseCase: ISyncJournalsUseCase
     val deleteJournalUseCase: IDeleteJournalUseCase
+    val editJournalSettingsUseCase: IEditJournalSettingsUseCase
     val getJournalEntriesUseCase: IGetJournalEntriesUseCase
     val syncJournalEntriesUseCase: ISyncJournalEntriesUseCase
     val deleteJournalEntryUseCase: IDeleteJournalEntryUseCase
@@ -322,6 +325,10 @@ class DefaultAppContainer(context: Context) : AppContainer {
         DeleteJournalUseCase(swRepository)
     }
 
+    override val editJournalSettingsUseCase: IEditJournalSettingsUseCase by lazy {
+        EditJournalSettingsUseCase(swRepository)
+    }
+
     val createJournalUseCase: ICreateJournalUseCase by lazy {
         CreateJournalUseCase(swRepository)
     }
@@ -367,6 +374,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
         getJournalsUseCase = getJournalsUseCase,
         syncJournalsUseCase = syncJournalsUseCase,
         deleteJournalUseCase = deleteJournalUseCase,
+        editJournalSettingsUseCase = editJournalSettingsUseCase,
         errorReporter = errorReporter
     )
 

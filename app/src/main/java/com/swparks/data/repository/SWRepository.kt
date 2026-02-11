@@ -787,16 +787,41 @@ class SWRepositoryImp(
         commentAccess: JournalAccess
     ): Result<Unit> =
         try {
-            swApi.editJournalSettings(
-                userId = userId ?: 1L, // Note: передавать реальный userId
-                journalId = journalId,
-                request = EditJournalSettingsRequest.create(
-                    title = title,
-                    viewAccess = viewAccess,
-                    commentAccess = commentAccess
-                )
+            val request = EditJournalSettingsRequest.create(
+                title = title,
+                viewAccess = viewAccess,
+                commentAccess = commentAccess
             )
-            Result.success(Unit)
+
+            Log.i(
+                TAG,
+                "Запрос редактирования настроек дневника: journalId=$journalId, userId=$userId, title=$title, viewAccess=${request.viewAccess}, commentAccess=${request.commentAccess}"
+            )
+
+            val response = swApi.editJournalSettings(
+                userId = userId ?: 1L,
+                journalId = journalId,
+                title = title,
+                viewAccess = request.viewAccess,
+                commentAccess = request.commentAccess
+            )
+
+            if (response.isSuccessful) {
+                Log.i(TAG, "Настройки дневника успешно обновлены на сервере: journalId=$journalId")
+                Result.success(Unit)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(
+                    TAG,
+                    "Ошибка сервера при редактировании настроек дневника: code=${response.code()}, body=$errorBody"
+                )
+                Result.failure(
+                    ServerException(
+                        message = errorBody ?: "Ошибка сервера: ${response.code()}",
+                        cause = Exception("HTTP ${response.code()}")
+                    )
+                )
+            }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "редактировании настроек дневника"))
         } catch (e: HttpException) {

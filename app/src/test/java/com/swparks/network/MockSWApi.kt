@@ -11,7 +11,6 @@ import com.swparks.data.model.MessageResponse
 import com.swparks.data.model.Park
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
-import com.swparks.ui.model.EditJournalSettingsRequest
 import com.swparks.ui.model.RegistrationRequest
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -521,7 +520,9 @@ class MockSWApi : SWApi {
     override suspend fun editJournalSettings(
         userId: Long,
         journalId: Long,
-        request: EditJournalSettingsRequest
+        title: String,
+        viewAccess: String,
+        commentAccess: String
     ): Response<Unit> {
         return Response.success(Unit)
     }

@@ -1,17 +1,5 @@
 package com.swparks.domain.model
 
-import com.swparks.domain.model.AppIcon.DEFAULT
-import com.swparks.domain.model.AppIcon.ICON_10
-import com.swparks.domain.model.AppIcon.ICON_11
-import com.swparks.domain.model.AppIcon.ICON_2
-import com.swparks.domain.model.AppIcon.ICON_3
-import com.swparks.domain.model.AppIcon.ICON_4
-import com.swparks.domain.model.AppIcon.ICON_5
-import com.swparks.domain.model.AppIcon.ICON_6
-import com.swparks.domain.model.AppIcon.ICON_7
-import com.swparks.domain.model.AppIcon.ICON_8
-import com.swparks.domain.model.AppIcon.ICON_9
-
 
 /**
  * Перечисление доступных иконок приложения.

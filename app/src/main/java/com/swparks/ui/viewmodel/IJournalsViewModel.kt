@@ -1,5 +1,6 @@
 package com.swparks.ui.viewmodel
 
+import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalsUiState
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -47,6 +48,24 @@ interface IJournalsViewModel {
      * @param journalId Идентификатор дневника
      */
     fun deleteJournal(journalId: Long)
+
+    /**
+     * Редактировать настройки дневника.
+     *
+     * После успешного обновления эмитится событие [JournalsEvent.JournalSettingsSaved].
+     * При ошибке эмитится событие [JournalsEvent.ShowSnackbar].
+     *
+     * @param journalId Идентификатор дневника
+     * @param title Новое название дневника
+     * @param viewAccess Новый уровень доступа для просмотра
+     * @param commentAccess Новый уровень доступа для комментариев
+     */
+    fun editJournalSettings(
+        journalId: Long,
+        title: String,
+        viewAccess: JournalAccess,
+        commentAccess: JournalAccess
+    )
 }
 
 /**
@@ -59,4 +78,11 @@ sealed interface JournalsEvent {
      * @property message Текст сообщения
      */
     data class ShowSnackbar(val message: String) : JournalsEvent
+
+    /**
+     * Настройки дневника успешно сохранены.
+     *
+     * @property journal Обновленный дневник
+     */
+    data class JournalSettingsSaved(val journal: com.swparks.domain.model.Journal) : JournalsEvent
 }

@@ -9,7 +9,6 @@ import com.swparks.data.model.LoginSuccess
 import com.swparks.data.model.MessageResponse
 import com.swparks.data.model.Park
 import com.swparks.data.model.User
-import com.swparks.ui.model.EditJournalSettingsRequest
 import com.swparks.ui.model.RegistrationRequest
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -331,11 +330,14 @@ interface SWApi {
     ): JournalResponse
 
     // Изменить настройки дневника
+    @FormUrlEncoded
     @PUT("users/{userId}/journals/{journalId}")
     suspend fun editJournalSettings(
         @Path("userId") userId: Long,
         @Path("journalId") journalId: Long,
-        @Body request: EditJournalSettingsRequest
+        @Field("title") title: String,
+        @Field("view_access") viewAccess: String,
+        @Field("comment_access") commentAccess: String
     ): Response<Unit>
 
     // Создать новый дневник

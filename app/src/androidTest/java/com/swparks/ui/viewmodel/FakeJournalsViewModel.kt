@@ -1,5 +1,6 @@
 package com.swparks.ui.viewmodel
 
+import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalsUiState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,5 +46,26 @@ class FakeJournalsViewModel(
      */
     override fun deleteJournal(journalId: Long) {
         // Заглушка - не делает ничего в тестах
+    }
+
+    /**
+     * Функция-заглушка для редактирования настроек дневника.
+     * В тестах можно проверить, был ли вызван этот метод.
+     */
+    override fun editJournalSettings(
+        journalId: Long,
+        title: String,
+        viewAccess: JournalAccess,
+        commentAccess: JournalAccess
+    ) {
+        // Заглушка - не делает ничего в тестах
+    }
+
+    /**
+     * Эмитировать событие успешного сохранения настроек дневника.
+     * Используется в тестах для проверки закрытия диалога.
+     */
+    suspend fun emitJournalSettingsSaved(journal: com.swparks.domain.model.Journal) {
+        _events.emit(JournalsEvent.JournalSettingsSaved(journal))
     }
 }

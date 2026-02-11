@@ -1,7 +1,5 @@
 package com.swparks.network
 
-import com.swparks.ui.model.EditJournalSettingsRequest
-import com.swparks.ui.model.JournalAccess
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -534,16 +532,14 @@ class MockSWApiTest {
 
     @Test
     fun editJournalSettings_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // Given
-        val request =
-            EditJournalSettingsRequest.create(
-                title = "New Title",
-                viewAccess = JournalAccess.ALL,
-                commentAccess = JournalAccess.ALL
-            )
-
         // When
-        val result = mockApi.editJournalSettings(1L, 123L, request)
+        val result = mockApi.editJournalSettings(
+            userId = 1L,
+            journalId = 123L,
+            title = "New Title",
+            viewAccess = "0",
+            commentAccess = "0"
+        )
 
         // Then
         assertTrue(result.isSuccessful)

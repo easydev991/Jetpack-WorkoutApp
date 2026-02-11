@@ -16,10 +16,12 @@ sealed class JournalsUiState {
      *
      * @param journals Список дневников
      * @param isRefreshing Признак обновления данных (pull-to-refresh)
+     * @param isSavingJournalSettings Признак сохранения настроек дневника
      */
     data class Content(
         val journals: List<Journal>,
-        val isRefreshing: Boolean = false
+        val isRefreshing: Boolean = false,
+        val isSavingJournalSettings: Boolean = false
     ) : JournalsUiState()
 
     /**

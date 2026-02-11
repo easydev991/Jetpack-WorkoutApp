@@ -1,6 +1,8 @@
 package com.swparks.ui.screens.journals
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -20,6 +22,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.FakeJournalsViewModel
 import com.swparks.ui.viewmodel.IJournalsViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -630,6 +633,85 @@ class JournalsListScreenTest {
         // Then - FAB для создания дневника не отображается при удалении
         composeTestRule
             .onNodeWithContentDescription(context.getString(R.string.fab_create_journal_description))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun journalsListScreen_journalSettingsDialog_closes_onJournalSettingsSaved() = runTest {
+        // Given - дневник и его настройки
+        val journal = Journal(
+            id = 1L,
+            title = "Тестовый дневник",
+            lastMessageImage = null,
+            createDate = null,
+            modifyDate = null,
+            lastMessageDate = null,
+            lastMessageText = null,
+            entriesCount = 0,
+            ownerId = 1L,
+            viewAccess = JournalAccess.ALL,
+            commentAccess = JournalAccess.ALL
+        )
+        val state = JournalsUiState.Content(journals = listOf(journal))
+        val viewModel = FakeJournalsViewModel(
+            uiState = MutableStateFlow(state),
+            isRefreshing = MutableStateFlow(false)
+        )
+
+        var onJournalSettingsSavedCalled = false
+
+        // When - открываем экран с обработчиком событий
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
+
+            JetpackWorkoutAppTheme {
+                var journalToEditSettings by androidx.compose.runtime.remember {
+                    androidx.compose.runtime.mutableStateOf<Journal?>(journal)
+                }
+
+                // Обработчик событий ViewModel
+                androidx.compose.runtime.LaunchedEffect(Unit) {
+                    viewModel.events.collect { event ->
+                        when (event) {
+                            is com.swparks.ui.viewmodel.JournalsEvent.JournalSettingsSaved -> {
+                                // Закрыть диалог только если это был наш journal
+                                if (journalToEditSettings?.id == event.journal.id) {
+                                    journalToEditSettings = null
+                                    onJournalSettingsSavedCalled = true
+                                }
+                            }
+
+                            else -> {}
+                        }
+                    }
+                }
+
+                // Отображаем диалог если journalToEditSettings не null
+                journalToEditSettings?.let { currentJournal ->
+                    JournalSettingsDialog(
+                        journal = currentJournal,
+                        onDismiss = { journalToEditSettings = null },
+                        viewModel = viewModel,
+                        uiState = state
+                    )
+                }
+            }
+        }
+
+        // Диалог настроек должен быть открыт
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.journal_settings))
+            .assertIsDisplayed()
+
+        // Эмитируем событие успешного сохранения настроек
+        viewModel.emitJournalSettingsSaved(journal)
+        composeTestRule.waitForIdle()
+
+        // Then - диалог настроек должен быть закрыт
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.journal_settings))
             .assertDoesNotExist()
     }
 }

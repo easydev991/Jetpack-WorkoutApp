@@ -287,4 +287,9 @@
     <string name="fab_add_entry">Add entry</string>
     <string name="fab_add_entry_description">Create a new journal entry</string>
     <string name="entry_deleted">Entry deleted</string>
+
+    <!-- Journal Settings Dialog -->
+    <string name="journal_settings_saved">Journal settings saved</string>
+    <string name="error_save_journal_settings">Error saving journal settings</string>
+    <string name="error_user_not_found">User not found</string>
 </resources>

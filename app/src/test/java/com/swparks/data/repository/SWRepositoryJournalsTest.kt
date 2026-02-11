@@ -256,9 +256,11 @@ class SWRepositoryJournalsTest {
             mockApi.editJournalSettings(
                 userId = any(),
                 journalId = any(),
-                request = any()
+                title = any(),
+                viewAccess = any(),
+                commentAccess = any()
             )
-        } returns mockk(relaxed = true)
+        } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -286,7 +288,9 @@ class SWRepositoryJournalsTest {
             mockApi.editJournalSettings(
                 userId = any(),
                 journalId = 123L,
-                request = any()
+                title = any(),
+                viewAccess = any(),
+                commentAccess = any()
             )
         }
     }
@@ -299,7 +303,9 @@ class SWRepositoryJournalsTest {
             mockApi.editJournalSettings(
                 userId = any(),
                 journalId = any(),
-                request = any()
+                title = any(),
+                viewAccess = any(),
+                commentAccess = any()
             )
         } throws IOException("Network error")
 

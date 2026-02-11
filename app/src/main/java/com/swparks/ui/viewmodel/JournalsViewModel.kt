@@ -4,8 +4,10 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.swparks.domain.usecase.IDeleteJournalUseCase
+import com.swparks.domain.usecase.IEditJournalSettingsUseCase
 import com.swparks.domain.usecase.IGetJournalsUseCase
 import com.swparks.domain.usecase.ISyncJournalsUseCase
+import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalsUiState
 import com.swparks.util.AppError
 import com.swparks.util.ErrorReporter
@@ -27,6 +29,7 @@ import kotlinx.coroutines.launch
  * @param getJournalsUseCase Use case для получения потока дневников
  * @param syncJournalsUseCase Use case для синхронизации дневников с сервером
  * @param deleteJournalUseCase Use case для удаления дневника
+ * @param editJournalSettingsUseCase Use case для редактирования настроек дневника
  * @param errorReporter Обработчик ошибок для отправки ошибок в систему мониторинга
  */
 class JournalsViewModel(
@@ -34,6 +37,7 @@ class JournalsViewModel(
     private val getJournalsUseCase: IGetJournalsUseCase,
     private val syncJournalsUseCase: ISyncJournalsUseCase,
     private val deleteJournalUseCase: IDeleteJournalUseCase,
+    private val editJournalSettingsUseCase: IEditJournalSettingsUseCase,
     private val errorReporter: ErrorReporter
 ) : ViewModel(), IJournalsViewModel {
 
@@ -72,7 +76,12 @@ class JournalsViewModel(
             getJournalsUseCase(userId).collect { journals ->
                 Log.i(TAG, "Получены данные из Flow: ${journals.size} дневников")
                 _uiState.value =
-                    JournalsUiState.Content(journals = journals, isRefreshing = _isRefreshing.value)
+                    JournalsUiState.Content(
+                        journals = journals,
+                        isRefreshing = _isRefreshing.value,
+                        isSavingJournalSettings = (_uiState.value as? JournalsUiState.Content)
+                            ?.isSavingJournalSettings ?: false
+                    )
             }
         }
     }
@@ -165,5 +174,109 @@ class JournalsViewModel(
                 _isDeleting.value = false
             }
         }
+    }
+
+    /**
+     * Редактировать настройки дневника.
+     *
+     * Обновляет настройки дневника через use case и перезагружает список дневников
+     * с сервера, чтобы получить обновленные данные.
+     *
+     * После успешного обновления эмитится событие [JournalsEvent.JournalSettingsSaved].
+     * При ошибке эмитится событие [JournalsEvent.ShowSnackbar].
+     *
+     * @param journalId Идентификатор дневника
+     * @param title Новое название дневника
+     * @param viewAccess Новый уровень доступа для просмотра
+     * @param commentAccess Новый уровень доступа для комментариев
+     */
+    @Suppress("TooGenericExceptionCaught")
+    override fun editJournalSettings(
+        journalId: Long,
+        title: String,
+        viewAccess: JournalAccess,
+        commentAccess: JournalAccess
+    ) {
+        viewModelScope.launch {
+            setSavingJournalSettings(true)
+
+            try {
+                Log.i(TAG, "Редактирование настроек дневника: journalId=$journalId, title=$title")
+
+                val result = editJournalSettingsUseCase(
+                    journalId = journalId,
+                    title = title,
+                    userId = userId,
+                    viewAccess = viewAccess,
+                    commentAccess = commentAccess
+                )
+
+                result.fold(
+                    onSuccess = {
+                        Log.i(TAG, "Настройки дневника успешно обновлены")
+                        handleJournalSettingsSync(journalId)
+                    },
+                    onFailure = { error ->
+                        Log.e(TAG, "Ошибка при редактировании настроек дневника: ${error.message}")
+                        handleJournalSettingsError(error.message)
+                    }
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Исключение при редактировании настроек дневника: ${e.message}")
+                handleJournalSettingsError(null)
+            }
+        }
+    }
+
+    /**
+     * Установить флаг загрузки настроек дневника
+     */
+    private fun setSavingJournalSettings(isSaving: Boolean) {
+        val currentState = _uiState.value
+        if (currentState is JournalsUiState.Content) {
+            _uiState.value = currentState.copy(isSavingJournalSettings = isSaving)
+        }
+    }
+
+    /**
+     * Обработать синхронизацию после успешного редактирования настроек
+     */
+    private suspend fun handleJournalSettingsSync(journalId: Long) {
+        syncJournalsUseCase(userId).fold(
+            onSuccess = {
+                Log.i(TAG, "Дневники перезагружены после обновления настроек")
+                handleJournalSettingsSuccess(journalId)
+            },
+            onFailure = { error ->
+                Log.e(TAG, "Ошибка при перезагрузке дневников: ${error.message}")
+                handleJournalSettingsSuccess(journalId)
+            }
+        )
+    }
+
+    /**
+     * Обработать успешное сохранение настроек дневника
+     */
+    private suspend fun handleJournalSettingsSuccess(journalId: Long) {
+        val updatedJournal =
+            (_uiState.value as? JournalsUiState.Content)?.journals?.find { it.id == journalId }
+
+        setSavingJournalSettings(false)
+
+        updatedJournal?.let {
+            _events.emit(JournalsEvent.JournalSettingsSaved(it))
+        }
+
+        _events.emit(JournalsEvent.ShowSnackbar("Настройки дневника сохранены"))
+    }
+
+    /**
+     * Обработать ошибку при редактировании настроек дневника
+     */
+    private suspend fun handleJournalSettingsError(errorMessage: String?) {
+        setSavingJournalSettings(false)
+        _events.emit(
+            JournalsEvent.ShowSnackbar(errorMessage ?: "Ошибка сохранения настроек дневника")
+        )
     }
 }

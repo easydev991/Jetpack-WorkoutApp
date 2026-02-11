@@ -90,9 +90,26 @@ fun JournalsListScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var journalToDelete by remember { mutableStateOf<Journal?>(null) }
 
+    // Состояние диалога настроек дневника
+    var journalToEditSettings by remember { mutableStateOf<Journal?>(null) }
+
     // Состояние для TextEntrySheet
     var showTextEntrySheet by remember { mutableStateOf(false) }
     var textEntryMode by remember { mutableStateOf<TextEntryMode?>(null) }
+
+    // Обработчик для действия SETUP (настройки дневника)
+    val onSetupClick: (Journal) -> Unit = { journal ->
+        journalToEditSettings = journal
+    }
+
+    // Обработчик событий ViewModel для закрытия диалога настроек
+    JournalsEventHandler(
+        viewModel = viewModel,
+        getJournalToEditSettings = { journalToEditSettings },
+        onJournalSettingsSaved = {
+            journalToEditSettings = null
+        }
+    )
 
     Scaffold(
         modifier = modifier.padding(bottom = parentPaddingValues.calculateBottomPadding()),
@@ -172,6 +189,7 @@ fun JournalsListScreen(
                             journalToDelete = journal
                             showDeleteDialog = true
                         },
+                        onSetupClick = onSetupClick,
                         onCreateJournalClick = {
                             // Открыть bottom sheet для создания дневника
                             textEntryMode = TextEntryMode.NewJournal(userId)
@@ -192,6 +210,16 @@ fun JournalsListScreen(
                     }
                     showDeleteDialog = false
                 }
+            )
+        }
+
+        // Диалог настроек дневника
+        journalToEditSettings?.let { journal ->
+            JournalSettingsDialog(
+                journal = journal,
+                onDismiss = { journalToEditSettings = null },
+                viewModel = viewModel,
+                uiState = uiState
             )
         }
 
@@ -216,6 +244,36 @@ fun JournalsListScreen(
 }
 
 /**
+ * Обработчик событий ViewModel
+ */
+@Composable
+private fun JournalsEventHandler(
+    viewModel: IJournalsViewModel,
+    getJournalToEditSettings: () -> Journal?,
+    onJournalSettingsSaved: () -> Unit
+) {
+    LocalContext.current
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is com.swparks.ui.viewmodel.JournalsEvent.JournalSettingsSaved -> {
+                    // Закрыть диалог только если это был наш journal
+                    val journalToEditSettings = getJournalToEditSettings()
+                    if (journalToEditSettings?.id == event.journal.id) {
+                        onJournalSettingsSaved()
+                    }
+                }
+
+                is com.swparks.ui.viewmodel.JournalsEvent.ShowSnackbar -> {
+                    // Показать Snackbar (TODO: добавить SnackbarHost)
+                }
+            }
+        }
+    }
+}
+
+/**
  * Контент с Pull-to-Refresh и списком дневников
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -227,6 +285,7 @@ private fun ContentScreen(
     onRefresh: () -> Unit,
     onJournalClick: (journalId: Long, journalOwnerId: Long, journalTitle: String, commentAccess: String) -> Unit,
     onDeleteClick: (Journal) -> Unit,
+    onSetupClick: (Journal) -> Unit = {},
     onCreateJournalClick: () -> Unit = {}
 ) {
     val pullRefreshState = rememberPullToRefreshState()
@@ -261,7 +320,8 @@ private fun ContentScreen(
                     journals = journals,
                     enabled = !isRefreshing && !isDeleting,
                     onJournalClick = onJournalClick,
-                    onDeleteClick = onDeleteClick
+                    onDeleteClick = onDeleteClick,
+                    onSetupClick = onSetupClick
                 )
 
                 // Индикатор загрузки при удалении
@@ -281,7 +341,8 @@ private fun JournalsList(
     journals: List<Journal>,
     enabled: Boolean = true,
     onJournalClick: (journalId: Long, journalOwnerId: Long, journalTitle: String, commentAccess: String) -> Unit = { _, _, _, _ -> },
-    onDeleteClick: (Journal) -> Unit = { }
+    onDeleteClick: (Journal) -> Unit = { },
+    onSetupClick: (Journal) -> Unit = { }
 ) {
     val context = LocalContext.current
     LazyColumn(
@@ -324,6 +385,8 @@ private fun JournalsList(
                         onClickAction = { action ->
                             if (action == JournalAction.DELETE) {
                                 onDeleteClick(journal)
+                            } else if (action == JournalAction.SETUP) {
+                                onSetupClick(journal)
                             }
                         }
                     )

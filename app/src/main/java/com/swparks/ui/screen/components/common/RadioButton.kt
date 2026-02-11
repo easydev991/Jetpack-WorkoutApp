@@ -11,9 +11,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.swparks.R
 
 /**
  * Переиспользуемый компонент Radio button для выбора опций.
@@ -57,7 +59,7 @@ fun RadioButton(
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(start = 16.dp),
+            modifier = Modifier.padding(start = dimensionResource(R.dimen.spacing_regular)),
             textAlign = TextAlign.Start,
         )
     }
