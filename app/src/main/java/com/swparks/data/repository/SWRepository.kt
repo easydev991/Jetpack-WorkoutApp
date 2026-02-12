@@ -7,6 +7,7 @@ import com.swparks.data.APIError
 import com.swparks.data.ErrorResponse
 import com.swparks.data.NetworkUtils
 import com.swparks.data.UserPreferencesRepository
+import com.swparks.data.database.dao.DialogDao
 import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.toDomain
@@ -169,7 +170,8 @@ class SWRepositoryImp(
     private val dataStore: DataStore<Preferences>,
     private val userDao: UserDao,
     private val journalDao: JournalDao,
-    private val journalEntryDao: com.swparks.data.database.dao.JournalEntryDao
+    private val journalEntryDao: com.swparks.data.database.dao.JournalEntryDao,
+    private val dialogDao: DialogDao
 ) : SWRepository {
     private companion object {
         const val TAG = "SWRepositoryImp"
@@ -1060,6 +1062,8 @@ class SWRepositoryImp(
     override suspend fun clearUserData() {
         // Удаляем все данные пользователя (профиль, друзья, заявки, черный список)
         userDao.clearAll()
+        // Удаляем все диалоги пользователя
+        dialogDao.deleteAll()
         Log.i(TAG, "Все данные пользователя удалены")
         // Очищаем ID текущего пользователя
         preferencesRepository.clearCurrentUserId()

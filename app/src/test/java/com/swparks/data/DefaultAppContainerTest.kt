@@ -25,17 +25,6 @@ class DefaultAppContainerTest {
     }
 
     @Test
-    fun `AppContainer имеет свойство errorReporter`() {
-        // Given
-        val container = DefaultAppContainer(mockContext)
-
-        // Then
-        assert(container.errorReporter != null) {
-            "AppContainer должен иметь свойство errorReporter"
-        }
-    }
-
-    @Test
     fun `AppContainer создает ErrorHandler для errorReporter`() {
         // Given
         val container = DefaultAppContainer(mockContext)
@@ -43,17 +32,6 @@ class DefaultAppContainerTest {
         // Then
         assert(container.errorReporter is com.swparks.util.ErrorHandler) {
             "errorReporter должен быть реализацией ErrorHandler"
-        }
-    }
-
-    @Test
-    fun `AppContainer имеет свойство logger`() {
-        // Given
-        val container = DefaultAppContainer(mockContext)
-
-        // Then
-        assert(container.logger != null) {
-            "AppContainer должен иметь свойство logger"
         }
     }
 }

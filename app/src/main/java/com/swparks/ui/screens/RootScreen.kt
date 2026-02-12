@@ -93,6 +93,11 @@ fun RootScreen(appState: AppState) {
         appContainer.profileViewModelFactory()
     }
 
+    // Создаем DialogsViewModel для экрана сообщений
+    val dialogsViewModel = remember {
+        appContainer.dialogsViewModelFactory()
+    }
+
     // Экран черного списка
     remember {
         appContainer.blacklistViewModelFactory()
@@ -189,7 +194,19 @@ fun RootScreen(appState: AppState) {
                 MessagesRootScreen(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
+                        .padding(paddingValues),
+                    viewModel = dialogsViewModel,
+                    appState = appState,
+                    onShowLoginSheet = {
+                        showLoginSheet = true
+                    },
+                    onNavigateToFriends = {
+                        appState.navController.navigate(Screen.MyFriends.route)
+                    },
+                    onNavigateToSearchUsers = {
+                        Log.i("RootScreen", "Навигация на поиск пользователей")
+                        // TODO: Реализовать Screen.UserSearch.route
+                    }
                 )
             }
 
@@ -200,7 +217,9 @@ fun RootScreen(appState: AppState) {
                     appContainer = appContainer,
                     viewModel = profileViewModel,
                     appState = appState,
-                    onShowLoginSheet = { showLoginSheet = true },
+                    onShowLoginSheet = {
+                        showLoginSheet = true
+                    },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
@@ -343,22 +362,6 @@ fun RootScreen(appState: AppState) {
                 }
             }
 
-            composable(route = Screen.JournalDetail.route) {
-                // TODO: Реализовать JournalDetailScreen
-            }
-
-            composable(route = Screen.CreateJournal.route) {
-                // TODO: Реализовать CreateJournalScreen
-            }
-
-            composable(route = Screen.EditJournal.route) {
-                // TODO: Реализовать EditJournalScreen
-            }
-
-            composable(route = Screen.AddJournalEntry.route) {
-                // TODO: Реализовать AddJournalEntryScreen
-            }
-
             composable(route = Screen.JournalEntries.route) { navBackStackEntry ->
                 val journalId = navBackStackEntry.arguments?.getString("journalId")?.toLongOrNull()
                 // Получаем journalOwnerId (владелец дневника) из query-параметра
@@ -441,12 +444,12 @@ fun RootScreen(appState: AppState) {
             show = showLoginSheet,
             onDismissed = { showLoginSheet = false },
             onLoginSuccess = { userId ->
-                // Успешная авторизация - загружаем профиль с сервера
-                profileViewModel.loadProfileFromServer(userId)
                 // Закрываем LoginSheet
                 showLoginSheet = false
-                // Навигируем на вкладку профиля, чтобы гарантированно обновить UI
-                appState.navigateToProfile()
+                // Успешная авторизация - загружаем профиль с сервера
+                profileViewModel.loadProfileFromServer(userId)
+                // Загружаем диалоги
+                dialogsViewModel.loadDialogsAfterAuth()
             }
         )
     }

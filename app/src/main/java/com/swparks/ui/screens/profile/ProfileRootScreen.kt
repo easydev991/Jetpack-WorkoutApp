@@ -45,6 +45,7 @@ import com.swparks.navigation.Screen
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.FormRowView
 import com.swparks.ui.ds.IncognitoProfileView
+import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.SWButton
 import com.swparks.ui.ds.SWButtonMode
 import com.swparks.ui.ds.SWButtonSize
@@ -78,11 +79,17 @@ fun ProfileRootScreen(
     // Получаем состояние обновления (isRefreshing)
     val isRefreshing by viewModel.isRefreshing.collectAsState()
 
+    // Получаем состояние загрузки профиля после авторизации
+    val isLoadingProfile by viewModel.isLoadingProfile.collectAsState()
+
     // Получаем черный список пользователя
     val blacklist by viewModel.blacklist.collectAsState()
 
     val user = currentUser
-    if (user == null) {
+    if (isLoadingProfile) {
+        // Загрузка профиля после авторизации - показываем LoadingOverlayView
+        LoadingOverlayView(modifier = modifier.fillMaxSize())
+    } else if (user == null) {
         // Не авторизован - показываем IncognitoProfileView
         IncognitoProfileView(
             modifier = modifier
@@ -95,132 +102,139 @@ fun ProfileRootScreen(
         )
     } else {
         // Авторизован - показываем профиль и кнопки навигации
-        val pullRefreshState = rememberPullToRefreshState()
-        PullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh = { viewModel.refreshProfile() },
-            state = pullRefreshState,
-            modifier = modifier.fillMaxSize(),
-            indicator = {
-                PullToRefreshDefaults.Indicator(
-                    state = pullRefreshState,
-                    isRefreshing = isRefreshing,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = dimensionResource(R.dimen.spacing_regular))
-                )
-            }
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(
-                        start = dimensionResource(R.dimen.spacing_regular),
-                        end = dimensionResource(R.dimen.spacing_regular),
-                        top = dimensionResource(R.dimen.spacing_regular),
-                        bottom = dimensionResource(R.dimen.spacing_regular)
-                    ),
-                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
+        Box(modifier = modifier.fillMaxSize()) {
+            val pullRefreshState = rememberPullToRefreshState()
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = { viewModel.refreshProfile() },
+                state = pullRefreshState,
+                modifier = Modifier.fillMaxSize(),
+                indicator = {
+                    PullToRefreshDefaults.Indicator(
+                        state = pullRefreshState,
+                        isRefreshing = isRefreshing,
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = dimensionResource(R.dimen.spacing_regular))
+                    )
+                }
             ) {
-                // Карточка профиля пользователя
-                // Извлекаем country и city из состояния (Success и Error имеют эти поля)
-                val (country, city) = when (val state = uiState) {
-                    is ProfileUiState.Success -> state.country to state.city
-                    is ProfileUiState.Error -> state.country to state.city
-                    ProfileUiState.Loading -> null to null
-                }
-
-                // shortAddress вычисляется на основе состояния: Loading показывает "Загрузка...", Success и Error показывают страну и город
-                val shortAddress = if (uiState is ProfileUiState.Loading) {
-                    stringResource(R.string.loading)
-                } else {
-                    "${country?.name ?: ""}, " + (city?.name ?: "")
-                }
-
-                UserProfileCardView(
-                    data = UserProfileData(
-                        modifier = Modifier,
-                        imageStringURL = user.image,
-                        userName = user.fullName ?: user.name,
-                        gender = user.genderOption?.let { stringResource(id = it.description) }
-                            ?: "",
-                        age = user.age,
-                        shortAddress = shortAddress
-                    )
-                )
-
-                // Кнопка "Изменить профиль"
-                EditProfileButton(
-                    onClick = {
-                        Log.i("ProfileRootScreen", "Нажата кнопка: Изменить профиль")
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(
+                            start = dimensionResource(R.dimen.spacing_regular),
+                            end = dimensionResource(R.dimen.spacing_regular),
+                            top = dimensionResource(R.dimen.spacing_regular),
+                            bottom = dimensionResource(R.dimen.spacing_regular)
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
+                ) {
+                    // Карточка профиля пользователя
+                    // Извлекаем country и city из состояния (Success и Error имеют эти поля)
+                    val (country, city) = when (val state = uiState) {
+                        is ProfileUiState.Success -> state.country to state.city
+                        is ProfileUiState.Error -> state.country to state.city
+                        ProfileUiState.Loading -> null to null
                     }
-                )
 
-                // Кнопка "Друзья"
-                if (user.hasFriends || (user.friendRequestCount?.toIntOrNull() ?: 0) > 0) {
-                    FriendsButton(
-                        friendsCount = user.friendsCount ?: 0,
-                        friendRequestsCount = user.friendRequestCount?.toIntOrNull() ?: 0,
+                    // shortAddress вычисляется на основе состояния: Loading показывает "Загрузка...", Success и Error показывают страну и город
+                    val shortAddress = if (uiState is ProfileUiState.Loading) {
+                        stringResource(R.string.loading)
+                    } else {
+                        "${country?.name ?: ""}, " + (city?.name ?: "")
+                    }
+
+                    UserProfileCardView(
+                        data = UserProfileData(
+                            modifier = Modifier,
+                            imageStringURL = user.image,
+                            userName = user.fullName ?: user.name,
+                            gender = user.genderOption?.let { stringResource(id = it.description) }
+                                ?: "",
+                            age = user.age,
+                            shortAddress = shortAddress
+                        )
+                    )
+
+                    // Кнопка "Изменить профиль"
+                    EditProfileButton(
                         onClick = {
-                            appState?.navController?.navigate(Screen.MyFriends.route)
+                            Log.i("ProfileRootScreen", "Нажата кнопка: Изменить профиль")
                         }
                     )
-                }
 
-                // Кнопка "Где тренируется"
-                if (user.hasUsedParks) {
-                    UsedParksButton(
-                        parksCount = user.parksCount?.toIntOrNull() ?: 0,
-                        onClick = {
-                            appState?.navController?.navigate(
-                                Screen.UserTrainingParks.createRoute(user.id)
-                            )
-                        }
-                    )
-                }
-
-                // Кнопка "Добавленные площадки"
-                if (user.hasAddedParks) {
-                    AddedParksButton(
-                        addedParksCount = user.addedParks?.size ?: 0,
-                        onClick = {
-                            appState?.navController?.navigate(
-                                Screen.UserParks.createRoute(user.id)
-                            )
-                        }
-                    )
-                }
-
-                // Кнопка "Дневники" (всегда показываем для главного пользователя)
-                JournalsButton(
-                    journalsCount = user.journalCount ?: 0,
-                    onClick = {
-                        appState?.navController?.navigate(
-                            Screen.JournalsList.createRoute(user.id)
+                    // Кнопка "Друзья"
+                    if (user.hasFriends || (user.friendRequestCount?.toIntOrNull() ?: 0) > 0) {
+                        FriendsButton(
+                            friendsCount = user.friendsCount ?: 0,
+                            friendRequestsCount = user.friendRequestCount?.toIntOrNull() ?: 0,
+                            onClick = {
+                                appState?.navController?.navigate(Screen.MyFriends.route)
+                            }
                         )
                     }
-                )
 
-                // Кнопка "Черный список" - показываем только если черный список не пустой
-                if (blacklist.isNotEmpty()) {
-                    BlacklistButton(
-                        blacklistCount = blacklist.size,
+                    // Кнопка "Где тренируется"
+                    if (user.hasUsedParks) {
+                        UsedParksButton(
+                            parksCount = user.parksCount?.toIntOrNull() ?: 0,
+                            onClick = {
+                                appState?.navController?.navigate(
+                                    Screen.UserTrainingParks.createRoute(user.id)
+                                )
+                            }
+                        )
+                    }
+
+                    // Кнопка "Добавленные площадки"
+                    if (user.hasAddedParks) {
+                        AddedParksButton(
+                            addedParksCount = user.addedParks?.size ?: 0,
+                            onClick = {
+                                appState?.navController?.navigate(
+                                    Screen.UserParks.createRoute(user.id)
+                                )
+                            }
+                        )
+                    }
+
+                    // Кнопка "Дневники" (всегда показываем для главного пользователя)
+                    JournalsButton(
+                        journalsCount = user.journalCount ?: 0,
                         onClick = {
-                            appState?.navController?.navigate(Screen.Blacklist.route)
+                            appState?.navController?.navigate(
+                                Screen.JournalsList.createRoute(user.id)
+                            )
+                        }
+                    )
+
+                    // Кнопка "Черный список" - показываем только если черный список не пустой
+                    if (blacklist.isNotEmpty()) {
+                        BlacklistButton(
+                            blacklistCount = blacklist.size,
+                            onClick = {
+                                appState?.navController?.navigate(Screen.Blacklist.route)
+                            }
+                        )
+                    }
+
+                    // Spacer прижимает кнопку выхода к низу экрана
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    // Кнопка "Выйти"
+                    LogoutButton(
+                        onClick = {
+                            showLogoutDialog = true
                         }
                     )
                 }
+            }
 
-                // Spacer прижимает кнопку выхода к низу экрана
-                Spacer(modifier = Modifier.weight(1f))
-
-                // Кнопка "Выйти"
-                LogoutButton(
-                    onClick = {
-                        showLogoutDialog = true
-                    }
-                )
+            // Показываем LoadingOverlayView при первой загрузке (не при pull-to-refresh)
+            if (uiState is ProfileUiState.Loading && !isRefreshing) {
+                LoadingOverlayView()
             }
         }
 

@@ -94,19 +94,6 @@ sealed class Screen(
         fun createRoute(userId: Long) = "journals_list/$userId"
     }
 
-    object JournalDetail : Screen("journal_detail/{journalId}", parentTab = Profile) {
-        fun createRoute(journalId: Long) = "journal_detail/$journalId"
-    }
-
-    object CreateJournal : Screen("create_journal", parentTab = Profile)
-    object EditJournal : Screen("edit_journal/{journalId}", parentTab = Profile) {
-        fun createRoute(journalId: Long) = "edit_journal/$journalId"
-    }
-
-    object AddJournalEntry : Screen("add_journal_entry/{journalId}", parentTab = Profile) {
-        fun createRoute(journalId: Long) = "add_journal_entry/$journalId"
-    }
-
     object JournalEntries :
         Screen(
             "journal_entries/{journalId}?userId={userId}&title={journalTitle}&commentAccess={commentAccess}",
@@ -148,8 +135,7 @@ sealed class Screen(
 
                 // Экраны профиля
                 EditProfile, UserParks, UserTrainingParks, Blacklist,
-                JournalsList, JournalDetail, CreateJournal, EditJournal,
-                AddJournalEntry, JournalEntries, ChangePassword, SelectCountry, SelectCity,
+                JournalsList, JournalEntries, ChangePassword, SelectCountry, SelectCity,
 
                 // Экраны настроек
                 ThemeIcon

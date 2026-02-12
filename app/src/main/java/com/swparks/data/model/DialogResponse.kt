@@ -1,5 +1,6 @@
 package com.swparks.data.model
 
+import com.swparks.data.database.entity.DialogEntity
 import com.swparks.data.datetime.FlexibleDateDeserializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -21,4 +22,17 @@ data class DialogResponse(
     @SerialName("last_message_date")
     val lastMessageDate: String?,
     val count: Int?
+)
+
+/**
+ * Преобразовать DialogResponse в DialogEntity для сохранения в Room
+ */
+fun DialogResponse.toEntity(): DialogEntity = DialogEntity(
+    id = id,
+    anotherUserId = anotherUserId,
+    name = name,
+    image = image,
+    lastMessageText = lastMessageText,
+    lastMessageDate = lastMessageDate,
+    unreadCount = count
 )

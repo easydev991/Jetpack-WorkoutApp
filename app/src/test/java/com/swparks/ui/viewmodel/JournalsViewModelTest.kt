@@ -1036,7 +1036,7 @@ class JournalsViewModelTest {
         val state = viewModel.uiState.value
         assertTrue(
             "Состояние не должно быть Content при редактировании в не-Content состоянии",
-            state !is JournalsUiState.Content || !(state as JournalsUiState.Content).isSavingJournalSettings
+            state !is JournalsUiState.Content || !state.isSavingJournalSettings
         )
     }
 

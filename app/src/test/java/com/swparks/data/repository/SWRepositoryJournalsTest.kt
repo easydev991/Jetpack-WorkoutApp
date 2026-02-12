@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
+import com.swparks.data.database.dao.DialogDao
 import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.UserDao
@@ -41,6 +42,7 @@ class SWRepositoryJournalsTest {
     private val mockUserDao = mockk<UserDao>(relaxed = true)
     private val mockJournalDao = mockk<JournalDao>(relaxed = true)
     private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
+    private val mockDialogDao = mockk<DialogDao>(relaxed = true)
 
     @Before
     fun setup() {
@@ -103,7 +105,8 @@ class SWRepositoryJournalsTest {
             mockDataStore,
             mockUserDao,
             mockJournalDao,
-            mockJournalEntryDao
+            mockJournalEntryDao,
+            mockDialogDao
         )
 
         // When
@@ -129,7 +132,8 @@ class SWRepositoryJournalsTest {
             mockDataStore,
             mockUserDao,
             mockJournalDao,
-            mockJournalEntryDao
+            mockJournalEntryDao,
+            mockDialogDao
         )
 
         // When
@@ -155,7 +159,8 @@ class SWRepositoryJournalsTest {
             mockDataStore,
             mockUserDao,
             mockJournalDao,
-            mockJournalEntryDao
+            mockJournalEntryDao,
+            mockDialogDao
         )
 
         // When
@@ -181,7 +186,8 @@ class SWRepositoryJournalsTest {
             mockDataStore,
             mockUserDao,
             mockJournalDao,
-            mockJournalEntryDao
+            mockJournalEntryDao,
+            mockDialogDao
         )
 
         // When
@@ -211,7 +217,8 @@ class SWRepositoryJournalsTest {
             mockDataStore,
             mockUserDao,
             mockJournalDao,
-            mockJournalEntryDao
+            mockJournalEntryDao,
+            mockDialogDao
         )
 
         // When
@@ -237,7 +244,8 @@ class SWRepositoryJournalsTest {
             mockDataStore,
             mockUserDao,
             mockJournalDao,
-            mockJournalEntryDao
+            mockJournalEntryDao,
+            mockDialogDao
         )
 
         // When
@@ -270,7 +278,8 @@ class SWRepositoryJournalsTest {
             mockDataStore,
             mockUserDao,
             mockJournalDao,
-            mockJournalEntryDao
+            mockJournalEntryDao,
+            mockDialogDao
         )
 
         // When
@@ -317,7 +326,8 @@ class SWRepositoryJournalsTest {
             mockDataStore,
             mockUserDao,
             mockJournalDao,
-            mockJournalEntryDao
+            mockJournalEntryDao,
+            mockDialogDao
         )
 
         // When
@@ -353,7 +363,8 @@ class SWRepositoryJournalsTest {
             mockDataStore,
             mockUserDao,
             mockJournalDao,
-            mockJournalEntryDao
+            mockJournalEntryDao,
+            mockDialogDao
         )
 
         // When
@@ -383,7 +394,8 @@ class SWRepositoryJournalsTest {
             mockDataStore,
             mockUserDao,
             mockJournalDao,
-            mockJournalEntryDao
+            mockJournalEntryDao,
+            mockDialogDao
         )
 
         // When
@@ -413,7 +425,8 @@ class SWRepositoryJournalsTest {
             mockDataStore,
             mockUserDao,
             mockJournalDao,
-            mockJournalEntryDao
+            mockJournalEntryDao,
+            mockDialogDao
         )
 
         // When
@@ -443,7 +456,8 @@ class SWRepositoryJournalsTest {
             mockDataStore,
             mockUserDao,
             mockJournalDao,
-            mockJournalEntryDao
+            mockJournalEntryDao,
+            mockDialogDao
         )
 
         // When

@@ -14,7 +14,8 @@ class FakeProfileViewModel(
     override val currentUser: StateFlow<User?> = MutableStateFlow(null),
     override val uiState: StateFlow<ProfileUiState> = MutableStateFlow(ProfileUiState.Loading),
     override val isRefreshing: StateFlow<Boolean> = MutableStateFlow(false),
-    override val blacklist: StateFlow<List<User>> = MutableStateFlow(emptyList())
+    override val blacklist: StateFlow<List<User>> = MutableStateFlow(emptyList()),
+    override val isLoadingProfile: StateFlow<Boolean> = MutableStateFlow(false)
 ) : IProfileViewModel {
 
     /**

@@ -43,10 +43,17 @@ data class DialogRowData(
  * Вьюшка с диалогом в списке
  *
  * @param data Данные для отображения - [DialogRowData]
+ * @param onClick Обработчик нажатия на диалог
  */
 @Composable
-fun DialogRowView(data: DialogRowData) {
-    FormCardContainer(modifier = data.modifier) {
+fun DialogRowView(
+    data: DialogRowData,
+    onClick: (() -> Unit)? = null
+) {
+    FormCardContainer(
+        modifier = data.modifier,
+        onClick = onClick
+    ) {
         FormRowContainer(
             config = FormRowConfig(
                 horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),

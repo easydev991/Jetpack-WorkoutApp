@@ -73,6 +73,10 @@ class ProfileViewModel(
     private val _isRefreshing = MutableStateFlow(false)
     override val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
+    // Индикатор загрузки профиля после авторизации
+    private val _isLoadingProfile = MutableStateFlow(false)
+    override val isLoadingProfile: StateFlow<Boolean> = _isLoadingProfile.asStateFlow()
+
     // Черный список пользователя
     override val blacklist: StateFlow<List<User>> = swRepository.getBlacklistFlow()
         .stateIn(
@@ -99,6 +103,7 @@ class ProfileViewModel(
     override fun loadProfileFromServer(userId: Long) {
         viewModelScope.launch {
             try {
+                _isLoadingProfile.update { true }
                 logger.i(TAG, "Начало загрузки профиля с сервера: $userId")
                 loadSocialUpdates(userId, updateUiState = true)
             } catch (e: Exception) {
@@ -106,6 +111,8 @@ class ProfileViewModel(
                 errorReporter.handleError(AppError.Generic(errorMessage, e))
                 _uiState.update { ProfileUiState.Error(errorMessage) }
                 logger.e(TAG, errorMessage)
+            } finally {
+                _isLoadingProfile.update { false }
             }
         }
     }

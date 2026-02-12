@@ -9,6 +9,7 @@ import androidx.room.Room
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.swparks.data.crypto.CryptoManager
 import com.swparks.data.crypto.CryptoManagerImpl
+import com.swparks.data.database.MIGRATION_1_2
 import com.swparks.data.database.SWDatabase
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.UserDao
@@ -18,11 +19,13 @@ import com.swparks.data.interceptor.TokenInterceptor
 import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.JournalEntriesRepositoryImpl
 import com.swparks.data.repository.JournalsRepositoryImpl
+import com.swparks.data.repository.MessagesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.data.repository.SWRepositoryImp
 import com.swparks.data.serializer.EncryptedStringSerializer
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.repository.JournalEntriesRepository
+import com.swparks.domain.repository.MessagesRepository
 import com.swparks.domain.usecase.CanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.CreateJournalUseCase
 import com.swparks.domain.usecase.DeleteJournalEntryUseCase
@@ -74,6 +77,7 @@ interface AppContainer {
     val countriesRepository: CountriesRepository
     val journalsRepository: com.swparks.domain.repository.JournalsRepository
     val journalEntriesRepository: JournalEntriesRepository
+    val messagesRepository: MessagesRepository
 
     // Сервисы для обработки ошибок
     val logger: Logger
@@ -120,6 +124,9 @@ interface AppContainer {
     /** Фабрика для TextEntryViewModel */
     fun textEntryViewModelFactory(mode: TextEntryMode): TextEntryViewModel
 
+    /** Фабрика для DialogsViewModel */
+    fun dialogsViewModelFactory(): com.swparks.ui.viewmodel.DialogsViewModel
+
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
     fun provideProfileApi(): SWApi
@@ -149,14 +156,15 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
     /**
      * Room Database для локального хранения данных
-     * Использует fallbackToDestructiveMigration для разработки - пересоздает БД при изменении схемы
+     * Использует миграции для сохранения данных при обновлении схемы
      */
     val database: SWDatabase by lazy {
         Room.databaseBuilder(
             appContext,
             SWDatabase::class.java,
             "sw_database"
-        ).fallbackToDestructiveMigration(dropAllTables = true)
+        ).addMigrations(MIGRATION_1_2)
+            .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }
 
@@ -169,6 +177,11 @@ class DefaultAppContainer(context: Context) : AppContainer {
      * DAO для работы с дневниками
      */
     private val journalDao: com.swparks.data.database.dao.JournalDao by lazy { database.journalDao() }
+
+    /**
+     * DAO для работы с диалогами
+     */
+    private val dialogDao: com.swparks.data.database.dao.DialogDao by lazy { database.dialogDao() }
 
     // ==================== Криптография и хранение токена ====================
 
@@ -236,7 +249,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
             dataStore = appContext.dataStore,
             userDao = userDao,
             journalDao = journalDao,
-            journalEntryDao = journalEntryDao
+            journalEntryDao = journalEntryDao,
+            dialogDao = dialogDao
         )
     }
 
@@ -262,6 +276,17 @@ class DefaultAppContainer(context: Context) : AppContainer {
      */
     override val journalEntriesRepository: JournalEntriesRepository by lazy {
         JournalEntriesRepositoryImpl(swApi = retrofitService, journalEntryDao = journalEntryDao)
+    }
+
+    /**
+     * Репозиторий для работы с диалогами
+     */
+    override val messagesRepository: MessagesRepository by lazy {
+        MessagesRepositoryImpl(
+            dialogsDao = dialogDao,
+            swApi = retrofitService,
+            logger = logger
+        )
     }
 
     // ==================== Use cases для авторизации ====================
@@ -405,6 +430,12 @@ class DefaultAppContainer(context: Context) : AppContainer {
         errorReporter = errorReporter,
         mode = mode,
         context = appContext
+    )
+
+    /** Factory метод для создания DialogsViewModel */
+    override fun dialogsViewModelFactory() = com.swparks.ui.viewmodel.DialogsViewModel(
+        messagesRepository = messagesRepository,
+        logger = logger
     )
 
     // ==================== API клиенты для разных функциональных областей ====================

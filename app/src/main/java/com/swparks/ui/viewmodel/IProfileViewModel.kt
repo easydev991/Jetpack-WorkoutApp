@@ -26,6 +26,12 @@ interface IProfileViewModel {
     val isRefreshing: StateFlow<Boolean>
 
     /**
+     * Индикатор загрузки профиля после авторизации.
+     * True когда идет загрузка данных профиля с сервера.
+     */
+    val isLoadingProfile: StateFlow<Boolean>
+
+    /**
      * Черный список пользователя.
      */
     val blacklist: StateFlow<List<User>>
