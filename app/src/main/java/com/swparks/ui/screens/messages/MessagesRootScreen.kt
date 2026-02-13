@@ -147,6 +147,7 @@ fun DialogsContent(
                         // LazyColumn с DialogRowView
                         DialogsList(
                             dialogs = uiState.dialogs,
+                            isRefreshing = isRefreshing,
                             onDialogClick = onDialogClick
                         )
                     }
@@ -216,6 +217,7 @@ private fun EmptyStateViewForDialogs(
 @Composable
 fun DialogsList(
     dialogs: List<DialogEntity>,
+    isRefreshing: Boolean,
     onDialogClick: (Long, Int?) -> Unit
 ) {
     val context = LocalContext.current
@@ -245,7 +247,8 @@ fun DialogsList(
                         ?: stringResource(R.string.default_user_name),
                     dateString = formattedDate,
                     bodyText = dialog.lastMessageText ?: "",
-                    unreadCount = dialog.unreadCount
+                    unreadCount = dialog.unreadCount,
+                    enabled = !isRefreshing
                 ),
                 onClick = {
                     onDialogClick(dialog.id, dialog.anotherUserId)

@@ -162,7 +162,8 @@ fun ProfileRootScreen(
                     EditProfileButton(
                         onClick = {
                             Log.i("ProfileRootScreen", "Нажата кнопка: Изменить профиль")
-                        }
+                        },
+                        enabled = !isRefreshing
                     )
 
                     // Кнопка "Друзья"
@@ -172,7 +173,8 @@ fun ProfileRootScreen(
                             friendRequestsCount = user.friendRequestCount?.toIntOrNull() ?: 0,
                             onClick = {
                                 appState?.navController?.navigate(Screen.MyFriends.route)
-                            }
+                            },
+                            enabled = !isRefreshing
                         )
                     }
 
@@ -184,7 +186,8 @@ fun ProfileRootScreen(
                                 appState?.navController?.navigate(
                                     Screen.UserTrainingParks.createRoute(user.id)
                                 )
-                            }
+                            },
+                            enabled = !isRefreshing
                         )
                     }
 
@@ -196,7 +199,8 @@ fun ProfileRootScreen(
                                 appState?.navController?.navigate(
                                     Screen.UserParks.createRoute(user.id)
                                 )
-                            }
+                            },
+                            enabled = !isRefreshing
                         )
                     }
 
@@ -207,7 +211,8 @@ fun ProfileRootScreen(
                             appState?.navController?.navigate(
                                 Screen.JournalsList.createRoute(user.id)
                             )
-                        }
+                        },
+                        enabled = !isRefreshing
                     )
 
                     // Кнопка "Черный список" - показываем только если черный список не пустой
@@ -216,7 +221,8 @@ fun ProfileRootScreen(
                             blacklistCount = blacklist.size,
                             onClick = {
                                 appState?.navController?.navigate(Screen.Blacklist.route)
-                            }
+                            },
+                            enabled = !isRefreshing
                         )
                     }
 
@@ -227,7 +233,8 @@ fun ProfileRootScreen(
                     LogoutButton(
                         onClick = {
                             showLogoutDialog = true
-                        }
+                        },
+                        enabled = !isRefreshing
                     )
                 }
             }
@@ -301,7 +308,8 @@ fun ProfileTopAppBar(
 @Composable
 private fun EditProfileButton(
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     SWButton(
         config = ButtonConfig(
@@ -309,6 +317,7 @@ private fun EditProfileButton(
             size = SWButtonSize.LARGE,
             mode = SWButtonMode.TINTED,
             text = stringResource(id = R.string.edit_profile),
+            enabled = enabled,
             onClick = onClick
         )
     )
@@ -322,12 +331,16 @@ private fun FriendsButton(
     friendsCount: Int,
     friendRequestsCount: Int,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(
+                enabled = enabled,
+                onClick = onClick
+            )
     ) {
         FormRowView(
             leadingText = stringResource(id = R.string.friends),
@@ -337,7 +350,7 @@ private fun FriendsButton(
                 friendsCount
             ),
             badgeValue = if (friendRequestsCount > 0) friendRequestsCount else null,
-            enabled = true
+            enabled = enabled
         )
     }
 }
@@ -349,12 +362,16 @@ private fun FriendsButton(
 private fun UsedParksButton(
     parksCount: Int,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(
+                enabled = enabled,
+                onClick = onClick
+            )
     ) {
         FormRowView(
             leadingText = stringResource(id = R.string.where_trains),
@@ -363,7 +380,7 @@ private fun UsedParksButton(
                 count = parksCount,
                 parksCount
             ),
-            enabled = true
+            enabled = enabled
         )
     }
 }
@@ -375,12 +392,16 @@ private fun UsedParksButton(
 private fun AddedParksButton(
     addedParksCount: Int,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(
+                enabled = enabled,
+                onClick = onClick
+            )
     ) {
         FormRowView(
             leadingText = stringResource(id = R.string.male_added_parks),
@@ -389,7 +410,7 @@ private fun AddedParksButton(
                 count = addedParksCount,
                 addedParksCount
             ),
-            enabled = true
+            enabled = enabled
         )
     }
 }
@@ -401,12 +422,16 @@ private fun AddedParksButton(
 private fun JournalsButton(
     journalsCount: Int,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(
+                enabled = enabled,
+                onClick = onClick
+            )
     ) {
         FormRowView(
             leadingText = stringResource(id = R.string.journals),
@@ -415,7 +440,7 @@ private fun JournalsButton(
                 count = journalsCount,
                 journalsCount
             ),
-            enabled = true
+            enabled = enabled
         )
     }
 }
@@ -427,12 +452,16 @@ private fun JournalsButton(
 private fun BlacklistButton(
     blacklistCount: Int,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(
+                enabled = enabled,
+                onClick = onClick
+            )
     ) {
         FormRowView(
             leadingText = stringResource(id = R.string.black_list),
@@ -441,7 +470,7 @@ private fun BlacklistButton(
                 count = blacklistCount,
                 blacklistCount
             ),
-            enabled = true
+            enabled = enabled
         )
     }
 }

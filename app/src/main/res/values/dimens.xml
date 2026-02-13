@@ -25,6 +25,7 @@
     <dimen name="icon_size_indicator">15dp</dimen>
     <dimen name="icon_size_dropdown">18dp</dimen>
     <dimen name="icon_size_menu">24dp</dimen>
+    <dimen name="icon_size_chevron">24dp</dimen>
     <dimen name="icon_size_small">32dp</dimen>
     <dimen name="icon_size_small_plus">34dp</dimen>
     <dimen name="icon_size_medium">42dp</dimen>

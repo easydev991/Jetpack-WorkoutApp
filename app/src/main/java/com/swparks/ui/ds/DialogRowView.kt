@@ -1,16 +1,26 @@
 package com.swparks.ui.ds
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
@@ -29,6 +39,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * @param dateString Дата отправки сообщения
  * @param bodyText Текст сообщения
  * @param unreadCount Количество непрочитанных сообщений в диалоге
+ * @param enabled Влияет на отображение шеврона справа
  */
 data class DialogRowData(
     val modifier: Modifier = Modifier,
@@ -36,7 +47,8 @@ data class DialogRowData(
     val authorName: String,
     val dateString: String,
     val bodyText: String,
-    val unreadCount: Int? = null
+    val unreadCount: Int? = null,
+    val enabled: Boolean = true
 )
 
 /**
@@ -52,6 +64,7 @@ fun DialogRowView(
 ) {
     FormCardContainer(
         modifier = data.modifier,
+        enabled = data.enabled,
         onClick = onClick
     ) {
         FormRowContainer(
@@ -66,7 +79,8 @@ fun DialogRowView(
                         authorName = data.authorName,
                         dateString = data.dateString,
                         bodyText = data.bodyText,
-                        unreadCount = data.unreadCount
+                        unreadCount = data.unreadCount,
+                        enabled = data.enabled
                     )
                 }
             )
@@ -92,7 +106,8 @@ private fun DialogRowContent(
     authorName: String,
     dateString: String,
     bodyText: String,
-    unreadCount: Int?
+    unreadCount: Int?,
+    enabled: Boolean
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall_plus)),
@@ -104,7 +119,8 @@ private fun DialogRowContent(
         )
         DialogRowBody(
             bodyText = bodyText,
-            unreadCount = unreadCount
+            unreadCount = unreadCount,
+            enabled = enabled
         )
     }
 }
@@ -138,11 +154,13 @@ private fun DialogRowHeader(
 @Composable
 private fun DialogRowBody(
     bodyText: String,
-    unreadCount: Int?
+    unreadCount: Int?,
+    enabled: Boolean
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.heightIn(min = dimensionResource(R.dimen.icon_size_chevron))
     ) {
         Text(
             text = bodyText,
@@ -155,6 +173,19 @@ private fun DialogRowBody(
         )
         if (unreadCount != null && unreadCount > 0) {
             CircleBadgeView(value = unreadCount)
+        }
+        AnimatedVisibility(
+            visible = enabled,
+            enter = fadeIn() + expandHorizontally(),
+            exit = fadeOut() + shrinkHorizontally()
+        ) {
+            Image(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                colorFilter = ColorFilter.tint(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                contentDescription = "Chevron"
+            )
         }
     }
 }
