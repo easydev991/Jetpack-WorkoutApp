@@ -9,7 +9,6 @@ import androidx.room.Room
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.swparks.data.crypto.CryptoManager
 import com.swparks.data.crypto.CryptoManagerImpl
-import com.swparks.data.database.MIGRATION_1_2
 import com.swparks.data.database.SWDatabase
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.UserDao
@@ -175,8 +174,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
             appContext,
             SWDatabase::class.java,
             "sw_database"
-        ).addMigrations(MIGRATION_1_2)
-            .fallbackToDestructiveMigration(dropAllTables = true)
+        ).fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }
 

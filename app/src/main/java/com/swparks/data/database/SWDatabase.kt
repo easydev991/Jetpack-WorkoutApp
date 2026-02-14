@@ -2,8 +2,6 @@ package com.swparks.data.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.swparks.data.database.dao.DialogDao
 import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.JournalEntryDao
@@ -55,25 +53,4 @@ abstract class SWDatabase : RoomDatabase() {
      * @return DialogDao
      */
     abstract fun dialogDao(): DialogDao
-}
-
-/**
- * Миграция с версии 1 до версии 2 - добавление таблицы dialogs
- */
-val MIGRATION_1_2 = object : Migration(1, 2) {
-    override fun migrate(database: SupportSQLiteDatabase) {
-        database.execSQL(
-            """
-            CREATE TABLE IF NOT EXISTS dialogs (
-                id INTEGER PRIMARY KEY NOT NULL,
-                anotherUserId INTEGER,
-                name TEXT,
-                image TEXT,
-                lastMessageText TEXT,
-                lastMessageDate TEXT,
-                unreadCount INTEGER
-            )
-            """.trimIndent()
-        )
-    }
 }
