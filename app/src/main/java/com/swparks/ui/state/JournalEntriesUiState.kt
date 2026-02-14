@@ -1,5 +1,6 @@
 package com.swparks.ui.state
 
+import com.swparks.domain.model.Journal
 import com.swparks.domain.model.JournalEntry
 
 /**
@@ -18,12 +19,16 @@ sealed class JournalEntriesUiState {
      * @param isRefreshing Признак обновления данных (pull-to-refresh)
      * @param firstEntryId Id первой записи (с минимальным id), которую нельзя удалить
      * @param canCreateEntry Признак возможности создания записей (для отображения FAB)
+     * @param journal Текущий дневник для диалога настроек (null во время загрузки)
+     * @param isSavingJournalSettings Флаг сохранения настроек дневника
      */
     data class Content(
         val entries: List<JournalEntry>,
         val isRefreshing: Boolean = false,
         val firstEntryId: Long? = null,
-        val canCreateEntry: Boolean = false
+        val canCreateEntry: Boolean = false,
+        val journal: Journal? = null,
+        val isSavingJournalSettings: Boolean = false
     ) : JournalEntriesUiState()
 
     /**

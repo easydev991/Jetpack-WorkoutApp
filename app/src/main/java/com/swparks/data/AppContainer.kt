@@ -430,6 +430,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
                 syncJournalEntriesUseCase = syncJournalEntriesUseCase,
                 deleteJournalEntryUseCase = deleteJournalEntryUseCase,
                 canDeleteJournalEntryUseCase = canDeleteJournalEntryUseCase,
+                editJournalSettingsUseCase = editJournalSettingsUseCase,
                 preferencesRepository = preferencesRepository,
                 swRepository = swRepository,
                 savedStateHandle = savedStateHandle,

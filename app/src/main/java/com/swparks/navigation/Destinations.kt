@@ -96,16 +96,17 @@ sealed class Screen(
 
     object JournalEntries :
         Screen(
-            "journal_entries/{journalId}?userId={userId}&title={journalTitle}&commentAccess={commentAccess}",
+            "journal_entries/{journalId}?userId={userId}&title={journalTitle}&viewAccess={viewAccess}&commentAccess={commentAccess}",
             parentTab = Profile
         ) {
         fun createRoute(
             journalId: Long,
             userId: Long,
             journalTitle: String,
+            viewAccess: String,
             commentAccess: String
         ) =
-            "journal_entries/$journalId?userId=$userId&title=${android.net.Uri.encode(journalTitle)}&commentAccess=$commentAccess"
+            "journal_entries/$journalId?userId=$userId&title=${android.net.Uri.encode(journalTitle)}&viewAccess=$viewAccess&commentAccess=$commentAccess"
     }
 
     object ChangePassword : Screen("change_password", parentTab = Profile)

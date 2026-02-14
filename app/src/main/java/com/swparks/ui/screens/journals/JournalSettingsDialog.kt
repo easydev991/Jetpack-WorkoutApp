@@ -42,12 +42,9 @@ import androidx.compose.ui.window.DialogProperties
 import com.swparks.R
 import com.swparks.domain.model.Journal
 import com.swparks.ui.model.JournalAccess
-import com.swparks.ui.state.JournalsUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
-import com.swparks.ui.viewmodel.IJournalsViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
+import com.swparks.ui.viewmodel.IJournalSettingsViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -57,15 +54,15 @@ import kotlinx.coroutines.flow.StateFlow
  *
  * @param journal Дневник для редактирования
  * @param onDismiss Обработчик закрытия диалога
- * @param viewModel ViewModel для сохранения настроек
- * @param uiState Состояние UI экрана дневников
+ * @param viewModel ViewModel для сохранения настроек (IJournalSettingsViewModel)
+ * @param isSaving Флаг сохранения настроек
  */
 @Composable
 fun JournalSettingsDialog(
     journal: Journal,
     onDismiss: () -> Unit,
-    viewModel: IJournalsViewModel,
-    uiState: JournalsUiState
+    viewModel: IJournalSettingsViewModel,
+    isSaving: Boolean
 ) {
     // Локальное состояние диалога
     var title by remember { mutableStateOf(TextFieldValue(journal.title ?: "")) }
@@ -82,7 +79,6 @@ fun JournalSettingsDialog(
 
     // Кнопка "Сохранить" активна только если название не пустое и есть изменения
     val isSaveButtonEnabled = title.text.isNotBlank() && hasChanges
-    val isSaving = (uiState as? JournalsUiState.Content)?.isSavingJournalSettings ?: false
 
     val configuration = LocalWindowInfo.current
 
@@ -291,17 +287,9 @@ private fun JournalAccessRow(
 @Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_NO)
 @Composable
 private fun JournalSettingsDialogPreviewLight() {
-    val mockViewModel = object : IJournalsViewModel {
-        override val uiState: StateFlow<JournalsUiState> =
-            MutableStateFlow(JournalsUiState.Content(emptyList()))
-        override val isRefreshing: StateFlow<Boolean> = MutableStateFlow(false)
-        override val isDeleting: StateFlow<Boolean> = MutableStateFlow(false)
-        override val events: SharedFlow<com.swparks.ui.viewmodel.JournalsEvent> =
-            MutableSharedFlow()
+    val mockViewModel = object : IJournalSettingsViewModel {
+        override val isSavingSettings: StateFlow<Boolean> = MutableStateFlow(false)
 
-        override fun retry() = Unit
-        override fun loadJournals() = Unit
-        override fun deleteJournal(journalId: Long) = Unit
         override fun editJournalSettings(
             journalId: Long,
             title: String,
@@ -327,10 +315,7 @@ private fun JournalSettingsDialogPreviewLight() {
             ),
             onDismiss = {},
             viewModel = mockViewModel,
-            uiState = JournalsUiState.Content(
-                journals = emptyList(),
-                isSavingJournalSettings = false
-            )
+            isSaving = false
         )
     }
 }
@@ -338,17 +323,9 @@ private fun JournalSettingsDialogPreviewLight() {
 @Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun JournalSettingsDialogPreviewDark() {
-    val mockViewModel = object : IJournalsViewModel {
-        override val uiState: StateFlow<JournalsUiState> =
-            MutableStateFlow(JournalsUiState.Content(emptyList()))
-        override val isRefreshing: StateFlow<Boolean> = MutableStateFlow(false)
-        override val isDeleting: StateFlow<Boolean> = MutableStateFlow(false)
-        override val events: SharedFlow<com.swparks.ui.viewmodel.JournalsEvent> =
-            MutableSharedFlow()
+    val mockViewModel = object : IJournalSettingsViewModel {
+        override val isSavingSettings: StateFlow<Boolean> = MutableStateFlow(false)
 
-        override fun retry() = Unit
-        override fun loadJournals() = Unit
-        override fun deleteJournal(journalId: Long) = Unit
         override fun editJournalSettings(
             journalId: Long,
             title: String,
@@ -374,10 +351,7 @@ private fun JournalSettingsDialogPreviewDark() {
             ),
             onDismiss = {},
             viewModel = mockViewModel,
-            uiState = JournalsUiState.Content(
-                journals = emptyList(),
-                isSavingJournalSettings = false
-            )
+            isSaving = false
         )
     }
 }

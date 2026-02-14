@@ -54,10 +54,10 @@ import com.swparks.ui.ds.JournalRowMode
 import com.swparks.ui.ds.JournalRowView
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.model.JournalAccess
-import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.screens.common.TextEntrySheetHost
 import com.swparks.ui.state.JournalsUiState
+import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.IJournalsViewModel
 import com.swparks.util.DateFormatter
 
@@ -80,7 +80,7 @@ fun JournalsListScreen(
     userId: Long,
     viewModel: IJournalsViewModel,
     onBackClick: () -> Unit,
-    onJournalClick: (journalId: Long, journalOwnerId: Long, journalTitle: String, commentAccess: String) -> Unit,
+    onJournalClick: (journalId: Long, journalOwnerId: Long, journalTitle: String, viewAccess: String, commentAccess: String) -> Unit,
     parentPaddingValues: PaddingValues
 ) {
     val layoutDirection = LocalLayoutDirection.current
@@ -217,11 +217,13 @@ fun JournalsListScreen(
 
         // Диалог настроек дневника
         journalToEditSettings?.let { journal ->
+            val isSavingSettings =
+                (uiState as? JournalsUiState.Content)?.isSavingJournalSettings ?: false
             JournalSettingsDialog(
                 journal = journal,
                 onDismiss = { journalToEditSettings = null },
                 viewModel = viewModel,
-                uiState = uiState
+                isSaving = isSavingSettings
             )
         }
 
@@ -285,7 +287,7 @@ private fun ContentScreen(
     isRefreshing: Boolean,
     isDeleting: Boolean,
     onRefresh: () -> Unit,
-    onJournalClick: (journalId: Long, journalOwnerId: Long, journalTitle: String, commentAccess: String) -> Unit,
+    onJournalClick: (journalId: Long, journalOwnerId: Long, journalTitle: String, viewAccess: String, commentAccess: String) -> Unit,
     onDeleteClick: (Journal) -> Unit,
     onSetupClick: (Journal) -> Unit = {},
     onCreateJournalClick: () -> Unit = {}
@@ -342,7 +344,7 @@ private fun ContentScreen(
 private fun JournalsList(
     journals: List<Journal>,
     enabled: Boolean = true,
-    onJournalClick: (journalId: Long, journalOwnerId: Long, journalTitle: String, commentAccess: String) -> Unit = { _, _, _, _ -> },
+    onJournalClick: (journalId: Long, journalOwnerId: Long, journalTitle: String, viewAccess: String, commentAccess: String) -> Unit = { _, _, _, _, _ -> },
     onDeleteClick: (Journal) -> Unit = { },
     onSetupClick: (Journal) -> Unit = { }
 ) {
@@ -365,8 +367,15 @@ private fun JournalsList(
                     .fillMaxWidth()
                     .clickable(enabled = enabled) {
                         val journalTitle = journal.title ?: ""
+                        val viewAccess = journal.viewAccess?.name ?: JournalAccess.NOBODY.name
                         val commentAccess = journal.commentAccess?.name ?: JournalAccess.NOBODY.name
-                        onJournalClick(journal.id, journal.ownerId!!, journalTitle, commentAccess)
+                        onJournalClick(
+                            journal.id,
+                            journal.ownerId!!,
+                            journalTitle,
+                            viewAccess,
+                            commentAccess
+                        )
                     }
             ) {
                 JournalRowView(
@@ -443,7 +452,7 @@ private fun JournalsListScreenEmptyPreview() {
             isRefreshing = false,
             isDeleting = false,
             onRefresh = {},
-            onJournalClick = { _, _, _, _ -> },
+            onJournalClick = { _, _, _, _, _ -> },
             onDeleteClick = {},
             onSetupClick = {},
             onCreateJournalClick = {}
@@ -490,7 +499,7 @@ private fun JournalsListScreenWithItemsPreview() {
             isRefreshing = false,
             isDeleting = false,
             onRefresh = {},
-            onJournalClick = { _, _, _, _ -> },
+            onJournalClick = { _, _, _, _, _ -> },
             onDeleteClick = {},
             onSetupClick = {},
             onCreateJournalClick = {}

@@ -42,9 +42,9 @@ class JournalSettingsDialogTest {
 
     private fun setContent(
         journal: Journal,
-        uiState: JournalsUiState = JournalsUiState.Content(journals = emptyList()),
+        isSaving: Boolean = false,
         viewModel: IJournalsViewModel = FakeJournalsViewModel(
-            uiState = MutableStateFlow(uiState),
+            uiState = MutableStateFlow(JournalsUiState.Content(journals = emptyList())),
             isRefreshing = MutableStateFlow(false)
         ),
         onDismiss: () -> Unit = {}
@@ -55,7 +55,7 @@ class JournalSettingsDialogTest {
                     journal = journal,
                     onDismiss = onDismiss,
                     viewModel = viewModel,
-                    uiState = uiState
+                    isSaving = isSaving
                 )
             }
         }
@@ -259,18 +259,14 @@ class JournalSettingsDialogTest {
      */
     @Test
     fun journalSettingsDialog_showsLoadingIndicator_whenSaving() {
-        // Given - диалог открыт и isSavingJournalSettings = true
+        // Given - диалог открыт и isSaving = true
         val journal = createTestJournal(
             title = "Тестовый дневник",
             viewAccess = JournalAccess.FRIENDS
         )
-        val uiState = JournalsUiState.Content(
-            journals = listOf(journal),
-            isSavingJournalSettings = true
-        )
 
         // When
-        setContent(journal, uiState)
+        setContent(journal, isSaving = true)
 
         // Then - Кнопка должна быть заблокирована при загрузке
         composeTestRule
@@ -283,18 +279,14 @@ class JournalSettingsDialogTest {
      */
     @Test
     fun journalSettingsDialog_saveButtonDisabled_whenSavingAndHasChanges() {
-        // Given - диалог открыт, есть изменения и isSavingJournalSettings = true
+        // Given - диалог открыт, есть изменения и isSaving = true
         val journal = createTestJournal(
             title = "Тестовый дневник",
             viewAccess = JournalAccess.FRIENDS
         )
-        val uiState = JournalsUiState.Content(
-            journals = listOf(journal),
-            isSavingJournalSettings = true
-        )
 
         // When - меняем viewAccess на ALL (первая секция - "Кто видит записи")
-        setContent(journal, uiState)
+        setContent(journal, isSaving = true)
         composeTestRule
             .onAllNodes(hasText(context.getString(R.string.everybody_access)))
             .get(0)
@@ -331,39 +323,38 @@ class JournalSettingsDialogTest {
     }
 
     /**
-     * Тест 11: Диалог с uiState не Content (Error)
+     * Тест 11: Диалог работает с isSaving = false
      */
     @Test
-    fun journalSettingsDialog_worksWithErrorUiState() {
-        // Given - диалог открыт с uiState = Error
+    fun journalSettingsDialog_worksWithIsSavingFalse() {
+        // Given - диалог открыт с isSaving = false
         val journal = createTestJournal()
-        val uiState = JournalsUiState.Error("Ошибка загрузки")
 
         // When
-        setContent(journal, uiState)
+        setContent(journal, isSaving = false)
 
-        // Then - isSaving должен вычисляться как false, кнопка работает нормально
+        // Then - кнопка работает нормально (isSaving = false)
         composeTestRule
             .onNodeWithTag("saveButton")
             .assertIsDisplayed()
     }
 
     /**
-     * Тест 12: Диалог с uiState InitialLoading
+     * Тест 12: Диалог работает с isSaving = true (кнопка отключена)
      */
     @Test
-    fun journalSettingsDialog_worksWithInitialLoadingUiState() {
-        // Given - диалог открыт с uiState = InitialLoading
+    fun journalSettingsDialog_worksWithIsSavingTrue() {
+        // Given - диалог открыт с isSaving = true
         val journal = createTestJournal()
-        val uiState = JournalsUiState.InitialLoading
 
         // When
-        setContent(journal, uiState)
+        setContent(journal, isSaving = true)
 
-        // Then - isSaving должен вычисляться как false, кнопка работает нормально
+        // Then - кнопка отключена при сохранении
         composeTestRule
             .onNodeWithTag("saveButton")
             .assertIsDisplayed()
+            .assertIsNotEnabled()
     }
 
     /**

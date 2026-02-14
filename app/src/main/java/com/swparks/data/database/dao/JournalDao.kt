@@ -44,4 +44,30 @@ interface JournalDao {
      */
     @Query("DELETE FROM journals WHERE id = :journalId")
     suspend fun deleteById(journalId: Long)
+
+    /**
+     * Вставить или обновить дневник
+     *
+     * @param journal Дневник для сохранения
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(journal: JournalEntity)
+
+    /**
+     * Получить дневник по ID
+     *
+     * @param journalId Идентификатор дневника
+     * @return Дневник или null если не найден
+     */
+    @Query("SELECT * FROM journals WHERE id = :journalId")
+    suspend fun getById(journalId: Long): JournalEntity?
+
+    /**
+     * Получить поток дневника по ID для подписки на изменения
+     *
+     * @param journalId Идентификатор дневника
+     * @return Flow с дневником или null если не найден
+     */
+    @Query("SELECT * FROM journals WHERE id = :journalId")
+    fun observeById(journalId: Long): Flow<JournalEntity?>
 }

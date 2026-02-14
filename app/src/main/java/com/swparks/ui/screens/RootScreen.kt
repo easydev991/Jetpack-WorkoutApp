@@ -347,12 +347,13 @@ fun RootScreen(appState: AppState) {
                         userId = userId,
                         viewModel = viewModel,
                         onBackClick = { appState.navController.popBackStack() },
-                        onJournalClick = { journalId, journalOwnerId, journalTitle, commentAccess ->
+                        onJournalClick = { journalId, journalOwnerId, journalTitle, viewAccess, commentAccess ->
                             appState.navController.navigate(
                                 Screen.JournalEntries.createRoute(
                                     journalId,
                                     journalOwnerId,
                                     journalTitle,
+                                    viewAccess,
                                     commentAccess
                                 )
                             )
@@ -371,6 +372,9 @@ fun RootScreen(appState: AppState) {
                 val journalTitle = navBackStackEntry.arguments?.getString("journalTitle")?.let {
                     android.net.Uri.decode(it)
                 } ?: ""
+                // Получаем viewAccess из query-параметра
+                val viewAccess = navBackStackEntry.arguments?.getString("viewAccess")
+                    ?: JournalAccess.NOBODY.name
                 // Получаем commentAccess из query-параметра
                 val commentAccess = navBackStackEntry.arguments?.getString("commentAccess")
                     ?: JournalAccess.NOBODY.name
@@ -382,6 +386,7 @@ fun RootScreen(appState: AppState) {
                     "journalOwnerId=$journalOwnerId (из query-параметра userId)"
                 )
                 Log.i("RootScreen", "journalTitle=$journalTitle")
+                Log.i("RootScreen", "viewAccess=$viewAccess")
                 Log.i("RootScreen", "commentAccess=$commentAccess")
 
                 if (journalId != null && journalOwnerId != null) {
@@ -397,7 +402,10 @@ fun RootScreen(appState: AppState) {
                         journalId = journalId,
                         journalTitle = journalTitle,
                         journalOwnerId = journalOwnerId,
+                        journalViewAccess = viewAccess,
+                        journalCommentAccess = commentAccess,
                         viewModel = viewModel,
+                        appState = appState,
                         onBackClick = { appState.navController.popBackStack() },
                         parentPaddingValues = paddingValues
                     )

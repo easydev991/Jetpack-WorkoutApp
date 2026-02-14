@@ -1,5 +1,6 @@
 package com.swparks.data.model
 
+import com.swparks.data.database.entity.toEntity
 import com.swparks.data.datetime.FlexibleDateDeserializer
 import com.swparks.domain.model.Journal
 import com.swparks.ui.model.JournalAccess
@@ -56,3 +57,11 @@ fun JournalResponse.toDomain(): Journal = Journal(
     viewAccess = journalAccessOption,
     commentAccess = commentAccessOption
 )
+
+/**
+ * Маппер для преобразования [JournalResponse] в [JournalEntity]
+ */
+fun JournalResponse.toEntity(): com.swparks.data.database.entity.JournalEntity {
+    val domain = toDomain()
+    return domain.toEntity()
+}

@@ -694,7 +694,7 @@ class JournalsListScreenTest {
                         journal = currentJournal,
                         onDismiss = { journalToEditSettings = null },
                         viewModel = viewModel,
-                        uiState = state
+                        isSaving = false
                     )
                 }
             }

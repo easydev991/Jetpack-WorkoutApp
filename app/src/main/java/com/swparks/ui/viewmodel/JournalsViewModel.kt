@@ -61,6 +61,10 @@ class JournalsViewModel(
     private val _isDeleting = MutableStateFlow(false)
     override val isDeleting: StateFlow<Boolean> = _isDeleting.asStateFlow()
 
+    // Индикатор сохранения настроек дневника (реализует интерфейс IJournalSettingsViewModel)
+    private val _isSavingSettings = MutableStateFlow(false)
+    override val isSavingSettings: StateFlow<Boolean> = _isSavingSettings.asStateFlow()
+
     // Поток событий UI (реализует интерфейс IJournalsViewModel)
     private val _events = MutableSharedFlow<JournalsEvent>()
     override val events: SharedFlow<JournalsEvent> = _events.asSharedFlow()
@@ -123,7 +127,8 @@ class JournalsViewModel(
                 _isRefreshing.value = false
                 val currentState = _uiState.value
                 if (currentState is JournalsUiState.Content && currentState.journals.isEmpty()) {
-                    _uiState.value = JournalsUiState.Error(resources.getString(R.string.error_loading_journals))
+                    _uiState.value =
+                        JournalsUiState.Error(resources.getString(R.string.error_loading_journals))
                 }
             }
         }
@@ -163,16 +168,24 @@ class JournalsViewModel(
                         Log.e(TAG, "Ошибка при удалении дневника: ${error.message}")
                         errorReporter.handleError(
                             AppError.Generic(
-                                error.message ?: resources.getString(R.string.error_delete_journal), error
+                                error.message ?: resources.getString(R.string.error_delete_journal),
+                                error
                             )
                         )
                         _events.emit(
-                            JournalsEvent.ShowSnackbar(error.message ?: resources.getString(R.string.error_deleting))
+                            JournalsEvent.ShowSnackbar(
+                                error.message ?: resources.getString(R.string.error_deleting)
+                            )
                         )
                     }
             } catch (e: Exception) {
                 Log.e(TAG, "Исключение при удалении дневника: ${e.message}")
-                errorReporter.handleError(AppError.Generic(resources.getString(R.string.error_delete_journal), e))
+                errorReporter.handleError(
+                    AppError.Generic(
+                        resources.getString(R.string.error_delete_journal),
+                        e
+                    )
+                )
                 _events.emit(JournalsEvent.ShowSnackbar(resources.getString(R.string.error_deleting)))
             } finally {
                 _isDeleting.value = false
@@ -236,6 +249,7 @@ class JournalsViewModel(
      * Установить флаг загрузки настроек дневника
      */
     private fun setSavingJournalSettings(isSaving: Boolean) {
+        _isSavingSettings.value = isSaving
         val currentState = _uiState.value
         if (currentState is JournalsUiState.Content) {
             _uiState.value = currentState.copy(isSavingJournalSettings = isSaving)
@@ -280,7 +294,9 @@ class JournalsViewModel(
     private suspend fun handleJournalSettingsError(errorMessage: String?) {
         setSavingJournalSettings(false)
         _events.emit(
-            JournalsEvent.ShowSnackbar(errorMessage ?: resources.getString(R.string.error_save_journal_settings))
+            JournalsEvent.ShowSnackbar(
+                errorMessage ?: resources.getString(R.string.error_save_journal_settings)
+            )
         )
     }
 }

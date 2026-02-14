@@ -9,7 +9,9 @@ import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.JournalEntry
 import com.swparks.domain.provider.ResourcesProvider
+import com.swparks.domain.usecase.ICanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IDeleteJournalEntryUseCase
+import com.swparks.domain.usecase.IEditJournalSettingsUseCase
 import com.swparks.domain.usecase.IGetJournalEntriesUseCase
 import com.swparks.domain.usecase.ISyncJournalEntriesUseCase
 import com.swparks.ui.model.JournalAccess
@@ -50,7 +52,8 @@ class JournalEntriesViewModelTest {
     private lateinit var getJournalEntriesUseCase: IGetJournalEntriesUseCase
     private lateinit var syncJournalEntriesUseCase: ISyncJournalEntriesUseCase
     private lateinit var deleteJournalEntryUseCase: IDeleteJournalEntryUseCase
-    private lateinit var canDeleteJournalEntryUseCase: com.swparks.domain.usecase.ICanDeleteJournalEntryUseCase
+    private lateinit var canDeleteJournalEntryUseCase: ICanDeleteJournalEntryUseCase
+    private lateinit var editJournalSettingsUseCase: IEditJournalSettingsUseCase
     private lateinit var preferencesRepository: UserPreferencesRepository
     private lateinit var swRepository: SWRepository
     private lateinit var savedStateHandle: SavedStateHandle
@@ -100,6 +103,7 @@ class JournalEntriesViewModelTest {
             syncJournalEntriesUseCase = syncJournalEntriesUseCase,
             deleteJournalEntryUseCase = deleteJournalEntryUseCase,
             canDeleteJournalEntryUseCase = canDeleteJournalEntryUseCase,
+            editJournalSettingsUseCase = editJournalSettingsUseCase,
             preferencesRepository = preferencesRepository,
             swRepository = swRepository,
             savedStateHandle = savedStateHandle,
@@ -122,6 +126,7 @@ class JournalEntriesViewModelTest {
         syncJournalEntriesUseCase = mockk(relaxed = true)
         deleteJournalEntryUseCase = mockk(relaxed = true)
         canDeleteJournalEntryUseCase = mockk(relaxed = true)
+        editJournalSettingsUseCase = mockk(relaxed = true)
         preferencesRepository = mockk(relaxed = true)
         swRepository = mockk(relaxed = true)
         savedStateHandle = mockk(relaxed = true)
@@ -976,5 +981,105 @@ class JournalEntriesViewModelTest {
             "Не владелец дневника не может создавать записи при NOBODY",
             canCreate
         )
+    }
+
+    // ==================== ТЕСТЫ ДЛЯ ИСПРАВЛЕНИЯ БАГОВ ====================
+
+    /**
+     * Тест 31: observeEntries сохраняет journal при обновлении записей
+     *
+     * Проверяет баг #1: Кнопка настроек исчезает после загрузки.
+     * При обновлении списка записей journal должен сохраняться в состоянии.
+     */
+    @Test
+    fun testObserveEntries_preservesJournal() = runTest {
+        // Given
+        val testJournal = com.swparks.domain.model.Journal(
+            id = testJournalId,
+            title = "Тестовый дневник",
+            lastMessageImage = null,
+            createDate = "2024-01-01T10:00:00",
+            modifyDate = "2024-01-15T15:30:00",
+            lastMessageDate = "2024-01-15T15:30:00",
+            lastMessageText = "Последнее сообщение",
+            entriesCount = 5,
+            ownerId = testUserId,
+            viewAccess = JournalAccess.ALL,
+            commentAccess = JournalAccess.ALL
+        )
+        val entries = listOf(testEntry)
+
+        // Настраиваем моки
+        coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns flowOf(entries)
+        coEvery {
+            syncJournalEntriesUseCase(
+                testUserId,
+                testJournalId
+            )
+        } returns Result.success(Unit)
+        every { swRepository.observeJournalById(testJournalId) } returns flowOf(testJournal)
+
+        // When
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then - journal должен быть сохранён в состоянии Content
+        val state = viewModel.uiState.value
+        assertTrue(
+            "Состояние должно быть Content",
+            state is JournalEntriesUiState.Content
+        )
+        val contentState = state as JournalEntriesUiState.Content
+        assertEquals(
+            "Journal должен быть сохранён в состоянии",
+            testJournal.id,
+            contentState.journal?.id
+        )
+        assertEquals(
+            "Заголовок journal должен быть корректным",
+            testJournal.title,
+            contentState.journal?.title
+        )
+    }
+
+    /**
+     * Тест 32: loadJournal пропускает загрузку, если дневник уже в кэше
+     *
+     * Проверяет баг #3: Лишняя загрузка дневника с сервера.
+     * Если дневник уже есть в кэше, запрос к серверу не должен выполняться.
+     */
+    @Test
+    fun testLoadJournal_skipsWhenCached() = runTest {
+        // Given
+        val testJournal = com.swparks.domain.model.Journal(
+            id = testJournalId,
+            title = "Тестовый дневник",
+            lastMessageImage = null,
+            createDate = "2024-01-01T10:00:00",
+            modifyDate = "2024-01-15T15:30:00",
+            lastMessageDate = "2024-01-15T15:30:00",
+            lastMessageText = "Последнее сообщение",
+            entriesCount = 5,
+            ownerId = testUserId,
+            viewAccess = JournalAccess.ALL,
+            commentAccess = JournalAccess.ALL
+        )
+
+        // Настраиваем моки - дневник уже в кэше
+        every { swRepository.observeJournalById(testJournalId) } returns flowOf(testJournal)
+        coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns emptyFlow()
+        coEvery {
+            syncJournalEntriesUseCase(
+                testUserId,
+                testJournalId
+            )
+        } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then - getJournal НЕ должен быть вызван, т.к. дневник уже в кэше
+        coVerify(exactly = 0) { swRepository.getJournal(any(), any()) }
     }
 }

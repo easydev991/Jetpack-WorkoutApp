@@ -1,14 +1,17 @@
 package com.swparks.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.swparks.R
 import com.swparks.data.UserPreferencesRepository
+import com.swparks.data.model.toDomain
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.usecase.ICanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IDeleteJournalEntryUseCase
+import com.swparks.domain.usecase.IEditJournalSettingsUseCase
 import com.swparks.domain.usecase.IGetJournalEntriesUseCase
 import com.swparks.domain.usecase.ISyncJournalEntriesUseCase
 import com.swparks.ui.model.JournalAccess
@@ -24,7 +27,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
@@ -37,6 +44,7 @@ data class JournalEntriesDeps(
     val syncJournalEntriesUseCase: ISyncJournalEntriesUseCase,
     val deleteJournalEntryUseCase: IDeleteJournalEntryUseCase,
     val canDeleteJournalEntryUseCase: ICanDeleteJournalEntryUseCase,
+    val editJournalSettingsUseCase: IEditJournalSettingsUseCase,
     val preferencesRepository: UserPreferencesRepository,
     val swRepository: SWRepository,
     val savedStateHandle: SavedStateHandle,
@@ -60,6 +68,10 @@ class JournalEntriesViewModel(
     private val deps: JournalEntriesDeps
 ) : ViewModel(), IJournalEntriesViewModel {
 
+    private companion object {
+        const val TAG = "JournalEntriesVM"
+    }
+
     // UI State (реализует интерфейс IJournalEntriesViewModel)
     private val _uiState =
         MutableStateFlow<JournalEntriesUiState>(JournalEntriesUiState.InitialLoading)
@@ -72,6 +84,10 @@ class JournalEntriesViewModel(
     // Индикатор удаления записи (реализует интерфейс IJournalEntriesViewModel)
     private val _isDeleting = MutableStateFlow(false)
     override val isDeleting: StateFlow<Boolean> = _isDeleting.asStateFlow()
+
+    // Индикатор сохранения настроек дневника (реализует интерфейс IJournalSettingsViewModel)
+    private val _isSavingSettings = MutableStateFlow(false)
+    override val isSavingSettings: StateFlow<Boolean> = _isSavingSettings.asStateFlow()
 
     // Признак возможности создания записей (реализует интерфейс IJournalEntriesViewModel)
     private val _canCreateEntry = MutableStateFlow(false)
@@ -90,7 +106,58 @@ class JournalEntriesViewModel(
         // Это предотвращает гонку состояния, когда observeEntries() создает Content до обновления canCreateEntry
         observeCanCreateEntry()
         observeEntries()
+        observeJournal()
+        loadJournal()
         loadEntries()
+    }
+
+    /**
+     * Загрузить информацию о дневнике с сервера и сохранить в кэш.
+     * Необходимо для отображения кнопки настроек (требуется journal.ownerId).
+     */
+    @Suppress("TooGenericExceptionCaught")
+    private fun loadJournal() {
+        viewModelScope.launch {
+            try {
+                // Проверяем кэш перед загрузкой с сервера
+                val cachedJournal = deps.swRepository.observeJournalById(journalId).first()
+                if (cachedJournal != null) {
+                    Log.i(TAG, "Дневник уже в кэше: journalId=$journalId, пропускаем загрузку")
+                    return@launch
+                }
+
+                val result = deps.swRepository.getJournal(journalOwnerId, journalId)
+                result.fold(
+                    onSuccess = { journalResponse ->
+                        val journal = journalResponse.toDomain()
+                        deps.swRepository.saveJournalToCache(journal)
+                        Log.i(TAG, "Дневник загружен и сохранён в кэш: journalId=$journalId")
+                    },
+                    onFailure = { error ->
+                        Log.e(TAG, "Ошибка при загрузке дневника: ${error.message}")
+                        // Не показываем ошибку пользователю - записи могут загрузиться успешно
+                    }
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Исключение при загрузке дневника: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Подписаться на изменения дневника через Repository.
+     * Обновляет UI State при изменении дневника в кэше.
+     */
+    private fun observeJournal() {
+        deps.swRepository.observeJournalById(journalId)
+            .onEach { journal ->
+                _uiState.update { state ->
+                    if (state is JournalEntriesUiState.Content) {
+                        state.copy(journal = journal)
+                    } else state
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     /**
@@ -114,12 +181,15 @@ class JournalEntriesViewModel(
                 val firstEntryId = entries.minByOrNull { it.id }?.id
                 // Используем текущее вычисленное значение canCreateEntry
                 val canCreateEntry = _canCreateEntry.value
+                // Сохраняем текущий журнал при обновлении записей
+                val currentJournal = (_uiState.value as? JournalEntriesUiState.Content)?.journal
                 _uiState.value =
                     JournalEntriesUiState.Content(
                         entries = entries,
                         isRefreshing = _isRefreshing.value,
                         firstEntryId = firstEntryId,
-                        canCreateEntry = canCreateEntry
+                        canCreateEntry = canCreateEntry,
+                        journal = currentJournal
                     )
             }
         }
@@ -198,7 +268,8 @@ class JournalEntriesViewModel(
                 _isRefreshing.value = false
                 val currentState = _uiState.value
                 if (currentState is JournalEntriesUiState.Content && currentState.entries.isEmpty()) {
-                    _uiState.value = JournalEntriesUiState.Error(deps.resources.getString(R.string.error_loading_entries))
+                    _uiState.value =
+                        JournalEntriesUiState.Error(deps.resources.getString(R.string.error_loading_entries))
                 }
             }
         }
@@ -234,7 +305,8 @@ class JournalEntriesViewModel(
                     .onFailure { error ->
                         deps.errorReporter.handleError(
                             AppError.Generic(
-                                error.message ?: deps.resources.getString(R.string.error_delete_entry), error
+                                error.message
+                                    ?: deps.resources.getString(R.string.error_delete_entry), error
                             )
                         )
                         val errorMessage = error.message
@@ -244,7 +316,12 @@ class JournalEntriesViewModel(
                         )
                     }
             } catch (e: Exception) {
-                deps.errorReporter.handleError(AppError.Generic(deps.resources.getString(R.string.error_delete_entry), e))
+                deps.errorReporter.handleError(
+                    AppError.Generic(
+                        deps.resources.getString(R.string.error_delete_entry),
+                        e
+                    )
+                )
                 _events.emit(JournalEntriesEvent.ShowSnackbar(deps.resources.getString(R.string.error_deleting)))
             } finally {
                 _isDeleting.value = false
@@ -283,5 +360,110 @@ class JournalEntriesViewModel(
     override fun canEditEntry(entry: com.swparks.domain.model.JournalEntry): Boolean {
         val currentUserId = _currentUserId.value
         return currentUserId == entry.authorId
+    }
+
+    /**
+     * Редактировать настройки дневника.
+     *
+     * После успешного обновления эмитится событие [JournalEntriesEvent.JournalSettingsSaved].
+     * При ошибке эмитится событие [JournalEntriesEvent.ShowSnackbar].
+     *
+     * @param journalId Идентификатор дневника
+     * @param title Новое название дневника
+     * @param viewAccess Новый уровень доступа для просмотра
+     * @param commentAccess Новый уровень доступа для комментариев
+     */
+    @Suppress("TooGenericExceptionCaught")
+    override fun editJournalSettings(
+        journalId: Long,
+        title: String,
+        viewAccess: JournalAccess,
+        commentAccess: JournalAccess
+    ) {
+        viewModelScope.launch {
+            try {
+                _isSavingSettings.value = true
+
+                Log.i(TAG, "Редактирование настроек дневника: journalId=$journalId, title=$title")
+
+                val result = deps.editJournalSettingsUseCase(
+                    journalId = journalId,
+                    title = title,
+                    userId = journalOwnerId,
+                    viewAccess = viewAccess,
+                    commentAccess = commentAccess
+                )
+
+                result.fold(
+                    onSuccess = {
+                        Log.i(TAG, "Настройки дневника успешно обновлены")
+                        // После успешного обновления загружаем дневник заново для обновления кэша
+                        loadJournalAfterSettingsUpdate(journalId)
+                    },
+                    onFailure = { error ->
+                        Log.e(TAG, "Ошибка при редактировании настроек дневника: ${error.message}")
+                        handleEditSettingsError(error)
+                    }
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Исключение при редактировании настроек дневника: ${e.message}")
+                handleEditSettingsError(e)
+            } finally {
+                _isSavingSettings.value = false
+            }
+        }
+    }
+
+    /**
+     * Загрузить дневник после успешного обновления настроек.
+     * Обновляет локальный кэш и эмитит событие об успехе.
+     */
+    private suspend fun loadJournalAfterSettingsUpdate(journalId: Long) {
+        deps.swRepository.getJournal(journalOwnerId, journalId)
+            .fold(
+                onSuccess = { journalResponse ->
+                    val journal = journalResponse.toDomain()
+                    // Обновляем кэш через Repository
+                    deps.swRepository.saveJournalToCache(journal)
+
+                    // Эмитим событие об успехе
+                    _events.emit(JournalEntriesEvent.JournalSettingsSaved(journal))
+                    _events.emit(
+                        JournalEntriesEvent.ShowSnackbar(
+                            deps.resources.getString(R.string.settings_saved)
+                        )
+                    )
+                },
+                onFailure = { error ->
+                    Log.e(TAG, "Ошибка загрузки дневника после обновления: ${error.message}")
+                    // Даже если не удалось загрузить, считаем операцию успешной
+                    // так как сервер подтвердил обновление
+                    val currentJournal = (_uiState.value as? JournalEntriesUiState.Content)?.journal
+                    if (currentJournal != null) {
+                        _events.emit(JournalEntriesEvent.JournalSettingsSaved(currentJournal))
+                    }
+                    _events.emit(
+                        JournalEntriesEvent.ShowSnackbar(
+                            deps.resources.getString(R.string.settings_saved)
+                        )
+                    )
+                }
+            )
+    }
+
+    /**
+     * Обработать ошибку редактирования настроек.
+     */
+    private suspend fun handleEditSettingsError(error: Throwable) {
+        val message = when {
+            error.message?.contains("403") == true -> {
+                deps.resources.getString(R.string.error_no_permission)
+            }
+
+            else -> {
+                deps.resources.getString(R.string.error_saving_settings)
+            }
+        }
+        _events.emit(JournalEntriesEvent.ShowSnackbar(message))
     }
 }

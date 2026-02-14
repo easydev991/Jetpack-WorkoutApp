@@ -293,7 +293,10 @@
 
     <!-- Journal Settings Dialog -->
     <string name="journal_settings_saved">Journal settings saved</string>
+    <string name="settings_saved">Settings saved</string>
     <string name="error_save_journal_settings">Error saving journal settings</string>
+    <string name="error_saving_settings">Error saving settings</string>
+    <string name="error_no_permission">You don\'t have permission to edit</string>
     <string name="error_loading_journals">Error loading journals</string>
     <string name="error_user_not_found">User not found</string>
     <string name="messages_placeholder">Your messages will be here</string>

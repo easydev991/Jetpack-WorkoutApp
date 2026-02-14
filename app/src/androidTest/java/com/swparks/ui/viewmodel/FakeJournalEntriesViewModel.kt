@@ -1,6 +1,7 @@
 package com.swparks.ui.viewmodel
 
 import com.swparks.domain.model.JournalEntry
+import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalEntriesUiState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +19,8 @@ class FakeJournalEntriesViewModel(
     override val uiState: StateFlow<JournalEntriesUiState>,
     override val isRefreshing: StateFlow<Boolean>,
     override val isDeleting: StateFlow<Boolean> = MutableStateFlow(false),
-    override val canCreateEntry: StateFlow<Boolean> = MutableStateFlow(false)
+    override val canCreateEntry: StateFlow<Boolean> = MutableStateFlow(false),
+    override val isSavingSettings: StateFlow<Boolean> = MutableStateFlow(false)
 ) : IJournalEntriesViewModel {
 
     // Поток событий для тестирования
@@ -73,5 +75,18 @@ class FakeJournalEntriesViewModel(
     override fun canEditEntry(entry: JournalEntry): Boolean {
         // Заглушка - проверяет, что у записи есть автор
         return entry.authorId != null
+    }
+
+    /**
+     * Функция-заглушка для редактирования настроек дневника.
+     * В тестах можно проверить, был ли вызван этот метод.
+     */
+    override fun editJournalSettings(
+        journalId: Long,
+        title: String,
+        viewAccess: JournalAccess,
+        commentAccess: JournalAccess
+    ) {
+        // Заглушка - не делает ничего в тестах
     }
 }

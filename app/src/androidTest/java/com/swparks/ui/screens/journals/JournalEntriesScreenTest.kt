@@ -9,10 +9,13 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
+import com.swparks.data.model.User
 import com.swparks.domain.model.JournalEntry
+import com.swparks.navigation.AppState
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.state.JournalEntriesUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
@@ -55,6 +58,16 @@ class JournalEntriesScreenTest {
         onBackClick: () -> Unit = {}
     ) {
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID,
+                    name = "testuser",
+                    image = null
+                )
+            )
+
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
@@ -62,6 +75,7 @@ class JournalEntriesScreenTest {
                     journalTitle = journalTitle,
                     journalOwnerId = journalOwnerId,
                     viewModel = viewModel,
+                    appState = appState,
                     onBackClick = onBackClick,
                     parentPaddingValues = PaddingValues()
                 )
@@ -117,6 +131,16 @@ class JournalEntriesScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID,
+                    name = "testuser",
+                    image = null
+                )
+            )
+
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
@@ -124,6 +148,7 @@ class JournalEntriesScreenTest {
                     journalTitle = TEST_JOURNAL_TITLE,
                     journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
+                    appState = appState,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
                 )
@@ -147,6 +172,16 @@ class JournalEntriesScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID,
+                    name = "testuser",
+                    image = null
+                )
+            )
+
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
@@ -154,6 +189,7 @@ class JournalEntriesScreenTest {
                     journalTitle = TEST_JOURNAL_TITLE,
                     journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
+                    appState = appState,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
                 )
@@ -177,6 +213,16 @@ class JournalEntriesScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID,
+                    name = "testuser",
+                    image = null
+                )
+            )
+
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
@@ -184,6 +230,7 @@ class JournalEntriesScreenTest {
                     journalTitle = TEST_JOURNAL_TITLE,
                     journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
+                    appState = appState,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
                 )
@@ -217,6 +264,16 @@ class JournalEntriesScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID,
+                    name = "testuser",
+                    image = null
+                )
+            )
+
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
@@ -224,6 +281,7 @@ class JournalEntriesScreenTest {
                     journalTitle = TEST_JOURNAL_TITLE,
                     journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
+                    appState = appState,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
                 )
@@ -334,6 +392,16 @@ class JournalEntriesScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID,
+                    name = "testuser",
+                    image = null
+                )
+            )
+
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
@@ -341,6 +409,7 @@ class JournalEntriesScreenTest {
                     journalTitle = TEST_JOURNAL_TITLE,
                     journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
+                    appState = appState,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
                 )
@@ -374,6 +443,16 @@ class JournalEntriesScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID,
+                    name = "testuser",
+                    image = null
+                )
+            )
+
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
@@ -381,6 +460,7 @@ class JournalEntriesScreenTest {
                     journalTitle = TEST_JOURNAL_TITLE,
                     journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
+                    appState = appState,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
                 )
@@ -417,6 +497,16 @@ class JournalEntriesScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID,
+                    name = "testuser",
+                    image = null
+                )
+            )
+
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
@@ -424,6 +514,7 @@ class JournalEntriesScreenTest {
                     journalTitle = TEST_JOURNAL_TITLE,
                     journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
+                    appState = appState,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
                 )
@@ -466,6 +557,16 @@ class JournalEntriesScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID,
+                    name = "testuser",
+                    image = null
+                )
+            )
+
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
@@ -473,6 +574,7 @@ class JournalEntriesScreenTest {
                     journalTitle = TEST_JOURNAL_TITLE,
                     journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
+                    appState = appState,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
                 )
@@ -517,6 +619,16 @@ class JournalEntriesScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID,
+                    name = "testuser",
+                    image = null
+                )
+            )
+
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
@@ -524,6 +636,7 @@ class JournalEntriesScreenTest {
                     journalTitle = TEST_JOURNAL_TITLE,
                     journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
+                    appState = appState,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
                 )
@@ -670,6 +783,16 @@ class JournalEntriesScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID,
+                    name = "testuser",
+                    image = null
+                )
+            )
+
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
@@ -677,6 +800,7 @@ class JournalEntriesScreenTest {
                     journalTitle = TEST_JOURNAL_TITLE,
                     journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
+                    appState = appState,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
                 )
@@ -843,6 +967,16 @@ class JournalEntriesScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID,
+                    name = "testuser",
+                    image = null
+                )
+            )
+
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
@@ -850,6 +984,7 @@ class JournalEntriesScreenTest {
                     journalTitle = TEST_JOURNAL_TITLE,
                     journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
+                    appState = appState,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
                 )
@@ -892,6 +1027,16 @@ class JournalEntriesScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID,
+                    name = "testuser",
+                    image = null
+                )
+            )
+
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
@@ -899,6 +1044,7 @@ class JournalEntriesScreenTest {
                     journalTitle = TEST_JOURNAL_TITLE,
                     journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
+                    appState = appState,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues()
                 )
@@ -938,6 +1084,16 @@ class JournalEntriesScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID,
+                    name = "testuser",
+                    image = null
+                )
+            )
+
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
@@ -945,6 +1101,7 @@ class JournalEntriesScreenTest {
                     journalTitle = TEST_JOURNAL_TITLE,
                     journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
+                    appState = appState,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues(),
                     textEntrySheetHostContent = { show, mode, _, _ ->
@@ -999,6 +1156,16 @@ class JournalEntriesScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID,
+                    name = "testuser",
+                    image = null
+                )
+            )
+
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
@@ -1006,6 +1173,7 @@ class JournalEntriesScreenTest {
                     journalTitle = TEST_JOURNAL_TITLE,
                     journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
+                    appState = appState,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues(),
                     textEntrySheetHostContent = { show, mode, _, _ ->
@@ -1054,6 +1222,16 @@ class JournalEntriesScreenTest {
 
         // When
         composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID,
+                    name = "testuser",
+                    image = null
+                )
+            )
+
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
@@ -1061,6 +1239,7 @@ class JournalEntriesScreenTest {
                     journalTitle = TEST_JOURNAL_TITLE,
                     journalOwnerId = TEST_JOURNAL_OWNER_ID,
                     viewModel = viewModel,
+                    appState = appState,
                     onBackClick = {},
                     parentPaddingValues = PaddingValues(),
                     textEntrySheetHostContent = { show, mode, _, _ ->

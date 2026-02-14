@@ -132,6 +132,23 @@ interface SWRepository {
         commentAccess: JournalAccess
     ): Result<Unit>
 
+    /**
+     * Получить поток дневника по ID для подписки на изменения.
+     * Возвращает Flow с дневником из локального кэша.
+     *
+     * @param journalId Идентификатор дневника
+     * @return Flow с дневником или null если не найден в кэше
+     */
+    fun observeJournalById(journalId: Long): Flow<com.swparks.domain.model.Journal?>
+
+    /**
+     * Сохранить дневник в локальный кэш.
+     * Используется после успешного обновления настроек для синхронизации кэша.
+     *
+     * @param journal Дневник для сохранения
+     */
+    suspend fun saveJournalToCache(journal: com.swparks.domain.model.Journal)
+
     suspend fun createJournal(title: String, userId: Long?): Result<Unit>
 
     suspend fun deleteJournal(journalId: Long, userId: Long?): Result<Unit>
@@ -1067,5 +1084,21 @@ class SWRepositoryImp(
         Log.i(TAG, "Все данные пользователя удалены")
         // Очищаем ID текущего пользователя
         preferencesRepository.clearCurrentUserId()
+    }
+
+    override fun observeJournalById(journalId: Long): Flow<com.swparks.domain.model.Journal?> {
+        return journalDao.observeById(journalId)
+            .map { entity -> entity?.toDomain() }
+            .flowOn(Dispatchers.IO)
+    }
+
+    override suspend fun saveJournalToCache(journal: com.swparks.domain.model.Journal) {
+        try {
+            journalDao.insert(journal.toEntity())
+            Log.i(TAG, "Дневник сохранен в кэш: journalId=${journal.id}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Ошибка сохранения дневника в кэш: ${e.message}")
+            throw e
+        }
     }
 }

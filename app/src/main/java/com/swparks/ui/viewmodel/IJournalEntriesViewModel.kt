@@ -1,5 +1,6 @@
 package com.swparks.ui.viewmodel
 
+import com.swparks.domain.model.Journal
 import com.swparks.domain.model.JournalEntry
 import com.swparks.ui.state.JournalEntriesUiState
 import kotlinx.coroutines.flow.SharedFlow
@@ -10,8 +11,9 @@ import kotlinx.coroutines.flow.StateFlow
  *
  * Создан для возможности тестирования UI компонентов Compose без бизнес-логики.
  * Позволяет создавать mock/fake реализации для UI тестов.
+ * Расширяет IJournalSettingsViewModel для поддержки редактирования настроек дневника.
  */
-interface IJournalEntriesViewModel {
+interface IJournalEntriesViewModel : IJournalSettingsViewModel {
     /**
      * Состояние UI экрана.
      */
@@ -91,4 +93,11 @@ sealed interface JournalEntriesEvent {
      * @property message Текст сообщения
      */
     data class ShowSnackbar(val message: String) : JournalEntriesEvent
+
+    /**
+     * Настройки дневника успешно сохранены.
+     *
+     * @property journal Обновленный дневник
+     */
+    data class JournalSettingsSaved(val journal: Journal) : JournalEntriesEvent
 }

@@ -17,7 +17,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 class FakeJournalsViewModel(
     override val uiState: StateFlow<JournalsUiState>,
     override val isRefreshing: StateFlow<Boolean>,
-    override val isDeleting: StateFlow<Boolean> = MutableStateFlow(false)
+    override val isDeleting: StateFlow<Boolean> = MutableStateFlow(false),
+    override val isSavingSettings: StateFlow<Boolean> = MutableStateFlow(false)
 ) : IJournalsViewModel {
 
     // Поток событий для тестирования

@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -48,7 +49,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.DialogProperties
 import com.swparks.R
+import com.swparks.domain.model.Journal
 import com.swparks.domain.model.JournalEntry
+import com.swparks.navigation.AppState
 import com.swparks.ui.ds.EmptyStateView
 import com.swparks.ui.ds.ErrorContentView
 import com.swparks.ui.ds.JournalAction
@@ -57,11 +60,13 @@ import com.swparks.ui.ds.JournalRowMode
 import com.swparks.ui.ds.JournalRowView
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.model.EditInfo
-import com.swparks.ui.theme.JetpackWorkoutAppTheme
+import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.screens.common.TextEntrySheetHost
 import com.swparks.ui.state.JournalEntriesUiState
+import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.IJournalEntriesViewModel
+import com.swparks.ui.viewmodel.JournalEntriesEvent
 import com.swparks.util.DateFormatter
 import kotlinx.coroutines.launch
 
@@ -72,7 +77,10 @@ import kotlinx.coroutines.launch
  * @param journalId Идентификатор дневника
  * @param journalTitle Название дневника для заголовка AppBar
  * @param journalOwnerId Идентификатор владельца дневника
+ * @param journalViewAccess Уровень доступа для просмотра (из навигации)
+ * @param journalCommentAccess Уровень доступа для комментариев (из навигации)
  * @param viewModel ViewModel для управления состоянием экрана
+ * @param appState Состояние приложения для проверки текущего пользователя
  * @param onBackClick Callback для навигации назад
  * @param parentPaddingValues Паддинги для учета BottomNavigationBar
  * @param textEntrySheetHostContent Content для замены TextEntrySheetHost в тестах
@@ -84,7 +92,10 @@ fun JournalEntriesScreen(
     journalId: Long,
     journalTitle: String,
     journalOwnerId: Long,
+    journalViewAccess: String? = null,
+    journalCommentAccess: String? = null,
     viewModel: IJournalEntriesViewModel,
+    appState: AppState,
     onBackClick: () -> Unit,
     parentPaddingValues: PaddingValues,
     textEntrySheetHostContent: @Composable (
@@ -120,25 +131,35 @@ fun JournalEntriesScreen(
     var showTextEntrySheet by remember { mutableStateOf(false) }
     var textEntryMode by remember { mutableStateOf<TextEntryMode?>(null) }
 
-    // Подписка на события ViewModel для Snackbar
+    // Состояние для диалога настроек
+    var showSettingsDialog by remember { mutableStateOf(false) }
+
+    // Подписка на события ViewModel для Snackbar и закрытия диалога
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is com.swparks.ui.viewmodel.JournalEntriesEvent.ShowSnackbar -> {
+                is JournalEntriesEvent.ShowSnackbar -> {
                     scope.launch {
                         snackbarHostState.showSnackbar(event.message)
                     }
                 }
+
+                is JournalEntriesEvent.JournalSettingsSaved -> {
+                    showSettingsDialog = false
+                }
             }
         }
     }
+
+    // Получаем текущий дневник из состояния
+    val currentJournal = (uiState as? JournalEntriesUiState.Content)?.journal
 
     Scaffold(
         modifier = modifier.padding(bottom = parentPaddingValues.calculateBottomPadding()),
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(journalTitle)
+                    Text(currentJournal?.title ?: journalTitle)
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
@@ -146,6 +167,19 @@ fun JournalEntriesScreen(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back)
                         )
+                    }
+                },
+                actions = {
+                    // Иконка настроек видна только владельцу дневника
+                    // Используем journalOwnerId из навигационных параметров для мгновенной проверки
+                    // без ожидания загрузки journal из кэша/сервера
+                    if (appState.currentUser?.id == journalOwnerId) {
+                        IconButton(onClick = { showSettingsDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = stringResource(R.string.settings)
+                            )
+                        }
                     }
                 }
             )
@@ -269,6 +303,33 @@ fun JournalEntriesScreen(
             }
         }
     )
+
+    // Диалог настроек дневника
+    // Используем данные из навигации если currentJournal еще не загружен
+    if (showSettingsDialog) {
+        val isSavingSettings by viewModel.isSavingSettings.collectAsState()
+        val journalForDialog = currentJournal ?: Journal(
+            id = journalId,
+            title = journalTitle,
+            ownerId = journalOwnerId,
+            viewAccess = journalViewAccess?.let { JournalAccess.valueOf(it) }
+                ?: JournalAccess.NOBODY,
+            commentAccess = journalCommentAccess?.let { JournalAccess.valueOf(it) }
+                ?: JournalAccess.NOBODY,
+            lastMessageImage = null,
+            createDate = null,
+            modifyDate = null,
+            lastMessageDate = null,
+            lastMessageText = null,
+            entriesCount = null
+        )
+        JournalSettingsDialog(
+            journal = journalForDialog,
+            onDismiss = { showSettingsDialog = false },
+            viewModel = viewModel,
+            isSaving = isSavingSettings
+        )
+    }
 }
 
 /**

@@ -10,8 +10,9 @@ import kotlinx.coroutines.flow.StateFlow
  *
  * Создан для возможности тестирования UI компонентов Compose без бизнес-логики.
  * Позволяет создавать mock/fake реализации для UI тестов.
+ * Расширяет IJournalSettingsViewModel для поддержки редактирования настроек дневника.
  */
-interface IJournalsViewModel {
+interface IJournalsViewModel : IJournalSettingsViewModel {
     /**
      * Состояние UI экрана.
      */
@@ -60,7 +61,7 @@ interface IJournalsViewModel {
      * @param viewAccess Новый уровень доступа для просмотра
      * @param commentAccess Новый уровень доступа для комментариев
      */
-    fun editJournalSettings(
+    override fun editJournalSettings(
         journalId: Long,
         title: String,
         viewAccess: JournalAccess,
