@@ -31,11 +31,23 @@ fun navigate(key: NavKey) {
 
 ### Основная идея
 
-1. **Поле `parentTab`** в `Screen` для определения принадлежности экрана к вкладке
-2. **Метод `isCurrentRouteTopLevel`** в `AppState` для определения типа экрана
-3. **Метод `currentTopLevelDestination`** для нахождения родительской вкладки
-4. **Условное отображение `topBar`** в `RootScreen`
-5. **Логика `navigateToTopLevelDestination()`** для сброса стека при reselect
+1. **Поле `parentTab`** в `Screen` для определения принадлежности экрана к вкладке (влияет только на UI)
+2. **"Липкое" состояние `currentTopLevelDestination`** — запоминает вкладку при входе, сохраняет при навигации вглубь
+3. **Слушатель `onDestinationChanged`** — обновляет активную вкладку только при попадании на корневой экран
+4. **Метод `isCurrentRouteTopLevel`** — определяет тип экрана для условного отображения TopAppBar
+5. **Логика `navigateToTopLevelDestination()`** — сброс стека при reselect на основе "липкого" состояния
+
+### Важный архитектурный принцип
+
+**Разделение логики и физики навигации:**
+
+- **Физика** (фактический стек): определяется тем, из какой вкладки мы открыли экран
+- **Логика** (parentTab): определяет только UI-поведение (какой TopAppBar показывать)
+
+Пример: если открыть `Chat` из вкладки `Parks`:
+- Физика: мы в стеке `Parks`, активная вкладка — `Parks`
+- Логика: `Chat` имеет `parentTab = Messages`, поэтому показываем его TopAppBar с кнопкой "Назад"
+- Результат: возврат назад вернёт в `Parks`, а не в `Messages`
 
 ---
 
@@ -46,11 +58,12 @@ fun navigate(key: NavKey) {
 ```kotlin
 sealed class Screen(
     val route: String,
-    val parentTab: Screen? = null
+    val parentTab: Screen? = null  // Влияет только на UI, не на переключение вкладок
 ) {
     object Parks : Screen("parks")
     object Profile : Screen("profile")
-    object UserParks : Screen("user_parks/{userId}", parentTab = Profile)
+    object Messages : Screen("messages")
+    object Chat : Screen("chat/{dialogId}", parentTab = Messages)  // Логически в Messages
 
     companion object {
         fun findParentTab(route: String): Screen? {
@@ -63,48 +76,56 @@ sealed class Screen(
 }
 ```
 
-### 2. AppState
+### 2. AppState — "липкое" состояние вкладки
 
 ```kotlin
 class AppState(val navController: NavHostController) {
-    val currentTopLevelDestination: TopLevelDestination?
-        @Composable get() {
-            val route = currentDestination?.route ?: return null
-            return findTopLevelDestinationForRoute(route)
-        }
 
-    private fun findTopLevelDestinationForRoute(route: String): TopLevelDestination? {
-        val baseRoute = route.substringBefore("/")
-        topLevelDestinations.find {
-            it.route.substringBefore("/") == baseRoute
-        }?.let { return it }
+    /**
+     * Текущее верхнеуровневое назначение (вкладка).
+     * Состояние "липкое": обновляется только когда мы попадаем на корневой экран вкладки.
+     * Если мы уходим вглубь вкладки, это поле хранит ссылку на "родительскую" вкладку.
+     * Это позволяет корректно определять физический стек навигации.
+     */
+    var currentTopLevelDestination by mutableStateOf<TopLevelDestination?>(null)
+        private set
 
-        val parentTabRoute = Screen.findParentTab(route)?.route?.substringBefore("/")
-        return topLevelDestinations.find {
-            it.route.substringBefore("/") == parentTabRoute
+    /**
+     * Обновляет активную вкладку, если маршрут соответствует одной из корневых вкладок.
+     */
+    fun onDestinationChanged(route: String?) {
+        val matchingTab = topLevelDestinations.find { it.route == route }
+        if (matchingTab != null) {
+            currentTopLevelDestination = matchingTab
         }
     }
 
+    /**
+     * Проверяет, является ли текущий маршрут корневым экраном.
+     * Используется для условного отображения главного TopAppBar в RootScreen.
+     */
     val isCurrentRouteTopLevel: Boolean
         @Composable get() {
             val route = currentDestination?.route ?: return false
             val baseRoute = route.substringBefore("/")
-            return Screen.allScreens.find {
+            val screen = Screen.allScreens.find {
                 it.route.substringBefore("/") == baseRoute
-            }?.parentTab == null
+            }
+            return screen?.parentTab == null
         }
 
     fun navigateToTopLevelDestination(topLevelDestination: TopLevelDestination) {
-        val currentRoute = navController.currentBackStackEntry?.destination?.route
-        val currentTab = currentRoute?.let { findTopLevelDestinationForRoute(it) }
-        val isReselect = currentTab?.route == topLevelDestination.route
+        // Используем "липкое" состояние — помнит вкладку даже на дочерних экранах
+        val isReselect = currentTopLevelDestination?.route == topLevelDestination.route
 
         if (isReselect) {
+            // Повторное нажатие на текущую вкладку — сбрасываем стек до корня
             navController.navigate(topLevelDestination.route) {
                 popUpTo(topLevelDestination.route) { inclusive = true }
                 launchSingleTop = true
             }
         } else {
+            // Переход на другую вкладку — стандартная логика
             navController.navigate(topLevelDestination.route) {
                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                 launchSingleTop = true
@@ -115,7 +136,33 @@ class AppState(val navController: NavHostController) {
 }
 ```
 
-### 3. RootScreen
+### 3. rememberAppState — подписка на изменения навигации
+
+```kotlin
+@Composable
+fun rememberAppState(
+    navController: NavHostController = rememberNavController(),
+): AppState {
+    val appState = remember(navController) {
+        AppState(navController)
+    }
+
+    // Слушаем изменения навигации для обновления активной вкладки
+    DisposableEffect(navController) {
+        val listener = NavController.OnDestinationChangedListener { _, destination, _ ->
+            appState.onDestinationChanged(destination.route)
+        }
+        navController.addOnDestinationChangedListener(listener)
+        onDispose {
+            navController.removeOnDestinationChangedListener(listener)
+        }
+    }
+
+    return appState
+}
+```
+
+### 4. RootScreen
 
 ```kotlin
 Scaffold(
@@ -144,7 +191,7 @@ Scaffold(
 }
 ```
 
-### 4. Дочерний экран (UserParks)
+### 5. Дочерний экран (пример)
 
 ```kotlin
 Scaffold(
@@ -162,20 +209,50 @@ Scaffold(
 
 ---
 
+## Роль parentTab
+
+**Важно:** Поле `parentTab` в `Destinations.kt` влияет **только на UI**, а не на переключение вкладок.
+
+### Что делает parentTab:
+
+1. **Определяет显示TopAppBar** через `isCurrentRouteTopLevel`
+   - Если у экрана есть `parentTab` → это не корневой экран → показываем его собственный TopAppBar
+   - Если `parentTab == null` → корневой экран → показываем главный TopAppBar из `RootScreen`
+
+### Что НЕ делает parentTab:
+
+- ❌ НЕ определяет активную вкладку в BottomNavigationBar
+- ❌ НЕ влияет на поведение при нажатии на вкладку
+- ❌ НЕ определяет стек навигации
+
+### Пример:
+
+```kotlin
+object Chat : Screen("chat/{dialogId}", parentTab = Messages)
+```
+
+Если открыть `Chat` из вкладки `Parks`:
+- Активная вкладка: `Parks` (физический стек)
+- TopAppBar: показываем собственный TopAppBar экрана `Chat` (потому что есть `parentTab`)
+- Кнопка "Назад": вернёт в `Parks` (физический стек)
+
+---
+
 ## Статус реализации
 
 ### ✅ Выполнено
 
 1. ✅ Добавлено поле `parentTab` в класс `Screen`
 2. ✅ Реализован метод `findParentTab()` для поиска родительской вкладки
-3. ✅ Реализован метод `isCurrentRouteTopLevel()` в `AppState`
-4. ✅ Реализован метод `findTopLevelDestinationForRoute()` в `AppState`
-5. ✅ Обновлена логика `navigateToTopLevelDestination()` для обработки подэкранов
-6. ✅ Обновлен `RootScreen` для условного отображения `topBar`
-7. ✅ Обновлены дочерние экраны для использования `parentPaddingValues`
-8. ✅ Проект успешно собран
-9. ✅ Код отформатирован
-10. ✅ Нет ошибок линтера
+3. ✅ Реализовано "липкое" состояние `currentTopLevelDestination` в `AppState`
+4. ✅ Реализован слушатель `onDestinationChanged()` через `DisposableEffect`
+5. ✅ Реализован метод `isCurrentRouteTopLevel()` в `AppState`
+6. ✅ Обновлена логика `navigateToTopLevelDestination()` для использования "липкого" состояния
+7. ✅ Обновлен `RootScreen` для условного отображения `topBar`
+8. ✅ Обновлены дочерние экраны для использования `parentPaddingValues`
+9. ✅ Проект успешно собран
+10. ✅ Код отформатирован
+11. ✅ Нет ошибок линтера
 
 ### 📋 Сценарии проверки
 
@@ -185,12 +262,28 @@ Scaffold(
 - [x] Повторное нажатие на вкладку без подэкранов → ничего не происходит
 - [x] Кнопка Back из подэкрана → возврат на корневой экран вкладки
 - [x] Сохранение состояния вкладок при переключении → состояние сохранено
+- [x] Кросс-навигация (открытие Chat из Parks) → активная вкладка остаётся Parks
 
 ---
 
 ## Безопасные зоны
 
 Используется `contentWindowInsets = WindowInsets(0, 0, 0, 0)` в Scaffold и добавление отступов через `paddingValues` (RootScreen) и `innerPadding` (дочерние экраны).
+
+---
+
+## Добавление новых экранов
+
+При добавлении нового экрана в `Destinations.kt`:
+
+```kotlin
+object NewScreen : Screen("new_screen", parentTab = Screen.Profile) // или другая вкладка
+```
+
+Это будет работать корректно:
+1. Если открыть его из Профиля — это будет обычный переход вглубь
+2. Если открыть его из Сообщений — он откроется поверх стека Сообщений, вкладка "Сообщения" останется активной
+3. Кнопка "Назад" вернёт на предыдущий экран в физическом стеке
 
 ---
 

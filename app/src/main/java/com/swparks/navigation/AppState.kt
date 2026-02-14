@@ -12,10 +12,13 @@ import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -35,9 +38,23 @@ import com.swparks.navigation.TopLevelDestinations.PROFILE
 fun rememberAppState(
     navController: NavHostController = rememberNavController(),
 ): AppState {
-    return remember(navController) {
+    val appState = remember(navController) {
         AppState(navController)
     }
+
+    // Слушаем изменения навигации для обновления активной вкладки
+    DisposableEffect(navController) {
+        val listener =
+            NavController.OnDestinationChangedListener { _, destination, _ ->
+                appState.onDestinationChanged(destination.route)
+            }
+        navController.addOnDestinationChangedListener(listener)
+        onDispose {
+            navController.removeOnDestinationChangedListener(listener)
+        }
+    }
+
+    return appState
 }
 
 /**
@@ -47,12 +64,13 @@ class AppState(
     val navController: NavHostController,
 ) {
     private val previousDestination =
-        mutableStateOf<androidx.navigation.NavDestination?>(null)
+        mutableStateOf<NavDestination?>(null)
 
     // ==================== Состояние авторизации ====================
 
     /**
      * Текущий авторизованный пользователь
+     *
      * Используем mutableStateOf для обеспечения рекомпозиции в Compose
      * private set запрещает прямое присваивание, заставляя использовать updateCurrentUser()
      */
@@ -68,6 +86,7 @@ class AppState(
 
     /**
      * Безопасное обновление текущего пользователя
+     *
      * Используется вместо прямого присваивания для контроля изменений
      */
     fun updateCurrentUser(user: User?) {
@@ -79,7 +98,7 @@ class AppState(
     /**
      * Текущий пункт назначения навигации
      */
-    val currentDestination: androidx.navigation.NavDestination?
+    val currentDestination: NavDestination?
         @Composable get() {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentEntry = navBackStackEntry
@@ -92,14 +111,23 @@ class AppState(
         }
 
     /**
-     * Текущее верхнеуровневое назначение (вкладка)
-     * Учитывает подэкраны — если мы на UserParks, вернет PROFILE
+     * Текущее верхнеуровневое назначение (вкладка).
+     * Состояние "липкое": обновляется только когда мы попадаем на корневой экран вкладки.
+     * Если мы уходим вглубь вкладки, это поле хранит ссылку на "родительскую" вкладку.
+     * Это позволяет корректно определять физический стек навигации.
      */
-    val currentTopLevelDestination: TopLevelDestination?
-        @Composable get() {
-            val route = currentDestination?.route ?: return null
-            return findTopLevelDestinationForRoute(route)
+    var currentTopLevelDestination by mutableStateOf<TopLevelDestination?>(null)
+        private set
+
+    /**
+     * Обновляет активную вкладку, если маршрут соответствует одной из корневых вкладок.
+     */
+    fun onDestinationChanged(route: String?) {
+        val matchingTab = topLevelDestinations.find { it.route == route }
+        if (matchingTab != null) {
+            currentTopLevelDestination = matchingTab
         }
+    }
 
     /**
      * Проверяет, является ли текущий маршрут корневым (верхнеуровневым) экраном
@@ -115,24 +143,6 @@ class AppState(
             }
             return screen?.parentTab == null
         }
-
-    /**
-     * Находит TopLevelDestination для маршрута (учитывает parentTab)
-     */
-    private fun findTopLevelDestinationForRoute(route: String): TopLevelDestination? {
-        val baseRoute = route.substringBefore("/")
-
-        // Сначала ищем точное совпадение с вкладкой
-        topLevelDestinations.find {
-            it.route.substringBefore("/") == baseRoute
-        }?.let { return it }
-
-        // Если не нашли, ищем через parentTab (для подэкранов)
-        val parentTabRoute = Screen.findParentTab(route)?.route?.substringBefore("/")
-        return topLevelDestinations.find {
-            it.route.substringBefore("/") == parentTabRoute
-        }
-    }
 
     /**
      * Список верхнеуровневых назначений (вкладок)
@@ -152,9 +162,10 @@ class AppState(
      * @param topLevelDestination: Назначение, к которому нужно перейти.
      */
     fun navigateToTopLevelDestination(topLevelDestination: TopLevelDestination) {
-        val currentRoute = navController.currentBackStackEntry?.destination?.route
-        val currentTab = currentRoute?.let { findTopLevelDestinationForRoute(it) }
-        val isReselect = currentTab?.route == topLevelDestination.route
+        // Проверяем, активна ли уже эта вкладка
+        // Мы используем "липкое" состояние currentTopLevelDestination, которое помнит,
+        // в какой вкладке мы находимся, даже если ушли на дочерний экран.
+        val isReselect = currentTopLevelDestination?.route == topLevelDestination.route
 
         if (isReselect) {
             // Повторное нажатие на текущую вкладку — сбрасываем стек до корня
@@ -179,12 +190,6 @@ class AppState(
         }
     }
 
-    /**
-     * Навигация на вкладку профиля
-     */
-    fun navigateToProfile() {
-        navigateToTopLevelDestination(PROFILE)
-    }
 }
 
 /**
