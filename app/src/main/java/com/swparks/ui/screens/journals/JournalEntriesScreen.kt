@@ -45,6 +45,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.DialogProperties
 import com.swparks.R
 import com.swparks.domain.model.JournalEntry
@@ -56,6 +57,7 @@ import com.swparks.ui.ds.JournalRowMode
 import com.swparks.ui.ds.JournalRowView
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.model.EditInfo
+import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.screens.common.TextEntrySheetHost
 import com.swparks.ui.state.JournalEntriesUiState
@@ -455,4 +457,77 @@ private fun DeleteConfirmationDialog(
             dismissOnClickOutside = true
         )
     )
+}
+
+// ==================== PREVIEWS ====================
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, locale = "ru", name = "Empty Journal Entries")
+@Composable
+private fun JournalEntriesScreenEmptyPreview() {
+    JetpackWorkoutAppTheme {
+        ContentScreen(
+            entries = emptyList(),
+            isRefreshing = false,
+            isDeleting = false,
+            canCreateEntry = true,
+            firstEntryId = null,
+            onRefresh = {},
+            onDeleteEntry = {},
+            onEditEntry = {},
+            onAddEntryClick = {}
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, locale = "ru", name = "Journal Entries with Items")
+@Composable
+private fun JournalEntriesScreenWithItemsPreview() {
+    val sampleEntries = listOf(
+        JournalEntry(
+            id = 1,
+            journalId = 1,
+            message = "Сегодня была отличная тренировка! Пробежал 5 км.",
+            createDate = "2024-01-15T10:30:00",
+            modifyDate = "2024-01-15T10:30:00",
+            authorId = 1,
+            authorName = "Иван",
+            authorImage = null
+        ),
+        JournalEntry(
+            id = 2,
+            journalId = 1,
+            message = "Настроение отличное, погода хорошая.",
+            createDate = "2024-01-14T08:00:00",
+            modifyDate = "2024-01-14T08:00:00",
+            authorId = 1,
+            authorName = "Иван",
+            authorImage = null
+        ),
+        JournalEntry(
+            id = 3,
+            journalId = 1,
+            message = "Завтра планирую тренировку в зале.",
+            createDate = "2024-01-13T18:45:00",
+            modifyDate = "2024-01-13T18:45:00",
+            authorId = 1,
+            authorName = "Иван",
+            authorImage = null
+        )
+    )
+
+    JetpackWorkoutAppTheme {
+        ContentScreen(
+            entries = sampleEntries,
+            isRefreshing = false,
+            isDeleting = false,
+            canCreateEntry = true,
+            firstEntryId = 1,
+            onRefresh = {},
+            onDeleteEntry = {},
+            onEditEntry = {},
+            onAddEntryClick = {}
+        )
+    }
 }

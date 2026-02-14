@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.DialogProperties
 import com.swparks.R
 import com.swparks.domain.model.Journal
@@ -53,6 +54,7 @@ import com.swparks.ui.ds.JournalRowMode
 import com.swparks.ui.ds.JournalRowView
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.model.JournalAccess
+import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.screens.common.TextEntrySheetHost
 import com.swparks.ui.state.JournalsUiState
@@ -427,4 +429,71 @@ private fun DeleteConfirmationDialog(
             dismissOnClickOutside = true
         )
     )
+}
+
+// ==================== PREVIEWS ====================
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, locale = "ru", name = "Empty Journals List")
+@Composable
+private fun JournalsListScreenEmptyPreview() {
+    JetpackWorkoutAppTheme {
+        ContentScreen(
+            journals = emptyList(),
+            isRefreshing = false,
+            isDeleting = false,
+            onRefresh = {},
+            onJournalClick = { _, _, _, _ -> },
+            onDeleteClick = {},
+            onSetupClick = {},
+            onCreateJournalClick = {}
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, locale = "ru", name = "Journals List with Items")
+@Composable
+private fun JournalsListScreenWithItemsPreview() {
+    val sampleJournals = listOf(
+        Journal(
+            id = 1,
+            title = "Мой первый дневник",
+            lastMessageText = "Сегодня была отличная тренировка!",
+            lastMessageDate = "2024-01-15T10:30:00",
+            lastMessageImage = null,
+            createDate = "2024-01-01T00:00:00",
+            modifyDate = "2024-01-15T10:30:00",
+            entriesCount = 5,
+            ownerId = 1,
+            viewAccess = JournalAccess.FRIENDS,
+            commentAccess = JournalAccess.FRIENDS
+        ),
+        Journal(
+            id = 2,
+            title = "Дневник питания",
+            lastMessageText = "Завтрак: овсянка с фруктами",
+            lastMessageDate = "2024-01-14T08:00:00",
+            lastMessageImage = null,
+            createDate = "2024-01-02T00:00:00",
+            modifyDate = "2024-01-14T08:00:00",
+            entriesCount = 3,
+            ownerId = 1,
+            viewAccess = JournalAccess.NOBODY,
+            commentAccess = JournalAccess.NOBODY
+        )
+    )
+
+    JetpackWorkoutAppTheme {
+        ContentScreen(
+            journals = sampleJournals,
+            isRefreshing = false,
+            isDeleting = false,
+            onRefresh = {},
+            onJournalClick = { _, _, _, _ -> },
+            onDeleteClick = {},
+            onSetupClick = {},
+            onCreateJournalClick = {}
+        )
+    }
 }
