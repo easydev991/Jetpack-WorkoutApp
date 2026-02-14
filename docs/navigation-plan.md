@@ -333,4 +333,3 @@ object NewScreen : Screen("new_screen", parentTab = Screen.Profile)
 ```
 
 Это будет работать корректно независимо от того, из какой вкладки открыт экран.
-

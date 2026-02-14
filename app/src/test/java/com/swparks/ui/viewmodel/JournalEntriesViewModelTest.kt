@@ -3,10 +3,12 @@ package com.swparks.ui.viewmodel
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.swparks.R
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.JournalEntry
+import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.usecase.IDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IGetJournalEntriesUseCase
 import com.swparks.domain.usecase.ISyncJournalEntriesUseCase
@@ -53,6 +55,7 @@ class JournalEntriesViewModelTest {
     private lateinit var swRepository: SWRepository
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var errorReporter: ErrorReporter
+    private lateinit var resources: ResourcesProvider
     private lateinit var viewModel: JournalEntriesViewModel
 
     private val testUserId = 1L
@@ -100,7 +103,8 @@ class JournalEntriesViewModelTest {
             preferencesRepository = preferencesRepository,
             swRepository = swRepository,
             savedStateHandle = savedStateHandle,
-            errorReporter = errorReporter
+            errorReporter = errorReporter,
+            resources = resources
         )
 
         return JournalEntriesViewModel(journalOwnerId, testJournalId, deps)
@@ -122,6 +126,13 @@ class JournalEntriesViewModelTest {
         swRepository = mockk(relaxed = true)
         savedStateHandle = mockk(relaxed = true)
         errorReporter = mockk(relaxed = true)
+        resources = mockk(relaxed = true)
+
+        // Мокируем getString для локализованных строк
+        every { resources.getString(R.string.entry_deleted) } returns "Entry deleted"
+        every { resources.getString(R.string.error_delete_entry) } returns "Error deleting entry"
+        every { resources.getString(R.string.error_deleting) } returns "Error deleting"
+        every { resources.getString(R.string.error_loading_entries) } returns "Error loading entries"
 
         // Настраиваем значения по умолчанию для SavedStateHandle
         every { savedStateHandle.get<String>("commentAccess") } returns "NOBODY"
@@ -234,8 +245,8 @@ class JournalEntriesViewModelTest {
         )
         val errorState = state as JournalEntriesUiState.Error
         assertEquals(
-            "Сообщение об ошибке должно содержать 'Ошибка загрузки записей'",
-            "Ошибка загрузки записей",
+            "Сообщение об ошибке должно содержать Error loading entries",
+            "Error loading entries",
             errorState.message
         )
     }
@@ -386,7 +397,7 @@ class JournalEntriesViewModelTest {
             val snackbarEvent = event as JournalEntriesEvent.ShowSnackbar
             assertEquals(
                 "Сообщение об успешном удалении",
-                "Запись удалена",
+                "Entry deleted",
                 snackbarEvent.message
             )
         }
@@ -485,7 +496,7 @@ class JournalEntriesViewModelTest {
             val snackbarEvent = event as JournalEntriesEvent.ShowSnackbar
             assertEquals(
                 "Сообщение об ошибке по умолчанию",
-                "Ошибка удаления",
+                "Error deleting",
                 snackbarEvent.message
             )
         }

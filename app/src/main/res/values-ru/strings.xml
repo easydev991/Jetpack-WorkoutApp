@@ -301,10 +301,14 @@
     <string name="fab_add_entry">Добавить запись</string>
     <string name="fab_add_entry_description">Создать новую запись в дневнике</string>
     <string name="entry_deleted">Запись удалена</string>
+    <string name="error_delete_entry">Ошибка удаления записи</string>
+    <string name="error_deleting">Ошибка удаления</string>
+    <string name="error_loading_entries">Ошибка загрузки записей</string>
 
     <!-- Journal Settings Dialog -->
     <string name="journal_settings_saved">Настройки дневника сохранены</string>
     <string name="error_save_journal_settings">Ошибка сохранения настроек дневника</string>
+    <string name="error_loading_journals">Ошибка загрузки дневников</string>
     <string name="error_user_not_found">Пользователь не найден</string>
     <string name="messages_placeholder">Тут будут ваши сообщения</string>
 

@@ -3,6 +3,8 @@ package com.swparks.ui.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.swparks.R
+import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.usecase.IDeleteJournalUseCase
 import com.swparks.domain.usecase.IEditJournalSettingsUseCase
 import com.swparks.domain.usecase.IGetJournalsUseCase
@@ -31,6 +33,7 @@ import kotlinx.coroutines.launch
  * @param deleteJournalUseCase Use case для удаления дневника
  * @param editJournalSettingsUseCase Use case для редактирования настроек дневника
  * @param errorReporter Обработчик ошибок для отправки ошибок в систему мониторинга
+ * @param resources Провайдер строковых ресурсов
  */
 class JournalsViewModel(
     private val userId: Long,
@@ -38,7 +41,8 @@ class JournalsViewModel(
     private val syncJournalsUseCase: ISyncJournalsUseCase,
     private val deleteJournalUseCase: IDeleteJournalUseCase,
     private val editJournalSettingsUseCase: IEditJournalSettingsUseCase,
-    private val errorReporter: ErrorReporter
+    private val errorReporter: ErrorReporter,
+    private val resources: ResourcesProvider
 ) : ViewModel(), IJournalsViewModel {
 
     private companion object {
@@ -110,7 +114,7 @@ class JournalsViewModel(
                         val currentState = _uiState.value
                         if (currentState is JournalsUiState.Content && currentState.journals.isEmpty()) {
                             _uiState.value =
-                                JournalsUiState.Error("Ошибка загрузки дневников")
+                                JournalsUiState.Error(resources.getString(R.string.error_loading_journals))
                         }
                     }
                 )
@@ -119,7 +123,7 @@ class JournalsViewModel(
                 _isRefreshing.value = false
                 val currentState = _uiState.value
                 if (currentState is JournalsUiState.Content && currentState.journals.isEmpty()) {
-                    _uiState.value = JournalsUiState.Error("Ошибка загрузки дневников")
+                    _uiState.value = JournalsUiState.Error(resources.getString(R.string.error_loading_journals))
                 }
             }
         }
@@ -153,23 +157,23 @@ class JournalsViewModel(
                 result
                     .onSuccess {
                         Log.i(TAG, "Дневник успешно удален")
-                        _events.emit(JournalsEvent.ShowSnackbar("Дневник удален"))
+                        _events.emit(JournalsEvent.ShowSnackbar(resources.getString(R.string.journal_deleted)))
                     }
                     .onFailure { error ->
                         Log.e(TAG, "Ошибка при удалении дневника: ${error.message}")
                         errorReporter.handleError(
                             AppError.Generic(
-                                error.message ?: "Ошибка удаления дневника", error
+                                error.message ?: resources.getString(R.string.error_delete_journal), error
                             )
                         )
                         _events.emit(
-                            JournalsEvent.ShowSnackbar(error.message ?: "Ошибка удаления")
+                            JournalsEvent.ShowSnackbar(error.message ?: resources.getString(R.string.error_deleting))
                         )
                     }
             } catch (e: Exception) {
                 Log.e(TAG, "Исключение при удалении дневника: ${e.message}")
-                errorReporter.handleError(AppError.Generic("Ошибка удаления дневника", e))
-                _events.emit(JournalsEvent.ShowSnackbar("Ошибка удаления"))
+                errorReporter.handleError(AppError.Generic(resources.getString(R.string.error_delete_journal), e))
+                _events.emit(JournalsEvent.ShowSnackbar(resources.getString(R.string.error_deleting)))
             } finally {
                 _isDeleting.value = false
             }
@@ -267,7 +271,7 @@ class JournalsViewModel(
             _events.emit(JournalsEvent.JournalSettingsSaved(it))
         }
 
-        _events.emit(JournalsEvent.ShowSnackbar("Настройки дневника сохранены"))
+        _events.emit(JournalsEvent.ShowSnackbar(resources.getString(R.string.journal_settings_saved)))
     }
 
     /**
@@ -276,7 +280,7 @@ class JournalsViewModel(
     private suspend fun handleJournalSettingsError(errorMessage: String?) {
         setSavingJournalSettings(false)
         _events.emit(
-            JournalsEvent.ShowSnackbar(errorMessage ?: "Ошибка сохранения настроек дневника")
+            JournalsEvent.ShowSnackbar(errorMessage ?: resources.getString(R.string.error_save_journal_settings))
         )
     }
 }

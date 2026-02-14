@@ -3,8 +3,10 @@ package com.swparks.ui.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.swparks.R
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.usecase.ICanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IGetJournalEntriesUseCase
@@ -39,6 +41,7 @@ data class JournalEntriesDeps(
     val swRepository: SWRepository,
     val savedStateHandle: SavedStateHandle,
     val errorReporter: ErrorReporter,
+    val resources: ResourcesProvider,
 )
 
 /**
@@ -185,7 +188,7 @@ class JournalEntriesViewModel(
                         val currentState = _uiState.value
                         if (currentState is JournalEntriesUiState.Content && currentState.entries.isEmpty()) {
                             _uiState.value =
-                                JournalEntriesUiState.Error("Ошибка загрузки записей")
+                                JournalEntriesUiState.Error(deps.resources.getString(R.string.error_loading_entries))
                         }
                     }
                 )
@@ -195,7 +198,7 @@ class JournalEntriesViewModel(
                 _isRefreshing.value = false
                 val currentState = _uiState.value
                 if (currentState is JournalEntriesUiState.Content && currentState.entries.isEmpty()) {
-                    _uiState.value = JournalEntriesUiState.Error("Ошибка загрузки записей")
+                    _uiState.value = JournalEntriesUiState.Error(deps.resources.getString(R.string.error_loading_entries))
                 }
             }
         }
@@ -226,21 +229,23 @@ class JournalEntriesViewModel(
                 val result = deps.deleteJournalEntryUseCase(journalOwnerId, journalId, entryId)
                 result
                     .onSuccess {
-                        _events.emit(JournalEntriesEvent.ShowSnackbar("Запись удалена"))
+                        _events.emit(JournalEntriesEvent.ShowSnackbar(deps.resources.getString(R.string.entry_deleted)))
                     }
                     .onFailure { error ->
                         deps.errorReporter.handleError(
                             AppError.Generic(
-                                error.message ?: "Ошибка удаления записи", error
+                                error.message ?: deps.resources.getString(R.string.error_delete_entry), error
                             )
                         )
+                        val errorMessage = error.message
+                            ?: deps.resources.getString(R.string.error_deleting)
                         _events.emit(
-                            JournalEntriesEvent.ShowSnackbar(error.message ?: "Ошибка удаления")
+                            JournalEntriesEvent.ShowSnackbar(errorMessage)
                         )
                     }
             } catch (e: Exception) {
-                deps.errorReporter.handleError(AppError.Generic("Ошибка удаления записи", e))
-                _events.emit(JournalEntriesEvent.ShowSnackbar("Ошибка удаления"))
+                deps.errorReporter.handleError(AppError.Generic(deps.resources.getString(R.string.error_delete_entry), e))
+                _events.emit(JournalEntriesEvent.ShowSnackbar(deps.resources.getString(R.string.error_deleting)))
             } finally {
                 _isDeleting.value = false
             }

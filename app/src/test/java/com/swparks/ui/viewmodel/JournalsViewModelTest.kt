@@ -2,7 +2,9 @@ package com.swparks.ui.viewmodel
 
 import android.util.Log
 import app.cash.turbine.test
+import com.swparks.R
 import com.swparks.domain.model.Journal
+import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.usecase.IDeleteJournalUseCase
 import com.swparks.domain.usecase.IEditJournalSettingsUseCase
 import com.swparks.domain.usecase.IGetJournalsUseCase
@@ -45,6 +47,7 @@ class JournalsViewModelTest {
     private lateinit var deleteJournalUseCase: IDeleteJournalUseCase
     private lateinit var editJournalSettingsUseCase: IEditJournalSettingsUseCase
     private lateinit var errorReporter: ErrorReporter
+    private lateinit var resources: ResourcesProvider
     private lateinit var viewModel: JournalsViewModel
 
     private val testUserId = 1L
@@ -75,6 +78,15 @@ class JournalsViewModelTest {
         deleteJournalUseCase = mockk(relaxed = true)
         editJournalSettingsUseCase = mockk(relaxed = true)
         errorReporter = mockk(relaxed = true)
+        resources = mockk(relaxed = true)
+
+        // Мокируем getString для локализованных строк
+        every { resources.getString(R.string.journal_deleted) } returns "Journal deleted"
+        every { resources.getString(R.string.error_delete_journal) } returns "Error deleting journal"
+        every { resources.getString(R.string.error_deleting) } returns "Error deleting"
+        every { resources.getString(R.string.journal_settings_saved) } returns "Journal settings saved"
+        every { resources.getString(R.string.error_save_journal_settings) } returns "Error saving journal settings"
+        every { resources.getString(R.string.error_loading_journals) } returns "Error loading journals"
     }
 
     @After
@@ -95,7 +107,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
 
         // Then
@@ -119,7 +132,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -139,7 +153,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -170,7 +185,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -186,8 +202,8 @@ class JournalsViewModelTest {
         )
         val errorState = state as JournalsUiState.Error
         assertEquals(
-            "Сообщение об ошибке должно содержать 'Ошибка загрузки дневников'",
-            "Ошибка загрузки дневников",
+            "Сообщение об ошибке должно содержать Error loading journals",
+            "Error loading journals",
             errorState.message
         )
     }
@@ -206,7 +222,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -234,7 +251,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -262,7 +280,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -289,7 +308,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -318,7 +338,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -350,7 +371,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -380,7 +402,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -419,7 +442,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -455,7 +479,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -473,7 +498,7 @@ class JournalsViewModelTest {
             val snackbarEvent = event as JournalsEvent.ShowSnackbar
             assertEquals(
                 "Сообщение об успешном удалении",
-                "Дневник удален",
+                "Journal deleted",
                 snackbarEvent.message
             )
         }
@@ -498,7 +523,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -540,7 +566,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -574,7 +601,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -592,7 +620,7 @@ class JournalsViewModelTest {
             val snackbarEvent = event as JournalsEvent.ShowSnackbar
             assertEquals(
                 "Сообщение об ошибке по умолчанию",
-                "Ошибка удаления",
+                "Error deleting",
                 snackbarEvent.message
             )
         }
@@ -616,7 +644,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -660,7 +689,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -708,7 +738,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -752,7 +783,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -796,7 +828,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -840,7 +873,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -888,7 +922,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -931,7 +966,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -978,7 +1014,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 
@@ -1020,7 +1057,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
 
         // Сразу вызываем editJournalSettings до того, как перейдем в Content состояние
@@ -1063,7 +1101,8 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter
+            errorReporter,
+            resources
         )
         advanceUntilIdle()
 

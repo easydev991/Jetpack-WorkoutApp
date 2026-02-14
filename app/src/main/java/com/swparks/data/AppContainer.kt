@@ -16,6 +16,7 @@ import com.swparks.data.database.dao.UserDao
 import com.swparks.data.interceptor.AuthInterceptor
 import com.swparks.data.interceptor.RetryInterceptor
 import com.swparks.data.interceptor.TokenInterceptor
+import com.swparks.data.provider.ResourcesProviderImpl
 import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.JournalEntriesRepositoryImpl
 import com.swparks.data.repository.JournalsRepositoryImpl
@@ -23,6 +24,7 @@ import com.swparks.data.repository.MessagesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.data.repository.SWRepositoryImp
 import com.swparks.data.serializer.EncryptedStringSerializer
+import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.repository.JournalEntriesRepository
 import com.swparks.domain.repository.MessagesRepository
@@ -151,6 +153,16 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
     override val logger: Logger = AndroidLogger()
     override val errorReporter: ErrorReporter = ErrorHandler(logger)
+
+    // ==================== Resources Provider ====================
+
+    /**
+     * Провайдер для доступа к строковым ресурсам
+     * Используется в ViewModel для локализации без зависимости от Context
+     */
+    private val resourcesProvider: ResourcesProvider by lazy {
+        ResourcesProviderImpl(appContext)
+    }
 
     // ==================== Room Database ====================
 
@@ -400,7 +412,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
         syncJournalsUseCase = syncJournalsUseCase,
         deleteJournalUseCase = deleteJournalUseCase,
         editJournalSettingsUseCase = editJournalSettingsUseCase,
-        errorReporter = errorReporter
+        errorReporter = errorReporter,
+        resources = resourcesProvider
     )
 
     /** Factory метод для создания JournalEntriesViewModel */
@@ -420,7 +433,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
                 preferencesRepository = preferencesRepository,
                 swRepository = swRepository,
                 savedStateHandle = savedStateHandle,
-                errorReporter = errorReporter
+                errorReporter = errorReporter,
+                resources = resourcesProvider
             )
         )
 

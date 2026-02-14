@@ -213,19 +213,19 @@ Scaffold(
 
 **Важно:** Поле `parentTab` в `Destinations.kt` влияет **только на UI**, а не на переключение вкладок.
 
-### Что делает parentTab:
+### Что делает parentTab
 
 1. **Определяет显示TopAppBar** через `isCurrentRouteTopLevel`
    - Если у экрана есть `parentTab` → это не корневой экран → показываем его собственный TopAppBar
    - Если `parentTab == null` → корневой экран → показываем главный TopAppBar из `RootScreen`
 
-### Что НЕ делает parentTab:
+### Что НЕ делает parentTab
 
 - ❌ НЕ определяет активную вкладку в BottomNavigationBar
 - ❌ НЕ влияет на поведение при нажатии на вкладку
 - ❌ НЕ определяет стек навигации
 
-### Пример:
+### Пример
 
 ```kotlin
 object Chat : Screen("chat/{dialogId}", parentTab = Messages)
