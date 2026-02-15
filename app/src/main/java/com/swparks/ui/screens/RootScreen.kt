@@ -43,6 +43,7 @@ import com.swparks.ui.screens.profile.MyBlacklistScreen
 import com.swparks.ui.screens.profile.MyFriendsScreen
 import com.swparks.ui.screens.profile.ProfileRootScreen
 import com.swparks.ui.screens.profile.ProfileTopAppBar
+import com.swparks.ui.screens.profile.SearchUserScreen
 import com.swparks.ui.screens.profile.UserTrainingParksScreen
 import com.swparks.ui.screens.themeicon.ThemeIconScreen
 import com.swparks.ui.viewmodel.ThemeIconViewModel
@@ -146,7 +147,7 @@ fun RootScreen(appState: AppState) {
                         ProfileTopAppBar(
                             appState = appState,
                             onSearchUsersClick = {
-                                Log.i("RootScreen", "Нажата кнопка: Поиск пользователей")
+                                appState.navController.navigate(Screen.UserSearch.route)
                             }
                         )
                     }
@@ -276,7 +277,15 @@ fun RootScreen(appState: AppState) {
             }
 
             composable(route = Screen.UserSearch.route) {
-                // TODO: Реализовать UserSearchScreen
+                val viewModel = remember(appContainer) {
+                    appContainer.searchUserViewModelFactory()
+                }
+                SearchUserScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    viewModel = viewModel,
+                    onBackClick = { appState.navController.popBackStack() },
+                    parentPaddingValues = paddingValues
+                )
             }
 
             // Экраны профиля (будут добавлены позже)

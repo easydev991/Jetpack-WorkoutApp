@@ -61,6 +61,7 @@ import com.swparks.ui.viewmodel.JournalEntriesDeps
 import com.swparks.ui.viewmodel.JournalEntriesViewModel
 import com.swparks.ui.viewmodel.JournalsViewModel
 import com.swparks.ui.viewmodel.ProfileViewModel
+import com.swparks.ui.viewmodel.SearchUserViewModel
 import com.swparks.ui.viewmodel.TextEntryViewModel
 import com.swparks.ui.viewmodel.UserTrainingParksViewModel
 import com.swparks.util.AndroidLogger
@@ -127,6 +128,9 @@ interface AppContainer {
 
     /** Фабрика для DialogsViewModel */
     fun dialogsViewModelFactory(): com.swparks.ui.viewmodel.DialogsViewModel
+
+    /** Фабрика для SearchUserViewModel */
+    fun searchUserViewModelFactory(): SearchUserViewModel
 
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
@@ -451,6 +455,12 @@ class DefaultAppContainer(context: Context) : AppContainer {
         swRepository = swRepository,
         logger = logger,
         resources = resourcesProvider
+    )
+
+    /** Factory метод для создания SearchUserViewModel */
+    override fun searchUserViewModelFactory() = SearchUserViewModel(
+        swRepository = swRepository,
+        logger = logger
     )
 
     // ==================== API клиенты для разных функциональных областей ====================

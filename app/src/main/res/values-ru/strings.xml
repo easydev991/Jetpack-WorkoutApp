@@ -326,4 +326,11 @@
     <string name="dialogs_sync_error">Ошибка синхронизации</string>
     <string name="sync_error_message">Ошибка синхронизации</string>
     <string name="default_user_name">Пользователь</string>
+
+    <!-- Search Users Screen -->
+    <string name="search_users">Поиск пользователей</string>
+    <string name="username_in_english">Имя пользователя на английском</string>
+    <string name="user_not_found">Не удалось найти такого пользователя</string>
+    <string name="search_network_error">Ошибка поиска. Проверьте подключение и попробуйте снова.</string>
+    <string name="search_min_length_hint">Введите минимум 2 символа</string>
 </resources>

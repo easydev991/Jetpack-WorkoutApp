@@ -312,4 +312,11 @@
     <string name="dialogs_sync_error">Sync error</string>
     <string name="sync_error_message">Sync error</string>
     <string name="default_user_name">User</string>
+
+    <!-- Search Users Screen -->
+    <string name="search_users">Search for users</string>
+    <string name="username_in_english">Username in English</string>
+    <string name="user_not_found">Could not find this user</string>
+    <string name="search_network_error">Search failed. Please check your connection and try again.</string>
+    <string name="search_min_length_hint">Enter at least 2 characters</string>
 </resources>
