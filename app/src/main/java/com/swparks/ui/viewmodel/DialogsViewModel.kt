@@ -2,6 +2,7 @@ package com.swparks.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.swparks.data.repository.SWRepository
 import com.swparks.domain.repository.MessagesRepository
 import com.swparks.ui.state.DialogsUiState
 import com.swparks.util.Logger
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -18,10 +20,12 @@ import kotlinx.coroutines.launch
  * и обрабатывает действия пользователя.
  *
  * @property messagesRepository Репозиторий для работы с диалогами
+ * @property swRepository Репозиторий для работы с сервером (удаление диалога)
  * @property logger Логгер для записи ошибок и отладочной информации
  */
 class DialogsViewModel(
     private val messagesRepository: MessagesRepository,
+    private val swRepository: SWRepository,
     private val logger: Logger
 ) : ViewModel(), IDialogsViewModel {
 
@@ -54,8 +58,13 @@ class DialogsViewModel(
                     _uiState.value = DialogsUiState.Error("Ошибка загрузки диалогов")
                 }
                 .collect { dialogs ->
+                    logger.d(
+                        TAG,
+                        "Collect получил ${dialogs.size} диалогов, hasSuccessfullyLoaded=$hasSuccessfullyLoaded"
+                    )
                     // Если был успешный ответ от сервера или кэш не пустой - показываем Success
                     if (hasSuccessfullyLoaded || dialogs.isNotEmpty()) {
+                        logger.i(TAG, "Устанавливаем Success с ${dialogs.size} диалогами")
                         _uiState.value = DialogsUiState.Success(dialogs = dialogs)
                     }
                     // Иначе оставляем Loading до завершения refresh()
@@ -108,13 +117,22 @@ class DialogsViewModel(
 
         if (result.isSuccess) {
             hasSuccessfullyLoaded = true
-            // Если сервер вернул 0 диалогов, Flow из Room может не эмитить повторно
-            // (значение не изменилось: было 0, осталось 0).
-            // Явно устанавливаем Success с текущим состоянием (пустой или заполненный список).
+            // После успешной загрузки с сервера, данные сохранены в БД.
+            // Flow из Room должен эмитить обновлённые данные.
+            // Если по какой-то причине Flow не эмитит (например, данные не изменились),
+            // явно читаем текущее состояние из БД и обновляем uiState.
             val currentState = _uiState.value
             if (currentState is DialogsUiState.Loading) {
-                // При первой загрузке с пустым результатом - показываем EmptyState
-                _uiState.value = DialogsUiState.Success(dialogs = emptyList())
+                // Пытаемся получить данные напрямую из репозитория
+                // Это гарантирует, что uiState будет обновлен даже если Flow не эмитит
+                try {
+                    val dialogs = messagesRepository.dialogs.first()
+                    logger.i(TAG, "Прямое чтение: получено ${dialogs.size} диалогов из БД")
+                    _uiState.value = DialogsUiState.Success(dialogs = dialogs)
+                } catch (e: Exception) {
+                    logger.e(TAG, "Ошибка при прямом чтении диалогов: ${e.message}")
+                    _uiState.value = DialogsUiState.Success(dialogs = emptyList())
+                }
             }
             // Если уже Success, collect обновит состояние из Room
         } else {
@@ -142,5 +160,23 @@ class DialogsViewModel(
 
     override fun dismissSyncError() {
         _syncError.value = null
+    }
+
+    // Индикатор удаления диалога
+    private val _isDeleting = MutableStateFlow(false)
+    override val isDeleting: StateFlow<Boolean> = _isDeleting.asStateFlow()
+
+    override fun deleteDialog(dialogId: Long) {
+        viewModelScope.launch {
+            _isDeleting.value = true
+            val result = swRepository.deleteDialog(dialogId)
+            _isDeleting.value = false
+
+            if (result.isFailure) {
+                _syncError.value = "Ошибка удаления диалога"
+                logger.e(TAG, "Ошибка удаления диалога: ${result.exceptionOrNull()?.message}")
+            }
+            // При успехе Flow из Room обновит список автоматически
+        }
     }
 }

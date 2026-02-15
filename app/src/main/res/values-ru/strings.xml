@@ -171,6 +171,8 @@
     <string name="cancel">Отмена</string>
     <string name="delete_entry_title">Удалить запись</string>
     <string name="delete_entry_message">Вы уверены, что хотите удалить эту запись?</string>
+    <string name="delete_dialog_title">Удалить диалог?</string>
+    <string name="delete_dialog_message">Диалог будет удалён без возможности восстановления.</string>
     <string name="address">Адрес</string>
     <string name="park_address">Адрес площадки</string>
     <string name="park_type">Тип площадки</string>

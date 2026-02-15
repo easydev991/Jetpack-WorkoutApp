@@ -3,6 +3,7 @@ package com.swparks.ui.viewmodel
 import android.util.Log
 import app.cash.turbine.test
 import com.swparks.data.database.entity.DialogEntity
+import com.swparks.data.repository.SWRepository
 import com.swparks.domain.repository.MessagesRepository
 import com.swparks.ui.state.DialogsUiState
 import com.swparks.util.Logger
@@ -29,7 +30,7 @@ import org.junit.Test
  * Unit тесты для DialogsViewModel.
  *
  * Тестирует управление состоянием экрана списка диалогов,
- * включая загрузку данных, обработку ошибок и pull-to-refresh.
+ * включая загрузку данных, обработку ошибок, pull-to-refresh и удаление диалогов.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DialogsViewModelTest {
@@ -38,6 +39,7 @@ class DialogsViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var messagesRepository: MessagesRepository
+    private lateinit var swRepository: SWRepository
     private lateinit var logger: Logger
     private lateinit var viewModel: DialogsViewModel
 
@@ -60,6 +62,7 @@ class DialogsViewModelTest {
         every { Log.w(any<String>(), any<String>()) } returns 0
 
         messagesRepository = mockk(relaxed = true)
+        swRepository = mockk(relaxed = true)
         logger = mockk(relaxed = true)
     }
 
@@ -76,7 +79,7 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, logger)
+        viewModel = DialogsViewModel(messagesRepository, swRepository, logger)
         advanceUntilIdle()
 
         // Then
@@ -91,7 +94,7 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, logger)
+        viewModel = DialogsViewModel(messagesRepository, swRepository, logger)
         advanceUntilIdle()
         viewModel.refresh()
         advanceUntilIdle()
@@ -107,7 +110,7 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, logger)
+        viewModel = DialogsViewModel(messagesRepository, swRepository, logger)
 
         // Then
         viewModel.isRefreshing.test {
@@ -126,7 +129,7 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.failure(Exception("Network error"))
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, logger)
+        viewModel = DialogsViewModel(messagesRepository, swRepository, logger)
         advanceUntilIdle()
 
         // Then
@@ -143,7 +146,7 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.failure(Exception("Network error"))
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, logger)
+        viewModel = DialogsViewModel(messagesRepository, swRepository, logger)
         advanceUntilIdle()
 
         // Then - при пустом кэше и ошибке должен быть Error state
@@ -158,7 +161,7 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, logger)
+        viewModel = DialogsViewModel(messagesRepository, swRepository, logger)
         advanceUntilIdle()
 
         // На этом этапе refresh из init уже завершён (вызван 1 раз)
@@ -182,7 +185,7 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, logger)
+        viewModel = DialogsViewModel(messagesRepository, swRepository, logger)
         advanceUntilIdle()
         viewModel.onDialogClick(dialogId = 1L, userId = 123)
 
@@ -197,7 +200,7 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, logger)
+        viewModel = DialogsViewModel(messagesRepository, swRepository, logger)
         advanceUntilIdle()
         viewModel.onDialogClick(dialogId = 1L, userId = null)
 
@@ -213,7 +216,7 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.failure(Exception("Network error"))
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, logger)
+        viewModel = DialogsViewModel(messagesRepository, swRepository, logger)
         advanceUntilIdle()
 
         // Verify error was set
@@ -244,7 +247,7 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
         // When - инициализация (первая авторизация)
-        viewModel = DialogsViewModel(messagesRepository, logger)
+        viewModel = DialogsViewModel(messagesRepository, swRepository, logger)
         advanceUntilIdle()
 
         // Проверяем что состояние Success с кэшированными данными
@@ -282,7 +285,7 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, logger)
+        viewModel = DialogsViewModel(messagesRepository, swRepository, logger)
         advanceUntilIdle()
 
         // Then - должен быть Success с пустым списком, а не Error
@@ -291,5 +294,99 @@ class DialogsViewModelTest {
             "Expected Success state with empty list but got $state",
             state is DialogsUiState.Success && state.dialogs.isEmpty()
         )
+    }
+
+    // ==================== Тесты для deleteDialog ====================
+
+    /**
+     * Тест: успешное удаление диалога вызывает swRepository.deleteDialog.
+     */
+    @Test
+    fun deleteDialog_whenSuccess_callsRepositoryDeleteDialog() = runTest {
+        // Given
+        val dialogId = 1L
+        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+        coEvery { swRepository.deleteDialog(dialogId) } returns Result.success(Unit)
+
+        // When
+        viewModel = DialogsViewModel(messagesRepository, swRepository, logger)
+        advanceUntilIdle()
+        viewModel.deleteDialog(dialogId)
+        advanceUntilIdle()
+
+        // Then
+        coVerify { swRepository.deleteDialog(dialogId) }
+    }
+
+    /**
+     * Тест: успешное удаление диалога обновляет isDeleting.
+     */
+    @Test
+    fun deleteDialog_whenSuccess_updatesIsDeleting() = runTest {
+        // Given
+        val dialogId = 1L
+        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+        // Добавляем небольшую задержку, чтобы успеть проверить состояние isDeleting = true
+        coEvery { swRepository.deleteDialog(dialogId) } coAnswers {
+            kotlinx.coroutines.delay(100)
+            Result.success(Unit)
+        }
+
+        // When
+        viewModel = DialogsViewModel(messagesRepository, swRepository, logger)
+        advanceUntilIdle()
+
+        // Test isDeleting flow
+        viewModel.isDeleting.test {
+            assertEquals(false, awaitItem()) // Initial state
+            viewModel.deleteDialog(dialogId)
+            assertEquals(true, awaitItem()) // During deletion
+            advanceUntilIdle() // Wait for deletion to complete
+            assertEquals(false, awaitItem()) // After deletion
+        }
+    }
+
+    /**
+     * Тест: неудачное удаление диалога показывает ошибку.
+     */
+    @Test
+    fun deleteDialog_whenFailure_showsSyncError() = runTest {
+        // Given
+        val dialogId = 1L
+        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+        coEvery { swRepository.deleteDialog(dialogId) } returns Result.failure(Exception("Network error"))
+
+        // When
+        viewModel = DialogsViewModel(messagesRepository, swRepository, logger)
+        advanceUntilIdle()
+        viewModel.deleteDialog(dialogId)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals("Ошибка удаления диалога", viewModel.syncError.value)
+    }
+
+    /**
+     * Тест: неудачное удаление диалога логирует ошибку.
+     */
+    @Test
+    fun deleteDialog_whenFailure_logsError() = runTest {
+        // Given
+        val dialogId = 1L
+        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+        coEvery { swRepository.deleteDialog(dialogId) } returns Result.failure(Exception("Network error"))
+
+        // When
+        viewModel = DialogsViewModel(messagesRepository, swRepository, logger)
+        advanceUntilIdle()
+        viewModel.deleteDialog(dialogId)
+        advanceUntilIdle()
+
+        // Then
+        verify { logger.e(any(), any(), any()) }
     }
 }

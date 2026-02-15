@@ -27,6 +27,13 @@ interface DialogDao {
     suspend fun insertAll(dialogs: List<DialogEntity>)
 
     /**
+     * Удалить диалог по ID
+     * @param dialogId Идентификатор диалога для удаления
+     */
+    @Query("DELETE FROM dialogs WHERE id = :dialogId")
+    suspend fun deleteById(dialogId: Long)
+
+    /**
      * Удалить все диалоги
      */
     @Query("DELETE FROM dialogs")

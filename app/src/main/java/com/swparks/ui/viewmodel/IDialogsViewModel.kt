@@ -55,4 +55,16 @@ interface IDialogsViewModel {
      * Скрыть ошибку синхронизации.
      */
     fun dismissSyncError()
+
+    /**
+     * Индикатор удаления диалога.
+     */
+    val isDeleting: StateFlow<Boolean>
+
+    /**
+     * Удалить диалог.
+     *
+     * @param dialogId Идентификатор диалога для удаления
+     */
+    fun deleteDialog(dialogId: Long)
 }

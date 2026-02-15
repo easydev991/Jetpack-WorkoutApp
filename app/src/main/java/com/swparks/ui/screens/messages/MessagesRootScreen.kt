@@ -10,12 +10,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -23,12 +32,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.window.DialogProperties
 import com.swparks.R
 import com.swparks.data.database.entity.DialogEntity
 import com.swparks.navigation.AppState
@@ -54,6 +69,20 @@ fun MessagesRootScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val syncError by viewModel.syncError.collectAsState()
     val isLoadingDialogs by viewModel.isLoadingDialogs.collectAsState()
+    val isDeleting by viewModel.isDeleting.collectAsState()
+
+    // Отладочное логирование
+    LaunchedEffect(isLoadingDialogs, appState.isAuthorized, uiState) {
+        android.util.Log.d(
+            "MessagesRootScreen",
+            "isLoadingDialogs=$isLoadingDialogs, isAuthorized=${appState.isAuthorized}, " +
+                    "uiState=${uiState.javaClass.simpleName}"
+        )
+    }
+
+    // Состояние для диалога подтверждения удаления
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var dialogToDelete by remember { mutableStateOf<DialogEntity?>(null) }
 
     if (isLoadingDialogs) {
         // Загрузка диалогов после авторизации - показываем LoadingOverlayView
@@ -75,6 +104,7 @@ fun MessagesRootScreen(
             modifier = modifier,
             uiState = uiState,
             isRefreshing = isRefreshing,
+            isDeleting = isDeleting,
             syncError = syncError,
             currentUser = appState.currentUser,
             onRefresh = { viewModel.refresh() },
@@ -82,8 +112,49 @@ fun MessagesRootScreen(
             onDialogClick = { dialogId, userId ->
                 viewModel.onDialogClick(dialogId, userId)
             },
+            onDeleteClick = { dialog ->
+                dialogToDelete = dialog
+                showDeleteDialog = true
+            },
             onNavigateToFriends = onNavigateToFriends,
             onNavigateToSearchUsers = onNavigateToSearchUsers
+        )
+    }
+
+    // Диалог подтверждения удаления
+    if (showDeleteDialog && dialogToDelete != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteDialog = false
+                dialogToDelete = null
+            },
+            title = { Text(stringResource(R.string.delete_dialog_title)) },
+            text = { Text(stringResource(R.string.delete_dialog_message)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        dialogToDelete?.let { viewModel.deleteDialog(it.id) }
+                        showDeleteDialog = false
+                        dialogToDelete = null
+                    }
+                ) {
+                    Text(stringResource(R.string.delete))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        dialogToDelete = null
+                    }
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true
+            )
         )
     }
 }
@@ -94,15 +165,22 @@ fun DialogsContent(
     modifier: Modifier = Modifier,
     uiState: DialogsUiState,
     isRefreshing: Boolean,
+    isDeleting: Boolean,
     syncError: String?,
     currentUser: com.swparks.data.model.User?,
     onRefresh: () -> Unit,
     onDismissSyncError: () -> Unit,
     onDialogClick: (Long, Int?) -> Unit,
+    onDeleteClick: (DialogEntity) -> Unit,
     onNavigateToFriends: () -> Unit,
     onNavigateToSearchUsers: () -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val density = LocalDensity.current
+
+    // Состояние контекстного меню - на уровне DialogsContent (вне PullToRefreshBox)
+    var contextMenuItem by remember { mutableStateOf<DialogEntity?>(null) }
+    var menuOffset by remember { mutableStateOf(DpOffset.Zero) }
 
     Box(modifier = modifier.fillMaxSize()) {
         when (uiState) {
@@ -147,8 +225,17 @@ fun DialogsContent(
                         // LazyColumn с DialogRowView
                         DialogsList(
                             dialogs = uiState.dialogs,
-                            isRefreshing = isRefreshing,
-                            onDialogClick = onDialogClick
+                            isRefreshing = isRefreshing || isDeleting,
+                            onDialogClick = onDialogClick,
+                            onLongClick = { dialog, localOffset, itemPosition ->
+                                contextMenuItem = dialog
+                                menuOffset = with(density) {
+                                    DpOffset(
+                                        (itemPosition.x + localOffset.x).toDp(),
+                                        (itemPosition.y + localOffset.y).toDp()
+                                    )
+                                }
+                            }
                         )
                     }
                 }
@@ -174,6 +261,35 @@ fun DialogsContent(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
+
+        // Индикатор загрузки при удалении диалога
+        if (isDeleting) {
+            LoadingOverlayView()
+        }
+    }
+
+    // Контекстное меню рендерится ПОСЛЕ Box, на уровне DialogsContent (как в JetpackDays)
+    contextMenuItem?.let { dialog ->
+        DropdownMenu(
+            expanded = true,
+            onDismissRequest = { contextMenuItem = null },
+            offset = menuOffset
+        ) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.delete)) },
+                onClick = {
+                    contextMenuItem = null
+                    onDeleteClick(dialog)
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            )
+        }
     }
 
     // Показываем ошибку синхронизации
@@ -218,7 +334,8 @@ private fun EmptyStateViewForDialogs(
 fun DialogsList(
     dialogs: List<DialogEntity>,
     isRefreshing: Boolean,
-    onDialogClick: (Long, Int?) -> Unit
+    onDialogClick: (Long, Int?) -> Unit,
+    onLongClick: (DialogEntity, Offset, Offset) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -248,7 +365,10 @@ fun DialogsList(
                     dateString = formattedDate,
                     bodyText = dialog.lastMessageText ?: "",
                     unreadCount = dialog.unreadCount,
-                    enabled = !isRefreshing
+                    enabled = !isRefreshing,
+                    onLongClick = { localOffset, itemPosition ->
+                        onLongClick(dialog, localOffset, itemPosition)
+                    }
                 ),
                 onClick = {
                     onDialogClick(dialog.id, dialog.anotherUserId)

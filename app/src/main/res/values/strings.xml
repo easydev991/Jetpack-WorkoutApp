@@ -171,6 +171,8 @@
     <string name="cancel">Cancel</string>
     <string name="delete_entry_title">Delete entry</string>
     <string name="delete_entry_message">Are you sure you want to delete this entry?</string>
+    <string name="delete_dialog_title">Delete dialog?</string>
+    <string name="delete_dialog_message">The dialog will be deleted without the possibility of recovery.</string>
     <string name="address">Address</string>
     <string name="park_address">Park address</string>
     <string name="park_type">Park type</string>

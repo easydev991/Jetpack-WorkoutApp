@@ -769,6 +769,8 @@ class SWRepositoryImp(
     override suspend fun deleteDialog(dialogId: Long): Result<Unit> =
         try {
             swApi.deleteDialog(dialogId)
+            // Удаляем из БД после успешного API - это запустит реактивное обновление UI
+            dialogDao.deleteById(dialogId)
             Result.success(Unit)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "удалении диалога"))

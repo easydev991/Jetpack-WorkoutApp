@@ -108,6 +108,10 @@ fun RootScreen(appState: AppState) {
 
     // Синхронизируем currentUser с AppState при каждом изменении
     LaunchedEffect(currentUser) {
+        Log.d(
+            "RootScreen",
+            "currentUser изменился: ${currentUser?.id}, isAuthorized=${currentUser != null}"
+        )
         appState.updateCurrentUser(currentUser)
     }
 

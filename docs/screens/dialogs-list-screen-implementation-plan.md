@@ -57,7 +57,9 @@ ui/ds/DialogRowView.kt
 
 # План: Удаление диалогов (Long Press + DropdownMenu)
 
-## Статус: 🔲 НЕ НАЧАТО
+## Статус: ✅ ВЫПОЛНЕНО
+
+**Дата завершения:** 14 февраля 2026
 
 ## UX Flow
 
@@ -229,14 +231,14 @@ suspend fun deleteById(dialogId: Long)
 ## Порядок реализации
 
 1. ✅ Endpoint уже реализован (`SWApi.deleteDialog`)
-2. 🔲 Добавить `deleteById` в `DialogDao`
-3. 🔲 Обновить `SWRepository.deleteDialog` — удалять из БД после успешного API
-4. 🔲 Добавить `isDeleting` и `deleteDialog` в `IDialogsViewModel` + `DialogsViewModel`
-5. 🔲 Обновить `DialogRowData` — добавить `onDeleteClick` (БЕЗ `showDeleteMenu`)
-6. 🔲 Обновить `DialogRowView` — локальный `showMenu` + `DropdownMenu` + `combinedClickable`
-7. 🔲 Обновить `MessagesRootScreen` — состояние AlertDialog + передача колбэка
-8. 🔲 Добавить строки в `strings.xml`
-9. 🔲 Написать тесты
+2. ✅ Добавить `deleteById` в `DialogDao`
+3. ✅ Обновить `SWRepository.deleteDialog` — удалять из БД после успешного API
+4. ✅ Добавить `isDeleting` и `deleteDialog` в `IDialogsViewModel` + `DialogsViewModel`
+5. ✅ Обновить `DialogRowData` — добавить `onDeleteClick` (БЕЗ `showDeleteMenu`)
+6. ✅ Обновить `DialogRowView` — локальный `showMenu` + `DropdownMenu` + `combinedClickable`
+7. ✅ Обновить `MessagesRootScreen` — состояние AlertDialog + передача колбэка
+8. ✅ Добавить строки в `strings.xml`
+9. ✅ Написать тесты
 
 ---
 
@@ -248,13 +250,16 @@ suspend fun deleteById(dialogId: Long)
 
 ```kotlin
 @Test
-fun deleteDialog_whenSuccess_thenRemovesFromList() = runTest
+fun deleteDialog_whenSuccess_callsRepositoryDeleteDialog() = runTest
 
 @Test
-fun deleteDialog_whenFailure_thenShowsError() = runTest
+fun deleteDialog_whenSuccess_updatesIsDeleting() = runTest
 
 @Test
-fun isDeleting_whenDeleting_thenReturnsTrue() = runTest
+fun deleteDialog_whenFailure_showsSyncError() = runTest
+
+@Test
+fun deleteDialog_whenFailure_logsError() = runTest
 ```
 
 ### Unit-тесты Repository
