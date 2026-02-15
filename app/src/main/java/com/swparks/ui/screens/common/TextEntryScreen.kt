@@ -148,11 +148,11 @@ private class PreviewTextEntryViewModel : ITextEntryViewModel {
         _uiState.value = _uiState.value.copy(text = text)
     }
 
-    override fun onSend() {}
+    override fun onSend() = Unit
 
-    override fun onDismissError() {}
+    override fun onDismissError() = Unit
 
-    override fun resetState() {}
+    override fun resetState() = Unit
 }
 
 @Preview(showBackground = true, locale = "ru")
@@ -197,11 +197,11 @@ private fun TextEntryScreenJournalPreview() {
             _uiState.value = _uiState.value.copy(text = text)
         }
 
-        override fun onSend() {}
+        override fun onSend() = Unit
 
-        override fun onDismissError() {}
+        override fun onDismissError() = Unit
 
-        override fun resetState() {}
+        override fun resetState() = Unit
     }
     JetpackWorkoutAppTheme {
         Surface {

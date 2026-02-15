@@ -99,7 +99,7 @@ res/values-ru/strings.xml
 
 ---
 
-# План: Mark as Read в контекстном меню диалога
+## План: Mark as Read в контекстном меню диалога
 
 ## Статус: ✅ ЗАВЕРШЁНО
 
@@ -156,7 +156,7 @@ res/values-ru/strings.xml
 | 5 | ✅ Рефакторинг `deleteDialog` | `DialogsViewModel.kt` | Заменить хардкод на `resources.getString(R.string.dialog_delete_error)` |
 | 6 | ✅ Добавить `isMarkingAsRead` | `DialogsViewModel.kt` | `MutableStateFlow<Boolean>` + геттер |
 | 7 | ✅ Добавить `markDialogAsRead` | `DialogsViewModel.kt` | Метод: `isMarkingAsRead = true` → repository → обработка ошибки через `_syncError` |
-| 8 | ✅ Обновить `isUpdating` | `DialogsViewModel.kt` | `val isUpdating = combine(isDeleting, isMarkingAsRead) { a, b -> a || b }` |
+| 8 | ✅ Обновить `isUpdating` | `DialogsViewModel.kt` | `val isUpdating = combine(isDeleting, isMarkingAsRead) { d, m -> d or m }` |
 | 9 | ✅ Добавить метод в interface | `IDialogsViewModel.kt` | `val isMarkingAsRead: StateFlow<Boolean>`, `fun markDialogAsRead(dialogId: Long, userId: Int)` |
 | 10 | ✅ Обновить `AppContainer` | `AppContainer.kt` | Передать `resourcesProvider` в `DialogsViewModel` factory |
 

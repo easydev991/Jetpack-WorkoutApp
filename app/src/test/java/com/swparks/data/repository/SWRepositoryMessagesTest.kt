@@ -346,4 +346,111 @@ class SWRepositoryMessagesTest {
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is NetworkException)
     }
+
+    @Test
+    fun deleteDialog_whenApiThrowsIllegalStateException_thenReturnsFailure() = runTest {
+        // Given
+        val mockApi = mockk<SWApi>()
+        coEvery { mockApi.deleteDialog(any()) } throws IllegalStateException("closed")
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao
+        )
+
+        // When
+        val result = repository.deleteDialog(1L)
+
+        // Then
+        assertTrue(result.isFailure)
+        assertTrue(result.exceptionOrNull() is NetworkException)
+    }
+
+    // ==================== Тесты для markDialogAsRead ====================
+
+    @Test
+    fun markDialogAsRead_whenApiReturnsSuccess_thenReturnsSuccess() = runTest {
+        // Given
+        val mockApi = mockk<SWApi>()
+        coEvery { mockApi.markAsRead(2L) } returns mockk(relaxed = true)
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao
+        )
+
+        // When
+        val result = repository.markDialogAsRead(dialogId = 1L, userId = 2)
+
+        // Then
+        assertTrue(result.isSuccess)
+        coVerify { mockApi.markAsRead(2L) }
+        coVerify { mockDialogDao.updateUnreadCount(1L) }
+    }
+
+    @Test
+    fun markDialogAsRead_whenApiThrowsIOException_thenReturnsFailure() = runTest {
+        // Given
+        val mockApi = mockk<SWApi>()
+        coEvery { mockApi.markAsRead(any()) } throws IOException("Network error")
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao
+        )
+
+        // When
+        val result = repository.markDialogAsRead(dialogId = 1L, userId = 2)
+
+        // Then
+        assertTrue(result.isFailure)
+        assertTrue(result.exceptionOrNull() is NetworkException)
+    }
+
+    @Test
+    fun markDialogAsRead_whenApiThrowsIllegalStateException_thenReturnsFailure() = runTest {
+        // Given
+        val mockApi = mockk<SWApi>()
+        coEvery { mockApi.markAsRead(any()) } throws IllegalStateException("closed")
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao
+        )
+
+        // When
+        val result = repository.markDialogAsRead(dialogId = 1L, userId = 2)
+
+        // Then
+        assertTrue(result.isFailure)
+        assertTrue(result.exceptionOrNull() is NetworkException)
+    }
 }
