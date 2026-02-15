@@ -31,6 +31,7 @@ fun ParksRootScreen(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("UnusedParameter")
 @Composable
 fun ParksTopAppBar(
     appState: AppState,

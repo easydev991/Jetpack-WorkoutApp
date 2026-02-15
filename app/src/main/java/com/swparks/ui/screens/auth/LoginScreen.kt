@@ -126,7 +126,7 @@ fun LoginScreen(
     }
 
     // Обработка ОШИБОК (остается на uiState)
-    HandleLoginErrorsOnly(uiState, screenState, viewModel)
+    HandleLoginErrorsOnly(uiState, screenState)
 
     // Алерты
     LoginScreenAlerts(
@@ -427,8 +427,7 @@ private fun ResetPasswordButton(
 @Composable
 private fun HandleLoginErrorsOnly(
     uiState: LoginUiState,
-    screenState: LoginScreenState,
-    viewModel: ILoginViewModel
+    screenState: LoginScreenState
 ) {
     LaunchedEffect(uiState) {
         when (uiState) {

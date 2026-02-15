@@ -834,7 +834,8 @@ class SWRepositoryImp(
 
             Log.i(
                 TAG,
-                "Запрос редактирования настроек дневника: journalId=$journalId, userId=$userId, title=$title, viewAccess=${request.viewAccess}, commentAccess=${request.commentAccess}"
+                "Запрос редактирования настроек дневника: journalId=$journalId, userId=$userId, " +
+                        "title=$title, viewAccess=${request.viewAccess}, commentAccess=${request.commentAccess}"
             )
 
             val response = swApi.editJournalSettings(

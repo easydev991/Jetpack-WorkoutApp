@@ -139,7 +139,7 @@ fun ProfileRootScreen(
                         ProfileUiState.Loading -> null to null
                     }
 
-                    // shortAddress вычисляется на основе состояния: Loading показывает "Загрузка...", Success и Error показывают страну и город
+                    // shortAddress: Loading -> "Загрузка...", Success/Error -> страна и город
                     val shortAddress = if (uiState is ProfileUiState.Loading) {
                         stringResource(R.string.loading)
                     } else {

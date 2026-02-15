@@ -7,7 +7,8 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
- * Тесты десериализации модели [com.swparks.data.model.Event] с использованием IntStringSerializer и LongStringSerializer
+ * Тесты десериализации модели [com.swparks.data.model.Event]
+ * с использованием IntStringSerializer и LongStringSerializer
  */
 class EventDeserializationTest {
 

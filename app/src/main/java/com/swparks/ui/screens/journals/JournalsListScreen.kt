@@ -80,7 +80,13 @@ fun JournalsListScreen(
     userId: Long,
     viewModel: IJournalsViewModel,
     onBackClick: () -> Unit,
-    onJournalClick: (journalId: Long, journalOwnerId: Long, journalTitle: String, viewAccess: String, commentAccess: String) -> Unit,
+    onJournalClick: (
+        journalId: Long,
+        journalOwnerId: Long,
+        journalTitle: String,
+        viewAccess: String,
+        commentAccess: String
+    ) -> Unit,
     parentPaddingValues: PaddingValues
 ) {
     val layoutDirection = LocalLayoutDirection.current
@@ -287,7 +293,13 @@ private fun ContentScreen(
     isRefreshing: Boolean,
     isDeleting: Boolean,
     onRefresh: () -> Unit,
-    onJournalClick: (journalId: Long, journalOwnerId: Long, journalTitle: String, viewAccess: String, commentAccess: String) -> Unit,
+    onJournalClick: (
+        journalId: Long,
+        journalOwnerId: Long,
+        journalTitle: String,
+        viewAccess: String,
+        commentAccess: String
+    ) -> Unit,
     onDeleteClick: (Journal) -> Unit,
     onSetupClick: (Journal) -> Unit = {},
     onCreateJournalClick: () -> Unit = {}
@@ -344,7 +356,13 @@ private fun ContentScreen(
 private fun JournalsList(
     journals: List<Journal>,
     enabled: Boolean = true,
-    onJournalClick: (journalId: Long, journalOwnerId: Long, journalTitle: String, viewAccess: String, commentAccess: String) -> Unit = { _, _, _, _, _ -> },
+    onJournalClick: (
+        journalId: Long,
+        journalOwnerId: Long,
+        journalTitle: String,
+        viewAccess: String,
+        commentAccess: String
+    ) -> Unit = { _, _, _, _, _ -> },
     onDeleteClick: (Journal) -> Unit = { },
     onSetupClick: (Journal) -> Unit = { }
 ) {
