@@ -1,12 +1,15 @@
-# План: Загрузка списка диалогов на экране Messages
+# План: Экран Messages (Список диалогов)
 
-## Статус: ✅ ВЫПОЛНЕНО
+## Статус: 🔄 В РАБОТЕ
 
-**Дата завершения:** 13 февраля 2026
+**Выполнено:** 15 февраля 2026 (загрузка диалогов, удаление)
+**В работе:** Mark as Read в контекстном меню
 
 ---
 
-## Реализация
+## Реализованный функционал
+
+### Загрузка списка диалогов (13.02.2026)
 
 **Архитектура:** MVVM + Fallback cache (сервер → Room → UI, офлайн-режим)
 
@@ -16,229 +19,151 @@
 
 **Тесты:** 11 unit-тестов ViewModel, 5 unit-тестов репозитория
 
----
+**Исправленные баги (8):** logout cleanup, форматирование даты, центрирование empty/error states, pull-to-refresh на пустом списке, повторная авторизация, loading overlay, пустой ответ сервера.
 
-## Исправленные баги (8)
+### Удаление диалогов (15.02.2026)
 
-| # | Проблема | Решение |
-|---|----------|---------|
-| 1 | Диалоги не удаляются при logout | `dialogDao.deleteAll()` в `clearUserData()` |
-| 2 | Дата не форматируется | `DateFormatter.formatDate()` |
-| 3 | EmptyStateView не по центру | `Box` + `contentAlignment = Center` |
-| 4 | Error state не по центру | `Box` + `contentAlignment = Center` |
-| 5 | Pull to refresh не работает при пустом списке | `verticalScroll(rememberScrollState())` |
-| 6 | Диалоги не загружаются при повторной авторизации | `LaunchedEffect(appState.isAuthorized)` |
-| 7 | Не показывается LoadingOverlayView после авторизации | `isLoadingProfile`/`isLoadingDialogs` флаги + `loadDialogsAfterAuth()` |
-| 8 | При 0 диалогах от сервера показывается Error вместо EmptyStateViewForDialogs | Явная установка `Success(emptyList())` при успехе в `loadDialogsInternal()` |
+**UX:** Long Press → DropdownMenu → AlertDialog → API → LoadingOverlayView
+
+**Ключевое решение:** DropdownMenu рендерится на уровне `DialogsContent` (State Hoisting), не внутри `DialogRowView`. Это корректно работает с `positionInRoot()`.
+
+**Реализация:**
+- `DialogRowData.onLongClick: (localOffset, itemPosition) -> Unit` — делегирует позицию
+- `FormCardContainer.onLongClickWithOffset` — `pointerInput` + `detectTapGestures`
+- `SWRepository.deleteDialog` — API + удаление из БД для реактивного обновления UI
+- `DialogsViewModel.deleteDialog()` с флагом `isDeleting`
+
+**Тесты:** 4 unit-теста на deleteDialog
 
 ---
 
 ## Ключевые файлы
 
 ```
+# Data Layer
 data/database/entity/DialogEntity.kt
-data/database/dao/DialogDao.kt
+data/database/dao/DialogDao.kt              # deleteById()
+data/repository/SWRepository.kt             # deleteDialog() — API + БД
 domain/repository/MessagesRepository.kt
 data/repository/MessagesRepositoryImpl.kt
 data/model/DialogResponse.kt
-ui/viewmodel/DialogsViewModel.kt
-ui/screens/messages/MessagesRootScreen.kt
-ui/ds/DialogRowView.kt
+
+# UI Layer
+ui/viewmodel/DialogsViewModel.kt            # deleteDialog(), isDeleting
+ui/viewmodel/IDialogsViewModel.kt
+ui/screens/messages/MessagesRootScreen.kt   # DropdownMenu + AlertDialog
+ui/ds/DialogRowView.kt                      # positionInRoot + onLongClick
+ui/ds/FormCardContainer.kt                  # onLongClickWithOffset
+
+# Resources
+res/values/strings.xml                      # delete_dialog_title, delete_dialog_message
+res/values-ru/strings.xml
 ```
+
+---
+
+## Технические нюансы
+
+### Позиционирование DropdownMenu
+
+- `positionInRoot()` — позиция относительно composition root (без TopAppBar)
+- DropdownMenu offset работает относительно window
+- **Решение:** Рендерить DropdownMenu как sibling после Box на уровне `DialogsContent`
+
+### Форматирование
+
+- `DateFormatter.formatDate()` для дат сообщений
+- Material3 `PullToRefreshBox` для обновления
+- `LoadingOverlayView` при загрузке и удалении
 
 ---
 
 ## Примечания
 
-- **Pull-to-refresh:** Material3 `PullToRefreshBox`
+- **Реактивность:** UI обновляется через Flow из Room
+- **ExperimentalFoundationApi:** НЕ используется — `pointerInput` + `detectTapGestures`
+- **State Hoisting:** Состояние меню локальное в Composable
 - **Безопасные зоны:** `parentPaddingValues` от `RootScreen`
 
 ---
 
-# План: Удаление диалогов (Long Press + DropdownMenu)
+# План: Mark as Read в контекстном меню диалога
 
-## Статус: ✅ ВЫПОЛНЕНО
-
-**Дата завершения:** 14 февраля 2026
+## Статус: 🔲 НЕ НАЧАТО
 
 ## UX Flow
 
-1. Пользователь удерживает палец на диалоге (**Long Press**)
-2. Появляется **DropdownMenu** рядом с пальцем с пунктом "Удалить"
-3. При нажатии на "Удалить" — **диалог подтверждения** (AlertDialog)
-4. Подтверждение → вызов API → обновление списка
+1. Пользователь делает **Long Press** на диалоге с непрочитанными сообщениями
+2. Появляется **DropdownMenu** с двумя пунктами: "Mark as read" и "Delete"
+3. При нажатии на "Mark as read" → API запрос → **LoadingOverlayView**
+4. После успешного ответа → обновление `unreadCount = 0` в БД → UI обновляется реактивно
 
 ---
 
-## Архитектурные решения
+## Ревью и решения
 
-### State Hoisting (Важно!)
+### ✅ API контракт проверен
 
-**❌ НЕ ДЕЛАТЬ:** Не добавлять `showDeleteMenu` в `DialogRowData` и не прокидывать через ViewModel.
+- API endpoint: `POST /mark-read` с параметром `from_user_id`
+- Сигнатура: `swApi.markAsRead(@Field("from_user_id") fromUserId: Long)`
+- **Решение:** Метод помечает все сообщения от конкретного пользователя как прочитанные. Параметр `userId` корректен.
 
-**✅ ПРАВИЛЬНО:** Состояние меню — **локальное** внутри Composable. ViewModel не нужно знать, открыта ли менюшка.
+### ⚠️ Существующий метод markAsRead
 
-```kotlin
-// DialogRowView.kt — локальный стейт
-var showMenu by remember { mutableStateOf(false) }
+- Текущий `SWRepository.markAsRead(userId)` делает **только API вызов**, не обновляет БД
+- **Решение:** Создать новый метод `markDialogAsRead(dialogId, userId)` который делает API + DAO update
 
-Box {
-    Row(
-        modifier = Modifier.combinedClickable(
-            onClick = { onClick() },
-            onLongClick = { showMenu = true }
-        )
-    ) { ... }
+### ✅ Механизм показа ошибок
 
-    DropdownMenu(
-        expanded = showMenu,
-        onDismissRequest = { showMenu = false }
-    ) {
-        DropdownMenuItem(
-            text = { Text("Удалить") },
-            onClick = {
-                showMenu = false
-                onDeleteClick() // Колбэк → Screen → ViewModel
-            }
-        )
-    }
-}
-```
+- Уже реализован: `syncError: StateFlow<String?>` в `DialogsViewModel`
+- `dismissSyncError()` для сброса ошибки
+- **Решение:** Использовать существующий механизм
 
-**Причина:** Избежать лишних перерисовок всего списка и unnecessary state hoisting.
+### 📝 Optimistic Update (отложено)
+
+- **Рекомендация:** Optimistic update (мгновенное обновление UI + откат при ошибке)
+- **Решение:** Для первой реализации используем синхронный подход с LoadingOverlayView. Optimistic update можно добавить позже как улучшение UX.
 
 ---
 
-## Задачи
+## Пошаговая реализация
 
-### 1. DialogRowView — добавить Long Press + DropdownMenu
+### Data Layer
 
-**Файл:** `ui/ds/DialogRowView.kt`
+| # | Задача | Файл | Описание |
+|---|--------|------|----------|
+| 1 | 🔲 Добавить `updateUnreadCount` | `DialogDao.kt` | SQL: `UPDATE dialogs SET unreadCount = 0 WHERE id = :dialogId` |
+| 2 | 🔲 Добавить `markDialogAsRead` в interface | `SWRepository.kt` | `suspend fun markDialogAsRead(dialogId: Long, userId: Int): Result<Unit>` |
+| 3 | 🔲 Реализовать `markDialogAsRead` | `SWRepository.kt` | API `swApi.markAsRead(userId)` + DAO `dialogDao.updateUnreadCount(dialogId)` |
 
-- Добавить параметр `onDeleteClick: () -> Unit` в `DialogRowData`
-- Использовать `combinedClickable` с `onLongClick`
-- Добавить локальный `var showMenu by remember { mutableStateOf(false) }`
-- Обернуть Row в Box, добавить `DropdownMenu`
-- **Важно:** Добавить `@OptIn(ExperimentalFoundationApi::class)` для `combinedClickable`
+### ViewModel
 
-**Референс:** `JournalRowView.kt` — меню с `DropdownMenuItem`
+| # | Задача | Файл | Описание |
+|---|--------|------|----------|
+| 4 | 🔲 Добавить `ResourcesProvider` | `DialogsViewModel.kt` | Добавить `resources: ResourcesProvider` в конструктор |
+| 5 | 🔲 Рефакторинг `deleteDialog` | `DialogsViewModel.kt` | Заменить хардкод на `resources.getString(R.string.dialog_delete_error)` |
+| 6 | 🔲 Добавить `isMarkingAsRead` | `DialogsViewModel.kt` | `MutableStateFlow<Boolean>` + геттер |
+| 7 | 🔲 Добавить `markDialogAsRead` | `DialogsViewModel.kt` | Метод: `isMarkingAsRead = true` → repository → обработка ошибки через `_syncError` |
+| 8 | 🔲 Обновить `isUpdating` | `DialogsViewModel.kt` | `val isUpdating = combine(isDeleting, isMarkingAsRead) { a, b -> a || b }` |
+| 9 | 🔲 Добавить метод в interface | `IDialogsViewModel.kt` | `val isMarkingAsRead: StateFlow<Boolean>`, `fun markDialogAsRead(dialogId: Long, userId: Int)` |
+| 10 | 🔲 Обновить `AppContainer` | `AppContainer.kt` | Передать `resourcesProvider` в `DialogsViewModel` factory |
 
-```kotlin
-data class DialogRowData(
-    // ... existing fields
-    val onDeleteClick: () -> Unit = {} // Только колбэк, без состояния меню!
-)
-```
+### Resources
 
-### 2. MessagesRootScreen — добавить диалог подтверждения
+| # | Задача | Файл | Описание |
+|---|--------|------|----------|
+| 11 | 🔲 Добавить `dialog_delete_error` | `strings.xml` | `<string name="dialog_delete_error">Failed to delete dialog</string>` |
+| 12 | 🔲 Добавить перевод | `strings-ru.xml` | `<string name="dialog_delete_error">Ошибка удаления диалога</string>` |
+| 13 | 🔲 Добавить `mark_as_read` | `strings.xml` | `<string name="mark_as_read">Mark as read</string>` |
+| 14 | 🔲 Добавить перевод | `strings-ru.xml` | `<string name="mark_as_read">Отметить прочитанным</string>` |
 
-**Файл:** `ui/screens/messages/MessagesRootScreen.kt`
+### UI Layer
 
-- Добавить состояние для AlertDialog:
-
-  ```kotlin
-  var showDeleteDialog by remember { mutableStateOf(false) }
-  var dialogToDelete by remember { mutableStateOf<DialogEntity?>(null) }
-  ```
-
-- Добавить `AlertDialog` для подтверждения (референс: `JournalsListScreen.kt:206-218`)
-- Передать `onDeleteClick` в `DialogsList` → `DialogRowView`:
-
-  ```kotlin
-  onDeleteClick = {
-      dialogToDelete = dialog
-      showDeleteDialog = true
-  }
-  ```
-
-### 3. DialogsViewModel — добавить удаление
-
-**Файл:** `ui/viewmodel/DialogsViewModel.kt`
-
-```kotlin
-private val _isDeleting = MutableStateFlow(false)
-val isDeleting: StateFlow<Boolean> = _isDeleting.asStateFlow()
-
-fun deleteDialog(dialogId: Long) {
-    viewModelScope.launch {
-        _isDeleting.value = true
-        val result = swRepository.deleteDialog(dialogId) // SWRepository, не MessagesRepository!
-        _isDeleting.value = false
-        if (result.isFailure) {
-            _syncError.value = "Ошибка удаления диалога"
-        }
-        // При успехе Flow из Room обновит список автоматически (после удаления из БД)
-    }
-}
-```
-
-### 4. IDialogsViewModel — добавить интерфейс
-
-**Файл:** `ui/viewmodel/IDialogsViewModel.kt`
-
-```kotlin
-val isDeleting: StateFlow<Boolean>
-fun deleteDialog(dialogId: Long)
-```
-
-### 5. SWRepository.deleteDialog — обновить (КРИТИЧНО!)
-
-**Файл:** `data/repository/SWRepository.kt:769`
-
-**Текущая реализация** вызывает только API:
-
-```kotlin
-override suspend fun deleteDialog(dialogId: Long): Result<Unit> =
-    safeApiCall { swApi.deleteDialog(dialogId) }
-```
-
-**Нужно добавить удаление из БД после успешного API:**
-
-```kotlin
-override suspend fun deleteDialog(dialogId: Long): Result<Unit> {
-    val result = safeApiCall { swApi.deleteDialog(dialogId) }
-    if (result.isSuccess) {
-        dialogDao.deleteById(dialogId) // ← Это запустит реактивное обновление UI
-    }
-    return result
-}
-```
-
-**Причина:** Без удаления из Room диалог останется на экране до следующего pull-to-refresh.
-
-### 6. DialogDao — добавить удаление
-
-**Файл:** `data/database/dao/DialogDao.kt`
-
-```kotlin
-@Query("DELETE FROM dialogs WHERE id = :dialogId")
-suspend fun deleteById(dialogId: Long)
-```
-
-### 7. Ресурсы — строки
-
-**Файл:** `res/values/strings.xml`
-
-```xml
-<string name="delete_dialog_title">Удалить диалог?</string>
-<string name="delete_dialog_message">Диалог будет удалён без возможности восстановления.</string>
-```
-
-**Файл:** `res/values-ru/strings.xml` (если нужен русский перевод)
-
----
-
-## Порядок реализации
-
-1. ✅ Endpoint уже реализован (`SWApi.deleteDialog`)
-2. ✅ Добавить `deleteById` в `DialogDao`
-3. ✅ Обновить `SWRepository.deleteDialog` — удалять из БД после успешного API
-4. ✅ Добавить `isDeleting` и `deleteDialog` в `IDialogsViewModel` + `DialogsViewModel`
-5. ✅ Обновить `DialogRowData` — добавить `onDeleteClick` (БЕЗ `showDeleteMenu`)
-6. ✅ Обновить `DialogRowView` — локальный `showMenu` + `DropdownMenu` + `combinedClickable`
-7. ✅ Обновить `MessagesRootScreen` — состояние AlertDialog + передача колбэка
-8. ✅ Добавить строки в `strings.xml`
-9. ✅ Написать тесты
+| # | Задача | Файл | Описание |
+|---|--------|------|----------|
+| 15 | 🔲 Добавить пункт меню | `MessagesRootScreen.kt` | `DropdownMenuItem` с текстом "Mark as read" |
+| 16 | 🔲 **Условное отображение** | `MessagesRootScreen.kt` | ⚠️ **Критично:** Показывать "Mark as read" ТОЛЬКО если `dialog.unreadCount > 0`. Если непрочитанных нет — пункт скрыт. |
+| 17 | 🔲 Обновить LoadingOverlayView условие | `MessagesRootScreen.kt` | `if (viewModel.isUpdating.value)` вместо `isDeleting` |
 
 ---
 
@@ -248,28 +173,110 @@ suspend fun deleteById(dialogId: Long)
 
 **Файл:** `test/.../DialogsViewModelTest.kt`
 
-```kotlin
-@Test
-fun deleteDialog_whenSuccess_callsRepositoryDeleteDialog() = runTest
-
-@Test
-fun deleteDialog_whenSuccess_updatesIsDeleting() = runTest
-
-@Test
-fun deleteDialog_whenFailure_showsSyncError() = runTest
-
-@Test
-fun deleteDialog_whenFailure_logsError() = runTest
-```
+| # | Тест | Описание |
+|---|------|----------|
+| 1 | `markDialogAsRead_whenSuccess_callsRepositoryMarkAsRead` | Проверяет вызов repository |
+| 2 | `markDialogAsRead_whenSuccess_updatesIsMarkingAsRead` | Проверяет флаг isMarkingAsRead |
+| 3 | `markDialogAsRead_whenSuccess_callsWithCorrectParams` | Проверяет dialogId и userId |
+| 4 | `markDialogAsRead_whenFailure_showsSyncError` | Проверяет `_syncError.value` через mock `resources.getString()` |
+| 5 | `markDialogAsRead_whenFailure_logsError` | Проверяет логирование |
 
 ### Unit-тесты Repository
 
-**Файл:** `test/.../SWRepositoryMessagesTest.kt` (обновить существующий)
+**Файл:** `test/.../SWRepositoryMessagesTest.kt`
+
+| # | Тест | Описание |
+|---|------|----------|
+| 6 | `markDialogAsRead_whenApiSuccess_updatesDaoAndReturnsSuccess` | Проверяет вызов API + DAO update |
+| 7 | `markDialogAsRead_whenApiFailure_returnsFailure` | Проверяет обработку ошибки |
+
+---
+
+## Технические детали
+
+### DialogDao.updateUnreadCount
 
 ```kotlin
-@Test
-fun deleteDialog_whenApiSuccess_thenDeletesFromDb() = runTest {
-    // Проверить, что dialogDao.deleteById() вызывается после успешного API
+@Query("UPDATE dialogs SET unreadCount = 0 WHERE id = :dialogId")
+suspend fun updateUnreadCount(dialogId: Long)
+```
+
+### SWRepository.markDialogAsRead (новый метод)
+
+```kotlin
+// В интерфейсе (строка ~119):
+suspend fun markDialogAsRead(dialogId: Long, userId: Int): Result<Unit>
+
+// Реализация (после markAsRead, строка ~768):
+override suspend fun markDialogAsRead(dialogId: Long, userId: Int): Result<Unit> =
+    try {
+        swApi.markAsRead(userId.toLong())  // API: from_user_id
+        dialogDao.updateUnreadCount(dialogId)  // DAO: реактивное обновление UI
+        Result.success(Unit)
+    } catch (e: IOException) {
+        Result.failure(handleIOException(e, "отметке сообщений прочитанными"))
+    } catch (e: HttpException) {
+        Result.failure(handleHttpException(e, "отметке сообщений прочитанными"))
+    }
+```
+
+### DialogsViewModel.isUpdating
+
+```kotlin
+private val _isMarkingAsRead = MutableStateFlow(false)
+val isMarkingAsRead: StateFlow<Boolean> = _isMarkingAsRead.asStateFlow()
+
+val isUpdating: StateFlow<Boolean> = combine(_isDeleting, _isMarkingAsRead) { deleting, marking ->
+    deleting || marking
+}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+```
+
+### DialogsViewModel — добавление ResourcesProvider
+
+```kotlin
+// Конструктор (добавить resources):
+class DialogsViewModel(
+    private val messagesRepository: MessagesRepository,
+    private val swRepository: SWRepository,
+    private val logger: Logger,
+    private val resources: ResourcesProvider  // ← добавить
+) : ViewModel(), IDialogsViewModel {
+```
+
+### DialogsViewModel.markDialogAsRead
+
+```kotlin
+override fun markDialogAsRead(dialogId: Long, userId: Int) {
+    viewModelScope.launch {
+        _isMarkingAsRead.value = true
+        _syncError.value = null
+
+        val result = swRepository.markDialogAsRead(dialogId, userId)
+        _isMarkingAsRead.value = false
+
+        if (result.isFailure) {
+            logger.e(TAG, "markDialogAsRead failed: ${result.exceptionOrNull()?.message}")
+            _syncError.value = resources.getString(R.string.sync_error_message)
+        }
+        // При успехе Flow из Room обновит unreadCount автоматически
+    }
+}
+```
+
+### Рефакторинг deleteDialog (использовать resources)
+
+```kotlin
+override fun deleteDialog(dialogId: Long) {
+    viewModelScope.launch {
+        _isDeleting.value = true
+        val result = swRepository.deleteDialog(dialogId)
+        _isDeleting.value = false
+
+        if (result.isFailure) {
+            _syncError.value = resources.getString(R.string.dialog_delete_error)
+            logger.e(TAG, "Ошибка удаления диалога: ${result.exceptionOrNull()?.message}")
+        }
+    }
 }
 ```
 
@@ -278,18 +285,11 @@ fun deleteDialog_whenApiSuccess_thenDeletesFromDb() = runTest {
 ## Ключевые файлы
 
 ```
-ui/ds/DialogRowView.kt                    # Long press + DropdownMenu (локальный showMenu)
-ui/screens/messages/MessagesRootScreen.kt # AlertDialog + состояние
-ui/viewmodel/DialogsViewModel.kt          # deleteDialog(), isDeleting
+data/database/dao/DialogDao.kt            # updateUnreadCount()
+data/repository/SWRepository.kt           # markDialogAsRead() — новый метод
+ui/viewmodel/DialogsViewModel.kt          # markDialogAsRead(), isMarkingAsRead, isUpdating
 ui/viewmodel/IDialogsViewModel.kt         # interface
-data/database/dao/DialogDao.kt            # deleteById()
-data/repository/SWRepository.kt           # update deleteDialog() — добавить удаление из БД
-res/values/strings.xml                    # strings
+ui/screens/messages/MessagesRootScreen.kt # DropdownMenuItem + LoadingOverlayView
+res/values/strings.xml                    # mark_as_read
+res/values-ru/strings.xml                 # перевод
 ```
-
----
-
-## Примечания
-
-- **ExperimentalFoundationApi:** Не забыть `@OptIn(ExperimentalFoundationApi::class)` для `combinedClickable`
-- **Реактивность:** UI обновится автоматически через Flow из Room после удаления из БД
