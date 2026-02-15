@@ -34,11 +34,14 @@ class MessagesRootScreenTest {
     private fun setContent(
         uiState: DialogsUiState = DialogsUiState.Success(emptyList()),
         isRefreshing: Boolean = false,
+        isUpdating: Boolean = false,
         syncError: String? = null,
         currentUser: User? = null,
         onRefresh: () -> Unit = {},
         onDismissSyncError: () -> Unit = {},
         onDialogClick: (Long, Int?) -> Unit = { _, _ -> },
+        onMarkAsRead: (Long, Int) -> Unit = { _, _ -> },
+        onDeleteClick: (DialogEntity) -> Unit = { },
         onNavigateToFriends: () -> Unit = {},
         onNavigateToSearchUsers: () -> Unit = {}
     ) {
@@ -48,11 +51,14 @@ class MessagesRootScreenTest {
                     modifier = androidx.compose.ui.Modifier,
                     uiState = uiState,
                     isRefreshing = isRefreshing,
+                    isUpdating = isUpdating,
                     syncError = syncError,
                     currentUser = currentUser,
                     onRefresh = onRefresh,
                     onDismissSyncError = onDismissSyncError,
                     onDialogClick = onDialogClick,
+                    onMarkAsRead = onMarkAsRead,
+                    onDeleteClick = onDeleteClick,
                     onNavigateToFriends = onNavigateToFriends,
                     onNavigateToSearchUsers = onNavigateToSearchUsers
                 )

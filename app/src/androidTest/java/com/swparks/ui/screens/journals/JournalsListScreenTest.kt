@@ -61,7 +61,7 @@ class JournalsListScreenTest {
                     userId = userId,
                     viewModel = viewModel,
                     onBackClick = onBackClick,
-                    onJournalClick = { _, _, _, _ -> },
+                    onJournalClick = { _, _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -100,7 +100,7 @@ class JournalsListScreenTest {
                     userId = 1L,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _, _, _ -> },
+                    onJournalClick = { _, _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -134,7 +134,7 @@ class JournalsListScreenTest {
                     userId = 1L,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _, _, _ -> },
+                    onJournalClick = { _, _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -173,7 +173,7 @@ class JournalsListScreenTest {
                     userId = 1L,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _, _, _ -> },
+                    onJournalClick = { _, _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -220,7 +220,7 @@ class JournalsListScreenTest {
                     userId = 1L,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _, _, _ -> },
+                    onJournalClick = { _, _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -301,7 +301,7 @@ class JournalsListScreenTest {
                     userId = 1L,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _, _, _ -> },
+                    onJournalClick = { _, _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -338,7 +338,7 @@ class JournalsListScreenTest {
                     userId = 1L,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _, _, _ -> },
+                    onJournalClick = { _, _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -386,7 +386,7 @@ class JournalsListScreenTest {
                     userId = 1L,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _, _, _ -> },
+                    onJournalClick = { _, _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -432,7 +432,7 @@ class JournalsListScreenTest {
                     userId = 1L,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _, _, _ -> },
+                    onJournalClick = { _, _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -481,7 +481,7 @@ class JournalsListScreenTest {
                     userId = 1L,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _, _, _ -> },
+                    onJournalClick = { _, _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -516,7 +516,7 @@ class JournalsListScreenTest {
                     userId = userId,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _, _, _ -> },
+                    onJournalClick = { _, _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -552,7 +552,7 @@ class JournalsListScreenTest {
                     userId = userId,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _, _, _ -> },
+                    onJournalClick = { _, _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -588,7 +588,7 @@ class JournalsListScreenTest {
                     userId = profileUserId,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _, _, _ -> },
+                    onJournalClick = { _, _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -624,7 +624,7 @@ class JournalsListScreenTest {
                     userId = userId,
                     viewModel = viewModel,
                     onBackClick = {},
-                    onJournalClick = { _, _, _, _ -> },
+                    onJournalClick = { _, _, _, _, _ -> },
                     parentPaddingValues = PaddingValues()
                 )
             }
