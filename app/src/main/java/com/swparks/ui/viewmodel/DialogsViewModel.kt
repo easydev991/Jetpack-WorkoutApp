@@ -2,15 +2,20 @@ package com.swparks.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.swparks.R
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.MessagesRepository
 import com.swparks.ui.state.DialogsUiState
 import com.swparks.util.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
@@ -22,15 +27,18 @@ import kotlinx.coroutines.launch
  * @property messagesRepository Репозиторий для работы с диалогами
  * @property swRepository Репозиторий для работы с сервером (удаление диалога)
  * @property logger Логгер для записи ошибок и отладочной информации
+ * @property resources Провайдер строковых ресурсов для локализации
  */
 class DialogsViewModel(
     private val messagesRepository: MessagesRepository,
     private val swRepository: SWRepository,
-    private val logger: Logger
+    private val logger: Logger,
+    private val resources: ResourcesProvider
 ) : ViewModel(), IDialogsViewModel {
 
     private companion object {
         private const val TAG = "DialogsViewModel"
+        private const val FLOW_SUBSCRIPTION_TIMEOUT_MS = 5000L
     }
 
     private val _uiState = MutableStateFlow<DialogsUiState>(DialogsUiState.Loading)
@@ -166,6 +174,21 @@ class DialogsViewModel(
     private val _isDeleting = MutableStateFlow(false)
     override val isDeleting: StateFlow<Boolean> = _isDeleting.asStateFlow()
 
+    // Индикатор отметки диалога как прочитанного
+    private val _isMarkingAsRead = MutableStateFlow(false)
+    override val isMarkingAsRead: StateFlow<Boolean> = _isMarkingAsRead.asStateFlow()
+
+    // Общий индикатор любой операции обновления
+    override val isUpdating: StateFlow<Boolean> = combine(
+        _isDeleting,
+        _isMarkingAsRead
+    ) { deleting, marking -> deleting || marking }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(FLOW_SUBSCRIPTION_TIMEOUT_MS),
+            false
+        )
+
     override fun deleteDialog(dialogId: Long) {
         viewModelScope.launch {
             _isDeleting.value = true
@@ -173,10 +196,26 @@ class DialogsViewModel(
             _isDeleting.value = false
 
             if (result.isFailure) {
-                _syncError.value = "Ошибка удаления диалога"
+                _syncError.value = resources.getString(R.string.dialog_delete_error)
                 logger.e(TAG, "Ошибка удаления диалога: ${result.exceptionOrNull()?.message}")
             }
             // При успехе Flow из Room обновит список автоматически
+        }
+    }
+
+    override fun markDialogAsRead(dialogId: Long, userId: Int) {
+        viewModelScope.launch {
+            _isMarkingAsRead.value = true
+            _syncError.value = null
+
+            val result = swRepository.markDialogAsRead(dialogId, userId)
+            _isMarkingAsRead.value = false
+
+            if (result.isFailure) {
+                logger.e(TAG, "markDialogAsRead failed: ${result.exceptionOrNull()?.message}")
+                _syncError.value = resources.getString(R.string.sync_error_message)
+            }
+            // При успехе Flow из Room обновит unreadCount автоматически
         }
     }
 }

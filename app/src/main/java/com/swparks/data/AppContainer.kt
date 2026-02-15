@@ -449,7 +449,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
     override fun dialogsViewModelFactory() = com.swparks.ui.viewmodel.DialogsViewModel(
         messagesRepository = messagesRepository,
         swRepository = swRepository,
-        logger = logger
+        logger = logger,
+        resources = resourcesProvider
     )
 
     // ==================== API клиенты для разных функциональных областей ====================

@@ -173,6 +173,8 @@
     <string name="delete_entry_message">Вы уверены, что хотите удалить эту запись?</string>
     <string name="delete_dialog_title">Удалить диалог?</string>
     <string name="delete_dialog_message">Диалог будет удалён без возможности восстановления.</string>
+    <string name="dialog_delete_error">Ошибка удаления диалога</string>
+    <string name="mark_as_read">Отметить прочитанным</string>
     <string name="address">Адрес</string>
     <string name="park_address">Адрес площадки</string>
     <string name="park_type">Тип площадки</string>
@@ -322,5 +324,6 @@
     <string name="dialogs_open_friends">Открыть список друзей</string>
     <string name="dialogs_find_user">Найти пользователя</string>
     <string name="dialogs_sync_error">Ошибка синхронизации</string>
+    <string name="sync_error_message">Ошибка синхронизации</string>
     <string name="default_user_name">Пользователь</string>
 </resources>

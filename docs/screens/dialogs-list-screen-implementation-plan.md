@@ -1,9 +1,8 @@
 # План: Экран Messages (Список диалогов)
 
-## Статус: 🔄 В РАБОТЕ
+## Статус: ✅ ЗАВЕРШЁН
 
-**Выполнено:** 15 февраля 2026 (загрузка диалогов, удаление)
-**В работе:** Mark as Read в контекстном меню
+**Выполнено:** 15 февраля 2026 (загрузка диалогов, удаление, mark as read)
 
 ---
 
@@ -34,6 +33,19 @@
 - `DialogsViewModel.deleteDialog()` с флагом `isDeleting`
 
 **Тесты:** 4 unit-теста на deleteDialog
+
+### Mark as Read (15.02.2026)
+
+**UX:** Long Press → DropdownMenu → "Mark as read" (только если unreadCount > 0) → API → LoadingOverlayView
+
+**Реализация:**
+- `DialogDao.updateUnreadCount(dialogId)` — SQL UPDATE для сброса счётчика
+- `SWRepository.markDialogAsRead(dialogId, userId)` — API + DAO update
+- `DialogsViewModel.markDialogAsRead()` с флагом `isMarkingAsRead`
+- `isUpdating = combine(isDeleting, isMarkingAsRead)` — общий индикатор загрузки
+- Условное отображение пункта меню: `if ((dialog.unreadCount ?: 0) > 0)`
+
+**Тесты:** 5 unit-тестов на markDialogAsRead
 
 ---
 
@@ -89,7 +101,7 @@ res/values-ru/strings.xml
 
 # План: Mark as Read в контекстном меню диалога
 
-## Статус: 🔲 НЕ НАЧАТО
+## Статус: ✅ ЗАВЕРШЁНО
 
 ## UX Flow
 
@@ -132,38 +144,38 @@ res/values-ru/strings.xml
 
 | # | Задача | Файл | Описание |
 |---|--------|------|----------|
-| 1 | 🔲 Добавить `updateUnreadCount` | `DialogDao.kt` | SQL: `UPDATE dialogs SET unreadCount = 0 WHERE id = :dialogId` |
-| 2 | 🔲 Добавить `markDialogAsRead` в interface | `SWRepository.kt` | `suspend fun markDialogAsRead(dialogId: Long, userId: Int): Result<Unit>` |
-| 3 | 🔲 Реализовать `markDialogAsRead` | `SWRepository.kt` | API `swApi.markAsRead(userId)` + DAO `dialogDao.updateUnreadCount(dialogId)` |
+| 1 | ✅ Добавить `updateUnreadCount` | `DialogDao.kt` | SQL: `UPDATE dialogs SET unreadCount = 0 WHERE id = :dialogId` |
+| 2 | ✅ Добавить `markDialogAsRead` в interface | `SWRepository.kt` | `suspend fun markDialogAsRead(dialogId: Long, userId: Int): Result<Unit>` |
+| 3 | ✅ Реализовать `markDialogAsRead` | `SWRepository.kt` | API `swApi.markAsRead(userId)` + DAO `dialogDao.updateUnreadCount(dialogId)` |
 
 ### ViewModel
 
 | # | Задача | Файл | Описание |
 |---|--------|------|----------|
-| 4 | 🔲 Добавить `ResourcesProvider` | `DialogsViewModel.kt` | Добавить `resources: ResourcesProvider` в конструктор |
-| 5 | 🔲 Рефакторинг `deleteDialog` | `DialogsViewModel.kt` | Заменить хардкод на `resources.getString(R.string.dialog_delete_error)` |
-| 6 | 🔲 Добавить `isMarkingAsRead` | `DialogsViewModel.kt` | `MutableStateFlow<Boolean>` + геттер |
-| 7 | 🔲 Добавить `markDialogAsRead` | `DialogsViewModel.kt` | Метод: `isMarkingAsRead = true` → repository → обработка ошибки через `_syncError` |
-| 8 | 🔲 Обновить `isUpdating` | `DialogsViewModel.kt` | `val isUpdating = combine(isDeleting, isMarkingAsRead) { a, b -> a || b }` |
-| 9 | 🔲 Добавить метод в interface | `IDialogsViewModel.kt` | `val isMarkingAsRead: StateFlow<Boolean>`, `fun markDialogAsRead(dialogId: Long, userId: Int)` |
-| 10 | 🔲 Обновить `AppContainer` | `AppContainer.kt` | Передать `resourcesProvider` в `DialogsViewModel` factory |
+| 4 | ✅ Добавить `ResourcesProvider` | `DialogsViewModel.kt` | Добавить `resources: ResourcesProvider` в конструктор |
+| 5 | ✅ Рефакторинг `deleteDialog` | `DialogsViewModel.kt` | Заменить хардкод на `resources.getString(R.string.dialog_delete_error)` |
+| 6 | ✅ Добавить `isMarkingAsRead` | `DialogsViewModel.kt` | `MutableStateFlow<Boolean>` + геттер |
+| 7 | ✅ Добавить `markDialogAsRead` | `DialogsViewModel.kt` | Метод: `isMarkingAsRead = true` → repository → обработка ошибки через `_syncError` |
+| 8 | ✅ Обновить `isUpdating` | `DialogsViewModel.kt` | `val isUpdating = combine(isDeleting, isMarkingAsRead) { a, b -> a || b }` |
+| 9 | ✅ Добавить метод в interface | `IDialogsViewModel.kt` | `val isMarkingAsRead: StateFlow<Boolean>`, `fun markDialogAsRead(dialogId: Long, userId: Int)` |
+| 10 | ✅ Обновить `AppContainer` | `AppContainer.kt` | Передать `resourcesProvider` в `DialogsViewModel` factory |
 
 ### Resources
 
 | # | Задача | Файл | Описание |
 |---|--------|------|----------|
-| 11 | 🔲 Добавить `dialog_delete_error` | `strings.xml` | `<string name="dialog_delete_error">Failed to delete dialog</string>` |
-| 12 | 🔲 Добавить перевод | `strings-ru.xml` | `<string name="dialog_delete_error">Ошибка удаления диалога</string>` |
-| 13 | 🔲 Добавить `mark_as_read` | `strings.xml` | `<string name="mark_as_read">Mark as read</string>` |
-| 14 | 🔲 Добавить перевод | `strings-ru.xml` | `<string name="mark_as_read">Отметить прочитанным</string>` |
+| 11 | ✅ Добавить `dialog_delete_error` | `strings.xml` | `<string name="dialog_delete_error">Failed to delete dialog</string>` |
+| 12 | ✅ Добавить перевод | `strings-ru.xml` | `<string name="dialog_delete_error">Ошибка удаления диалога</string>` |
+| 13 | ✅ Добавить `mark_as_read` | `strings.xml` | `<string name="mark_as_read">Mark as read</string>` |
+| 14 | ✅ Добавить перевод | `strings-ru.xml` | `<string name="mark_as_read">Отметить прочитанным</string>` |
 
 ### UI Layer
 
 | # | Задача | Файл | Описание |
 |---|--------|------|----------|
-| 15 | 🔲 Добавить пункт меню | `MessagesRootScreen.kt` | `DropdownMenuItem` с текстом "Mark as read" |
-| 16 | 🔲 **Условное отображение** | `MessagesRootScreen.kt` | ⚠️ **Критично:** Показывать "Mark as read" ТОЛЬКО если `dialog.unreadCount > 0`. Если непрочитанных нет — пункт скрыт. |
-| 17 | 🔲 Обновить LoadingOverlayView условие | `MessagesRootScreen.kt` | `if (viewModel.isUpdating.value)` вместо `isDeleting` |
+| 15 | ✅ Добавить пункт меню | `MessagesRootScreen.kt` | `DropdownMenuItem` с текстом "Mark as read" |
+| 16 | ✅ **Условное отображение** | `MessagesRootScreen.kt` | ⚠️ **Критично:** Показывать "Mark as read" ТОЛЬКО если `dialog.unreadCount > 0`. Если непрочитанных нет — пункт скрыт. |
+| 17 | ✅ Обновить LoadingOverlayView условие | `MessagesRootScreen.kt` | `if (viewModel.isUpdating.value)` вместо `isDeleting` |
 
 ---
 
@@ -175,11 +187,11 @@ res/values-ru/strings.xml
 
 | # | Тест | Описание |
 |---|------|----------|
-| 1 | `markDialogAsRead_whenSuccess_callsRepositoryMarkAsRead` | Проверяет вызов repository |
-| 2 | `markDialogAsRead_whenSuccess_updatesIsMarkingAsRead` | Проверяет флаг isMarkingAsRead |
-| 3 | `markDialogAsRead_whenSuccess_callsWithCorrectParams` | Проверяет dialogId и userId |
-| 4 | `markDialogAsRead_whenFailure_showsSyncError` | Проверяет `_syncError.value` через mock `resources.getString()` |
-| 5 | `markDialogAsRead_whenFailure_logsError` | Проверяет логирование |
+| 1 | ✅ `markDialogAsRead_whenSuccess_callsRepositoryMarkAsRead` | Проверяет вызов repository |
+| 2 | ✅ `markDialogAsRead_whenSuccess_updatesIsMarkingAsRead` | Проверяет флаг isMarkingAsRead |
+| 3 | ✅ `markDialogAsRead_whenSuccess_callsWithCorrectParams` | Проверяет dialogId и userId |
+| 4 | ✅ `markDialogAsRead_whenFailure_showsSyncError` | Проверяет `_syncError.value` через mock `resources.getString()` |
+| 5 | ✅ `markDialogAsRead_whenFailure_logsError` | Проверяет логирование |
 
 ### Unit-тесты Repository
 
@@ -187,8 +199,8 @@ res/values-ru/strings.xml
 
 | # | Тест | Описание |
 |---|------|----------|
-| 6 | `markDialogAsRead_whenApiSuccess_updatesDaoAndReturnsSuccess` | Проверяет вызов API + DAO update |
-| 7 | `markDialogAsRead_whenApiFailure_returnsFailure` | Проверяет обработку ошибки |
+| 6 | ✅ `markDialogAsRead_whenApiSuccess_updatesDaoAndReturnsSuccess` | Проверяет вызов API + DAO update |
+| 7 | ✅ `markDialogAsRead_whenApiFailure_returnsFailure` | Проверяет обработку ошибки |
 
 ---
 

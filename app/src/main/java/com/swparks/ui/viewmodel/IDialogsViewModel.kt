@@ -62,9 +62,27 @@ interface IDialogsViewModel {
     val isDeleting: StateFlow<Boolean>
 
     /**
+     * Индикатор отметки диалога как прочитанного.
+     */
+    val isMarkingAsRead: StateFlow<Boolean>
+
+    /**
+     * Общий индикатор любой операции обновления (удаление или отметка прочитанным).
+     */
+    val isUpdating: StateFlow<Boolean>
+
+    /**
      * Удалить диалог.
      *
      * @param dialogId Идентификатор диалога для удаления
      */
     fun deleteDialog(dialogId: Long)
+
+    /**
+     * Отметить диалог как прочитанный.
+     *
+     * @param dialogId Идентификатор диалога
+     * @param userId Идентификатор собеседника
+     */
+    fun markDialogAsRead(dialogId: Long, userId: Int)
 }

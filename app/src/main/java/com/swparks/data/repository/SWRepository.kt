@@ -117,6 +117,7 @@ interface SWRepository {
     suspend fun getMessages(dialogId: Long): Result<List<MessageResponse>>
     suspend fun sendMessage(message: String, userId: Long): Result<Unit>
     suspend fun markAsRead(userId: Long): Result<Unit>
+    suspend fun markDialogAsRead(dialogId: Long, userId: Int): Result<Unit>
     suspend fun deleteDialog(dialogId: Long): Result<Unit>
 
     // 3.7. Дневники
@@ -766,6 +767,20 @@ class SWRepositoryImp(
             Result.failure(handleHttpException(e, "отметке сообщений прочитанными"))
         }
 
+    override suspend fun markDialogAsRead(dialogId: Long, userId: Int): Result<Unit> =
+        try {
+            swApi.markAsRead(userId.toLong())
+            dialogDao.updateUnreadCount(dialogId)
+            Result.success(Unit)
+        } catch (e: IOException) {
+            Result.failure(handleIOException(e, "отметке сообщений прочитанными"))
+        } catch (e: HttpException) {
+            Result.failure(handleHttpException(e, "отметке сообщений прочитанными"))
+        } catch (e: IllegalStateException) {
+            // Ошибка "closed" при таймауте соединения
+            Result.failure(NetworkException("Ошибка сети: ${e.message}"))
+        }
+
     override suspend fun deleteDialog(dialogId: Long): Result<Unit> =
         try {
             swApi.deleteDialog(dialogId)
@@ -776,6 +791,9 @@ class SWRepositoryImp(
             Result.failure(handleIOException(e, "удалении диалога"))
         } catch (e: HttpException) {
             Result.failure(handleHttpException(e, "удалении диалога"))
+        } catch (e: IllegalStateException) {
+            // Ошибка "closed" при таймауте соединения
+            Result.failure(NetworkException("Ошибка сети: ${e.message}"))
         }
 
     // 3.7. Дневники

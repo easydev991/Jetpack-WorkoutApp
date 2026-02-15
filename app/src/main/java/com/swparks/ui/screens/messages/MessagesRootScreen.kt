@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.MarkEmailRead
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -69,7 +70,7 @@ fun MessagesRootScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val syncError by viewModel.syncError.collectAsState()
     val isLoadingDialogs by viewModel.isLoadingDialogs.collectAsState()
-    val isDeleting by viewModel.isDeleting.collectAsState()
+    val isUpdating by viewModel.isUpdating.collectAsState()
 
     // Отладочное логирование
     LaunchedEffect(isLoadingDialogs, appState.isAuthorized, uiState) {
@@ -104,13 +105,16 @@ fun MessagesRootScreen(
             modifier = modifier,
             uiState = uiState,
             isRefreshing = isRefreshing,
-            isDeleting = isDeleting,
+            isUpdating = isUpdating,
             syncError = syncError,
             currentUser = appState.currentUser,
             onRefresh = { viewModel.refresh() },
             onDismissSyncError = { viewModel.dismissSyncError() },
             onDialogClick = { dialogId, userId ->
                 viewModel.onDialogClick(dialogId, userId)
+            },
+            onMarkAsRead = { dialogId, userId ->
+                viewModel.markDialogAsRead(dialogId, userId)
             },
             onDeleteClick = { dialog ->
                 dialogToDelete = dialog
@@ -165,12 +169,13 @@ fun DialogsContent(
     modifier: Modifier = Modifier,
     uiState: DialogsUiState,
     isRefreshing: Boolean,
-    isDeleting: Boolean,
+    isUpdating: Boolean,
     syncError: String?,
     currentUser: com.swparks.data.model.User?,
     onRefresh: () -> Unit,
     onDismissSyncError: () -> Unit,
     onDialogClick: (Long, Int?) -> Unit,
+    onMarkAsRead: (Long, Int) -> Unit,
     onDeleteClick: (DialogEntity) -> Unit,
     onNavigateToFriends: () -> Unit,
     onNavigateToSearchUsers: () -> Unit
@@ -225,7 +230,7 @@ fun DialogsContent(
                         // LazyColumn с DialogRowView
                         DialogsList(
                             dialogs = uiState.dialogs,
-                            isRefreshing = isRefreshing || isDeleting,
+                            isRefreshing = isRefreshing || isUpdating,
                             onDialogClick = onDialogClick,
                             onLongClick = { dialog, localOffset, itemPosition ->
                                 contextMenuItem = dialog
@@ -262,8 +267,8 @@ fun DialogsContent(
             modifier = Modifier.align(Alignment.BottomCenter)
         )
 
-        // Индикатор загрузки при удалении диалога
-        if (isDeleting) {
+        // Индикатор загрузки при удалении или отметке диалога
+        if (isUpdating) {
             LoadingOverlayView()
         }
     }
@@ -275,6 +280,24 @@ fun DialogsContent(
             onDismissRequest = { contextMenuItem = null },
             offset = menuOffset
         ) {
+            // Mark as read - показываем только если есть непрочитанные сообщения
+            if ((dialog.unreadCount ?: 0) > 0) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.mark_as_read)) },
+                    onClick = {
+                        contextMenuItem = null
+                        dialog.anotherUserId?.let { userId ->
+                            onMarkAsRead(dialog.id, userId)
+                        }
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.MarkEmailRead,
+                            contentDescription = null
+                        )
+                    }
+                )
+            }
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.delete)) },
                 onClick = {

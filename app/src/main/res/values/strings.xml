@@ -173,6 +173,8 @@
     <string name="delete_entry_message">Are you sure you want to delete this entry?</string>
     <string name="delete_dialog_title">Delete dialog?</string>
     <string name="delete_dialog_message">The dialog will be deleted without the possibility of recovery.</string>
+    <string name="dialog_delete_error">Failed to delete dialog</string>
+    <string name="mark_as_read">Mark as read</string>
     <string name="address">Address</string>
     <string name="park_address">Park address</string>
     <string name="park_type">Park type</string>
@@ -308,5 +310,6 @@
     <string name="dialogs_open_friends">Open friends list</string>
     <string name="dialogs_find_user">Find user</string>
     <string name="dialogs_sync_error">Sync error</string>
+    <string name="sync_error_message">Sync error</string>
     <string name="default_user_name">User</string>
 </resources>

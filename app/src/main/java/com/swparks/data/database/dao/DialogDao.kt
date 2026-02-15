@@ -38,4 +38,11 @@ interface DialogDao {
      */
     @Query("DELETE FROM dialogs")
     suspend fun deleteAll()
+
+    /**
+     * Сбросить счётчик непрочитанных сообщений в диалоге
+     * @param dialogId Идентификатор диалога
+     */
+    @Query("UPDATE dialogs SET unreadCount = 0 WHERE id = :dialogId")
+    suspend fun updateUnreadCount(dialogId: Long)
 }
