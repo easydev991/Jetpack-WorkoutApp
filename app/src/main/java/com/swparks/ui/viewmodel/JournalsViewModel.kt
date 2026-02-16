@@ -162,7 +162,7 @@ class JournalsViewModel(
                 result
                     .onSuccess {
                         Log.i(TAG, "Дневник успешно удален")
-                        _events.emit(JournalsEvent.ShowSnackbar(resources.getString(R.string.journal_deleted)))
+                        errorReporter.showInfo(resources.getString(R.string.journal_deleted))
                     }
                     .onFailure { error ->
                         Log.e(TAG, "Ошибка при удалении дневника: ${error.message}")
@@ -170,11 +170,6 @@ class JournalsViewModel(
                             AppError.Generic(
                                 error.message ?: resources.getString(R.string.error_delete_journal),
                                 error
-                            )
-                        )
-                        _events.emit(
-                            JournalsEvent.ShowSnackbar(
-                                error.message ?: resources.getString(R.string.error_deleting)
                             )
                         )
                     }
@@ -186,7 +181,6 @@ class JournalsViewModel(
                         e
                     )
                 )
-                _events.emit(JournalsEvent.ShowSnackbar(resources.getString(R.string.error_deleting)))
             } finally {
                 _isDeleting.value = false
             }
@@ -275,26 +269,28 @@ class JournalsViewModel(
     /**
      * Обработать успешное сохранение настроек дневника
      */
-    private suspend fun handleJournalSettingsSuccess(journalId: Long) {
+    private fun handleJournalSettingsSuccess(journalId: Long) {
         val updatedJournal =
             (_uiState.value as? JournalsUiState.Content)?.journals?.find { it.id == journalId }
 
         setSavingJournalSettings(false)
 
         updatedJournal?.let {
-            _events.emit(JournalsEvent.JournalSettingsSaved(it))
+            viewModelScope.launch {
+                _events.emit(JournalsEvent.JournalSettingsSaved(it))
+            }
         }
 
-        _events.emit(JournalsEvent.ShowSnackbar(resources.getString(R.string.journal_settings_saved)))
+        errorReporter.showInfo(resources.getString(R.string.journal_settings_saved))
     }
 
     /**
      * Обработать ошибку при редактировании настроек дневника
      */
-    private suspend fun handleJournalSettingsError(errorMessage: String?) {
+    private fun handleJournalSettingsError(errorMessage: String?) {
         setSavingJournalSettings(false)
-        _events.emit(
-            JournalsEvent.ShowSnackbar(
+        errorReporter.handleError(
+            AppError.Generic(
                 errorMessage ?: resources.getString(R.string.error_save_journal_settings)
             )
         )

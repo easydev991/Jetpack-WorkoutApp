@@ -88,13 +88,6 @@ interface IJournalEntriesViewModel : IJournalSettingsViewModel {
  */
 sealed interface JournalEntriesEvent {
     /**
-     * Показать Snackbar с сообщением.
-     *
-     * @property message Текст сообщения
-     */
-    data class ShowSnackbar(val message: String) : JournalEntriesEvent
-
-    /**
      * Настройки дневника успешно сохранены.
      *
      * @property journal Обновленный дневник

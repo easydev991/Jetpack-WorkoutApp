@@ -24,8 +24,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -37,7 +35,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,7 +66,6 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.IJournalEntriesViewModel
 import com.swparks.ui.viewmodel.JournalEntriesEvent
 import com.swparks.util.DateFormatter
-import kotlinx.coroutines.launch
 
 /**
  * Экран списка записей в дневнике пользователя
@@ -120,13 +116,9 @@ fun JournalEntriesScreen(
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isDeleting by viewModel.isDeleting.collectAsState()
-    val scope = rememberCoroutineScope()
 
     // Проверка: просмотр собственного дневника или чужого
     val isOwner = appState.currentUser?.id == journalOwnerId
-
-    // Snackbar для отображения сообщений
-    val snackbarHostState = remember { SnackbarHostState() }
 
     // Состояние диалога подтверждения удаления
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -139,16 +131,10 @@ fun JournalEntriesScreen(
     // Состояние для диалога настроек
     var showSettingsDialog by remember { mutableStateOf(false) }
 
-    // Подписка на события ViewModel для Snackbar и закрытия диалога
+    // Подписка на события ViewModel для закрытия диалога настроек
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is JournalEntriesEvent.ShowSnackbar -> {
-                    scope.launch {
-                        snackbarHostState.showSnackbar(event.message)
-                    }
-                }
-
                 is JournalEntriesEvent.JournalSettingsSaved -> {
                     showSettingsDialog = false
                 }
@@ -188,9 +174,6 @@ fun JournalEntriesScreen(
             )
         },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
-        },
         floatingActionButton = {
             when (uiState) {
                 is JournalEntriesUiState.Content -> {

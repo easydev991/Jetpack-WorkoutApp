@@ -91,7 +91,35 @@
 
 ---
 
-## Четвертая итерация: TODO
+## Четвертая итерация: унификация уведомлений ✅
+
+**Проблема:**
+- В JournalsListScreen и JournalEntriesScreen есть локальные SnackbarHost и события ShowSnackbar
+- Это дублирует глобальный механизм через errorReporter.errorFlow в RootScreen
+- FIXME в коде: `// Показать Snackbar (FIXME: добавить SnackbarHost)`
+
+**Решение:**
+- Расширить ErrorReporter для поддержки информационных сообщений (не только ошибки)
+- Убрать локальные SnackbarHost из экранов дневников
+- Убрать события ShowSnackbar из ViewModel
+
+**Реализованный функционал:**
+1. Создан `AppNotification` sealed class для информационных сообщений
+2. Расширен `ErrorReporter` - добавлен `notificationFlow` и метод `showInfo()`
+3. Обновлен `ErrorHandler` - реализация `showInfo()` с логированием
+4. Обновлен `RootScreen` - подписка на `notificationFlow` для показа Snackbar
+5. Убран `ShowSnackbar` из `JournalsEvent` и `JournalEntriesEvent`
+6. ViewModels используют `errorReporter.showInfo()` вместо emit событий
+7. Убраны локальные SnackbarHost и обработка ShowSnackbar в экранах
+
+**Измененные файлы:**
+- **Созданные:** `AppNotification.kt`
+- **Измененные:** `ErrorReporter.kt`, `ErrorHandler.kt`, `AppError.kt`, `RootScreen.kt`, `IJournalsViewModel.kt`, `JournalsViewModel.kt`, `IJournalEntriesViewModel.kt`, `JournalEntriesViewModel.kt`, `JournalsListScreen.kt`, `JournalEntriesScreen.kt`, `strings.xml` (добавлена строка `info`), `strings-ru/strings.xml`
+- **Тесты:** `ErrorHandlerTest.kt`, `JournalsViewModelTest.kt`, `JournalEntriesViewModelTest.kt`
+
+---
+
+## Пятая итерация: TODO
 
 - Добавить фильтрацию и сортировку дневников
 - Добавить индикатор количества записей в дневнике

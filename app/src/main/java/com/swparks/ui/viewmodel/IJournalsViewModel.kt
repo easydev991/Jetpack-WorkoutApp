@@ -54,7 +54,7 @@ interface IJournalsViewModel : IJournalSettingsViewModel {
      * Редактировать настройки дневника.
      *
      * После успешного обновления эмитится событие [JournalsEvent.JournalSettingsSaved].
-     * При ошибке эмитится событие [JournalsEvent.ShowSnackbar].
+     * Информационные сообщения и ошибки отправляются через [com.swparks.util.ErrorReporter].
      *
      * @param journalId Идентификатор дневника
      * @param title Новое название дневника
@@ -73,13 +73,6 @@ interface IJournalsViewModel : IJournalSettingsViewModel {
  * События UI для экрана списка дневников.
  */
 sealed interface JournalsEvent {
-    /**
-     * Показать Snackbar с сообщением.
-     *
-     * @property message Текст сообщения
-     */
-    data class ShowSnackbar(val message: String) : JournalsEvent
-
     /**
      * Настройки дневника успешно сохранены.
      *

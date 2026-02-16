@@ -101,4 +101,24 @@ class ErrorHandlerTest {
 
         assertTrue(result)
     }
+
+    @Test
+    fun show_info_logs_message() = runTest {
+        val message = "Операция успешно выполнена"
+
+        errorHandler.showInfo(message)
+
+        verify {
+            mockLogger.i("ErrorHandler", "Инфо: $message")
+        }
+    }
+
+    @Test
+    fun show_info_returns_true_when_emitted_successfully() = runTest {
+        val message = "Операция успешно выполнена"
+
+        val result = errorHandler.showInfo(message)
+
+        assertTrue(result)
+    }
 }

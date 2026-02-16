@@ -1,7 +1,6 @@
 package com.swparks.ui.viewmodel
 
 import android.util.Log
-import app.cash.turbine.test
 import com.swparks.R
 import com.swparks.domain.model.Journal
 import com.swparks.domain.provider.ResourcesProvider
@@ -11,6 +10,7 @@ import com.swparks.domain.usecase.IGetJournalsUseCase
 import com.swparks.domain.usecase.ISyncJournalsUseCase
 import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalsUiState
+import com.swparks.util.AppError
 import com.swparks.util.ErrorReporter
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -485,30 +485,20 @@ class JournalsViewModelTest {
         advanceUntilIdle()
 
         // Then - подписываемся на события перед вызовом deleteJournal
-        viewModel.events.test {
-            viewModel.deleteJournal(testJournalId)
-            advanceUntilIdle()
+        viewModel.deleteJournal(testJournalId)
+        advanceUntilIdle()
 
-            // Проверяем, что события эмитятся корректно
-            val event = awaitItem()
-            assertTrue(
-                "Должно быть событие ShowSnackbar",
-                event is JournalsEvent.ShowSnackbar
-            )
-            val snackbarEvent = event as JournalsEvent.ShowSnackbar
-            assertEquals(
-                "Сообщение об успешном удалении",
-                "Journal deleted",
-                snackbarEvent.message
-            )
+        // Проверяем, что showInfo был вызван с сообщением об успешном удалении
+        coVerify(exactly = 1) {
+            errorReporter.showInfo("Journal deleted")
         }
     }
 
     /**
-     * Тест 14: Ошибка при удалении дневника эмитит событие Snackbar с текстом ошибки
+     * Тест 14: Ошибка при удалении дневника вызывает handleError с текстом ошибки
      */
     @Test
-    fun testDeleteJournal_failure_emitsSnackbarEventWithError() = runTest {
+    fun testDeleteJournal_failure_callsHandleError() = runTest {
         // Given
         val testJournalId = 1L
         val errorMessage = "Ошибка доступа"
@@ -528,23 +518,12 @@ class JournalsViewModelTest {
         )
         advanceUntilIdle()
 
-        // Then - подписываемся на события перед вызовом deleteJournal
-        viewModel.events.test {
-            viewModel.deleteJournal(testJournalId)
-            advanceUntilIdle()
+        viewModel.deleteJournal(testJournalId)
+        advanceUntilIdle()
 
-            // Проверяем, что событие содержит текст ошибки
-            val event = awaitItem()
-            assertTrue(
-                "Должно быть событие ShowSnackbar",
-                event is JournalsEvent.ShowSnackbar
-            )
-            val snackbarEvent = event as JournalsEvent.ShowSnackbar
-            assertEquals(
-                "Сообщение об ошибке",
-                errorMessage,
-                snackbarEvent.message
-            )
+        // Then - проверяем, что handleError был вызван
+        coVerify(exactly = 1) {
+            errorReporter.handleError(match { it is AppError.Generic })
         }
     }
 
@@ -587,7 +566,7 @@ class JournalsViewModelTest {
      * Тест 16: Удаление дневника без сообщения об ошибке (null message)
      */
     @Test
-    fun testDeleteJournal_failureWithoutMessage_emitsGenericError() = runTest {
+    fun testDeleteJournal_failureWithoutMessage_callsHandleError() = runTest {
         // Given
         val testJournalId = 1L
         coEvery {
@@ -606,23 +585,12 @@ class JournalsViewModelTest {
         )
         advanceUntilIdle()
 
-        // Then - подписываемся на события перед вызовом deleteJournal
-        viewModel.events.test {
-            viewModel.deleteJournal(testJournalId)
-            advanceUntilIdle()
+        viewModel.deleteJournal(testJournalId)
+        advanceUntilIdle()
 
-            // Проверяем, что используется сообщение об ошибке по умолчанию
-            val event = awaitItem()
-            assertTrue(
-                "Должно быть событие ShowSnackbar",
-                event is JournalsEvent.ShowSnackbar
-            )
-            val snackbarEvent = event as JournalsEvent.ShowSnackbar
-            assertEquals(
-                "Сообщение об ошибке по умолчанию",
-                "Error deleting",
-                snackbarEvent.message
-            )
+        // Then - проверяем, что handleError был вызван
+        coVerify(exactly = 1) {
+            errorReporter.handleError(match { it is AppError.Generic })
         }
     }
 

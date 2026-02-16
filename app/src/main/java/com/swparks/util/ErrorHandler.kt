@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.asSharedFlow
 /**
  * Реализация интерфейса ErrorReporter.
  *
- * Логирует все ошибки и отправляет их в SharedFlow для отображения в UI.
- * Использует MutableSharedFlow с буфером для неблокирующей отправки ошибок.
+ * Логирует все ошибки и уведомления и отправляет их в SharedFlow для отображения в UI.
+ * Использует MutableSharedFlow с буфером для неблокирующей отправки.
  *
- * @property logger Логгер для записи ошибок
+ * @property logger Логгер для записи ошибок и уведомлений
  */
 class ErrorHandler(
     private val logger: Logger,
@@ -19,6 +19,7 @@ class ErrorHandler(
     private companion object {
         private const val TAG = "ErrorHandler"
         private const val ERROR_BUFFER_CAPACITY = 10
+        private const val NOTIFICATION_BUFFER_CAPACITY = 10
     }
 
     /**
@@ -31,9 +32,23 @@ class ErrorHandler(
     )
 
     /**
-     * Публичный поток для подписки из UI-слоя.
+     * Публичный поток ошибок для подписки из UI-слоя.
      */
     override val errorFlow: SharedFlow<AppError> = _errorFlow.asSharedFlow()
+
+    /**
+     * Поток уведомлений для подписки из UI-слоя.
+     * Использует SharedFlow для поддержки множества подписчиков.
+     */
+    private val _notificationFlow = MutableSharedFlow<AppNotification>(
+        extraBufferCapacity = NOTIFICATION_BUFFER_CAPACITY,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+
+    /**
+     * Публичный поток уведомлений для подписки из UI-слоя.
+     */
+    override val notificationFlow: SharedFlow<AppNotification> = _notificationFlow.asSharedFlow()
 
     /**
      * Обрабатывает ошибку: логирует и отправляет в поток.
@@ -72,5 +87,19 @@ class ErrorHandler(
 
         // Отправляем в поток (неблокирующая операция)
         return _errorFlow.tryEmit(error)
+    }
+
+    /**
+     * Показывает информационное уведомление.
+     *
+     * Использует tryEmit для неблокирующей отправки без необходимости в launch.
+     * Если буфер переполнен, старые уведомления отбрасываются (DROP_OLDEST).
+     *
+     * @param message Сообщение для отображения пользователю
+     * @return true если уведомление успешно отправлено, false если буфер переполнен
+     */
+    override fun showInfo(message: String): Boolean {
+        logger.i(TAG, "Инфо: $message")
+        return _notificationFlow.tryEmit(AppNotification.Info(message))
     }
 }

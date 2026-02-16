@@ -289,10 +289,6 @@ private fun JournalsEventHandler(
                         onJournalSettingsSaved()
                     }
                 }
-
-                is JournalsEvent.ShowSnackbar -> {
-                    // Показать Snackbar (FIXME: добавить SnackbarHost)
-                }
             }
         }
     }

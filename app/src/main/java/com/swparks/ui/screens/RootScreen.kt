@@ -86,6 +86,18 @@ fun RootScreen(appState: AppState) {
         }
     }
 
+    // Собираем информационные уведомления и показываем в Snackbar
+    LaunchedEffect(Unit) {
+        appContainer.errorReporter.notificationFlow.collect { notification ->
+            // Показываем Snackbar с сообщением
+            snackbarHostState.showSnackbar(
+                message = notification.message,
+                withDismissAction = true,
+                duration = SnackbarDuration.Short
+            )
+        }
+    }
+
     // Состояние для LoginSheet
     var showLoginSheet by remember { mutableStateOf(false) }
 

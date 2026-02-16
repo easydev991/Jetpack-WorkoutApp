@@ -2,7 +2,6 @@ package com.swparks.ui.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
-import app.cash.turbine.test
 import com.swparks.R
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.User
@@ -16,6 +15,7 @@ import com.swparks.domain.usecase.IGetJournalEntriesUseCase
 import com.swparks.domain.usecase.ISyncJournalEntriesUseCase
 import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalEntriesUiState
+import com.swparks.util.AppError
 import com.swparks.util.ErrorReporter
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -388,31 +388,20 @@ class JournalEntriesViewModelTest {
         viewModel = createViewModel()
         advanceUntilIdle()
 
-        // Then - подписываемся на события перед вызовом deleteEntry
-        viewModel.events.test {
-            viewModel.deleteEntry(testEntryId)
-            advanceUntilIdle()
+        // Then - проверяем, что showInfo был вызван
+        viewModel.deleteEntry(testEntryId)
+        advanceUntilIdle()
 
-            // Проверяем, что события эмитятся корректно
-            val event = awaitItem()
-            assertTrue(
-                "Должно быть событие ShowSnackbar",
-                event is JournalEntriesEvent.ShowSnackbar
-            )
-            val snackbarEvent = event as JournalEntriesEvent.ShowSnackbar
-            assertEquals(
-                "Сообщение об успешном удалении",
-                "Entry deleted",
-                snackbarEvent.message
-            )
+        coVerify(exactly = 1) {
+            errorReporter.showInfo("Entry deleted")
         }
     }
 
     /**
-     * Тест 12: Ошибка при удалении записи эмитит событие Snackbar с текстом ошибки
+     * Тест 12: Ошибка при удалении записи вызывает handleError
      */
     @Test
-    fun testDeleteEntry_failure_emitsSnackbarEventWithError() = runTest {
+    fun testDeleteEntry_failure_callsHandleError() = runTest {
         // Given
         val testEntryId = 1L
         val errorMessage = "Ошибка доступа"
@@ -424,23 +413,14 @@ class JournalEntriesViewModelTest {
         viewModel = createViewModel()
         advanceUntilIdle()
 
-        // Then - подписываемся на события перед вызовом deleteEntry
-        viewModel.events.test {
-            viewModel.deleteEntry(testEntryId)
-            advanceUntilIdle()
+        viewModel.deleteEntry(testEntryId)
+        advanceUntilIdle()
 
-            // Проверяем, что событие содержит текст ошибки
-            val event = awaitItem()
-            assertTrue(
-                "Должно быть событие ShowSnackbar",
-                event is JournalEntriesEvent.ShowSnackbar
-            )
-            val snackbarEvent = event as JournalEntriesEvent.ShowSnackbar
-            assertEquals(
-                "Сообщение об ошибке",
-                errorMessage,
-                snackbarEvent.message
-            )
+        // Then - проверяем, что handleError был вызван с сообщением об ошибке удаления
+        coVerify(atLeast = 1) {
+            errorReporter.handleError(match {
+                it is AppError.Generic && it.message?.contains(errorMessage) == true
+            })
         }
     }
 
@@ -476,7 +456,7 @@ class JournalEntriesViewModelTest {
      * Тест 14: Удаление несуществующей записи (ошибка без сообщения)
      */
     @Test
-    fun testDeleteEntry_failureWithoutMessage_emitsGenericError() = runTest {
+    fun testDeleteEntry_failureWithoutMessage_callsHandleError() = runTest {
         // Given
         val testEntryId = 1L
         coEvery {
@@ -487,23 +467,12 @@ class JournalEntriesViewModelTest {
         viewModel = createViewModel()
         advanceUntilIdle()
 
-        // Then - подписываемся на события перед вызовом deleteEntry
-        viewModel.events.test {
-            viewModel.deleteEntry(testEntryId)
-            advanceUntilIdle()
+        viewModel.deleteEntry(testEntryId)
+        advanceUntilIdle()
 
-            // Проверяем, что используется сообщение об ошибке по умолчанию
-            val event = awaitItem()
-            assertTrue(
-                "Должно быть событие ShowSnackbar",
-                event is JournalEntriesEvent.ShowSnackbar
-            )
-            val snackbarEvent = event as JournalEntriesEvent.ShowSnackbar
-            assertEquals(
-                "Сообщение об ошибке по умолчанию",
-                "Error deleting",
-                snackbarEvent.message
-            )
+        // Then - проверяем, что handleError был вызван (хотя бы один раз)
+        coVerify(atLeast = 1) {
+            errorReporter.handleError(match { it is AppError.Generic })
         }
     }
 

@@ -286,8 +286,8 @@ class JournalEntriesViewModel(
     /**
      * Удалить запись из дневника.
      *
-     * Удаляет запись через use case и отправляет событие для Snackbar
-     * с результатом операции (успех или ошибка).
+     * Удаляет запись через use case. Информационные сообщения и ошибки
+     * отправляются через [ErrorReporter].
      *
      * @param entryId Идентификатор записи
      */
@@ -300,7 +300,7 @@ class JournalEntriesViewModel(
                 val result = deps.deleteJournalEntryUseCase(journalOwnerId, journalId, entryId)
                 result
                     .onSuccess {
-                        _events.emit(JournalEntriesEvent.ShowSnackbar(deps.resources.getString(R.string.entry_deleted)))
+                        deps.errorReporter.showInfo(deps.resources.getString(R.string.entry_deleted))
                     }
                     .onFailure { error ->
                         deps.errorReporter.handleError(
@@ -308,11 +308,6 @@ class JournalEntriesViewModel(
                                 error.message
                                     ?: deps.resources.getString(R.string.error_delete_entry), error
                             )
-                        )
-                        val errorMessage = error.message
-                            ?: deps.resources.getString(R.string.error_deleting)
-                        _events.emit(
-                            JournalEntriesEvent.ShowSnackbar(errorMessage)
                         )
                     }
             } catch (e: Exception) {
@@ -322,7 +317,6 @@ class JournalEntriesViewModel(
                         e
                     )
                 )
-                _events.emit(JournalEntriesEvent.ShowSnackbar(deps.resources.getString(R.string.error_deleting)))
             } finally {
                 _isDeleting.value = false
             }
@@ -428,11 +422,7 @@ class JournalEntriesViewModel(
 
                     // Эмитим событие об успехе
                     _events.emit(JournalEntriesEvent.JournalSettingsSaved(journal))
-                    _events.emit(
-                        JournalEntriesEvent.ShowSnackbar(
-                            deps.resources.getString(R.string.settings_saved)
-                        )
-                    )
+                    deps.errorReporter.showInfo(deps.resources.getString(R.string.settings_saved))
                 },
                 onFailure = { error ->
                     Log.e(TAG, "Ошибка загрузки дневника после обновления: ${error.message}")
@@ -442,11 +432,7 @@ class JournalEntriesViewModel(
                     if (currentJournal != null) {
                         _events.emit(JournalEntriesEvent.JournalSettingsSaved(currentJournal))
                     }
-                    _events.emit(
-                        JournalEntriesEvent.ShowSnackbar(
-                            deps.resources.getString(R.string.settings_saved)
-                        )
-                    )
+                    deps.errorReporter.showInfo(deps.resources.getString(R.string.settings_saved))
                 }
             )
     }
@@ -454,7 +440,7 @@ class JournalEntriesViewModel(
     /**
      * Обработать ошибку редактирования настроек.
      */
-    private suspend fun handleEditSettingsError(error: Throwable) {
+    private fun handleEditSettingsError(error: Throwable) {
         val message = when {
             error.message?.contains("403") == true -> {
                 deps.resources.getString(R.string.error_no_permission)
@@ -464,6 +450,6 @@ class JournalEntriesViewModel(
                 deps.resources.getString(R.string.error_saving_settings)
             }
         }
-        _events.emit(JournalEntriesEvent.ShowSnackbar(message))
+        deps.errorReporter.handleError(AppError.Generic(message, error))
     }
 }
