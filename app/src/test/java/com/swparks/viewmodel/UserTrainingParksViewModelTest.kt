@@ -7,8 +7,8 @@ import com.swparks.data.repository.SWRepository
 import com.swparks.ui.viewmodel.MainDispatcherRule
 import com.swparks.ui.viewmodel.UserTrainingParksUiState
 import com.swparks.ui.viewmodel.UserTrainingParksViewModel
-import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
+import com.swparks.util.UserNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -38,7 +38,7 @@ class UserTrainingParksViewModelTest {
 
     private lateinit var swRepository: SWRepository
     private lateinit var logger: Logger
-    private lateinit var errorReporter: ErrorReporter
+    private lateinit var userNotifier: UserNotifier
     private lateinit var viewModel: UserTrainingParksViewModel
 
     private val testUserId = 1L
@@ -76,7 +76,7 @@ class UserTrainingParksViewModelTest {
 
         swRepository = mockk(relaxed = true)
         logger = mockk(relaxed = true)
-        errorReporter = mockk(relaxed = true)
+        userNotifier = mockk(relaxed = true)
     }
 
     @After
@@ -92,7 +92,7 @@ class UserTrainingParksViewModelTest {
             swRepository = swRepository,
             userId = userId,
             logger = logger,
-            errorReporter = errorReporter
+            userNotifier = userNotifier
         )
     }
 

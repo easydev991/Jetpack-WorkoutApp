@@ -6,18 +6,18 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 /**
- * Реализация интерфейса ErrorReporter.
+ * Реализация интерфейса UserNotifier.
  *
  * Логирует все ошибки и уведомления и отправляет их в SharedFlow для отображения в UI.
  * Использует MutableSharedFlow с буфером для неблокирующей отправки.
  *
  * @property logger Логгер для записи ошибок и уведомлений
  */
-class ErrorHandler(
+class UserNotifierImpl(
     private val logger: Logger,
-) : ErrorReporter {
+) : UserNotifier {
     private companion object {
-        private const val TAG = "ErrorHandler"
+        private const val TAG = "UserNotifier"
         private const val ERROR_BUFFER_CAPACITY = 10
         private const val NOTIFICATION_BUFFER_CAPACITY = 10
     }

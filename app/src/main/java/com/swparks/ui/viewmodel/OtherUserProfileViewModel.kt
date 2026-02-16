@@ -11,8 +11,8 @@ import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.model.BlacklistAction
 import com.swparks.ui.model.toApiOption
 import com.swparks.util.AppError
-import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
+import com.swparks.util.UserNotifier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -30,7 +30,7 @@ class OtherUserProfileViewModel(
     private val countriesRepository: CountriesRepository,
     private val swRepository: SWRepository,
     private val logger: Logger,
-    private val errorReporter: ErrorReporter
+    private val userNotifier: UserNotifier
 ) : ViewModel(), IOtherUserProfileViewModel {
 
     companion object {
@@ -125,7 +125,7 @@ class OtherUserProfileViewModel(
                         error is HttpException && error.code() == 403 -> "Доступ запрещен" to false
                         else -> "Ошибка загрузки профиля: ${error.message}" to true
                     }
-                    errorReporter.handleError(AppError.Generic(message, error))
+                    userNotifier.handleError(AppError.Generic(message, error))
                     if (!canRetry) {
                         _uiState.update { OtherUserProfileUiState.UserNotFound }
                     } else {
@@ -148,7 +148,7 @@ class OtherUserProfileViewModel(
                 }
                 .onFailure { error ->
                     val message = "Ошибка обновления профиля: ${error.message}"
-                    errorReporter.handleError(AppError.Generic(message, error))
+                    userNotifier.handleError(AppError.Generic(message, error))
                     logger.e(TAG, message)
                 }
 
@@ -184,7 +184,7 @@ class OtherUserProfileViewModel(
                 logger.i(TAG, "Адрес профиля обновлен")
             } catch (e: Exception) {
                 val message = "Ошибка загрузки адреса: ${e.message}"
-                errorReporter.handleError(AppError.Generic(message, e))
+                userNotifier.handleError(AppError.Generic(message, e))
                 logger.e(TAG, message)
             }
         }
@@ -217,7 +217,7 @@ class OtherUserProfileViewModel(
                 .onSuccess { logger.i(TAG, "Действие с друзьями выполнено успешно") }
                 .onFailure { error ->
                     val message = "Ошибка действия с друзьями: ${error.message}"
-                    errorReporter.handleError(AppError.Generic(message, error))
+                    userNotifier.handleError(AppError.Generic(message, error))
                     logger.e(TAG, message)
                 }
         }
@@ -240,7 +240,7 @@ class OtherUserProfileViewModel(
                 }
                 .onFailure { error ->
                     val message = "Ошибка действия с черным списком: ${error.message}"
-                    errorReporter.handleError(AppError.Generic(message, error))
+                    userNotifier.handleError(AppError.Generic(message, error))
                     logger.e(TAG, message)
                 }
         }

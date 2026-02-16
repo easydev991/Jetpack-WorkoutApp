@@ -4,10 +4,10 @@ package com.swparks.util
  * Модель ошибки приложения.
  *
  * Используется для централизованной обработки ошибок во ViewModels
- * через ErrorReporter интерфейс. Разные типы ошибок позволяют
+ * через UserNotifier интерфейс. Разные типы ошибок позволяют
  * различным образом обрабатывать и логировать ошибки.
  *
- * @see ErrorReporter
+ * @see UserNotifier
  */
 sealed class AppError {
     /**

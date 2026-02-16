@@ -53,7 +53,7 @@ class RootScreenTest {
         composeTestRule.waitForIdle()
 
         // When - отправляем ошибку через ErrorReporter (с IOException для получения конкретного сообщения)
-        appContainer.errorReporter.handleError(
+        appContainer.userNotifier.handleError(
             AppError.Network(message = "", throwable = IOException())
         )
 
@@ -84,7 +84,7 @@ class RootScreenTest {
         composeTestRule.waitForIdle()
 
         // When - отправляем ошибку валидации через ErrorReporter
-        appContainer.errorReporter.handleError(
+        appContainer.userNotifier.handleError(
             AppError.Validation(message = "", field = "password")
         )
 
@@ -114,7 +114,7 @@ class RootScreenTest {
         composeTestRule.waitForIdle()
 
         // When - отправляем ошибку сервера через ErrorReporter
-        appContainer.errorReporter.handleError(
+        appContainer.userNotifier.handleError(
             AppError.Server(message = "", code = 500)
         )
 
@@ -146,7 +146,7 @@ class RootScreenTest {
 
         // When - отправляем общую ошибку через ErrorReporter
         val errorMessage = "An unexpected error occurred"
-        appContainer.errorReporter.handleError(
+        appContainer.userNotifier.handleError(
             AppError.Generic(message = errorMessage)
         )
 

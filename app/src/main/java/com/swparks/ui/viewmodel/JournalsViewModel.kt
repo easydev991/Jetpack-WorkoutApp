@@ -12,7 +12,7 @@ import com.swparks.domain.usecase.ISyncJournalsUseCase
 import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalsUiState
 import com.swparks.util.AppError
-import com.swparks.util.ErrorReporter
+import com.swparks.util.UserNotifier
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -32,7 +32,7 @@ import kotlinx.coroutines.launch
  * @param syncJournalsUseCase Use case для синхронизации дневников с сервером
  * @param deleteJournalUseCase Use case для удаления дневника
  * @param editJournalSettingsUseCase Use case для редактирования настроек дневника
- * @param errorReporter Обработчик ошибок для отправки ошибок в систему мониторинга
+ * @param userNotifier Обработчик ошибок для отправки ошибок в систему мониторинга
  * @param resources Провайдер строковых ресурсов
  */
 class JournalsViewModel(
@@ -41,7 +41,7 @@ class JournalsViewModel(
     private val syncJournalsUseCase: ISyncJournalsUseCase,
     private val deleteJournalUseCase: IDeleteJournalUseCase,
     private val editJournalSettingsUseCase: IEditJournalSettingsUseCase,
-    private val errorReporter: ErrorReporter,
+    private val userNotifier: UserNotifier,
     private val resources: ResourcesProvider
 ) : ViewModel(), IJournalsViewModel {
 
@@ -162,11 +162,11 @@ class JournalsViewModel(
                 result
                     .onSuccess {
                         Log.i(TAG, "Дневник успешно удален")
-                        errorReporter.showInfo(resources.getString(R.string.journal_deleted))
+                        userNotifier.showInfo(resources.getString(R.string.journal_deleted))
                     }
                     .onFailure { error ->
                         Log.e(TAG, "Ошибка при удалении дневника: ${error.message}")
-                        errorReporter.handleError(
+                        userNotifier.handleError(
                             AppError.Generic(
                                 error.message ?: resources.getString(R.string.error_delete_journal),
                                 error
@@ -175,7 +175,7 @@ class JournalsViewModel(
                     }
             } catch (e: Exception) {
                 Log.e(TAG, "Исключение при удалении дневника: ${e.message}")
-                errorReporter.handleError(
+                userNotifier.handleError(
                     AppError.Generic(
                         resources.getString(R.string.error_delete_journal),
                         e
@@ -281,7 +281,7 @@ class JournalsViewModel(
             }
         }
 
-        errorReporter.showInfo(resources.getString(R.string.journal_settings_saved))
+        userNotifier.showInfo(resources.getString(R.string.journal_settings_saved))
     }
 
     /**
@@ -289,7 +289,7 @@ class JournalsViewModel(
      */
     private fun handleJournalSettingsError(errorMessage: String?) {
         setSavingJournalSettings(false)
-        errorReporter.handleError(
+        userNotifier.handleError(
             AppError.Generic(
                 errorMessage ?: resources.getString(R.string.error_save_journal_settings)
             )

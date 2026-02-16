@@ -8,8 +8,8 @@ import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.util.AppError
-import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
+import com.swparks.util.UserNotifier
 import com.swparks.util.setValueIfChanged
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -42,14 +42,14 @@ sealed class ProfileUiState {
  * @param countriesRepository Репозиторий для работы с данными стран и городов
  * @param swRepository Репозиторий для работы с данными пользователя и API
  * @param logger Логгер для записи сообщений
- * @param errorReporter Обработчик ошибок для отправки ошибок в UI
+ * @param userNotifier Обработчик ошибок для отправки ошибок в UI
  */
 @Suppress("UnusedPrivateProperty", "TooGenericExceptionCaught", "MaxLineLength")
 class ProfileViewModel(
     private val countriesRepository: CountriesRepository,
     private val swRepository: SWRepository,
     private val logger: Logger,
-    private val errorReporter: ErrorReporter,
+    private val userNotifier: UserNotifier,
 ) : ViewModel(), IProfileViewModel {
 
     private companion object {
@@ -108,7 +108,7 @@ class ProfileViewModel(
                 loadSocialUpdates(userId, updateUiState = true)
             } catch (e: Exception) {
                 val errorMessage = "Ошибка загрузки профиля и социальных данных: ${e.message}"
-                errorReporter.handleError(AppError.Generic(errorMessage, e))
+                userNotifier.handleError(AppError.Generic(errorMessage, e))
                 _uiState.update { ProfileUiState.Error(errorMessage) }
                 logger.e(TAG, errorMessage)
             } finally {
@@ -135,7 +135,7 @@ class ProfileViewModel(
                 loadSocialUpdates(user.id, updateUiState = false)
             } catch (e: Exception) {
                 val errorMessage = "Ошибка обновления профиля: ${e.message}"
-                errorReporter.handleError(AppError.Generic(errorMessage, e))
+                userNotifier.handleError(AppError.Generic(errorMessage, e))
                 logger.e(TAG, errorMessage)
             } finally {
                 _isRefreshing.update { false }
@@ -160,7 +160,7 @@ class ProfileViewModel(
             }
             .onFailure { error ->
                 val errorMessage = "Ошибка загрузки профиля и социальных данных: ${error.message}"
-                errorReporter.handleError(AppError.Generic(errorMessage, error))
+                userNotifier.handleError(AppError.Generic(errorMessage, error))
                 if (updateUiState) {
                     _uiState.update { ProfileUiState.Error(errorMessage) }
                 }
@@ -199,7 +199,7 @@ class ProfileViewModel(
                 }
             } catch (e: Exception) {
                 val message = "Ошибка загрузки адреса для профиля: ${e.message}"
-                errorReporter.handleError(AppError.Generic(message, e))
+                userNotifier.handleError(AppError.Generic(message, e))
 
                 // Сохраняем предыдущие данные из текущего состояния, если они есть
                 val currentState = _uiState.value

@@ -9,7 +9,7 @@ package com.swparks.util
  * В отличие от [AppError], предназначена для успешных операций
  * и информационных сообщений, а не для ошибок.
  *
- * @see ErrorReporter
+ * @see UserNotifier
  * @see AppError
  */
 sealed class AppNotification {

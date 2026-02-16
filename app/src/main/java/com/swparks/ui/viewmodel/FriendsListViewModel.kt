@@ -8,8 +8,8 @@ import com.swparks.data.database.entity.toDomain
 import com.swparks.data.repository.SWRepository
 import com.swparks.ui.state.FriendsListUiState
 import com.swparks.util.AppError
-import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
+import com.swparks.util.UserNotifier
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,13 +26,13 @@ import kotlinx.coroutines.launch
  * @param userDao DAO для работы с пользователями в локальной БД
  * @param swRepository Репозиторий для работы с API и загрузки социальных данных
  * @param logger Логгер для записи сообщений
- * @param errorReporter Обработчик ошибок для отправки ошибок в UI
+ * @param userNotifier Обработчик ошибок для отправки ошибок в UI
  */
 class FriendsListViewModel(
     private val userDao: UserDao,
     private val swRepository: SWRepository,
     private val logger: Logger,
-    private val errorReporter: ErrorReporter,
+    private val userNotifier: UserNotifier,
 ) : ViewModel(), IFriendsListViewModel {
 
     private companion object {
@@ -114,7 +114,7 @@ class FriendsListViewModel(
                     logger.i(TAG, "Заявка успешно принята: userId=$userId")
                 }
                 .onFailure { error ->
-                    errorReporter.handleError(
+                    userNotifier.handleError(
                         AppError.Network(
                             message = "Не удалось принять заявку. Проверьте подключение к интернету.",
                             throwable = error
@@ -140,7 +140,7 @@ class FriendsListViewModel(
                     logger.i(TAG, "Заявка успешно отклонена: userId=$userId")
                 }
                 .onFailure { error ->
-                    errorReporter.handleError(
+                    userNotifier.handleError(
                         AppError.Network(
                             message = "Не удалось отклонить заявку. Проверьте подключение к интернету.",
                             throwable = error

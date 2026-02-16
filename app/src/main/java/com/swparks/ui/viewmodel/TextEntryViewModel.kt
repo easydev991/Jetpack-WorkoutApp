@@ -11,7 +11,7 @@ import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.state.TextEntryEvent
 import com.swparks.ui.state.TextEntryUiState
 import com.swparks.util.AppError
-import com.swparks.util.ErrorReporter
+import com.swparks.util.UserNotifier
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,13 +26,13 @@ import kotlinx.coroutines.launch
  * комментариев и записей в дневнике.
  *
  * @param textEntryUseCase Use case для добавления/редактирования комментариев и записей
- * @param errorReporter Интерфейс для обработки и отправки ошибок
+ * @param userNotifier Интерфейс для обработки и отправки ошибок
  * @param mode Режим работы экрана (определяет тип операции и заголовок)
  * @param context Контекст приложения для проверки сетевого подключения
  */
 class TextEntryViewModel(
     private val textEntryUseCase: ITextEntryUseCase,
-    private val errorReporter: ErrorReporter,
+    private val userNotifier: UserNotifier,
     private val mode: TextEntryMode,
     private val context: Context
 ) : ViewModel(), ITextEntryViewModel {
@@ -169,7 +169,7 @@ class TextEntryViewModel(
                         message = errorMessage,
                         throwable = exception
                     )
-                    errorReporter.handleError(appError)
+                    userNotifier.handleError(appError)
                 }
             )
         }

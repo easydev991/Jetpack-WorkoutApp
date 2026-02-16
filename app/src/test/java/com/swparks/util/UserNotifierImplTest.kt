@@ -10,29 +10,29 @@ import org.junit.Test
 import java.io.IOException
 
 /**
- * Unit-тесты для ErrorHandler.
+ * Unit-тесты для UserNotifierImpl.
  *
  * Проверяют логирование и отправку ошибок в SharedFlow.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class ErrorHandlerTest {
+class UserNotifierImplTest {
     private lateinit var mockLogger: Logger
-    private lateinit var errorHandler: ErrorHandler
+    private lateinit var userNotifier: UserNotifierImpl
 
     @Before
     fun setUp() {
         mockLogger = mockk(relaxed = true)
-        errorHandler = ErrorHandler(mockLogger)
+        userNotifier = UserNotifierImpl(mockLogger)
     }
 
     @Test
     fun handle_error_logs_network_error() = runTest {
         val error = AppError.Network("Нет подключения")
 
-        errorHandler.handleError(error)
+        userNotifier.handleError(error)
 
         verify {
-            mockLogger.e("ErrorHandler", "Сетевая ошибка: Нет подключения", null)
+            mockLogger.e("UserNotifier", "Сетевая ошибка: Нет подключения", null)
         }
     }
 
@@ -41,10 +41,10 @@ class ErrorHandlerTest {
         val exception = IOException("Connection timeout")
         val error = AppError.Network("Таймаут соединения", throwable = exception)
 
-        errorHandler.handleError(error)
+        userNotifier.handleError(error)
 
         verify {
-            mockLogger.e("ErrorHandler", "Сетевая ошибка: Таймаут соединения", exception)
+            mockLogger.e("UserNotifier", "Сетевая ошибка: Таймаут соединения", exception)
         }
     }
 
@@ -52,10 +52,10 @@ class ErrorHandlerTest {
     fun handle_error_logs_validation_error() = runTest {
         val error = AppError.Validation("Обязательное поле", field = "email")
 
-        errorHandler.handleError(error)
+        userNotifier.handleError(error)
 
         verify {
-            mockLogger.w("ErrorHandler", "Ошибка валидации: Обязательное поле")
+            mockLogger.w("UserNotifier", "Ошибка валидации: Обязательное поле")
         }
     }
 
@@ -63,10 +63,10 @@ class ErrorHandlerTest {
     fun handle_error_logs_server_error() = runTest {
         val error = AppError.Server("Внутренняя ошибка сервера", code = 500)
 
-        errorHandler.handleError(error)
+        userNotifier.handleError(error)
 
         verify {
-            mockLogger.e("ErrorHandler", "Ошибка сервера (500): Внутренняя ошибка сервера")
+            mockLogger.e("UserNotifier", "Ошибка сервера (500): Внутренняя ошибка сервера")
         }
     }
 
@@ -74,10 +74,10 @@ class ErrorHandlerTest {
     fun handle_error_logs_generic_error() = runTest {
         val error = AppError.Generic("Неизвестная ошибка")
 
-        errorHandler.handleError(error)
+        userNotifier.handleError(error)
 
         verify {
-            mockLogger.e("ErrorHandler", "Общая ошибка: Неизвестная ошибка", null)
+            mockLogger.e("UserNotifier", "Общая ошибка: Неизвестная ошибка", null)
         }
     }
 
@@ -86,10 +86,10 @@ class ErrorHandlerTest {
         val exception = RuntimeException("Unexpected error")
         val error = AppError.Generic("Критическая ошибка", throwable = exception)
 
-        errorHandler.handleError(error)
+        userNotifier.handleError(error)
 
         verify {
-            mockLogger.e("ErrorHandler", "Общая ошибка: Критическая ошибка", exception)
+            mockLogger.e("UserNotifier", "Общая ошибка: Критическая ошибка", exception)
         }
     }
 
@@ -97,7 +97,7 @@ class ErrorHandlerTest {
     fun handle_error_returns_true_when_emitted_successfully() = runTest {
         val error = AppError.Generic("Ошибка")
 
-        val result = errorHandler.handleError(error)
+        val result = userNotifier.handleError(error)
 
         assertTrue(result)
     }
@@ -106,10 +106,10 @@ class ErrorHandlerTest {
     fun show_info_logs_message() = runTest {
         val message = "Операция успешно выполнена"
 
-        errorHandler.showInfo(message)
+        userNotifier.showInfo(message)
 
         verify {
-            mockLogger.i("ErrorHandler", "Инфо: $message")
+            mockLogger.i("UserNotifier", "Инфо: $message")
         }
     }
 
@@ -117,7 +117,7 @@ class ErrorHandlerTest {
     fun show_info_returns_true_when_emitted_successfully() = runTest {
         val message = "Операция успешно выполнена"
 
-        val result = errorHandler.showInfo(message)
+        val result = userNotifier.showInfo(message)
 
         assertTrue(result)
     }

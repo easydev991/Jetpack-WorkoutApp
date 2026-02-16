@@ -16,7 +16,7 @@ import com.swparks.domain.usecase.ISyncJournalEntriesUseCase
 import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalEntriesUiState
 import com.swparks.util.AppError
-import com.swparks.util.ErrorReporter
+import com.swparks.util.UserNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -57,7 +57,7 @@ class JournalEntriesViewModelTest {
     private lateinit var preferencesRepository: UserPreferencesRepository
     private lateinit var swRepository: SWRepository
     private lateinit var savedStateHandle: SavedStateHandle
-    private lateinit var errorReporter: ErrorReporter
+    private lateinit var userNotifier: UserNotifier
     private lateinit var resources: ResourcesProvider
     private lateinit var viewModel: JournalEntriesViewModel
 
@@ -107,7 +107,7 @@ class JournalEntriesViewModelTest {
             preferencesRepository = preferencesRepository,
             swRepository = swRepository,
             savedStateHandle = savedStateHandle,
-            errorReporter = errorReporter,
+            userNotifier = userNotifier,
             resources = resources
         )
 
@@ -130,7 +130,7 @@ class JournalEntriesViewModelTest {
         preferencesRepository = mockk(relaxed = true)
         swRepository = mockk(relaxed = true)
         savedStateHandle = mockk(relaxed = true)
-        errorReporter = mockk(relaxed = true)
+        userNotifier = mockk(relaxed = true)
         resources = mockk(relaxed = true)
 
         // Мокируем getString для локализованных строк
@@ -393,7 +393,7 @@ class JournalEntriesViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) {
-            errorReporter.showInfo("Entry deleted")
+            userNotifier.showInfo("Entry deleted")
         }
     }
 
@@ -418,7 +418,7 @@ class JournalEntriesViewModelTest {
 
         // Then - проверяем, что handleError был вызван с сообщением об ошибке удаления
         coVerify(atLeast = 1) {
-            errorReporter.handleError(match {
+            userNotifier.handleError(match {
                 it is AppError.Generic && it.message?.contains(errorMessage) == true
             })
         }
@@ -472,7 +472,7 @@ class JournalEntriesViewModelTest {
 
         // Then - проверяем, что handleError был вызван (хотя бы один раз)
         coVerify(atLeast = 1) {
-            errorReporter.handleError(match { it is AppError.Generic })
+            userNotifier.handleError(match { it is AppError.Generic })
         }
     }
 

@@ -23,7 +23,7 @@
 - ✅ **AppContainer** - создает и интегрирует TokenInterceptor и SecureTokenRepository
 - ✅ **LoginUseCase** - сохраняет токен, вызывает login, сохраняет userId, интерфейс ILoginUseCase, unit-тесты
 - ✅ **LogoutUseCase** - очищает токен, сбрасывает isAuthorized, интерфейс ILogoutUseCase, unit-тесты
-- ✅ **AuthViewModel** - использует ILoginUseCase/ILogoutUseCase, AuthUiState, ErrorReporter, unit-тесты
+- ✅ **AuthViewModel** - использует ILoginUseCase/ILogoutUseCase, AuthUiState, UserNotifier, unit-тесты
 
 ### Проверка тестов
 
@@ -176,7 +176,7 @@ request.allHTTPHeaderFields = Dictionary(
 - ✅ **AppContainer** - интеграция TokenInterceptor и SecureTokenRepository в OkHttp
 - ✅ **LoginUseCase** - сохраняет токен, вызывает API, сохраняет userId, интерфейс ILoginUseCase, unit-тесты
 - ✅ **LogoutUseCase** - очищает токен, сбрасывает авторизацию, интерфейс ILogoutUseCase, unit-тесты
-- ✅ **AuthViewModel** - управление состоянием авторизации, интерфейсы, ErrorReporter, unit-тесты
+- ✅ **AuthViewModel** - управление состоянием авторизации, интерфейсы, UserNotifier, unit-тесты
 
 ---
 

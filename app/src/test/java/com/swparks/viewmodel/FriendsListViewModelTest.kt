@@ -7,8 +7,8 @@ import com.swparks.ui.state.FriendsListUiState
 import com.swparks.ui.viewmodel.FriendsListViewModel
 import com.swparks.ui.viewmodel.MainDispatcherRule
 import com.swparks.util.AppError
-import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
+import com.swparks.util.UserNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -38,7 +38,7 @@ class FriendsListViewModelTest {
     private lateinit var userDao: UserDao
     private lateinit var swRepository: SWRepository
     private lateinit var logger: Logger
-    private lateinit var errorReporter: ErrorReporter
+    private lateinit var userNotifier: UserNotifier
     private lateinit var friendsListViewModel: FriendsListViewModel
 
     @Before
@@ -48,12 +48,12 @@ class FriendsListViewModelTest {
 
         swRepository = mockk(relaxed = true)
         logger = mockk(relaxed = true)
-        errorReporter = mockk(relaxed = true)
+        userNotifier = mockk(relaxed = true)
         friendsListViewModel = FriendsListViewModel(
             userDao,
             swRepository,
             logger,
-            errorReporter
+            userNotifier
         )
     }
 
@@ -87,7 +87,7 @@ class FriendsListViewModelTest {
             userDao,
             swRepository,
             logger,
-            errorReporter
+            userNotifier
         )
         advanceUntilIdle()
 
@@ -174,7 +174,7 @@ class FriendsListViewModelTest {
 
         // Then
         verify {
-            errorReporter.handleError(
+            userNotifier.handleError(
                 match<AppError> {
                     it is AppError.Network && it.message.contains("Не удалось принять заявку")
                 }
@@ -214,7 +214,7 @@ class FriendsListViewModelTest {
 
         // Then
         verify {
-            errorReporter.handleError(
+            userNotifier.handleError(
                 match<AppError> {
                     it is AppError.Network && it.message.contains("Не удалось отклонить заявку")
                 }

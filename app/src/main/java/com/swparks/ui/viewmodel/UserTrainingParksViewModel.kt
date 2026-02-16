@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.swparks.data.model.Park
 import com.swparks.data.repository.SWRepository
 import com.swparks.util.AppError
-import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
+import com.swparks.util.UserNotifier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,14 +28,14 @@ sealed class UserTrainingParksUiState {
  * @param swRepository Репозиторий для работы с данными площадок
  * @param userId ID пользователя, для которого загружаются площадки
  * @param logger Логгер для записи сообщений
- * @param errorReporter Обработчик ошибок для отправки ошибок в UI
+ * @param userNotifier Обработчик ошибок для отправки ошибок в UI
  */
 @Suppress("TooGenericExceptionCaught", "MaxLineLength")
 class UserTrainingParksViewModel(
     private val swRepository: SWRepository,
     private val userId: Long,
     private val logger: Logger,
-    private val errorReporter: ErrorReporter,
+    private val userNotifier: UserNotifier,
 ) : ViewModel(), IUserTrainingParksViewModel {
 
     private companion object {
@@ -68,7 +68,7 @@ class UserTrainingParksViewModel(
                 .onFailure { error ->
                     val errorMessage = "Ошибка загрузки площадок пользователя: ${error.message}"
                     _uiState.update { UserTrainingParksUiState.Error(errorMessage) }
-                    errorReporter.handleError(AppError.Generic(errorMessage, error))
+                    userNotifier.handleError(AppError.Generic(errorMessage, error))
                     logger.e(TAG, errorMessage)
                 }
         }
@@ -92,13 +92,13 @@ class UserTrainingParksViewModel(
                         val errorMessage =
                             "Ошибка обновления площадок пользователя: ${error.message}"
                         _uiState.update { UserTrainingParksUiState.Error(errorMessage) }
-                        errorReporter.handleError(AppError.Generic(errorMessage, error))
+                        userNotifier.handleError(AppError.Generic(errorMessage, error))
                         logger.e(TAG, errorMessage)
                     }
             } catch (e: Exception) {
                 val errorMessage = "Неожиданная ошибка при обновлении площадок: ${e.message}"
                 _uiState.update { UserTrainingParksUiState.Error(errorMessage) }
-                errorReporter.handleError(AppError.Generic(errorMessage, e))
+                userNotifier.handleError(AppError.Generic(errorMessage, e))
                 logger.e(TAG, errorMessage, e)
             } finally {
                 _isRefreshing.update { false }

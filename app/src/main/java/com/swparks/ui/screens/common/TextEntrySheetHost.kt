@@ -32,7 +32,7 @@ import kotlinx.coroutines.launch
  *
  * Закрытие по тапу вне области, свайпу вниз, системной кнопке/жесту "назад" — запрещено.
  *
- * Ошибки обрабатываются через [errorReporter] в ViewModel (Snackbar отображается автоматически в любом экране).
+ * Ошибки обрабатываются через [userNotifier] в ViewModel (Snackbar отображается автоматически в любом экране).
  *
  * @param show Флаг для показа/скрытия листа
  * @param mode Режим работы экрана (тип операции, заголовок, валидация)
@@ -87,7 +87,7 @@ fun TextEntrySheetHost(
                 }
 
                 is TextEntryEvent.Error -> {
-                    // Ошибки обрабатываются через errorReporter в ViewModel (Snackbar отображается автоматически)
+                    // Ошибки обрабатываются через userNotifier в ViewModel (Snackbar отображается автоматически)
                     // Ничего не делаем здесь
                 }
             }

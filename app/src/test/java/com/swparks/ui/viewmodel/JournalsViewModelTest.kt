@@ -11,7 +11,7 @@ import com.swparks.domain.usecase.ISyncJournalsUseCase
 import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalsUiState
 import com.swparks.util.AppError
-import com.swparks.util.ErrorReporter
+import com.swparks.util.UserNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -46,7 +46,7 @@ class JournalsViewModelTest {
     private lateinit var syncJournalsUseCase: ISyncJournalsUseCase
     private lateinit var deleteJournalUseCase: IDeleteJournalUseCase
     private lateinit var editJournalSettingsUseCase: IEditJournalSettingsUseCase
-    private lateinit var errorReporter: ErrorReporter
+    private lateinit var userNotifier: UserNotifier
     private lateinit var resources: ResourcesProvider
     private lateinit var viewModel: JournalsViewModel
 
@@ -77,7 +77,7 @@ class JournalsViewModelTest {
         syncJournalsUseCase = mockk(relaxed = true)
         deleteJournalUseCase = mockk(relaxed = true)
         editJournalSettingsUseCase = mockk(relaxed = true)
-        errorReporter = mockk(relaxed = true)
+        userNotifier = mockk(relaxed = true)
         resources = mockk(relaxed = true)
 
         // Мокируем getString для локализованных строк
@@ -107,7 +107,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
 
@@ -132,7 +132,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -153,7 +153,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -185,7 +185,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -222,7 +222,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -251,7 +251,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -280,7 +280,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -308,7 +308,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -338,7 +338,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -371,7 +371,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -402,7 +402,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -442,7 +442,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -479,7 +479,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -490,7 +490,7 @@ class JournalsViewModelTest {
 
         // Проверяем, что showInfo был вызван с сообщением об успешном удалении
         coVerify(exactly = 1) {
-            errorReporter.showInfo("Journal deleted")
+            userNotifier.showInfo("Journal deleted")
         }
     }
 
@@ -513,7 +513,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -523,7 +523,7 @@ class JournalsViewModelTest {
 
         // Then - проверяем, что handleError был вызван
         coVerify(exactly = 1) {
-            errorReporter.handleError(match { it is AppError.Generic })
+            userNotifier.handleError(match { it is AppError.Generic })
         }
     }
 
@@ -545,7 +545,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -580,7 +580,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -590,7 +590,7 @@ class JournalsViewModelTest {
 
         // Then - проверяем, что handleError был вызван
         coVerify(exactly = 1) {
-            errorReporter.handleError(match { it is AppError.Generic })
+            userNotifier.handleError(match { it is AppError.Generic })
         }
     }
 
@@ -612,7 +612,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -657,7 +657,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -706,7 +706,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -751,7 +751,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -796,7 +796,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -841,7 +841,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -890,7 +890,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -934,7 +934,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -982,7 +982,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()
@@ -1025,7 +1025,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
 
@@ -1069,7 +1069,7 @@ class JournalsViewModelTest {
             syncJournalsUseCase,
             deleteJournalUseCase,
             editJournalSettingsUseCase,
-            errorReporter,
+            userNotifier,
             resources
         )
         advanceUntilIdle()

@@ -8,7 +8,7 @@ import com.swparks.domain.usecase.ITextEntryUseCase
 import com.swparks.ui.model.EditInfo
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.state.TextEntryEvent
-import com.swparks.util.ErrorReporter
+import com.swparks.util.UserNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -39,7 +39,7 @@ class TextEntryViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var textEntryUseCase: ITextEntryUseCase
-    private lateinit var errorReporter: ErrorReporter
+    private lateinit var userNotifier: UserNotifier
     private lateinit var context: Context
     private lateinit var viewModel: TextEntryViewModel
 
@@ -57,7 +57,7 @@ class TextEntryViewModelTest {
         every { android.util.Log.e(any(), any()) } returns 0
         mockkStatic(Context::class)
         textEntryUseCase = mockk()
-        errorReporter = mockk(relaxed = true)
+        userNotifier = mockk(relaxed = true)
         context = mockk(relaxed = true)
 
         // Mock ConnectivityManager для проверки сети
@@ -85,7 +85,7 @@ class TextEntryViewModelTest {
     fun onTextChanged_WhenNewForPark_ThenUpdatesStateAndEnablesButton() {
         // Given
         val mode = TextEntryMode.NewForPark(testParkId)
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
 
         // When
         viewModel.onTextChanged(testText)
@@ -101,7 +101,7 @@ class TextEntryViewModelTest {
     fun onTextChanged_WhenNewForParkWithEmptyText_ThenDisablesButton() {
         // Given
         val mode = TextEntryMode.NewForPark(testParkId)
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
 
         // When
         viewModel.onTextChanged("   ")
@@ -116,7 +116,7 @@ class TextEntryViewModelTest {
         // Given
         val editInfo = EditInfo(testParkId, testEntryId, testOldEntry)
         val mode = TextEntryMode.EditPark(editInfo)
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
 
         // Then - проверяем, что текст предзаполнен с oldEntry при создании
         assertEquals(testOldEntry, viewModel.uiState.value.text)
@@ -135,7 +135,7 @@ class TextEntryViewModelTest {
         // Given
         val editInfo = EditInfo(testParkId, testEntryId, testOldEntry)
         val mode = TextEntryMode.EditPark(editInfo)
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
 
         // When
         viewModel.onTextChanged(testText)
@@ -150,7 +150,7 @@ class TextEntryViewModelTest {
     fun onSend_WhenNewForParkAndSuccess_ThenEmitsSuccessEvent() = runTest {
         // Given
         val mode = TextEntryMode.NewForPark(testParkId)
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
         viewModel.onTextChanged(testText)
         coEvery { textEntryUseCase.addParkComment(testParkId, testText) } returns Result.success(
             Unit
@@ -170,7 +170,7 @@ class TextEntryViewModelTest {
     fun onSend_WhenNewForEventAndSuccess_ThenEmitsSuccessEvent() = runTest {
         // Given
         val mode = TextEntryMode.NewForEvent(testEventId)
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
         viewModel.onTextChanged(testText)
         coEvery { textEntryUseCase.addEventComment(testEventId, testText) } returns Result.success(
             Unit
@@ -190,7 +190,7 @@ class TextEntryViewModelTest {
     fun onSend_WhenNewForJournalAndSuccess_ThenEmitsSuccessEvent() = runTest {
         // Given
         val mode = TextEntryMode.NewForJournal(testOwnerId, testJournalId)
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
         viewModel.onTextChanged(testText)
         coEvery {
             textEntryUseCase.addJournalEntry(
@@ -221,7 +221,7 @@ class TextEntryViewModelTest {
         // Given
         val editInfo = EditInfo(testParkId, testEntryId, testOldEntry)
         val mode = TextEntryMode.EditPark(editInfo)
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
         viewModel.onTextChanged(testText)
         coEvery {
             textEntryUseCase.editParkComment(testParkId, testEntryId, testText)
@@ -248,7 +248,7 @@ class TextEntryViewModelTest {
         // Given
         val editInfo = EditInfo(testEventId, testEntryId, testOldEntry)
         val mode = TextEntryMode.EditEvent(editInfo)
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
         viewModel.onTextChanged(testText)
         coEvery {
             textEntryUseCase.editEventComment(testEventId, testEntryId, testText)
@@ -275,7 +275,7 @@ class TextEntryViewModelTest {
         // Given
         val editInfo = EditInfo(testJournalId, testEntryId, testOldEntry)
         val mode = TextEntryMode.EditJournalEntry(testOwnerId, editInfo)
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
         viewModel.onTextChanged(testText)
         coEvery {
             textEntryUseCase.editJournalEntry(testOwnerId, testJournalId, testEntryId, testText)
@@ -302,7 +302,7 @@ class TextEntryViewModelTest {
     fun onSend_WhenEmptyText_ThenShowsError() {
         // Given
         val mode = TextEntryMode.NewForPark(testParkId)
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
 
         // When
         viewModel.onSend()
@@ -319,7 +319,7 @@ class TextEntryViewModelTest {
         // Given
         val editInfo = EditInfo(testParkId, testEntryId, testOldEntry)
         val mode = TextEntryMode.EditPark(editInfo)
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
         viewModel.onTextChanged(testOldEntry)
 
         // When
@@ -335,7 +335,7 @@ class TextEntryViewModelTest {
     fun onDismissError_WhenCalled_ThenClearsError() {
         // Given
         val mode = TextEntryMode.NewForPark(testParkId)
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
         viewModel.onTextChanged("")
         viewModel.onSend()
 
@@ -354,7 +354,7 @@ class TextEntryViewModelTest {
         val mode = TextEntryMode.EditPark(editInfo)
 
         // When
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
 
         // Then
         assertEquals(mode, viewModel.uiState.value.mode)
@@ -369,7 +369,7 @@ class TextEntryViewModelTest {
         val mode = TextEntryMode.EditEvent(editInfo)
 
         // When
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
 
         // Then
         assertEquals(mode, viewModel.uiState.value.mode)
@@ -384,7 +384,7 @@ class TextEntryViewModelTest {
         val mode = TextEntryMode.EditJournalEntry(testOwnerId, editInfo)
 
         // When
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
 
         // Then
         assertEquals(mode, viewModel.uiState.value.mode)
@@ -398,7 +398,7 @@ class TextEntryViewModelTest {
         val mode = TextEntryMode.NewForPark(testParkId)
 
         // When
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
 
         // Then
         assertEquals(mode, viewModel.uiState.value.mode)
@@ -410,7 +410,7 @@ class TextEntryViewModelTest {
     fun resetState_WhenCalledForNewMode_ThenResetsToInitialState() {
         // Given
         val mode = TextEntryMode.NewForPark(testParkId)
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
         viewModel.onTextChanged(testText)
 
         // When
@@ -430,7 +430,7 @@ class TextEntryViewModelTest {
         // Given
         val editInfo = EditInfo(testParkId, testEntryId, testOldEntry)
         val mode = TextEntryMode.EditPark(editInfo)
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
         viewModel.onTextChanged(testText)
 
         // When
@@ -451,7 +451,7 @@ class TextEntryViewModelTest {
         val userId = 123L
         val userName = "Test User"
         val mode = TextEntryMode.Message(userId, userName)
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
 
         // When
         viewModel.onTextChanged(testText)
@@ -469,7 +469,7 @@ class TextEntryViewModelTest {
         val userId = 123L
         val userName = "Test User"
         val mode = TextEntryMode.Message(userId, userName)
-        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
         viewModel.onTextChanged(testText)
         coEvery { textEntryUseCase.sendMessageTo(userId, testText) } returns Result.success(Unit)
 

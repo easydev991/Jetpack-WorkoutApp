@@ -4,7 +4,7 @@ import com.swparks.data.model.Event
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.util.AppError
-import com.swparks.util.ErrorReporter
+import com.swparks.util.UserNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -28,7 +28,7 @@ import java.io.IOException
 class EventsViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private val mockRepository = mockk<SWRepository>(relaxed = true)
-    private val mockErrorReporter = mockk<ErrorReporter>(relaxed = true)
+    private val mockUserNotifier = mockk<UserNotifier>(relaxed = true)
 
     @Before
     fun setup() {
@@ -68,7 +68,7 @@ class EventsViewModelTest {
         coEvery { mockRepository.getPastEvents() } returns emptyList()
 
         // When
-        val viewModel = EventsViewModel(mockRepository, mockErrorReporter)
+        val viewModel = EventsViewModel(mockRepository, mockUserNotifier)
         advanceUntilIdle()
 
         // Then
@@ -88,7 +88,7 @@ class EventsViewModelTest {
         val mockEventsList = listOf(createMockEvent(1L), createMockEvent(2L))
         coEvery { mockRepository.getPastEvents() } returns mockEventsList
 
-        val viewModel = EventsViewModel(mockRepository, mockErrorReporter)
+        val viewModel = EventsViewModel(mockRepository, mockUserNotifier)
         advanceUntilIdle() // Ждем завершения init
 
         // When
@@ -107,7 +107,7 @@ class EventsViewModelTest {
         val ioException = IOException("Network error")
         coEvery { mockRepository.getPastEvents() } throws ioException
 
-        val viewModel = EventsViewModel(mockRepository, mockErrorReporter)
+        val viewModel = EventsViewModel(mockRepository, mockUserNotifier)
         advanceUntilIdle() // Ждем завершения init
 
         // When
@@ -119,9 +119,9 @@ class EventsViewModelTest {
         val errorState = viewModel.eventsUIState.value as EventsUIState.Error
         assertEquals("Network error", errorState.message)
 
-        // Проверяем, что errorReporter.handleError был вызван с AppError.Network
+        // Проверяем, что userNotifier.handleError был вызван с AppError.Network
         coVerify {
-            mockErrorReporter.handleError(
+            mockUserNotifier.handleError(
                 match<AppError> { error ->
                     error is AppError.Network &&
                             error.message.contains("Не удалось загрузить мероприятия") &&
@@ -138,7 +138,7 @@ class EventsViewModelTest {
             val ioException = IOException()
             coEvery { mockRepository.getPastEvents() } throws ioException
 
-            val viewModel = EventsViewModel(mockRepository, mockErrorReporter)
+            val viewModel = EventsViewModel(mockRepository, mockUserNotifier)
             advanceUntilIdle() // Ждем завершения init
 
             // When
@@ -150,9 +150,9 @@ class EventsViewModelTest {
             val errorState = viewModel.eventsUIState.value as EventsUIState.Error
             assertEquals(null, errorState.message)
 
-            // Проверяем, что errorReporter.handleError был вызван с AppError.Network
+            // Проверяем, что userNotifier.handleError был вызван с AppError.Network
             coVerify {
-                mockErrorReporter.handleError(
+                mockUserNotifier.handleError(
                     match<AppError> { error ->
                         error is AppError.Network &&
                                 error.message.contains("Не удалось загрузить мероприятия") &&
@@ -171,7 +171,7 @@ class EventsViewModelTest {
         val httpException = HttpException(mockResponse)
         coEvery { mockRepository.getPastEvents() } throws httpException
 
-        val viewModel = EventsViewModel(mockRepository, mockErrorReporter)
+        val viewModel = EventsViewModel(mockRepository, mockUserNotifier)
         advanceUntilIdle() // Ждем завершения init
 
         // When
@@ -183,9 +183,9 @@ class EventsViewModelTest {
         val errorState = viewModel.eventsUIState.value as EventsUIState.Error
         assertEquals("HTTP 404", errorState.message)
 
-        // Проверяем, что errorReporter.handleError был вызван с AppError.Server
+        // Проверяем, что userNotifier.handleError был вызван с AppError.Server
         coVerify {
-            mockErrorReporter.handleError(
+            mockUserNotifier.handleError(
                 match<AppError> { error ->
                     error is AppError.Server &&
                             error.code == 404 &&
@@ -201,7 +201,7 @@ class EventsViewModelTest {
         val ioException = IOException("Network error")
         coEvery { mockRepository.getPastEvents() } throws ioException
 
-        val viewModel = EventsViewModel(mockRepository, mockErrorReporter)
+        val viewModel = EventsViewModel(mockRepository, mockUserNotifier)
         advanceUntilIdle() // Ждем завершения init
 
         // Первый вызов с ошибкой
@@ -228,7 +228,7 @@ class EventsViewModelTest {
         // Given
         coEvery { mockRepository.getPastEvents() } returns emptyList()
 
-        val viewModel = EventsViewModel(mockRepository, mockErrorReporter)
+        val viewModel = EventsViewModel(mockRepository, mockUserNotifier)
         advanceUntilIdle() // Ждем завершения init
 
         // When

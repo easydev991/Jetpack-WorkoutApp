@@ -10,8 +10,8 @@ import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.viewmodel.MainDispatcherRule
 import com.swparks.ui.viewmodel.ProfileUiState
 import com.swparks.ui.viewmodel.ProfileViewModel
-import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
+import com.swparks.util.UserNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -43,7 +43,7 @@ class ProfileViewModelTest {
     private lateinit var countriesRepository: CountriesRepository
     private lateinit var swRepository: com.swparks.data.repository.SWRepository
     private lateinit var logger: Logger
-    private lateinit var errorReporter: ErrorReporter
+    private lateinit var userNotifier: UserNotifier
     private lateinit var profileViewModel: ProfileViewModel
 
     private val testCountry = Country(id = "1", name = "Россия", cities = emptyList())
@@ -57,7 +57,7 @@ class ProfileViewModelTest {
         countriesRepository = mockk(relaxed = true)
         swRepository = mockk(relaxed = true)
         logger = mockk(relaxed = true)
-        errorReporter = mockk(relaxed = true)
+        userNotifier = mockk(relaxed = true)
     }
 
     @After
@@ -73,7 +73,7 @@ class ProfileViewModelTest {
             countriesRepository,
             swRepository,
             logger,
-            errorReporter
+            userNotifier
         )
     }
 

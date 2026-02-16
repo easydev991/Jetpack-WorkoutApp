@@ -6,8 +6,8 @@ import com.swparks.data.repository.SWRepository
 import com.swparks.ui.state.BlacklistUiState
 import com.swparks.ui.viewmodel.BlacklistViewModel
 import com.swparks.ui.viewmodel.MainDispatcherRule
-import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
+import com.swparks.util.UserNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -35,18 +35,18 @@ class BlacklistViewModelTest {
 
     private lateinit var swRepository: SWRepository
     private lateinit var logger: Logger
-    private lateinit var errorReporter: ErrorReporter
+    private lateinit var userNotifier: UserNotifier
     private lateinit var blacklistViewModel: BlacklistViewModel
 
     @Before
     fun setup() {
         swRepository = mockk(relaxed = true)
         logger = mockk(relaxed = true)
-        errorReporter = mockk(relaxed = true)
+        userNotifier = mockk(relaxed = true)
         blacklistViewModel = BlacklistViewModel(
             swRepository,
             logger,
-            errorReporter
+            userNotifier
         )
     }
 
@@ -77,7 +77,7 @@ class BlacklistViewModelTest {
         val viewModel = BlacklistViewModel(
             swRepository,
             logger,
-            errorReporter
+            userNotifier
         )
         advanceUntilIdle()
 
@@ -255,7 +255,7 @@ class BlacklistViewModelTest {
         blacklistViewModel.showRemoveDialog(mockk(relaxed = true))
         // Устанавливаем состояние, как будто алерт уже показан
         // Прямая установка состояния для теста
-        val testViewModel = BlacklistViewModel(swRepository, logger, errorReporter)
+        val testViewModel = BlacklistViewModel(swRepository, logger, userNotifier)
         testViewModel.showRemoveDialog(mockk(relaxed = true))
         testViewModel.removeFromBlacklist(mockk(relaxed = true))
 

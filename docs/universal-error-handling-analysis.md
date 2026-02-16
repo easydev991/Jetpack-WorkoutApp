@@ -25,7 +25,7 @@
 
 ---
 
-## Рекомендуемый подход: ErrorReporter + SharedFlow
+## Рекомендуемый подход: UserNotifier + SharedFlow
 
 ### Архитектура
 
@@ -36,13 +36,13 @@
 │                                                         │
 │  swRepository.method()                                  │
 │      .onFailure { error ->                              │
-│          errorReporter.handleError(AppError.Network(...)) │
+│          userNotifier.handleError(AppError.Network(...)) │
 │      }                                                  │
 └───────────────────────┬─────────────────────────────────┘
                         │
                         ↓ handleError()
 ┌─────────────────────────────────────────────────────────┐
-│                 ErrorHandler : ErrorReporter              │
+│                 UserNotifierImpl : UserNotifier              │
 │                                                         │
 │  - logger: Logger                                       │
 │  + errorFlow: SharedFlow<AppError>                      │
@@ -54,7 +54,7 @@
 │                      RootScreen                         │
 │                                                         │
 │  LaunchedEffect(Unit) {                                │
-│      errorReporter.errorFlow.collect { error ->         │
+│      userNotifier.errorFlow.collect { error ->         │
 │          val message = error.toMessage()               │
 │          snackbarHostState.showSnackbar(message)       │
 │      }                                                  │
@@ -73,12 +73,12 @@
 
 1. **Чистое разделение ответственности**
    - AppState остается только для навигации и авторизации
-   - ErrorReporter - отдельный интерфейс для обработки ошибок
-   - ErrorHandler - реализация интерфейса с логикой
+   - UserNotifier - отдельный интерфейс для обработки ошибок
+   - UserNotifierImpl - реализация интерфейса с логикой
    - Нет смешения UI-state и business-logic concerns
 
 2. **Легкая интеграция в текущую архитектуру**
-   - ErrorReporter размещается рядом с Logger и другими сервисами
+   - UserNotifier размещается рядом с Logger и другими сервисами
    - Передается в ViewModels через существующие factory методы в AppContainer
    - Не требует изменений в AppState
 
@@ -93,31 +93,31 @@
    - Можно добавить историю ошибок для отладки
 
 5. **Тестируемость**
-   - Легко мокать ErrorReporter в тестах ViewModels (интерфейс)
-   - Отдельные unit-тесты для ErrorHandler
+   - Легко мокать UserNotifier в тестах ViewModels (интерфейс)
+   - Отдельные unit-тесты для UserNotifierImpl
    - Нет зависимости от AppState и Compose
 
 **Реализовано:**
-- Интерфейс `ErrorReporter` с `errorFlow` и `handleError()`
-- Класс `ErrorHandler` с `MutableSharedFlow` (buffer=10, DROP_OLDEST)
+- Интерфейс `UserNotifier` с `errorFlow` и `handleError()`
+- Класс `UserNotifierImpl` с `MutableSharedFlow` (buffer=10, DROP_OLDEST)
 - Логирование всех типов ошибок через Logger
 
 ---
 
 ## План реализации
 
-### Этапы 1-7: Создание модели, ErrorReporter, интеграция и миграция ✅ ВЫПОЛНЕНО
+### Этапы 1-7: Создание модели, UserNotifier, интеграция и миграция ✅ ВЫПОЛНЕНО
 
 **Создание и интеграция механизма обработки ошибок:**
 - ✅ Создан `AppError` (Network, Validation, Server, Generic) с 12 unit-тестами
-- ✅ Реализованы интерфейс `ErrorReporter`, класс `ErrorHandler` (SharedFlow, buffer=10, DROP_OLDEST) с 7 unit-тестами
-- ✅ Интегрирован ErrorReporter в AppContainer, обновлены factory методы для ViewModels, созданы 3 unit-теста
+- ✅ Реализованы интерфейс `UserNotifier`, класс `UserNotifierImpl` (SharedFlow, buffer=10, DROP_OLDEST) с 7 unit-тестами
+- ✅ Интегрирован UserNotifier в AppContainer, обновлены factory методы для ViewModels, созданы 3 unit-теста
 - ✅ Обновлены ViewModels:
-  - `ProfileViewModel`: добавлен errorReporter в конструктор (создается через profileViewModelFactory() в RootScreen)
-  - `FriendsListViewModel`: добавлен errorReporter, заменены вызовы handleError в onAcceptFriendRequest/onDeclineFriendRequest, 8 unit-тестов
-  - `LoginViewModel`: добавлена документация про errorReporter, но errorReporter НЕ используется в коде - ошибки валидации отображаются под полями через `_loginError` и `_resetError`, не отправляются через errorReporter, 17 unit-тестов
-  - `EventsViewModel`: добавлен errorReporter, заменены исключения на handleError(), создана собственная Factory через Application.container, 7 unit-тестов
-  - `AuthViewModel`: добавлен errorReporter, добавлен вызов handleError(), 5 unit-тестов
+  - `ProfileViewModel`: добавлен userNotifier в конструктор (создается через profileViewModelFactory() в RootScreen)
+  - `FriendsListViewModel`: добавлен userNotifier, заменены вызовы handleError в onAcceptFriendRequest/onDeclineFriendRequest, 8 unit-тестов
+  - `LoginViewModel`: добавлена документация про userNotifier, но userNotifier НЕ используется в коде - ошибки валидации отображаются под полями через `_loginError` и `_resetError`, не отправляются через userNotifier, 17 unit-тестов
+  - `EventsViewModel`: добавлен userNotifier, заменены исключения на handleError(), создана собственная Factory через Application.container, 7 unit-тестов
+  - `AuthViewModel`: добавлен userNotifier, добавлен вызов handleError(), 5 unit-тестов
 - ✅ Реализован Snackbar в RootScreen: добавлен SnackbarHostState, сбор ошибок из errorFlow через LaunchedEffect, логирование, 4 инструментальных теста
 - ✅ Все unit-тесты (59) и инструментальные тесты (4) проходят, проект собирается без ошибок
 
@@ -198,7 +198,7 @@
 val showErrorDialog by remember { mutableStateOf<AppError?>(null) }
 
 LaunchedEffect(Unit) {
-    appContainer.errorReporter.errorFlow.collect { error ->
+    appContainer.userNotifier.errorFlow.collect { error ->
         when (error) {
             is AppError.Server, is AppError.Generic -> {
                 showErrorDialog = error
@@ -246,7 +246,7 @@ sealed class AppError {
 
 // RootScreen.kt
 LaunchedEffect(Unit) {
-    appContainer.errorReporter.errorFlow.collect { error ->
+    appContainer.userNotifier.errorFlow.collect { error ->
         val message = error.toUiText(context)
         val actionLabel = if (error is AppError.Network && error.retryAction != null) {
             "Повторить"
@@ -272,10 +272,10 @@ LaunchedEffect(Unit) {
 **Идея:** Хранить историю ошибок для аналитики и отладки
 
 ```kotlin
-// ErrorHandler.kt
-class ErrorHandler(
+// UserNotifierImpl.kt
+class UserNotifierImpl(
     private val logger: Logger,
-) : ErrorReporter {
+) : UserNotifier {
     private val errorHistory = mutableListOf<AppError>()
 
     override fun handleError(error: AppError): Boolean {
@@ -328,11 +328,11 @@ class AnalyticsHelper {
     }
 }
 
-// ErrorHandler.kt
-class ErrorHandler(
+// UserNotifierImpl.kt
+class UserNotifierImpl(
     private val logger: Logger,
     private val analyticsHelper: AnalyticsHelper,  // ✅ Добавлено
-) : ErrorReporter {
+) : UserNotifier {
     override fun handleError(error: AppError): Boolean {
         logger.e(TAG, error.message)
         analyticsHelper.logError(error)  // ✅ Логируем в аналитику
@@ -346,10 +346,10 @@ class ErrorHandler(
 ## Критерии приемки
 
 - [x] **Этап 1**: AppError создан и покрыт unit-тестами (12 тестов)
-- [x] **Этап 2**: ErrorReporter интерфейс и ErrorHandler реализация созданы (7 тестов)
-- [x] **Этап 3**: AppContainer обновлен с errorReporter и factory методами (3 теста)
-- [x] **Этап 4**: FriendsListViewModel обновлен с errorReporter (8 тестов)
-- [x] **Этап 5**: LoginViewModel обновлен с errorReporter (17 тестов)
+- [x] **Этап 2**: UserNotifier интерфейс и UserNotifierImpl реализация созданы (7 тестов)
+- [x] **Этап 3**: AppContainer обновлен с userNotifier и factory методами (3 теста)
+- [x] **Этап 4**: FriendsListViewModel обновлен с userNotifier (8 тестов)
+- [x] **Этап 5**: LoginViewModel обновлен с userNotifier (17 тестов)
 - [x] **Этап 6**: RootScreen показывает Snackbar при ошибках + инструментальные тесты (4 теста)
 - [x] **Этап 7**: Все существующие ViewModels обновлены (EventsViewModel, AuthViewModel, ProfileViewModel)
 - [x] **Этап 8**: Сообщения об ошибках локализованы с AppError.toUiText()
@@ -363,7 +363,7 @@ class ErrorHandler(
 
 ## Заключение
 
-Реализация универсального механизма обработки ошибок через **ErrorReporter (интерфейс) + ErrorHandler (реализация) + SharedFlow** позволит:
+Реализация универсального механизма обработки ошибок через **UserNotifier (интерфейс) + UserNotifierImpl (реализация) + SharedFlow** позволит:
 
 1. **Устранить дублирование кода** в ViewModels
 2. **Обеспечить консистентный UX** для всех ошибок приложения
@@ -374,4 +374,4 @@ class ErrorHandler(
 7. **Легкая интеграция** через существующий DI контейнер AppContainer
 8. **Чистое разделение ответственности** - интерфейс для DI, реализация для логики
 
-Этот подход идеально подходит для текущей архитектуры приложения и соответствует принципам MVVM и Clean Architecture. Разделение ответственности между AppState (UI-состояние) и ErrorReporter (обработка ошибок) обеспечивает чистую архитектуру и легкую поддержку кода. Использование интерфейса ErrorReporter в зависимостях улучшает тестируемость и соответствует принципу Dependency Inversion.
+Этот подход идеально подходит для текущей архитектуры приложения и соответствует принципам MVVM и Clean Architecture. Разделение ответственности между AppState (UI-состояние) и UserNotifier (обработка ошибок) обеспечивает чистую архитектуру и легкую поддержку кода. Использование интерфейса UserNotifier в зависимостях улучшает тестируемость и соответствует принципу Dependency Inversion.

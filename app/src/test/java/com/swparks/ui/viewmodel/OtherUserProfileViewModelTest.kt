@@ -8,8 +8,8 @@ import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.util.AppError
-import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
+import com.swparks.util.UserNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -40,7 +40,7 @@ class OtherUserProfileViewModelTest {
     private val mockSwRepository = mockk<SWRepository>()
     private val mockCountriesRepository = mockk<CountriesRepository>()
     private val mockLogger = mockk<Logger>(relaxed = true)
-    private val mockErrorReporter = mockk<ErrorReporter>(relaxed = true)
+    private val mockUserNotifier = mockk<UserNotifier>(relaxed = true)
 
     private val currentUserFlow = MutableSharedFlow<User?>(replay = 1)
     private val friendsFlow = MutableSharedFlow<List<User>>(replay = 1)
@@ -52,7 +52,7 @@ class OtherUserProfileViewModelTest {
         every { mockSwRepository.getCurrentUserFlow() } returns currentUserFlow
         every { mockSwRepository.getFriendsFlow() } returns friendsFlow
         every { mockSwRepository.getBlacklistFlow() } returns blacklistFlow
-        every { mockErrorReporter.errorFlow } returns errorFlow
+        every { mockUserNotifier.errorFlow } returns errorFlow
 
         // Эмулируем авторизованного пользователя по умолчанию
         currentUserFlow.tryEmit(User(id = 1L, name = "current", image = null))
@@ -74,7 +74,7 @@ class OtherUserProfileViewModelTest {
         coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
 
         val viewModel = OtherUserProfileViewModel(
-            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockErrorReporter
+            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockUserNotifier
         )
         advanceUntilIdle()
 
@@ -89,7 +89,7 @@ class OtherUserProfileViewModelTest {
         coEvery { mockSwRepository.getUser(userId) } returns Result.failure(error)
 
         val viewModel = OtherUserProfileViewModel(
-            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockErrorReporter
+            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockUserNotifier
         )
         advanceUntilIdle()
 
@@ -102,7 +102,7 @@ class OtherUserProfileViewModelTest {
         coEvery { mockSwRepository.getUser(userId) } returns Result.failure(Exception("Network error"))
 
         val viewModel = OtherUserProfileViewModel(
-            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockErrorReporter
+            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockUserNotifier
         )
         advanceUntilIdle()
 
@@ -121,7 +121,7 @@ class OtherUserProfileViewModelTest {
                 Result.failure(Exception("Network error"))
 
         val viewModel = OtherUserProfileViewModel(
-            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockErrorReporter
+            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockUserNotifier
         )
         advanceUntilIdle()
 
@@ -144,7 +144,7 @@ class OtherUserProfileViewModelTest {
         coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
 
         val viewModel = OtherUserProfileViewModel(
-            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockErrorReporter
+            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockUserNotifier
         )
         advanceUntilIdle()
 
@@ -170,7 +170,7 @@ class OtherUserProfileViewModelTest {
         coEvery { mockCountriesRepository.getCityById("100") } returns city
 
         val viewModel = OtherUserProfileViewModel(
-            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockErrorReporter
+            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockUserNotifier
         )
         advanceUntilIdle()
 
@@ -200,7 +200,7 @@ class OtherUserProfileViewModelTest {
         } returns Result.success(Unit)
 
         val viewModel = OtherUserProfileViewModel(
-            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockErrorReporter
+            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockUserNotifier
         )
         advanceUntilIdle()
 
@@ -225,7 +225,7 @@ class OtherUserProfileViewModelTest {
         } returns Result.success(Unit)
 
         val viewModel = OtherUserProfileViewModel(
-            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockErrorReporter
+            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockUserNotifier
         )
         advanceUntilIdle()
 
@@ -247,7 +247,7 @@ class OtherUserProfileViewModelTest {
         every { mockSwRepository.getCurrentUserFlow() } returns flowOf(null)
 
         val viewModel = OtherUserProfileViewModel(
-            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockErrorReporter
+            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockUserNotifier
         )
 
         // Используем advanceTimeBy для срабатывания timeout (10 сек + запас)

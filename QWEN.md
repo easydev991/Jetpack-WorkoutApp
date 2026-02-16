@@ -98,7 +98,7 @@ Presentation (UI, ViewModel)
 #### Utilities
 
 - **Logger**: интерфейс для логирования (`AndroidLogger`, `NoOpLogger`)
-- **ErrorReporter**: интерфейс для отчетов об ошибках (`ErrorHandler`)
+- **UserNotifier**: интерфейс для отчетов об ошибках (`UserNotifierImpl`)
 - **AppError**: унифицированные ошибки приложения (`AppError`, `AppErrorExt`)
 - **AppConstants**: константы приложения
 - **DateFormatter**: форматирование дат

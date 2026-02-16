@@ -8,8 +8,8 @@ import com.swparks.ui.model.BlacklistAction
 import com.swparks.ui.model.toApiOption
 import com.swparks.ui.state.BlacklistUiState
 import com.swparks.util.AppError
-import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
+import com.swparks.util.UserNotifier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,13 +23,13 @@ import kotlinx.coroutines.launch
  *
  * @param swRepository Репозиторий для работы с API и загрузки данных
  * @param logger Логгер для записи сообщений
- * @param errorReporter Обработчик ошибок для отправки ошибок в UI
+ * @param userNotifier Обработчик ошибок для отправки ошибок в UI
  */
 @Suppress("TooGenericExceptionCaught")
 class BlacklistViewModel(
     private val swRepository: SWRepository,
     private val logger: Logger,
-    private val errorReporter: ErrorReporter
+    private val userNotifier: UserNotifier
 ) : ViewModel(), IBlacklistViewModel {
 
     private companion object {
@@ -67,7 +67,7 @@ class BlacklistViewModel(
                     val message = "Ошибка при загрузке черного списка: ${error.message}"
                     logger.e(TAG, message)
                     _uiState.value = BlacklistUiState.Error("Ошибка загрузки черного списка")
-                    errorReporter.handleError(AppError.Generic(message, error))
+                    userNotifier.handleError(AppError.Generic(message, error))
                 }
                 .collect { blacklist ->
                     _uiState.value = BlacklistUiState.Success(blacklist = blacklist)
@@ -120,7 +120,7 @@ class BlacklistViewModel(
                     onFailure = { error ->
                         val message = "Ошибка при удалении из черного списка: ${error.message}"
                         logger.e(TAG, message)
-                        errorReporter.handleError(AppError.Generic(message, error))
+                        userNotifier.handleError(AppError.Generic(message, error))
                         _itemToRemove.value = null
                         _isRemoving.value = false
                         // Возвращаем состояние Success с isLoading = false
@@ -133,7 +133,7 @@ class BlacklistViewModel(
             } catch (e: Exception) {
                 val message = "Ошибка при удалении из черного списка: ${e.message}"
                 logger.e(TAG, message)
-                errorReporter.handleError(AppError.Generic(message, e))
+                userNotifier.handleError(AppError.Generic(message, e))
                 _itemToRemove.value = null
                 _isRemoving.value = false
                 // Возвращаем состояние Success с isLoading = false

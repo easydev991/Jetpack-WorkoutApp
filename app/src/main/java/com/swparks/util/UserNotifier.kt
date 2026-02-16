@@ -7,14 +7,14 @@ import kotlinx.coroutines.flow.SharedFlow
  *
  * Используется во всех ViewModels для централизованной обработки ошибок
  * и информационных сообщений.
- * Реализация (ErrorHandler) логирует и отправляет их в SharedFlow
+ * Реализация (UserNotifierImpl) логирует и отправляет их в SharedFlow
  * для отображения пользователю через Snackbar/Toast/Alert.
  *
- * @see ErrorHandler
+ * @see UserNotifierImpl
  * @see AppError
  * @see AppNotification
  */
-interface ErrorReporter {
+interface UserNotifier {
     /**
      * Поток ошибок для подписки из UI-слоя.
      *

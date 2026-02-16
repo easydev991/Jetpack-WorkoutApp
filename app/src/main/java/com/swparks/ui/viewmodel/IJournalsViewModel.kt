@@ -54,7 +54,7 @@ interface IJournalsViewModel : IJournalSettingsViewModel {
      * Редактировать настройки дневника.
      *
      * После успешного обновления эмитится событие [JournalsEvent.JournalSettingsSaved].
-     * Информационные сообщения и ошибки отправляются через [com.swparks.util.ErrorReporter].
+     * Информационные сообщения и ошибки отправляются через [com.swparks.util.UserNotifier].
      *
      * @param journalId Идентификатор дневника
      * @param title Новое название дневника

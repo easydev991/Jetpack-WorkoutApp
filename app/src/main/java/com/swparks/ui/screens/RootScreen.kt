@@ -65,13 +65,13 @@ fun RootScreen(appState: AppState) {
     // Состояние для Snackbar
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Собираем ошибки из ErrorReporter и показываем в Snackbar
+    // Собираем ошибки из UserNotifier и показываем в Snackbar
     LaunchedEffect(Unit) {
-        appContainer.errorReporter.errorFlow.collect { error ->
+        appContainer.userNotifier.errorFlow.collect { error ->
             // Логируем ошибку для отладки
             Log.e(
                 "RootScreen",
-                "Ошибка из ErrorReporter: ${error.javaClass.simpleName}: ${error.message}"
+                "Ошибка из UserNotifier: ${error.javaClass.simpleName}: ${error.message}"
             )
 
             // Преобразуем ошибку в локализованное сообщение для пользователя
@@ -88,7 +88,7 @@ fun RootScreen(appState: AppState) {
 
     // Собираем информационные уведомления и показываем в Snackbar
     LaunchedEffect(Unit) {
-        appContainer.errorReporter.notificationFlow.collect { notification ->
+        appContainer.userNotifier.notificationFlow.collect { notification ->
             // Показываем Snackbar с сообщением
             snackbarHostState.showSnackbar(
                 message = notification.message,

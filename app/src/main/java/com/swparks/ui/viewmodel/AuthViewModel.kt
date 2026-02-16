@@ -7,7 +7,7 @@ import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.ILogoutUseCase
 import com.swparks.ui.model.LoginCredentials
 import com.swparks.util.AppError
-import com.swparks.util.ErrorReporter
+import com.swparks.util.UserNotifier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,16 +27,16 @@ sealed class AuthUiState {
  * ViewModel для управления авторизацией пользователей.
  *
  * Использует LoginUseCase и LogoutUseCase для авторизации и выхода из системы.
- * Управляет состоянием UI авторизации. Обрабатывает ошибки через ErrorReporter.
+ * Управляет состоянием UI авторизации. Обрабатывает ошибки через UserNotifier.
  *
  * @param loginUseCase Use case для входа в систему
  * @param logoutUseCase Use case для выхода из системы
- * @param errorReporter Интерфейс для обработки и отправки ошибок в UI-слой
+ * @param userNotifier Интерфейс для обработки и отправки ошибок в UI-слой
  */
 class AuthViewModel(
     private val loginUseCase: ILoginUseCase,
     private val logoutUseCase: ILogoutUseCase,
-    private val errorReporter: ErrorReporter,
+    private val userNotifier: UserNotifier,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
@@ -58,8 +58,8 @@ class AuthViewModel(
                     val errorMessage = exception.message ?: "Неизвестная ошибка авторизации"
                     _uiState.value = AuthUiState.Error(message = errorMessage)
 
-                    // Отправляем ошибку через ErrorReporter
-                    errorReporter.handleError(
+                    // Отправляем ошибку через UserNotifier
+                    userNotifier.handleError(
                         AppError.Network(
                             message = "Не удалось войти. Проверьте подключение к интернету.",
                             throwable = exception

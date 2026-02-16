@@ -7,12 +7,12 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Тесты для проверки интеграции ErrorReporter в AppContainer.
+ * Тесты для проверки интеграции UserNotifier в AppContainer.
  *
  * Проверяет, что:
- * 1. ErrorReporter корректно создается в DefaultAppContainer
- * 2. ErrorReporter передается во все ViewModels
- * 3. ErrorReporter используется для обработки ошибок
+ * 1. UserNotifier корректно создается в DefaultAppContainer
+ * 2. UserNotifier передается во все ViewModels
+ * 3. UserNotifier используется для обработки ошибок
  */
 class DefaultAppContainerTest {
 
@@ -25,13 +25,13 @@ class DefaultAppContainerTest {
     }
 
     @Test
-    fun `AppContainer создает ErrorHandler для errorReporter`() {
+    fun `AppContainer создает UserNotifierImpl для userNotifier`() {
         // Given
         val container = DefaultAppContainer(mockContext)
 
         // Then
-        assert(container.errorReporter is com.swparks.util.ErrorHandler) {
-            "errorReporter должен быть реализацией ErrorHandler"
+        assert(container.userNotifier is com.swparks.util.UserNotifierImpl) {
+            "userNotifier должен быть реализацией UserNotifierImpl"
         }
     }
 }

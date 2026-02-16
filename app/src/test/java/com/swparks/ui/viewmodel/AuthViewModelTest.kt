@@ -5,7 +5,7 @@ import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.ILogoutUseCase
 import com.swparks.ui.model.LoginCredentials
 import com.swparks.util.AppError
-import com.swparks.util.ErrorReporter
+import com.swparks.util.UserNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -27,7 +27,7 @@ class AuthViewModelTest {
 
     private lateinit var loginUseCase: ILoginUseCase
     private lateinit var logoutUseCase: ILogoutUseCase
-    private lateinit var errorReporter: ErrorReporter
+    private lateinit var userNotifier: UserNotifier
     private lateinit var authViewModel: AuthViewModel
 
     private val testCredentials =
@@ -39,14 +39,14 @@ class AuthViewModelTest {
         loginUseCase = mockk(relaxed = true)
         logoutUseCase = mockk(relaxed = true)
         val mockErrorFlow = MutableSharedFlow<AppError>()
-        errorReporter = mockk(relaxed = true) {
+        userNotifier = mockk(relaxed = true) {
             every { errorFlow } returns mockErrorFlow
         }
 
         // Настраиваем возвращаемое значение для loginUseCase
         coEvery { loginUseCase(any()) } returns Result.success(testLoginSuccess)
 
-        authViewModel = AuthViewModel(loginUseCase, logoutUseCase, errorReporter)
+        authViewModel = AuthViewModel(loginUseCase, logoutUseCase, userNotifier)
     }
 
     @After
@@ -98,7 +98,7 @@ class AuthViewModelTest {
     }
 
     @Test
-    fun login_whenUseCaseFails_thenCallsErrorReporter() = runTest {
+    fun login_whenUseCaseFails_thenCallsUserNotifier() = runTest {
         // Given
         val testException = RuntimeException("Login failed")
         coEvery { loginUseCase(any()) } returns Result.failure(testException)
@@ -107,9 +107,9 @@ class AuthViewModelTest {
         authViewModel.login(testCredentials)
         advanceUntilIdle()
 
-        // Then - проверяем, что errorReporter.handleError был вызван
+        // Then - проверяем, что userNotifier.handleError был вызван
         verify {
-            errorReporter.handleError(
+            userNotifier.handleError(
                 match<AppError> { error ->
                     error is AppError.Network &&
                             error.message.contains("Не удалось войти")

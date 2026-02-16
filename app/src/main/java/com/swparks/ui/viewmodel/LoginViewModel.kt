@@ -32,7 +32,7 @@ import kotlinx.coroutines.launch
  * @param logger Логгер для записи сообщений
  * @param loginUseCase Use case для входа в систему
  * @param resetPasswordUseCase Use case для восстановления пароля
- * @param errorReporter Интерфейс для обработки и отправки ошибок в UI-слой
+ * @param userNotifier Интерфейс для обработки и отправки ошибок в UI-слой
  */
 class LoginViewModel(
     private val logger: Logger,
@@ -112,7 +112,7 @@ class LoginViewModel(
                     _uiState.value = LoginUiState.LoginError(errorMessage, exception)
                     _loginError.value = errorMessage
 
-                    // Не отправляем в errorReporter - ошибка отображается под полем пароля
+                    // Не отправляем в userNotifier - ошибка отображается под полем пароля
                 }
         }
     }
@@ -147,7 +147,7 @@ class LoginViewModel(
                     _uiState.value = LoginUiState.ResetError(errorMessage, exception)
                     _resetError.value = errorMessage
 
-                    // Не отправляем в errorReporter - ошибка отображается под полем логина
+                    // Не отправляем в userNotifier - ошибка отображается под полем логина
                 }
         }
     }

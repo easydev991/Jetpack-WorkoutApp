@@ -18,7 +18,7 @@ import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.model.canCreateEntry
 import com.swparks.ui.state.JournalEntriesUiState
 import com.swparks.util.AppError
-import com.swparks.util.ErrorReporter
+import com.swparks.util.UserNotifier
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,7 +48,7 @@ data class JournalEntriesDeps(
     val preferencesRepository: UserPreferencesRepository,
     val swRepository: SWRepository,
     val savedStateHandle: SavedStateHandle,
-    val errorReporter: ErrorReporter,
+    val userNotifier: UserNotifier,
     val resources: ResourcesProvider,
 )
 
@@ -252,7 +252,7 @@ class JournalEntriesViewModel(
                     },
                     onFailure = { error ->
                         val message = "Ошибка при синхронизации записей: ${error.message}"
-                        deps.errorReporter.handleError(AppError.Generic(message, error))
+                        deps.userNotifier.handleError(AppError.Generic(message, error))
                         _isRefreshing.value = false
                         // Если это первая загрузка и список пустой - показываем ошибку
                         val currentState = _uiState.value
@@ -264,7 +264,7 @@ class JournalEntriesViewModel(
                 )
             } catch (e: Exception) {
                 val message = "Исключение при загрузке записей: ${e.message}"
-                deps.errorReporter.handleError(AppError.Generic(message, e))
+                deps.userNotifier.handleError(AppError.Generic(message, e))
                 _isRefreshing.value = false
                 val currentState = _uiState.value
                 if (currentState is JournalEntriesUiState.Content && currentState.entries.isEmpty()) {
@@ -287,7 +287,7 @@ class JournalEntriesViewModel(
      * Удалить запись из дневника.
      *
      * Удаляет запись через use case. Информационные сообщения и ошибки
-     * отправляются через [ErrorReporter].
+     * отправляются через [UserNotifier].
      *
      * @param entryId Идентификатор записи
      */
@@ -300,10 +300,10 @@ class JournalEntriesViewModel(
                 val result = deps.deleteJournalEntryUseCase(journalOwnerId, journalId, entryId)
                 result
                     .onSuccess {
-                        deps.errorReporter.showInfo(deps.resources.getString(R.string.entry_deleted))
+                        deps.userNotifier.showInfo(deps.resources.getString(R.string.entry_deleted))
                     }
                     .onFailure { error ->
-                        deps.errorReporter.handleError(
+                        deps.userNotifier.handleError(
                             AppError.Generic(
                                 error.message
                                     ?: deps.resources.getString(R.string.error_delete_entry), error
@@ -311,7 +311,7 @@ class JournalEntriesViewModel(
                         )
                     }
             } catch (e: Exception) {
-                deps.errorReporter.handleError(
+                deps.userNotifier.handleError(
                     AppError.Generic(
                         deps.resources.getString(R.string.error_delete_entry),
                         e
@@ -422,7 +422,7 @@ class JournalEntriesViewModel(
 
                     // Эмитим событие об успехе
                     _events.emit(JournalEntriesEvent.JournalSettingsSaved(journal))
-                    deps.errorReporter.showInfo(deps.resources.getString(R.string.settings_saved))
+                    deps.userNotifier.showInfo(deps.resources.getString(R.string.settings_saved))
                 },
                 onFailure = { error ->
                     Log.e(TAG, "Ошибка загрузки дневника после обновления: ${error.message}")
@@ -432,7 +432,7 @@ class JournalEntriesViewModel(
                     if (currentJournal != null) {
                         _events.emit(JournalEntriesEvent.JournalSettingsSaved(currentJournal))
                     }
-                    deps.errorReporter.showInfo(deps.resources.getString(R.string.settings_saved))
+                    deps.userNotifier.showInfo(deps.resources.getString(R.string.settings_saved))
                 }
             )
     }
@@ -450,6 +450,6 @@ class JournalEntriesViewModel(
                 deps.resources.getString(R.string.error_saving_settings)
             }
         }
-        deps.errorReporter.handleError(AppError.Generic(message, error))
+        deps.userNotifier.handleError(AppError.Generic(message, error))
     }
 }

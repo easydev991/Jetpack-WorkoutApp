@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.util.AppError
-import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
+import com.swparks.util.UserNotifier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,13 +27,13 @@ sealed interface UserFriendsUiState {
  * @param userId ID пользователя, чей список друзей нужно показать
  * @param swRepository Репозиторий для работы с API
  * @param logger Логгер
- * @param errorReporter Обработчик ошибок
+ * @param userNotifier Обработчик ошибок
  */
 class UserFriendsViewModel(
     private val userId: Long,
     private val swRepository: SWRepository,
     private val logger: Logger,
-    private val errorReporter: ErrorReporter,
+    private val userNotifier: UserNotifier,
 ) : ViewModel() {
 
     private companion object {
@@ -59,7 +59,7 @@ class UserFriendsViewModel(
                 }
                 .onFailure { error ->
                     logger.e(TAG, "Ошибка загрузки друзей: ${error.message}")
-                    errorReporter.handleError(
+                    userNotifier.handleError(
                         AppError.Network(
                             message = "Не удалось загрузить список друзей",
                             throwable = error

@@ -71,9 +71,9 @@ import com.swparks.ui.viewmodel.TextEntryViewModel
 import com.swparks.ui.viewmodel.UserFriendsViewModel
 import com.swparks.ui.viewmodel.UserTrainingParksViewModel
 import com.swparks.util.AndroidLogger
-import com.swparks.util.ErrorHandler
-import com.swparks.util.ErrorReporter
 import com.swparks.util.Logger
+import com.swparks.util.UserNotifier
+import com.swparks.util.UserNotifierImpl
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -89,7 +89,7 @@ interface AppContainer {
 
     // Сервисы для обработки ошибок
     val logger: Logger
-    val errorReporter: ErrorReporter
+    val userNotifier: UserNotifier
 
     // Use cases для авторизации
     val loginUseCase: ILoginUseCase
@@ -167,7 +167,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
     }
 
     override val logger: Logger = AndroidLogger()
-    override val errorReporter: ErrorReporter = ErrorHandler(logger)
+    override val userNotifier: UserNotifier = UserNotifierImpl(logger)
 
     // ==================== Resources Provider ====================
 
@@ -393,7 +393,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
         countriesRepository = countriesRepository,
         swRepository = swRepository,
         logger = logger,
-        errorReporter = errorReporter
+        userNotifier = userNotifier
     )
 
     /** Factory метод для создания FriendsListViewModel */
@@ -401,7 +401,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
         userDao = userDao,
         swRepository = swRepository,
         logger = logger,
-        errorReporter = errorReporter
+        userNotifier = userNotifier
     )
 
     /** Factory метод для создания UserFriendsViewModel */
@@ -409,14 +409,14 @@ class DefaultAppContainer(context: Context) : AppContainer {
         userId = userId,
         swRepository = swRepository,
         logger = logger,
-        errorReporter = errorReporter
+        userNotifier = userNotifier
     )
 
     /** Factory метод для создания BlacklistViewModel */
     override fun blacklistViewModelFactory() = BlacklistViewModel(
         swRepository = swRepository,
         logger = logger,
-        errorReporter = errorReporter
+        userNotifier = userNotifier
     )
 
     /** Factory метод для создания UserTrainingParksViewModel */
@@ -424,7 +424,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
         swRepository = swRepository,
         userId = userId,
         logger = logger,
-        errorReporter = errorReporter
+        userNotifier = userNotifier
     )
 
     /** Factory метод для создания JournalsViewModel */
@@ -434,7 +434,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
         syncJournalsUseCase = syncJournalsUseCase,
         deleteJournalUseCase = deleteJournalUseCase,
         editJournalSettingsUseCase = editJournalSettingsUseCase,
-        errorReporter = errorReporter,
+        userNotifier = userNotifier,
         resources = resourcesProvider
     )
 
@@ -456,7 +456,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
                 preferencesRepository = preferencesRepository,
                 swRepository = swRepository,
                 savedStateHandle = savedStateHandle,
-                errorReporter = errorReporter,
+                userNotifier = userNotifier,
                 resources = resourcesProvider
             )
         )
@@ -464,7 +464,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
     /** Factory метод для создания TextEntryViewModel */
     override fun textEntryViewModelFactory(mode: TextEntryMode) = TextEntryViewModel(
         textEntryUseCase = textEntryUseCase,
-        errorReporter = errorReporter,
+        userNotifier = userNotifier,
         mode = mode,
         context = appContext
     )
@@ -490,7 +490,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
             countriesRepository = countriesRepository,
             swRepository = swRepository,
             logger = logger,
-            errorReporter = errorReporter
+            userNotifier = userNotifier
         )
 
     // ==================== API клиенты для разных функциональных областей ====================
