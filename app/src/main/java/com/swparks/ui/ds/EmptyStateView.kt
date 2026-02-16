@@ -15,11 +15,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
 
 /**
- * Компонент для отображения состояния пустого списка с текстом и кнопкой действия.
+ * Компонент для отображения состояния пустого списка с текстом и опциональной кнопкой действия.
  *
  * @param modifier Модификатор для настройки внешнего вида
  * @param text Локализованный текст для отображения
- * @param buttonTitle Локализованный заголовок кнопки
+ * @param buttonTitle Локализованный заголовок кнопки (если null, кнопка не отображается)
  * @param enabled Включена ли кнопка (по умолчанию true)
  * @param onButtonClick Замыкание для обработки нажатия на кнопку
  */
@@ -27,7 +27,7 @@ import com.swparks.R
 fun EmptyStateView(
     modifier: Modifier = Modifier,
     text: String,
-    buttonTitle: String,
+    buttonTitle: String? = null,
     enabled: Boolean = true,
     onButtonClick: () -> Unit = {}
 ) {
@@ -44,11 +44,13 @@ fun EmptyStateView(
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Button(
-                enabled = enabled,
-                onClick = onButtonClick
-            ) {
-                Text(text = buttonTitle)
+            if (buttonTitle != null) {
+                Button(
+                    enabled = enabled,
+                    onClick = onButtonClick
+                ) {
+                    Text(text = buttonTitle)
+                }
             }
         }
     }

@@ -444,4 +444,42 @@ class TextEntryViewModelTest {
         assertFalse(state.isSendEnabled) // Кнопка отключена, так как текст равен oldEntry
         assertNull(state.error)
     }
+
+    @Test
+    fun onTextChanged_WhenMessage_ThenUpdatesStateAndEnablesButton() {
+        // Given
+        val userId = 123L
+        val userName = "Test User"
+        val mode = TextEntryMode.Message(userId, userName)
+        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+
+        // When
+        viewModel.onTextChanged(testText)
+
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals(testText, state.text)
+        assertTrue(state.isSendEnabled)
+        assertNull(state.error)
+    }
+
+    @Test
+    fun onSend_WhenMessageAndSuccess_ThenEmitsSuccessEvent() = runTest {
+        // Given
+        val userId = 123L
+        val userName = "Test User"
+        val mode = TextEntryMode.Message(userId, userName)
+        viewModel = TextEntryViewModel(textEntryUseCase, errorReporter, mode, context)
+        viewModel.onTextChanged(testText)
+        coEvery { textEntryUseCase.sendMessageTo(userId, testText) } returns Result.success(Unit)
+
+        // When
+        viewModel.onSend()
+        advanceUntilIdle()
+
+        // Then
+        val event = viewModel.events.first()
+        assertTrue(event is TextEntryEvent.Success)
+        coVerify(exactly = 1) { textEntryUseCase.sendMessageTo(userId, testText) }
+    }
 }

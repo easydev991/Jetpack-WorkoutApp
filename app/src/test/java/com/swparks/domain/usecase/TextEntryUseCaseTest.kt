@@ -173,4 +173,35 @@ class TextEntryUseCaseTest {
             )
         }
     }
+
+    @Test
+    fun sendMessageTo_whenSuccess_thenReturnsSuccess() = runTest {
+        // Given
+        val userId = 123L
+        val message = "Hello!"
+        coEvery { swRepository.sendMessage(message, userId) } returns Result.success(Unit)
+
+        // When
+        val result = textEntryUseCase.sendMessageTo(userId, message)
+
+        // Then
+        assertTrue(result.isSuccess)
+        coVerify(exactly = 1) { swRepository.sendMessage(message, userId) }
+    }
+
+    @Test
+    fun sendMessageTo_whenError_thenReturnsError() = runTest {
+        // Given
+        val userId = 123L
+        val message = "Hello!"
+        val exception = Exception("Network error")
+        coEvery { swRepository.sendMessage(message, userId) } returns Result.failure(exception)
+
+        // When
+        val result = textEntryUseCase.sendMessageTo(userId, message)
+
+        // Then
+        assertTrue(result.isFailure)
+        coVerify(exactly = 1) { swRepository.sendMessage(message, userId) }
+    }
 }

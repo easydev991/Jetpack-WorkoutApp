@@ -88,6 +88,14 @@ sealed class Screen(
         fun createRoute(userId: Long) = "user_training_parks/$userId"
     }
 
+    object UserFriends : Screen("user_friends/{userId}", parentTab = Profile) {
+        fun createRoute(userId: Long) = "user_friends/$userId"
+    }
+
+    object OtherUserProfile : Screen("other_user_profile/{userId}", parentTab = Profile) {
+        fun createRoute(userId: Long) = "other_user_profile/$userId"
+    }
+
     object Blacklist : Screen("blacklist", parentTab = Profile)
 
     object JournalsList : Screen("journals_list/{userId}", parentTab = Profile) {
@@ -137,8 +145,8 @@ sealed class Screen(
                 Chat, Friends, MyFriends, UserSearch,
 
                 // Экраны профиля
-                EditProfile, UserParks, UserTrainingParks, Blacklist,
-                JournalsList, JournalEntries, ChangePassword, SelectCountry, SelectCity,
+                EditProfile, UserParks, UserTrainingParks, UserFriends, OtherUserProfile,
+                Blacklist, JournalsList, JournalEntries, ChangePassword, SelectCountry, SelectCity,
 
                 // Экраны настроек
                 ThemeIcon

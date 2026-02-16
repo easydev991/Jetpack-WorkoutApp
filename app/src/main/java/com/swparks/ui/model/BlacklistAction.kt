@@ -9,15 +9,18 @@ import com.swparks.data.model.ApiBlacklistOption
  */
 enum class BlacklistAction(
     @param:StringRes val description: Int,
-    @param:StringRes val alertMessage: Int
+    @param:StringRes val alertMessage: Int,
+    @param:StringRes val alertMessageDetailed: Int
 ) {
     BLOCK(
         description = R.string.block,
-        alertMessage = R.string.user_will_be_blocked
+        alertMessage = R.string.user_will_be_blocked,
+        alertMessageDetailed = R.string.block_user_alert
     ),
     UNBLOCK(
         description = R.string.unblock,
-        alertMessage = R.string.user_will_be_unblocked
+        alertMessage = R.string.user_will_be_unblocked,
+        alertMessageDetailed = R.string.unblock_user_alert
     )
 }
 

@@ -1,3 +1,5 @@
+@file:Suppress("UnusedPrivateMember")
+
 package com.swparks.ui.screens.common
 
 import android.content.res.Configuration
@@ -22,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,8 +37,8 @@ import com.swparks.ui.ds.SWButtonMode
 import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.ds.SWTextEditor
 import com.swparks.ui.model.TextEntryMode
+import com.swparks.ui.model.getFormattedTitle
 import com.swparks.ui.model.getPlaceholder
-import com.swparks.ui.model.getTitle
 import com.swparks.ui.state.TextEntryEvent
 import com.swparks.ui.state.TextEntryUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
@@ -63,6 +66,7 @@ fun TextEntryScreen(
     onDismiss: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val resources = LocalContext.current.resources
 
     Scaffold(
         modifier = modifier,
@@ -70,7 +74,7 @@ fun TextEntryScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = stringResource(id = uiState.mode.getTitle())
+                        text = uiState.mode.getFormattedTitle(resources)
                     )
                 },
                 navigationIcon = {

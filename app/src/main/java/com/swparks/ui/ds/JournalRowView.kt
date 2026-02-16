@@ -221,6 +221,11 @@ private fun JournalHeader(
 
 @Composable
 private fun JournalActionsMenu(config: JournalActionsMenuConfig) {
+    // Не рендерить меню если нет действий
+    if (config.actions.isEmpty()) {
+        return
+    }
+
     Box {
         IconButton(
             modifier = Modifier

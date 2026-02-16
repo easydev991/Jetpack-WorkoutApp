@@ -76,6 +76,9 @@ class SWRepositoryProfileTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
+        // Mock userDao to return null (no existing cached user)
+        every { mockUserDao.getUserByIdFlow(any()) } returns flowOf(null)
+
         val repository = SWRepositoryImp(
             mockApi,
             mockDataStore,

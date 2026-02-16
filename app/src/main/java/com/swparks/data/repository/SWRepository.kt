@@ -321,9 +321,17 @@ class SWRepositoryImp(
             // 1. Загружаем с сервера
             val remoteUser = swApi.getUser(userId)
 
-            // 2. Сохраняем в кэш
+            // 2. Сохраняем в кэш, сохраняя существующие флаги отношений
             val currentUserId = preferencesRepository.getCurrentUserIdSync()
-            userDao.insert(remoteUser.toEntity(isCurrentUser = (userId == currentUserId)))
+            val existingUser = userDao.getUserByIdFlow(userId).first()
+            userDao.insert(
+                remoteUser.toEntity(
+                    isCurrentUser = (userId == currentUserId),
+                    isFriend = existingUser?.isFriend ?: false,
+                    isFriendRequest = existingUser?.isFriendRequest ?: false,
+                    isBlacklisted = existingUser?.isBlacklisted ?: false
+                )
+            )
 
             Result.success(remoteUser)
         } catch (e: IOException) {

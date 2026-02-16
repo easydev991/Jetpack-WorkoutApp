@@ -23,6 +23,7 @@
     <string name="send_friend_request">Add a friend</string>
     <string name="remove_friend">Remove from friends</string>
     <string name="message">Message</string>
+    <string name="message_placeholder">Write a message…</string>
 
     <string name="block">Block</string>
     <string name="unblock">Unblock</string>
@@ -66,6 +67,7 @@
 
     <string name="requests">Requests</string>
     <string name="friends">Friends</string>
+    <string name="no_friends_yet">No friends yet</string>
     <string name="where_trains">Where trains</string>
     <string name="added_parks">Added parks</string>
     <string name="male_added_parks">Added parks</string>
@@ -319,4 +321,10 @@
     <string name="user_not_found">Could not find this user</string>
     <string name="search_network_error">Search failed. Please check your connection and try again.</string>
     <string name="search_min_length_hint">Enter at least 2 characters</string>
+
+    <!-- Other User Profile Screen -->
+    <string name="blocked_by_user">This user has restricted access to their profile</string>
+    <string name="go_back">Go back</string>
+    <string name="block_user_alert">Are you sure you want to block this user? They will not be able to view your profile or send you messages.</string>
+    <string name="unblock_user_alert">Are you sure you want to unblock this user? They will be able to view your profile and send you messages again.</string>
 </resources>

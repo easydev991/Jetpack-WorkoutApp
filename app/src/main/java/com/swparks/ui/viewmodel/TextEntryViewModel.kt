@@ -74,21 +74,20 @@ class TextEntryViewModel(
             is TextEntryMode.EditPark,
             is TextEntryMode.EditEvent,
             is TextEntryMode.EditJournalEntry -> {
-                val editInfo = when (mode) {
-                    is TextEntryMode.EditPark -> mode.editInfo
-                    is TextEntryMode.EditEvent -> mode.editInfo
-                    is TextEntryMode.EditJournalEntry -> mode.editInfo
+                val oldEntry = when (mode) {
+                    is TextEntryMode.EditPark -> mode.editInfo.oldEntry
+                    is TextEntryMode.EditEvent -> mode.editInfo.oldEntry
+                    is TextEntryMode.EditJournalEntry -> mode.editInfo.oldEntry
                     else -> return
                 }
-                trimmedText != editInfo.oldEntry.trim()
+                trimmedText != oldEntry.trim()
             }
 
             is TextEntryMode.NewForPark,
             is TextEntryMode.NewForEvent,
             is TextEntryMode.NewForJournal,
-            is TextEntryMode.NewJournal -> true
-
-            else -> true
+            is TextEntryMode.NewJournal,
+            is TextEntryMode.Message -> true
         }
 
         if (!isTextChanged) {
@@ -146,6 +145,11 @@ class TextEntryViewModel(
                     mode.editInfo.parentObjectId,
                     mode.editInfo.entryId,
                     trimmedText
+                )
+
+                is TextEntryMode.Message -> textEntryUseCase.sendMessageTo(
+                    userId = mode.userId,
+                    message = trimmedText
                 )
             }
 
@@ -216,7 +220,8 @@ class TextEntryViewModel(
             is TextEntryMode.NewForPark,
             is TextEntryMode.NewForEvent,
             is TextEntryMode.NewForJournal,
-            is TextEntryMode.NewJournal -> trimmedText.isNotEmpty()
+            is TextEntryMode.NewJournal,
+            is TextEntryMode.Message -> trimmedText.isNotEmpty()
 
             is TextEntryMode.EditPark,
             is TextEntryMode.EditEvent,

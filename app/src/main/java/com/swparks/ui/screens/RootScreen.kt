@@ -41,9 +41,11 @@ import com.swparks.ui.screens.parks.ParksRootScreen
 import com.swparks.ui.screens.parks.ParksTopAppBar
 import com.swparks.ui.screens.profile.MyBlacklistScreen
 import com.swparks.ui.screens.profile.MyFriendsScreen
+import com.swparks.ui.screens.profile.OtherUserProfileScreen
 import com.swparks.ui.screens.profile.ProfileRootScreen
 import com.swparks.ui.screens.profile.ProfileTopAppBar
 import com.swparks.ui.screens.profile.SearchUserScreen
+import com.swparks.ui.screens.profile.UserFriendsScreen
 import com.swparks.ui.screens.profile.UserTrainingParksScreen
 import com.swparks.ui.screens.themeicon.ThemeIconScreen
 import com.swparks.ui.viewmodel.ThemeIconViewModel
@@ -209,8 +211,7 @@ fun RootScreen(appState: AppState) {
                         appState.navController.navigate(Screen.MyFriends.route)
                     },
                     onNavigateToSearchUsers = {
-                        Log.i("RootScreen", "Навигация на поиск пользователей")
-                        // TODO: Реализовать Screen.UserSearch.route
+                        appState.navController.navigate(Screen.UserSearch.route)
                     }
                 )
             }
@@ -243,37 +244,33 @@ fun RootScreen(appState: AppState) {
 
             // Детальные экраны площадок (будут добавлены позже)
             composable(route = Screen.ParkDetail.route) {
-                // TODO: Реализовать ParkDetailScreen
+                // FIXME: Реализовать ParkDetailScreen
             }
 
             composable(route = Screen.CreatePark.route) {
-                // TODO: Реализовать CreateParkScreen
+                // FIXME: Реализовать CreateParkScreen
             }
 
             composable(route = Screen.EditPark.route) {
-                // TODO: Реализовать EditParkScreen
+                // FIXME: Реализовать EditParkScreen
             }
 
             // Детальные экраны мероприятий (будут добавлены позже)
             composable(route = Screen.EventDetail.route) {
-                // TODO: Реализовать EventDetailScreen
+                // FIXME: Реализовать EventDetailScreen
             }
 
             composable(route = Screen.CreateEvent.route) {
-                // TODO: Реализовать CreateEventScreen
+                // FIXME: Реализовать CreateEventScreen
             }
 
             composable(route = Screen.EditEvent.route) {
-                // TODO: Реализовать EditEventScreen
+                // FIXME: Реализовать EditEventScreen
             }
 
             // Экраны сообщений (будут добавлены позже)
             composable(route = Screen.Chat.route) {
-                // TODO: Реализовать ChatScreen
-            }
-
-            composable(route = Screen.Friends.route) {
-                // TODO: Реализовать FriendsScreen
+                // FIXME: Реализовать ChatScreen
             }
 
             composable(route = Screen.UserSearch.route) {
@@ -284,13 +281,16 @@ fun RootScreen(appState: AppState) {
                     modifier = Modifier.fillMaxSize(),
                     viewModel = viewModel,
                     onBackClick = { appState.navController.popBackStack() },
+                    onUserClick = { userId ->
+                        appState.navController.navigate(Screen.OtherUserProfile.createRoute(userId))
+                    },
                     parentPaddingValues = paddingValues
                 )
             }
 
             // Экраны профиля (будут добавлены позже)
             composable(route = Screen.EditProfile.route) {
-                // TODO: Реализовать EditProfileScreen
+                // FIXME: Реализовать EditProfileScreen
             }
 
             composable(route = Screen.UserParks.route) {
@@ -315,6 +315,9 @@ fun RootScreen(appState: AppState) {
                     modifier = Modifier.fillMaxSize(),
                     viewModel = viewModel,
                     onBackClick = { appState.navController.popBackStack() },
+                    onFriendClick = { userId ->
+                        appState.navController.navigate(Screen.OtherUserProfile.createRoute(userId))
+                    },
                     parentPaddingValues = paddingValues
                 )
             }
@@ -336,6 +339,28 @@ fun RootScreen(appState: AppState) {
                 }
             }
 
+            composable(
+                route = Screen.UserFriends.route
+            ) { navBackStackEntry ->
+                val userId = navBackStackEntry.arguments?.getString("userId")?.toLongOrNull()
+                if (userId != null) {
+                    val viewModel = remember(appContainer, userId) {
+                        appContainer.userFriendsViewModelFactory(userId)
+                    }
+                    UserFriendsScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        viewModel = viewModel,
+                        onBackClick = { appState.navController.popBackStack() },
+                        onUserClick = { clickedUserId ->
+                            appState.navController.navigate(
+                                Screen.OtherUserProfile.createRoute(clickedUserId)
+                            )
+                        },
+                        parentPaddingValues = paddingValues
+                    )
+                }
+            }
+
             composable(route = Screen.Blacklist.route) {
                 val viewModel = remember(appContainer) {
                     appContainer.blacklistViewModelFactory()
@@ -346,6 +371,26 @@ fun RootScreen(appState: AppState) {
                     onBackClick = { appState.navController.popBackStack() },
                     parentPaddingValues = paddingValues
                 )
+            }
+
+            composable(route = Screen.OtherUserProfile.route) { navBackStackEntry ->
+                val userId = navBackStackEntry.arguments?.getString("userId")?.toLongOrNull()
+                if (userId != null) {
+                    val viewModel = remember(appContainer, userId) {
+                        appContainer.otherUserProfileViewModelFactory(userId)
+                    }
+                    OtherUserProfileScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        viewModel = viewModel,
+                        appState = appState,
+                        onBack = { appState.navController.popBackStack() },
+                        onNavigateToOwnProfile = {
+                            appState.navController.navigate(Screen.Profile.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    )
+                }
             }
 
             composable(route = Screen.JournalsList.route) { navBackStackEntry ->
@@ -426,15 +471,15 @@ fun RootScreen(appState: AppState) {
             }
 
             composable(route = Screen.ChangePassword.route) {
-                // TODO: Реализовать ChangePasswordScreen
+                // FIXME: Реализовать ChangePasswordScreen
             }
 
             composable(route = Screen.SelectCountry.route) {
-                // TODO: Реализовать SelectCountryScreen
+                // FIXME: Реализовать SelectCountryScreen
             }
 
             composable(route = Screen.SelectCity.route) {
-                // TODO: Реализовать SelectCityScreen
+                // FIXME: Реализовать SelectCityScreen
             }
 
             // Экраны настроек

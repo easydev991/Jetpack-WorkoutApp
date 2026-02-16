@@ -1,3 +1,5 @@
+@file:Suppress("UnusedPrivateMember")
+
 package com.swparks.ui.screens.journals
 
 import androidx.compose.foundation.clickable
@@ -28,6 +30,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,6 +62,7 @@ import com.swparks.ui.screens.common.TextEntrySheetHost
 import com.swparks.ui.state.JournalsUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.IJournalsViewModel
+import com.swparks.ui.viewmodel.JournalsEvent
 import com.swparks.util.DateFormatter
 
 /**
@@ -93,6 +97,9 @@ fun JournalsListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isDeleting by viewModel.isDeleting.collectAsState()
+
+    // Проверка: просмотр собственных дневников или чужих
+    val isOwner = appState.currentUser?.id == userId
 
     // Состояние диалога подтверждения удаления
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -141,8 +148,7 @@ fun JournalsListScreen(
             // Показывать FAB только если текущий пользователь авторизован И открывает свой профиль
             when (uiState) {
                 is JournalsUiState.Content -> {
-                    val currentUser = appState.currentUser
-                    if (!isDeleting && currentUser != null && userId == currentUser.id) {
+                    if (!isDeleting && isOwner) {
                         FloatingActionButton(
                             onClick = {
                                 // Открыть bottom sheet с режимом создания дневника
@@ -191,17 +197,26 @@ fun JournalsListScreen(
                         journals = contentState.journals,
                         isRefreshing = isRefreshing,
                         isDeleting = isDeleting,
+                        isOwner = isOwner,
                         onRefresh = { viewModel.loadJournals() },
                         onJournalClick = onJournalClick,
-                        onDeleteClick = { journal ->
-                            journalToDelete = journal
-                            showDeleteDialog = true
+                        onDeleteClick = if (isOwner) {
+                            { journal ->
+                                journalToDelete = journal
+                                showDeleteDialog = true
+                            }
+                        } else {
+                            { _ -> }
                         },
-                        onSetupClick = onSetupClick,
-                        onCreateJournalClick = {
-                            // Открыть bottom sheet для создания дневника
-                            textEntryMode = TextEntryMode.NewJournal(userId)
-                            showTextEntrySheet = true
+                        onSetupClick = if (isOwner) onSetupClick else { _ -> },
+                        onCreateJournalClick = if (isOwner) {
+                            {
+                                // Открыть bottom sheet для создания дневника
+                                textEntryMode = TextEntryMode.NewJournal(userId)
+                                showTextEntrySheet = true
+                            }
+                        } else {
+                            { }
                         }
                     )
                 }
@@ -264,10 +279,10 @@ private fun JournalsEventHandler(
 ) {
     LocalContext.current
 
-    androidx.compose.runtime.LaunchedEffect(Unit) {
+    LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is com.swparks.ui.viewmodel.JournalsEvent.JournalSettingsSaved -> {
+                is JournalsEvent.JournalSettingsSaved -> {
                     // Закрыть диалог только если это был наш journal
                     val journalToEditSettings = getJournalToEditSettings()
                     if (journalToEditSettings?.id == event.journal.id) {
@@ -275,8 +290,8 @@ private fun JournalsEventHandler(
                     }
                 }
 
-                is com.swparks.ui.viewmodel.JournalsEvent.ShowSnackbar -> {
-                    // Показать Snackbar (TODO: добавить SnackbarHost)
+                is JournalsEvent.ShowSnackbar -> {
+                    // Показать Snackbar (FIXME: добавить SnackbarHost)
                 }
             }
         }
@@ -285,6 +300,8 @@ private fun JournalsEventHandler(
 
 /**
  * Контент с Pull-to-Refresh и списком дневников
+ *
+ * @param isOwner Если true - показывать кнопки настроек и удаления; если false - скрыть меню действий
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -292,6 +309,7 @@ private fun ContentScreen(
     journals: List<Journal>,
     isRefreshing: Boolean,
     isDeleting: Boolean,
+    isOwner: Boolean = true,
     onRefresh: () -> Unit,
     onJournalClick: (
         journalId: Long,
@@ -335,6 +353,7 @@ private fun ContentScreen(
                 JournalsList(
                     journals = journals,
                     enabled = !isRefreshing && !isDeleting,
+                    isOwner = isOwner,
                     onJournalClick = onJournalClick,
                     onDeleteClick = onDeleteClick,
                     onSetupClick = onSetupClick
@@ -351,11 +370,14 @@ private fun ContentScreen(
 
 /**
  * Список дневников
+ *
+ * @param isOwner Если true - показывать кнопки SETUP и DELETE; если false - скрыть меню действий
  */
 @Composable
 private fun JournalsList(
     journals: List<Journal>,
     enabled: Boolean = true,
+    isOwner: Boolean = true,
     onJournalClick: (
         journalId: Long,
         journalOwnerId: Long,
@@ -407,10 +429,12 @@ private fun JournalsList(
                         ),
                         bodyText = journal.lastMessageText ?: "",
                         mode = JournalRowMode.ROOT,
-                        actions = listOf(
-                            JournalAction.SETUP,
-                            JournalAction.DELETE
-                        ),
+                        // Показывать действия только для владельца
+                        actions = if (isOwner) {
+                            listOf(JournalAction.SETUP, JournalAction.DELETE)
+                        } else {
+                            emptyList()
+                        },
                         onClickAction = { action ->
                             if (action == JournalAction.DELETE) {
                                 onDeleteClick(journal)

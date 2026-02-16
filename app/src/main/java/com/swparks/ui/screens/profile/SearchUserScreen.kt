@@ -49,6 +49,7 @@ import com.swparks.ui.viewmodel.ISearchUserViewModel
  * @param modifier Модификатор
  * @param viewModel ViewModel для управления состоянием экрана
  * @param onBackClick Callback для навигации назад
+ * @param onUserClick Callback для навигации на профиль найденного пользователя
  * @param parentPaddingValues Паддинги для учета BottomNavigationBar
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,6 +58,7 @@ fun SearchUserScreen(
     modifier: Modifier = Modifier,
     viewModel: ISearchUserViewModel,
     onBackClick: () -> Unit,
+    onUserClick: (Long) -> Unit,
     parentPaddingValues: PaddingValues
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -68,7 +70,7 @@ fun SearchUserScreen(
         searchQuery = searchQuery,
         onSearchQueryChange = { viewModel.searchQuery.value = it },
         onSearch = { viewModel.onSearch() },
-        onUserClick = viewModel::onUserClick,
+        onUserClick = onUserClick,
         onBackClick = onBackClick,
         onRetry = { viewModel.onSearch() },
         parentPaddingValues = parentPaddingValues

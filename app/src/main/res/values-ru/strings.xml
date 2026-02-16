@@ -28,6 +28,7 @@
     <string name="send_friend_request">Добавить в друзья</string>
     <string name="remove_friend">Удалить из друзей</string>
     <string name="message">Сообщение</string>
+    <string name="message_placeholder">Напишите сообщение…</string>
 
     <string name="block">Заблокировать</string>
     <string name="unblock">Разблокировать</string>
@@ -71,6 +72,7 @@
 
     <string name="requests">Заявки</string>
     <string name="friends">Друзья</string>
+    <string name="no_friends_yet">Друзей пока нет</string>
     <string name="where_trains">Где тренируется</string>
     <string name="added_parks">Добавленные</string>
     <string name="male_added_parks">Добавил площадки</string>
@@ -333,4 +335,10 @@
     <string name="user_not_found">Не удалось найти такого пользователя</string>
     <string name="search_network_error">Ошибка поиска. Проверьте подключение и попробуйте снова.</string>
     <string name="search_min_length_hint">Введите минимум 2 символа</string>
+
+    <!-- Other User Profile Screen -->
+    <string name="blocked_by_user">Этот пользователь ограничил доступ к своему профилю</string>
+    <string name="go_back">Назад</string>
+    <string name="block_user_alert">Вы уверены, что хотите заблокировать этого пользователя? Он не сможет просматривать ваш профиль и отправлять вам сообщения.</string>
+    <string name="unblock_user_alert">Вы уверены, что хотите разблокировать этого пользователя? Он снова сможет просматривать ваш профиль и отправлять вам сообщения.</string>
 </resources>

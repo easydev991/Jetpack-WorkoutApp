@@ -97,7 +97,7 @@ private val DarkColors = darkColorScheme(
 fun JetpackWorkoutAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     appTheme: AppTheme? = null,
-    dynamicColor: Boolean = false, // TODO: change to true when dynamic colors are available
+    dynamicColor: Boolean = false, // FIXME: change to true when dynamic colors are available
     content: @Composable () -> Unit
 ) {
     val useDarkTheme = when (appTheme) {

@@ -10,6 +10,8 @@ import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFact
 import com.swparks.data.crypto.CryptoManager
 import com.swparks.data.crypto.CryptoManagerImpl
 import com.swparks.data.database.SWDatabase
+import com.swparks.data.database.dao.DialogDao
+import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.interceptor.AuthInterceptor
@@ -26,6 +28,7 @@ import com.swparks.data.serializer.EncryptedStringSerializer
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.repository.JournalEntriesRepository
+import com.swparks.domain.repository.JournalsRepository
 import com.swparks.domain.repository.MessagesRepository
 import com.swparks.domain.usecase.CanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.CreateJournalUseCase
@@ -56,13 +59,16 @@ import com.swparks.domain.usecase.TextEntryUseCase
 import com.swparks.network.SWApi
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.viewmodel.BlacklistViewModel
+import com.swparks.ui.viewmodel.DialogsViewModel
 import com.swparks.ui.viewmodel.FriendsListViewModel
 import com.swparks.ui.viewmodel.JournalEntriesDeps
 import com.swparks.ui.viewmodel.JournalEntriesViewModel
 import com.swparks.ui.viewmodel.JournalsViewModel
+import com.swparks.ui.viewmodel.OtherUserProfileViewModel
 import com.swparks.ui.viewmodel.ProfileViewModel
 import com.swparks.ui.viewmodel.SearchUserViewModel
 import com.swparks.ui.viewmodel.TextEntryViewModel
+import com.swparks.ui.viewmodel.UserFriendsViewModel
 import com.swparks.ui.viewmodel.UserTrainingParksViewModel
 import com.swparks.util.AndroidLogger
 import com.swparks.util.ErrorHandler
@@ -77,7 +83,7 @@ interface AppContainer {
     val swRepository: SWRepository
     val secureTokenRepository: SecureTokenRepository
     val countriesRepository: CountriesRepository
-    val journalsRepository: com.swparks.domain.repository.JournalsRepository
+    val journalsRepository: JournalsRepository
     val journalEntriesRepository: JournalEntriesRepository
     val messagesRepository: MessagesRepository
 
@@ -107,6 +113,9 @@ interface AppContainer {
     /** Фабрика для FriendsListViewModel */
     fun friendsListViewModelFactory(): FriendsListViewModel
 
+    /** Фабрика для UserFriendsViewModel */
+    fun userFriendsViewModelFactory(userId: Long): UserFriendsViewModel
+
     /** Фабрика для BlacklistViewModel */
     fun blacklistViewModelFactory(): BlacklistViewModel
 
@@ -127,10 +136,13 @@ interface AppContainer {
     fun textEntryViewModelFactory(mode: TextEntryMode): TextEntryViewModel
 
     /** Фабрика для DialogsViewModel */
-    fun dialogsViewModelFactory(): com.swparks.ui.viewmodel.DialogsViewModel
+    fun dialogsViewModelFactory(): DialogsViewModel
 
     /** Фабрика для SearchUserViewModel */
     fun searchUserViewModelFactory(): SearchUserViewModel
+
+    /** Фабрика для OtherUserProfileViewModel */
+    fun otherUserProfileViewModelFactory(userId: Long): OtherUserProfileViewModel
 
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
@@ -190,12 +202,12 @@ class DefaultAppContainer(context: Context) : AppContainer {
     /**
      * DAO для работы с дневниками
      */
-    private val journalDao: com.swparks.data.database.dao.JournalDao by lazy { database.journalDao() }
+    private val journalDao: JournalDao by lazy { database.journalDao() }
 
     /**
      * DAO для работы с диалогами
      */
-    private val dialogDao: com.swparks.data.database.dao.DialogDao by lazy { database.dialogDao() }
+    private val dialogDao: DialogDao by lazy { database.dialogDao() }
 
     // ==================== Криптография и хранение токена ====================
 
@@ -274,7 +286,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
         CountriesRepositoryImpl(context = appContext, swApi = retrofitService, logger = logger)
     }
 
-    override val journalsRepository: com.swparks.domain.repository.JournalsRepository by lazy {
+    override val journalsRepository: JournalsRepository by lazy {
         JournalsRepositoryImpl(swApi = retrofitService, journalDao = journalDao)
     }
 
@@ -392,6 +404,14 @@ class DefaultAppContainer(context: Context) : AppContainer {
         errorReporter = errorReporter
     )
 
+    /** Factory метод для создания UserFriendsViewModel */
+    override fun userFriendsViewModelFactory(userId: Long) = UserFriendsViewModel(
+        userId = userId,
+        swRepository = swRepository,
+        logger = logger,
+        errorReporter = errorReporter
+    )
+
     /** Factory метод для создания BlacklistViewModel */
     override fun blacklistViewModelFactory() = BlacklistViewModel(
         swRepository = swRepository,
@@ -450,7 +470,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
     )
 
     /** Factory метод для создания DialogsViewModel */
-    override fun dialogsViewModelFactory() = com.swparks.ui.viewmodel.DialogsViewModel(
+    override fun dialogsViewModelFactory() = DialogsViewModel(
         messagesRepository = messagesRepository,
         swRepository = swRepository,
         logger = logger,
@@ -462,6 +482,16 @@ class DefaultAppContainer(context: Context) : AppContainer {
         swRepository = swRepository,
         logger = logger
     )
+
+    /** Factory метод для создания OtherUserProfileViewModel */
+    override fun otherUserProfileViewModelFactory(userId: Long) =
+        OtherUserProfileViewModel(
+            userId = userId,
+            countriesRepository = countriesRepository,
+            swRepository = swRepository,
+            logger = logger,
+            errorReporter = errorReporter
+        )
 
     // ==================== API клиенты для разных функциональных областей ====================
     // Все фабричные методы возвращают один и тот же экземпляр SWApi для консистентности

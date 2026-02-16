@@ -42,6 +42,7 @@ import com.swparks.ui.viewmodel.IFriendsListViewModel
  * @param modifier Модификатор
  * @param viewModel ViewModel для управления состоянием экрана
  * @param onBackClick Callback для навигации назад
+ * @param onFriendClick Callback для навигации на профиль друга
  * @param parentPaddingValues Паддинги для учета BottomNavigationBar
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,6 +51,7 @@ fun MyFriendsScreen(
     modifier: Modifier = Modifier,
     viewModel: IFriendsListViewModel,
     onBackClick: () -> Unit,
+    onFriendClick: (Long) -> Unit,
     parentPaddingValues: PaddingValues
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -62,7 +64,7 @@ fun MyFriendsScreen(
         parentPaddingValues = parentPaddingValues,
         onAcceptFriendRequest = { viewModel.onAcceptFriendRequest(it) },
         onDeclineFriendRequest = { viewModel.onDeclineFriendRequest(it) },
-        onFriendClick = { viewModel.onFriendClick(it) },
+        onFriendClick = onFriendClick,
         isProcessing = isProcessing
     )
 }

@@ -10,9 +10,10 @@ import android.widget.Toast
 import com.swparks.BuildConfig
 import com.swparks.R
 import com.swparks.util.AppConstants
+import com.swparks.util.Complaint
 
 private object Feedback {
-    const val recipient = "info@workout.su"
+    val recipients = arrayOf("info@workout.su", "cuties.84tilbury@icloud.com")
     const val subject = "Jetpack WorkoutApp: Обратная связь"
     val body = """
         Android SDK: ${Build.VERSION.SDK_INT}
@@ -22,7 +23,7 @@ private object Feedback {
     const val intentType = "message/rfc822"
 }
 
-private const val TAG = "MoreScreen_Feedback"
+private const val TAG = "FeedbackSender"
 
 /**
  * Отправляет отзыв по электронной почте.
@@ -30,9 +31,40 @@ private const val TAG = "MoreScreen_Feedback"
 fun sendFeedback(context: Context) {
     try {
         val intent = Intent(Intent.ACTION_SEND).apply {
-            putExtra(Intent.EXTRA_EMAIL, Feedback.recipient)
+            putExtra(Intent.EXTRA_EMAIL, Feedback.recipients)
             putExtra(Intent.EXTRA_SUBJECT, Feedback.subject)
             putExtra(Intent.EXTRA_TEXT, Feedback.body)
+            type = Feedback.intentType
+        }
+        context.startActivity(
+            Intent.createChooser(
+                intent,
+                context.getString(R.string.choose_email_client)
+            )
+        )
+    } catch (e: ActivityNotFoundException) {
+        logAndShowError(context, e)
+    } catch (e: SecurityException) {
+        logAndShowError(context, e)
+    } catch (e: IllegalArgumentException) {
+        logAndShowError(context, e)
+    } catch (e: IllegalStateException) {
+        logAndShowError(context, e)
+    }
+}
+
+/**
+ * Отправляет жалобу на контент по электронной почте.
+ *
+ * @param complaint Модель жалобы с темой и телом письма
+ * @param context Android Context
+ */
+fun sendComplaint(complaint: Complaint, context: Context) {
+    try {
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            putExtra(Intent.EXTRA_EMAIL, Feedback.recipients)
+            putExtra(Intent.EXTRA_SUBJECT, complaint.subject)
+            putExtra(Intent.EXTRA_TEXT, complaint.body)
             type = Feedback.intentType
         }
         context.startActivity(

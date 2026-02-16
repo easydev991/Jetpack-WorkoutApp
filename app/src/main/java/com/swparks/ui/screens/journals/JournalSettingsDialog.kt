@@ -1,3 +1,5 @@
+@file:Suppress("UnusedPrivateMember")
+
 package com.swparks.ui.screens.journals
 
 import androidx.compose.foundation.layout.Arrangement

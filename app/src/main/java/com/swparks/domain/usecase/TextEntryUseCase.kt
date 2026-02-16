@@ -101,4 +101,12 @@ class TextEntryUseCase(
         }
         return result
     }
+
+    override suspend fun sendMessageTo(userId: Long, message: String): Result<Unit> {
+        val result = swRepository.sendMessage(message, userId)
+        result.onSuccess {
+            Log.i("TextEntryUseCase", "Сообщение отправлено пользователю $userId")
+        }
+        return result
+    }
 }

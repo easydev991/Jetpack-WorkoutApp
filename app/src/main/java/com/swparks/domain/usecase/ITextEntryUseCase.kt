@@ -44,4 +44,9 @@ interface ITextEntryUseCase {
      * Редактировать комментарий к мероприятию
      */
     suspend fun editEventComment(eventId: Long, commentId: Long, text: String): Result<Unit>
+
+    /**
+     * Отправить сообщение пользователю
+     */
+    suspend fun sendMessageTo(userId: Long, message: String): Result<Unit>
 }

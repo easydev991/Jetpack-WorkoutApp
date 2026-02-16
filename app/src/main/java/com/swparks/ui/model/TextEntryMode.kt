@@ -1,5 +1,6 @@
 package com.swparks.ui.model
 
+import android.content.res.Resources
 import com.swparks.R
 
 /**
@@ -19,17 +20,23 @@ sealed class TextEntryMode {
     data class EditPark(val editInfo: EditInfo) : TextEntryMode()
     data class EditEvent(val editInfo: EditInfo) : TextEntryMode()
     data class EditJournalEntry(val ownerId: Long, val editInfo: EditInfo) : TextEntryMode()
+
+    // Сообщение пользователю
+    data class Message(val userId: Long, val userName: String) : TextEntryMode()
 }
 
 /**
- * Возвращает ID строкового ресурса для заголовка экрана
+ * Возвращает отформатированный заголовок для экрана ввода текста
+ *
+ * Для Message режима форматирует строку с именем пользователя
  */
-fun TextEntryMode.getTitle(): Int = when (this) {
-    is TextEntryMode.NewForPark, is TextEntryMode.NewForEvent -> R.string.new_comment_title
-    is TextEntryMode.NewForJournal -> R.string.new_entry_title
-    is TextEntryMode.NewJournal -> R.string.new_journal
-    is TextEntryMode.EditPark, is TextEntryMode.EditEvent -> R.string.edit_comment_title
-    is TextEntryMode.EditJournalEntry -> R.string.edit_entry_title
+fun TextEntryMode.getFormattedTitle(resources: Resources): String = when (this) {
+    is TextEntryMode.Message -> resources.getString(R.string.message_for_user, userName)
+    is TextEntryMode.NewForPark, is TextEntryMode.NewForEvent -> resources.getString(R.string.new_comment_title)
+    is TextEntryMode.NewForJournal -> resources.getString(R.string.new_entry_title)
+    is TextEntryMode.NewJournal -> resources.getString(R.string.new_journal)
+    is TextEntryMode.EditPark, is TextEntryMode.EditEvent -> resources.getString(R.string.edit_comment_title)
+    is TextEntryMode.EditJournalEntry -> resources.getString(R.string.edit_entry_title)
 }
 
 /**
@@ -38,5 +45,6 @@ fun TextEntryMode.getTitle(): Int = when (this) {
 fun TextEntryMode.getPlaceholder(): Int? = when (this) {
     is TextEntryMode.NewForJournal -> R.string.new_entry_placeholder
     is TextEntryMode.NewJournal -> R.string.new_journal_placeholder
+    is TextEntryMode.Message -> R.string.message_placeholder
     else -> null
 }
