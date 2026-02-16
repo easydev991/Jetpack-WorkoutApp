@@ -2,6 +2,7 @@ package com.swparks.data.model
 
 import com.swparks.data.database.entity.DialogEntity
 import com.swparks.data.datetime.FlexibleDateDeserializer
+import com.swparks.util.parseHtmlOrNull
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -22,7 +23,12 @@ data class DialogResponse(
     @SerialName("last_message_date")
     val lastMessageDate: String?,
     val count: Int?
-)
+) {
+    /**
+     * Текст последнего сообщения без HTML-тегов (compact mode - для превью в списке)
+     */
+    val parsedLastMessageText: String? = lastMessageText.parseHtmlOrNull(compactMode = true)
+}
 
 /**
  * Преобразовать DialogResponse в DialogEntity для сохранения в Room

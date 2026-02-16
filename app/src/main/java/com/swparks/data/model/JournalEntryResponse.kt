@@ -1,6 +1,7 @@
 package com.swparks.data.model
 
 import com.swparks.data.datetime.FlexibleDateDeserializer
+import com.swparks.util.parseHtmlOrNull
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -23,4 +24,9 @@ data class JournalEntryResponse(
     @SerialName("modify_date")
     val modifyDate: String?,
     val image: String?
-)
+) {
+    /**
+     * Текст записи без HTML-тегов (detail mode - сохраняет переносы)
+     */
+    val parsedMessage: String? = message.parseHtmlOrNull(compactMode = false)
+}

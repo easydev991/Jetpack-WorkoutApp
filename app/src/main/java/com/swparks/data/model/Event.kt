@@ -3,6 +3,7 @@ package com.swparks.data.model
 import com.swparks.data.datetime.FlexibleDateDeserializer
 import com.swparks.data.serialization.IntStringSerializer
 import com.swparks.data.serialization.LongStringSerializer
+import com.swparks.util.parseHtml
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -51,6 +52,11 @@ data class Event(
     @SerialName("train_here")
     val trainHere: Boolean? = null
 ) {
+    /**
+     * Описание без HTML-тегов (detail mode - сохраняет переносы)
+     */
+    val parsedDescription: String = description.parseHtml(compactMode = false)
+
     /**
      * Есть ли описание
      */
