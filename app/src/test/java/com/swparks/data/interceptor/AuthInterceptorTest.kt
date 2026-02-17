@@ -62,7 +62,7 @@ class AuthInterceptorTest {
 
         // Then
         verify {
-            Log.e("AuthInterceptor", "Ошибка авторизации (401): токен недействителен или истек")
+            Log.e("AuthInterceptor", match { it.contains("Ошибка авторизации (401)") })
             Log.i("AuthInterceptor", "Токен авторизации очищен")
         }
         verify { mockPreferencesRepository.clearToken() }

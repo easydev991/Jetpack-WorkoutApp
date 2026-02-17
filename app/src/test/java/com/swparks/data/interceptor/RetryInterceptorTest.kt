@@ -180,8 +180,8 @@ class RetryInterceptorTest {
     }
 
     @Test
-    fun test_io_exception_should_retry_exactly_3_times() {
-        // Given
+    fun test_io_exception_should_not_retry() {
+        // Given - IOException НЕ ретраится (только 502/503/504)
         val mockChain = mockk<Interceptor.Chain>()
         val mockRequest = mockk<Request>()
         val exception = IOException("Network error")
@@ -193,12 +193,12 @@ class RetryInterceptorTest {
         try {
             retryInterceptor.intercept(mockChain)
         } catch (e: IOException) {
-            // Ожидаем исключение после всех попыток
+            // Ожидаем исключение сразу без retry
         }
 
-        // Then
-        verify(exactly = 3) { mockChain.proceed(mockRequest) }
-        verify(atLeast = 1) { logger.w("RetryInterceptor", any()) }
+        // Then - только 1 попытка, IOException не ретраится
+        verify(exactly = 1) { mockChain.proceed(mockRequest) }
+        verify(exactly = 0) { logger.w("RetryInterceptor", any()) }
     }
 
     @Test

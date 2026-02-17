@@ -78,7 +78,6 @@ class TextEntryViewModel(
                     is TextEntryMode.EditPark -> mode.editInfo.oldEntry
                     is TextEntryMode.EditEvent -> mode.editInfo.oldEntry
                     is TextEntryMode.EditJournalEntry -> mode.editInfo.oldEntry
-                    else -> return
                 }
                 trimmedText != oldEntry.trim()
             }
@@ -202,7 +201,6 @@ class TextEntryViewModel(
                 is TextEntryMode.EditPark -> mode.editInfo
                 is TextEntryMode.EditEvent -> mode.editInfo
                 is TextEntryMode.EditJournalEntry -> mode.editInfo
-                else -> return ""
             }
             editInfo.oldEntry
         }
@@ -230,7 +228,6 @@ class TextEntryViewModel(
                     is TextEntryMode.EditPark -> mode.editInfo
                     is TextEntryMode.EditEvent -> mode.editInfo
                     is TextEntryMode.EditJournalEntry -> mode.editInfo
-                    else -> return false
                 }
                 trimmedText.isNotEmpty() && trimmedText != editInfo.oldEntry.trim()
             }

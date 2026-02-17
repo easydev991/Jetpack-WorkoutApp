@@ -1,6 +1,5 @@
 package com.swparks.domain.usecase
 
-import android.util.Log
 import com.swparks.data.SecureTokenRepository
 import com.swparks.data.TokenEncoder
 import com.swparks.data.UserPreferencesRepository
@@ -34,6 +33,7 @@ class LoginUseCase(
     private val swRepository: SWRepository,
     private val preferencesRepository: UserPreferencesRepository
 ) : ILoginUseCase {
+
     /**
      * Выполняет авторизацию пользователя.
      *
@@ -53,7 +53,6 @@ class LoginUseCase(
         // Сохраняем userId после успешной авторизации
         result.onSuccess { loginSuccess ->
             preferencesRepository.saveCurrentUserId(loginSuccess.userId)
-            Log.i("LoginUseCase", "Пользователь сохранён: ${loginSuccess.userId}")
         }
 
         return result

@@ -15,6 +15,7 @@ import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.interceptor.AuthInterceptor
+import com.swparks.data.interceptor.LoggingInterceptor
 import com.swparks.data.interceptor.RetryInterceptor
 import com.swparks.data.interceptor.TokenInterceptor
 import com.swparks.data.provider.ResourcesProviderImpl
@@ -78,6 +79,7 @@ import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
+import java.util.concurrent.TimeUnit
 
 interface AppContainer {
     val swRepository: SWRepository
@@ -248,11 +250,23 @@ class DefaultAppContainer(context: Context) : AppContainer {
         AuthInterceptor(preferencesRepository)
     }
 
+    // LoggingInterceptor для отладки HTTP запросов
+    private val loggingInterceptor: LoggingInterceptor by lazy {
+        LoggingInterceptor()
+    }
+
     // Создаем OkHttpClient с interceptor chain
-    // Порядок важен: retry → token → auth
+    // Порядок важен: logging → retry → token → auth
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
-            .addInterceptor(retryInterceptor)  // ← ОБЯЗАТЕЛЬНО ПЕРВЫМ!
+            // Таймауты для сетевых операций
+            .connectTimeout(15, TimeUnit.SECONDS)   // Установление соединения
+            .readTimeout(30, TimeUnit.SECONDS)      // Чтение данных
+            .writeTimeout(30, TimeUnit.SECONDS)     // Запись данных
+            .callTimeout(60, TimeUnit.SECONDS)      // Общее время запроса
+            // Interceptors
+            .addInterceptor(loggingInterceptor) // Логирование запросов/ответов
+            .addInterceptor(retryInterceptor)   // ← ОБЯЗАТЕЛЬНО ПЕРВЫМ после logging!
             .addInterceptor(tokenInterceptor)
             .addInterceptor(authInterceptor)
             .build()

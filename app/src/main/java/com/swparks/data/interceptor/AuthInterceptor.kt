@@ -49,14 +49,10 @@ class AuthInterceptor(
                     path.contains("/reset-password")
 
             if (!isAuthEndpoint) {
-                Log.e(TAG, "Ошибка авторизации (401): токен недействителен или истек")
-                Log.e(TAG, "URL запроса: ${request.url}")
-                Log.e(TAG, "Путь запроса: $path")
+                Log.e(TAG, "Ошибка авторизации (401): токен недействителен или истек для $path")
 
                 // Очищаем токен авторизации синхронно с защитой от гонок
                 clearToken()
-            } else {
-                Log.d(TAG, "Игнорируем 401 для эндпоинта авторизации: $path")
             }
         }
 
@@ -71,13 +67,11 @@ class AuthInterceptor(
         // Защита от гонок
         logoutMutex.tryLock().let { locked ->
             if (!locked) {
-                Log.w(TAG, "Выполняется другой логаут, пропускаем")
                 return
             }
 
             try {
                 if (isLoggingOut) {
-                    Log.w(TAG, "Уже выполняется логаут, пропускаем")
                     return
                 }
 

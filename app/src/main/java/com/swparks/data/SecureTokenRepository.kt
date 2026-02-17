@@ -12,8 +12,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
 import java.io.IOException
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Репозиторий для безопасного хранения токена авторизации.
@@ -21,6 +21,9 @@ import java.io.IOException
  * Токен шифруется через [EncryptedStringSerializer] с использованием CryptoManager (Tink)
  * и сохраняется в Preferences DataStore. UserPreferencesRepository остаётся без изменений
  * и хранит только настройки приложения (is_authorized и т.д.).
+ *
+ * **Важно:** Токен кэшируется в памяти для синхронного доступа из Interceptor.
+ * Это позволяет избежать runBlocking, который может вызывать deadlock в OkHttp.
  *
  * @param dataStore DataStore для хранения Preferences
  * @param serializer Serializer для шифрования/дешифрования токена
@@ -33,6 +36,10 @@ class SecureTokenRepository(
         val encrypted_token = stringPreferencesKey("encrypted_token")
         const val TAG = "SecureTokenRepository"
     }
+
+    // In-memory кэш токена для синхронного доступа из Interceptor
+    // Используем AtomicReference для thread-safety
+    private val tokenCache = AtomicReference<String?>(null)
 
     /**
      * Flow токена авторизации.
@@ -65,43 +72,57 @@ class SecureTokenRepository(
     /**
      * Сохраняет токен авторизации с шифрованием.
      *
+     * Также обновляет in-memory кэш для синхронного доступа.
+     *
      * @param token Токен авторизации или null для очистки
      */
     suspend fun saveAuthToken(token: String?) {
+        // Обновляем кэш synchronously (до сохранения на диск)
+        tokenCache.set(token)
+
         val encryptedToken = serializer.serialize(token)
         dataStore.edit { preferences ->
             if (encryptedToken.isEmpty()) {
                 preferences.remove(encrypted_token)
-                Log.i(TAG, "Токен авторизации удален")
+                Log.i(TAG, "Токен авторизации удален из DataStore")
             } else {
                 val encryptedTokenBase64 = Base64.encodeToString(encryptedToken, Base64.NO_WRAP)
                 preferences[encrypted_token] = encryptedTokenBase64
-                Log.i(TAG, "Токен авторизации сохранен")
             }
         }
     }
 
     /**
-     * Синхронно получает токен авторизации.
+     * Синхронно получает токен авторизации из in-memory кэша.
      *
      * Используется в Interceptor, который работает в не-suspend контексте.
-     * Использует runBlocking для блокирующего чтения из DataStore.
+     * Читает токен из кэша, что позволяет избежать runBlocking и потенциального deadlock.
+     *
+     * Если кэш пуст, возвращает null (токен не установлен или приложение только запущено).
      *
      * @return Токен авторизации или null если не установлен
      */
-    fun getAuthTokenSync(): String? = runBlocking {
+    fun getAuthTokenSync(): String? = tokenCache.get()
+
+    /**
+     * Загружает токен из DataStore в кэш при запуске приложения.
+     *
+     * Должен вызываться один раз при инициализации приложения.
+     */
+    suspend fun loadTokenToCache() {
         try {
             val preferences = dataStore.data.first()
             val encryptedTokenBase64 = preferences[encrypted_token]
             if (encryptedTokenBase64 != null) {
                 val encryptedToken = Base64.decode(encryptedTokenBase64, Base64.NO_WRAP)
-                serializer.deserialize(encryptedToken)
+                val token = serializer.deserialize(encryptedToken)
+                tokenCache.set(token)
+                Log.i(TAG, "Токен загружен в кэш при старте")
             } else {
-                null
+                Log.i(TAG, "Токен отсутствует в DataStore")
             }
         } catch (e: IOException) {
-            Log.e(TAG, "Ошибка при чтении токена синхронно", e)
-            null
+            Log.e(TAG, "Ошибка при загрузке токена в кэш", e)
         }
     }
 
@@ -109,17 +130,11 @@ class SecureTokenRepository(
      * Синхронно очищает токен авторизации.
      *
      * Используется в Interceptor при ошибке 401 или при выходе из системы.
+     * Очищает и кэш, и DataStore.
      */
     fun clearAuthTokenSync() {
-        runBlocking {
-            try {
-                dataStore.edit { preferences ->
-                    preferences.remove(encrypted_token)
-                }
-                Log.i(TAG, "Токен авторизации успешно очищен")
-            } catch (e: IOException) {
-                Log.e(TAG, "Ошибка при очистке токена", e)
-            }
-        }
+        // Очищаем кэш
+        tokenCache.set(null)
+        Log.i(TAG, "Токен авторизации очищен из кэша")
     }
 }

@@ -97,22 +97,22 @@ class SecureTokenRepositoryTest {
     }
 
     @Test
-    fun getAuthTokenSync_whenTokenExists_thenReturnsDecryptedToken() {
+    fun getAuthTokenSync_whenTokenInCache_thenReturnsToken() = runTest {
         // Given
         val repository = SecureTokenRepository(mockDataStore, serializer)
-        val encryptedToken = "encrypted_data".toByteArray()
-        val encryptedTokenBase64 = java.util.Base64.getEncoder().encodeToString(encryptedToken)
-        val plainToken = "decrypted_token"
+        val token = "my_auth_token_67890"
+        val encryptedBytes = "encrypted_data".toByteArray()
 
-        val preferences = preferencesOf(encryptedTokenKey to encryptedTokenBase64)
-        every { mockDataStore.data } returns flowOf(preferences)
-        every { mockCryptoManager.decrypt(encryptedToken) } returns plainToken.toByteArray()
+        every { mockCryptoManager.encrypt(token.toByteArray()) } returns encryptedBytes
+
+        // Сначала сохраняем токен (он попадёт в кэш)
+        repository.saveAuthToken(token)
 
         // When
         val result = repository.getAuthTokenSync()
 
         // Then
-        assertEquals(plainToken, result)
+        assertEquals(token, result)
     }
 
     @Test
@@ -122,7 +122,7 @@ class SecureTokenRepositoryTest {
         val emptyPreferences = preferencesOf()
         every { mockDataStore.data } returns flowOf(emptyPreferences)
 
-        // When
+        // When - кэш пустой, токена нет
         val result = repository.getAuthTokenSync()
 
         // Then
@@ -130,15 +130,44 @@ class SecureTokenRepositoryTest {
     }
 
     @Test
-    fun clearAuthTokenSync_thenRemovesToken() {
+    fun loadTokenToCache_whenTokenInDataStore_thenLoadsToCache() = runTest {
         // Given
+        val encryptedToken = "encrypted_data".toByteArray()
+        val encryptedTokenBase64 = java.util.Base64.getEncoder().encodeToString(encryptedToken)
+        val plainToken = "decrypted_token"
+
+        val preferences = preferencesOf(encryptedTokenKey to encryptedTokenBase64)
+        every { mockDataStore.data } returns flowOf(preferences)
+        every { mockCryptoManager.decrypt(encryptedToken) } returns plainToken.toByteArray()
+
         val repository = SecureTokenRepository(mockDataStore, serializer)
 
-        // When
+        // When - загружаем токен из DataStore в кэш
+        repository.loadTokenToCache()
+
+        // Then - токен доступен через синхронный метод
+        val result = repository.getAuthTokenSync()
+        assertEquals(plainToken, result)
+    }
+
+    @Test
+    fun clearAuthTokenSync_thenClearsCache() = runTest {
+        // Given
+        val repository = SecureTokenRepository(mockDataStore, serializer)
+        val token = "my_auth_token"
+        val encryptedBytes = "encrypted_data".toByteArray()
+
+        every { mockCryptoManager.encrypt(token.toByteArray()) } returns encryptedBytes
+
+        // Сначала сохраняем токен
+        repository.saveAuthToken(token)
+        assertEquals(token, repository.getAuthTokenSync())
+
+        // When - очищаем
         repository.clearAuthTokenSync()
 
-        // Then
-        coVerify(exactly = 1) { mockDataStore.updateData(any()) }
+        // Then - кэш пустой
+        assertNull(repository.getAuthTokenSync())
     }
 
     @Test

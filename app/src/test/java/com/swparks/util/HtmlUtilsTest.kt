@@ -106,7 +106,7 @@ class HtmlUtilsTest {
 
     @Test
     fun parseHtmlOrNull_whenNonNullInput_thenReturnsParsedString() {
-        val html: String? = "<p>Test</p>"
+        val html: String = "<p>Test</p>"
         assertEquals("Test", html.parseHtmlOrNull())
     }
 
@@ -122,7 +122,7 @@ class HtmlUtilsTest {
     fun parseHtml_whenRealJournalEntry_thenPreservesStructure() {
         val html =
             "<i data-ed3=\"3\"></i><p><strong>Что я успел сделать в 2026 году?</strong></p>" +
-            "<p>+ Собрать паззл на 1000 деталей</p>"
+                    "<p>+ Собрать паззл на 1000 деталей</p>"
         val expected = "Что я успел сделать в 2026 году?\n\n+ Собрать паззл на 1000 деталей"
         assertEquals(expected, html.parseHtml(compactMode = false))
     }

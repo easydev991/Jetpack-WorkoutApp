@@ -116,14 +116,22 @@ class MessagesRootScreenTest {
         // Given
         val dialogs = listOf(createTestDialog())
         val uiState = DialogsUiState.Success(dialogs)
+        var clickCalled = false
 
         // When
-        setContent(uiState = uiState)
+        setContent(
+            uiState = uiState,
+            onDialogClick = { _, _ -> clickCalled = true }
+        )
 
-        // Then - диалог кликабелен
+        // Then - клик по диалогу вызывает callback
+        // Примечание: DialogRowView использует pointerInput вместо onClick семантики,
+        // поэтому проверяем реальный клик через performClick
         composeTestRule
             .onNodeWithText("Test User", ignoreCase = true)
-            .assertHasClickAction()
+            .performClick()
+
+        assert(clickCalled) { "Клик по диалогу должен вызывать onDialogClick" }
     }
 
     @Test

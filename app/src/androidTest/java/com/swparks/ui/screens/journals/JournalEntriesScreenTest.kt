@@ -372,7 +372,7 @@ class JournalEntriesScreenTest {
     }
 
     @Test
-    fun testEntryItem_click_logsMessage() {
+    fun testEntryItem_menuButton_clickable() {
         // Given
         val testEntry = JournalEntry(
             id = 1L,
@@ -416,9 +416,10 @@ class JournalEntriesScreenTest {
             }
         }
 
-        // Then - Запись должна быть кликабельной
+        // Then - Кнопка меню записи должна быть кликабельной
         composeTestRule
-            .onNodeWithText("Иван Иванов")
+            .onNodeWithTag("MenuButton", useUnmergedTree = true)
+            .assertIsDisplayed()
             .assertHasClickAction()
     }
 
@@ -467,10 +468,13 @@ class JournalEntriesScreenTest {
             }
         }
 
-        // Then - Запись отображается, но не кликабельна при обновлении
+        // Then - Запись отображается, кнопка меню отключена при обновлении
         composeTestRule
             .onNodeWithText("Иван Иванов")
             .assertIsDisplayed()
+        // Кнопка меню отключена при refreshing
+        composeTestRule
+            .onNodeWithTag("MenuButton", useUnmergedTree = true)
             .assertIsNotEnabled()
     }
 
@@ -613,8 +617,14 @@ class JournalEntriesScreenTest {
     fun testEmptyState_displaysEmptyStateView() {
         // Given
         val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = emptyList())),
-            isRefreshing = MutableStateFlow(false)
+            uiState = MutableStateFlow(
+                JournalEntriesUiState.Content(
+                    entries = emptyList(),
+                    canCreateEntry = true
+                )
+            ),
+            isRefreshing = MutableStateFlow(false),
+            canCreateEntry = MutableStateFlow(true)
         )
 
         // When
@@ -662,8 +672,14 @@ class JournalEntriesScreenTest {
     fun testEmptyState_buttonIsEnabled_whenNotRefreshing() {
         // Given
         val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = emptyList())),
-            isRefreshing = MutableStateFlow(false)
+            uiState = MutableStateFlow(
+                JournalEntriesUiState.Content(
+                    entries = emptyList(),
+                    canCreateEntry = true
+                )
+            ),
+            isRefreshing = MutableStateFlow(false),
+            canCreateEntry = MutableStateFlow(true)
         )
 
         // When
@@ -682,8 +698,14 @@ class JournalEntriesScreenTest {
     fun testEmptyState_buttonIsDisabled_whenRefreshing() {
         // Given
         val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = emptyList())),
-            isRefreshing = MutableStateFlow(true)
+            uiState = MutableStateFlow(
+                JournalEntriesUiState.Content(
+                    entries = emptyList(),
+                    canCreateEntry = true
+                )
+            ),
+            isRefreshing = MutableStateFlow(true),
+            canCreateEntry = MutableStateFlow(true)
         )
 
         // When
@@ -703,9 +725,15 @@ class JournalEntriesScreenTest {
     fun testEmptyState_buttonIsDisabled_whenDeleting() {
         // Given
         val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = emptyList())),
+            uiState = MutableStateFlow(
+                JournalEntriesUiState.Content(
+                    entries = emptyList(),
+                    canCreateEntry = true
+                )
+            ),
             isRefreshing = MutableStateFlow(false),
-            isDeleting = MutableStateFlow(true)
+            isDeleting = MutableStateFlow(true),
+            canCreateEntry = MutableStateFlow(true)
         )
 
         // When
@@ -725,9 +753,15 @@ class JournalEntriesScreenTest {
     fun testEmptyState_buttonIsDisabled_whenRefreshingAndDeleting() {
         // Given
         val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = emptyList())),
+            uiState = MutableStateFlow(
+                JournalEntriesUiState.Content(
+                    entries = emptyList(),
+                    canCreateEntry = true
+                )
+            ),
             isRefreshing = MutableStateFlow(true),
-            isDeleting = MutableStateFlow(true)
+            isDeleting = MutableStateFlow(true),
+            canCreateEntry = MutableStateFlow(true)
         )
 
         // When
@@ -916,7 +950,7 @@ class JournalEntriesScreenTest {
     }
 
     /**
-     * Тест 21: Проверка кнопки EmptyStateView отключена при canCreateEntry == false
+     * Тест 21: Проверка что кнопка EmptyStateView не отображается при canCreateEntry == false
      */
     @Test
     fun testEmptyState_buttonDisabled_whenCannotCreateEntry() {
@@ -935,11 +969,10 @@ class JournalEntriesScreenTest {
         // When
         setContent(viewModel = viewModel)
 
-        // Then - Кнопка EmptyStateView отключена
+        // Then - Кнопка EmptyStateView не отображается (текст EmptyStateView тоже не отображается)
         composeTestRule
             .onNodeWithText(context.getString(R.string.create_entry))
-            .assertIsDisplayed()
-            .assertIsNotEnabled()
+            .assertDoesNotExist()
     }
 
     /**

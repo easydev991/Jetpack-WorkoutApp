@@ -286,6 +286,8 @@ class SWRepositoryImp(
             Result.failure(handleIOException(e, "авторизации"))
         } catch (e: HttpException) {
             Result.failure(handleHttpException(e, "авторизации"))
+        } catch (e: Exception) {
+            Result.failure(e)
         }
 
     override suspend fun resetPassword(login: String): Result<Unit> =
@@ -296,6 +298,8 @@ class SWRepositoryImp(
             Result.failure(handleIOException(e, "восстановлении пароля"))
         } catch (e: HttpException) {
             Result.failure(handleHttpException(e, "восстановлении пароля"))
+        } catch (e: Exception) {
+            Result.failure(e)
         }
 
     override suspend fun changePassword(current: String, new: String): Result<Unit> =

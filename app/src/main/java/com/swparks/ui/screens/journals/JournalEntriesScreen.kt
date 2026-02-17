@@ -474,6 +474,7 @@ private fun EntriesList(
                         ),
                         bodyText = entry.message ?: "",
                         mode = JournalRowMode.ENTRY,
+                        enabled = enabled,
                         actions = actions,
                         onClickAction = { action ->
                             when (action) {

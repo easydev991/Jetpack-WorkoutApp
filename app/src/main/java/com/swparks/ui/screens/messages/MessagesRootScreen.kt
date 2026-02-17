@@ -56,6 +56,7 @@ import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.state.DialogsUiState
 import com.swparks.ui.viewmodel.IDialogsViewModel
 import com.swparks.util.DateFormatter
+import com.swparks.util.parseHtmlOrNull
 
 @Composable
 fun MessagesRootScreen(
@@ -386,7 +387,7 @@ fun DialogsList(
                     authorName = dialog.name?.takeIf { it.isNotBlank() }
                         ?: stringResource(R.string.default_user_name),
                     dateString = formattedDate,
-                    bodyText = dialog.lastMessageText ?: "",
+                    bodyText = dialog.lastMessageText.parseHtmlOrNull(compactMode = true) ?: "",
                     unreadCount = dialog.unreadCount,
                     enabled = !isRefreshing,
                     onLongClick = { localOffset, itemPosition ->

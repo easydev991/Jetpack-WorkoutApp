@@ -419,7 +419,7 @@ class JournalEntriesViewModelTest {
         // Then - проверяем, что handleError был вызван с сообщением об ошибке удаления
         coVerify(atLeast = 1) {
             userNotifier.handleError(match {
-                it is AppError.Generic && it.message?.contains(errorMessage) == true
+                it is AppError.Generic && it.message.contains(errorMessage)
             })
         }
     }

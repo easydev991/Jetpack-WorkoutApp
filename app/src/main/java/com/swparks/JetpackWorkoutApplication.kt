@@ -5,6 +5,10 @@ import com.swparks.data.AppContainer
 import com.swparks.data.DefaultAppContainer
 import com.swparks.util.AndroidLogger
 import com.swparks.util.Logger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class JetpackWorkoutApplication : Application() {
     lateinit var container: AppContainer
@@ -12,8 +16,17 @@ class JetpackWorkoutApplication : Application() {
     val logger: Logger
         get() = AndroidLogger()
 
+    // Scope для операций при старте приложения
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     override fun onCreate() {
         super.onCreate()
         container = DefaultAppContainer(context = this)
+
+        // Загружаем токен из DataStore в память при старте приложения
+        // Это нужно для синхронного доступа из TokenInterceptor
+        applicationScope.launch {
+            container.secureTokenRepository.loadTokenToCache()
+        }
     }
 }
