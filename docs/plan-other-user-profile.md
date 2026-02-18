@@ -29,6 +29,10 @@
 - EmptyStateView.buttonTitle опциональный (null = без кнопки)
 - Complaint sealed class + FeedbackSender.sendComplaint() для жалоб (скрыто до доработки)
 - TextEntryMode.Message для отправки сообщений через TextEntrySheetHost
+- Snackbar через UserNotifier:
+  - При добавлении в друзья: "Запрос отправлен!" (`friend_request_sent`)
+  - При удалении из друзей: "Обновлен список друзей" (`friends_list_updated`)
+  - При отправке сообщения: "Сообщение отправлено!" (`message_sent`)
 
 ---
 
