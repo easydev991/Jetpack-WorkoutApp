@@ -11,6 +11,7 @@ interface IOtherUserProfileViewModel {
     val uiState: StateFlow<OtherUserProfileUiState>
     val isRefreshing: StateFlow<Boolean>
     val isLoadingCurrentUser: StateFlow<Boolean>
+    val isFriendActionLoading: StateFlow<Boolean>
 
     fun loadUser()
     fun refreshUser()

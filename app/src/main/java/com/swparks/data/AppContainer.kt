@@ -504,7 +504,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
             countriesRepository = countriesRepository,
             swRepository = swRepository,
             logger = logger,
-            userNotifier = userNotifier
+            userNotifier = userNotifier,
+            resources = resourcesProvider
         )
 
     // ==================== API клиенты для разных функциональных областей ====================

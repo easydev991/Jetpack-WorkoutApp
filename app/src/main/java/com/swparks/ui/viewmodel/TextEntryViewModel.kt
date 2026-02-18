@@ -156,6 +156,10 @@ class TextEntryViewModel(
 
             result.fold(
                 onSuccess = {
+                    // Показываем snackbar при успешной отправке сообщения
+                    if (mode is TextEntryMode.Message) {
+                        userNotifier.showInfo(context.getString(R.string.message_sent))
+                    }
                     _events.trySend(TextEntryEvent.Success)
                 },
                 onFailure = { exception ->

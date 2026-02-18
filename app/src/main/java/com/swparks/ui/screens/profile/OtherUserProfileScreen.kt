@@ -86,6 +86,7 @@ fun OtherUserProfileScreen(
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isLoadingCurrentUser by viewModel.isLoadingCurrentUser.collectAsState()
+    val isFriendActionLoading by viewModel.isFriendActionLoading.collectAsState()
 
     // Проверки отношений между currentUser и viewedUser
     val viewedUserId = viewedUser?.id
@@ -104,6 +105,9 @@ fun OtherUserProfileScreen(
 
     var showBlacklistDialog by remember { mutableStateOf(false) }
     val blacklistAction = if (isInBlacklist) BlacklistAction.UNBLOCK else BlacklistAction.BLOCK
+
+    // Состояние для диалога подтверждения удаления из друзей
+    var showRemoveFriendDialog by remember { mutableStateOf(false) }
 
     // Состояние для TextEntrySheet (отправка сообщения)
     var showTextEntrySheet by remember { mutableStateOf(false) }
@@ -158,13 +162,15 @@ fun OtherUserProfileScreen(
                                 isFriend = isFriend,
                                 isInBlacklist = isInBlacklist,
                                 isRefreshing = isRefreshing,
+                                isFriendActionLoading = isFriendActionLoading,
                                 viewModel = viewModel,
                                 appState = appState,
                                 onSendMessageClick = { user ->
                                     textEntryMode =
                                         TextEntryMode.Message(user.id, user.fullName ?: user.name)
                                     showTextEntrySheet = true
-                                }
+                                },
+                                onShowRemoveFriendDialog = { showRemoveFriendDialog = true }
                             )
                         }
 
@@ -181,6 +187,11 @@ fun OtherUserProfileScreen(
                 if (uiState is OtherUserProfileUiState.Loading && !isRefreshing) {
                     LoadingOverlayView(modifier = Modifier.fillMaxSize())
                 }
+
+                // Блокировка UI при выполнении friend action
+                if (isFriendActionLoading) {
+                    LoadingOverlayView(modifier = Modifier.fillMaxSize())
+                }
             }
         }
     }
@@ -193,6 +204,17 @@ fun OtherUserProfileScreen(
                 showBlacklistDialog = false
             },
             onDismiss = { showBlacklistDialog = false }
+        )
+    }
+
+    // Диалог подтверждения удаления из друзей
+    if (showRemoveFriendDialog) {
+        RemoveFriendDialog(
+            onConfirm = {
+                viewModel.performFriendAction()
+                showRemoveFriendDialog = false
+            },
+            onDismiss = { showRemoveFriendDialog = false }
         )
     }
 
@@ -270,6 +292,29 @@ internal fun BlacklistActionDialog(
 }
 
 @Composable
+internal fun RemoveFriendDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.remove_friend_alert_title)) },
+        text = { Text(stringResource(R.string.remove_friend_alert_message)) },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) { Text(stringResource(R.string.remove_friend_alert_confirm)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) }
+        }
+    )
+}
+
+@Composable
 private fun ProfileContent(
     viewedUser: User?,
     country: Country?,
@@ -277,14 +322,16 @@ private fun ProfileContent(
     isFriend: Boolean,
     isInBlacklist: Boolean,
     isRefreshing: Boolean,
+    isFriendActionLoading: Boolean,
     viewModel: IOtherUserProfileViewModel,
     appState: AppState,
-    onSendMessageClick: (User) -> Unit
+    onSendMessageClick: (User) -> Unit,
+    onShowRemoveFriendDialog: () -> Unit
 ) {
     if (viewedUser == null) return
 
-    // Кнопки недоступны если пользователь заблокирован или идет обновление
-    val buttonsEnabled = !isRefreshing && !isInBlacklist
+    // Кнопки недоступны если пользователь заблокирован, идет обновление или friend action
+    val buttonsEnabled = !isRefreshing && !isInBlacklist && !isFriendActionLoading
 
     Column(
         modifier = Modifier
@@ -313,7 +360,13 @@ private fun ProfileContent(
             if (isFriend) FriendAction.REMOVE_FRIEND else FriendAction.SEND_FRIEND_REQUEST
         FriendActionButton(
             action = friendAction,
-            onClick = { viewModel.performFriendAction() },
+            onClick = {
+                if (friendAction == FriendAction.REMOVE_FRIEND) {
+                    onShowRemoveFriendDialog()
+                } else {
+                    viewModel.performFriendAction()
+                }
+            },
             enabled = buttonsEnabled
         )
 
@@ -329,7 +382,7 @@ private fun ProfileContent(
                         )
                     )
                 },
-                enabled = !isRefreshing
+                enabled = buttonsEnabled
             )
         }
 
@@ -343,7 +396,7 @@ private fun ProfileContent(
                         )
                     )
                 },
-                enabled = !isRefreshing
+                enabled = buttonsEnabled
             )
         }
 
@@ -351,7 +404,7 @@ private fun ProfileContent(
             AddedParksButton(
                 addedParksCount = viewedUser.addedParks?.size ?: 0,
                 onClick = { appState.navController.navigate(Screen.UserParks.createRoute(viewedUser.id)) },
-                enabled = !isRefreshing
+                enabled = buttonsEnabled
             )
         }
 
@@ -365,7 +418,7 @@ private fun ProfileContent(
                         )
                     )
                 },
-                enabled = !isRefreshing
+                enabled = buttonsEnabled
             )
         }
     }
@@ -386,7 +439,7 @@ internal fun SendMessageButton(onClick: () -> Unit, enabled: Boolean) {
 }
 
 @Composable
-private fun FriendActionButton(action: FriendAction, onClick: () -> Unit, enabled: Boolean) {
+internal fun FriendActionButton(action: FriendAction, onClick: () -> Unit, enabled: Boolean) {
     val icon = when (action) {
         FriendAction.SEND_FRIEND_REQUEST -> Icons.Outlined.PersonAdd
         FriendAction.REMOVE_FRIEND -> Icons.Outlined.PersonRemove
@@ -511,5 +564,13 @@ private fun BlacklistActionDialogPreview() {
             BlacklistActionDialog(action = BlacklistAction.BLOCK, onConfirm = {}, onDismiss = {})
             BlacklistActionDialog(action = BlacklistAction.UNBLOCK, onConfirm = {}, onDismiss = {})
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun RemoveFriendDialogPreview() {
+    JetpackWorkoutAppTheme {
+        RemoveFriendDialog(onConfirm = {}, onDismiss = {})
     }
 }

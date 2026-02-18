@@ -284,6 +284,8 @@ class SWRepositoryFriendsTest {
         assertTrue(result.isSuccess)
         coVerify { mockApi.sendFriendRequest(2L) }
         coVerify(exactly = 0) { mockApi.deleteFriend(any()) }
+        // При отправке заявки пользователь ещё не становится другом
+        coVerify(exactly = 0) { mockUserDao.markAsFriend(any()) }
     }
 
     @Test
@@ -311,6 +313,9 @@ class SWRepositoryFriendsTest {
         assertTrue(result.isSuccess)
         coVerify { mockApi.deleteFriend(2L) }
         coVerify(exactly = 0) { mockApi.sendFriendRequest(any()) }
+        // Проверяем обновление локального кэша
+        coVerify { mockUserDao.removeFriend(2L) }
+        coVerify { mockUserDao.decrementFriendsCount() }
     }
 
     @Test
@@ -337,6 +342,38 @@ class SWRepositoryFriendsTest {
         // Then
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is NetworkException)
+        // Локальный кэш не должен обновляться при ошибке
+        coVerify(exactly = 0) { mockUserDao.markAsFriend(any()) }
+        coVerify(exactly = 0) { mockUserDao.decrementFriendsCount() }
+    }
+
+    @Test
+    fun friendAction_whenRemoveApiFails_thenDoesNotUpdateCache() = runTest {
+        // Given
+        val mockApi = mockk<SWApi>()
+        coEvery { mockApi.deleteFriend(any()) } throws IOException("Network error")
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao
+        )
+
+        // When
+        val result = repository.friendAction(2L, ApiFriendAction.REMOVE)
+
+        // Then
+        assertTrue(result.isFailure)
+        assertTrue(result.exceptionOrNull() is NetworkException)
+        // Локальный кэш не должен обновляться при ошибке
+        coVerify(exactly = 0) { mockUserDao.removeFriend(any()) }
+        coVerify(exactly = 0) { mockUserDao.decrementFriendsCount() }
     }
 
     @Test

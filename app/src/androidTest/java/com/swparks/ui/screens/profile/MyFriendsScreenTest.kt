@@ -399,9 +399,9 @@ class MyFriendsScreenTest {
         // When
         setContent(uiState = state)
 
-        // Then - Отображается текст загрузки/пустого состояния
+        // Then - Отображается сообщение об отсутствии друзей
         composeTestRule
-            .onNodeWithText(context.getString(R.string.loading), ignoreCase = true)
+            .onNodeWithText(context.getString(R.string.no_friends_yet), ignoreCase = true)
             .assertIsDisplayed()
     }
 

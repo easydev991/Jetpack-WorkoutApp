@@ -10,6 +10,7 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
+import com.swparks.domain.model.FriendAction
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import org.junit.Rule
 import org.junit.Test
@@ -411,5 +412,126 @@ class OtherUserProfileScreenTest {
 
         // Then
         assert(confirmCalled) { "Ожидался вызов onConfirm при клике на Confirm" }
+    }
+
+    // === Тесты для FriendActionButton ===
+
+    @Test
+    fun friendActionButton_sendRequest_displaysText() {
+        // When
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                FriendActionButton(
+                    action = FriendAction.SEND_FRIEND_REQUEST,
+                    onClick = {},
+                    enabled = true
+                )
+            }
+        }
+
+        // Then
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.send_friend_request))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun friendActionButton_removeFriend_displaysText() {
+        // When
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                FriendActionButton(
+                    action = FriendAction.REMOVE_FRIEND,
+                    onClick = {},
+                    enabled = true
+                )
+            }
+        }
+
+        // Then
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.remove_friend))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun friendActionButton_enabled_whenEnabledIsTrue() {
+        // When
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                FriendActionButton(
+                    action = FriendAction.SEND_FRIEND_REQUEST,
+                    onClick = {},
+                    enabled = true
+                )
+            }
+        }
+
+        // Then - кнопка доступна (не отключена)
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.send_friend_request))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun friendActionButton_disabled_whenEnabledIsFalse() {
+        // When
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                FriendActionButton(
+                    action = FriendAction.SEND_FRIEND_REQUEST,
+                    onClick = {},
+                    enabled = false
+                )
+            }
+        }
+
+        // Then - кнопка отключена
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.send_friend_request))
+            .assertIsNotEnabled()
+    }
+
+    @Test
+    fun friendActionButton_click_callsOnClick() {
+        // Given
+        var clicked = false
+
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                FriendActionButton(
+                    action = FriendAction.SEND_FRIEND_REQUEST,
+                    onClick = { clicked = true },
+                    enabled = true
+                )
+            }
+        }
+
+        // When
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.send_friend_request))
+            .performClick()
+
+        // Then
+        assert(clicked) { "Ожидался вызов onClick при клике на кнопку" }
+    }
+
+    @Test
+    fun friendActionButton_removeFriend_disabled_whenEnabledIsFalse() {
+        // When
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                FriendActionButton(
+                    action = FriendAction.REMOVE_FRIEND,
+                    onClick = {},
+                    enabled = false
+                )
+            }
+        }
+
+        // Then - кнопка отключена
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.remove_friend))
+            .assertIsNotEnabled()
     }
 }

@@ -1,11 +1,13 @@
 package com.swparks.ui.viewmodel
 
+import com.swparks.R
 import com.swparks.data.model.ApiBlacklistOption
 import com.swparks.data.model.ApiFriendAction
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.util.AppError
 import com.swparks.util.Logger
@@ -41,6 +43,7 @@ class OtherUserProfileViewModelTest {
     private val mockCountriesRepository = mockk<CountriesRepository>()
     private val mockLogger = mockk<Logger>(relaxed = true)
     private val mockUserNotifier = mockk<UserNotifier>(relaxed = true)
+    private val mockResources = mockk<ResourcesProvider>(relaxed = true)
 
     private val currentUserFlow = MutableSharedFlow<User?>(replay = 1)
     private val friendsFlow = MutableSharedFlow<List<User>>(replay = 1)
@@ -53,6 +56,10 @@ class OtherUserProfileViewModelTest {
         every { mockSwRepository.getFriendsFlow() } returns friendsFlow
         every { mockSwRepository.getBlacklistFlow() } returns blacklistFlow
         every { mockUserNotifier.errorFlow } returns errorFlow
+
+        // Мокируем getString для локализованных строк
+        every { mockResources.getString(R.string.friend_request_sent) } returns "Request sent!"
+        every { mockResources.getString(R.string.friends_list_updated) } returns "Friends list updated"
 
         // Эмулируем авторизованного пользователя по умолчанию
         currentUserFlow.tryEmit(User(id = 1L, name = "current", image = null))
@@ -74,7 +81,12 @@ class OtherUserProfileViewModelTest {
         coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
 
         val viewModel = OtherUserProfileViewModel(
-            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockUserNotifier
+            userId,
+            mockCountriesRepository,
+            mockSwRepository,
+            mockLogger,
+            mockUserNotifier,
+            mockResources
         )
         advanceUntilIdle()
 
@@ -89,7 +101,12 @@ class OtherUserProfileViewModelTest {
         coEvery { mockSwRepository.getUser(userId) } returns Result.failure(error)
 
         val viewModel = OtherUserProfileViewModel(
-            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockUserNotifier
+            userId,
+            mockCountriesRepository,
+            mockSwRepository,
+            mockLogger,
+            mockUserNotifier,
+            mockResources
         )
         advanceUntilIdle()
 
@@ -102,7 +119,12 @@ class OtherUserProfileViewModelTest {
         coEvery { mockSwRepository.getUser(userId) } returns Result.failure(Exception("Network error"))
 
         val viewModel = OtherUserProfileViewModel(
-            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockUserNotifier
+            userId,
+            mockCountriesRepository,
+            mockSwRepository,
+            mockLogger,
+            mockUserNotifier,
+            mockResources
         )
         advanceUntilIdle()
 
@@ -121,7 +143,12 @@ class OtherUserProfileViewModelTest {
                 Result.failure(Exception("Network error"))
 
         val viewModel = OtherUserProfileViewModel(
-            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockUserNotifier
+            userId,
+            mockCountriesRepository,
+            mockSwRepository,
+            mockLogger,
+            mockUserNotifier,
+            mockResources
         )
         advanceUntilIdle()
 
@@ -144,7 +171,12 @@ class OtherUserProfileViewModelTest {
         coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
 
         val viewModel = OtherUserProfileViewModel(
-            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockUserNotifier
+            userId,
+            mockCountriesRepository,
+            mockSwRepository,
+            mockLogger,
+            mockUserNotifier,
+            mockResources
         )
         advanceUntilIdle()
 
@@ -170,7 +202,12 @@ class OtherUserProfileViewModelTest {
         coEvery { mockCountriesRepository.getCityById("100") } returns city
 
         val viewModel = OtherUserProfileViewModel(
-            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockUserNotifier
+            userId,
+            mockCountriesRepository,
+            mockSwRepository,
+            mockLogger,
+            mockUserNotifier,
+            mockResources
         )
         advanceUntilIdle()
 
@@ -200,7 +237,12 @@ class OtherUserProfileViewModelTest {
         } returns Result.success(Unit)
 
         val viewModel = OtherUserProfileViewModel(
-            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockUserNotifier
+            userId,
+            mockCountriesRepository,
+            mockSwRepository,
+            mockLogger,
+            mockUserNotifier,
+            mockResources
         )
         advanceUntilIdle()
 
@@ -208,6 +250,83 @@ class OtherUserProfileViewModelTest {
         advanceUntilIdle()
 
         coVerify { mockSwRepository.friendAction(userId, ApiFriendAction.ADD) }
+    }
+
+    @Test
+    fun performFriendAction_whenStarts_isFriendActionLoadingIsFalseInitially() = runTest {
+        val userId = 123L
+        val user = User(id = userId, name = "test", image = null)
+        coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+
+        val viewModel = OtherUserProfileViewModel(
+            userId,
+            mockCountriesRepository,
+            mockSwRepository,
+            mockLogger,
+            mockUserNotifier,
+            mockResources
+        )
+        advanceUntilIdle()
+
+        // До вызова - не в состоянии загрузки
+        assertEquals(false, viewModel.isFriendActionLoading.value)
+    }
+
+    @Test
+    fun performFriendAction_whenSuccess_thenIsFriendActionLoadingIsFalseAfterCompletion() =
+        runTest {
+            val userId = 123L
+            val user = User(id = userId, name = "test", image = null)
+            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery {
+                mockSwRepository.friendAction(
+                    userId,
+                    ApiFriendAction.ADD
+                )
+            } returns Result.success(Unit)
+
+            val viewModel = OtherUserProfileViewModel(
+                userId,
+                mockCountriesRepository,
+                mockSwRepository,
+                mockLogger,
+                mockUserNotifier,
+                mockResources
+            )
+            advanceUntilIdle()
+
+            viewModel.performFriendAction()
+            advanceUntilIdle()
+
+            assertEquals(false, viewModel.isFriendActionLoading.value)
+        }
+
+    @Test
+    fun performFriendAction_whenError_thenIsFriendActionLoadingIsFalseAfterCompletion() = runTest {
+        val userId = 123L
+        val user = User(id = userId, name = "test", image = null)
+        coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+        coEvery {
+            mockSwRepository.friendAction(
+                userId,
+                ApiFriendAction.ADD
+            )
+        } returns Result.failure(Exception("Network error"))
+
+        val viewModel = OtherUserProfileViewModel(
+            userId,
+            mockCountriesRepository,
+            mockSwRepository,
+            mockLogger,
+            mockUserNotifier,
+            mockResources
+        )
+        advanceUntilIdle()
+
+        viewModel.performFriendAction()
+        advanceUntilIdle()
+
+        assertEquals(false, viewModel.isFriendActionLoading.value)
     }
 
     // === Blacklist action tests ===
@@ -225,7 +344,12 @@ class OtherUserProfileViewModelTest {
         } returns Result.success(Unit)
 
         val viewModel = OtherUserProfileViewModel(
-            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockUserNotifier
+            userId,
+            mockCountriesRepository,
+            mockSwRepository,
+            mockLogger,
+            mockUserNotifier,
+            mockResources
         )
         advanceUntilIdle()
 
@@ -247,7 +371,12 @@ class OtherUserProfileViewModelTest {
         every { mockSwRepository.getCurrentUserFlow() } returns flowOf(null)
 
         val viewModel = OtherUserProfileViewModel(
-            userId, mockCountriesRepository, mockSwRepository, mockLogger, mockUserNotifier
+            userId,
+            mockCountriesRepository,
+            mockSwRepository,
+            mockLogger,
+            mockUserNotifier,
+            mockResources
         )
 
         // Используем advanceTimeBy для срабатывания timeout (10 сек + запас)

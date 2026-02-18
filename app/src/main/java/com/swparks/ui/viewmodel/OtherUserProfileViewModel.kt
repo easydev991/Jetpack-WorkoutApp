@@ -2,11 +2,13 @@ package com.swparks.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.swparks.R
 import com.swparks.data.model.ApiFriendAction
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.model.BlacklistAction
 import com.swparks.ui.model.toApiOption
@@ -30,7 +32,8 @@ class OtherUserProfileViewModel(
     private val countriesRepository: CountriesRepository,
     private val swRepository: SWRepository,
     private val logger: Logger,
-    private val userNotifier: UserNotifier
+    private val userNotifier: UserNotifier,
+    private val resources: ResourcesProvider
 ) : ViewModel(), IOtherUserProfileViewModel {
 
     companion object {
@@ -68,6 +71,9 @@ class OtherUserProfileViewModel(
 
     private val _isLoadingCurrentUser = MutableStateFlow(true)
     override val isLoadingCurrentUser: StateFlow<Boolean> = _isLoadingCurrentUser.asStateFlow()
+
+    private val _isFriendActionLoading = MutableStateFlow(false)
+    override val isFriendActionLoading: StateFlow<Boolean> = _isFriendActionLoading.asStateFlow()
 
     // Кэш адреса для оптимизации refreshUser
     private var lastCountryId: Int? = null
@@ -212,14 +218,24 @@ class OtherUserProfileViewModel(
         val action = if (isFriend) ApiFriendAction.REMOVE else ApiFriendAction.ADD
 
         viewModelScope.launch {
+            _isFriendActionLoading.update { true }
             logger.i(TAG, "Действие с друзьями: $action для $viewedUserId")
             swRepository.friendAction(viewedUserId, action)
-                .onSuccess { logger.i(TAG, "Действие с друзьями выполнено успешно") }
+                .onSuccess {
+                    logger.i(TAG, "Действие с друзьями выполнено успешно")
+                    val message = if (action == ApiFriendAction.ADD) {
+                        resources.getString(R.string.friend_request_sent)
+                    } else {
+                        resources.getString(R.string.friends_list_updated)
+                    }
+                    userNotifier.showInfo(message)
+                }
                 .onFailure { error ->
                     val message = "Ошибка действия с друзьями: ${error.message}"
                     userNotifier.handleError(AppError.Generic(message, error))
                     logger.e(TAG, message)
                 }
+            _isFriendActionLoading.update { false }
         }
     }
 

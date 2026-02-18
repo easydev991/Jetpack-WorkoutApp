@@ -22,17 +22,10 @@
 
 ### Багфиксы и доработки
 
-- JournalsButton при journalCount=0 → проверка `journalCount > 0`
-- isFriend/isInBlacklist не работали → исправлено в SWRepository.getUser()
-- Кнопки disabled при блокировке: `buttonsEnabled = !isRefreshing && !isInBlacklist`
-- Скрытие edit-кнопок в чужих дневниках (JournalsListScreen, JournalEntriesScreen)
-- EmptyStateView.buttonTitle опциональный (null = без кнопки)
-- Complaint sealed class + FeedbackSender.sendComplaint() для жалоб (скрыто до доработки)
-- TextEntryMode.Message для отправки сообщений через TextEntrySheetHost
-- Snackbar через UserNotifier:
-  - При добавлении в друзья: "Запрос отправлен!" (`friend_request_sent`)
-  - При удалении из друзей: "Обновлен список друзей" (`friends_list_updated`)
-  - При отправке сообщения: "Сообщение отправлено!" (`message_sent`)
+- **UI**: JournalsButton при journalCount=0 скрыт; кнопки disabled при `isRefreshing || isInBlacklist`; скрытие edit-кнопок в чужих дневниках; EmptyStateView.buttonTitle опциональный; `enabled=false` для всех элементов при friend action
+- **Friend actions**: RemoveFriendDialog с подтверждением; LoadingOverlayView при выполнении действия; Snackbar через UserNotifier
+- **Кэш**: Обновление isFriend/friendsCount после friendAction; исправлен баг с markAsFriend при отправке заявки
+- **Прочее**: TextEntryMode.Message для отправки сообщений; Complaint sealed class (скрыто); исправлен isFriend/isInBlacklist в SWRepository.getUser()
 
 ---
 
@@ -80,3 +73,4 @@ Auth Error  Loading → getUser
 5. **Кэширование адреса:** При refreshUser не загружаем country/city если ID не изменились
 6. **Timeout currentUser:** 10 сек, иначе `canRetry=false`
 7. **Тесты:** Приватные composables помечать `internal`, для дублей текста использовать `onAllNodesWithText(text)[index]`
+8. **Обновление кэша:** При удалении друга обновляется `isFriend=0` и `friendsCount--` текущего пользователя

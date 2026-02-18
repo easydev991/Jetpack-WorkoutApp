@@ -507,6 +507,17 @@ class SWRepositoryImp(
                 ApiFriendAction.ADD -> swApi.sendFriendRequest(userId)
                 ApiFriendAction.REMOVE -> swApi.deleteFriend(userId)
             }
+            // Обновляем локальную базу данных после успешного ответа от сервера
+            when (action) {
+                // При отправке заявки не обновляем isFriend - пользователь ещё не стал другом
+                ApiFriendAction.ADD -> { /* noop - заявка отправлена, ждём подтверждения */
+                }
+                // При удалении из друзей: снимаем флаг и уменьшаем счетчик
+                ApiFriendAction.REMOVE -> {
+                    userDao.removeFriend(userId)
+                    userDao.decrementFriendsCount()
+                }
+            }
             Result.success(Unit)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "действии с другом"))

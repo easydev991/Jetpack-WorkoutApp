@@ -199,8 +199,11 @@ private fun SuccessContent(
                 }
             }
 
-            item {
-                HorizontalDivider()
+            // Divider показываем только если есть обе секции
+            if (hasFriends) {
+                item {
+                    HorizontalDivider()
+                }
             }
         }
 
@@ -234,7 +237,7 @@ private fun SuccessContent(
             }
         }
 
-        // Если данных нет
+        // Если данных нет - показываем сообщение об отсутствии друзей
         if (friendRequests.isEmpty() && friends.isEmpty()) {
             item {
                 Box(
@@ -244,7 +247,7 @@ private fun SuccessContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = stringResource(R.string.loading),
+                        text = stringResource(R.string.no_friends_yet),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }

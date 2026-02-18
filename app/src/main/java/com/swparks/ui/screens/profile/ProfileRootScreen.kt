@@ -344,11 +344,15 @@ private fun FriendsButton(
     ) {
         FormRowView(
             leadingText = stringResource(id = R.string.friends),
-            trailingText = pluralStringResource(
-                id = R.plurals.friendsCount,
-                count = friendsCount,
-                friendsCount
-            ),
+            trailingText = if (friendsCount > 0) {
+                pluralStringResource(
+                    id = R.plurals.friendsCount,
+                    count = friendsCount,
+                    friendsCount
+                )
+            } else {
+                ""
+            },
             badgeValue = if (friendRequestsCount > 0) friendRequestsCount else null,
             enabled = enabled
         )

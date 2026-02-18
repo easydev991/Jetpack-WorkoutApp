@@ -21,7 +21,10 @@
     <string name="accept_friend_request">Accept</string>
     <string name="decline_friend_request">Decline</string>
     <string name="send_friend_request">Add a friend</string>
-    <string name="remove_friend">Remove from friends</string>
+    <string name="remove_friend">Remove a friend</string>
+    <string name="remove_friend_alert_title">Remove a friend</string>
+    <string name="remove_friend_alert_message">Are you sure you want to remove this user from your friends?</string>
+    <string name="remove_friend_alert_confirm">Remove</string>
     <string name="message">Message</string>
     <string name="message_placeholder">Write a message…</string>
 

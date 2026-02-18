@@ -27,6 +27,9 @@
     <string name="decline_friend_request">Отклонить</string>
     <string name="send_friend_request">Добавить в друзья</string>
     <string name="remove_friend">Удалить из друзей</string>
+    <string name="remove_friend_alert_title">Удалить из друзей</string>
+    <string name="remove_friend_alert_message">Вы уверены, что хотите удалить этого пользователя из списка друзей?</string>
+    <string name="remove_friend_alert_confirm">Удалить</string>
     <string name="message">Сообщение</string>
     <string name="message_placeholder">Напишите сообщение…</string>
 
