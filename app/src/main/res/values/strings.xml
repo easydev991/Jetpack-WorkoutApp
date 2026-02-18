@@ -327,4 +327,9 @@
     <string name="go_back">Go back</string>
     <string name="block_user_alert">Are you sure you want to block this user? They will not be able to view your profile or send you messages.</string>
     <string name="unblock_user_alert">Are you sure you want to unblock this user? They will be able to view your profile and send you messages again.</string>
+
+    <!-- Snackbar messages -->
+    <string name="message_sent">Message sent!</string>
+    <string name="friend_request_sent">Request sent!</string>
+    <string name="friends_list_updated">Friends list updated</string>
 </resources>

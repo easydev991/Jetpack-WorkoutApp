@@ -341,4 +341,9 @@
     <string name="go_back">Назад</string>
     <string name="block_user_alert">Вы уверены, что хотите заблокировать этого пользователя? Он не сможет просматривать ваш профиль и отправлять вам сообщения.</string>
     <string name="unblock_user_alert">Вы уверены, что хотите разблокировать этого пользователя? Он снова сможет просматривать ваш профиль и отправлять вам сообщения.</string>
+
+    <!-- Сообщения Snackbar -->
+    <string name="message_sent">Сообщение отправлено!</string>
+    <string name="friend_request_sent">Запрос отправлен!</string>
+    <string name="friends_list_updated">Обновлен список друзей</string>
 </resources>
