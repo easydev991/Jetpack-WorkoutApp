@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -200,10 +201,13 @@ class SWRepositoryAuthTest {
     @Test
     fun changePassword_whenApiReturnsSuccess_thenReturnsSuccess() = runTest {
         // Given
+        val mockResponse = mockk<Response<Unit>>(relaxed = true)
+        every { mockResponse.isSuccessful } returns true
+
         val mockApi = mockk<SWApi>()
         coEvery {
             mockApi.changePassword(any(), any())
-        } returns mockk(relaxed = true)
+        } returns mockResponse
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -251,6 +255,42 @@ class SWRepositoryAuthTest {
         // Then
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is NetworkException)
+    }
+
+    @Test
+    fun changePassword_whenApiReturnsError400_thenReturnsFailure() = runTest {
+        // Given
+        val errorBody = """{"errors":["Некорректный текущий пароль"]}""".trimIndent()
+            .toResponseBody("application/json".toMediaType())
+
+        val mockResponse = mockk<Response<Unit>>(relaxed = true)
+        every { mockResponse.isSuccessful } returns false
+        every { mockResponse.code() } returns 400
+        every { mockResponse.errorBody() } returns errorBody
+
+        val mockApi = mockk<SWApi>()
+        coEvery {
+            mockApi.changePassword(any(), any())
+        } returns mockResponse
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao
+        )
+
+        // When
+        val result = repository.changePassword("current", "new")
+
+        // Then
+        assertTrue(result.isFailure)
+        assertTrue(result.exceptionOrNull() is ServerException)
     }
 
     @Test

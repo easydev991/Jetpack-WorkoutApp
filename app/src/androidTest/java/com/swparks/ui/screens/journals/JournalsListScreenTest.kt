@@ -682,8 +682,6 @@ class JournalsListScreenTest {
                                     onJournalSettingsSavedCalled = true
                                 }
                             }
-
-                            else -> {}
                         }
                     }
                 }

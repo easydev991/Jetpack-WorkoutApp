@@ -1,6 +1,5 @@
 package com.swparks.ui.screens.profile
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -161,7 +160,7 @@ fun ProfileRootScreen(
                     // Кнопка "Изменить профиль"
                     EditProfileButton(
                         onClick = {
-                            Log.i("ProfileRootScreen", "Нажата кнопка: Изменить профиль")
+                            appState?.navController?.navigate(Screen.EditProfile.route)
                         },
                         enabled = !isRefreshing
                     )

@@ -39,12 +39,16 @@ import com.swparks.ui.screens.more.MoreTopAppBar
 import com.swparks.ui.screens.parks.ParksAddedByUserScreen
 import com.swparks.ui.screens.parks.ParksRootScreen
 import com.swparks.ui.screens.parks.ParksTopAppBar
+import com.swparks.ui.screens.profile.ChangePasswordScreen
+import com.swparks.ui.screens.profile.EditProfileScreen
 import com.swparks.ui.screens.profile.MyBlacklistScreen
 import com.swparks.ui.screens.profile.MyFriendsScreen
 import com.swparks.ui.screens.profile.OtherUserProfileScreen
 import com.swparks.ui.screens.profile.ProfileRootScreen
 import com.swparks.ui.screens.profile.ProfileTopAppBar
 import com.swparks.ui.screens.profile.SearchUserScreen
+import com.swparks.ui.screens.profile.SelectCityScreen
+import com.swparks.ui.screens.profile.SelectCountryScreen
 import com.swparks.ui.screens.profile.UserFriendsScreen
 import com.swparks.ui.screens.profile.UserTrainingParksScreen
 import com.swparks.ui.screens.themeicon.ThemeIconScreen
@@ -111,6 +115,12 @@ fun RootScreen(appState: AppState) {
     // Создаем DialogsViewModel для экрана сообщений
     val dialogsViewModel = remember {
         appContainer.dialogsViewModelFactory()
+    }
+
+    // Создаем EditProfileViewModel для экранов редактирования профиля
+    // Shared между EditProfileScreen, SelectCountryScreen, SelectCityScreen
+    val editProfileViewModel = remember {
+        appContainer.editProfileViewModelFactory()
     }
 
     // Экран черного списка
@@ -302,7 +312,21 @@ fun RootScreen(appState: AppState) {
 
             // Экраны профиля (будут добавлены позже)
             composable(route = Screen.EditProfile.route) {
-                // FIXME: Реализовать EditProfileScreen
+                EditProfileScreen(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    currentUser = currentUser,
+                    viewModel = editProfileViewModel,
+                    onBackClick = { appState.navController.popBackStack() },
+                    onNavigateToChangePassword = { appState.navController.navigate(Screen.ChangePassword.route) },
+                    onNavigateToSelectCountry = {
+                        appState.navController.navigate(Screen.SelectCountry.route)
+                    },
+                    onNavigateToSelectCity = { _, _ ->
+                        appState.navController.navigate(Screen.SelectCity.route)
+                    }
+                )
             }
 
             composable(route = Screen.UserParks.route) {
@@ -483,15 +507,30 @@ fun RootScreen(appState: AppState) {
             }
 
             composable(route = Screen.ChangePassword.route) {
-                // FIXME: Реализовать ChangePasswordScreen
+                val changePasswordViewModel = remember(appContainer) {
+                    appContainer.changePasswordViewModelFactory()
+                }
+                ChangePasswordScreen(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    viewModel = changePasswordViewModel,
+                    onBackClick = { appState.navController.popBackStack() }
+                )
             }
 
             composable(route = Screen.SelectCountry.route) {
-                // FIXME: Реализовать SelectCountryScreen
+                SelectCountryScreen(
+                    viewModel = editProfileViewModel,
+                    onBackClick = { appState.navController.popBackStack() }
+                )
             }
 
             composable(route = Screen.SelectCity.route) {
-                // FIXME: Реализовать SelectCityScreen
+                SelectCityScreen(
+                    viewModel = editProfileViewModel,
+                    onBackClick = { appState.navController.popBackStack() }
+                )
             }
 
             // Экраны настроек

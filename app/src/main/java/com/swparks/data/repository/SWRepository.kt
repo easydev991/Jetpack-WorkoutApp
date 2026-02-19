@@ -304,8 +304,13 @@ class SWRepositoryImp(
 
     override suspend fun changePassword(current: String, new: String): Result<Unit> =
         try {
-            swApi.changePassword(current, new)
-            Result.success(Unit)
+            val response = swApi.changePassword(current, new)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                val exception = HttpException(response)
+                Result.failure(handleHttpException(exception, "смене пароля"))
+            }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "смене пароля"))
         } catch (e: HttpException) {
@@ -377,6 +382,8 @@ class SWRepositoryImp(
                 ),
                 image = NetworkUtils.createOptionalImagePart(image, "image")
             )
+            // Сохраняем обновленного пользователя в локальный кэш для автообновления UI
+            userDao.insert(user.toEntity(isCurrentUser = true))
             Result.success(user)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "редактировании пользователя"))

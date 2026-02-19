@@ -24,6 +24,7 @@ import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -93,13 +94,18 @@ data class DateTimePickerConfig(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SWDateTimePicker(config: DateTimePickerConfig) {
-    var selectedDate by remember {
+    var selectedDate by remember(config.initialSelectedDateMillis) {
         mutableLongStateOf(config.initialSelectedDateMillis ?: System.currentTimeMillis())
     }
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = config.initialSelectedDateMillis,
+        initialSelectedDateMillis = selectedDate,
         yearRange = config.yearRange
     )
+
+    // Синхронизация state при изменении selectedDate извне (например, при загрузке профиля)
+    LaunchedEffect(selectedDate) {
+        datePickerState.selectedDateMillis = selectedDate
+    }
 
     var selectedHour by remember { mutableIntStateOf(config.initialHour ?: 0) }
     var selectedMinute by remember { mutableIntStateOf(config.initialMinute ?: 0) }

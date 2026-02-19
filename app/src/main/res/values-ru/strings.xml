@@ -50,13 +50,17 @@
     <string name="legendary_park">Легендарная</string>
 
     <string name="man">Мужчина</string>
+    <string name="male">Мужской</string>
     <string name="woman">Женщина</string>
+    <string name="female">Женский</string>
     <string name="message_for_user">Сообщение для %1$s</string>
 
     <string name="edit_profile">Изменить профиль</string>
     <string name="login">Логин</string>
     <string name="email">Email</string>
     <string name="name">Имя</string>
+    <string name="full_name">Имя и фамилия</string>
+    <string name="change_photo">Изменить фотографию</string>
     <string name="change_password">Изменить пароль</string>
     <string name="gender">Пол</string>
     <string name="birthdate">Дата рождения</string>
@@ -68,10 +72,12 @@
     <string name="password_confirmation">Новый пароль ещё раз</string>
     <string name="password_short">Минимум 6 символов</string>
     <string name="password_not_match">Пароли должны совпадать</string>
+    <string name="password_changed_successfully">Пароль успешно изменён</string>
     <string name="save_changes">Сохранить изменения</string>
 
     <string name="select_country">Выбери страну</string>
     <string name="select_city">Выбери город</string>
+    <string name="select_gender">Выбери пол</string>
 
     <string name="requests">Заявки</string>
     <string name="friends">Друзья</string>
@@ -349,4 +355,10 @@
     <string name="message_sent">Сообщение отправлено!</string>
     <string name="friend_request_sent">Запрос отправлен!</string>
     <string name="friends_list_updated">Обновлен список друзей</string>
+
+    <!-- Item List Screen -->
+    <string name="search">Поиск</string>
+    <string name="help_country_not_found">Не нашли свою страну в списке?</string>
+    <string name="help_city_not_found">Не нашли свой город в списке?</string>
+    <string name="contact_us">Напиши нам</string>
 </resources>

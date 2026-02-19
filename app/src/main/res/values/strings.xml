@@ -45,13 +45,17 @@
     <string name="legendary_park">Legendary</string>
 
     <string name="man">Man</string>
+    <string name="male">Male</string>
     <string name="woman">Woman</string>
+    <string name="female">Female</string>
     <string name="message_for_user">Message for %1$s</string>
 
     <string name="edit_profile">Edit your profile</string>
     <string name="login">Login</string>
     <string name="email">Email</string>
     <string name="name">Name</string>
+    <string name="full_name">Full name</string>
+    <string name="change_photo">Change photo</string>
     <string name="change_password">Change password</string>
     <string name="gender">Gender</string>
     <string name="birthdate">Date of birth</string>
@@ -63,10 +67,12 @@
     <string name="password_confirmation">New password again</string>
     <string name="password_short">At least 6 characters</string>
     <string name="password_not_match">Passwords must match</string>
+    <string name="password_changed_successfully">Password changed successfully</string>
     <string name="save_changes">Save changes</string>
 
     <string name="select_country">Select a country</string>
     <string name="select_city">Select a city</string>
+    <string name="select_gender">Select gender</string>
 
     <string name="requests">Requests</string>
     <string name="friends">Friends</string>
@@ -335,4 +341,10 @@
     <string name="message_sent">Message sent!</string>
     <string name="friend_request_sent">Request sent!</string>
     <string name="friends_list_updated">Friends list updated</string>
+
+    <!-- Item List Screen -->
+    <string name="search">Search</string>
+    <string name="help_country_not_found">Don\'t see your country in the list?</string>
+    <string name="help_city_not_found">Don\'t see your city in the list?</string>
+    <string name="contact_us">Contact us</string>
 </resources>

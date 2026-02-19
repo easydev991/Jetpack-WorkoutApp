@@ -32,6 +32,7 @@ import com.swparks.domain.repository.JournalEntriesRepository
 import com.swparks.domain.repository.JournalsRepository
 import com.swparks.domain.repository.MessagesRepository
 import com.swparks.domain.usecase.CanDeleteJournalEntryUseCase
+import com.swparks.domain.usecase.ChangePasswordUseCase
 import com.swparks.domain.usecase.CreateJournalUseCase
 import com.swparks.domain.usecase.DeleteJournalEntryUseCase
 import com.swparks.domain.usecase.DeleteJournalUseCase
@@ -39,6 +40,7 @@ import com.swparks.domain.usecase.EditJournalSettingsUseCase
 import com.swparks.domain.usecase.GetJournalEntriesUseCase
 import com.swparks.domain.usecase.GetJournalsUseCase
 import com.swparks.domain.usecase.ICanDeleteJournalEntryUseCase
+import com.swparks.domain.usecase.IChangePasswordUseCase
 import com.swparks.domain.usecase.ICreateJournalUseCase
 import com.swparks.domain.usecase.IDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IDeleteJournalUseCase
@@ -60,7 +62,9 @@ import com.swparks.domain.usecase.TextEntryUseCase
 import com.swparks.network.SWApi
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.viewmodel.BlacklistViewModel
+import com.swparks.ui.viewmodel.ChangePasswordViewModel
 import com.swparks.ui.viewmodel.DialogsViewModel
+import com.swparks.ui.viewmodel.EditProfileViewModel
 import com.swparks.ui.viewmodel.FriendsListViewModel
 import com.swparks.ui.viewmodel.JournalEntriesDeps
 import com.swparks.ui.viewmodel.JournalEntriesViewModel
@@ -97,6 +101,7 @@ interface AppContainer {
     val loginUseCase: ILoginUseCase
     val logoutUseCase: ILogoutUseCase
     val resetPasswordUseCase: IResetPasswordUseCase
+    val changePasswordUseCase: IChangePasswordUseCase
 
     // Use cases для дневников
     val getJournalsUseCase: IGetJournalsUseCase
@@ -145,6 +150,12 @@ interface AppContainer {
 
     /** Фабрика для OtherUserProfileViewModel */
     fun otherUserProfileViewModelFactory(userId: Long): OtherUserProfileViewModel
+
+    /** Фабрика для EditProfileViewModel */
+    fun editProfileViewModelFactory(): EditProfileViewModel
+
+    /** Фабрика для ChangePasswordViewModel */
+    fun changePasswordViewModelFactory(): ChangePasswordViewModel
 
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
@@ -356,6 +367,10 @@ class DefaultAppContainer(context: Context) : AppContainer {
         ResetPasswordUseCase(swRepository)
     }
 
+    override val changePasswordUseCase: IChangePasswordUseCase by lazy {
+        ChangePasswordUseCase(swRepository, secureTokenRepository, tokenEncoder)
+    }
+
     // ==================== Use cases для дневников ====================
 
     override val getJournalsUseCase: IGetJournalsUseCase by lazy {
@@ -507,6 +522,22 @@ class DefaultAppContainer(context: Context) : AppContainer {
             userNotifier = userNotifier,
             resources = resourcesProvider
         )
+
+    /** Factory метод для создания EditProfileViewModel */
+    override fun editProfileViewModelFactory() = EditProfileViewModel(
+        swRepository = swRepository,
+        countriesRepository = countriesRepository,
+        logger = logger,
+        userNotifier = userNotifier
+    )
+
+    /** Factory метод для создания ChangePasswordViewModel */
+    override fun changePasswordViewModelFactory() = ChangePasswordViewModel(
+        changePasswordUseCase = changePasswordUseCase,
+        logger = logger,
+        userNotifier = userNotifier,
+        resources = resourcesProvider
+    )
 
     // ==================== API клиенты для разных функциональных областей ====================
     // Все фабричные методы возвращают один и тот же экземпляр SWApi для консистентности

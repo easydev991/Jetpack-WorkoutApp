@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -73,11 +72,11 @@ fun ListRowView(data: ListRowData) {
                 Image(
                     painter = painterResource(data.leadingIconID),
                     contentDescription = "Leading icon",
-                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.primary),
+                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onSecondary),
                     modifier = Modifier
                         .clip(RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_small)))
-                        .size(dimensionResource(id = R.dimen.icon_size_small_plus))
                         .background(color = MaterialTheme.colorScheme.secondary)
+                        .padding(dimensionResource(R.dimen.spacing_xsmall))
                 )
             }
             Text(
