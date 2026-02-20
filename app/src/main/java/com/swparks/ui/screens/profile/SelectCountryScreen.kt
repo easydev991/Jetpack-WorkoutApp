@@ -7,10 +7,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import com.swparks.ui.screens.more.sendLocationFeedback
 import com.swparks.ui.screens.settings.ItemListMode
 import com.swparks.ui.screens.settings.ItemListScreen
 import com.swparks.ui.state.ItemListUiState
 import com.swparks.ui.viewmodel.IEditProfileViewModel
+import com.swparks.util.LocationFeedback
 
 /**
  * Экран выбора страны (Stateful wrapper).
@@ -25,23 +28,20 @@ fun SelectCountryScreen(
     viewModel: IEditProfileViewModel,
     onBackClick: () -> Unit
 ) {
+    val context = LocalContext.current
     val state by viewModel.uiState.collectAsState()
 
-    // Локальное состояние для поиска (не загрязняет EditProfileViewModel)
     var searchQuery by rememberSaveable { mutableStateOf("") }
 
-    // Преобразуем страны в строки один раз при изменении списка
     val allCountries = remember(state.countries) {
         state.countries.map { it.name }
     }
 
-    // Фильтрация происходит здесь (State Hoisting)
     val filteredItems = remember(searchQuery, allCountries) {
         if (searchQuery.isEmpty()) allCountries
         else allCountries.filter { it.contains(searchQuery, ignoreCase = true) }
     }
 
-    // Empty state только когда есть запрос, но нет результатов
     val isEmpty = filteredItems.isEmpty() && searchQuery.isNotEmpty()
 
     ItemListScreen(
@@ -58,7 +58,8 @@ fun SelectCountryScreen(
             onBackClick()
         },
         onContactUs = {
-            // Note: отправка feedback будет реализована позже
+            val feedback = LocationFeedback.createCountry(context)
+            sendLocationFeedback(context, feedback)
         },
         onBackClick = onBackClick
     )

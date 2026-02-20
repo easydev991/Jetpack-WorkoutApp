@@ -361,4 +361,9 @@
     <string name="help_country_not_found">Не нашли свою страну в списке?</string>
     <string name="help_city_not_found">Не нашли свой город в списке?</string>
     <string name="contact_us">Напиши нам</string>
+    <string name="feedback_country_question">Какую страну нужно добавить?</string>
+    <string name="feedback_city_question">Какой город нужно добавить?</string>
+    <string name="feedback_email_subject_country">Отсутствующая страна - JetpackWorkoutApp</string>
+    <string name="feedback_email_subject_city">Отсутствующий город - JetpackWorkoutApp</string>
+    <string name="no_email_client">Приложение для почты не установлено</string>
 </resources>

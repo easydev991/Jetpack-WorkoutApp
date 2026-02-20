@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 /**
  * Fake-реализация JournalEntriesViewModel для UI тестов.
  *
- * Предоставляет простую реализацию интерфейса с возможность установки состояния.
+ * Предоставляет простую реализацию интерфейса с возможностью установки состояния.
  * Используется в Compose UI тестах для проверки разных состояний экрана.
  */
 class FakeJournalEntriesViewModel(

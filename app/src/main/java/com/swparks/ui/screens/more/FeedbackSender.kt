@@ -7,20 +7,21 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.core.net.toUri
 import com.swparks.BuildConfig
 import com.swparks.R
 import com.swparks.util.AppConstants
 import com.swparks.util.Complaint
+import com.swparks.util.Feedback
+import com.swparks.util.LocationFeedback
 
-private object Feedback {
-    val recipients = arrayOf("info@workout.su", "cuties.84tilbury@icloud.com")
+private object FeedbackData {
     const val subject = "Jetpack WorkoutApp: Обратная связь"
     val body = """
         Android SDK: ${Build.VERSION.SDK_INT}
         App version: ${BuildConfig.VERSION_NAME}
         Над чем нам стоит поработать?
     """.trimIndent()
-    const val intentType = "message/rfc822"
 }
 
 private const val TAG = "FeedbackSender"
@@ -29,27 +30,16 @@ private const val TAG = "FeedbackSender"
  * Отправляет отзыв по электронной почте.
  */
 fun sendFeedback(context: Context) {
+    val encodedSubject = Uri.encode(FeedbackData.subject)
+    val encodedBody = Uri.encode(FeedbackData.body)
+    val uri =
+        "mailto:${Feedback.recipients.joinToString(",")}?subject=$encodedSubject&body=$encodedBody".toUri()
+    val intent = Intent(Intent.ACTION_SENDTO, uri)
     try {
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            putExtra(Intent.EXTRA_EMAIL, Feedback.recipients)
-            putExtra(Intent.EXTRA_SUBJECT, Feedback.subject)
-            putExtra(Intent.EXTRA_TEXT, Feedback.body)
-            type = Feedback.intentType
-        }
-        context.startActivity(
-            Intent.createChooser(
-                intent,
-                context.getString(R.string.choose_email_client)
-            )
-        )
+        context.startActivity(intent)
     } catch (e: ActivityNotFoundException) {
-        logAndShowError(context, e)
-    } catch (e: SecurityException) {
-        logAndShowError(context, e)
-    } catch (e: IllegalArgumentException) {
-        logAndShowError(context, e)
-    } catch (e: IllegalStateException) {
-        logAndShowError(context, e)
+        Log.e(TAG, "Почтовый клиент не найден", e)
+        Toast.makeText(context, R.string.no_email_client, Toast.LENGTH_LONG).show()
     }
 }
 
@@ -60,27 +50,30 @@ fun sendFeedback(context: Context) {
  * @param context Android Context
  */
 fun sendComplaint(complaint: Complaint, context: Context) {
+    val encodedSubject = Uri.encode(complaint.subject)
+    val encodedBody = Uri.encode(complaint.body)
+    val uri =
+        "mailto:${Feedback.recipients.joinToString(",")}?subject=$encodedSubject&body=$encodedBody".toUri()
+    val intent = Intent(Intent.ACTION_SENDTO, uri)
     try {
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            putExtra(Intent.EXTRA_EMAIL, Feedback.recipients)
-            putExtra(Intent.EXTRA_SUBJECT, complaint.subject)
-            putExtra(Intent.EXTRA_TEXT, complaint.body)
-            type = Feedback.intentType
-        }
-        context.startActivity(
-            Intent.createChooser(
-                intent,
-                context.getString(R.string.choose_email_client)
-            )
-        )
+        context.startActivity(intent)
     } catch (e: ActivityNotFoundException) {
-        logAndShowError(context, e)
-    } catch (e: SecurityException) {
-        logAndShowError(context, e)
-    } catch (e: IllegalArgumentException) {
-        logAndShowError(context, e)
-    } catch (e: IllegalStateException) {
-        logAndShowError(context, e)
+        Log.e(TAG, "Почтовый клиент не найден", e)
+        Toast.makeText(context, R.string.no_email_client, Toast.LENGTH_LONG).show()
+    }
+}
+
+fun sendLocationFeedback(context: Context, feedback: LocationFeedback) {
+    val encodedSubject = Uri.encode(feedback.subject)
+    val encodedBody = Uri.encode(feedback.body)
+    val uri =
+        "mailto:${Feedback.recipients.joinToString(",")}?subject=$encodedSubject&body=$encodedBody".toUri()
+    val intent = Intent(Intent.ACTION_SENDTO, uri)
+    try {
+        context.startActivity(intent)
+    } catch (e: ActivityNotFoundException) {
+        Log.e(TAG, "Почтовый клиент не найден", e)
+        Toast.makeText(context, R.string.no_email_client, Toast.LENGTH_LONG).show()
     }
 }
 
@@ -122,12 +115,5 @@ fun openGitHub(context: Context) {
         context.startActivity(intent)
     } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "Не удалось открыть GitHub: ${e.message}")
-    }
-}
-
-private fun logAndShowError(context: Context, error: Exception) {
-    error.localizedMessage?.let {
-        Log.e(TAG, it)
-        Toast.makeText(context, it, Toast.LENGTH_LONG).show()
     }
 }

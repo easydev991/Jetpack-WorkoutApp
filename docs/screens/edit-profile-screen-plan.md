@@ -125,6 +125,13 @@ data class EditProfileUiState(
    - Добавлены composable для SelectCountryScreen и SelectCityScreen
    - Добавлены колбэки навигации в EditProfileScreen
 
+### Нереализованный функционал
+
+**Feedback (отправка сообщения об отсутствии страны/города):**
+- ⚠️ Кнопка "Написать нам" отображается в empty state
+- ⚠️ Колбэк `onContactUs` содержит заглушку
+- 📋 План реализации: [item-list-screen-plan.md](./item-list-screen-plan.md) (Этап 5)
+
 ---
 
 ## Итерация 4: ChangePasswordScreen 📋 ЗАПЛАНИРОВАНО

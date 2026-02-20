@@ -93,7 +93,7 @@ class CryptoManagerIntegrationTest {
     }
 
     @Test
-    fun encryptAndDecrypt_whenMultipleEncryptions_thenAllDecryptCorrectly() {
+    fun encryptAndDecrypt_whenMultiple_encryption_thenAllDecryptCorrectly() {
         // Given
         val dataList = listOf(
             "data_1".toByteArray(),

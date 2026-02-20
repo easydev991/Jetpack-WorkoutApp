@@ -157,8 +157,7 @@ class JournalSettingsDialogTest {
 
         // Кликаем на "Друзья" для "Кто видит записи"
         composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.friends_access)))
-            .get(0)
+            .onAllNodes(hasText(context.getString(R.string.friends_access)))[0]
             .performClick()
 
         // Then - Кнопка "Сохранить" должна быть включена
@@ -183,12 +182,10 @@ class JournalSettingsDialogTest {
 
         // Кликаем на "Только я" для "Кто может оставлять комментарии" (вторая секция)
         composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.only_me_access)))
-            .get(0)
+            .onAllNodes(hasText(context.getString(R.string.only_me_access)))[0]
             .performClick()
         composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.only_me_access)))
-            .get(1)
+            .onAllNodes(hasText(context.getString(R.string.only_me_access)))[1]
             .performClick() // Второй клик для commentAccess (вторая секция)
 
         // Then - Кнопка "Сохранить" должна быть включена
@@ -213,15 +210,13 @@ class JournalSettingsDialogTest {
 
         // Кликаем на "Друзья" для "Кто видит записи" (первая секция)
         composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.friends_access)))
-            .get(0)
+            .onAllNodes(hasText(context.getString(R.string.friends_access)))[0]
             .performClick()
 
         // Then - RadioButton "Друзья" должен быть выбран
         // (в Compose тестах мы проверяем только наличие кликабельных элементов)
         composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.friends_access)))
-            .get(0)
+            .onAllNodes(hasText(context.getString(R.string.friends_access)))[0]
             .assertHasClickAction()
     }
 
@@ -239,18 +234,15 @@ class JournalSettingsDialogTest {
         // Then - Все RadioButton строки должны быть кликабельны
         // Проверяем хотя бы один элемент для каждого варианта (в первой секции)
         composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.everybody_access)))
-            .get(0)
+            .onAllNodes(hasText(context.getString(R.string.everybody_access)))[0]
             .assertHasClickAction()
 
         composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.friends_access)))
-            .get(0)
+            .onAllNodes(hasText(context.getString(R.string.friends_access)))[0]
             .assertHasClickAction()
 
         composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.only_me_access)))
-            .get(0)
+            .onAllNodes(hasText(context.getString(R.string.only_me_access)))[0]
             .assertHasClickAction()
     }
 
@@ -288,8 +280,7 @@ class JournalSettingsDialogTest {
         // When - меняем viewAccess на ALL (первая секция - "Кто видит записи")
         setContent(journal, isSaving = true)
         composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.everybody_access)))
-            .get(0)
+            .onAllNodes(hasText(context.getString(R.string.everybody_access)))[0]
             .performClick()
 
         // Then - Кнопка должна быть заблокирована при загрузке
@@ -448,34 +439,28 @@ class JournalSettingsDialogTest {
         // Then - Все варианты доступа отображаются (проверяем наличие в первой и второй секциях)
         // В первой секции
         composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.everybody_access)))
-            .get(0)
+            .onAllNodes(hasText(context.getString(R.string.everybody_access)))[0]
             .assertIsDisplayed()
 
         composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.friends_access)))
-            .get(0)
+            .onAllNodes(hasText(context.getString(R.string.friends_access)))[0]
             .assertIsDisplayed()
 
         composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.only_me_access)))
-            .get(0)
+            .onAllNodes(hasText(context.getString(R.string.only_me_access)))[0]
             .assertIsDisplayed()
 
         // Во второй секции
         composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.everybody_access)))
-            .get(1)
+            .onAllNodes(hasText(context.getString(R.string.everybody_access)))[1]
             .assertIsDisplayed()
 
         composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.friends_access)))
-            .get(1)
+            .onAllNodes(hasText(context.getString(R.string.friends_access)))[1]
             .assertIsDisplayed()
 
         composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.only_me_access)))
-            .get(1)
+            .onAllNodes(hasText(context.getString(R.string.only_me_access)))[1]
             .assertIsDisplayed()
     }
 

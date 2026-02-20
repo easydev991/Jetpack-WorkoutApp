@@ -7,10 +7,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import com.swparks.ui.screens.more.sendLocationFeedback
 import com.swparks.ui.screens.settings.ItemListMode
 import com.swparks.ui.screens.settings.ItemListScreen
 import com.swparks.ui.state.ItemListUiState
 import com.swparks.ui.viewmodel.IEditProfileViewModel
+import com.swparks.util.LocationFeedback
 
 /**
  * Экран выбора города (Stateful wrapper).
@@ -25,17 +28,15 @@ fun SelectCityScreen(
     viewModel: IEditProfileViewModel,
     onBackClick: () -> Unit
 ) {
+    val context = LocalContext.current
     val state by viewModel.uiState.collectAsState()
 
-    // Локальное состояние для поиска
     var searchQuery by rememberSaveable { mutableStateOf("") }
 
-    // Города берутся из state.cities (уже отфильтрованы по выбранной стране в ViewModel)
     val allCities = remember(state.cities) {
         state.cities.map { it.name }
     }
 
-    // Фильтрация
     val filteredItems = remember(searchQuery, allCities) {
         if (searchQuery.isEmpty()) allCities
         else allCities.filter { it.contains(searchQuery, ignoreCase = true) }
@@ -57,7 +58,8 @@ fun SelectCityScreen(
             onBackClick()
         },
         onContactUs = {
-            // Note: отправка feedback будет реализована позже
+            val feedback = LocationFeedback.createCity(context)
+            sendLocationFeedback(context, feedback)
         },
         onBackClick = onBackClick
     )

@@ -347,4 +347,9 @@
     <string name="help_country_not_found">Don\'t see your country in the list?</string>
     <string name="help_city_not_found">Don\'t see your city in the list?</string>
     <string name="contact_us">Contact us</string>
+    <string name="feedback_country_question">What country is missing?</string>
+    <string name="feedback_city_question">What city is missing?</string>
+    <string name="feedback_email_subject_country">Missing Country - JetpackWorkoutApp</string>
+    <string name="feedback_email_subject_city">Missing City - JetpackWorkoutApp</string>
+    <string name="no_email_client">No email app installed</string>
 </resources>

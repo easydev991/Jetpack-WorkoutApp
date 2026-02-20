@@ -1,5 +1,6 @@
 package com.swparks.navigation
 
+import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.List
@@ -31,6 +32,8 @@ import com.swparks.navigation.TopLevelDestinations.MORE
 import com.swparks.navigation.TopLevelDestinations.PARKS
 import com.swparks.navigation.TopLevelDestinations.PROFILE
 
+private const val TAG = "Navigation"
+
 /**
  * AppState для управления навигацией приложения
  */
@@ -44,12 +47,15 @@ fun rememberAppState(
 
     // Слушаем изменения навигации для обновления активной вкладки
     DisposableEffect(navController) {
+        Log.d(TAG, "DisposableEffect: добавляем OnDestinationChangedListener")
         val listener =
             NavController.OnDestinationChangedListener { _, destination, _ ->
+                Log.d(TAG, "OnDestinationChangedListener: destination=${destination.route}")
                 appState.onDestinationChanged(destination.route)
             }
         navController.addOnDestinationChangedListener(listener)
         onDispose {
+            Log.d(TAG, "DisposableEffect: удаляем OnDestinationChangedListener")
             navController.removeOnDestinationChangedListener(listener)
         }
     }
@@ -120,13 +126,43 @@ class AppState(
         private set
 
     /**
-     * Обновляет активную вкладку, если маршрут соответствует одной из корневых вкладок.
+     * Обновляет активную вкладку на основе текущего маршрута.
+     * Проверяет как прямое совпадение с корневыми вкладками, так и parentTab для дочерних экранов.
+     * Это позволяет корректно определять активную вкладку даже когда restoreState
+     * восстанавливает стек с дочерними экранами (например, edit_profile внутри Profile).
      */
     fun onDestinationChanged(route: String?) {
+        Log.d(TAG, "onDestinationChanged: route=$route")
+
+        // Сначала проверяем прямое совпадение с корневой вкладкой
         val matchingTab = topLevelDestinations.find { it.route == route }
         if (matchingTab != null) {
+            Log.d(
+                TAG,
+                "  -> найдена вкладка: ${matchingTab.route}, обновляем currentTopLevelDestination"
+            )
             currentTopLevelDestination = matchingTab
+            return
         }
+
+        // Если прямого совпадения нет, проверяем parentTab для дочерних экранов
+        // Это решает проблему: когда restoreState восстанавливает стек с дочерним экраном,
+        // onDestinationChanged вызывается с маршрутом дочернего экрана, а не корневого
+        val parentTab = Screen.findParentTab(route ?: "")
+        if (parentTab != null) {
+            val parentTopLevelDestination =
+                topLevelDestinations.find { it.route == parentTab.route }
+            if (parentTopLevelDestination != null) {
+                Log.d(
+                    TAG,
+                    "  -> дочерний экран с parentTab=${parentTab.route}, обновляем currentTopLevelDestination"
+                )
+                currentTopLevelDestination = parentTopLevelDestination
+                return
+            }
+        }
+
+        Log.d(TAG, "  -> маршрут не соответствует никакой вкладке")
     }
 
     /**
@@ -167,8 +203,17 @@ class AppState(
         // в какой вкладке мы находимся, даже если ушли на дочерний экран.
         val isReselect = currentTopLevelDestination?.route == topLevelDestination.route
 
+        Log.d(
+            TAG,
+            "navigateToTopLevelDestination: ${topLevelDestination.route}, isReselect=$isReselect, currentTopLevelDestination=${currentTopLevelDestination?.route}"
+        )
+
         if (isReselect) {
             // Повторное нажатие на текущую вкладку — сбрасываем стек до корня
+            Log.d(
+                TAG,
+                "  -> повторное нажатие: сбрасываем стек до корня ${topLevelDestination.route}"
+            )
             navController.navigate(topLevelDestination.route) {
                 // Удаляем весь стек выше корня вкладки (включительно),
                 // затем создаем заново
@@ -178,8 +223,13 @@ class AppState(
                 launchSingleTop = true
                 // restoreState = false — не восстанавливаем, а создаем заново
             }
+            Log.d(
+                TAG,
+                "  -> navigate() вызван с popUpTo(${topLevelDestination.route}, inclusive=true)"
+            )
         } else {
             // Переход на другую вкладку — стандартная логика
+            Log.d(TAG, "  -> переход на другую вкладку: ${topLevelDestination.route}")
             navController.navigate(topLevelDestination.route) {
                 popUpTo(navController.graph.findStartDestination().id) {
                     saveState = true
@@ -187,6 +237,10 @@ class AppState(
                 launchSingleTop = true
                 restoreState = true
             }
+            Log.d(
+                TAG,
+                "  -> navigate() вызван с popUpTo(startDestination), saveState=true, restoreState=true"
+            )
         }
     }
 

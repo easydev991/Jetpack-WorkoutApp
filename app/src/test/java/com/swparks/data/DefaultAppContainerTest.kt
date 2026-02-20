@@ -25,7 +25,7 @@ class DefaultAppContainerTest {
     }
 
     @Test
-    fun `AppContainer создает UserNotifierImpl для userNotifier`() {
+    fun appContainer_creates_userNotifierImpl_for_userNotifier() {
         // Given
         val container = DefaultAppContainer(mockContext)
 

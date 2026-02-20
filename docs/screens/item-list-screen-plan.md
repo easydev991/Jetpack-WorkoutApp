@@ -64,13 +64,28 @@
 
 ---
 
-## Этап 5: Feedback (опционально)
+## Этап 5: Feedback ✅
 
-- [ ] Реализовать отправку feedback при нажатии "Написать нам" (email клиент)
+**Реализовано:**
+- `util/Feedback.kt` — объект с recipients (info@workout.su, cuties.84tilbury@icloud.com)
+- `util/AppVersionProvider.kt` — getVersion(), getVersionCode() с PackageInfoCompat
+- `util/LocationFeedback.kt` — sealed class Country/City с companion object factory methods
+- `FeedbackSender.sendLocationFeedback()` — ACTION_SENDTO + mailto: + ActivityNotFoundException + Toast
+- `SelectCountryScreen.kt` — интеграция с LocalContext.current
+- `SelectCityScreen.kt` — интеграция с LocalContext.current
+- `res/values/strings.xml` — 5 ключей EN
+- `res/values-ru/strings.xml` — 5 ключей RU
+- `Feedback.recipients` используется консистентно во всех методах FeedbackSender
+
+**Ключевые решения:**
+- `ACTION_SENDTO` + `mailto:` вместо `ACTION_SEND` — консистентно с iOS
+- Unit-тесты для LocationFeedback/AppVersionProvider требуют Robolectric — отложены в пользу ручного тестирования
 
 ---
 
 ## Критерии завершения
+
+### Этапы 1-4 ✅
 
 - [x] Все unit-тесты проходят
 - [x] Проект собирается без ошибок
@@ -82,3 +97,15 @@
 - [x] При выборе страны/города происходит возврат на EditProfileScreen
 - [x] Выбранные страна/город корректно отображаются на EditProfileScreen
 - [x] Локализация работает для RU и EN
+
+### Этап 5: Feedback ✅
+
+- [x] Кнопка "Написать нам" открывает почтовый клиент (ACTION_SENDTO + mailto:)
+- [x] Subject письма корректный (Country/City)
+- [x] Body письма содержит Android SDK, версию приложения, вопрос
+- [x] Toast "Почтовый клиент не установлен" если нет email-приложения
+- [x] `Feedback.recipients` используется консистентно во всех методах FeedbackSender
+- [x] Строковые ресурсы без trailing spaces
+- [x] План актуализирован (Этап 5 → ✅)
+- [ ] Ручное тестирование на устройстве (открытие email клиента)
+- [ ] Ручное тестирование на устройстве (Toast при отсутствии email-приложения)

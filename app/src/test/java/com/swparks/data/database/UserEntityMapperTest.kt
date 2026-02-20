@@ -17,7 +17,7 @@ import org.junit.Test
 class UserEntityMapperTest {
 
     @Test
-    fun User_toEntity_convertsAllFieldsCorrectly() {
+    fun user_toEntity_convertsAllFieldsCorrectly() {
         // Given
         val user = createTestUser(
             id = 123,
@@ -67,7 +67,7 @@ class UserEntityMapperTest {
     }
 
     @Test
-    fun User_toEntity_whenAddedParksNull_convertsCorrectly() {
+    fun user_toEntity_whenAddedParksNull_convertsCorrectly() {
         // Given
         val user = createTestUser(id = 123, name = "testuser", addedParks = null)
 
@@ -80,7 +80,7 @@ class UserEntityMapperTest {
     }
 
     @Test
-    fun User_toEntity_whenAddedParksEmpty_convertsCorrectly() {
+    fun user_toEntity_whenAddedParksEmpty_convertsCorrectly() {
         // Given
         val user = createTestUser(id = 123, name = "testuser", addedParks = emptyList())
 
@@ -94,7 +94,7 @@ class UserEntityMapperTest {
     }
 
     @Test
-    fun UserEntity_toDomain_convertsAllFieldsCorrectly() {
+    fun userEntity_toDomain_convertsAllFieldsCorrectly() {
         // Given
         val entity = UserEntity(
             id = 123,
@@ -148,7 +148,7 @@ class UserEntityMapperTest {
     }
 
     @Test
-    fun UserEntity_toDomain_whenAddedParksNull_convertsCorrectly() {
+    fun userEntity_toDomain_whenAddedParksNull_convertsCorrectly() {
         // Given
         val entity = UserEntity(
             id = 123,
@@ -180,7 +180,7 @@ class UserEntityMapperTest {
     }
 
     @Test
-    fun UserEntity_toDomain_whenAddedParksEmpty_convertsCorrectly() {
+    fun userEntity_toDomain_whenAddedParksEmpty_convertsCorrectly() {
         // Given
         val entity = UserEntity(
             id = 123,

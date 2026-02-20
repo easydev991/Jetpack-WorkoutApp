@@ -106,7 +106,7 @@ class EditProfileViewModelSelectionTest {
     }
 
     @Test
-    fun onCountrySelected_resetsCity_ifCityNotInNewCountry() = runTest {
+    fun onCountrySelected_selectsFirstCity_whenCityNotInNewCountry() = runTest {
         // Arrange
         val countries = makeTestCountries()
         val user = makeTestUser()
@@ -127,10 +127,10 @@ class EditProfileViewModelSelectionTest {
         viewModel.onCountrySelected("США")
         testDispatcher.scheduler.advanceUntilIdle()
 
-        // Assert - город должен сброситься
+        // Assert - должен выбраться первый город из США (так как сервер требует city_id)
         val state = viewModel.uiState.first()
         Assert.assertEquals("США", state.selectedCountry?.name)
-        Assert.assertNull("Город должен быть null", state.selectedCity)
+        Assert.assertEquals("Нью-Йорк", state.selectedCity?.name)
     }
 
     @Test

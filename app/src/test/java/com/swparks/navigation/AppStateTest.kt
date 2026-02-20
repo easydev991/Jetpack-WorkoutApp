@@ -1,10 +1,14 @@
 package com.swparks.navigation
 
+import android.util.Log
 import androidx.navigation.NavHostController
 import com.swparks.data.model.User
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -13,7 +17,9 @@ import org.junit.Test
 
 /**
  * Unit тесты для AppState.
- * Проверяют функциональность состояния авторизации и обновления текущего пользователя.
+ * Проверяют функциональность:
+ * - Состояния авторизации и обновления текущего пользователя
+ * - Навигации и определения активной вкладки (включая parentTab для дочерних экранов)
  */
 class AppStateTest {
 
@@ -40,6 +46,11 @@ class AppStateTest {
 
     @Before
     fun setup() {
+        // Мокаем Android Log для тестов навигации
+        mockkStatic(Log::class)
+        every { Log.d(any(), any()) } returns 0
+        every { Log.e(any(), any()) } returns 0
+
         navController = mockk(relaxed = true)
         appState = AppState(navController)
     }
@@ -232,5 +243,167 @@ class AppStateTest {
             "После повторной установки пользователь должен быть авторизован",
             authorizedAfterSecondUser
         )
+    }
+
+    // ==================== Тесты навигации ====================
+
+    @Test
+    fun onDestinationChanged_whenRootScreen_thenUpdatesTopLevelDestination() {
+        // When - переход на корневой экран Profile
+        appState.onDestinationChanged("profile")
+
+        // Then
+        assertEquals(
+            "При переходе на корневой экран Profile currentTopLevelDestination должен быть PROFILE",
+            TopLevelDestinations.PROFILE,
+            appState.currentTopLevelDestination
+        )
+    }
+
+    @Test
+    fun onDestinationChanged_whenChildScreenWithParentTab_thenUpdatesToParentTab() {
+        // Given - сначала перейдем на Profile
+        appState.onDestinationChanged("profile")
+        assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
+
+        // When - переход на дочерний экран edit_profile (parentTab = Profile)
+        appState.onDestinationChanged("edit_profile")
+
+        // Then - должен определить Profile как активную вкладку
+        assertEquals(
+            "При переходе на дочерний экран edit_profile currentTopLevelDestination должен остаться PROFILE",
+            TopLevelDestinations.PROFILE,
+            appState.currentTopLevelDestination
+        )
+    }
+
+    @Test
+    fun onDestinationChanged_whenUnknownRoute_thenDoesNotChangeTopLevelDestination() {
+        // Given - сначала установим вкладку Profile
+        appState.onDestinationChanged("profile")
+        assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
+
+        // When - переход на неизвестный маршрут
+        appState.onDestinationChanged("unknown_route")
+
+        // Then - currentTopLevelDestination не должен измениться
+        assertEquals(
+            "При переходе на неизвестный маршрут currentTopLevelDestination должен остаться прежним",
+            TopLevelDestinations.PROFILE,
+            appState.currentTopLevelDestination
+        )
+    }
+
+    @Test
+    fun onDestinationChanged_whenSwitchingTabs_thenUpdatesTopLevelDestination() {
+        // When - переход на Parks
+        appState.onDestinationChanged("parks")
+        assertEquals(TopLevelDestinations.PARKS, appState.currentTopLevelDestination)
+
+        // When - переход на Events
+        appState.onDestinationChanged("events")
+        assertEquals(TopLevelDestinations.EVENTS, appState.currentTopLevelDestination)
+
+        // When - переход на Messages
+        appState.onDestinationChanged("messages")
+        assertEquals(TopLevelDestinations.MESSAGES, appState.currentTopLevelDestination)
+
+        // When - переход на More
+        appState.onDestinationChanged("more")
+        assertEquals(TopLevelDestinations.MORE, appState.currentTopLevelDestination)
+
+        // When - возврат на Profile
+        appState.onDestinationChanged("profile")
+        assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
+    }
+
+    @Test
+    fun onDestinationChanged_whenRestoringStackWithChildScreen_thenParentTabIsSelected() {
+        // Сценарий: Profile -> EditProfile -> More -> Profile (restoreState восстанавливает стек с EditProfile)
+
+        // Step 1: Открываем Profile
+        appState.onDestinationChanged("profile")
+        assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
+
+        // Step 2: Переходим в EditProfile (дочерний экран)
+        appState.onDestinationChanged("edit_profile")
+        assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
+
+        // Step 3: Переключаемся на More
+        appState.onDestinationChanged("more")
+        assertEquals(TopLevelDestinations.MORE, appState.currentTopLevelDestination)
+
+        // Step 4: Возвращаемся на Profile с restoreState=true
+        // Navigation Component восстанавливает стек и сразу вызывает onDestinationChanged с edit_profile
+        appState.onDestinationChanged("edit_profile")
+
+        // Then - Profile должен быть выбран как активная вкладка (благодаря parentTab)
+        assertEquals(
+            "При восстановлении стека с дочерним экраном edit_profile " +
+                    "currentTopLevelDestination должен быть PROFILE (родительская вкладка)",
+            TopLevelDestinations.PROFILE,
+            appState.currentTopLevelDestination
+        )
+    }
+
+    @Test
+    fun onDestinationChanged_whenAllTopLevelDestinations_thenEachIsSelected() {
+        // Проверяем, что все 5 вкладок корректно определяются
+        val destinations = listOf(
+            "parks" to TopLevelDestinations.PARKS,
+            "events" to TopLevelDestinations.EVENTS,
+            "messages" to TopLevelDestinations.MESSAGES,
+            "profile" to TopLevelDestinations.PROFILE,
+            "more" to TopLevelDestinations.MORE
+        )
+
+        destinations.forEach { (route, expectedDestination) ->
+            // When
+            appState.onDestinationChanged(route)
+
+            // Then
+            assertEquals(
+                "При переходе на $route currentTopLevelDestination должен быть $expectedDestination",
+                expectedDestination,
+                appState.currentTopLevelDestination
+            )
+        }
+    }
+
+    @Test
+    fun onDestinationChanged_whenChildScreens_thenParentTabIsSelected() {
+        // Проверяем различные дочерние экраны и их родительские вкладки
+        val childScreens = listOf(
+            // Дочерние экраны Profile
+            "edit_profile" to TopLevelDestinations.PROFILE,
+            "user_parks/123" to TopLevelDestinations.PROFILE,
+            "my_friends" to TopLevelDestinations.PROFILE,
+            "blacklist" to TopLevelDestinations.PROFILE,
+            // Дочерние экраны Parks
+            "park_detail/456" to TopLevelDestinations.PARKS,
+            "create_park" to TopLevelDestinations.PARKS,
+            "park_filter" to TopLevelDestinations.PARKS,
+            // Дочерние экраны Events
+            "event_detail/789" to TopLevelDestinations.EVENTS,
+            "create_event" to TopLevelDestinations.EVENTS,
+            // Дочерние экраны Messages
+            "chat/123" to TopLevelDestinations.MESSAGES,
+            "friends" to TopLevelDestinations.MESSAGES,
+            // Дочерние экраны More
+            "theme_icon" to TopLevelDestinations.MORE
+        )
+
+        childScreens.forEach { (route, expectedDestination) ->
+            // When
+            appState.onDestinationChanged(route)
+
+            // Then
+            assertEquals(
+                "При переходе на дочерний экран $route " +
+                        "currentTopLevelDestination должен быть $expectedDestination (родительская вкладка)",
+                expectedDestination,
+                appState.currentTopLevelDestination
+            )
+        }
     }
 }

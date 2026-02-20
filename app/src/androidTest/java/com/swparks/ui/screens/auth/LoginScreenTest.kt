@@ -31,11 +31,9 @@ class LoginScreenTest {
 
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
-    private val signInText = context.getString(R.string.sign_in)
     private val closeText = context.getString(R.string.close)
     private val loginOrEmailText = context.getString(R.string.login_or_email)
     private val passwordText = context.getString(R.string.password)
-    private val resetPasswordText = context.getString(R.string.reset_password)
 
     /**
      * Настраивает LoginScreen для тестирования.
