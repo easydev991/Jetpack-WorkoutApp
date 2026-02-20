@@ -317,8 +317,8 @@ class SWRepositoryCommentsTest {
             mockJournalEntryDao.insert(
                 match<com.swparks.data.database.entity.JournalEntryEntity> {
                     it.id == 999L &&
-                            it.message == "Updated comment" &&
-                            it.modifyDate != 1000000L // modifyDate должен измениться
+                        it.message == "Updated comment" &&
+                        it.modifyDate != 1000000L // modifyDate должен измениться
                 }
             )
         }

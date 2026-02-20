@@ -44,13 +44,13 @@ class SecureTokenRepositoryTest {
 
         mockkStatic(Base64::class)
         every { Base64.encodeToString(any(), any()) } answers
-                {
-                    java.util.Base64.getEncoder().encodeToString(firstArg<ByteArray>())
-                }
+            {
+                java.util.Base64.getEncoder().encodeToString(firstArg<ByteArray>())
+            }
         every { Base64.decode(any<String>(), any()) } answers
-                {
-                    java.util.Base64.getDecoder().decode(firstArg<String>())
-                }
+            {
+                java.util.Base64.getDecoder().decode(firstArg<String>())
+            }
 
         mockDataStore = mockk(relaxed = true)
         mockCryptoManager = mockk()

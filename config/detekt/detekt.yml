@@ -1,5 +1,5 @@
 build:
-  maxIssues: 100  # Increase threshold to allow more issues
+  maxIssues: 90  # Current warnings count (88) + buffer (2)
   excludeCorrectable: false
   weights:
     # complexity: 2

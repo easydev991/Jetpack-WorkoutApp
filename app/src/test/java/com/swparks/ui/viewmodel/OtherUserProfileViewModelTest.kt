@@ -140,7 +140,7 @@ class OtherUserProfileViewModelTest {
         val userId = 123L
         val user = User(id = userId, name = "test", image = null)
         coEvery { mockSwRepository.getUser(userId) } returns Result.success(user) andThen
-                Result.failure(Exception("Network error"))
+            Result.failure(Exception("Network error"))
 
         val viewModel = OtherUserProfileViewModel(
             userId,

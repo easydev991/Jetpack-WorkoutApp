@@ -9,7 +9,7 @@ Android application "SW Parks" (Street Workout Parks) built with Kotlin and Jetp
 - **Package**: `com.swparks`
 - **Min SDK**: 26 (Android 8.0)
 - **Target SDK**: 35
-- **Kotlin**: 2.3.0
+- **Kotlin**: 2.3.10
 
 ## Build/Lint/Test Commands
 
@@ -221,6 +221,7 @@ fun functionName_whenCondition_thenExpectedResult() {
 - **MockK** — mocking (`mockk`, `coEvery`, `coVerify`)
 - **kotlinx.coroutines.test** — `runTest`, `advanceUntilIdle`
 - **Turbine** — Flow testing
+- **Robolectric** — Android unit tests
 
 ### Test Locations
 
@@ -255,7 +256,7 @@ fun login_whenValidCredentials_thenReturnsSuccess() = runTest {
 | `config/detekt/detekt.yml` | Detekt rules |
 | `Makefile` | Build commands |
 | `.cursor/rules/*.mdc` | Cursor AI rules |
-| `docs/development-plan.md` | Development roadmap |
+| `docs/plan-development.md` | Development roadmap |
 
 ## Pre-Commit Checklist
 

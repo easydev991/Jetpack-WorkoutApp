@@ -145,6 +145,25 @@ data class EditProfileUiState(
 
 ---
 
+## Итерация 5: AvatarPicker (Выбор фото профиля) 📋 ЗАПЛАНИРОВАНО
+
+**Подробный план**: [avatar-picker-plan.md](./avatar-picker-plan.md)
+
+### Что нужно сделать
+
+- Добавить Photo Picker для выбора изображения из галереи
+- Обновить UI State для хранения выбранного фото
+- Реализовать отправку фото на сервер при сохранении
+- Добавить превью выбранного фото в AvatarSection
+
+### Best Practices
+
+- Использовать `ActivityResultContracts.PickVisualMedia()` (Android 13+)
+- Fallback на `ActivityResultContracts.GetContent()` для Android < 13
+- Не требует разрешений `READ_MEDIA_IMAGES`
+
+---
+
 ## Локализация
 
 ### Добавленные строковые ресурсы

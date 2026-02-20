@@ -50,7 +50,7 @@ Presentation (UI, ViewModel)
 
 #### Data
 
-- **Data Models** (`data/model/`): API DTOs и сетевые модели (17 файлов: `User`, `Park`, `Event`, `Comment`, `Photo`, `JournalResponse`, `JournalEntryResponse`, `DialogResponse`, `MessageResponse`, `City`, `Country`, `Gender`, `ParkType`, `ParkSize`, `EventKind`, `EventType`, `SocialUpdates`, `ApiFriendAction`, `ApiBlacklistOption`)
+- **Data Models** (`data/model/`): API DTOs и сетевые модели (17 файлов: `User`, `Park`, `Event`, `Comment`, `Photo`, `JournalResponse`, `JournalEntryResponse`, `DialogResponse`, `MessageResponse`, `City`, `Country`, `ParkType`, `ParkSize`, `SocialUpdates`, `ApiFriendAction`, `ApiBlacklistOption`, `LoginSuccess`)
 - **Room Database**: `SWDatabase` - основная база данных приложения
 - **Repository Implementations**:
   - `SWRepository` - основной репозиторий для работы с данными (площадки, мероприятия, пользователи и т.д.)
@@ -73,14 +73,14 @@ Presentation (UI, ViewModel)
   - Авторизация: `LoginUseCase`, `LogoutUseCase`, `ResetPasswordUseCase`
   - Справочник: `GetCountriesUseCase`, `GetCitiesByCountryUseCase`, `GetCountryByIdUseCase`, `GetCityByIdUseCase`
   - Настройки: `IconManager` - управление иконками приложения (11 иконок)
-- **Models**: доменные модели (`AppIcon`, `AppTheme` - настройки приложения)
+- **Models**: доменные модели (6 файлов: `AppIcon`, `AppTheme`, `FriendAction`, `Journal`, `JournalEntry`, `EditProfileLocations`)
 - **Exceptions**: исключения доменного слоя (`NetworkException`, `ServerException`)
 - **Repository Interfaces**: интерфейсы репозиториев (например, `CountriesRepository`)
 
 #### Presentation
 
 - **ViewModels**: `AuthViewModel`, `LoginViewModel`, `ProfileViewModel`, `EventsViewModel`, `ThemeIconViewModel`, `MainActivityViewModel`, `FriendsListViewModel` и др.
-- **UI Models** (`ui/model/`): формы и запросы UI (12 файлов: `LoginCredentials`, `ParkForm`, `EventForm`, `MainUserForm`, `RegistrationRequest`, `ResetPasswordRequest`, `EditJournalSettingsRequest`, `FriendAction`, `BlacklistAction`, `Gender`, `JournalAccess`, `TextEntryOption`)
+- **UI Models** (`ui/model/`): формы и запросы UI (15 файлов: `LoginCredentials`, `ParkForm`, `EventForm`, `MainUserForm`, `RegistrationRequest`, `ResetPasswordRequest`, `EditJournalSettingsRequest`, `FriendAction`, `BlacklistAction`, `Gender`, `JournalAccess`, `TextEntryOption`, `EditInfo`, `EventKind`, `EventType`, `TextEntryMode`)
 - **UI State**: sealed классы (Loading/Success/Error) для состояний экранов
 - **Screens**: Compose экраны в `ui/screens/`:
   - `auth/` - экраны авторизации (LoginScreen, RecoveryScreen)
@@ -93,7 +93,7 @@ Presentation (UI, ViewModel)
   - `RootScreen` - корневой экран с навигацией по вкладкам
 - **Navigation**: навигация в `navigation/` (`AppState.kt`, `Destinations.kt`, `Navigation.kt`, `TopLevelDestination.kt`)
 - **Theme**: тема в `ui/theme/`
-- **Design System**: компоненты дизайн-системы в `ui/ds/` (28 компонентов)
+- **Design System**: компоненты дизайн-системы в `ui/ds/` (29 компонентов)
 
 #### Utilities
 
@@ -133,7 +133,7 @@ Presentation (UI, ViewModel)
 
 #### Компоненты дизайн-системы
 
-- ✅ Компоненты дизайн-системы уже реализованы и готовы к использованию (28 компонентов)
+- ✅ Компоненты дизайн-системы уже реализованы и готовы к использованию (29 компонентов)
 - Использовать готовые компоненты для верстки экранов
 
 ## Структура проекта
@@ -154,20 +154,20 @@ app/
 │   │   │   └── serializer/ # Сериализатор для шифрования
 │   │   ├── domain/         # Domain layer
 │   │   │   ├── exception/  # Исключения
-│   │   │   ├── model/      # Доменные модели (4 файла)
+│   │   │   ├── model/      # Доменные модели (6 файлов)
 │   │   │   ├── repository/ # Интерфейсы репозиториев
 │   │   │   └── usecase/    # Use cases
 │   │   ├── navigation/     # Навигация
 │   │   ├── network/        # Сетевой слой (SWApi - 57 endpoints)
 │   │   ├── ui/             # UI слой
-│   │   │   ├── ds/         # Компоненты пользовательского интерфейса (28 компонентов)
-│   │   │   ├── model/      # UI формы и запросы (12 файлов)
+│   │   │   ├── ds/         # Компоненты пользовательского интерфейса (29 компонентов)
+│   │   │   ├── model/      # UI формы и запросы (15 файлов)
 │   │   │   ├── screen/     # Компоненты экранов
 │   │   │   ├── screens/    # Экраны приложения
 │   │   │   ├── state/      # Состояния UI компонентов
 │   │   │   ├── theme/      # Тема приложения
 │   │   │   └── viewmodel/  # ViewModel классы
-│   │   ├── util/           # Утилиты (9 файлов)
+│   │   ├── util/           # Утилиты
 │   │   ├── utils/          # Дополнительные утилиты
 │   │   ├── viewmodel/      # ViewModels верхнего уровня
 │   │   ├── JetpackWorkoutApplication.kt
@@ -187,13 +187,13 @@ app/
 
 - `androidx.core:core-ktx:1.17.0`
 - `androidx.lifecycle:lifecycle-runtime-ktx:2.10.0`
-- `androidx.activity:activity-compose:1.12.2`
-- `androidx.compose:*:compose-bom:2026.01.00` (Material 3)
+- `androidx.activity:activity-compose:1.12.4`
+- `androidx.compose:*:compose-bom:2026.02.00` (Material 3)
 - `androidx.appcompat:appcompat:1.7.1`
 - `androidx.compose.material:material-icons-extended:1.7.8`
-- `androidx.navigation:navigation-compose:2.9.6`
+- `androidx.navigation:navigation-compose:2.9.7`
 - `com.squareup.retrofit2:retrofit:3.0.0`
-- `org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0`
+- `org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0`
 - `org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2`
 - `io.coil-kt:coil-compose:2.7.0`
 - `androidx.datastore:datastore-preferences:1.2.0`
@@ -202,7 +202,7 @@ app/
 - `androidx.room:room-compiler:2.8.4` (KSP)
 - `com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0`
 - `com.google.crypto.tink:tink-android:1.20.0`
-- `com.google.devtools.ksp:2.3.2`
+- `com.google.devtools.ksp:2.3.4`
 
 ## Конфигурация сборки
 
@@ -212,8 +212,8 @@ app/
 - **Компиляция Kotlin**: JVM Target 17
 - **Compose**: Включена поддержка
 - **ProGuard/R8**: Включена минификация для релизных сборок
-- **Gradle Plugin**: 9.0.0
-- **Kotlin Version**: 2.3.0
+- **Gradle Plugin**: 9.0.1
+- **Kotlin Version**: 2.3.10
 
 ## Ключевые компоненты
 
@@ -272,12 +272,13 @@ app/
 
 ### Инструменты
 
-- JUnit 5 - unit-тесты
+- JUnit 4 - unit-тесты
 - MockK - мокирование
 - Compose Testing - Compose компоненты
 - Room Testing - для интеграционных тестов БД
 - kotlinx-coroutines-test - для тестирования корутин
 - Turbine - для тестирования Flow/StateFlow (app.cash.turbine:turbine:1.2.1)
+- Robolectric - для unit-тестов с Android API
 
 ### Структура
 
@@ -368,8 +369,8 @@ fun tearDown() {
 - Unit-тесты для ViewModels с моками
 - Сетевые функции только на моках (без реальных запросов)
 - UI-тесты для Compose компонентов без бизнес-логики
-- Использовать JUnit 5 аннотации (`@Test`, `@Before`, `@After`)
-- Использовать assertions JUnit 5 (`assertEquals`, `assertTrue`, `assertNull`)
+- Использовать JUnit 4 аннотации (`@Test`, `@Before`, `@After`)
+- Использовать assertions JUnit 4 (`assertEquals`, `assertTrue`, `assertNull`)
 
 **Подробные правила тестирования см. в `.cursor/rules/tdd.mdc`**
 
@@ -460,13 +461,6 @@ fun tearDown() {
 
 **Подробные требования к качеству кода см. в `.cursor/rules/code-quality.mdc`**
 
-## Локализация
-
-### Языки
-
-- Русский (ru) - основной
-- Английский (en) - по умолчанию
-
 ## Правила разработки Android SW Parks
 
 ### Терминология
@@ -481,7 +475,7 @@ fun tearDown() {
 
 Android-приложение является портом iOS-приложения на платформу Android. Необходимо реализовать такой же набор функционала, как в iOS-версии.
 
-Пошаговый план разработки находится в файле `docs/development-plan.md`
+Пошаговый план разработки находится в файле `docs/plan-development.md`
 
 ### Дополнительные правила и рекомендации
 

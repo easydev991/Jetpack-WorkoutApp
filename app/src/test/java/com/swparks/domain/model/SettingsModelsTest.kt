@@ -109,7 +109,7 @@ private fun <T> assertListsEqual(actual: List<T>, expected: List<T>) {
     if (actual != expected) {
         throw AssertionError(
             "Ожидался список: $expected\n" +
-                    "Получен список: $actual"
+                "Получен список: $actual"
         )
     }
 }
@@ -121,7 +121,7 @@ private fun assertStringsEqual(actual: String, expected: String) {
     if (actual != expected) {
         throw AssertionError(
             "Ожидалась строка: $expected\n" +
-                    "Получена строка: $actual"
+                "Получена строка: $actual"
         )
     }
 }
@@ -133,7 +133,7 @@ private fun assertThemesEqual(actual: AppTheme, expected: AppTheme) {
     if (actual != expected) {
         throw AssertionError(
             "Ожидалась тема: $expected\n" +
-                    "Получена тема: $actual"
+                "Получена тема: $actual"
         )
     }
 }

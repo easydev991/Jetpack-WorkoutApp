@@ -179,10 +179,10 @@ class MessagesRepositoryTest {
         coVerify {
             mockDialogDao.insertAll(match { entities ->
                 entities.size == 1 &&
-                        entities[0].id == 1L &&
-                        entities[0].anotherUserId == 456 &&
-                        entities[0].name == "Тест" &&
-                        entities[0].unreadCount == 5
+                    entities[0].id == 1L &&
+                    entities[0].anotherUserId == 456 &&
+                    entities[0].name == "Тест" &&
+                    entities[0].unreadCount == 5
             })
         }
     }

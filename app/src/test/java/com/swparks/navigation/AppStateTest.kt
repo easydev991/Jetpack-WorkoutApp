@@ -340,7 +340,7 @@ class AppStateTest {
         // Then - Profile должен быть выбран как активная вкладка (благодаря parentTab)
         assertEquals(
             "При восстановлении стека с дочерним экраном edit_profile " +
-                    "currentTopLevelDestination должен быть PROFILE (родительская вкладка)",
+                "currentTopLevelDestination должен быть PROFILE (родительская вкладка)",
             TopLevelDestinations.PROFILE,
             appState.currentTopLevelDestination
         )
@@ -400,7 +400,7 @@ class AppStateTest {
             // Then
             assertEquals(
                 "При переходе на дочерний экран $route " +
-                        "currentTopLevelDestination должен быть $expectedDestination (родительская вкладка)",
+                    "currentTopLevelDestination должен быть $expectedDestination (родительская вкладка)",
                 expectedDestination,
                 appState.currentTopLevelDestination
             )

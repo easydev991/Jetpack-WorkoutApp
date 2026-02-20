@@ -8,7 +8,8 @@
 
 - **Реактивный UI**: автоматическое обновление при изменении данных через Flow
 - **Авторизация**: отображение `IncognitoProfileView` для неавторизованных пользователей
-- **Pull-to-refresh**: обновление профиля с сервера
+- **Pull-to-refresh**: обновление профиля с сервера через `refreshProfile()`
+- **Загрузка профиля**: `loadProfileFromServer(userId)` после успешной авторизации
 - **Навигация**: кнопки для перехода к связанным экранам
 
 ---
@@ -18,6 +19,10 @@
 ### Реактивное отображение профиля
 
 - [x] `ProfileViewModel.currentUser: StateFlow<User?>` - единый источник правды
+- [x] `ProfileViewModel.uiState: StateFlow<ProfileUiState>` - состояние UI (Loading/Success/Error)
+- [x] `ProfileViewModel.isRefreshing: StateFlow<Boolean>` - состояние pull-to-refresh
+- [x] `ProfileViewModel.isLoadingProfile: StateFlow<Boolean>` - загрузка после авторизации
+- [x] `ProfileViewModel.blacklist: StateFlow<List<User>>` - черный список
 - [x] Подписка UI через `collectAsState()` для автоматической рекомпозиции
 - [x] Обновление UI после авторизации без перезапуска приложения
 - [x] `AppState.currentUser` - синхронизация для TopAppBar (кнопка поиска)
@@ -28,25 +33,27 @@
 - [x] `UserProfileCardView` - карточка с фото, именем, адресом
 - [x] `IncognitoProfileView` - экран для неавторизованных пользователей
 - [x] `ProfileTopAppBar` с кнопкой поиска пользователей (только для авторизованных)
-- [x] Pull-to-refresh через `PullToRefreshBox`
+- [x] Pull-to-refresh через Material3 `PullToRefreshBox`
+- [x] LoadingOverlayView при первой загрузке (не при pull-to-refresh)
 
 ### Кнопки навигации
 
 | Кнопка | Условие отображения | Навигация | Статус |
 |--------|---------------------|-----------|--------|
 | Изменить профиль | Авторизован | `Screen.EditProfile` | ✅ |
-| Друзья | Авторизован | `Screen.MyFriends` | ✅ |
+| Друзья | `hasFriends \|\| friendRequestCount > 0` | `Screen.MyFriends` | ✅ |
 | Где тренируется | `hasUsedParks` | `Screen.UserTrainingParks` | ✅ |
 | Добавленные площадки | `hasAddedParks` | `Screen.UserParks` | ✅ |
-| Дневники | Авторизован | `Screen.JournalsList` | ✅ |
-| Чёрный список | Есть в списке | `Screen.Blacklist` | ✅ |
+| Дневники | Авторизован (всегда) | `Screen.JournalsList` | ✅ |
+| Чёрный список | `blacklist.isNotEmpty()` | `Screen.Blacklist` | ✅ |
 | Выйти | Авторизован | AlertDialog → logout | ✅ |
 
 ### UI доработки
 
-- [x] FriendsButton: скрытие текста про друзей при `friendsCount=0` (показывается только badge с заявками)
-- [x] AlertDialog для подтверждения логаута
+- [x] FriendsButton: показывается если есть друзья ИЛИ заявки в друзья; текст друзей скрывается при `friendsCount=0`
+- [x] AlertDialog для подтверждения логаута с красной кнопкой подтверждения
 - [x] Логирование всех нажатий кнопок на русском
+- [x] Кнопки disabled при `isRefreshing`
 
 ---
 
@@ -101,11 +108,10 @@ UI компоненты
 
 | Файл | Назначение |
 |------|------------|
-| `ProfileRootScreen.kt` | UI экран профиля |
-| `ProfileViewModel.kt` | ViewModel для управления состоянием |
-| `ProfileUiState.kt` | Sealed class состояний UI |
-| `IProfileViewModel.kt` | Интерфейс ViewModel |
-| `ProfileButtons.kt` | Компоненты кнопок профиля |
+| `ui/screens/profile/ProfileRootScreen.kt` | UI экран профиля и кнопки (EditProfileButton, FriendsButton, UsedParksButton, AddedParksButton, JournalsButton, BlacklistButton, LogoutButton) |
+| `ui/viewmodel/ProfileViewModel.kt` | ViewModel + `ProfileUiState` sealed class (объявлен внутри) |
+| `ui/viewmodel/IProfileViewModel.kt` | Интерфейс ViewModel |
+| `ui/screen/profile/ProfileButtons.kt` | Переиспользуемые кнопки (FriendsButton, UsedParksButton, AddedParksButton, JournalsButton) |
 
 ---
 
@@ -113,8 +119,9 @@ UI компоненты
 
 ### Ограничения
 
-1. **AppState**: Кнопка поиска синхронизируется через `appState.currentUser`, а не напрямую из ViewModel
+1. **AppState**: Кнопка поиска синхронизируется через `appState.isAuthorized`, а не напрямую из ViewModel
 2. **Логаут**: Вызывается через `appContainer?.logoutUseCase` из UI (в идеале - через ViewModel)
+3. **Адрес**: Загружается из `CountriesRepository` по `countryID` и `cityID`
 
 ### Рекомендации для рефакторинга
 

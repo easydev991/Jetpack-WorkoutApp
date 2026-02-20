@@ -67,7 +67,7 @@
 ## Этап 5: Feedback ✅
 
 **Реализовано:**
-- `util/Feedback.kt` — объект с recipients (info@workout.su, cuties.84tilbury@icloud.com)
+- `util/Feedback.kt` — объект с recipients (<info@workout.su>, <easy_dev991@mai.ru>)
 - `util/AppVersionProvider.kt` — getVersion(), getVersionCode() с PackageInfoCompat
 - `util/LocationFeedback.kt` — sealed class Country/City с companion object factory methods
 - `FeedbackSender.sendLocationFeedback()` — ACTION_SENDTO + mailto: + ActivityNotFoundException + Toast

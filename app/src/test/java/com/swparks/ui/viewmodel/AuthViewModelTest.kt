@@ -112,7 +112,7 @@ class AuthViewModelTest {
             userNotifier.handleError(
                 match<AppError> { error ->
                     error is AppError.Network &&
-                            error.message.contains("Не удалось войти")
+                        error.message.contains("Не удалось войти")
                 }
             )
         }

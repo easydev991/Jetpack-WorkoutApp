@@ -10,11 +10,11 @@ data class ChangePasswordUiState(
 ) {
     val canSave: Boolean
         get() = currentPassword.isNotEmpty() &&
-                newPassword.isNotEmpty() &&
-                confirmPassword.isNotEmpty() &&
-                newPassword == confirmPassword &&
-                newPassword.length in MIN_PASSWORD_LENGTH..MAX_PASSWORD_LENGTH &&
-                !isSaving
+            newPassword.isNotEmpty() &&
+            confirmPassword.isNotEmpty() &&
+            newPassword == confirmPassword &&
+            newPassword.length in MIN_PASSWORD_LENGTH..MAX_PASSWORD_LENGTH &&
+            !isSaving
 
     /**
      * Ошибка для поля "Новый пароль".

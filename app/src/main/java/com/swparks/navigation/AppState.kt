@@ -205,7 +205,8 @@ class AppState(
 
         Log.d(
             TAG,
-            "navigateToTopLevelDestination: ${topLevelDestination.route}, isReselect=$isReselect, currentTopLevelDestination=${currentTopLevelDestination?.route}"
+            "navigateToTopLevelDestination: ${topLevelDestination.route}, " +
+                "isReselect=$isReselect, currentTopLevelDestination=${currentTopLevelDestination?.route}"
         )
 
         if (isReselect) {

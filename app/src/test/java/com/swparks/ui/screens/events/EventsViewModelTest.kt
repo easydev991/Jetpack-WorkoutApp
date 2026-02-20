@@ -76,8 +76,8 @@ class EventsViewModelTest {
         // выполнения
         assertTrue(
             viewModel.eventsUIState.value is EventsUIState.Loading ||
-                    viewModel.eventsUIState.value is EventsUIState.Success ||
-                    viewModel.eventsUIState.value is EventsUIState.Error
+                viewModel.eventsUIState.value is EventsUIState.Success ||
+                viewModel.eventsUIState.value is EventsUIState.Error
         )
         coVerify { mockRepository.getPastEvents() }
     }
@@ -124,8 +124,8 @@ class EventsViewModelTest {
             mockUserNotifier.handleError(
                 match<AppError> { error ->
                     error is AppError.Network &&
-                            error.message.contains("Не удалось загрузить мероприятия") &&
-                            error.throwable == ioException
+                        error.message.contains("Не удалось загрузить мероприятия") &&
+                        error.throwable == ioException
                 }
             )
         }
@@ -155,8 +155,8 @@ class EventsViewModelTest {
                 mockUserNotifier.handleError(
                     match<AppError> { error ->
                         error is AppError.Network &&
-                                error.message.contains("Не удалось загрузить мероприятия") &&
-                                error.throwable == ioException
+                            error.message.contains("Не удалось загрузить мероприятия") &&
+                            error.throwable == ioException
                     }
                 )
             }
@@ -188,8 +188,8 @@ class EventsViewModelTest {
             mockUserNotifier.handleError(
                 match<AppError> { error ->
                     error is AppError.Server &&
-                            error.code == 404 &&
-                            error.message.contains("Ошибка сервера при загрузке мероприятий")
+                        error.code == 404 &&
+                        error.message.contains("Ошибка сервера при загрузке мероприятий")
                 }
             )
         }

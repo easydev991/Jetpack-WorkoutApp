@@ -62,6 +62,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeParseException
 import androidx.compose.material.icons.Icons.AutoMirrored.Filled as AutoMirroredIcons
 
+private const val GENDER_DROPDOWN_MENU_WIDTH_FRACTION = 0.3f
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun EditProfileScreen(
@@ -338,7 +340,7 @@ private fun GenderPicker(
         Box(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
-                .fillMaxWidth(0.3f)
+                .fillMaxWidth(GENDER_DROPDOWN_MENU_WIDTH_FRACTION)
         ) {
             DropdownMenu(
                 expanded = expanded,

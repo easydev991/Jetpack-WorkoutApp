@@ -433,7 +433,7 @@ class JournalEntriesRepositoryImplTest {
         val testEntryId = 1L
         val successResponse: Response<Unit> = Response.success(Unit)
         coEvery { mockApi.deleteJournalEntry(testUserId, testJournalId, testEntryId) } returns
-                successResponse
+            successResponse
 
         // When
         val result = repository.deleteJournalEntry(testUserId, testJournalId, testEntryId)
@@ -462,7 +462,7 @@ class JournalEntriesRepositoryImplTest {
         val testEntryId = 1L
         val successResponse: Response<Unit> = Response.success(204, Unit)
         coEvery { mockApi.deleteJournalEntry(testUserId, testJournalId, testEntryId) } returns
-                successResponse
+            successResponse
 
         // When
         val result = repository.deleteJournalEntry(testUserId, testJournalId, testEntryId)
@@ -486,7 +486,7 @@ class JournalEntriesRepositoryImplTest {
         val notFoundResponse: Response<Unit> =
             Response.error(404, "".toResponseBody(null))
         coEvery { mockApi.deleteJournalEntry(testUserId, testJournalId, testEntryId) } returns
-                notFoundResponse
+            notFoundResponse
 
         // When
         val result = repository.deleteJournalEntry(testUserId, testJournalId, testEntryId)
@@ -515,7 +515,7 @@ class JournalEntriesRepositoryImplTest {
         val unauthorizedResponse: Response<Unit> =
             Response.error(401, "Unauthorized".toResponseBody(null))
         coEvery { mockApi.deleteJournalEntry(testUserId, testJournalId, testEntryId) } returns
-                unauthorizedResponse
+            unauthorizedResponse
 
         // When
         val result = repository.deleteJournalEntry(testUserId, testJournalId, testEntryId)
@@ -541,7 +541,7 @@ class JournalEntriesRepositoryImplTest {
         val forbiddenResponse: Response<Unit> =
             Response.error(403, "Forbidden".toResponseBody(null))
         coEvery { mockApi.deleteJournalEntry(testUserId, testJournalId, testEntryId) } returns
-                forbiddenResponse
+            forbiddenResponse
 
         // When
         val result = repository.deleteJournalEntry(testUserId, testJournalId, testEntryId)
@@ -599,7 +599,7 @@ class JournalEntriesRepositoryImplTest {
         val testEntryId = 1L
         val successResponse: Response<Unit> = Response.success(Unit)
         coEvery { mockApi.deleteJournalEntry(testUserId, testJournalId, testEntryId) } returns
-                successResponse
+            successResponse
 
         // When
         repository.deleteJournalEntry(testUserId, testJournalId, testEntryId)

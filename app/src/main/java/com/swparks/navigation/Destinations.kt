@@ -105,7 +105,7 @@ sealed class Screen(
     object JournalEntries :
         Screen(
             "journal_entries/{journalId}?userId={userId}&title={journalTitle}" +
-                    "&viewAccess={viewAccess}&commentAccess={commentAccess}",
+                "&viewAccess={viewAccess}&commentAccess={commentAccess}",
             parentTab = Profile
         ) {
         fun createRoute(
@@ -116,7 +116,7 @@ sealed class Screen(
             commentAccess: String
         ) =
             "journal_entries/$journalId?userId=$userId&title=${android.net.Uri.encode(journalTitle)}" +
-                    "&viewAccess=$viewAccess&commentAccess=$commentAccess"
+                "&viewAccess=$viewAccess&commentAccess=$commentAccess"
     }
 
     object ChangePassword : Screen("change_password", parentTab = Profile)

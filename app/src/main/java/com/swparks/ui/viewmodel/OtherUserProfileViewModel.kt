@@ -13,6 +13,7 @@ import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.model.BlacklistAction
 import com.swparks.ui.model.toApiOption
 import com.swparks.util.AppError
+import com.swparks.util.HttpCodes
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -127,8 +128,10 @@ class OtherUserProfileViewModel(
                 }
                 .onFailure { error ->
                     val (message, canRetry) = when {
-                        error is HttpException && error.code() == 404 -> "Пользователь не найден" to false
-                        error is HttpException && error.code() == 403 -> "Доступ запрещен" to false
+                        error is HttpException && error.code() == HttpCodes.NOT_FOUND ->
+                            "Пользователь не найден" to false
+                        error is HttpException && error.code() == HttpCodes.FORBIDDEN ->
+                            "Доступ запрещен" to false
                         else -> "Ошибка загрузки профиля: ${error.message}" to true
                     }
                     userNotifier.handleError(AppError.Generic(message, error))

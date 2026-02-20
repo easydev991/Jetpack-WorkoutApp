@@ -75,8 +75,8 @@ fun JournalSettingsDialog(
     // Проверка, есть ли изменения
     val hasChanges = remember(title.text, viewAccess, commentAccess, journal) {
         title.text != journal.title ||
-                viewAccess != journal.viewAccess ||
-                commentAccess != journal.commentAccess
+            viewAccess != journal.viewAccess ||
+            commentAccess != journal.commentAccess
     }
 
     // Кнопка "Сохранить" активна только если название не пустое и есть изменения

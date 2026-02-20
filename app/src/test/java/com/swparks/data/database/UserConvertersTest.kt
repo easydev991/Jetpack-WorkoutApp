@@ -76,12 +76,12 @@ class UserConvertersTest {
         // Given
         val park1Json =
             """{"id":1,"name":"Park 1","class_id":1,"type_id":1,""" +
-                    """"longitude":"1.0","latitude":"1.0","address":"Address",""" +
-                    """"city_id":1,"country_id":1,"preview":"preview.jpg"}"""
+                """"longitude":"1.0","latitude":"1.0","address":"Address",""" +
+                """"city_id":1,"country_id":1,"preview":"preview.jpg"}"""
         val park2Json =
             """{"id":2,"name":"Park 2","class_id":2,"type_id":2,""" +
-                    """"longitude":"2.0","latitude":"2.0","address":"Address 2",""" +
-                    """"city_id":2,"country_id":2,"preview":"preview2.jpg"}"""
+                """"longitude":"2.0","latitude":"2.0","address":"Address 2",""" +
+                """"city_id":2,"country_id":2,"preview":"preview2.jpg"}"""
         val json = "[$park1Json,$park2Json]"
 
         // When
@@ -122,8 +122,8 @@ class UserConvertersTest {
     fun toParksList_whenJsonWithUnknownKeys_returnsParkList() {
         // Given - JSON с неизвестными полями, которые должны игнорироваться благодаря ignoreUnknownKeys = true
         val jsonWithUnknownKeys = """[{"id":"1","name":"Park 1","class_id":1,"type_id":1,""" +
-                """"longitude":"1.0","latitude":"1.0","address":"Address","city_id":1,"country_id":1,""" +
-                """"preview":"preview.jpg","unknownField":"value","anotherUnknown":123}]"""
+            """"longitude":"1.0","latitude":"1.0","address":"Address","city_id":1,"country_id":1,""" +
+            """"preview":"preview.jpg","unknownField":"value","anotherUnknown":123}]"""
 
         // When
         val result = UserConverters.toParksList(jsonWithUnknownKeys)

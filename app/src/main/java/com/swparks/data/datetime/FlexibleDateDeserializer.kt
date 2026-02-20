@@ -77,10 +77,10 @@ object FlexibleDateDeserializer : KSerializer<String> {
 
         return parsedDate ?: throw SerializationException(
             "Невозможно распарсить дату: '$dateString'. " +
-                    "Ожидается один из форматов: " +
-                    "yyyy-MM-dd'T'HH:mm:ss.SSS'Z', yyyy-MM-dd'T'HH:mm:ss'Z', " +
-                    "yyyy-MM-dd'T'HH:mm:ssXXX, yyyy-MM-dd'T'HH:mm:ss.SSSXXX, " +
-                    "yyyy-MM-dd'T'HH:mm:ss, yyyy-MM-dd"
+                "Ожидается один из форматов: " +
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z', yyyy-MM-dd'T'HH:mm:ss'Z', " +
+                "yyyy-MM-dd'T'HH:mm:ssXXX, yyyy-MM-dd'T'HH:mm:ss.SSSXXX, " +
+                "yyyy-MM-dd'T'HH:mm:ss, yyyy-MM-dd"
         )
     }
 
@@ -116,10 +116,10 @@ object FlexibleDateDeserializer : KSerializer<String> {
         if (!isValid) {
             throw SerializationException(
                 "Невозможно распарсить дату: '$dateString'. " +
-                        "Ожидается один из форматов: " +
-                        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z', yyyy-MM-dd'T'HH:mm:ss'Z', " +
-                        "yyyy-MM-dd'T'HH:mm:ssXXX, yyyy-MM-dd'T'HH:mm:ss.SSSXXX, " +
-                        "yyyy-MM-dd'T'HH:mm:ss, yyyy-MM-dd"
+                    "Ожидается один из форматов: " +
+                    "yyyy-MM-dd'T'HH:mm:ss.SSS'Z', yyyy-MM-dd'T'HH:mm:ss'Z', " +
+                    "yyyy-MM-dd'T'HH:mm:ssXXX, yyyy-MM-dd'T'HH:mm:ss.SSSXXX, " +
+                    "yyyy-MM-dd'T'HH:mm:ss, yyyy-MM-dd"
             )
         }
 

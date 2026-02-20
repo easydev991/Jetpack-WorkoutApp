@@ -96,10 +96,10 @@ data class Park(
      * `true` - сервер прислал всю информацию о площадке, `false` - не всю
      */
     val isFull = (
-            createDate != null
-                    && author != null
-                    && hasPhotos
-                    && !needUpdateParticipants
-                    && !needUpdateComments
-            )
+        createDate != null
+            && author != null
+            && hasPhotos
+            && !needUpdateParticipants
+            && !needUpdateComments
+        )
 }

@@ -12,9 +12,8 @@
 
 ## Документация
 
-- [План разработки приложения](docs/development-plan.md)
-- [План реализации API](docs/api-implementation-plan.md)
-- [Сравнение эндпоинтов iOS и Android](docs/api-implementation-comparison.md)
+- [План разработки приложения](docs/plan-development.md)
+- [API](docs/doc-api-implementation.md)
 
 ## Помощь проекту
 

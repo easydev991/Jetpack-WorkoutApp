@@ -78,7 +78,7 @@ fun MessagesRootScreen(
         android.util.Log.d(
             "MessagesRootScreen",
             "isLoadingDialogs=$isLoadingDialogs, isAuthorized=${appState.isAuthorized}, " +
-                    "uiState=${uiState.javaClass.simpleName}"
+                "uiState=${uiState.javaClass.simpleName}"
         )
     }
 

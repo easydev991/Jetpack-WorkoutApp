@@ -85,6 +85,16 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import java.util.concurrent.TimeUnit
 
+/**
+ * Таймауты для сетевых запросов
+ */
+private object NetworkTimeouts {
+    const val CONNECT_SECONDS = 15L
+    const val READ_SECONDS = 30L
+    const val WRITE_SECONDS = 30L
+    const val CALL_SECONDS = 60L
+}
+
 interface AppContainer {
     val swRepository: SWRepository
     val secureTokenRepository: SecureTokenRepository
@@ -271,10 +281,10 @@ class DefaultAppContainer(context: Context) : AppContainer {
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
             // Таймауты для сетевых операций
-            .connectTimeout(15, TimeUnit.SECONDS)   // Установление соединения
-            .readTimeout(30, TimeUnit.SECONDS)      // Чтение данных
-            .writeTimeout(30, TimeUnit.SECONDS)     // Запись данных
-            .callTimeout(60, TimeUnit.SECONDS)      // Общее время запроса
+            .connectTimeout(NetworkTimeouts.CONNECT_SECONDS, TimeUnit.SECONDS)
+            .readTimeout(NetworkTimeouts.READ_SECONDS, TimeUnit.SECONDS)
+            .writeTimeout(NetworkTimeouts.WRITE_SECONDS, TimeUnit.SECONDS)
+            .callTimeout(NetworkTimeouts.CALL_SECONDS, TimeUnit.SECONDS)
             // Interceptors
             .addInterceptor(loggingInterceptor) // Логирование запросов/ответов
             .addInterceptor(retryInterceptor)   // ← ОБЯЗАТЕЛЬНО ПЕРВЫМ после logging!

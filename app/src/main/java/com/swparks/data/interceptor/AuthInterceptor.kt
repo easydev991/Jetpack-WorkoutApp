@@ -45,8 +45,8 @@ class AuthInterceptor(
             // Проверяем путь запроса - НЕ логаут для эндпоинтов авторизации
             val path = request.url.encodedPath
             val isAuthEndpoint = path.contains("/login") ||
-                    path.contains("/register") ||
-                    path.contains("/reset-password")
+                path.contains("/register") ||
+                path.contains("/reset-password")
 
             if (!isAuthEndpoint) {
                 Log.e(TAG, "Ошибка авторизации (401): токен недействителен или истек для $path")

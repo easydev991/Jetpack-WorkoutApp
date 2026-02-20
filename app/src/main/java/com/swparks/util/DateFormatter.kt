@@ -52,7 +52,7 @@ object DateFormatter {
             val locale = context.resources.configuration.locales.get(0)
             val yesterdayString = context.getString(com.swparks.R.string.yesterday)
 
-            return when {
+            when {
                 localDate.isToday() -> {
                     // Сегодня: показываем только время
                     val timeFormatter = SimpleDateFormat(MEDIUM_TIME, locale)
