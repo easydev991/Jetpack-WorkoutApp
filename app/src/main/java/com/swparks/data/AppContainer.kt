@@ -71,6 +71,7 @@ import com.swparks.ui.viewmodel.JournalEntriesViewModel
 import com.swparks.ui.viewmodel.JournalsViewModel
 import com.swparks.ui.viewmodel.OtherUserProfileViewModel
 import com.swparks.ui.viewmodel.ProfileViewModel
+import com.swparks.ui.viewmodel.RegisterViewModel
 import com.swparks.ui.viewmodel.SearchUserViewModel
 import com.swparks.ui.viewmodel.TextEntryViewModel
 import com.swparks.ui.viewmodel.UserFriendsViewModel
@@ -166,6 +167,9 @@ interface AppContainer {
 
     /** Фабрика для ChangePasswordViewModel */
     fun changePasswordViewModelFactory(): ChangePasswordViewModel
+
+    /** Фабрика для RegisterViewModel */
+    fun registerViewModelFactory(): RegisterViewModel
 
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
@@ -548,6 +552,16 @@ class DefaultAppContainer(context: Context) : AppContainer {
         logger = logger,
         userNotifier = userNotifier,
         resources = resourcesProvider
+    )
+
+    /** Factory метод для создания RegisterViewModel */
+    override fun registerViewModelFactory() = RegisterViewModel(
+        logger = logger,
+        swRepository = swRepository,
+        secureTokenRepository = secureTokenRepository,
+        preferencesRepository = preferencesRepository,
+        tokenEncoder = tokenEncoder,
+        countriesRepository = countriesRepository
     )
 
     // ==================== API клиенты для разных функциональных областей ====================

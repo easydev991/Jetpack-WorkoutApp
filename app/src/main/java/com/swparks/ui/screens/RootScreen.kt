@@ -28,6 +28,7 @@ import com.swparks.navigation.BottomNavigationBar
 import com.swparks.navigation.Screen
 import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.screens.auth.LoginSheetHost
+import com.swparks.ui.screens.auth.RegisterSheetHost
 import com.swparks.ui.screens.events.EventsScreen
 import com.swparks.ui.screens.events.EventsTopAppBar
 import com.swparks.ui.screens.journals.JournalEntriesScreen
@@ -104,6 +105,9 @@ fun RootScreen(appState: AppState) {
 
     // Состояние для LoginSheet
     var showLoginSheet by remember { mutableStateOf(false) }
+
+    // Состояние для RegisterSheet
+    var showRegisterSheet by remember { mutableStateOf(false) }
 
     // Создаем ProfileViewModel ЕДИН РАЗ на уровне RootScreen
     // Это предотвращает пересоздание ViewModel при навигации между вкладками
@@ -229,6 +233,9 @@ fun RootScreen(appState: AppState) {
                     onShowLoginSheet = {
                         showLoginSheet = true
                     },
+                    onShowRegisterSheet = {
+                        showRegisterSheet = true
+                    },
                     onNavigateToFriends = {
                         appState.navController.navigate(Screen.MyFriends.route)
                     },
@@ -247,6 +254,9 @@ fun RootScreen(appState: AppState) {
                     appState = appState,
                     onShowLoginSheet = {
                         showLoginSheet = true
+                    },
+                    onShowRegisterSheet = {
+                        showRegisterSheet = true
                     },
                     modifier = Modifier
                         .fillMaxSize()
@@ -564,6 +574,21 @@ fun RootScreen(appState: AppState) {
                 // Закрываем LoginSheet
                 showLoginSheet = false
                 // Успешная авторизация - загружаем профиль с сервера
+                profileViewModel.loadProfileFromServer(userId)
+                // Загружаем диалоги
+                dialogsViewModel.loadDialogsAfterAuth()
+            }
+        )
+
+        // RegisterSheetHost поверх NavHost
+        RegisterSheetHost(
+            show = showRegisterSheet,
+            appContainer = appContainer,
+            onDismissed = { showRegisterSheet = false },
+            onRegisterSuccess = { userId ->
+                // Закрываем RegisterSheet
+                showRegisterSheet = false
+                // Успешная регистрация - загружаем профиль с сервера
                 profileViewModel.loadProfileFromServer(userId)
                 // Загружаем диалоги
                 dialogsViewModel.loadDialogsAfterAuth()

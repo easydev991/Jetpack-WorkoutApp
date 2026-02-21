@@ -58,6 +58,10 @@ class CountriesRepositoryImpl(
     @Volatile
     private var countriesByIdMap: Map<String, Country> = emptyMap()
 
+    /** Словарь для быстрого поиска страны по ID города (оптимизация) */
+    @Volatile
+    private var countryByCityIdMap: Map<String, Country> = emptyMap()
+
     /** Загружает справочник стран из локального JSON-файла в assets */
     private fun loadCountriesFromAssets() {
         if (isLoaded) {
@@ -83,6 +87,9 @@ class CountriesRepositoryImpl(
             // Создаем индексы для быстрого поиска
             countriesByIdMap = countries.associateBy { it.id }
             citiesByIdMap = countries.flatMap { it.cities }.associateBy { it.id }
+            countryByCityIdMap = countries.flatMap { country ->
+                country.cities.map { city -> city.id to country }
+            }.toMap()
 
             logger.i(TAG, "Загружен справочник стран: ${countries.size} стран")
         } catch (e: SerializationException) {
@@ -90,6 +97,16 @@ class CountriesRepositoryImpl(
         } catch (e: Exception) {
             logger.e(TAG, "Ошибка при загрузке справочника стран: ${e.message}", e)
         }
+    }
+
+    /**
+     * Гарантирует, что данные стран загружены из assets.
+     *
+     * Метод должен вызываться перед использованием getCountriesFlow(),
+     * чтобы убедиться что данные загружены в кэш.
+     */
+    override fun ensureCountriesLoaded() {
+        loadCountriesFromAssets()
     }
 
     /**
@@ -138,6 +155,29 @@ class CountriesRepositoryImpl(
     }
 
     /**
+     * Получить список всех городов из всех стран
+     *
+     * @return список всех городов
+     */
+    override suspend fun getAllCities(): List<City> {
+        // Загружаем данные, если они еще не загружены
+        loadCountriesFromAssets()
+        return citiesByIdMap.values.toList()
+    }
+
+    /**
+     * Получить страну, к которой принадлежит город
+     *
+     * @param cityId идентификатор города
+     * @return страна или null, если город не найден
+     */
+    override suspend fun getCountryForCity(cityId: String): Country? {
+        // Загружаем данные, если они еще не загружены
+        loadCountriesFromAssets()
+        return countryByCityIdMap[cityId]
+    }
+
+    /**
      * Обновить справочник стран и городов с сервера
      *
      * Метод для будущего использования. Позволяет обновить справочник данных с сервера workout.su.
@@ -156,6 +196,9 @@ class CountriesRepositoryImpl(
             // Обновляем индексы для быстрого поиска
             countriesByIdMap = countries.associateBy { it.id }
             citiesByIdMap = countries.flatMap { it.cities }.associateBy { it.id }
+            countryByCityIdMap = countries.flatMap { country ->
+                country.cities.map { city -> city.id to country }
+            }.toMap()
 
             logger.i(TAG, "Справочник стран успешно обновлен с сервера: ${countries.size} стран")
             Result.success(Unit)

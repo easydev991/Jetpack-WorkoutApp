@@ -358,4 +358,14 @@
     <string name="avatar_error_too_large">Image is too large</string>
     <string name="avatar_error_read_failed">Failed to read image</string>
     <string name="avatar_upload_error">Failed to upload image</string>
+
+    <!-- Registration screen -->
+    <string name="registration">Registration</string>
+    <string name="register">Register</string>
+    <string name="i_accept_terms">I accept the terms of&#160;</string>
+    <string name="user_agreement">User Agreement</string>
+    <string name="user_agreement_url">https://workout.su/pravila</string>
+    <string name="minimum_age_13">You must be at least 13 years old</string>
+    <string name="registration_success">Registration successful</string>
+    <string name="registration_error">Registration error</string>
 </resources>

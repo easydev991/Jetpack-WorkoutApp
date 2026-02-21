@@ -14,6 +14,14 @@ import kotlinx.coroutines.flow.Flow
  */
 interface CountriesRepository {
     /**
+     * Гарантирует, что данные стран загружены из assets.
+     *
+     * Метод должен вызываться перед использованием getCountriesFlow(),
+     * чтобы убедиться что данные загружены в кэш.
+     */
+    fun ensureCountriesLoaded()
+
+    /**
      * Получить список всех стран в виде Flow
      *
      * @return Flow со списком всех стран
@@ -43,6 +51,21 @@ interface CountriesRepository {
      * @return список городов страны
      */
     suspend fun getCitiesByCountry(countryId: String): List<City>
+
+    /**
+     * Получить список всех городов из всех стран
+     *
+     * @return список всех городов
+     */
+    suspend fun getAllCities(): List<City>
+
+    /**
+     * Получить страну, к которой принадлежит город
+     *
+     * @param cityId идентификатор города
+     * @return страна или null, если город не найден
+     */
+    suspend fun getCountryForCity(cityId: String): Country?
 
     /**
      * Обновить справочник стран и городов с сервера

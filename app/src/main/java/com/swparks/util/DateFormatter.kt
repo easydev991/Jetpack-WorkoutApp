@@ -1,6 +1,7 @@
 package com.swparks.util
 
 import android.content.Context
+import android.util.Log
 import androidx.annotation.VisibleForTesting
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -83,6 +84,7 @@ object DateFormatter {
                 }
             }
         } catch (e: Exception) {
+            Log.w("DateFormatter", "Failed to format date: ${e.message}")
             ""
         }
     }

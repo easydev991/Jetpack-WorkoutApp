@@ -372,4 +372,14 @@
     <string name="avatar_error_too_large">Изображение слишком большое</string>
     <string name="avatar_error_read_failed">Не удалось прочитать изображение</string>
     <string name="avatar_upload_error">Ошибка при загрузке изображения</string>
+
+    <!-- Экран регистрации -->
+    <string name="registration">Регистрация</string>
+    <string name="register">Зарегистрироваться</string>
+    <string name="i_accept_terms">Я принимаю условия&#160;</string>
+    <string name="user_agreement">Пользовательского соглашения</string>
+    <string name="user_agreement_url">https://workout.su/pravila</string>
+    <string name="minimum_age_13">Вам должно быть не менее 13 лет</string>
+    <string name="registration_success">Регистрация успешна</string>
+    <string name="registration_error">Ошибка регистрации</string>
 </resources>

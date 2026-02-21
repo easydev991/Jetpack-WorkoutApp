@@ -64,6 +64,7 @@ fun MessagesRootScreen(
     viewModel: IDialogsViewModel,
     appState: AppState,
     onShowLoginSheet: () -> Unit,
+    onShowRegisterSheet: () -> Unit = {},
     onNavigateToFriends: () -> Unit = {},
     onNavigateToSearchUsers: () -> Unit = {}
 ) {
@@ -98,7 +99,8 @@ fun MessagesRootScreen(
                     start = dimensionResource(R.dimen.spacing_regular),
                     end = dimensionResource(R.dimen.spacing_regular)
                 ),
-            onClickAuth = onShowLoginSheet
+            onClickAuth = onShowLoginSheet,
+            onClickRegister = onShowRegisterSheet
         )
     } else {
         // Авторизованный пользователь

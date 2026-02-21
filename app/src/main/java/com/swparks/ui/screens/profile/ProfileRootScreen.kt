@@ -62,7 +62,8 @@ fun ProfileRootScreen(
     viewModel: IProfileViewModel,
     appContainer: AppContainer? = null,
     appState: AppState? = null,
-    onShowLoginSheet: () -> Unit = {}
+    onShowLoginSheet: () -> Unit = {},
+    onShowRegisterSheet: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
 
@@ -97,7 +98,8 @@ fun ProfileRootScreen(
                     start = dimensionResource(R.dimen.spacing_regular),
                     end = dimensionResource(R.dimen.spacing_regular)
                 ),
-            onClickAuth = onShowLoginSheet
+            onClickAuth = onShowLoginSheet,
+            onClickRegister = onShowRegisterSheet
         )
     } else {
         // Авторизован - показываем профиль и кнопки навигации
@@ -508,7 +510,8 @@ fun ProfileRootScreenPreview() {
         // В реальном приложении неавторизованный пользователь будет показан через currentUser = null
         IncognitoProfileView(
             modifier = Modifier.fillMaxWidth(),
-            onClickAuth = {}
+            onClickAuth = {},
+            onClickRegister = {}
         )
     }
 }

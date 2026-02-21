@@ -3,6 +3,7 @@ package com.swparks.ui.ds
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -22,14 +23,16 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * Вьюшка, закрывающая фичу для неавторизованного пользователя
  *
  * @param modifier Модификатор
- * @param enabled Доступность кнопки "Авторизация"
+ * @param enabled Доступность кнопок
  * @param onClickAuth Действие по нажатию на кнопку "Авторизация"
+ * @param onClickRegister Действие по нажатию на кнопку "Регистрация"
  */
 @Composable
 fun IncognitoProfileView(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    onClickAuth: () -> Unit
+    onClickAuth: () -> Unit,
+    onClickRegister: () -> Unit = {}
 ) {
     Column(
         verticalArrangement = Arrangement.Center,
@@ -44,19 +47,19 @@ fun IncognitoProfileView(
         )
         SWButton(
             config = ButtonConfig(
-                modifier = Modifier.padding(bottom = dimensionResource(id = R.dimen.spacing_large)),
                 text = stringResource(id = R.string.authorization),
                 enabled = enabled,
                 onClick = onClickAuth
             )
         )
-        Text(
-            text = stringResource(id = R.string.registration_info),
-            maxLines = 2,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(bottom = dimensionResource(id = R.dimen.spacing_medium_plus))
+        Spacer(modifier = Modifier.padding(dimensionResource(id = R.dimen.spacing_small)))
+        SWButton(
+            config = ButtonConfig(
+                mode = SWButtonMode.TINTED,
+                text = stringResource(id = R.string.register),
+                enabled = enabled,
+                onClick = onClickRegister
+            )
         )
     }
 }

@@ -62,43 +62,10 @@ class TextEntryViewModel(
     override fun onSend() {
         val trimmedText = _uiState.value.text.trim()
 
-        // Валидация пустого текста
-        if (trimmedText.isEmpty()) {
-            _uiState.value =
-                _uiState.value.copy(error = context.getString(R.string.text_entry_empty_error))
-            return
-        }
-
-        // Проверка изменения текста при редактировании
-        val isTextChanged = when (mode) {
-            is TextEntryMode.EditPark,
-            is TextEntryMode.EditEvent,
-            is TextEntryMode.EditJournalEntry -> {
-                val oldEntry = when (mode) {
-                    is TextEntryMode.EditPark -> mode.editInfo.oldEntry
-                    is TextEntryMode.EditEvent -> mode.editInfo.oldEntry
-                    is TextEntryMode.EditJournalEntry -> mode.editInfo.oldEntry
-                }
-                trimmedText != oldEntry.trim()
-            }
-
-            is TextEntryMode.NewForPark,
-            is TextEntryMode.NewForEvent,
-            is TextEntryMode.NewForJournal,
-            is TextEntryMode.NewJournal,
-            is TextEntryMode.Message -> true
-        }
-
-        if (!isTextChanged) {
-            _uiState.value =
-                _uiState.value.copy(error = context.getString(R.string.text_entry_empty_error))
-            return
-        }
-
-        // Проверка сетевого подключения
-        if (!isNetworkAvailable()) {
-            _uiState.value =
-                _uiState.value.copy(error = context.getString(R.string.error_network_io))
+        // Объединённая валидация
+        val validationError = validateInput(trimmedText)
+        if (validationError != null) {
+            _uiState.value = _uiState.value.copy(error = validationError)
             return
         }
 
@@ -175,6 +142,44 @@ class TextEntryViewModel(
                     userNotifier.handleError(appError)
                 }
             )
+        }
+    }
+
+    /**
+     * Валидирует ввод перед отправкой.
+     *
+     * @param trimmedText Текст для валидации
+     * @return Строка ошибки или null, если валидация прошла успешно
+     */
+    private fun validateInput(trimmedText: String): String? {
+        val emptyError = context.getString(R.string.text_entry_empty_error)
+
+        // Проверка изменения текста при редактировании
+        val isTextChanged = when (mode) {
+            is TextEntryMode.EditPark,
+            is TextEntryMode.EditEvent,
+            is TextEntryMode.EditJournalEntry -> {
+                val oldEntry = when (mode) {
+                    is TextEntryMode.EditPark -> mode.editInfo.oldEntry
+                    is TextEntryMode.EditEvent -> mode.editInfo.oldEntry
+                    is TextEntryMode.EditJournalEntry -> mode.editInfo.oldEntry
+                    else -> ""
+                }
+                trimmedText.isNotEmpty() && trimmedText != oldEntry.trim()
+            }
+
+            is TextEntryMode.NewForPark,
+            is TextEntryMode.NewForEvent,
+            is TextEntryMode.NewForJournal,
+            is TextEntryMode.NewJournal,
+            is TextEntryMode.Message -> trimmedText.isNotEmpty()
+        }
+
+        // Объединённый результат валидации
+        return when {
+            !isTextChanged -> emptyError
+            !isNetworkAvailable() -> context.getString(R.string.error_network_io)
+            else -> null
         }
     }
 
