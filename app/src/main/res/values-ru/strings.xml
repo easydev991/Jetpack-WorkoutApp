@@ -366,4 +366,10 @@
     <string name="feedback_email_subject_country">Отсутствующая страна - JetpackWorkoutApp</string>
     <string name="feedback_email_subject_city">Отсутствующий город - JetpackWorkoutApp</string>
     <string name="no_email_client">Приложение для почты не установлено</string>
+
+    <!-- Ошибки выбора аватара -->
+    <string name="avatar_error_unsupported_type">Неподдерживаемый формат изображения</string>
+    <string name="avatar_error_too_large">Изображение слишком большое</string>
+    <string name="avatar_error_read_failed">Не удалось прочитать изображение</string>
+    <string name="avatar_upload_error">Ошибка при загрузке изображения</string>
 </resources>

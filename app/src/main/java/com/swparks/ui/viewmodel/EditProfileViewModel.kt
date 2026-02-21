@@ -1,7 +1,10 @@
 package com.swparks.ui.viewmodel
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.swparks.R
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.EditProfileLocations
@@ -11,7 +14,9 @@ import com.swparks.ui.model.MainUserForm
 import com.swparks.ui.state.EditProfileEvent
 import com.swparks.ui.state.EditProfileUiState
 import com.swparks.util.AppError
+import com.swparks.util.ImageUtils
 import com.swparks.util.Logger
+import com.swparks.util.UriUtils
 import com.swparks.util.UserNotifier
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,6 +40,7 @@ import java.time.format.DateTimeFormatter
  *
  * @param swRepository Репозиторий для работы с данными пользователя и API
  * @param countriesRepository Репозиторий для работы с данными стран и городов
+ * @param context Контекст приложения для работы с Uri и ресурсами
  * @param logger Логгер для записи сообщений
  * @param userNotifier Обработчик ошибок для отправки ошибок в UI
  */
@@ -42,6 +48,7 @@ import java.time.format.DateTimeFormatter
 class EditProfileViewModel(
     private val swRepository: SWRepository,
     private val countriesRepository: CountriesRepository,
+    private val context: Context,
     private val logger: Logger,
     private val userNotifier: UserNotifier
 ) : ViewModel(), IEditProfileViewModel {
@@ -186,6 +193,31 @@ class EditProfileViewModel(
         logger.d(TAG, "Клик по изменению фото")
     }
 
+    override fun onAvatarSelected(uri: Uri?) {
+        // Если uri == null — пользователь отменил выбор
+        if (uri == null) {
+            logger.d(TAG, "Avatar selection cancelled by user")
+            return
+        }
+
+        // Проверяем MIME-тип
+        if (!ImageUtils.isSupportedMimeType(context, uri)) {
+            val errorMessage = context.getString(R.string.avatar_error_unsupported_type)
+            logger.w(TAG, "Unsupported MIME type for uri: $uri")
+            _uiState.update { it.copy(avatarError = errorMessage) }
+            return
+        }
+
+        // Сбрасываем ошибку и сохраняем URI
+        logger.d(TAG, "Avatar selected: $uri")
+        _uiState.update {
+            it.copy(
+                selectedAvatarUri = uri,
+                avatarError = null
+            )
+        }
+    }
+
     override fun onSaveClick() {
         val currentState = _uiState.value
 
@@ -209,41 +241,99 @@ class EditProfileViewModel(
         logger.i(TAG, "Начало сохранения профиля")
 
         // Устанавливаем состояние сохранения
-        _uiState.update { it.copy(isSaving = true) }
-
-        viewModelScope.launch {
-            val result = swRepository.editUser(
-                userId = userId,
-                form = currentState.userForm,
-                image = null // Фото будет реализовано в следующей итерации
-            )
-
-            result.fold(
-                onSuccess = { updatedUser ->
-                    logger.i(TAG, "Профиль успешно обновлен: ${updatedUser.id}")
-                    // Обновляем initial значения на новые (чтобы resetChanges не сбросил их)
-                    _uiState.update {
-                        it.copy(
-                            initialForm = it.userForm,
-                            initialCountry = it.selectedCountry,
-                            initialCity = it.selectedCity,
-                            isSaving = false
-                        )
-                    }
-                    _events.emit(EditProfileEvent.NavigateBack)
-                },
-                onFailure = { error ->
-                    logger.e(TAG, "Ошибка сохранения профиля: ${error.message}", error)
-                    _uiState.update { it.copy(isSaving = false) }
-                    userNotifier.handleError(
-                        AppError.Generic(
-                            error.message ?: "Ошибка сохранения профиля",
-                            error
-                        )
-                    )
-                }
+        _uiState.update {
+            it.copy(
+                isSaving = true,
+                isUploadingAvatar = currentState.selectedAvatarUri != null
             )
         }
+
+        viewModelScope.launch {
+            // Подготавливаем изображение если выбрано
+            val imageBytes = prepareImageBytes(currentState.selectedAvatarUri)
+            if (currentState.selectedAvatarUri != null && imageBytes == null) {
+                // Ошибка уже обработана в prepareImageBytes
+                return@launch
+            }
+
+            // Сохраняем профиль
+            saveProfile(userId, currentState, imageBytes)
+        }
+    }
+
+    /**
+     * Подготавливает изображение для отправки на сервер.
+     *
+     * @param uri URI выбранного изображения или null
+     * @return ByteArray с данными изображения или null если URI null или произошла ошибка
+     */
+    private fun prepareImageBytes(uri: Uri?): ByteArray? {
+        if (uri == null) return null
+
+        val uriResult = UriUtils.uriToByteArray(context, uri)
+        return uriResult.fold(
+            onSuccess = { bytes ->
+                val compressed = ImageUtils.compressIfNeeded(bytes)
+                logger.d(TAG, "Image prepared: ${bytes.size} -> ${compressed.size} bytes")
+                compressed
+            },
+            onFailure = { error ->
+                logger.e(TAG, "Ошибка чтения изображения: ${error.message}", error)
+                val errorMessage = context.getString(R.string.avatar_error_read_failed)
+                _uiState.update {
+                    it.copy(
+                        isSaving = false,
+                        isUploadingAvatar = false,
+                        avatarError = errorMessage
+                    )
+                }
+                userNotifier.handleError(AppError.Generic(errorMessage, error))
+                null
+            }
+        )
+    }
+
+    /**
+     * Сохраняет профиль пользователя.
+     */
+    private suspend fun saveProfile(
+        userId: Long,
+        currentState: EditProfileUiState,
+        imageBytes: ByteArray?
+    ) {
+        val result = swRepository.editUser(
+            userId = userId,
+            form = currentState.userForm,
+            image = imageBytes
+        )
+
+        result.fold(
+            onSuccess = { updatedUser ->
+                logger.i(TAG, "Профиль успешно обновлен: ${updatedUser.id}")
+                _uiState.update {
+                    it.copy(
+                        initialForm = it.userForm,
+                        initialCountry = it.selectedCountry,
+                        initialCity = it.selectedCity,
+                        selectedAvatarUri = null,
+                        avatarError = null,
+                        isSaving = false,
+                        isUploadingAvatar = false
+                    )
+                }
+                _events.emit(EditProfileEvent.NavigateBack)
+            },
+            onFailure = { error ->
+                logger.e(TAG, "Ошибка сохранения профиля: ${error.message}", error)
+                _uiState.update { it.copy(isSaving = false, isUploadingAvatar = false) }
+                userNotifier.handleError(
+                    AppError.Generic(
+                        error.message ?: "Ошибка сохранения профиля",
+                        error
+                    )
+                )
+            }
+        )
     }
 
     /**
@@ -342,7 +432,9 @@ class EditProfileViewModel(
                     userForm = it.initialForm,
                     selectedCountry = initialCountry,
                     selectedCity = initialCity,
-                    cities = cities
+                    cities = cities,
+                    selectedAvatarUri = null,
+                    avatarError = null
                 )
             }
         }

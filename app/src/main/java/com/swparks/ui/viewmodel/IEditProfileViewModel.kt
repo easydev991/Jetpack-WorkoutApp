@@ -1,5 +1,6 @@
 package com.swparks.ui.viewmodel
 
+import android.net.Uri
 import com.swparks.ui.model.Gender
 import com.swparks.ui.state.EditProfileEvent
 import com.swparks.ui.state.EditProfileUiState
@@ -68,6 +69,13 @@ interface IEditProfileViewModel {
      * Обработчик клика по кнопке изменения фото.
      */
     fun onChangeAvatarClick()
+
+    /**
+     * Обработчик выбора фото из галереи.
+     *
+     * @param uri URI выбранного фото или null если пользователь отменил выбор
+     */
+    fun onAvatarSelected(uri: Uri?)
 
     /**
      * Обработчик клика по кнопке сохранения.

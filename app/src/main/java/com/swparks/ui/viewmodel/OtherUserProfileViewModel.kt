@@ -130,8 +130,10 @@ class OtherUserProfileViewModel(
                     val (message, canRetry) = when {
                         error is HttpException && error.code() == HttpCodes.NOT_FOUND ->
                             "Пользователь не найден" to false
+
                         error is HttpException && error.code() == HttpCodes.FORBIDDEN ->
                             "Доступ запрещен" to false
+
                         else -> "Ошибка загрузки профиля: ${error.message}" to true
                     }
                     userNotifier.handleError(AppError.Generic(message, error))

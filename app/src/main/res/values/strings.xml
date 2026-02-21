@@ -352,4 +352,10 @@
     <string name="feedback_email_subject_country">Missing Country - JetpackWorkoutApp</string>
     <string name="feedback_email_subject_city">Missing City - JetpackWorkoutApp</string>
     <string name="no_email_client">No email app installed</string>
+
+    <!-- Avatar picker errors -->
+    <string name="avatar_error_unsupported_type">Unsupported image format</string>
+    <string name="avatar_error_too_large">Image is too large</string>
+    <string name="avatar_error_read_failed">Failed to read image</string>
+    <string name="avatar_upload_error">Failed to upload image</string>
 </resources>

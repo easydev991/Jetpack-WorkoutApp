@@ -537,6 +537,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
     override fun editProfileViewModelFactory() = EditProfileViewModel(
         swRepository = swRepository,
         countriesRepository = countriesRepository,
+        context = appContext,
         logger = logger,
         userNotifier = userNotifier
     )

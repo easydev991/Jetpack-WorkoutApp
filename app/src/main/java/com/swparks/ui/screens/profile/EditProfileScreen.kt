@@ -1,5 +1,9 @@
 package com.swparks.ui.screens.profile
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -19,6 +24,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -77,6 +83,19 @@ fun EditProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
+
+    // Photo Picker для выбора изображения
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        viewModel.onAvatarSelected(uri)
+    }
+
+    // Функция для запуска выбора фото
+    val launchPhotoPicker: () -> Unit = {
+        // Используем Photo Picker с ограничением только на изображения
+        photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+    }
 
     // Обработка событий
     LaunchedEffect(Unit) {
@@ -139,8 +158,10 @@ fun EditProfileScreen(
                 // Секция аватара
                 AvatarSection(
                     avatarUrl = currentUser?.image,
+                    selectedAvatarUri = uiState.selectedAvatarUri,
+                    avatarError = uiState.avatarError,
                     enabled = isEnabled,
-                    onChangeAvatarClick = viewModel::onChangeAvatarClick
+                    onChangeAvatarClick = launchPhotoPicker
                 )
 
                 // Текстовые поля
@@ -201,8 +222,8 @@ fun EditProfileScreen(
                 }
             }
 
-            // Оверлей загрузки при сохранении
-            if (uiState.isSaving) {
+            // Оверлей загрузки при сохранении или загрузке аватара
+            if (uiState.isSaving || uiState.isUploadingAvatar) {
                 LoadingOverlayView()
             }
         }
@@ -212,6 +233,8 @@ fun EditProfileScreen(
 @Composable
 private fun AvatarSection(
     avatarUrl: String?,
+    selectedAvatarUri: Uri?,
+    avatarError: String?,
     enabled: Boolean,
     onChangeAvatarClick: () -> Unit
 ) {
@@ -221,13 +244,24 @@ private fun AvatarSection(
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
     ) {
         AsyncImage(
-            model = avatarUrl,
+            model = selectedAvatarUri ?: avatarUrl,
             contentDescription = stringResource(R.string.photo),
             modifier = Modifier
                 .size(150.dp)
                 .clip(RoundedCornerShape(dimensionResource(R.dimen.spacing_small))),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
+            alpha = if (enabled) 1f else 0.5f
         )
+
+        // Отображение ошибки
+        if (!avatarError.isNullOrEmpty()) {
+            Text(
+                text = avatarError,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
         SWButton(
             config = ButtonConfig(
                 mode = SWButtonMode.TINTED,
@@ -268,9 +302,7 @@ private fun EmailField(
             labelID = R.string.email,
             enabled = enabled,
             onTextChange = onValueChange,
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                keyboardType = KeyboardType.Email
-            )
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
         )
     )
 }

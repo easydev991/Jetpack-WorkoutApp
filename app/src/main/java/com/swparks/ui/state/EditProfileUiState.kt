@@ -1,5 +1,6 @@
 package com.swparks.ui.state
 
+import android.net.Uri
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.ui.model.MainUserForm
@@ -15,8 +16,11 @@ import com.swparks.ui.model.MainUserForm
  * @param selectedCity Выбранный город
  * @param initialCountry Исходная страна (для отката изменений)
  * @param initialCity Исходный город (для отката изменений)
+ * @param selectedAvatarUri URI выбранного фото для превью (null если не выбрано)
+ * @param avatarError Ошибка при обработке фото
  * @param isLoading Индикатор загрузки
  * @param isSaving Индикатор сохранения
+ * @param isUploadingAvatar Индикатор загрузки аватара
  */
 data class EditProfileUiState(
     val userForm: MainUserForm = MainUserForm(
@@ -36,15 +40,18 @@ data class EditProfileUiState(
     val selectedCity: City? = null,
     val initialCountry: Country? = null,
     val initialCity: City? = null,
+    val selectedAvatarUri: Uri? = null,
+    val avatarError: String? = null,
     val isLoading: Boolean = true,
-    val isSaving: Boolean = false
+    val isSaving: Boolean = false,
+    val isUploadingAvatar: Boolean = false
 ) {
     /**
      * Вычисляемое свойство - есть ли изменения в форме.
-     * Сравнивает текущую форму с исходным снимком.
+     * Сравнивает текущую форму с исходным снимком и учитывает изменение аватара.
      */
     val hasChanges: Boolean
-        get() = userForm != initialForm
+        get() = userForm != initialForm || selectedAvatarUri != null
 }
 
 /**

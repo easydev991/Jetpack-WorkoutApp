@@ -1,5 +1,8 @@
 package com.swparks.ui.viewmodel
 
+import android.content.Context
+import android.net.Uri
+import com.swparks.R
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
@@ -32,6 +35,7 @@ class EditProfileViewModelSelectionTest {
 
     private lateinit var swRepository: SWRepository
     private lateinit var countriesRepository: CountriesRepository
+    private lateinit var context: Context
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
 
@@ -44,11 +48,14 @@ class EditProfileViewModelSelectionTest {
 
         swRepository = mockk(relaxed = true)
         countriesRepository = mockk(relaxed = true)
+        context = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
 
         every { swRepository.getCurrentUserFlow() } returns currentUserFlow
         every { countriesRepository.getCountriesFlow() } returns countriesFlow
+        every { context.getString(R.string.avatar_error_unsupported_type) } returns "Unsupported image format"
+        every { context.getString(R.string.avatar_error_read_failed) } returns "Failed to read image"
     }
 
     @After
@@ -184,12 +191,66 @@ class EditProfileViewModelSelectionTest {
         Assert.assertEquals("США", state.selectedCountry?.name)
     }
 
+    // MARK: - Avatar tests
+
+    @Test
+    fun onAvatarSelected_nullUri_doesNothing() = runTest {
+        // Arrange
+        val countries = makeTestCountries()
+        val user = makeTestUser()
+
+        currentUserFlow.value = user
+        countriesFlow.value = countries
+
+        val viewModel = createViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Act - передаем null (пользователь отменил выбор)
+        viewModel.onAvatarSelected(null)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Assert - состояние не изменилось
+        val state = viewModel.uiState.first()
+        Assert.assertNull(state.selectedAvatarUri)
+        Assert.assertNull(state.avatarError)
+    }
+
+    @Test
+    fun hasChanges_returnsTrue_whenAvatarSelected() = runTest {
+        // Arrange
+        val countries = makeTestCountries()
+        val user = makeTestUser()
+
+        currentUserFlow.value = user
+        countriesFlow.value = countries
+
+        val viewModel = createViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Получаем начальное состояние (hasChanges должен быть false)
+        val initialState = viewModel.uiState.first()
+        Assert.assertFalse("Initial hasChanges should be false", initialState.hasChanges)
+
+        // Act - выбираем аватар
+        val uri = mockk<Uri>()
+        every { context.contentResolver.getType(uri) } returns "image/jpeg"
+
+        viewModel.onAvatarSelected(uri)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Assert - hasChanges должен быть true
+        val state = viewModel.uiState.first()
+        Assert.assertTrue("hasChanges should be true after avatar selection", state.hasChanges)
+        Assert.assertEquals(uri, state.selectedAvatarUri)
+    }
+
     // MARK: - Helper methods
 
     private fun createViewModel(): EditProfileViewModel =
         EditProfileViewModel(
             swRepository = swRepository,
             countriesRepository = countriesRepository,
+            context = context,
             logger = logger,
             userNotifier = userNotifier
         )
