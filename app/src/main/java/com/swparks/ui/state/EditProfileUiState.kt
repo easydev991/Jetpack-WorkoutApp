@@ -19,6 +19,7 @@ import com.swparks.ui.model.MainUserForm
  * @param selectedAvatarUri URI выбранного фото для превью (null если не выбрано)
  * @param avatarError Ошибка при обработке фото
  * @param emailError Ошибка валидации email
+ * @param birthDateError Ошибка валидации даты рождения
  * @param isLoading Индикатор загрузки
  * @param isSaving Индикатор сохранения
  * @param isUploadingAvatar Индикатор загрузки аватара
@@ -44,6 +45,7 @@ data class EditProfileUiState(
     val selectedAvatarUri: Uri? = null,
     val avatarError: String? = null,
     val emailError: String? = null,
+    val birthDateError: String? = null,
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
     val isUploadingAvatar: Boolean = false,
@@ -61,7 +63,7 @@ data class EditProfileUiState(
      * Требует наличия изменений и отсутствия ошибок валидации.
      */
     val canSave: Boolean
-        get() = hasChanges && emailError == null
+        get() = hasChanges && emailError == null && birthDateError == null
 }
 
 /**

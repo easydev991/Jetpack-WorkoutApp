@@ -82,6 +82,7 @@ interface SWRepository {
         countryId: Int?,
         cityId: Int?
     ): Result<User>
+
     suspend fun login(token: String?): Result<LoginSuccess>
     suspend fun resetPassword(login: String): Result<Unit>
     suspend fun changePassword(current: String, new: String): Result<Unit>

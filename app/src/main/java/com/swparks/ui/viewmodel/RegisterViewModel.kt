@@ -86,7 +86,7 @@ class RegisterViewModel(
     private val _birthDateError = MutableStateFlow<String?>(null)
     override val birthDateError: StateFlow<String?> = _birthDateError.asStateFlow()
 
-    private val _form = MutableStateFlow(RegisterForm())
+    private val _form = MutableStateFlow(RegisterForm(birthDate = LocalDate.now()))
     override val form: StateFlow<RegisterForm> = _form.asStateFlow()
 
     init {
@@ -125,7 +125,6 @@ class RegisterViewModel(
 
     override fun onEmailChange(value: String) {
         _form.value = _form.value.copy(email = value)
-        // Валидация email "на лету"
         _emailFormatError.value = if (value.isNotEmpty() && !isValidEmail(value)) {
             resources.getString(R.string.email_invalid)
         } else {
@@ -135,7 +134,6 @@ class RegisterViewModel(
 
     override fun onPasswordChange(value: String) {
         _form.value = _form.value.copy(password = value)
-        // Валидация длины пароля "на лету"
         val trueCount = value.count { !it.isWhitespace() }
         _passwordLengthError.value =
             if (value.isNotEmpty() && trueCount < RegisterForm.MIN_PASSWORD_LENGTH) {
@@ -155,7 +153,11 @@ class RegisterViewModel(
 
     override fun onBirthDateChange(date: LocalDate?) {
         _form.value = _form.value.copy(birthDate = date)
-        _birthDateError.value = null
+        _birthDateError.value = if (date != null && date > LocalDate.now()) {
+            resources.getString(R.string.birth_date_in_future)
+        } else {
+            null
+        }
     }
 
     override fun onCountrySelectedByName(countryName: String) {
@@ -264,7 +266,7 @@ class RegisterViewModel(
     }
 
     override fun resetForNewSession() {
-        _form.value = RegisterForm()
+        _form.value = RegisterForm(birthDate = LocalDate.now())
         _uiState.value = RegisterUiState.Idle
         _selectedCountry.value = null
         _selectedCity.value = null
@@ -293,12 +295,9 @@ class RegisterViewModel(
         }
 
         val birthDate = _form.value.birthDate
-        if (birthDate != null) {
-            val age = java.time.Period.between(birthDate, LocalDate.now()).years
-            if (age < MINIMUM_AGE) {
-                _birthDateError.value = "Вам должно быть не менее 13 лет"
-                isValid = false
-            }
+        if (birthDate != null && birthDate > LocalDate.now()) {
+            _birthDateError.value = resources.getString(R.string.birth_date_in_future)
+            isValid = false
         }
 
         return isValid
@@ -307,9 +306,5 @@ class RegisterViewModel(
     private fun isValidEmail(email: String): Boolean {
         val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
         return emailRegex.matches(email)
-    }
-
-    companion object {
-        private const val MINIMUM_AGE = 13
     }
 }

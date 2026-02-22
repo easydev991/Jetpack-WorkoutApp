@@ -1,13 +1,14 @@
 package com.swparks.ui.viewmodel
 
-import android.content.Context
 import android.net.Uri
 import android.util.Log
 import com.swparks.R
+import java.time.LocalDate
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.provider.AvatarHelper
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.IDeleteUserUseCase
@@ -15,7 +16,6 @@ import com.swparks.ui.model.MainUserForm
 import com.swparks.util.AppError
 import com.swparks.util.ImageUtils
 import com.swparks.util.Logger
-import com.swparks.util.UriUtils
 import com.swparks.util.UserNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -59,7 +59,7 @@ class EditProfileViewModelTest {
     private lateinit var swRepository: SWRepository
     private lateinit var countriesRepository: CountriesRepository
     private lateinit var deleteUserUseCase: IDeleteUserUseCase
-    private lateinit var context: Context
+    private lateinit var avatarHelper: AvatarHelper
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
     private lateinit var resources: ResourcesProvider
@@ -77,13 +77,12 @@ class EditProfileViewModelTest {
         every { Log.d(any<String>(), any<String>()) } returns 0
         every { Log.i(any<String>(), any<String>()) } returns 0
 
-        mockkObject(UriUtils)
         mockkObject(ImageUtils)
 
         swRepository = mockk(relaxed = true)
         countriesRepository = mockk(relaxed = true)
         deleteUserUseCase = mockk(relaxed = true)
-        context = mockk(relaxed = true)
+        avatarHelper = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
         resources = mockk(relaxed = true)
@@ -92,12 +91,13 @@ class EditProfileViewModelTest {
         every { swRepository.getCurrentUserFlow() } returns userFlow
         every { countriesRepository.getCountriesFlow() } returns flowOf(listOf(testCountry))
         coEvery { countriesRepository.getCitiesByCountry(any()) } returns listOf(testCity)
-        every { context.getString(R.string.avatar_error_unsupported_type) } returns
-            "Неподдерживаемый формат изображения"
-        every { context.getString(R.string.avatar_error_read_failed) } returns
-            "Не удалось прочитать изображение"
-        every { context.contentResolver } returns mockk(relaxed = true)
         every { resources.getString(R.string.email_invalid) } returns "Введите корректный email"
+        every { resources.getString(R.string.avatar_error_unsupported_type) } returns
+            "Неподдерживаемый формат изображения"
+        every { resources.getString(R.string.avatar_error_read_failed) } returns
+            "Не удалось прочитать изображение"
+        every { resources.getString(R.string.birth_date_in_future) } returns
+            "Дата рождения не может быть в будущем"
     }
 
     @After
@@ -113,7 +113,7 @@ class EditProfileViewModelTest {
             swRepository = swRepository,
             countriesRepository = countriesRepository,
             deleteUserUseCase = deleteUserUseCase,
-            context = context,
+            avatarHelper = avatarHelper,
             logger = logger,
             userNotifier = userNotifier,
             resources = resources
@@ -124,7 +124,7 @@ class EditProfileViewModelTest {
     fun onAvatarSelected_updatesState() = runTest {
         // Given
         val uri = mockk<Uri>()
-        every { ImageUtils.isSupportedMimeType(context, uri) } returns true
+        every { avatarHelper.isSupportedMimeType(uri) } returns true
 
         val viewModel = createViewModel()
         advanceUntilIdle()
@@ -161,7 +161,7 @@ class EditProfileViewModelTest {
     fun onAvatarSelected_unsupportedMimeType_showsError() = runTest {
         // Given
         val uri = mockk<Uri>()
-        every { ImageUtils.isSupportedMimeType(context, uri) } returns false
+        every { avatarHelper.isSupportedMimeType(uri) } returns false
 
         val viewModel = createViewModel()
         advanceUntilIdle()
@@ -185,7 +185,7 @@ class EditProfileViewModelTest {
     fun hasChanges_returnsTrue_whenAvatarSelected() = runTest {
         // Given
         val uri = mockk<Uri>()
-        every { ImageUtils.isSupportedMimeType(context, uri) } returns true
+        every { avatarHelper.isSupportedMimeType(uri) } returns true
 
         val viewModel = createViewModel()
         advanceUntilIdle()
@@ -333,8 +333,8 @@ class EditProfileViewModelTest {
         val uri = mockk<Uri>()
         val imageBytes = byteArrayOf(1, 2, 3, 4, 5)
 
-        every { ImageUtils.isSupportedMimeType(context, uri) } returns true
-        every { UriUtils.uriToByteArray(context, uri) } returns Result.success(imageBytes)
+        every { avatarHelper.isSupportedMimeType(uri) } returns true
+        every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
         every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
         coEvery {
             swRepository.editUser(
@@ -387,8 +387,8 @@ class EditProfileViewModelTest {
         val uri = mockk<Uri>()
         val exception = java.io.IOException("Read error")
 
-        every { ImageUtils.isSupportedMimeType(context, uri) } returns true
-        every { UriUtils.uriToByteArray(context, uri) } returns Result.failure(exception)
+        every { avatarHelper.isSupportedMimeType(uri) } returns true
+        every { avatarHelper.uriToByteArray(uri) } returns Result.failure(exception)
 
         val viewModel = createViewModel()
         advanceUntilIdle()
@@ -444,8 +444,8 @@ class EditProfileViewModelTest {
         val uri = mockk<Uri>()
         val imageBytes = byteArrayOf(1, 2, 3)
 
-        every { ImageUtils.isSupportedMimeType(context, uri) } returns true
-        every { UriUtils.uriToByteArray(context, uri) } returns Result.success(imageBytes)
+        every { avatarHelper.isSupportedMimeType(uri) } returns true
+        every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
         every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
         coEvery {
             swRepository.editUser(
@@ -477,7 +477,7 @@ class EditProfileViewModelTest {
     fun resetChanges_clearsAvatarSelection() = runTest {
         // Given
         val uri = mockk<Uri>()
-        every { ImageUtils.isSupportedMimeType(context, uri) } returns true
+        every { avatarHelper.isSupportedMimeType(uri) } returns true
 
         val viewModel = createViewModel()
         advanceUntilIdle()
@@ -779,5 +779,119 @@ class EditProfileViewModelTest {
         val state = viewModel.uiState.value
         assertFalse("isDeleting должен быть false после ошибки", state.isDeleting)
         coVerify(exactly = 1) { userNotifier.handleError(any()) }
+    }
+
+    // ==================== Тесты валидации даты рождения ====================
+
+    @Test
+    fun onBirthDateChange_validDate_noError() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When - выбираем дату 20 лет назад (валидная дата)
+        val twentyYearsAgo = LocalDate.now().minusYears(20)
+        val timestamp = twentyYearsAgo.atStartOfDay(java.time.ZoneId.systemDefault())
+            .toInstant().toEpochMilli()
+        viewModel.onBirthDateChange(timestamp)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertNull("Для валидной даты не должно быть ошибки", state.birthDateError)
+    }
+
+    @Test
+    fun onBirthDateChange_futureDate_showsError() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When - выбираем дату в будущем
+        val futureDate = LocalDate.now().plusDays(1)
+        val timestamp = futureDate.atStartOfDay(java.time.ZoneId.systemDefault())
+            .toInstant().toEpochMilli()
+        viewModel.onBirthDateChange(timestamp)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertNotNull("Для даты в будущем должна быть ошибка", state.birthDateError)
+        assertEquals(
+            "Текст ошибки должен соответствовать",
+            "Дата рождения не может быть в будущем",
+            state.birthDateError
+        )
+    }
+
+    @Test
+    fun onBirthDateChange_fromFutureToValid_clearsError() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Сначала выбираем дату в будущем
+        val futureDate = LocalDate.now().plusDays(1)
+        val futureTimestamp = futureDate.atStartOfDay(java.time.ZoneId.systemDefault())
+            .toInstant().toEpochMilli()
+        viewModel.onBirthDateChange(futureTimestamp)
+        advanceUntilIdle()
+        assertNotNull("Должна быть ошибка", viewModel.uiState.value.birthDateError)
+
+        // When - меняем на валидную дату
+        val validDate = LocalDate.now().minusYears(20)
+        val validTimestamp = validDate.atStartOfDay(java.time.ZoneId.systemDefault())
+            .toInstant().toEpochMilli()
+        viewModel.onBirthDateChange(validTimestamp)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertNull("Ошибка должна быть сброшена при выборе валидной даты", state.birthDateError)
+    }
+
+    @Test
+    fun canSave_returnsFalse_whenBirthDateErrorExists() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When - выбираем дату в будущем
+        val futureDate = LocalDate.now().plusDays(1)
+        val timestamp = futureDate.atStartOfDay(java.time.ZoneId.systemDefault())
+            .toInstant().toEpochMilli()
+        viewModel.onBirthDateChange(timestamp)
+        advanceUntilIdle()
+
+        // Then
+        // canSave = hasChanges && emailError == null && birthDateError == null
+        // birthDateError != null, поэтому canSave должен быть false
+        assertFalse(
+            "canSave должен быть false при наличии ошибки даты рождения",
+            viewModel.uiState.value.canSave
+        )
+    }
+
+    @Test
+    fun resetChanges_clearsBirthDateError() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Вводим дату в будущем для создания ошибки
+        val futureDate = LocalDate.now().plusDays(1)
+        val timestamp = futureDate.atStartOfDay(java.time.ZoneId.systemDefault())
+            .toInstant().toEpochMilli()
+        viewModel.onBirthDateChange(timestamp)
+        advanceUntilIdle()
+        assertNotNull("Должна быть ошибка", viewModel.uiState.value.birthDateError)
+
+        // When
+        viewModel.resetChanges()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertNull("Ошибка даты рождения должна быть сброшена после resetChanges", state.birthDateError)
     }
 }

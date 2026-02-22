@@ -64,6 +64,7 @@
     <string name="change_password">Изменить пароль</string>
     <string name="gender">Пол</string>
     <string name="birthdate">Дата рождения</string>
+    <string name="birth_date_in_future">Дата рождения не может быть в будущем</string>
     <string name="country">Страна</string>
     <string name="city">Город</string>
 

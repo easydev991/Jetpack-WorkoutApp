@@ -18,6 +18,7 @@ import com.swparks.data.interceptor.AuthInterceptor
 import com.swparks.data.interceptor.LoggingInterceptor
 import com.swparks.data.interceptor.RetryInterceptor
 import com.swparks.data.interceptor.TokenInterceptor
+import com.swparks.data.provider.AvatarHelperImpl
 import com.swparks.data.provider.ResourcesProviderImpl
 import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.JournalEntriesRepositoryImpl
@@ -26,6 +27,7 @@ import com.swparks.data.repository.MessagesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.data.repository.SWRepositoryImp
 import com.swparks.data.serializer.EncryptedStringSerializer
+import com.swparks.domain.provider.AvatarHelper
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.repository.JournalEntriesRepository
@@ -207,6 +209,16 @@ class DefaultAppContainer(context: Context) : AppContainer {
      */
     private val resourcesProvider: ResourcesProvider by lazy {
         ResourcesProviderImpl(appContext)
+    }
+
+    // ==================== Avatar Helper ====================
+
+    /**
+     * Хелпер для работы с аватарами (изображениями)
+     * Используется в ViewModel для работы с Uri без зависимости от Context
+     */
+    private val avatarHelper: AvatarHelper by lazy {
+        AvatarHelperImpl(appContext)
     }
 
     // ==================== Room Database ====================
@@ -549,7 +561,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
         swRepository = swRepository,
         countriesRepository = countriesRepository,
         deleteUserUseCase = deleteUserUseCase,
-        context = appContext,
+        avatarHelper = avatarHelper,
         logger = logger,
         userNotifier = userNotifier,
         resources = resourcesProvider

@@ -1,6 +1,5 @@
 package com.swparks.ui.viewmodel
 
-import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,9 +7,10 @@ import com.swparks.R
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.EditProfileLocations
+import com.swparks.domain.provider.AvatarHelper
 import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.usecase.IDeleteUserUseCase
 import com.swparks.domain.repository.CountriesRepository
+import com.swparks.domain.usecase.IDeleteUserUseCase
 import com.swparks.ui.model.Gender
 import com.swparks.ui.model.MainUserForm
 import com.swparks.ui.state.EditProfileEvent
@@ -18,7 +18,6 @@ import com.swparks.ui.state.EditProfileUiState
 import com.swparks.util.AppError
 import com.swparks.util.ImageUtils
 import com.swparks.util.Logger
-import com.swparks.util.UriUtils
 import com.swparks.util.UserNotifier
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,6 +31,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -43,7 +43,7 @@ import java.time.format.DateTimeFormatter
  * @param swRepository Репозиторий для работы с данными пользователя и API
  * @param countriesRepository Репозиторий для работы с данными стран и городов
  * @param deleteUserUseCase Use case для удаления аккаунта пользователя
- * @param context Контекст приложения для работы с Uri и ресурсами
+ * @param avatarHelper Хелпер для работы с аватарами (Uri → ByteArray)
  * @param logger Логгер для записи сообщений
  * @param userNotifier Обработчик ошибок для отправки ошибок в UI
  * @param resources Провайдер строковых ресурсов
@@ -53,7 +53,7 @@ class EditProfileViewModel(
     private val swRepository: SWRepository,
     private val countriesRepository: CountriesRepository,
     private val deleteUserUseCase: IDeleteUserUseCase,
-    private val context: Context,
+    private val avatarHelper: AvatarHelper,
     private val logger: Logger,
     private val userNotifier: UserNotifier,
     private val resources: ResourcesProvider
@@ -147,7 +147,6 @@ class EditProfileViewModel(
     }
 
     override fun onEmailChange(value: String) {
-        // Валидация email "на лету"
         val emailError = if (value.isNotEmpty() && !isValidEmail(value)) {
             resources.getString(R.string.email_invalid)
         } else {
@@ -175,7 +174,20 @@ class EditProfileViewModel(
             .atZone(ZoneId.systemDefault())
             .toLocalDate()
         val formatted = localDate.format(DateTimeFormatter.ISO_DATE)
-        _uiState.update { it.copy(userForm = it.userForm.copy(birthDate = formatted)) }
+
+        // Валидация: дата не должна быть в будущем
+        val birthDateError = if (localDate.isInFuture()) {
+            resources.getString(R.string.birth_date_in_future)
+        } else {
+            null
+        }
+
+        _uiState.update {
+            it.copy(
+                userForm = it.userForm.copy(birthDate = formatted),
+                birthDateError = birthDateError
+            )
+        }
         logger.d(TAG, "Дата рождения изменена: $formatted")
     }
 
@@ -218,8 +230,8 @@ class EditProfileViewModel(
         }
 
         // Проверяем MIME-тип
-        if (!ImageUtils.isSupportedMimeType(context, uri)) {
-            val errorMessage = context.getString(R.string.avatar_error_unsupported_type)
+        if (!avatarHelper.isSupportedMimeType(uri)) {
+            val errorMessage = resources.getString(R.string.avatar_error_unsupported_type)
             logger.w(TAG, "Unsupported MIME type for uri: $uri")
             _uiState.update { it.copy(avatarError = errorMessage) }
             return
@@ -287,7 +299,7 @@ class EditProfileViewModel(
     private fun prepareImageBytes(uri: Uri?): ByteArray? {
         if (uri == null) return null
 
-        val uriResult = UriUtils.uriToByteArray(context, uri)
+        val uriResult = avatarHelper.uriToByteArray(uri)
         return uriResult.fold(
             onSuccess = { bytes ->
                 val compressed = ImageUtils.compressIfNeeded(bytes)
@@ -296,7 +308,7 @@ class EditProfileViewModel(
             },
             onFailure = { error ->
                 logger.e(TAG, "Ошибка чтения изображения: ${error.message}", error)
-                val errorMessage = context.getString(R.string.avatar_error_read_failed)
+                val errorMessage = resources.getString(R.string.avatar_error_read_failed)
                 _uiState.update {
                     it.copy(
                         isSaving = false,
@@ -452,7 +464,8 @@ class EditProfileViewModel(
                     cities = cities,
                     selectedAvatarUri = null,
                     avatarError = null,
-                    emailError = null
+                    emailError = null,
+                    birthDateError = null
                 )
             }
         }
@@ -512,3 +525,8 @@ class EditProfileViewModel(
         return emailRegex.matches(email)
     }
 }
+
+/**
+ * Проверяет, находится ли дата в будущем.
+ */
+private fun LocalDate.isInFuture(): Boolean = this > LocalDate.now()

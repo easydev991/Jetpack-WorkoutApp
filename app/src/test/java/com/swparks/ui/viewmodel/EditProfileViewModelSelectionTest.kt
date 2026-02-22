@@ -1,12 +1,12 @@
 package com.swparks.ui.viewmodel
 
-import android.content.Context
 import android.net.Uri
 import com.swparks.R
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.provider.AvatarHelper
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.IDeleteUserUseCase
@@ -38,7 +38,7 @@ class EditProfileViewModelSelectionTest {
     private lateinit var swRepository: SWRepository
     private lateinit var countriesRepository: CountriesRepository
     private lateinit var deleteUserUseCase: IDeleteUserUseCase
-    private lateinit var context: Context
+    private lateinit var avatarHelper: AvatarHelper
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
     private lateinit var resources: ResourcesProvider
@@ -53,16 +53,16 @@ class EditProfileViewModelSelectionTest {
         swRepository = mockk(relaxed = true)
         countriesRepository = mockk(relaxed = true)
         deleteUserUseCase = mockk(relaxed = true)
-        context = mockk(relaxed = true)
+        avatarHelper = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
         resources = mockk(relaxed = true)
 
         every { swRepository.getCurrentUserFlow() } returns currentUserFlow
         every { countriesRepository.getCountriesFlow() } returns countriesFlow
-        every { context.getString(R.string.avatar_error_unsupported_type) } returns "Unsupported image format"
-        every { context.getString(R.string.avatar_error_read_failed) } returns "Failed to read image"
         every { resources.getString(R.string.email_invalid) } returns "Enter a valid email"
+        every { resources.getString(R.string.avatar_error_unsupported_type) } returns "Unsupported image format"
+        every { resources.getString(R.string.avatar_error_read_failed) } returns "Failed to read image"
     }
 
     @After
@@ -240,7 +240,7 @@ class EditProfileViewModelSelectionTest {
 
         // Act - выбираем аватар
         val uri = mockk<Uri>()
-        every { context.contentResolver.getType(uri) } returns "image/jpeg"
+        every { avatarHelper.isSupportedMimeType(uri) } returns true
 
         viewModel.onAvatarSelected(uri)
         testDispatcher.scheduler.advanceUntilIdle()
@@ -258,7 +258,7 @@ class EditProfileViewModelSelectionTest {
             swRepository = swRepository,
             countriesRepository = countriesRepository,
             deleteUserUseCase = deleteUserUseCase,
-            context = context,
+            avatarHelper = avatarHelper,
             logger = logger,
             userNotifier = userNotifier,
             resources = resources

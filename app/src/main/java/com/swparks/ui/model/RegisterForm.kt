@@ -1,7 +1,6 @@
 package com.swparks.ui.model
 
 import java.time.LocalDate
-import java.time.Period
 
 /**
  * Модель формы регистрации пользователя.
@@ -35,7 +34,7 @@ data class RegisterForm(
      * - password не пустой (минимум 6 символов)
      * - fullName не пустое
      * - genderCode выбран
-     * - birthDate указана и возраст >= 13 лет
+     * - birthDate указана и не в будущем
      * - countryId выбран
      * - cityId выбран
      * - isPolicyAccepted == true
@@ -47,7 +46,7 @@ data class RegisterForm(
             fullName.isNotBlank() &&
             genderCode != null &&
             birthDate != null &&
-            birthDate.isAtLeast13YearsOld() &&
+            !birthDate.isInFuture() &&
             countryId != null &&
             cityId != null &&
             isPolicyAccepted
@@ -73,11 +72,6 @@ private val String.trueCount: Int
     get() = count { !it.isWhitespace() }
 
 /**
- * Проверяет, что дата рождения соответствует возрасту >= 13 лет.
+ * Проверяет, что дата не в будущем.
  */
-private fun LocalDate.isAtLeast13YearsOld(): Boolean {
-    val age = Period.between(this, LocalDate.now()).years
-    return age >= MINIMUM_AGE
-}
-
-private const val MINIMUM_AGE = 13
+private fun LocalDate.isInFuture(): Boolean = this > LocalDate.now()

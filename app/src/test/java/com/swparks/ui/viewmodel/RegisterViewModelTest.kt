@@ -30,6 +30,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -81,6 +82,9 @@ class RegisterViewModelTest {
         every { resourcesProvider.getString(R.string.email_invalid) } returns "Введите корректный email"
         every { resourcesProvider.getString(R.string.password_short) } returns "Пароль слишком короткий"
         every { resourcesProvider.getString(R.string.login_empty) } returns "Введите логин"
+        every {
+            resourcesProvider.getString(R.string.birth_date_in_future)
+        } returns "Дата рождения не может быть в будущем"
 
         registerViewModel = RegisterViewModel(
             logger = testLogger,
@@ -244,6 +248,41 @@ class RegisterViewModelTest {
     }
 
     @Test
+    fun onBirthDateChange_WhenDateInFuture_thenShowsError() {
+        // Given
+        val futureDate = LocalDate.now().plusDays(1)
+
+        // When
+        registerViewModel.onBirthDateChange(futureDate)
+
+        // Then
+        assertEquals(futureDate, registerViewModel.form.value.birthDate)
+        assertEquals(
+            "Дата рождения не может быть в будущем",
+            registerViewModel.birthDateError.value
+        )
+    }
+
+    @Test
+    fun onBirthDateChange_WhenDateChangedFromFutureToValid_thenClearsError() {
+        // Given - first set future date to get error
+        val futureDate = LocalDate.now().plusDays(1)
+        registerViewModel.onBirthDateChange(futureDate)
+        assertEquals(
+            "Дата рождения не может быть в будущем",
+            registerViewModel.birthDateError.value
+        )
+
+        // When - change to valid date
+        val validDate = LocalDate.of(2000, 1, 15)
+        registerViewModel.onBirthDateChange(validDate)
+
+        // Then
+        assertEquals(validDate, registerViewModel.form.value.birthDate)
+        assertNull(registerViewModel.birthDateError.value)
+    }
+
+    @Test
     fun onCountrySelectedByName_WhenCalled_thenUpdatesCountryAndClearsCity() = runTest {
         // Given - first select city
         registerViewModel.onCountrySelectedByName("Россия")
@@ -394,8 +433,31 @@ class RegisterViewModelTest {
     }
 
     @Test
-    fun formIsValid_WhenUnder13YearsOld_thenReturnsFalse() = runTest {
-        // Given - birth date less than 13 years ago
+    fun formIsValid_WhenBirthDateInFuture_thenReturnsFalse() = runTest {
+        // Given - birth date in the future
+        val futureDate = LocalDate.now().plusDays(1)
+        registerViewModel.onLoginChange("testuser")
+        registerViewModel.onEmailChange("test@example.com")
+        registerViewModel.onPasswordChange("password123")
+        registerViewModel.onFullNameChange("Ivan Ivanov")
+        registerViewModel.onGenderChange(0)
+        registerViewModel.onBirthDateChange(futureDate)
+        registerViewModel.onCountrySelectedByName("Россия")
+        advanceUntilIdle()
+        registerViewModel.onCitySelectedByName("Москва")
+        advanceUntilIdle()
+        registerViewModel.onPolicyAcceptedChange(true)
+
+        // When
+        val isValid = registerViewModel.form.value.isValid
+
+        // Then
+        assertFalse(isValid)
+    }
+
+    @Test
+    fun formIsValid_WhenYoungUser_thenReturnsTrue() = runTest {
+        // Given - birth date less than 13 years ago (should be valid now)
         val youngDate = LocalDate.now().minusYears(10)
         registerViewModel.onLoginChange("testuser")
         registerViewModel.onEmailChange("test@example.com")
@@ -413,7 +475,7 @@ class RegisterViewModelTest {
         val isValid = registerViewModel.form.value.isValid
 
         // Then
-        assertFalse(isValid)
+        assertTrue(isValid)
     }
 
     @Test
@@ -558,7 +620,8 @@ class RegisterViewModelTest {
         assertEquals("", form.password)
         assertEquals("", form.fullName)
         assertNull(form.genderCode)
-        assertNull(form.birthDate)
+        assertNotNull(form.birthDate)
+        assertFalse(form.birthDate!!.isAfter(LocalDate.now())) // not in future
         assertNull(form.countryId)
         assertNull(form.cityId)
         assertFalse(form.isPolicyAccepted)

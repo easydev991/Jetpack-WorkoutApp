@@ -207,23 +207,32 @@ fun EditProfileScreen(
                         )
                     }
                 }
-
-                // Пикеры
                 FormCardContainer(enabled = isEnabled) {
                     Column(
                         modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
-                        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall))
                     ) {
                         GenderPicker(
                             selectedGender = Gender.entries.find { it.rawValue == uiState.userForm.genderCode },
                             enabled = isEnabled,
                             onGenderChange = viewModel::onGenderChange
                         )
+                    }
+                }
+                FormCardContainer(enabled = isEnabled) {
+                    Column(modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small))) {
                         BirthdayPicker(
                             birthDate = uiState.userForm.birthDate,
+                            error = uiState.birthDateError,
                             enabled = isEnabled,
                             onBirthDateChange = viewModel::onBirthDateChange
                         )
+                    }
+                }
+                FormCardContainer(enabled = isEnabled) {
+                    Column(
+                        modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
+                        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall))
+                    ) {
                         CountryPicker(
                             countryName = uiState.selectedCountry?.name,
                             enabled = isEnabled,
@@ -431,6 +440,7 @@ private fun GenderPicker(
 @Composable
 private fun BirthdayPicker(
     birthDate: String,
+    error: String?,
     enabled: Boolean,
     onBirthDateChange: (Long) -> Unit
 ) {
@@ -452,15 +462,25 @@ private fun BirthdayPicker(
 
     val currentYear = LocalDate.now().year
 
-    SWDateTimePicker(
-        config = DateTimePickerConfig(
-            mode = SWDatePickerMode.BIRTHDAY,
-            initialSelectedDateMillis = initialTimestamp,
-            yearRange = 1900..(currentYear - 13), // Минимальный возраст 13 лет
-            enabled = enabled,
-            onClickSaveDate = onBirthDateChange
+    Column {
+        SWDateTimePicker(
+            config = DateTimePickerConfig(
+                mode = SWDatePickerMode.BIRTHDAY,
+                initialSelectedDateMillis = initialTimestamp,
+                yearRange = 1900..currentYear,
+                enabled = enabled,
+                onClickSaveDate = onBirthDateChange
+            )
         )
-    )
+        if (!error.isNullOrEmpty()) {
+            Text(
+                text = error,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = dimensionResource(R.dimen.spacing_xsmall))
+            )
+        }
+    }
 }
 
 @Composable

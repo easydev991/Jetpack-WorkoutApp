@@ -59,6 +59,7 @@
     <string name="change_password">Change password</string>
     <string name="gender">Gender</string>
     <string name="birthdate">Date of birth</string>
+    <string name="birth_date_in_future">Date of birth cannot be in the future</string>
     <string name="country">Country</string>
     <string name="city">City</string>
 

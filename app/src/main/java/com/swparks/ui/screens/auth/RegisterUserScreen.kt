@@ -176,26 +176,29 @@ fun RegisterUserScreen(
                     )
                 }
 
-                // Пикеры (дата рождения, страна, город)
+                FormCardContainer(enabled = !isLoading) {
+                    BirthdayPicker(
+                        birthDate = form.birthDate,
+                        error = birthDateError,
+                        enabled = !isLoading,
+                        onBirthDateChange = { timestamp ->
+                            val date = if (timestamp != 0L) {
+                                val millisPerDay = 24L * 60L * 60L * 1000L
+                                LocalDate.ofEpochDay(timestamp / millisPerDay)
+                            } else {
+                                null
+                            }
+                            viewModel.onBirthDateChange(date)
+                        }
+                    )
+                }
+
+                // Пикеры для страны и города
                 FormCardContainer(enabled = !isLoading) {
                     Column(
                         modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
                         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall))
                     ) {
-                        BirthdayPicker(
-                            birthDate = form.birthDate,
-                            error = birthDateError,
-                            enabled = !isLoading,
-                            onBirthDateChange = { timestamp ->
-                                val date = if (timestamp != 0L) {
-                                    val millisPerDay = 24L * 60L * 60L * 1000L
-                                    LocalDate.ofEpochDay(timestamp / millisPerDay)
-                                } else {
-                                    null
-                                }
-                                viewModel.onBirthDateChange(date)
-                            }
-                        )
                         CountryPicker(
                             countryName = selectedCountry?.name,
                             enabled = !isLoading,
@@ -391,12 +394,12 @@ private fun BirthdayPicker(
 
     val currentYear = LocalDate.now().year
 
-    Column {
+    Column(modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small))) {
         SWDateTimePicker(
             config = DateTimePickerConfig(
                 mode = SWDatePickerMode.BIRTHDAY,
                 initialSelectedDateMillis = initialTimestamp,
-                yearRange = 1900..(currentYear - 13),
+                yearRange = 1900..currentYear,
                 enabled = enabled,
                 onClickSaveDate = onBirthDateChange
             )
