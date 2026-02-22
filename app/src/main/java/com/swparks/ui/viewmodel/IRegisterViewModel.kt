@@ -63,14 +63,14 @@ interface IRegisterViewModel {
     val loginError: StateFlow<String?>
 
     /**
-     * Ошибка валидации email.
+     * Ошибка валидации email (формат email на лету).
      */
-    val emailError: StateFlow<String?>
+    val emailFormatError: StateFlow<String?>
 
     /**
-     * Ошибка валидации пароля.
+     * Ошибка валидации пароля (длина пароля на лету).
      */
-    val passwordError: StateFlow<String?>
+    val passwordLengthError: StateFlow<String?>
 
     /**
      * Ошибка валидации возраста.

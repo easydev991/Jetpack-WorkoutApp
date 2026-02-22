@@ -135,7 +135,7 @@ fun EditProfileScreen(
         },
         bottomBar = {
             SaveButton(
-                enabled = uiState.hasChanges && !uiState.isSaving,
+                enabled = uiState.canSave && !uiState.isSaving,
                 onClick = viewModel::onSaveClick
             )
         },
@@ -177,6 +177,7 @@ fun EditProfileScreen(
                         )
                         EmailField(
                             value = uiState.userForm.email,
+                            error = uiState.emailError,
                             enabled = isEnabled,
                             onValueChange = viewModel::onEmailChange
                         )
@@ -293,6 +294,7 @@ private fun LoginField(
 @Composable
 private fun EmailField(
     value: String,
+    error: String?,
     enabled: Boolean,
     onValueChange: (String) -> Unit
 ) {
@@ -301,6 +303,8 @@ private fun EmailField(
             text = value,
             labelID = R.string.email,
             enabled = enabled,
+            isError = error != null,
+            supportingText = error ?: "",
             onTextChange = onValueChange,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
         )

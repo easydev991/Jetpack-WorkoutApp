@@ -1,5 +1,6 @@
 package com.swparks.ui.viewmodel
 
+import com.swparks.R
 import com.swparks.data.SecureTokenRepository
 import com.swparks.data.TokenEncoder
 import com.swparks.data.UserPreferencesRepository
@@ -7,6 +8,7 @@ import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.LoginSuccess
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.model.LoginCredentials
 import com.swparks.ui.model.RegistrationRequest
@@ -48,6 +50,7 @@ class RegisterViewModelTest {
     private lateinit var preferencesRepository: UserPreferencesRepository
     private lateinit var tokenEncoder: TokenEncoder
     private lateinit var countriesRepository: CountriesRepository
+    private lateinit var resourcesProvider: ResourcesProvider
     private lateinit var registerViewModel: RegisterViewModel
 
     private val testLoginSuccess = LoginSuccess(userId = 123L)
@@ -62,6 +65,7 @@ class RegisterViewModelTest {
         preferencesRepository = mockk(relaxed = true)
         tokenEncoder = mockk(relaxed = true)
         countriesRepository = mockk(relaxed = true)
+        resourcesProvider = mockk(relaxed = true)
 
         every { tokenEncoder.encode(any<LoginCredentials>()) } returns "test-token"
         coEvery { countriesRepository.getCountryById(any()) } returns testCountry
@@ -70,13 +74,19 @@ class RegisterViewModelTest {
         coEvery { countriesRepository.getCountryForCity(any()) } returns testCountry
         every { countriesRepository.getCountriesFlow() } returns flowOf(listOf(testCountry))
 
+        // Mock resources
+        every { resourcesProvider.getString(R.string.email_invalid) } returns "Введите корректный email"
+        every { resourcesProvider.getString(R.string.password_short) } returns "Пароль слишком короткий"
+        every { resourcesProvider.getString(R.string.login_empty) } returns "Введите логин"
+
         registerViewModel = RegisterViewModel(
             logger = testLogger,
             swRepository = swRepository,
             secureTokenRepository = secureTokenRepository,
             preferencesRepository = preferencesRepository,
             tokenEncoder = tokenEncoder,
-            countriesRepository = countriesRepository
+            countriesRepository = countriesRepository,
+            resources = resourcesProvider
         )
     }
 
@@ -108,7 +118,34 @@ class RegisterViewModelTest {
 
         // Then
         assertEquals(newEmail, registerViewModel.form.value.email)
-        assertNull(registerViewModel.emailError.value)
+        assertNull(registerViewModel.emailFormatError.value)
+    }
+
+    @Test
+    fun onEmailChange_WhenInvalidEmail_thenShowsError() {
+        // Given
+        val invalidEmail = "invalid-email"
+
+        // When
+        registerViewModel.onEmailChange(invalidEmail)
+
+        // Then
+        assertEquals(invalidEmail, registerViewModel.form.value.email)
+        assertEquals("Введите корректный email", registerViewModel.emailFormatError.value)
+    }
+
+    @Test
+    fun onEmailChange_WhenEmpty_thenClearsError() {
+        // Given - first set invalid email to get error
+        registerViewModel.onEmailChange("invalid")
+        assertEquals("Введите корректный email", registerViewModel.emailFormatError.value)
+
+        // When - clear email
+        registerViewModel.onEmailChange("")
+
+        // Then
+        assertEquals("", registerViewModel.form.value.email)
+        assertNull(registerViewModel.emailFormatError.value)
     }
 
     @Test
@@ -121,7 +158,48 @@ class RegisterViewModelTest {
 
         // Then
         assertEquals(newPassword, registerViewModel.form.value.password)
-        assertNull(registerViewModel.passwordError.value)
+        assertNull(registerViewModel.passwordLengthError.value)
+    }
+
+    @Test
+    fun onPasswordChange_WhenShortPassword_thenShowsError() {
+        // Given
+        val shortPassword = "123"
+
+        // When
+        registerViewModel.onPasswordChange(shortPassword)
+
+        // Then
+        assertEquals(shortPassword, registerViewModel.form.value.password)
+        assertEquals("Пароль слишком короткий", registerViewModel.passwordLengthError.value)
+    }
+
+    @Test
+    fun onPasswordChange_WhenEmpty_thenClearsError() {
+        // Given - first set short password to get error
+        registerViewModel.onPasswordChange("123")
+        assertEquals("Пароль слишком короткий", registerViewModel.passwordLengthError.value)
+
+        // When - clear password
+        registerViewModel.onPasswordChange("")
+
+        // Then
+        assertEquals("", registerViewModel.form.value.password)
+        assertNull(registerViewModel.passwordLengthError.value)
+    }
+
+    @Test
+    fun onPasswordChange_WhenValidLength_thenClearsError() {
+        // Given - first set short password to get error
+        registerViewModel.onPasswordChange("123")
+        assertEquals("Пароль слишком короткий", registerViewModel.passwordLengthError.value)
+
+        // When - set valid password
+        registerViewModel.onPasswordChange("123456")
+
+        // Then
+        assertEquals("123456", registerViewModel.form.value.password)
+        assertNull(registerViewModel.passwordLengthError.value)
     }
 
     @Test
@@ -210,6 +288,7 @@ class RegisterViewModelTest {
     fun clearErrors_WhenCalled_thenClearsAllErrors() {
         // Given - set some errors via validation
         registerViewModel.onLoginChange("")
+        registerViewModel.register() // triggers validation
         registerViewModel.onEmailChange("invalid-email")
         registerViewModel.onPasswordChange("123")
 
@@ -218,8 +297,8 @@ class RegisterViewModelTest {
 
         // Then
         assertNull(registerViewModel.loginError.value)
-        assertNull(registerViewModel.emailError.value)
-        assertNull(registerViewModel.passwordError.value)
+        assertNull(registerViewModel.emailFormatError.value)
+        assertNull(registerViewModel.passwordLengthError.value)
         assertNull(registerViewModel.birthDateError.value)
     }
 

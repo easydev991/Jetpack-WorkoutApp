@@ -89,8 +89,8 @@ fun RegisterUserScreen(
     val selectedCountry by viewModel.selectedCountry.collectAsState()
     val selectedCity by viewModel.selectedCity.collectAsState()
     val loginError by viewModel.loginError.collectAsState()
-    val emailError by viewModel.emailError.collectAsState()
-    val passwordError by viewModel.passwordError.collectAsState()
+    val emailFormatError by viewModel.emailFormatError.collectAsState()
+    val passwordLengthError by viewModel.passwordLengthError.collectAsState()
     val birthDateError by viewModel.birthDateError.collectAsState()
 
     val scrollState = rememberScrollState()
@@ -149,13 +149,13 @@ fun RegisterUserScreen(
                         )
                         EmailField(
                             value = form.email,
-                            error = emailError,
+                            error = emailFormatError,
                             enabled = !isLoading,
                             onValueChange = viewModel::onEmailChange
                         )
                         PasswordField(
                             value = form.password,
-                            error = passwordError,
+                            error = passwordLengthError,
                             enabled = !isLoading,
                             onValueChange = viewModel::onPasswordChange
                         )
@@ -277,13 +277,14 @@ private fun LoginField(
     enabled: Boolean,
     onValueChange: (String) -> Unit
 ) {
+    val hint = stringResource(R.string.login_hint)
     SWTextField(
         config = TextFieldConfig(
             text = value,
             labelID = R.string.login,
             enabled = enabled,
             isError = error != null,
-            supportingText = error ?: "",
+            supportingText = error ?: hint,
             onTextChange = onValueChange
         )
     )

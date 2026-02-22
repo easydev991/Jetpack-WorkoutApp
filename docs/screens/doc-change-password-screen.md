@@ -9,7 +9,7 @@
 ### Выполненные шаги
 
 - ✅ **Шаг 0-2:** API Endpoint `POST /auth/changepass`, метод `changePassword` в Repository, навигация
-- ✅ **Шаг 3-4:** UseCase и ViewModel с unit-тестами (22 теста)
+- ✅ **Шаг 3-4:** UseCase и ViewModel с unit-тестами (14 тестов ViewModel)
 - ✅ **Шаг 5:** UI Screen с Scaffold, TopAppBar, три SWTextField, LoadingOverlayView
 - ✅ **Шаг 6:** Unit-тесты для Repository (в `SWRepositoryAuthTest.kt`)
 - ✅ **Шаг 8:** Обновление токена в SecureTokenRepository при смене пароля
@@ -42,6 +42,7 @@ app/src/main/java/com/swparks/
 ├── network/SWApi.kt                           - API endpoint
 ├── data/repository/SWRepository.kt            - метод changePassword
 ├── domain/usecase/ChangePasswordUseCase.kt    - бизнес-логика + обновление токена
+│                                              - интерфейс IChangePasswordUseCase
 ├── ui/
 │   ├── viewmodel/
 │   │   ├── IChangePasswordViewModel.kt        - интерфейс
@@ -82,7 +83,11 @@ API, Repository, UseCase, ViewModel, UI Screen, тесты — все выпол
 - ✅ API, Repository, Use Case, ViewModel, UI Screen реализованы
 - ✅ Валидация (6-32 символа, совпадение), обработка ошибок
 - ✅ Токен обновляется при смене пароля
-- ✅ 30+ unit-тестов, все проходят
+- ✅ 33 unit-теста:
+  - `ChangePasswordViewModelTest.kt` — 14 тестов
+  - `ChangePasswordUiStateTest.kt` — 8 тестов
+  - `ChangePasswordUseCaseTest.kt` — 8 тестов
+  - `SWRepositoryAuthTest.kt` (changePassword) — 3 теста
 
 ## Примечания
 
@@ -96,3 +101,4 @@ API, Repository, UseCase, ViewModel, UI Screen, тесты — все выпол
 - 2026-02-19: Завершена базовая реализация (шаги 0-6)
 - 2026-02-19: Добавлено обновление токена (шаг 8)
 - 2026-02-19: Добавлено отображение ошибок валидации (шаг 9)
+- 2026-02-22: Актуализация документации — уточнено количество тестов (33)

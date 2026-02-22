@@ -47,9 +47,13 @@ data class EditProfileUiState(
     val initialForm: MainUserForm,      // снимок исходных значений
     val selectedCountry: Country?,
     val selectedCity: City?,
-    val isSaving: Boolean = false
+    val selectedAvatarUri: Uri?,        // выбранное фото профиля
+    val avatarError: String?,           // ошибка загрузки фото
+    val emailError: String?,            // ошибка валидации email
+    val isSaving: Boolean = false,
+    val isUploadingAvatar: Boolean = false
 ) {
-    val hasChanges: Boolean get() = userForm != initialForm
+    val hasChanges: Boolean get() = userForm != initialForm || selectedAvatarUri != null
 }
 ```
 
@@ -57,110 +61,33 @@ data class EditProfileUiState(
 
 ## Выполненные итерации
 
-### ✅ Итерация 1: UI экрана
+### ✅ Итерация 1-2: UI экрана и сохранение
 
-Созданы файлы: `EditProfileScreen.kt`, `IEditProfileViewModel.kt`, `EditProfileViewModel.kt`, `EditProfileUiState.kt`. Реализованы: верстка компонентов, подписка на `SWRepository.userFlow`, навигация из ProfileRootScreen, `imePadding()`.
+Созданы `EditProfileScreen.kt`, `EditProfileViewModel.kt`, `EditProfileUiState.kt`. Реализованы: верстка, подписка на `SWRepository.userFlow`, `onSaveClick()` с `editUser()`, проверка `hasChanges`, состояния `isSaving`/`isUploadingAvatar`, навигация.
 
-### ✅ Итерация 2: Сохранение на сервер
+### ✅ Итерация 2.1-3.4: Багфиксы и UX улучшения
 
-`onSaveClick()` с `SWRepository.editUser()`, проверка `hasChanges`, состояние `isSaving`, обновление `initialForm`, навигация назад, сохранение в Room.
+- DatePicker sync, GenderPicker/ChangePasswordButton на ListRowView, DropdownMenu
+- LoadingOverlayView, иконка ArrowBack, UTC timezone, минимальный возраст 13 лет
+- Интеграция `UserNotifier` и `Logger` через интерфейсы
+- Автовыбор первого города при смене страны (`EditProfileLocations.selectCountry()`)
+- Откат несохранённых изменений через `resetChanges()` + `DisposableEffect`
 
-### ✅ Итерация 2.1-2.3: Багфиксы и UX
+### ✅ Итерация 3: Экраны выбора страны/города
 
-Исправлены: синхронизация DatePicker, GenderPicker/ChangePasswordButton на ListRowView, DropdownMenu. Добавлены: LoadingOverlayView, иконка ArrowBack, UTC timezone. Добавлена иконка `outline_key.xml`, строка `select_gender`.
+Реализованы: `EditProfileLocations` (domain), `ItemListScreen` (UI), `SelectCountryScreen`, `SelectCityScreen`, навигация в RootScreen.kt. Подробнее: [item-list-screen-plan.md](./item-list-screen-plan.md)
 
-### ✅ Итерация 2.4: Ограничение минимального возраста
+### ✅ Итерация 4: ChangePasswordScreen
 
-`yearRange = 1900..(currentYear - 13)` в BirthdayPicker — пользователь не может указать возраст младше 13 лет.
+UI с 3 текстовыми полями, ViewModel с валидацией (6-32 символа), UseCase для API. Навигация: `Screen.ChangePassword` → `change_password`. Тесты: 30 (14+8+8).
 
-### ✅ Итерация 3.1: Интеграция UserNotifier для обработки ошибок
+### ✅ Итерация 5: AvatarPicker
 
-Добавлена зависимость `userNotifier: UserNotifier` в конструктор ViewModel. Заменены `_events.emit(EditProfileEvent.ShowError(...))` на `userNotifier.handleError(AppError.Generic(...))`. Удалено событие `ShowError` из `EditProfileEvent` и обработка в `EditProfileScreen`. Обновлена фабрика в `AppContainer`.
+Photo Picker через `ActivityResultContracts.PickVisualMedia()` (без разрешений). MIME-проверка (`ImageUtils`), конвертация (`UriUtils`), сжатие. Тесты: 3.
 
-### ✅ Итерация 3.2: Добавление Logger через интерфейс
+### ✅ Итерация 6: Валидация email
 
-Добавлена зависимость `logger: Logger` в конструктор ViewModel. Заменены все вызовы `Log.i/d/w/e(TAG, ...)` на `logger.i/d/w/e(TAG, ...)`. Обновлена фабрика в `AppContainer`. Удален импорт `android.util.Log`.
-
-### ✅ Итерация 3.3: Автоматический выбор города при смене страны
-
-**Проблема**: Сервер не принимает `country_id` без `city_id` - при сохранении профиля с новой страной, но без города, сервер игнорировал изменения.
-
-**Решение**: Обновлена логика `EditProfileLocations.selectCountry()` - при смене страны автоматически выбирается первый город из новой страны вместо `null`.
-
-**Изменения**:
-- `EditProfileLocations.kt`: `newCity = newCountry.cities.firstOrNull()` вместо `null`
-- `EditProfileLocationsTest.kt`: обновлены тесты `selectCountry_selectsFirstCity_whenCityNotInNewCountry` и `selectCountry_selectsFirstCity_whenCurrentCityIsNull`
-
-### ✅ Итерация 3.4: Откат несохранённых изменений при закрытии экрана
-
-**Проблема**: Если пользователь выбрал другую страну/город, но не нажал "Сохранить", изменения оставались в ViewModel и отображались при повторном открытии экрана.
-
-**Решение**: Добавлен механизм отката изменений к исходным значениям при закрытии экрана без сохранения.
-
-**Изменения**:
-- `EditProfileUiState.kt`: добавлены поля `initialCountry` и `initialCity` для хранения исходных значений
-- `IEditProfileViewModel.kt`: добавлен метод `resetChanges()`
-- `EditProfileViewModel.kt`:
-  - `loadUserData()` сохраняет `initialCountry` и `initialCity`
-  - `onSaveClick()` обновляет initial значения при успешном сохранении
-  - `resetChanges()` восстанавливает форму и локации к исходным значениям
-- `EditProfileScreen.kt`: добавлен `DisposableEffect` для вызова `resetChanges()` при закрытии экрана
-
-**Важно**: Экран смены пароля имеет свою логику и не затрагивается этим механизмом.
-
----
-
-## Итерация 3: Экраны выбора страны/города ✅
-
-**Подробный план**: [item-list-screen-plan.md](./item-list-screen-plan.md)
-
-### Реализованные компоненты
-
-1. **EditProfileLocations** (domain layer) - логика выбора страны/города с тестами
-2. **ItemListScreen** (UI) - stateless composable с SearchBar, LazyColumn, EmptyStateView
-3. **SelectCountryScreen** / **SelectCityScreen** - wrapper-экраны с локальным состоянием поиска
-4. **Интеграция** с EditProfileViewModel (методы `onCountrySelected()`, `onCitySelected()`)
-5. **Навигация** в RootScreen.kt:
-   - `EditProfileViewModel` создаётся на уровне RootScreen (shared между экранами)
-   - Добавлены composable для SelectCountryScreen и SelectCityScreen
-   - Добавлены колбэки навигации в EditProfileScreen
-
-### Нереализованный функционал
-
-**Feedback (отправка сообщения об отсутствии страны/города):**
-- ⚠️ Кнопка "Написать нам" отображается в empty state
-- ⚠️ Колбэк `onContactUs` содержит заглушку
-- 📋 План реализации: [item-list-screen-plan.md](./item-list-screen-plan.md) (Этап 5)
-
----
-
-## Итерация 4: ChangePasswordScreen 📋 ЗАПЛАНИРОВАНО
-
-**Подробный план**: [6.6_ChangePasswordScreen.md](./6.6_ChangePasswordScreen.md)
-
-### Что нужно сделать
-
-- Проверить существование экрана
-- Подключить навигацию
-
----
-
-## Итерация 5: AvatarPicker (Выбор фото профиля) 📋 ЗАПЛАНИРОВАНО
-
-**Подробный план**: [avatar-picker-plan.md](./avatar-picker-plan.md)
-
-### Что нужно сделать
-
-- Добавить Photo Picker для выбора изображения из галереи
-- Обновить UI State для хранения выбранного фото
-- Реализовать отправку фото на сервер при сохранении
-- Добавить превью выбранного фото в AvatarSection
-
-### Best Practices
-
-- Использовать `ActivityResultContracts.PickVisualMedia()` (Android 13+)
-- Fallback на `ActivityResultContracts.GetContent()` для Android < 13
-- Не требует разрешений `READ_MEDIA_IMAGES`
+Regex-валидация "на лету" в `onEmailChange()`, отображение ошибки в UI. Тесты: 9.
 
 ---
 
@@ -173,6 +100,12 @@ data class EditProfileUiState(
 | `change_photo` | Изменить фотографию | Change Photo | Кнопка под аватаром |
 | `full_name` | Имя и фамилия | Full name | Placeholder для поля имени |
 | `select_gender` | Выбери пол | Select gender | Placeholder для GenderPicker |
+| `email_invalid` | Введите корректный email | Enter a valid email | Ошибка валидации email |
+| `avatar_error_unsupported_type` | Неподдерживаемый формат изображения | Unsupported image format | Ошибка при выборе невалидного файла |
+| `avatar_error_read_failed` | Не удалось прочитать изображение | Failed to read image | Ошибка при чтении файла |
+| `password_short` | Пароль слишком короткий | Password is too short | Ошибка длины пароля |
+| `password_not_match` | Пароли не совпадают | Passwords do not match | Ошибка несовпадения паролей |
+| `password_changed_successfully` | Пароль успешно изменён | Password changed successfully | Успешная смена пароля |
 
 ### Используемые существующие строки
 
@@ -191,3 +124,52 @@ data class EditProfileUiState(
 | `select_city` | Выбери город | Select a city |
 | `man` | Мужчина | Man |
 | `woman` | Женщина | Woman |
+
+---
+
+## Тестирование
+
+### EditProfile (45 тестов)
+
+| Файл | Тестов | Покрытие |
+|------|--------|----------|
+| `EditProfileViewModelTest` | 27 | Avatar, hasChanges, canSave, onSave, resetChanges, email validation |
+| `EditProfileViewModelSelectionTest` | 7 | Country/city selection |
+| `EditProfileLocationsTest` | 11 | Domain model |
+
+### ChangePassword (30 тестов)
+
+| Файл | Тестов | Покрытие |
+|------|--------|----------|
+| `ChangePasswordViewModelTest` | 14 | Initial state, input, canSave, onSave |
+| `ChangePasswordUiStateTest` | 8 | canSave, password errors |
+| `ChangePasswordUseCaseTest` | 8 | API success/error |
+
+---
+
+## Оставшиеся задачи
+
+### ✅ ~~Блокировка Save при ошибке email~~ (выполнено 2026-02-22)
+
+**Реализовано**:
+- Добавлено `canSave` computed property в `EditProfileUiState`: `hasChanges && emailError == null`
+- Обновлено условие enabled кнопки в `EditProfileScreen`
+- Добавлено 5 тестов для canSave в `EditProfileViewModelTest`
+
+### ⚠️ Feedback для отсутствующих стран/городов
+
+**Приоритет**: Низкий
+
+**Описание**: Кнопка "Написать нам" в empty state экранов выбора страны/города не реализована.
+
+**План**: [item-list-screen-plan.md](./item-list-screen-plan.md) (Этап 5)
+
+---
+
+## История изменений
+
+| Дата | Изменение |
+|------|-----------|
+| 2026-02-22 | Реализована блокировка Save при ошибке email: добавлено `canSave` в UiState, 5 тестов |
+| 2026-02-22 | Сжатие плана: объединены итерации 1-3.4, сокращены таблицы компонентов |
+| 2026-02-22 | Актуализация тестов: EditProfile (40), ChangePassword (30) |

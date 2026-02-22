@@ -72,6 +72,7 @@
     <string name="password_confirmation">Новый пароль ещё раз</string>
     <string name="password_short">Минимум 6 символов</string>
     <string name="password_not_match">Пароли должны совпадать</string>
+    <string name="email_invalid">Введите корректный email</string>
     <string name="password_changed_successfully">Пароль успешно изменён</string>
     <string name="save_changes">Сохранить изменения</string>
 
@@ -375,6 +376,7 @@
 
     <!-- Экран регистрации -->
     <string name="registration">Регистрация</string>
+    <string name="login_hint">Можно использовать только латинские буквы, цифры и знак подчеркивания</string>
     <string name="register">Зарегистрироваться</string>
     <string name="i_accept_terms">Я принимаю условия&#160;</string>
     <string name="user_agreement">Пользовательского соглашения</string>

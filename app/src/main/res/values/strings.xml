@@ -67,6 +67,7 @@
     <string name="password_confirmation">New password again</string>
     <string name="password_short">At least 6 characters</string>
     <string name="password_not_match">Passwords must match</string>
+    <string name="email_invalid">Enter a valid email</string>
     <string name="password_changed_successfully">Password changed successfully</string>
     <string name="save_changes">Save changes</string>
 
@@ -361,6 +362,7 @@
 
     <!-- Registration screen -->
     <string name="registration">Registration</string>
+    <string name="login_hint">Only Latin letters, numbers, and underscores are allowed</string>
     <string name="register">Register</string>
     <string name="i_accept_terms">I accept the terms of&#160;</string>
     <string name="user_agreement">User Agreement</string>

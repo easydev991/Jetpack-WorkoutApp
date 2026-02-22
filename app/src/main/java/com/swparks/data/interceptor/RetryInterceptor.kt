@@ -19,7 +19,8 @@ class RetryInterceptor(private val logger: Logger) : Interceptor {
         private const val HTTP_BAD_GATEWAY = 502
         private const val HTTP_SERVICE_UNAVAILABLE = 503
         private const val HTTP_GATEWAY_TIMEOUT = 504
-        private val RETRY_CODES = setOf(HTTP_BAD_GATEWAY, HTTP_SERVICE_UNAVAILABLE, HTTP_GATEWAY_TIMEOUT)
+        private val RETRY_CODES =
+            setOf(HTTP_BAD_GATEWAY, HTTP_SERVICE_UNAVAILABLE, HTTP_GATEWAY_TIMEOUT)
     }
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -32,7 +33,7 @@ class RetryInterceptor(private val logger: Logger) : Interceptor {
             response = chain.proceed(request)
 
             // Проверяем код ответа
-            val statusCode = response!!.code
+            val statusCode = response.code
             val shouldRetry = statusCode in RETRY_CODES
 
             if (!shouldRetry) {

@@ -543,7 +543,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
         countriesRepository = countriesRepository,
         context = appContext,
         logger = logger,
-        userNotifier = userNotifier
+        userNotifier = userNotifier,
+        resources = resourcesProvider
     )
 
     /** Factory метод для создания ChangePasswordViewModel */
@@ -561,7 +562,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
         secureTokenRepository = secureTokenRepository,
         preferencesRepository = preferencesRepository,
         tokenEncoder = tokenEncoder,
-        countriesRepository = countriesRepository
+        countriesRepository = countriesRepository,
+        resources = resourcesProvider
     )
 
     // ==================== API клиенты для разных функциональных областей ====================

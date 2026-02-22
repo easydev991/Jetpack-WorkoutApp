@@ -7,6 +7,7 @@ import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
@@ -38,6 +39,7 @@ class EditProfileViewModelSelectionTest {
     private lateinit var context: Context
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
+    private lateinit var resources: ResourcesProvider
 
     private val currentUserFlow = MutableStateFlow<User?>(null)
     private val countriesFlow = MutableStateFlow<List<Country>>(emptyList())
@@ -51,11 +53,13 @@ class EditProfileViewModelSelectionTest {
         context = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
+        resources = mockk(relaxed = true)
 
         every { swRepository.getCurrentUserFlow() } returns currentUserFlow
         every { countriesRepository.getCountriesFlow() } returns countriesFlow
         every { context.getString(R.string.avatar_error_unsupported_type) } returns "Unsupported image format"
         every { context.getString(R.string.avatar_error_read_failed) } returns "Failed to read image"
+        every { resources.getString(R.string.email_invalid) } returns "Enter a valid email"
     }
 
     @After
@@ -252,7 +256,8 @@ class EditProfileViewModelSelectionTest {
             countriesRepository = countriesRepository,
             context = context,
             logger = logger,
-            userNotifier = userNotifier
+            userNotifier = userNotifier,
+            resources = resources
         )
 
     private fun makeTestUser(): User = User(

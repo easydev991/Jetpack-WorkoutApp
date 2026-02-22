@@ -8,6 +8,7 @@ import com.swparks.R
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.EditProfileLocations
+import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.model.Gender
 import com.swparks.ui.model.MainUserForm
@@ -43,6 +44,7 @@ import java.time.format.DateTimeFormatter
  * @param context Контекст приложения для работы с Uri и ресурсами
  * @param logger Логгер для записи сообщений
  * @param userNotifier Обработчик ошибок для отправки ошибок в UI
+ * @param resources Провайдер строковых ресурсов
  */
 @Suppress("TooGenericExceptionCaught")
 class EditProfileViewModel(
@@ -50,7 +52,8 @@ class EditProfileViewModel(
     private val countriesRepository: CountriesRepository,
     private val context: Context,
     private val logger: Logger,
-    private val userNotifier: UserNotifier
+    private val userNotifier: UserNotifier,
+    private val resources: ResourcesProvider
 ) : ViewModel(), IEditProfileViewModel {
 
     private companion object {
@@ -141,7 +144,18 @@ class EditProfileViewModel(
     }
 
     override fun onEmailChange(value: String) {
-        _uiState.update { it.copy(userForm = it.userForm.copy(email = value)) }
+        // Валидация email "на лету"
+        val emailError = if (value.isNotEmpty() && !isValidEmail(value)) {
+            resources.getString(R.string.email_invalid)
+        } else {
+            null
+        }
+        _uiState.update {
+            it.copy(
+                userForm = it.userForm.copy(email = value),
+                emailError = emailError
+            )
+        }
     }
 
     override fun onFullNameChange(value: String) {
@@ -434,9 +448,21 @@ class EditProfileViewModel(
                     selectedCity = initialCity,
                     cities = cities,
                     selectedAvatarUri = null,
-                    avatarError = null
+                    avatarError = null,
+                    emailError = null
                 )
             }
         }
+    }
+
+    /**
+     * Проверяет валидность email адреса.
+     *
+     * @param email Email для проверки
+     * @return true если email валиден
+     */
+    private fun isValidEmail(email: String): Boolean {
+        val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
+        return emailRegex.matches(email)
     }
 }

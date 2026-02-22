@@ -8,6 +8,7 @@ import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.model.MainUserForm
 import com.swparks.util.AppError
@@ -59,6 +60,7 @@ class EditProfileViewModelTest {
     private lateinit var context: Context
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
+    private lateinit var resources: ResourcesProvider
 
     private val testUser = createTestUser()
     private val testCountry = Country(id = "1", name = "Россия", cities = emptyList())
@@ -81,6 +83,7 @@ class EditProfileViewModelTest {
         context = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
+        resources = mockk(relaxed = true)
 
         // Настройка базовых моков
         every { swRepository.getCurrentUserFlow() } returns userFlow
@@ -91,6 +94,7 @@ class EditProfileViewModelTest {
         every { context.getString(R.string.avatar_error_read_failed) } returns
             "Не удалось прочитать изображение"
         every { context.contentResolver } returns mockk(relaxed = true)
+        every { resources.getString(R.string.email_invalid) } returns "Введите корректный email"
     }
 
     @After
@@ -107,7 +111,8 @@ class EditProfileViewModelTest {
             countriesRepository = countriesRepository,
             context = context,
             logger = logger,
-            userNotifier = userNotifier
+            userNotifier = userNotifier,
+            resources = resources
         )
     }
 
@@ -219,6 +224,102 @@ class EditProfileViewModelTest {
         assertTrue(
             "После изменения формы hasChanges должен быть true",
             viewModel.uiState.value.hasChanges
+        )
+    }
+
+    // MARK: - canSave tests
+
+    @Test
+    fun canSave_returnsTrue_whenHasChangesAndNoEmailError() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When - изменяем форму (создаём изменения)
+        viewModel.onLoginChange("Новое имя")
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(
+            "canSave должен быть true при наличии изменений и отсутствии ошибки email",
+            viewModel.uiState.value.canSave
+        )
+    }
+
+    @Test
+    fun canSave_returnsFalse_whenNoChanges() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then - нет изменений, нет ошибки email
+        assertFalse(
+            "canSave должен быть false при отсутствии изменений",
+            viewModel.uiState.value.canSave
+        )
+    }
+
+    @Test
+    fun canSave_returnsFalse_whenEmailErrorExists() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When - вводим невалидный email
+        viewModel.onEmailChange("invalid-email")
+        advanceUntilIdle()
+
+        // Then - есть ошибка email, но нет изменений формы
+        // canSave = hasChanges && emailError == null
+        // hasChanges может быть true если email изменился от исходного
+        // Но emailError != null, поэтому canSave должен быть false
+        assertFalse(
+            "canSave должен быть false при наличии ошибки email",
+            viewModel.uiState.value.canSave
+        )
+    }
+
+    @Test
+    fun canSave_returnsFalse_whenHasChangesAndEmailError() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When - изменяем имя (создаём изменения) и вводим невалидный email
+        viewModel.onLoginChange("Новое имя")
+        viewModel.onEmailChange("invalid-email")
+        advanceUntilIdle()
+
+        // Then
+        assertTrue("Должны быть изменения", viewModel.uiState.value.hasChanges)
+        assertNotNull("Должна быть ошибка email", viewModel.uiState.value.emailError)
+        assertFalse(
+            "canSave должен быть false даже при наличии изменений, если есть ошибка email",
+            viewModel.uiState.value.canSave
+        )
+    }
+
+    @Test
+    fun canSave_returnsTrue_whenEmailErrorCleared() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Сначала вводим невалидный email
+        viewModel.onEmailChange("invalid-email")
+        advanceUntilIdle()
+
+        // Then - canSave false из-за ошибки
+        assertFalse("canSave должен быть false при ошибке", viewModel.uiState.value.canSave)
+
+        // When - исправляем email на валидный (создаём изменения)
+        viewModel.onEmailChange("valid@email.com")
+        advanceUntilIdle()
+
+        // Then - canSave true после исправления
+        assertTrue(
+            "canSave должен быть true после исправления email",
+            viewModel.uiState.value.canSave
         )
     }
 
@@ -410,5 +511,190 @@ class EditProfileViewModelTest {
             addedParks = emptyList(),
             journalCount = 2
         )
+    }
+
+    // ==================== Тесты валидации email ====================
+
+    @Test
+    fun onEmailChange_validEmail_noError() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEmailChange("valid@example.com")
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertNull("Для валидного email не должно быть ошибки", state.emailError)
+        assertEquals("Email должен быть обновлен", "valid@example.com", state.userForm.email)
+    }
+
+    @Test
+    fun onEmailChange_emptyEmail_noError() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEmailChange("")
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertNull("Для пустого email не должно быть ошибки", state.emailError)
+        assertEquals("Email должен быть обновлен", "", state.userForm.email)
+    }
+
+    @Test
+    fun onEmailChange_invalidEmailWithoutAt_showsError() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEmailChange("invalidemail.com")
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertNotNull("Для невалидного email должна быть ошибка", state.emailError)
+        assertEquals(
+            "Текст ошибки должен соответствовать",
+            "Введите корректный email",
+            state.emailError
+        )
+        assertEquals(
+            "Email должен быть обновлен даже если невалиден",
+            "invalidemail.com",
+            state.userForm.email
+        )
+    }
+
+    @Test
+    fun onEmailChange_invalidEmailWithoutDomain_showsError() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEmailChange("invalid@")
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertNotNull("Для невалидного email должна быть ошибка", state.emailError)
+        assertEquals(
+            "Текст ошибки должен соответствовать",
+            "Введите корректный email",
+            state.emailError
+        )
+    }
+
+    @Test
+    fun onEmailChange_invalidEmailWithShortDomain_showsError() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEmailChange("invalid@example.c")
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertNotNull("Для email с коротким доменом должна быть ошибка", state.emailError)
+    }
+
+    @Test
+    fun onEmailChange_fromInvalidToValid_clearsError() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Сначала вводим невалидный email
+        viewModel.onEmailChange("invalid")
+        advanceUntilIdle()
+        assertNotNull("Должна быть ошибка", viewModel.uiState.value.emailError)
+
+        // When - меняем на валидный
+        viewModel.onEmailChange("valid@example.com")
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertNull("Ошибка должна быть сброшена при вводе валидного email", state.emailError)
+        assertEquals("Email должен быть обновлен", "valid@example.com", state.userForm.email)
+    }
+
+    @Test
+    fun onEmailChange_fromInvalidToEmpty_clearsError() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Сначала вводим невалидный email
+        viewModel.onEmailChange("invalid")
+        advanceUntilIdle()
+        assertNotNull("Должна быть ошибка", viewModel.uiState.value.emailError)
+
+        // When - очищаем поле
+        viewModel.onEmailChange("")
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertNull("Ошибка должна быть сброшена при очистке поля", state.emailError)
+    }
+
+    @Test
+    fun resetChanges_clearsEmailError() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Вводим невалидный email для создания ошибки
+        viewModel.onEmailChange("invalid")
+        advanceUntilIdle()
+        assertNotNull("Должна быть ошибка", viewModel.uiState.value.emailError)
+
+        // When
+        viewModel.resetChanges()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertNull("Ошибка email должна быть сброшена после resetChanges", state.emailError)
+    }
+
+    @Test
+    fun onEmailChange_validEmailWithSubdomain_noError() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEmailChange("user@mail.example.com")
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertNull("Email с поддоменом должен быть валиден", state.emailError)
+    }
+
+    @Test
+    fun onEmailChange_validEmailWithPlus_noError() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onEmailChange("user+tag@example.com")
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertNull("Email с плюсом должен быть валиден", state.emailError)
     }
 }

@@ -2,12 +2,14 @@ package com.swparks.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.swparks.R
 import com.swparks.data.SecureTokenRepository
 import com.swparks.data.TokenEncoder
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.model.RegisterForm
 import com.swparks.ui.model.RegistrationRequest
@@ -35,6 +37,7 @@ import java.time.format.DateTimeFormatter
  * @param preferencesRepository Репозиторий для хранения настроек
  * @param tokenEncoder Кодировщик токена
  * @param countriesRepository Репозиторий для работы со странами и городами
+ * @param resources Провайдер строковых ресурсов
  */
 class RegisterViewModel(
     private val logger: Logger,
@@ -42,7 +45,8 @@ class RegisterViewModel(
     private val secureTokenRepository: SecureTokenRepository,
     private val preferencesRepository: UserPreferencesRepository,
     private val tokenEncoder: TokenEncoder,
-    private val countriesRepository: CountriesRepository
+    private val countriesRepository: CountriesRepository,
+    private val resources: ResourcesProvider
 ) : ViewModel(), IRegisterViewModel {
 
     private val _uiState = MutableStateFlow<RegisterUiState>(RegisterUiState.Idle)
@@ -69,11 +73,11 @@ class RegisterViewModel(
     private val _loginError = MutableStateFlow<String?>(null)
     override val loginError: StateFlow<String?> = _loginError.asStateFlow()
 
-    private val _emailError = MutableStateFlow<String?>(null)
-    override val emailError: StateFlow<String?> = _emailError.asStateFlow()
+    private val _emailFormatError = MutableStateFlow<String?>(null)
+    override val emailFormatError: StateFlow<String?> = _emailFormatError.asStateFlow()
 
-    private val _passwordError = MutableStateFlow<String?>(null)
-    override val passwordError: StateFlow<String?> = _passwordError.asStateFlow()
+    private val _passwordLengthError = MutableStateFlow<String?>(null)
+    override val passwordLengthError: StateFlow<String?> = _passwordLengthError.asStateFlow()
 
     private val _birthDateError = MutableStateFlow<String?>(null)
     override val birthDateError: StateFlow<String?> = _birthDateError.asStateFlow()
@@ -112,17 +116,29 @@ class RegisterViewModel(
 
     override fun onLoginChange(value: String) {
         _form.value = _form.value.copy(login = value)
-        clearFieldError(_loginError)
+        _loginError.value = null
     }
 
     override fun onEmailChange(value: String) {
         _form.value = _form.value.copy(email = value)
-        clearFieldError(_emailError)
+        // Валидация email "на лету"
+        _emailFormatError.value = if (value.isNotEmpty() && !isValidEmail(value)) {
+            resources.getString(R.string.email_invalid)
+        } else {
+            null
+        }
     }
 
     override fun onPasswordChange(value: String) {
         _form.value = _form.value.copy(password = value)
-        clearFieldError(_passwordError)
+        // Валидация длины пароля "на лету"
+        val trueCount = value.count { !it.isWhitespace() }
+        _passwordLengthError.value =
+            if (value.isNotEmpty() && trueCount < RegisterForm.MIN_PASSWORD_LENGTH) {
+                resources.getString(R.string.password_short)
+            } else {
+                null
+            }
     }
 
     override fun onFullNameChange(value: String) {
@@ -135,7 +151,7 @@ class RegisterViewModel(
 
     override fun onBirthDateChange(date: LocalDate?) {
         _form.value = _form.value.copy(birthDate = date)
-        clearFieldError(_birthDateError)
+        _birthDateError.value = null
     }
 
     override fun onCountrySelectedByName(countryName: String) {
@@ -232,8 +248,8 @@ class RegisterViewModel(
 
     override fun clearErrors() {
         _loginError.value = null
-        _emailError.value = null
-        _passwordError.value = null
+        _emailFormatError.value = null
+        _passwordLengthError.value = null
         _birthDateError.value = null
     }
 
@@ -250,17 +266,19 @@ class RegisterViewModel(
         var isValid = true
 
         if (_form.value.login.isBlank()) {
-            _loginError.value = "Логин не может быть пустым"
+            _loginError.value = resources.getString(R.string.login_empty)
             isValid = false
         }
 
-        if (!_form.value.email.matches(Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"))) {
-            _emailError.value = "Некорректный email адрес"
+        if (_form.value.email.isNotEmpty() && !isValidEmail(_form.value.email)) {
+            // Ошибка уже показана через onEmailChange
             isValid = false
         }
 
-        if (_form.value.password.count { !it.isWhitespace() } < RegisterForm.MIN_PASSWORD_LENGTH) {
-            _passwordError.value = "Пароль должен содержать минимум 6 символов"
+        if (_form.value.password.isNotEmpty() &&
+            _form.value.password.count { !it.isWhitespace() } < RegisterForm.MIN_PASSWORD_LENGTH
+        ) {
+            // Ошибка уже показана через onPasswordChange
             isValid = false
         }
 
@@ -276,8 +294,9 @@ class RegisterViewModel(
         return isValid
     }
 
-    private fun clearFieldError(errorFlow: MutableStateFlow<String?>) {
-        errorFlow.value = null
+    private fun isValidEmail(email: String): Boolean {
+        val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
+        return emailRegex.matches(email)
     }
 
     companion object {

@@ -18,6 +18,7 @@ import com.swparks.ui.model.MainUserForm
  * @param initialCity Исходный город (для отката изменений)
  * @param selectedAvatarUri URI выбранного фото для превью (null если не выбрано)
  * @param avatarError Ошибка при обработке фото
+ * @param emailError Ошибка валидации email
  * @param isLoading Индикатор загрузки
  * @param isSaving Индикатор сохранения
  * @param isUploadingAvatar Индикатор загрузки аватара
@@ -42,6 +43,7 @@ data class EditProfileUiState(
     val initialCity: City? = null,
     val selectedAvatarUri: Uri? = null,
     val avatarError: String? = null,
+    val emailError: String? = null,
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
     val isUploadingAvatar: Boolean = false
@@ -52,6 +54,13 @@ data class EditProfileUiState(
      */
     val hasChanges: Boolean
         get() = userForm != initialForm || selectedAvatarUri != null
+
+    /**
+     * Вычисляемое свойство - можно ли сохранить форму.
+     * Требует наличия изменений и отсутствия ошибок валидации.
+     */
+    val canSave: Boolean
+        get() = hasChanges && emailError == null
 }
 
 /**
