@@ -9,7 +9,6 @@ import com.swparks.data.model.LoginSuccess
 import com.swparks.data.model.MessageResponse
 import com.swparks.data.model.Park
 import com.swparks.data.model.User
-import com.swparks.ui.model.RegistrationRequest
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
@@ -30,8 +29,18 @@ interface SWApi {
     // ==================== АВТОРИЗАЦИЯ И ПРОФИЛЬ ====================
 
     // Регистрация
+    @FormUrlEncoded
     @POST("registration")
-    suspend fun register(@Body request: RegistrationRequest): LoginSuccess
+    suspend fun register(
+        @Field("name") name: String,
+        @Field("fullname") fullName: String,
+        @Field("email") email: String,
+        @Field("password") password: String,
+        @Field("birth_date") birthDate: String,
+        @Field("gender") genderCode: Int,
+        @Field("country_id") countryId: Int?,
+        @Field("city_id") cityId: Int?
+    ): User
 
     // Авторизация
     @POST("auth/login")

@@ -9,10 +9,10 @@ import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.model.LoginSuccess
+import com.swparks.data.model.User
 import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.exception.ServerException
 import com.swparks.network.SWApi
-import com.swparks.ui.model.RegistrationRequest
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -296,9 +296,20 @@ class SWRepositoryAuthTest {
     @Test
     fun register_whenApiReturnsSuccess_thenReturnsSuccessAndSavesToken() = runTest {
         // Given
-        val mockSuccess = LoginSuccess(userId = 456L)
+        val mockSuccess = User(id = 456L, name = "testuser", image = null)
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.register(any()) } returns mockSuccess
+        coEvery {
+            mockApi.register(
+                name = any(),
+                fullName = any(),
+                email = any(),
+                password = any(),
+                birthDate = any(),
+                genderCode = any(),
+                countryId = any(),
+                cityId = any()
+            )
+        } returns mockSuccess
 
         val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -314,27 +325,51 @@ class SWRepositoryAuthTest {
 
         // When
         val result = repository.register(
-            RegistrationRequest(
-                name = "testuser",
-                fullName = "Test User",
-                email = "test@example.com",
-                password = "password123",
-                birthDate = "1990-01-01",
-                genderCode = 1
-            )
+            name = "testuser",
+            fullName = "Test User",
+            email = "test@example.com",
+            password = "password123",
+            birthDate = "1990-01-01",
+            genderCode = 1,
+            countryId = null,
+            cityId = null
         )
 
         // Then
         assertTrue(result.isSuccess)
         assertEquals(mockSuccess, result.getOrNull())
-        coVerify { mockApi.register(any()) }
+        coVerify {
+            mockApi.register(
+                name = any(),
+                fullName = any(),
+                email = any(),
+                password = any(),
+                birthDate = any(),
+                genderCode = any(),
+                countryId = any(),
+                cityId = any()
+            )
+        }
+        // Проверяем, что пользователь сохранён в локальный кэш
+        coVerify { mockUserDao.insert(any()) }
     }
 
     @Test
     fun register_whenApiThrowsException_thenReturnsFailure() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.register(any()) } throws IOException("Network error")
+        coEvery {
+            mockApi.register(
+                name = any(),
+                fullName = any(),
+                email = any(),
+                password = any(),
+                birthDate = any(),
+                genderCode = any(),
+                countryId = any(),
+                cityId = any()
+            )
+        } throws IOException("Network error")
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -350,14 +385,14 @@ class SWRepositoryAuthTest {
 
         // When
         val result = repository.register(
-            RegistrationRequest(
-                name = "testuser",
-                fullName = "Test User",
-                email = "test@example.com",
-                password = "password123",
-                birthDate = "1990-01-01",
-                genderCode = 1
-            )
+            name = "testuser",
+            fullName = "Test User",
+            email = "test@example.com",
+            password = "password123",
+            birthDate = "1990-01-01",
+            genderCode = 1,
+            countryId = null,
+            cityId = null
         )
 
         // Then
@@ -577,7 +612,18 @@ class SWRepositoryAuthTest {
                 400,
                 errorJson.toResponseBody(null)
             )
-            coEvery { mockApi.register(any()) } throws HttpException(errorResponse)
+            coEvery {
+                mockApi.register(
+                    name = any(),
+                    fullName = any(),
+                    email = any(),
+                    password = any(),
+                    birthDate = any(),
+                    genderCode = any(),
+                    countryId = any(),
+                    cityId = any()
+                )
+            } throws HttpException(errorResponse)
 
             val mockDataStore = mockk<DataStore<Preferences>>()
             every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -593,14 +639,14 @@ class SWRepositoryAuthTest {
 
             // When
             val result = repository.register(
-                RegistrationRequest(
-                    name = "testuser",
-                    fullName = "Test User",
-                    email = "test@example.com",
-                    password = "password123",
-                    birthDate = "1990-01-01",
-                    genderCode = 1
-                )
+                name = "testuser",
+                fullName = "Test User",
+                email = "test@example.com",
+                password = "password123",
+                birthDate = "1990-01-01",
+                genderCode = 1,
+                countryId = null,
+                cityId = null
             )
 
             // Then

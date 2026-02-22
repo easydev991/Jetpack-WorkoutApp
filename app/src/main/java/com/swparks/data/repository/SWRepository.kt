@@ -32,7 +32,6 @@ import com.swparks.ui.model.EventType
 import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.model.MainUserForm
 import com.swparks.ui.model.ParkForm
-import com.swparks.ui.model.RegistrationRequest
 import com.swparks.ui.model.TextEntryOption
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -73,7 +72,16 @@ interface SWRepository {
     suspend fun clearUserData()
 
     // 3.1. Авторизация
-    suspend fun register(request: RegistrationRequest): Result<LoginSuccess>
+    suspend fun register(
+        name: String,
+        fullName: String,
+        email: String,
+        password: String,
+        birthDate: String,
+        genderCode: Int,
+        countryId: Int?,
+        cityId: Int?
+    ): Result<User>
     suspend fun login(token: String?): Result<LoginSuccess>
     suspend fun resetPassword(login: String): Result<Unit>
     suspend fun changePassword(current: String, new: String): Result<Unit>
@@ -262,13 +270,31 @@ class SWRepositoryImp(
     // 3.1. Авторизация
 
     override suspend fun register(
-        request: RegistrationRequest
-    ): Result<LoginSuccess> =
+        name: String,
+        fullName: String,
+        email: String,
+        password: String,
+        birthDate: String,
+        genderCode: Int,
+        countryId: Int?,
+        cityId: Int?
+    ): Result<User> =
         try {
-            val response = swApi.register(request)
+            val user = swApi.register(
+                name = name,
+                fullName = fullName,
+                email = email,
+                password = password,
+                birthDate = birthDate,
+                genderCode = genderCode,
+                countryId = countryId,
+                cityId = cityId
+            )
             // Сохраняем токен авторизации при успешной регистрации
             savePreference(true)
-            Result.success(response)
+            // Сохраняем пользователя в локальный кэш для отображения профиля без запроса
+            userDao.insert(user.toEntity(isCurrentUser = true))
+            Result.success(user)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "регистрации"))
         } catch (e: HttpException) {

@@ -6,16 +6,17 @@ import com.swparks.data.TokenEncoder
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
-import com.swparks.data.model.LoginSuccess
+import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.model.LoginCredentials
-import com.swparks.ui.model.RegistrationRequest
 import com.swparks.ui.state.RegisterEvent
 import com.swparks.ui.state.RegisterUiState
+import com.swparks.util.AppError
 import com.swparks.util.Logger
 import com.swparks.util.NoOpLogger
+import com.swparks.util.UserNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -51,9 +52,10 @@ class RegisterViewModelTest {
     private lateinit var tokenEncoder: TokenEncoder
     private lateinit var countriesRepository: CountriesRepository
     private lateinit var resourcesProvider: ResourcesProvider
+    private lateinit var userNotifier: UserNotifier
     private lateinit var registerViewModel: RegisterViewModel
 
-    private val testLoginSuccess = LoginSuccess(userId = 123L)
+    private val testUser = User(id = 123L, name = "testuser", image = null)
     private val testLogger: Logger = NoOpLogger()
     private val testCountry = Country(id = "1", name = "Россия", cities = emptyList())
     private val testCity = City(id = "1", name = "Москва", lat = "55.7558", lon = "37.6173")
@@ -66,6 +68,7 @@ class RegisterViewModelTest {
         tokenEncoder = mockk(relaxed = true)
         countriesRepository = mockk(relaxed = true)
         resourcesProvider = mockk(relaxed = true)
+        userNotifier = mockk(relaxed = true)
 
         every { tokenEncoder.encode(any<LoginCredentials>()) } returns "test-token"
         coEvery { countriesRepository.getCountryById(any()) } returns testCountry
@@ -86,7 +89,8 @@ class RegisterViewModelTest {
             preferencesRepository = preferencesRepository,
             tokenEncoder = tokenEncoder,
             countriesRepository = countriesRepository,
-            resources = resourcesProvider
+            resources = resourcesProvider,
+            userNotifier = userNotifier
         )
     }
 
@@ -438,9 +442,18 @@ class RegisterViewModelTest {
     fun register_WhenValidForm_thenReturnsSuccess() = runTest {
         // Given
         fillValidForm()
-        coEvery { swRepository.register(any<RegistrationRequest>()) } returns Result.success(
-            testLoginSuccess
-        )
+        coEvery {
+            swRepository.register(
+                name = any(),
+                fullName = any(),
+                email = any(),
+                password = any(),
+                birthDate = any(),
+                genderCode = any(),
+                countryId = any(),
+                cityId = any()
+            )
+        } returns Result.success(testUser)
 
         // When
         registerViewModel.register()
@@ -452,11 +465,22 @@ class RegisterViewModelTest {
 
         val event = registerViewModel.registerEvents.first()
         assertTrue(event is RegisterEvent.Success)
-        assertEquals(testLoginSuccess.userId, (event as RegisterEvent.Success).userId)
+        assertEquals(testUser.id, (event as RegisterEvent.Success).userId)
 
-        coVerify(exactly = 1) { swRepository.register(any<RegistrationRequest>()) }
+        coVerify(exactly = 1) {
+            swRepository.register(
+                name = any(),
+                fullName = any(),
+                email = any(),
+                password = any(),
+                birthDate = any(),
+                genderCode = any(),
+                countryId = any(),
+                cityId = any()
+            )
+        }
         coVerify(exactly = 1) { secureTokenRepository.saveAuthToken("test-token") }
-        coVerify(exactly = 1) { preferencesRepository.saveCurrentUserId(testLoginSuccess.userId) }
+        coVerify(exactly = 1) { preferencesRepository.saveCurrentUserId(testUser.id) }
     }
 
     @Test
@@ -464,9 +488,18 @@ class RegisterViewModelTest {
         // Given
         fillValidForm()
         val errorMessage = "Пользователь с таким email уже существует"
-        coEvery { swRepository.register(any<RegistrationRequest>()) } returns Result.failure(
-            Exception(errorMessage)
-        )
+        coEvery {
+            swRepository.register(
+                name = any(),
+                fullName = any(),
+                email = any(),
+                password = any(),
+                birthDate = any(),
+                genderCode = any(),
+                countryId = any(),
+                cityId = any()
+            )
+        } returns Result.failure(Exception(errorMessage))
 
         // When
         registerViewModel.register()
@@ -476,7 +509,16 @@ class RegisterViewModelTest {
         val state = registerViewModel.uiState.value
         assertTrue(state is RegisterUiState.Error)
         val errorState = state as RegisterUiState.Error
-        assertEquals(errorMessage, errorState.message)
+        assertTrue(errorState.message.contains(errorMessage))
+
+        // Проверяем, что userNotifier.handleError был вызван
+        coVerify(exactly = 1) {
+            userNotifier.handleError(
+                match<AppError> { error ->
+                    error is AppError.Generic && error.message.contains(errorMessage)
+                }
+            )
+        }
     }
 
     @Test
@@ -487,7 +529,18 @@ class RegisterViewModelTest {
         advanceUntilIdle()
 
         // Then
-        coVerify(exactly = 0) { swRepository.register(any<RegistrationRequest>()) }
+        coVerify(exactly = 0) {
+            swRepository.register(
+                name = any(),
+                fullName = any(),
+                email = any(),
+                password = any(),
+                birthDate = any(),
+                genderCode = any(),
+                countryId = any(),
+                cityId = any()
+            )
+        }
     }
 
     @Test

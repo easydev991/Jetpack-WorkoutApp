@@ -11,7 +11,6 @@ import com.swparks.data.model.MessageResponse
 import com.swparks.data.model.Park
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
-import com.swparks.ui.model.RegistrationRequest
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
@@ -221,8 +220,17 @@ class MockSWApi : SWApi {
         return createMockLoginSuccess()
     }
 
-    override suspend fun register(request: RegistrationRequest): LoginSuccess {
-        return createMockLoginSuccess(userId = 456L)
+    override suspend fun register(
+        name: String,
+        fullName: String,
+        email: String,
+        password: String,
+        birthDate: String,
+        genderCode: Int,
+        countryId: Int?,
+        cityId: Int?
+    ): User {
+        return createMockUser()
     }
 
 

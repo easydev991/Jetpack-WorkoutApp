@@ -12,10 +12,11 @@ import com.swparks.data.repository.SWRepository
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.model.RegisterForm
-import com.swparks.ui.model.RegistrationRequest
 import com.swparks.ui.state.RegisterEvent
 import com.swparks.ui.state.RegisterUiState
+import com.swparks.util.AppError
 import com.swparks.util.Logger
+import com.swparks.util.UserNotifier
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,6 +39,7 @@ import java.time.format.DateTimeFormatter
  * @param tokenEncoder Кодировщик токена
  * @param countriesRepository Репозиторий для работы со странами и городами
  * @param resources Провайдер строковых ресурсов
+ * @param userNotifier Интерфейс для обработки и отправки ошибок в UI-слой
  */
 @Suppress("LongParameterList")
 class RegisterViewModel(
@@ -47,7 +49,8 @@ class RegisterViewModel(
     private val preferencesRepository: UserPreferencesRepository,
     private val tokenEncoder: TokenEncoder,
     private val countriesRepository: CountriesRepository,
-    private val resources: ResourcesProvider
+    private val resources: ResourcesProvider,
+    private val userNotifier: UserNotifier
 ) : ViewModel(), IRegisterViewModel {
 
     private val _uiState = MutableStateFlow<RegisterUiState>(RegisterUiState.Idle)
@@ -210,7 +213,7 @@ class RegisterViewModel(
             _uiState.value = RegisterUiState.Loading
 
             val currentForm = _form.value
-            val request = RegistrationRequest(
+            swRepository.register(
                 name = currentForm.login,
                 fullName = currentForm.fullName,
                 email = currentForm.email,
@@ -220,9 +223,7 @@ class RegisterViewModel(
                 countryId = currentForm.countryId?.toIntOrNull(),
                 cityId = currentForm.cityId?.toIntOrNull()
             )
-
-            swRepository.register(request)
-                .onSuccess { loginSuccess ->
+                .onSuccess { user ->
                     // Генерируем токен из логина и пароля (как при обычной авторизации)
                     val token = tokenEncoder.encode(
                         com.swparks.ui.model.LoginCredentials(
@@ -233,16 +234,24 @@ class RegisterViewModel(
                     secureTokenRepository.saveAuthToken(token)
 
                     // Сохраняем userId
-                    preferencesRepository.saveCurrentUserId(loginSuccess.userId)
+                    preferencesRepository.saveCurrentUserId(user.id)
 
                     // Отправляем событие успеха
-                    _registerEvents.send(RegisterEvent.Success(loginSuccess.userId))
+                    _registerEvents.send(RegisterEvent.Success(user.id))
                     _uiState.value = RegisterUiState.Idle
                 }
                 .onFailure { exception ->
-                    val errorMessage = exception.message ?: "Ошибка регистрации"
+                    val errorMessage = "Ошибка регистрации: ${exception.message}"
                     _uiState.value = RegisterUiState.Error(errorMessage, exception)
-                    logger.e("RegisterViewModel", "Ошибка регистрации: $errorMessage", exception)
+                    logger.e("RegisterViewModel", errorMessage, exception)
+
+                    // Отправляем ошибку через UserNotifier для отображения в Snackbar
+                    userNotifier.handleError(
+                        AppError.Generic(
+                            message = errorMessage,
+                            throwable = exception
+                        )
+                    )
                 }
         }
     }

@@ -571,7 +571,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
         preferencesRepository = preferencesRepository,
         tokenEncoder = tokenEncoder,
         countriesRepository = countriesRepository,
-        resources = resourcesProvider
+        resources = resourcesProvider,
+        userNotifier = userNotifier
     )
 
     // ==================== API клиенты для разных функциональных областей ====================

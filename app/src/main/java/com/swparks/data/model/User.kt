@@ -24,7 +24,6 @@ import java.time.format.DateTimeParseException
  * @property parksCount Количество площадок, где тренируется, например: "2"
  * @property addedParks Добавленные площадки
  * @property journalCount Количество дневников
- * @property lang Язык
  */
 @Serializable
 data class User(
