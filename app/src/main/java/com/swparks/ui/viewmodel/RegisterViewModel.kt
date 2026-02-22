@@ -39,6 +39,7 @@ import java.time.format.DateTimeFormatter
  * @param countriesRepository Репозиторий для работы со странами и городами
  * @param resources Провайдер строковых ресурсов
  */
+@Suppress("LongParameterList")
 class RegisterViewModel(
     private val logger: Logger,
     private val swRepository: SWRepository,

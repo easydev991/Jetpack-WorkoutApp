@@ -35,6 +35,7 @@ import kotlinx.coroutines.launch
  * @param userNotifier Обработчик ошибок для отправки ошибок в систему мониторинга
  * @param resources Провайдер строковых ресурсов
  */
+@Suppress("LongParameterList")
 class JournalsViewModel(
     private val userId: Long,
     private val getJournalsUseCase: IGetJournalsUseCase,

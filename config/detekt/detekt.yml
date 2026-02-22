@@ -1,5 +1,5 @@
 build:
-  maxIssues: 90  # Current warnings count (88) + buffer (2)
+  maxIssues: 80  # Current warnings count (78) + buffer (2)
   excludeCorrectable: false
   weights:
     # complexity: 2
@@ -131,6 +131,7 @@ complexity:
     threshold: 60
   LongParameterList:
     active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/jsTest/**', '**/iosTest/**']
     functionThreshold: 6
     constructorThreshold: 7
     ignoreDefaultParameters: false
@@ -258,6 +259,7 @@ exceptions:
     ignoreLabeled: false
   SwallowedException:
     active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/jsTest/**', '**/iosTest/**']
     ignoredExceptionTypes:
       - 'InterruptedException'
       - 'MalformedURLException'
