@@ -15,7 +15,7 @@ import androidx.compose.ui.res.stringResource
 import com.swparks.R
 import com.swparks.data.model.Park
 import com.swparks.navigation.AppState
-import com.swparks.ui.screen.components.ParksListView
+import com.swparks.ui.ds.ParksListView
 
 @Composable
 fun ParksRootScreen(

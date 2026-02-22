@@ -32,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -49,6 +50,7 @@ import com.swparks.ui.ds.FormCardContainer
 import com.swparks.ui.ds.ListRowData
 import com.swparks.ui.ds.ListRowView
 import com.swparks.ui.ds.LoadingOverlayView
+import com.swparks.ui.ds.RadioButton
 import com.swparks.ui.ds.SWButton
 import com.swparks.ui.ds.SWButtonMode
 import com.swparks.ui.ds.SWButtonSize
@@ -57,7 +59,6 @@ import com.swparks.ui.ds.SWDateTimePicker
 import com.swparks.ui.ds.SWTextField
 import com.swparks.ui.ds.TextFieldConfig
 import com.swparks.ui.model.Gender
-import com.swparks.ui.screen.components.common.RadioButton
 import com.swparks.ui.state.RegisterEvent
 import com.swparks.ui.viewmodel.IRegisterViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -485,7 +486,9 @@ private fun PolicyToggle(
     }
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .alpha(if (enabled) 1f else 0.5f),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
     ) {
@@ -493,7 +496,7 @@ private fun PolicyToggle(
             text = annotatedText,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier
-                .clickable {
+                .clickable(enabled = enabled) {
                     val intent = Intent(Intent.ACTION_VIEW, agreementUrl.toUri())
                     context.startActivity(intent)
                 }

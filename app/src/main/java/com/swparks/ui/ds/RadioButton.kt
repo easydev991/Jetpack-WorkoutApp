@@ -1,8 +1,8 @@
-package com.swparks.ui.screen.components.common
+package com.swparks.ui.ds
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.MaterialTheme
@@ -11,10 +11,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import com.swparks.R
 
 /**
@@ -46,11 +46,12 @@ fun RadioButton(
         }
 
     Row(
-        modifier =
-            rowModifier
-                .fillMaxWidth()
-                .height(56.dp),
+        modifier = rowModifier
+            .fillMaxWidth()
+            .padding(vertical = dimensionResource(R.dimen.spacing_regular))
+            .alpha(if (onClickable) 1f else 0.5f),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
     ) {
         RadioButton(
             selected = selected,
@@ -59,7 +60,6 @@ fun RadioButton(
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(start = dimensionResource(R.dimen.spacing_regular)),
             textAlign = TextAlign.Start,
         )
     }

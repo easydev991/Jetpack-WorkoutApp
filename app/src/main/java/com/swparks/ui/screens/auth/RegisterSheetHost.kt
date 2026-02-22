@@ -19,6 +19,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.swparks.data.AppContainer
+import com.swparks.ui.ds.disableAllGestures
 import com.swparks.ui.viewmodel.IRegisterViewModel
 import kotlinx.coroutines.launch
 
@@ -81,8 +82,12 @@ fun RegisterSheetHost(
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
         confirmValueChange = { newValue ->
-            // Запрещаем скрытие всегда, кроме явного close/success
-            if (newValue == SheetValue.Hidden) allowHide else true
+            // Запрещаем любые изменения состояния sheet'а, кроме явного закрытия
+            when (newValue) {
+                SheetValue.Expanded -> true
+                SheetValue.PartiallyExpanded -> false
+                SheetValue.Hidden -> allowHide
+            }
         }
     )
 
@@ -92,9 +97,10 @@ fun RegisterSheetHost(
                 // Игнорируем тап вне sheet / системный dismiss
             },
             sheetState = sheetState,
-            dragHandle = {},
+            dragHandle = null,
             properties = ModalBottomSheetProperties(
-                shouldDismissOnBackPress = false
+                shouldDismissOnBackPress = false,
+                shouldDismissOnClickOutside = false
             ),
         ) {
             // Внутренняя навигация внутри sheet
@@ -117,7 +123,8 @@ fun RegisterSheetHost(
                         allowHide = false
                         onDismissed()
                     }
-                }
+                },
+                modifier = Modifier.disableAllGestures()
             )
         }
     }

@@ -1,4 +1,4 @@
-package com.swparks.ui.screen.components.themeicon
+package com.swparks.ui.screens.themeicon
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring

@@ -31,8 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.swparks.R
 import com.swparks.domain.model.AppIcon
 import com.swparks.domain.model.AppTheme
-import com.swparks.ui.screen.components.common.RadioButton
-import com.swparks.ui.screen.components.themeicon.IconPreviewItem
+import com.swparks.ui.ds.RadioButton
 import com.swparks.ui.theme.DynamicColors
 import com.swparks.ui.viewmodel.IThemeIconViewModel
 

@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
 import com.swparks.data.model.Park
-import com.swparks.ui.screen.components.ParksListView
+import com.swparks.ui.ds.ParksListView
 
 /**
  * Экран для отображения добавленных пользователем площадок

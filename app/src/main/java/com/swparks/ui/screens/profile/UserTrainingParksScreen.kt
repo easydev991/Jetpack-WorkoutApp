@@ -26,7 +26,7 @@ import androidx.compose.ui.res.stringResource
 import com.swparks.R
 import com.swparks.data.model.Park
 import com.swparks.ui.ds.LoadingOverlayView
-import com.swparks.ui.screen.components.ParksListView
+import com.swparks.ui.ds.ParksListView
 import com.swparks.ui.viewmodel.IUserTrainingParksViewModel
 import com.swparks.ui.viewmodel.UserTrainingParksUiState
 

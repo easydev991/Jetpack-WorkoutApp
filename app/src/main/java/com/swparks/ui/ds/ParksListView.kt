@@ -1,4 +1,4 @@
-package com.swparks.ui.screen.components
+package com.swparks.ui.ds
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,8 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import com.swparks.R
 import com.swparks.data.model.Park
-import com.swparks.ui.ds.ParkRowData
-import com.swparks.ui.ds.ParkRowView
 
 /**
  * Компонент для отображения списка площадок.
