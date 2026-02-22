@@ -103,4 +103,9 @@ interface IEditProfileViewModel {
      * исходных значений формы, страны и города.
      */
     fun resetChanges()
+
+    /**
+     * Обработчик клика по кнопке удаления профиля.
+     */
+    fun onDeleteProfileClick()
 }

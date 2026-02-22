@@ -335,6 +335,11 @@ fun RootScreen(appState: AppState) {
                     },
                     onNavigateToSelectCity = { _, _ ->
                         appState.navController.navigate(Screen.SelectCity.route)
+                    },
+                    onNavigateToLogin = {
+                        // После удаления профиля закрываем EditProfileScreen
+                        // и возвращаемся на ProfileRootScreen, который покажет IncognitoProfileView
+                        appState.navController.popBackStack(Screen.Profile.route, inclusive = false)
                     }
                 )
             }

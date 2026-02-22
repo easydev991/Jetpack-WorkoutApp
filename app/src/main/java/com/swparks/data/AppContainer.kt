@@ -36,6 +36,7 @@ import com.swparks.domain.usecase.ChangePasswordUseCase
 import com.swparks.domain.usecase.CreateJournalUseCase
 import com.swparks.domain.usecase.DeleteJournalEntryUseCase
 import com.swparks.domain.usecase.DeleteJournalUseCase
+import com.swparks.domain.usecase.DeleteUserUseCase
 import com.swparks.domain.usecase.EditJournalSettingsUseCase
 import com.swparks.domain.usecase.GetJournalEntriesUseCase
 import com.swparks.domain.usecase.GetJournalsUseCase
@@ -44,6 +45,7 @@ import com.swparks.domain.usecase.IChangePasswordUseCase
 import com.swparks.domain.usecase.ICreateJournalUseCase
 import com.swparks.domain.usecase.IDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IDeleteJournalUseCase
+import com.swparks.domain.usecase.IDeleteUserUseCase
 import com.swparks.domain.usecase.IEditJournalSettingsUseCase
 import com.swparks.domain.usecase.IGetJournalEntriesUseCase
 import com.swparks.domain.usecase.IGetJournalsUseCase
@@ -113,6 +115,7 @@ interface AppContainer {
     val logoutUseCase: ILogoutUseCase
     val resetPasswordUseCase: IResetPasswordUseCase
     val changePasswordUseCase: IChangePasswordUseCase
+    val deleteUserUseCase: IDeleteUserUseCase
 
     // Use cases для дневников
     val getJournalsUseCase: IGetJournalsUseCase
@@ -385,6 +388,10 @@ class DefaultAppContainer(context: Context) : AppContainer {
         ChangePasswordUseCase(swRepository, secureTokenRepository, tokenEncoder)
     }
 
+    override val deleteUserUseCase: IDeleteUserUseCase by lazy {
+        DeleteUserUseCase(secureTokenRepository, swRepository)
+    }
+
     // ==================== Use cases для дневников ====================
 
     override val getJournalsUseCase: IGetJournalsUseCase by lazy {
@@ -541,6 +548,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
     override fun editProfileViewModelFactory() = EditProfileViewModel(
         swRepository = swRepository,
         countriesRepository = countriesRepository,
+        deleteUserUseCase = deleteUserUseCase,
         context = appContext,
         logger = logger,
         userNotifier = userNotifier,

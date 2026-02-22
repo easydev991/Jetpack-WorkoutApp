@@ -10,6 +10,7 @@ import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
+import com.swparks.domain.usecase.IDeleteUserUseCase
 import com.swparks.ui.model.MainUserForm
 import com.swparks.util.AppError
 import com.swparks.util.ImageUtils
@@ -57,6 +58,7 @@ class EditProfileViewModelTest {
 
     private lateinit var swRepository: SWRepository
     private lateinit var countriesRepository: CountriesRepository
+    private lateinit var deleteUserUseCase: IDeleteUserUseCase
     private lateinit var context: Context
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
@@ -80,6 +82,7 @@ class EditProfileViewModelTest {
 
         swRepository = mockk(relaxed = true)
         countriesRepository = mockk(relaxed = true)
+        deleteUserUseCase = mockk(relaxed = true)
         context = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
@@ -109,6 +112,7 @@ class EditProfileViewModelTest {
         return EditProfileViewModel(
             swRepository = swRepository,
             countriesRepository = countriesRepository,
+            deleteUserUseCase = deleteUserUseCase,
             context = context,
             logger = logger,
             userNotifier = userNotifier,
@@ -696,5 +700,84 @@ class EditProfileViewModelTest {
         // Then
         val state = viewModel.uiState.value
         assertNull("Email с плюсом должен быть валиден", state.emailError)
+    }
+
+    // ==================== Тесты удаления профиля ====================
+
+    @Test
+    fun onDeleteProfileClick_whenSuccess_setsIsDeletingAndNavigatesToLogin() = runTest {
+        // Given
+        coEvery { deleteUserUseCase() } returns Result.success(Unit)
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onDeleteProfileClick()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertFalse("isDeleting должен быть false после завершения", state.isDeleting)
+        coVerify(exactly = 1) { deleteUserUseCase() }
+    }
+
+    @Test
+    fun onDeleteProfileClick_whenSuccess_resetsIsDeleting() = runTest {
+        // Given
+        coEvery { deleteUserUseCase() } returns Result.success(Unit)
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When - запускаем удаление
+        viewModel.onDeleteProfileClick()
+        advanceUntilIdle()
+
+        // Then - isDeleting должен быть false после успешного удаления
+        val state = viewModel.uiState.value
+        assertFalse("isDeleting должен быть false после успешного удаления", state.isDeleting)
+        coVerify(exactly = 1) { deleteUserUseCase() }
+    }
+
+    @Test
+    fun onDeleteProfileClick_whenCalledTwiceWhileDeleting_doesNotCallUseCaseTwice() = runTest {
+        // Given
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Создаем мок, который не завершается сразу (имитация долгого запроса)
+        var deleteCallCount = 0
+        coEvery { deleteUserUseCase() } coAnswers {
+            deleteCallCount++
+            // Небольшая задержка, чтобы успеть вызвать второй раз
+            kotlinx.coroutines.delay(100)
+            Result.success(Unit)
+        }
+
+        // When - вызываем дважды подряд быстро
+        viewModel.onDeleteProfileClick()
+        // Второй вызов должен быть проигнорирован (isDeleting уже true)
+        viewModel.onDeleteProfileClick()
+        advanceUntilIdle()
+
+        // Then - use case должен быть вызван только один раз
+        coVerify(exactly = 1) { deleteUserUseCase() }
+    }
+
+    @Test
+    fun onDeleteProfileClick_whenError_handlesErrorAndResetsIsDeleting() = runTest {
+        // Given
+        val error = RuntimeException("Delete failed")
+        coEvery { deleteUserUseCase() } returns Result.failure(error)
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onDeleteProfileClick()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertFalse("isDeleting должен быть false после ошибки", state.isDeleting)
+        coVerify(exactly = 1) { userNotifier.handleError(any()) }
     }
 }

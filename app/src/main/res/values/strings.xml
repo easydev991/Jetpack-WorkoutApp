@@ -370,4 +370,8 @@
     <string name="minimum_age_13">You must be at least 13 years old</string>
     <string name="registration_success">Registration successful</string>
     <string name="registration_error">Registration error</string>
+
+    <!-- Delete profile dialog -->
+    <string name="delete_profile_title">Delete profile</string>
+    <string name="delete_profile_message">All your profile data will be permanently deleted</string>
 </resources>

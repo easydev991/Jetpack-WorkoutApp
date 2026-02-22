@@ -384,4 +384,8 @@
     <string name="minimum_age_13">Вам должно быть не менее 13 лет</string>
     <string name="registration_success">Регистрация успешна</string>
     <string name="registration_error">Ошибка регистрации</string>
+
+    <!-- Диалог удаления профиля -->
+    <string name="delete_profile_title">Удаление профиля</string>
+    <string name="delete_profile_message">Все данные вашего профиля будут необратимо удалены</string>
 </resources>

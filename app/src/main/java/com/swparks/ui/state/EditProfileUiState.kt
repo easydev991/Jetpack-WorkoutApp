@@ -46,7 +46,8 @@ data class EditProfileUiState(
     val emailError: String? = null,
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
-    val isUploadingAvatar: Boolean = false
+    val isUploadingAvatar: Boolean = false,
+    val isDeleting: Boolean = false
 ) {
     /**
      * Вычисляемое свойство - есть ли изменения в форме.
@@ -71,6 +72,11 @@ sealed interface EditProfileEvent {
      * Навигация назад.
      */
     data object NavigateBack : EditProfileEvent
+
+    /**
+     * Навигация на экран логина (после удаления профиля).
+     */
+    data object NavigateToLogin : EditProfileEvent
 
     /**
      * Навигация на экран смены пароля.

@@ -9,6 +9,7 @@ import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.EditProfileLocations
 import com.swparks.domain.provider.ResourcesProvider
+import com.swparks.domain.usecase.IDeleteUserUseCase
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.model.Gender
 import com.swparks.ui.model.MainUserForm
@@ -41,6 +42,7 @@ import java.time.format.DateTimeFormatter
  *
  * @param swRepository Репозиторий для работы с данными пользователя и API
  * @param countriesRepository Репозиторий для работы с данными стран и городов
+ * @param deleteUserUseCase Use case для удаления аккаунта пользователя
  * @param context Контекст приложения для работы с Uri и ресурсами
  * @param logger Логгер для записи сообщений
  * @param userNotifier Обработчик ошибок для отправки ошибок в UI
@@ -50,6 +52,7 @@ import java.time.format.DateTimeFormatter
 class EditProfileViewModel(
     private val swRepository: SWRepository,
     private val countriesRepository: CountriesRepository,
+    private val deleteUserUseCase: IDeleteUserUseCase,
     private val context: Context,
     private val logger: Logger,
     private val userNotifier: UserNotifier,
@@ -452,6 +455,49 @@ class EditProfileViewModel(
                     emailError = null
                 )
             }
+        }
+    }
+
+    /**
+     * Удаляет профиль пользователя.
+     *
+     * Показывает состояние загрузки, вызывает API для удаления профиля на сервере,
+     * очищает все локальные данные пользователя и перенаправляет на экран логина.
+     */
+    override fun onDeleteProfileClick() {
+        val currentState = _uiState.value
+
+        // Предотвращаем повторный клик во время удаления
+        if (currentState.isDeleting) {
+            logger.w(TAG, "Удаление уже в процессе")
+            return
+        }
+
+        logger.i(TAG, "Начало удаления профиля")
+
+        // Устанавливаем состояние удаления
+        _uiState.update { it.copy(isDeleting = true) }
+
+        viewModelScope.launch {
+            val result = deleteUserUseCase()
+
+            result.fold(
+                onSuccess = {
+                    logger.i(TAG, "Профиль успешно удален")
+                    _uiState.update { it.copy(isDeleting = false) }
+                    _events.emit(EditProfileEvent.NavigateToLogin)
+                },
+                onFailure = { error ->
+                    logger.e(TAG, "Ошибка удаления профиля: ${error.message}", error)
+                    _uiState.update { it.copy(isDeleting = false) }
+                    userNotifier.handleError(
+                        AppError.Generic(
+                            error.message ?: "Ошибка удаления профиля",
+                            error
+                        )
+                    )
+                }
+            )
         }
     }
 

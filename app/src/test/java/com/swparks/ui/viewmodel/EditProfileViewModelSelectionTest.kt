@@ -9,6 +9,7 @@ import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
+import com.swparks.domain.usecase.IDeleteUserUseCase
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import io.mockk.every
@@ -36,6 +37,7 @@ class EditProfileViewModelSelectionTest {
 
     private lateinit var swRepository: SWRepository
     private lateinit var countriesRepository: CountriesRepository
+    private lateinit var deleteUserUseCase: IDeleteUserUseCase
     private lateinit var context: Context
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
@@ -50,6 +52,7 @@ class EditProfileViewModelSelectionTest {
 
         swRepository = mockk(relaxed = true)
         countriesRepository = mockk(relaxed = true)
+        deleteUserUseCase = mockk(relaxed = true)
         context = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
@@ -254,6 +257,7 @@ class EditProfileViewModelSelectionTest {
         EditProfileViewModel(
             swRepository = swRepository,
             countriesRepository = countriesRepository,
+            deleteUserUseCase = deleteUserUseCase,
             context = context,
             logger = logger,
             userNotifier = userNotifier,

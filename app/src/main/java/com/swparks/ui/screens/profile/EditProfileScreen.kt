@@ -17,7 +17,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -27,6 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -79,10 +83,12 @@ fun EditProfileScreen(
     onBackClick: () -> Unit,
     onNavigateToChangePassword: (Long) -> Unit = {},
     onNavigateToSelectCountry: (Int?) -> Unit = {},
-    onNavigateToSelectCity: (Int?, Int) -> Unit = { _, _ -> }
+    onNavigateToSelectCity: (Int?, Int) -> Unit = { _, _ -> },
+    onNavigateToLogin: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     // Photo Picker для выбора изображения
     val photoPickerLauncher = rememberLauncherForActivityResult(
@@ -102,6 +108,7 @@ fun EditProfileScreen(
         viewModel.events.collectLatest { event ->
             when (event) {
                 is EditProfileEvent.NavigateBack -> onBackClick()
+                is EditProfileEvent.NavigateToLogin -> onNavigateToLogin()
                 is EditProfileEvent.NavigateToChangePassword -> onNavigateToChangePassword(event.userId)
                 is EditProfileEvent.NavigateToSelectCountry -> onNavigateToSelectCountry(event.currentCountryId)
                 is EditProfileEvent.NavigateToSelectCity -> onNavigateToSelectCity(
@@ -128,6 +135,14 @@ fun EditProfileScreen(
                         Icon(
                             imageVector = AutoMirroredIcons.ArrowBack,
                             contentDescription = stringResource(R.string.back)
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = stringResource(R.string.delete)
                         )
                     }
                 }
@@ -223,11 +238,22 @@ fun EditProfileScreen(
                 }
             }
 
-            // Оверлей загрузки при сохранении или загрузке аватара
-            if (uiState.isSaving || uiState.isUploadingAvatar) {
+            // Оверлей загрузки при сохранении, загрузке аватара или удалении профиля
+            if (uiState.isSaving || uiState.isUploadingAvatar || uiState.isDeleting) {
                 LoadingOverlayView()
             }
         }
+    }
+
+    // Диалог подтверждения удаления профиля
+    if (showDeleteDialog) {
+        DeleteProfileDialog(
+            onDismiss = { showDeleteDialog = false },
+            onConfirm = {
+                showDeleteDialog = false
+                viewModel.onDeleteProfileClick()
+            }
+        )
     }
 }
 
@@ -501,5 +527,34 @@ private fun SaveButton(
             enabled = enabled,
             onClick = onClick
         )
+    )
+}
+
+@Composable
+private fun DeleteProfileDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = stringResource(R.string.delete_profile_title))
+        },
+        text = {
+            Text(text = stringResource(R.string.delete_profile_message))
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    text = stringResource(R.string.delete),
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.cancel))
+            }
+        }
     )
 }
