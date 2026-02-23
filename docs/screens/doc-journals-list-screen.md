@@ -116,3 +116,49 @@
 - **Созданные:** `AppNotification.kt`
 - **Измененные:** `UserNotifier.kt`, `UserNotifierImpl.kt`, `AppError.kt`, `RootScreen.kt`, `IJournalsViewModel.kt`, `JournalsViewModel.kt`, `IJournalEntriesViewModel.kt`, `JournalEntriesViewModel.kt`, `JournalsListScreen.kt`, `JournalEntriesScreen.kt`, `strings.xml` (добавлена строка `info`), `strings-ru/strings.xml`
 - **Тесты:** `UserNotifierImplTest.kt`, `JournalsViewModelTest.kt`, `JournalEntriesViewModelTest.kt`
+
+---
+
+## Известные баги 🐛
+
+### Баг 1: Не обновляется счётчик дневников в профиле
+
+**Описание:** При удалении всех собственных дневников (при изменении количества своих дневников) не происходит обновление данных профиля. На экране профиля всё ещё отображается старое количество дневников, и только если сделать pull to refresh, количество обновляется.
+
+**Место:** ProfileScreen → JournalsListScreen → удаление дневника → возврат в профиль
+
+**Ожидаемое поведение:** После удаления дневника счётчик в профиле должен автоматически обновляться без необходимости pull to refresh.
+
+**Возможное решение:**
+1. Использовать Flow для наблюдения за количеством дневников в ProfileViewModel
+2. При удалении дневника в JournalsViewModel отправлять событие об обновлении профиля
+3. Или использовать общий кэш/репозиторий с автоматическим обновлением
+
+**Приоритет:** Средний
+
+---
+
+### Баг 2: Отображение "0 journals" в профиле
+
+**Описание:** Когда своих дневников становится 0, в профиле показывается текст "0 journals" справа от кнопки. Это выглядит неестественно.
+
+**Ожидаемое поведение:**
+- Если journalsCount == 0: не показывать текст справа, только кнопку "Journals"
+- Кнопка "Journals" остаётся кликабельной (пользователь может создать дневник)
+
+**Текущий код (примерный):**
+
+```kotlin
+Text("${journalsCount} journals")  // Показывает "0 journals"
+```
+
+**Требуемый код:**
+
+```kotlin
+if (journalsCount > 0) {
+    Text("${journalsCount} journals")
+}
+// Кнопка Journals показывается всегда
+```
+
+**Приоритет:** Низкий

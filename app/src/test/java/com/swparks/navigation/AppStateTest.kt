@@ -406,4 +406,144 @@ class AppStateTest {
             )
         }
     }
+
+    // ==================== Тесты динамического определения parentTab ====================
+
+    @Test
+    fun onDestinationChanged_whenUserSearchFromMessages_thenMessagesTabIsSelected() {
+        // When - UserSearch открыт из Messages
+        val arguments = mockk<android.os.Bundle>(relaxed = true) {
+            every { getString("source") } returns "messages"
+        }
+        appState.onDestinationChanged("user_search", arguments)
+
+        // Then
+        assertEquals(
+            "При переходе на UserSearch из Messages currentTopLevelDestination должен быть MESSAGES",
+            TopLevelDestinations.MESSAGES,
+            appState.currentTopLevelDestination
+        )
+    }
+
+    @Test
+    fun onDestinationChanged_whenUserSearchFromProfile_thenProfileTabIsSelected() {
+        // When - UserSearch открыт из Profile
+        val arguments = mockk<android.os.Bundle>(relaxed = true) {
+            every { getString("source") } returns "profile"
+        }
+        appState.onDestinationChanged("user_search", arguments)
+
+        // Then
+        assertEquals(
+            "При переходе на UserSearch из Profile currentTopLevelDestination должен быть PROFILE",
+            TopLevelDestinations.PROFILE,
+            appState.currentTopLevelDestination
+        )
+    }
+
+    @Test
+    fun onDestinationChanged_whenUserSearchWithoutSource_thenMessagesTabIsSelected() {
+        // When - UserSearch открыт без source (default)
+        appState.onDestinationChanged("user_search")
+
+        // Then - по умолчанию должен быть Messages
+        assertEquals(
+            "При переходе на UserSearch без source currentTopLevelDestination должен быть MESSAGES",
+            TopLevelDestinations.MESSAGES,
+            appState.currentTopLevelDestination
+        )
+    }
+
+    @Test
+    fun onDestinationChanged_whenOtherUserProfileFromMessages_thenMessagesTabIsSelected() {
+        // When - OtherUserProfile открыт из Messages (через UserSearch)
+        val arguments = mockk<android.os.Bundle>(relaxed = true) {
+            every { getString("source") } returns "messages"
+        }
+        appState.onDestinationChanged("other_user_profile/123", arguments)
+
+        // Then
+        assertEquals(
+            "При переходе на OtherUserProfile из Messages currentTopLevelDestination должен быть MESSAGES",
+            TopLevelDestinations.MESSAGES,
+            appState.currentTopLevelDestination
+        )
+    }
+
+    @Test
+    fun onDestinationChanged_whenOtherUserProfileFromProfile_thenProfileTabIsSelected() {
+        // When - OtherUserProfile открыт из Profile
+        val arguments = mockk<android.os.Bundle>(relaxed = true) {
+            every { getString("source") } returns "profile"
+        }
+        appState.onDestinationChanged("other_user_profile/123", arguments)
+
+        // Then
+        assertEquals(
+            "При переходе на OtherUserProfile из Profile currentTopLevelDestination должен быть PROFILE",
+            TopLevelDestinations.PROFILE,
+            appState.currentTopLevelDestination
+        )
+    }
+
+    @Test
+    fun onDestinationChanged_whenOtherUserProfileWithoutSource_thenProfileTabIsSelected() {
+        // When - OtherUserProfile открыт без source (default)
+        appState.onDestinationChanged("other_user_profile/123")
+
+        // Then - по умолчанию должен быть Profile
+        assertEquals(
+            "При переходе на OtherUserProfile без source currentTopLevelDestination должен быть PROFILE",
+            TopLevelDestinations.PROFILE,
+            appState.currentTopLevelDestination
+        )
+    }
+
+    @Test
+    fun onDestinationChanged_whenOtherUserProfileFromParks_thenParksTabIsSelected() {
+        // When - OtherUserProfile открыт из Parks
+        val arguments = mockk<android.os.Bundle>(relaxed = true) {
+            every { getString("source") } returns "parks"
+        }
+        appState.onDestinationChanged("other_user_profile/123", arguments)
+
+        // Then
+        assertEquals(
+            "При переходе на OtherUserProfile из Parks currentTopLevelDestination должен быть PARKS",
+            TopLevelDestinations.PARKS,
+            appState.currentTopLevelDestination
+        )
+    }
+
+    @Test
+    fun onDestinationChanged_whenOtherUserProfileFromEvents_thenEventsTabIsSelected() {
+        // When - OtherUserProfile открыт из Events
+        val arguments = mockk<android.os.Bundle>(relaxed = true) {
+            every { getString("source") } returns "events"
+        }
+        appState.onDestinationChanged("other_user_profile/123", arguments)
+
+        // Then
+        assertEquals(
+            "При переходе на OtherUserProfile из Events currentTopLevelDestination должен быть EVENTS",
+            TopLevelDestinations.EVENTS,
+            appState.currentTopLevelDestination
+        )
+    }
+
+    @Test
+    fun onDestinationChanged_whenOtherUserProfileFromMore_thenMoreTabIsSelected() {
+        // When - OtherUserProfile открыт из More
+        val arguments = mockk<android.os.Bundle>(relaxed = true) {
+            every { getString("source") } returns "more"
+        }
+        appState.onDestinationChanged("other_user_profile/123", arguments)
+
+        // Then
+        assertEquals(
+            "При переходе на OtherUserProfile из More currentTopLevelDestination должен быть MORE",
+            TopLevelDestinations.MORE,
+            appState.currentTopLevelDestination
+        )
+    }
 }

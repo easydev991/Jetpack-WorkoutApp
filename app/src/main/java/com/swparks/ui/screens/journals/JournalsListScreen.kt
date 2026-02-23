@@ -72,6 +72,7 @@ import com.swparks.util.DateFormatter
  * @param appState Состояние приложения для проверки авторизации
  * @param userId Идентификатор пользователя
  * @param viewModel ViewModel для управления состоянием экрана
+ * @param source Источник навигации для сохранения активной вкладки
  * @param onBackClick Callback для навигации назад
  * @param onJournalClick Callback для навигации к записям дневника
  * @param parentPaddingValues Паддинги для учета BottomNavigationBar
@@ -83,6 +84,7 @@ fun JournalsListScreen(
     appState: AppState,
     userId: Long,
     viewModel: IJournalsViewModel,
+    source: String = "profile",
     onBackClick: () -> Unit,
     onJournalClick: (
         journalId: Long,

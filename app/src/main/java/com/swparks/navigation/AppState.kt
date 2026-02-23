@@ -135,7 +135,8 @@ class AppState(
      * Это позволяет корректно определять активную вкладку даже когда restoreState
      * восстанавливает стек с дочерними экранами (например, edit_profile внутри Profile).
      *
-     * Для UserSearch определяет parentTab динамически на основе аргумента source.
+     * Для экранов с source параметром (UserSearch, OtherUserProfile, UserFriends и др.)
+     * определяет parentTab динамически на основе аргумента source.
      *
      * @param route строка маршрута (может содержать placeholder-ы)
      * @param arguments Bundle с фактическими значениями аргументов навигации
@@ -155,28 +156,17 @@ class AppState(
         }
 
         // Если прямого совпадения нет, проверяем parentTab для дочерних экранов
-        // Это решает проблему: когда restoreState восстанавливает стек с дочерним экраном,
-        // onDestinationChanged вызывается с маршрутом дочернего экрана, а не корневого
-        val parentTab = Screen.findParentTab(route ?: "")
+        // Передаем arguments для извлечения source параметра
+        val parentTab = Screen.findParentTab(route ?: "", arguments)
         if (parentTab != null) {
-            // Для UserSearch определяем parentTab динамически на основе source параметра
-            val effectiveParentTab = if (route?.startsWith("user_search") == true) {
-                val source = arguments?.getString("source")
-                Log.d(TAG, "  -> UserSearch source=$source")
-                when (source) {
-                    "profile" -> Screen.Profile
-                    else -> Screen.Messages
-                }
-            } else {
-                parentTab
-            }
-
             val parentTopLevelDestination =
-                topLevelDestinations.find { it.route == effectiveParentTab.route }
+                topLevelDestinations.find { it.route == parentTab.route }
             if (parentTopLevelDestination != null) {
+                val source = arguments?.getString("source")
                 Log.d(
                     TAG,
-                    "  -> дочерний экран с parentTab=${effectiveParentTab.route}, обновляем currentTopLevelDestination"
+                    "  -> дочерний экран с parentTab=${parentTab.route}, source=$source, " +
+                        "обновляем currentTopLevelDestination"
                 )
                 currentTopLevelDestination = parentTopLevelDestination
                 return

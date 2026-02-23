@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions", "LongMethod", "CyclomaticComplexMethod", "ForbiddenComment")
+
 package com.swparks.ui.screens
 
 import android.app.Application
@@ -276,33 +278,33 @@ fun RootScreen(appState: AppState) {
 
             // Детальные экраны площадок (будут добавлены позже)
             composable(route = Screen.ParkDetail.route) {
-                // FIXME: Реализовать ParkDetailScreen
+                // TODO: Реализовать ParkDetailScreen
             }
 
             composable(route = Screen.CreatePark.route) {
-                // FIXME: Реализовать CreateParkScreen
+                // TODO: Реализовать CreateParkScreen
             }
 
             composable(route = Screen.EditPark.route) {
-                // FIXME: Реализовать EditParkScreen
+                // TODO: Реализовать EditParkScreen
             }
 
             // Детальные экраны мероприятий (будут добавлены позже)
             composable(route = Screen.EventDetail.route) {
-                // FIXME: Реализовать EventDetailScreen
+                // TODO: Реализовать EventDetailScreen
             }
 
             composable(route = Screen.CreateEvent.route) {
-                // FIXME: Реализовать CreateEventScreen
+                // TODO: Реализовать CreateEventScreen
             }
 
             composable(route = Screen.EditEvent.route) {
-                // FIXME: Реализовать EditEventScreen
+                // TODO: Реализовать EditEventScreen
             }
 
             // Экраны сообщений (будут добавлены позже)
             composable(route = Screen.Chat.route) {
-                // FIXME: Реализовать ChatScreen
+                // TODO: Реализовать ChatScreen
             }
 
             composable(
@@ -312,16 +314,20 @@ fun RootScreen(appState: AppState) {
                         defaultValue = "messages"
                     }
                 )
-            ) {
+            ) { navBackStackEntry ->
                 val viewModel = remember(appContainer) {
                     appContainer.searchUserViewModelFactory()
                 }
+                // Получаем source из аргументов навигации для передачи в OtherUserProfile
+                val source = navBackStackEntry.arguments?.getString("source") ?: "messages"
                 SearchUserScreen(
                     modifier = Modifier.fillMaxSize(),
                     viewModel = viewModel,
                     onBackClick = { appState.navController.popBackStack() },
                     onUserClick = { userId ->
-                        appState.navController.navigate(Screen.OtherUserProfile.createRoute(userId))
+                        appState.navController.navigate(
+                            Screen.OtherUserProfile.createRoute(userId, source)
+                        )
                     },
                     parentPaddingValues = paddingValues
                 )
@@ -374,7 +380,9 @@ fun RootScreen(appState: AppState) {
                     viewModel = viewModel,
                     onBackClick = { appState.navController.popBackStack() },
                     onFriendClick = { userId ->
-                        appState.navController.navigate(Screen.OtherUserProfile.createRoute(userId))
+                        appState.navController.navigate(
+                            Screen.OtherUserProfile.createRoute(userId, "profile")
+                        )
                     },
                     parentPaddingValues = paddingValues
                 )
@@ -384,6 +392,7 @@ fun RootScreen(appState: AppState) {
                 route = Screen.UserTrainingParks.route
             ) { navBackStackEntry ->
                 val userId = navBackStackEntry.arguments?.getString("userId")?.toLongOrNull()
+                val source = navBackStackEntry.arguments?.getString("source") ?: "profile"
                 if (userId != null) {
                     val viewModel = remember(appContainer) {
                         appContainer.userTrainingParksViewModelFactory(userId)
@@ -392,6 +401,11 @@ fun RootScreen(appState: AppState) {
                         modifier = Modifier.fillMaxSize(),
                         viewModel = viewModel,
                         onBackClick = { appState.navController.popBackStack() },
+                        onParkClick = { park ->
+                            appState.navController.navigate(
+                                Screen.ParkDetail.createRoute(park.id, source)
+                            )
+                        },
                         parentPaddingValues = paddingValues
                     )
                 }
@@ -401,6 +415,7 @@ fun RootScreen(appState: AppState) {
                 route = Screen.UserFriends.route
             ) { navBackStackEntry ->
                 val userId = navBackStackEntry.arguments?.getString("userId")?.toLongOrNull()
+                val source = navBackStackEntry.arguments?.getString("source") ?: "profile"
                 if (userId != null) {
                     val viewModel = remember(appContainer, userId) {
                         appContainer.userFriendsViewModelFactory(userId)
@@ -411,7 +426,7 @@ fun RootScreen(appState: AppState) {
                         onBackClick = { appState.navController.popBackStack() },
                         onUserClick = { clickedUserId ->
                             appState.navController.navigate(
-                                Screen.OtherUserProfile.createRoute(clickedUserId)
+                                Screen.OtherUserProfile.createRoute(clickedUserId, source)
                             )
                         },
                         parentPaddingValues = paddingValues
@@ -431,8 +446,16 @@ fun RootScreen(appState: AppState) {
                 )
             }
 
-            composable(route = Screen.OtherUserProfile.route) { navBackStackEntry ->
+            composable(
+                route = Screen.OtherUserProfile.route,
+                arguments = listOf(
+                    androidx.navigation.navArgument("source") {
+                        defaultValue = "profile"
+                    }
+                )
+            ) { navBackStackEntry ->
                 val userId = navBackStackEntry.arguments?.getString("userId")?.toLongOrNull()
+                val source = navBackStackEntry.arguments?.getString("source") ?: "profile"
                 if (userId != null) {
                     val viewModel = remember(appContainer, userId) {
                         appContainer.otherUserProfileViewModelFactory(userId)
@@ -441,6 +464,7 @@ fun RootScreen(appState: AppState) {
                         modifier = Modifier.fillMaxSize(),
                         viewModel = viewModel,
                         appState = appState,
+                        source = source,
                         onBack = { appState.navController.popBackStack() },
                         onNavigateToOwnProfile = {
                             appState.navController.navigate(Screen.Profile.route) {
@@ -451,8 +475,16 @@ fun RootScreen(appState: AppState) {
                 }
             }
 
-            composable(route = Screen.JournalsList.route) { navBackStackEntry ->
+            composable(
+                route = Screen.JournalsList.route,
+                arguments = listOf(
+                    androidx.navigation.navArgument("source") {
+                        defaultValue = "profile"
+                    }
+                )
+            ) { navBackStackEntry ->
                 val userId = navBackStackEntry.arguments?.getString("userId")?.toLongOrNull()
+                val source = navBackStackEntry.arguments?.getString("source") ?: "profile"
                 if (userId != null) {
                     val viewModel = remember(appContainer) {
                         appContainer.journalsViewModelFactory(userId)
@@ -462,6 +494,7 @@ fun RootScreen(appState: AppState) {
                         appState = appState,
                         userId = userId,
                         viewModel = viewModel,
+                        source = source,
                         onBackClick = { appState.navController.popBackStack() },
                         onJournalClick = { journalId, journalOwnerId, journalTitle, viewAccess, commentAccess ->
                             appState.navController.navigate(
@@ -470,7 +503,8 @@ fun RootScreen(appState: AppState) {
                                     journalOwnerId,
                                     journalTitle,
                                     viewAccess,
-                                    commentAccess
+                                    commentAccess,
+                                    source
                                 )
                             )
                         },
@@ -479,7 +513,14 @@ fun RootScreen(appState: AppState) {
                 }
             }
 
-            composable(route = Screen.JournalEntries.route) { navBackStackEntry ->
+            composable(
+                route = Screen.JournalEntries.route,
+                arguments = listOf(
+                    androidx.navigation.navArgument("source") {
+                        defaultValue = "profile"
+                    }
+                )
+            ) { navBackStackEntry ->
                 val journalId = navBackStackEntry.arguments?.getString("journalId")?.toLongOrNull()
                 // Получаем journalOwnerId (владелец дневника) из query-параметра
                 val journalOwnerId =
@@ -494,6 +535,8 @@ fun RootScreen(appState: AppState) {
                 // Получаем commentAccess из query-параметра
                 val commentAccess = navBackStackEntry.arguments?.getString("commentAccess")
                     ?: JournalAccess.NOBODY.name
+                // Получаем source из query-параметра
+                val source = navBackStackEntry.arguments?.getString("source") ?: "profile"
 
                 Log.i("RootScreen", "=== JournalEntries Route ===")
                 Log.i("RootScreen", "journalId=$journalId")
@@ -504,6 +547,7 @@ fun RootScreen(appState: AppState) {
                 Log.i("RootScreen", "journalTitle=$journalTitle")
                 Log.i("RootScreen", "viewAccess=$viewAccess")
                 Log.i("RootScreen", "commentAccess=$commentAccess")
+                Log.i("RootScreen", "source=$source")
 
                 if (journalId != null && journalOwnerId != null) {
                     val viewModel = remember(navBackStackEntry, appContainer) {

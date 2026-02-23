@@ -75,6 +75,7 @@ import com.swparks.ui.viewmodel.OtherUserProfileUiState
 fun OtherUserProfileScreen(
     viewModel: IOtherUserProfileViewModel,
     appState: AppState,
+    source: String = "profile",
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
     onNavigateToOwnProfile: () -> Unit = {}
@@ -165,6 +166,7 @@ fun OtherUserProfileScreen(
                                 isFriendActionLoading = isFriendActionLoading,
                                 viewModel = viewModel,
                                 appState = appState,
+                                source = source,
                                 onSendMessageClick = { user ->
                                     textEntryMode =
                                         TextEntryMode.Message(user.id, user.fullName ?: user.name)
@@ -325,6 +327,7 @@ private fun ProfileContent(
     isFriendActionLoading: Boolean,
     viewModel: IOtherUserProfileViewModel,
     appState: AppState,
+    source: String,
     onSendMessageClick: (User) -> Unit,
     onShowRemoveFriendDialog: () -> Unit
 ) {
@@ -378,7 +381,8 @@ private fun ProfileContent(
                 onClick = {
                     appState.navController.navigate(
                         Screen.UserFriends.createRoute(
-                            viewedUser.id
+                            viewedUser.id,
+                            source
                         )
                     )
                 },
@@ -392,7 +396,8 @@ private fun ProfileContent(
                 onClick = {
                     appState.navController.navigate(
                         Screen.UserTrainingParks.createRoute(
-                            viewedUser.id
+                            viewedUser.id,
+                            source
                         )
                     )
                 },
@@ -403,7 +408,11 @@ private fun ProfileContent(
         if (viewedUser.hasAddedParks) {
             AddedParksButton(
                 addedParksCount = viewedUser.addedParks?.size ?: 0,
-                onClick = { appState.navController.navigate(Screen.UserParks.createRoute(viewedUser.id)) },
+                onClick = {
+                    appState.navController.navigate(
+                        Screen.UserParks.createRoute(viewedUser.id, source)
+                    )
+                },
                 enabled = buttonsEnabled
             )
         }
@@ -414,7 +423,8 @@ private fun ProfileContent(
                 onClick = {
                     appState.navController.navigate(
                         Screen.JournalsList.createRoute(
-                            viewedUser.id
+                            viewedUser.id,
+                            source
                         )
                     )
                 },

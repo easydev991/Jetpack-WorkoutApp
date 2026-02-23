@@ -1,5 +1,7 @@
 package com.swparks.navigation
 
+import android.os.Bundle
+
 /**
  * Маршруты навигации в приложении
  */
@@ -15,99 +17,216 @@ sealed class Screen(
     object More : Screen("more")
 
     // Детальные экраны площадок
-    object ParkDetail : Screen("park_detail/{parkId}", parentTab = Parks) {
-        fun createRoute(parkId: Long) = "park_detail/$parkId"
+    object ParkDetail : Screen("park_detail/{parkId}?source={source}", parentTab = Parks) {
+        fun createRoute(parkId: Long, source: String = "parks") =
+            "park_detail/$parkId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "parks"
+            return getScreenBySource(source, default = Parks)
+        }
     }
 
     object CreatePark : Screen("create_park", parentTab = Parks)
-    object EditPark : Screen("edit_park/{parkId}", parentTab = Parks) {
-        fun createRoute(parkId: Long) = "edit_park/$parkId"
+    object EditPark : Screen("edit_park/{parkId}?source={source}", parentTab = Parks) {
+        fun createRoute(parkId: Long, source: String = "parks") = "edit_park/$parkId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "parks"
+            return getScreenBySource(source, default = Parks)
+        }
     }
 
     object ParkFilter : Screen("park_filter", parentTab = Parks)
 
-    object CreateEventForPark : Screen("create_event_for_park/{parkId}", parentTab = Parks) {
-        fun createRoute(parkId: Long) = "create_event_for_park/$parkId"
+    object CreateEventForPark :
+        Screen("create_event_for_park/{parkId}?source={source}", parentTab = Parks) {
+        fun createRoute(parkId: Long, source: String = "parks") =
+            "create_event_for_park/$parkId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "parks"
+            return getScreenBySource(source, default = Parks)
+        }
     }
 
-    object ParkRoute : Screen("park_route/{parkId}", parentTab = Parks) {
-        fun createRoute(parkId: Long) = "park_route/$parkId"
+    object ParkRoute : Screen("park_route/{parkId}?source={source}", parentTab = Parks) {
+        fun createRoute(parkId: Long, source: String = "parks") =
+            "park_route/$parkId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "parks"
+            return getScreenBySource(source, default = Parks)
+        }
     }
 
-    object AddParkComment : Screen("add_park_comment/{parkId}", parentTab = Parks) {
-        fun createRoute(parkId: Long) = "add_park_comment/$parkId"
+    object AddParkComment : Screen("add_park_comment/{parkId}?source={source}", parentTab = Parks) {
+        fun createRoute(parkId: Long, source: String = "parks") =
+            "add_park_comment/$parkId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "parks"
+            return getScreenBySource(source, default = Parks)
+        }
     }
 
-    object ParkTrainees : Screen("park_trainees/{parkId}", parentTab = Parks) {
-        fun createRoute(parkId: Long) = "park_trainees/$parkId"
+    object ParkTrainees : Screen("park_trainees/{parkId}?source={source}", parentTab = Parks) {
+        fun createRoute(parkId: Long, source: String = "parks") =
+            "park_trainees/$parkId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "parks"
+            return getScreenBySource(source, default = Parks)
+        }
     }
 
-    object ParkGallery : Screen("park_gallery/{parkId}", parentTab = Parks) {
-        fun createRoute(parkId: Long) = "park_gallery/$parkId"
+    object ParkGallery : Screen("park_gallery/{parkId}?source={source}", parentTab = Parks) {
+        fun createRoute(parkId: Long, source: String = "parks") =
+            "park_gallery/$parkId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "parks"
+            return getScreenBySource(source, default = Parks)
+        }
     }
 
     // Детальные экраны мероприятий
-    object EventDetail : Screen("event_detail/{eventId}", parentTab = Events) {
-        fun createRoute(eventId: Long) = "event_detail/$eventId"
+    object EventDetail : Screen("event_detail/{eventId}?source={source}", parentTab = Events) {
+        fun createRoute(eventId: Long, source: String = "events") =
+            "event_detail/$eventId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "events"
+            return getScreenBySource(source, default = Events)
+        }
     }
 
     object CreateEvent : Screen("create_event", parentTab = Events)
-    object EditEvent : Screen("edit_event/{eventId}", parentTab = Events) {
-        fun createRoute(eventId: Long) = "edit_event/$eventId"
+    object EditEvent : Screen("edit_event/{eventId}?source={source}", parentTab = Events) {
+        fun createRoute(eventId: Long, source: String = "events") =
+            "edit_event/$eventId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "events"
+            return getScreenBySource(source, default = Events)
+        }
     }
 
-    object EventParticipants : Screen("event_participants/{eventId}", parentTab = Events) {
-        fun createRoute(eventId: Long) = "event_participants/$eventId"
+    object EventParticipants :
+        Screen("event_participants/{eventId}?source={source}", parentTab = Events) {
+        fun createRoute(eventId: Long, source: String = "events") =
+            "event_participants/$eventId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "events"
+            return getScreenBySource(source, default = Events)
+        }
     }
 
-    object EventGallery : Screen("event_gallery/{eventId}", parentTab = Events) {
-        fun createRoute(eventId: Long) = "event_gallery/$eventId"
+    object EventGallery : Screen("event_gallery/{eventId}?source={source}", parentTab = Events) {
+        fun createRoute(eventId: Long, source: String = "events") =
+            "event_gallery/$eventId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "events"
+            return getScreenBySource(source, default = Events)
+        }
     }
 
-    object AddEventComment : Screen("add_event_comment/{eventId}", parentTab = Events) {
-        fun createRoute(eventId: Long) = "add_event_comment/$eventId"
+    object AddEventComment :
+        Screen("add_event_comment/{eventId}?source={source}", parentTab = Events) {
+        fun createRoute(eventId: Long, source: String = "events") =
+            "add_event_comment/$eventId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "events"
+            return getScreenBySource(source, default = Events)
+        }
     }
 
     // Экраны сообщений
-    object Chat : Screen("chat/{dialogId}", parentTab = Messages) {
-        fun createRoute(dialogId: Long) = "chat/$dialogId"
+    object Chat : Screen("chat/{dialogId}?source={source}", parentTab = Messages) {
+        fun createRoute(dialogId: Long, source: String = "messages") =
+            "chat/$dialogId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "messages"
+            return getScreenBySource(source, default = Messages)
+        }
     }
 
     object Friends : Screen("friends", parentTab = Messages)
     object MyFriends : Screen("my_friends", parentTab = Profile)
     object UserSearch : Screen("user_search?source={source}", parentTab = Messages) {
         fun createRoute(source: String = "messages") = "user_search?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "messages"
+            return getScreenBySource(source, default = Messages)
+        }
     }
 
     // Экраны профиля
     object EditProfile : Screen("edit_profile", parentTab = Profile)
 
-    object UserParks : Screen("user_parks/{userId}", parentTab = Profile) {
-        fun createRoute(userId: Long) = "user_parks/$userId"
+    object UserParks : Screen("user_parks/{userId}?source={source}", parentTab = Profile) {
+        fun createRoute(userId: Long, source: String = "profile") =
+            "user_parks/$userId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "profile"
+            return getScreenBySource(source, default = Profile)
+        }
     }
 
-    object UserTrainingParks : Screen("user_training_parks/{userId}", parentTab = Profile) {
-        fun createRoute(userId: Long) = "user_training_parks/$userId"
+    object UserTrainingParks :
+        Screen("user_training_parks/{userId}?source={source}", parentTab = Profile) {
+        fun createRoute(userId: Long, source: String = "profile") =
+            "user_training_parks/$userId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "profile"
+            return getScreenBySource(source, default = Profile)
+        }
     }
 
-    object UserFriends : Screen("user_friends/{userId}", parentTab = Profile) {
-        fun createRoute(userId: Long) = "user_friends/$userId"
+    object UserFriends : Screen("user_friends/{userId}?source={source}", parentTab = Profile) {
+        fun createRoute(userId: Long, source: String = "profile") =
+            "user_friends/$userId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "profile"
+            return getScreenBySource(source, default = Profile)
+        }
     }
 
-    object OtherUserProfile : Screen("other_user_profile/{userId}", parentTab = Profile) {
-        fun createRoute(userId: Long) = "other_user_profile/$userId"
+    object OtherUserProfile :
+        Screen("other_user_profile/{userId}?source={source}", parentTab = Profile) {
+        fun createRoute(userId: Long, source: String = "profile") =
+            "other_user_profile/$userId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "profile"
+            return getScreenBySource(source, default = Profile)
+        }
     }
 
     object Blacklist : Screen("blacklist", parentTab = Profile)
 
-    object JournalsList : Screen("journals_list/{userId}", parentTab = Profile) {
-        fun createRoute(userId: Long) = "journals_list/$userId"
+    object JournalsList : Screen("journals_list/{userId}?source={source}", parentTab = Profile) {
+        fun createRoute(userId: Long, source: String = "profile") =
+            "journals_list/$userId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "profile"
+            return getScreenBySource(source, default = Profile)
+        }
     }
 
     object JournalEntries :
         Screen(
             "journal_entries/{journalId}?userId={userId}&title={journalTitle}" +
-                "&viewAccess={viewAccess}&commentAccess={commentAccess}",
+                "&viewAccess={viewAccess}&commentAccess={commentAccess}&source={source}",
             parentTab = Profile
         ) {
         fun createRoute(
@@ -115,10 +234,16 @@ sealed class Screen(
             userId: Long,
             journalTitle: String,
             viewAccess: String,
-            commentAccess: String
+            commentAccess: String,
+            source: String = "profile"
         ) =
             "journal_entries/$journalId?userId=$userId&title=${android.net.Uri.encode(journalTitle)}" +
-                "&viewAccess=$viewAccess&commentAccess=$commentAccess"
+                "&viewAccess=$viewAccess&commentAccess=$commentAccess&source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "profile"
+            return getScreenBySource(source, default = Profile)
+        }
     }
 
     object ChangePassword : Screen("change_password", parentTab = Profile)
@@ -156,13 +281,67 @@ sealed class Screen(
         }
 
         /**
-         * Находит родительскую вкладку для маршрута
+         * Находит родительскую вкладку для маршрута.
+         * Для экранов с source параметром вызывает findParentTab с аргументами.
+         *
+         * @param route строка маршрута (может содержать placeholder-ы)
+         * @param arguments Bundle с фактическими значениями аргументов навигации (включая source)
          */
-        fun findParentTab(route: String): Screen? {
-            val baseRoute = route.substringBefore("/")
-            return allScreens.find {
-                it.route.substringBefore("/") == baseRoute
-            }?.parentTab
+        fun findParentTab(route: String, arguments: Bundle? = null): Screen? {
+            // Special cases: UserSearch и OtherUserProfile с source параметром
+            return when (val baseRoute = route.substringBefore("/").substringBefore("?")) {
+                "user_search" -> UserSearch.findParentTab(arguments)
+                "other_user_profile" -> OtherUserProfile.findParentTab(arguments)
+
+                // Экраны пользователей с source параметром
+                "user_friends" -> UserFriends.findParentTab(arguments)
+                "user_parks" -> UserParks.findParentTab(arguments)
+                "user_training_parks" -> UserTrainingParks.findParentTab(arguments)
+                "journals_list" -> JournalsList.findParentTab(arguments)
+                "journal_entries" -> JournalEntries.findParentTab(arguments)
+
+                // Экраны площадок с source параметром
+                "park_detail" -> ParkDetail.findParentTab(arguments)
+                "edit_park" -> EditPark.findParentTab(arguments)
+                "create_event_for_park" -> CreateEventForPark.findParentTab(arguments)
+                "park_route" -> ParkRoute.findParentTab(arguments)
+                "add_park_comment" -> AddParkComment.findParentTab(arguments)
+                "park_trainees" -> ParkTrainees.findParentTab(arguments)
+                "park_gallery" -> ParkGallery.findParentTab(arguments)
+
+                // Экраны мероприятий с source параметром
+                "event_detail" -> EventDetail.findParentTab(arguments)
+                "edit_event" -> EditEvent.findParentTab(arguments)
+                "event_participants" -> EventParticipants.findParentTab(arguments)
+                "event_gallery" -> EventGallery.findParentTab(arguments)
+                "add_event_comment" -> AddEventComment.findParentTab(arguments)
+
+                // Экраны сообщений с source параметром
+                "chat" -> Chat.findParentTab(arguments)
+
+                // Остальные экраны - используем parentTab из определения
+                else -> allScreens.find {
+                    it.route.substringBefore("/").substringBefore("?") == baseRoute
+                }?.parentTab
+            }
         }
+    }
+}
+
+/**
+ * Определяет Screen по значению source параметра.
+ *
+ * @param source значение source параметра
+ * @param default Screen по умолчанию, если source не распознан
+ * @return Screen соответствующий source или default
+ */
+fun getScreenBySource(source: String, default: Screen): Screen {
+    return when (source) {
+        "parks" -> Screen.Parks
+        "events" -> Screen.Events
+        "messages" -> Screen.Messages
+        "profile" -> Screen.Profile
+        "more" -> Screen.More
+        else -> default
     }
 }

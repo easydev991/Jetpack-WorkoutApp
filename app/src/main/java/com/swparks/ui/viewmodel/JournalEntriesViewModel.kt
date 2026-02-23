@@ -363,11 +363,15 @@ class JournalEntriesViewModel(
     override fun canEditEntry(entry: com.swparks.domain.model.JournalEntry): Boolean {
         val currentUserId = _currentUserId.value
         val commentAccessRaw = deps.savedStateHandle.get<String>("commentAccess")
-        val commentAccessType = commentAccessRaw?.let { JournalAccess.valueOf(it) } ?: JournalAccess.NOBODY
+        val commentAccessType =
+            commentAccessRaw?.let { JournalAccess.valueOf(it) } ?: JournalAccess.NOBODY
 
         // Логирование для отладки FAB
         Log.d(TAG, "=== canEditEntry DEBUG ===")
-        Log.d(TAG, "currentUserId=$currentUserId, journalOwnerId=$journalOwnerId, commentAccess=$commentAccessType")
+        Log.d(
+            TAG,
+            "currentUserId=$currentUserId, journalOwnerId=$journalOwnerId, commentAccess=$commentAccessType"
+        )
         Log.d(TAG, "entry.authorId=${entry.authorId}, entry.id=${entry.id}")
         Log.d(TAG, "==================")
 
@@ -389,11 +393,15 @@ class JournalEntriesViewModel(
     override fun canDeleteEntry(entry: com.swparks.domain.model.JournalEntry): Boolean {
         val currentUserId = _currentUserId.value
         val commentAccessRaw = deps.savedStateHandle.get<String>("commentAccess")
-        val commentAccessType = commentAccessRaw?.let { JournalAccess.valueOf(it) } ?: JournalAccess.NOBODY
+        val commentAccessType =
+            commentAccessRaw?.let { JournalAccess.valueOf(it) } ?: JournalAccess.NOBODY
 
         // Логирование для отладки FAB
         Log.d(TAG, "=== canDeleteEntry DEBUG ===")
-        Log.d(TAG, "currentUserId=$currentUserId, journalOwnerId=$journalOwnerId, commentAccess=$commentAccessType")
+        Log.d(
+            TAG,
+            "currentUserId=$currentUserId, journalOwnerId=$journalOwnerId, commentAccess=$commentAccessType"
+        )
         Log.d(TAG, "entry.authorId=${entry.authorId}, entry.id=${entry.id}")
         Log.d(TAG, "==================")
 

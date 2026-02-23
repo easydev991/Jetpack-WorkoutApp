@@ -1,6 +1,5 @@
 package com.swparks.ui.screens.profile
 
-import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,6 +35,7 @@ import com.swparks.ui.viewmodel.UserTrainingParksUiState
  * @param modifier Modifier для настройки внешнего вида
  * @param viewModel ViewModel для управления данными экрана
  * @param onBackClick Замыкание, вызываемое при нажатии кнопки "Назад"
+ * @param onParkClick Замыкание, вызываемое при нажатии на площадку
  * @param parentPaddingValues PaddingValues для соблюдения безопасных зон
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,6 +44,7 @@ fun UserTrainingParksScreen(
     modifier: Modifier = Modifier,
     viewModel: IUserTrainingParksViewModel,
     onBackClick: () -> Unit,
+    onParkClick: (Park) -> Unit = { },
     parentPaddingValues: androidx.compose.foundation.layout.PaddingValues
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -75,7 +76,7 @@ fun UserTrainingParksScreen(
             }
         ) {
             Box(modifier = Modifier.padding(innerPadding)) {
-                UserTrainingParksContent(uiState)
+                UserTrainingParksContent(uiState, onParkClick)
             }
         }
     }
@@ -99,18 +100,21 @@ private fun TopAppBar(onBackClick: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun UserTrainingParksContent(uiState: UserTrainingParksUiState) {
+private fun UserTrainingParksContent(
+    uiState: UserTrainingParksUiState,
+    onParkClick: (Park) -> Unit
+) {
     when (uiState) {
         UserTrainingParksUiState.Loading -> LoadingOverlayView()
 
-        is UserTrainingParksUiState.Success -> SuccessContent(uiState.parks)
+        is UserTrainingParksUiState.Success -> SuccessContent(uiState.parks, onParkClick)
 
         is UserTrainingParksUiState.Error -> ErrorContent(uiState.message)
     }
 }
 
 @Composable
-private fun SuccessContent(parks: List<Park>) {
+private fun SuccessContent(parks: List<Park>, onParkClick: (Park) -> Unit) {
     if (parks.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -121,9 +125,7 @@ private fun SuccessContent(parks: List<Park>) {
     } else {
         ParksListView(
             parks = parks,
-            onParkClick = { park ->
-                Log.d("UserTrainingParksScreen", "Нажата площадка: ${park.name}")
-            }
+            onParkClick = onParkClick
         )
     }
 }
