@@ -445,6 +445,13 @@ class SWRepositoryImp(
                 val requests = requestsDeferred.await()
                 val blacklist = blacklistDeferred.await()
 
+                // Сбрасываем все флаги перед обновлением
+                // Это критически важно: если сервер возвращает пустой список,
+                // старые записи должны быть очищены
+                userDao.clearAllFriendFlags()
+                userDao.clearAllFriendRequestFlags()
+                userDao.clearAllBlacklistFlags()
+
                 // Сохраняем в кэш
                 userDao.insert(user.toEntity(isCurrentUser = true))
                 userDao.insertAll(friends.map { it.toEntity(isFriend = true) })

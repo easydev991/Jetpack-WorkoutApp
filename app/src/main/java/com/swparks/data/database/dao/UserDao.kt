@@ -138,6 +138,27 @@ interface UserDao {
     suspend fun clearCurrentUserFlags()
 
     /**
+     * Сбросить флаги дружбы для всех пользователей (кроме текущего).
+     * Используется перед синхронизацией списка друзей с сервера.
+     */
+    @Query("UPDATE users SET isFriend = 0 WHERE isFriend = 1")
+    suspend fun clearAllFriendFlags()
+
+    /**
+     * Сбросить флаги заявок в друзья для всех пользователей.
+     * Используется перед синхронизацией списка заявок с сервера.
+     */
+    @Query("UPDATE users SET isFriendRequest = 0 WHERE isFriendRequest = 1")
+    suspend fun clearAllFriendRequestFlags()
+
+    /**
+     * Сбросить флаги черного списка для всех пользователей.
+     * Используется перед синхронизацией черного списка с сервера.
+     */
+    @Query("UPDATE users SET isBlacklisted = 0 WHERE isBlacklisted = 1")
+    suspend fun clearAllBlacklistFlags()
+
+    /**
      * Увеличить счетчик друзей текущего пользователя на 1
      */
     @Query(

@@ -201,7 +201,105 @@ val canDeleteEntry: (JournalEntry) -> Boolean = { entry -> viewModel.canDeleteEn
 
 ---
 
-## Связанные документы
+## Девятая итерация: Отладка FAB для FRIENDS-доступа 🔍
+
+### Проблема
+
+На iOS FAB не отображается в чужом дневнике с FRIENDS-доступом, если владелец дневника не находится в списке друзей текущего пользователя. На Android FAB отображается (и сервер возвращает 403 при попытке создать запись).
+
+Предполагаемые причины:
+1. **Stale friends cache** — локальный список друзей может содержать устаревшие данные
+2. **Несимметричная проверка дружбы** — `isFriend` проверяет "владелец в моём списке друзей", а не "я в списке друзей владельца"
+
+### Добавленное логирование
+
+Добавлено логирование в следующие функции:
+
+1. **`computeCanCreateEntry()`** — логирует:
+   - `currentUserId` — ID авторизованного пользователя
+   - `journalOwnerId` — ID владельца дневника
+   - `commentAccess` — уровень доступа (ALL/FRIENDS/NOBODY)
+   - `friendsIds` — список ID друзей текущего пользователя
+   - `isFriend` — результат проверки `friendsIds.contains(journalOwnerId)`
+   - `canCreateEntry result` — итоговый результат
+
+2. **`canEditEntry(entry)`** — логирует:
+   - `currentUserId`
+   - `journalOwnerId`
+   - `commentAccess`
+   - `entry.authorId`, `entry.id`
+
+3. **`canDeleteEntry(entry)`** — логирует:
+   - `currentUserId`
+   - `journalOwnerId`
+   - `commentAccess`
+   - `entry.authorId`, `entry.id`
+
+### Ожидаемые логи
+
+При открытии чужого дневника с FRIENDS-доступом, где владелец НЕ в друзьях:
+
+```
+D JournalEntriesVM: === computeCanCreateEntry DEBUG ===
+D JournalEntriesVM: currentUserId=10367, journalOwnerId=22748
+D JournalEntriesVM: commentAccess=FRIENDS, friendsIds=[...]
+D JournalEntriesVM: isFriend=false
+D JournalEntriesVM: ==================
+D JournalEntriesVM: canCreateEntry result: false
+```
+
+### Реальные логи (проблема найдена!)
+
+После pull-to-refresh профиля:
+- Сервер возвращает пустой список друзей: `Body: []`
+- НО локальный кэш всё ещё содержит `friendsIds=[10367]`
+
+**Вывод:** Локальная база данных НЕ обновляется при получении пустого списка друзей с сервера.
+
+### Корень проблемы
+
+1. **Проблема не в canCreateEntry** — логика правильная
+2. **Проблема в синхронизации друзей** — при обновлении профиля API возвращает пустой массив `[]`, но Room-таблица не очищается для удалённых друзей
+3. **Метод `getSocialUpdates()`** получает `friends = []` с сервера, но не удаляет старых друзей из БД
+
+### Исправление
+
+**1. UserDao.kt** — добавлены методы для сброса флагов:
+
+```kotlin
+@Query("UPDATE users SET isFriend = 0 WHERE isFriend = 1")
+suspend fun clearAllFriendFlags()
+
+@Query("UPDATE users SET isFriendRequest = 0 WHERE isFriendRequest = 1")
+suspend fun clearAllFriendRequestFlags()
+
+@Query("UPDATE users SET isBlacklisted = 0 WHERE isBlacklisted = 1")
+suspend fun clearAllBlacklistFlags()
+```
+
+**2. SWRepository.kt** — `getSocialUpdates()` теперь очищает старые данные перед вставкой новых:
+
+```kotlin
+// Сбрасываем все флаги перед обновлением
+// Это критически важно: если сервер возвращает пустой список,
+// старые записи должны быть очищены
+userDao.clearAllFriendFlags()
+userDao.clearAllFriendRequestFlags()
+userDao.clearAllBlacklistFlags()
+
+// Затем вставляем актуальные данные
+userDao.insertAll(friends.map { it.toEntity(isFriend = true) })
+```
+
+### Unit-тесты
+
+Добавлено 4 теста в `SWRepositoryProfileTest`:
+- `getSocialUpdates_clearsOldFriendsBeforeInsertingNew` — проверяет очистку флагов перед вставкой
+- `getSocialUpdates_whenApiReturnsEmptyFriendsList_clearsOldFriends` — проверяет очистку при пустом списке
+- `getSocialUpdates_whenApiReturnsEmptyFriendRequests_clearsOldRequests` — проверяет очистку заявок
+- `getSocialUpdates_whenApiReturnsEmptyBlacklist_clearsOldBlacklist` — проверяет очистку черного списка
+
+### Связанные документы
 
 - [План JournalsListScreen](./doc-journals-list-screen.md)
 - [План TextEntryScreen](./doc-text-entry-screen.md)

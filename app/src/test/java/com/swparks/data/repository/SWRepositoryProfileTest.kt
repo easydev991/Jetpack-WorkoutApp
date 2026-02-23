@@ -365,6 +365,138 @@ class SWRepositoryProfileTest {
     }
 
     @Test
+    fun getSocialUpdates_clearsOldFriendsBeforeInsertingNew() = runTest {
+        // Given
+        val mockApi = mockk<SWApi>()
+        coEvery { mockApi.getUser(1L) } returns createMockUser(1L)
+        coEvery { mockApi.getFriendsForUser(1L) } returns listOf(createMockUser(2L))
+        coEvery { mockApi.getFriendRequests() } returns emptyList()
+        coEvery { mockApi.getBlacklist() } returns emptyList()
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao
+        )
+
+        // When
+        val result = repository.getSocialUpdates(1L)
+
+        // Then
+        assertTrue(result.isSuccess)
+
+        // Проверяем, что старые флаги были очищены ПЕРЕД вставкой новых данных
+        coVerify { mockUserDao.clearAllFriendFlags() }
+        coVerify { mockUserDao.clearAllFriendRequestFlags() }
+        coVerify { mockUserDao.clearAllBlacklistFlags() }
+    }
+
+    @Test
+    fun getSocialUpdates_whenApiReturnsEmptyFriendsList_clearsOldFriends() = runTest {
+        // Given
+        val mockApi = mockk<SWApi>()
+        coEvery { mockApi.getUser(1L) } returns createMockUser(1L)
+        // API возвращает ПУСТОЙ список друзей (пользователь удалил всех друзей)
+        coEvery { mockApi.getFriendsForUser(1L) } returns emptyList()
+        coEvery { mockApi.getFriendRequests() } returns emptyList()
+        coEvery { mockApi.getBlacklist() } returns emptyList()
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao
+        )
+
+        // When
+        val result = repository.getSocialUpdates(1L)
+
+        // Then
+        assertTrue(result.isSuccess)
+        val socialUpdates = result.getOrNull()
+        assertNotNull(socialUpdates)
+        assertTrue(socialUpdates?.friends?.isEmpty() == true)
+
+        // КРИТИЧЕСКИ ВАЖНО: старые друзья должны быть очищены из БД
+        coVerify { mockUserDao.clearAllFriendFlags() }
+    }
+
+    @Test
+    fun getSocialUpdates_whenApiReturnsEmptyFriendRequests_clearsOldRequests() = runTest {
+        // Given
+        val mockApi = mockk<SWApi>()
+        coEvery { mockApi.getUser(1L) } returns createMockUser(1L)
+        coEvery { mockApi.getFriendsForUser(1L) } returns emptyList()
+        // API возвращает ПУСТОЙ список заявок в друзья
+        coEvery { mockApi.getFriendRequests() } returns emptyList()
+        coEvery { mockApi.getBlacklist() } returns emptyList()
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao
+        )
+
+        // When
+        val result = repository.getSocialUpdates(1L)
+
+        // Then
+        assertTrue(result.isSuccess)
+
+        // Старые заявки должны быть очищены
+        coVerify { mockUserDao.clearAllFriendRequestFlags() }
+    }
+
+    @Test
+    fun getSocialUpdates_whenApiReturnsEmptyBlacklist_clearsOldBlacklist() = runTest {
+        // Given
+        val mockApi = mockk<SWApi>()
+        coEvery { mockApi.getUser(1L) } returns createMockUser(1L)
+        coEvery { mockApi.getFriendsForUser(1L) } returns emptyList()
+        coEvery { mockApi.getFriendRequests() } returns emptyList()
+        // API возвращает ПУСТОЙ черный список
+        coEvery { mockApi.getBlacklist() } returns emptyList()
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao
+        )
+
+        // When
+        val result = repository.getSocialUpdates(1L)
+
+        // Then
+        assertTrue(result.isSuccess)
+
+        // Старый черный список должен быть очищен
+        coVerify { mockUserDao.clearAllBlacklistFlags() }
+    }
+
+    @Test
     fun findUsers_whenApiReturnsUsers_thenReturnsUsers() = runTest {
         // Given
         val mockUsers = listOf(createMockUser(2L))

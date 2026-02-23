@@ -227,11 +227,20 @@ class JournalEntriesViewModel(
             deps.preferencesRepository.currentUserId,
             deps.swRepository.getFriendsFlow().map { friends -> friends.map { it.id } }
         ) { currentUserIdParam, friendsIds ->
-            commentAccessType.canCreateEntry(
+            // Логирование для отладки FAB
+            Log.d(TAG, "=== computeCanCreateEntry DEBUG ===")
+            Log.d(TAG, "currentUserId=$currentUserIdParam, journalOwnerId=$journalOwnerId")
+            Log.d(TAG, "commentAccess=$commentAccessType, friendsIds=$friendsIds")
+            Log.d(TAG, "isFriend=${friendsIds.contains(journalOwnerId)}")
+            Log.d(TAG, "==================")
+
+            val result = commentAccessType.canCreateEntry(
                 journalOwnerId = this@JournalEntriesViewModel.journalOwnerId, // владелец дневника
                 mainUserId = currentUserIdParam,
                 mainUserFriendsIds = friendsIds
             )
+            Log.d(TAG, "canCreateEntry result: $result")
+            result
         }
     }
 
@@ -344,7 +353,7 @@ class JournalEntriesViewModel(
     }
 
     /**
-     * Проверить, можно ли редактировать запись.
+     * Проверить, можно ли отредактировать запись.
      *
      * Редактировать записи может владелец дневника или автор записи.
      *
@@ -352,7 +361,17 @@ class JournalEntriesViewModel(
      * @return true если редактирование разрешено
      */
     override fun canEditEntry(entry: com.swparks.domain.model.JournalEntry): Boolean {
-        val currentUserId = _currentUserId.value ?: return false
+        val currentUserId = _currentUserId.value
+        val commentAccessRaw = deps.savedStateHandle.get<String>("commentAccess")
+        val commentAccessType = commentAccessRaw?.let { JournalAccess.valueOf(it) } ?: JournalAccess.NOBODY
+
+        // Логирование для отладки FAB
+        Log.d(TAG, "=== canEditEntry DEBUG ===")
+        Log.d(TAG, "currentUserId=$currentUserId, journalOwnerId=$journalOwnerId, commentAccess=$commentAccessType")
+        Log.d(TAG, "entry.authorId=${entry.authorId}, entry.id=${entry.id}")
+        Log.d(TAG, "==================")
+
+        if (currentUserId == null) return false
         if (entry.authorId == null) return false
         val isOwner = journalOwnerId == currentUserId
         return isOwner || entry.authorId == currentUserId
@@ -368,7 +387,17 @@ class JournalEntriesViewModel(
      * @return true если удаление разрешено
      */
     override fun canDeleteEntry(entry: com.swparks.domain.model.JournalEntry): Boolean {
-        val currentUserId = _currentUserId.value ?: return false
+        val currentUserId = _currentUserId.value
+        val commentAccessRaw = deps.savedStateHandle.get<String>("commentAccess")
+        val commentAccessType = commentAccessRaw?.let { JournalAccess.valueOf(it) } ?: JournalAccess.NOBODY
+
+        // Логирование для отладки FAB
+        Log.d(TAG, "=== canDeleteEntry DEBUG ===")
+        Log.d(TAG, "currentUserId=$currentUserId, journalOwnerId=$journalOwnerId, commentAccess=$commentAccessType")
+        Log.d(TAG, "entry.authorId=${entry.authorId}, entry.id=${entry.id}")
+        Log.d(TAG, "==================")
+
+        if (currentUserId == null) return false
         val isOwner = journalOwnerId == currentUserId
         return isOwner || entry.authorId == currentUserId
     }

@@ -121,6 +121,7 @@ class JournalEntriesViewModelTest {
         every { Log.i(any<String>(), any<String>()) } returns 0
         every { Log.e(any<String>(), any<String>()) } returns 0
         every { Log.e(any<String>(), any<String>(), any()) } returns 0
+        every { Log.d(any<String>(), any<String>()) } returns 0
 
         getJournalEntriesUseCase = mockk(relaxed = true)
         syncJournalEntriesUseCase = mockk(relaxed = true)
