@@ -14,7 +14,7 @@ class JournalAccessTest {
     private val friendId = 100L
 
     @Test
-    fun `canCreateEntry with ALL and authorized user returns true`() {
+    fun canCreateEntry_with_ALL_and_authorized_user_returns_true() {
         val result = JournalAccess.ALL.canCreateEntry(
             journalOwnerId = journalOwnerId,
             mainUserId = currentUserId,
@@ -25,7 +25,7 @@ class JournalAccessTest {
     }
 
     @Test
-    fun `canCreateEntry with ALL and unauthorized user returns false`() {
+    fun canCreateEntry_with_ALL_and_unauthorized_user_returns_false() {
         val result = JournalAccess.ALL.canCreateEntry(
             journalOwnerId = journalOwnerId,
             mainUserId = null,
@@ -36,7 +36,7 @@ class JournalAccessTest {
     }
 
     @Test
-    fun `canCreateEntry with FRIENDS and friend returns true`() {
+    fun canCreateEntry_with_FRIENDS_and_friend_returns_true() {
         val result = JournalAccess.FRIENDS.canCreateEntry(
             journalOwnerId = friendId,
             mainUserId = currentUserId,
@@ -47,7 +47,7 @@ class JournalAccessTest {
     }
 
     @Test
-    fun `canCreateEntry with FRIENDS and non-friend returns false`() {
+    fun canCreateEntry_with_FRIENDS_and_non_friend_returns_false() {
         val result = JournalAccess.FRIENDS.canCreateEntry(
             journalOwnerId = journalOwnerId,
             mainUserId = currentUserId,
@@ -58,7 +58,7 @@ class JournalAccessTest {
     }
 
     @Test
-    fun `canCreateEntry with FRIENDS and owner returns false`() {
+    fun canCreateEntry_with_FRIENDS_and_owner_returns_false() {
         val result = JournalAccess.FRIENDS.canCreateEntry(
             journalOwnerId = journalOwnerId,
             mainUserId = journalOwnerId,
@@ -69,7 +69,7 @@ class JournalAccessTest {
     }
 
     @Test
-    fun `canCreateEntry with NOBODY and owner returns true`() {
+    fun canCreateEntry_with_NOBODY_and_owner_returns_true() {
         val result = JournalAccess.NOBODY.canCreateEntry(
             journalOwnerId = journalOwnerId,
             mainUserId = journalOwnerId,
@@ -80,7 +80,7 @@ class JournalAccessTest {
     }
 
     @Test
-    fun `canCreateEntry with NOBODY and non-owner returns false`() {
+    fun canCreateEntry_with_NOBODY_and_non_owner_returns_false() {
         val result = JournalAccess.NOBODY.canCreateEntry(
             journalOwnerId = journalOwnerId,
             mainUserId = currentUserId,
