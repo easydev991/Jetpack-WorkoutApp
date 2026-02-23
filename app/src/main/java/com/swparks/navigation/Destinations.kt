@@ -75,7 +75,9 @@ sealed class Screen(
 
     object Friends : Screen("friends", parentTab = Messages)
     object MyFriends : Screen("my_friends", parentTab = Profile)
-    object UserSearch : Screen("user_search", parentTab = Messages)
+    object UserSearch : Screen("user_search?source={source}", parentTab = Messages) {
+        fun createRoute(source: String = "messages") = "user_search?source=$source"
+    }
 
     // Экраны профиля
     object EditProfile : Screen("edit_profile", parentTab = Profile)

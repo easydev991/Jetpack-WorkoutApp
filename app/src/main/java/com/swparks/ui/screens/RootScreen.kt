@@ -175,7 +175,7 @@ fun RootScreen(appState: AppState) {
                         ProfileTopAppBar(
                             appState = appState,
                             onSearchUsersClick = {
-                                appState.navController.navigate(Screen.UserSearch.route)
+                                appState.navController.navigate(Screen.UserSearch.createRoute("profile"))
                             }
                         )
                     }
@@ -240,7 +240,7 @@ fun RootScreen(appState: AppState) {
                         appState.navController.navigate(Screen.MyFriends.route)
                     },
                     onNavigateToSearchUsers = {
-                        appState.navController.navigate(Screen.UserSearch.route)
+                        appState.navController.navigate(Screen.UserSearch.createRoute("messages"))
                     }
                 )
             }
@@ -305,7 +305,14 @@ fun RootScreen(appState: AppState) {
                 // FIXME: Реализовать ChatScreen
             }
 
-            composable(route = Screen.UserSearch.route) {
+            composable(
+                route = Screen.UserSearch.route,
+                arguments = listOf(
+                    androidx.navigation.navArgument("source") {
+                        defaultValue = "messages"
+                    }
+                )
+            ) {
                 val viewModel = remember(appContainer) {
                     appContainer.searchUserViewModelFactory()
                 }

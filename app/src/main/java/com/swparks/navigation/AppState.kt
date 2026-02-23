@@ -49,9 +49,13 @@ fun rememberAppState(
     DisposableEffect(navController) {
         Log.d(TAG, "DisposableEffect: добавляем OnDestinationChangedListener")
         val listener =
-            NavController.OnDestinationChangedListener { _, destination, _ ->
-                Log.d(TAG, "OnDestinationChangedListener: destination=${destination.route}")
-                appState.onDestinationChanged(destination.route)
+            NavController.OnDestinationChangedListener { _, destination, arguments ->
+                Log.d(
+                    TAG,
+                    "OnDestinationChangedListener: destination=${destination.route}, " +
+                        "arguments=${arguments?.keySet()}"
+                )
+                appState.onDestinationChanged(destination.route, arguments)
             }
         navController.addOnDestinationChangedListener(listener)
         onDispose {
@@ -130,9 +134,14 @@ class AppState(
      * Проверяет как прямое совпадение с корневыми вкладками, так и parentTab для дочерних экранов.
      * Это позволяет корректно определять активную вкладку даже когда restoreState
      * восстанавливает стек с дочерними экранами (например, edit_profile внутри Profile).
+     *
+     * Для UserSearch определяет parentTab динамически на основе аргумента source.
+     *
+     * @param route строка маршрута (может содержать placeholder-ы)
+     * @param arguments Bundle с фактическими значениями аргументов навигации
      */
-    fun onDestinationChanged(route: String?) {
-        Log.d(TAG, "onDestinationChanged: route=$route")
+    fun onDestinationChanged(route: String?, arguments: android.os.Bundle? = null) {
+        Log.d(TAG, "onDestinationChanged: route=$route, arguments=${arguments?.keySet()}")
 
         // Сначала проверяем прямое совпадение с корневой вкладкой
         val matchingTab = topLevelDestinations.find { it.route == route }
@@ -150,12 +159,24 @@ class AppState(
         // onDestinationChanged вызывается с маршрутом дочернего экрана, а не корневого
         val parentTab = Screen.findParentTab(route ?: "")
         if (parentTab != null) {
+            // Для UserSearch определяем parentTab динамически на основе source параметра
+            val effectiveParentTab = if (route?.startsWith("user_search") == true) {
+                val source = arguments?.getString("source")
+                Log.d(TAG, "  -> UserSearch source=$source")
+                when (source) {
+                    "profile" -> Screen.Profile
+                    else -> Screen.Messages
+                }
+            } else {
+                parentTab
+            }
+
             val parentTopLevelDestination =
-                topLevelDestinations.find { it.route == parentTab.route }
+                topLevelDestinations.find { it.route == effectiveParentTab.route }
             if (parentTopLevelDestination != null) {
                 Log.d(
                     TAG,
-                    "  -> дочерний экран с parentTab=${parentTab.route}, обновляем currentTopLevelDestination"
+                    "  -> дочерний экран с parentTab=${effectiveParentTab.route}, обновляем currentTopLevelDestination"
                 )
                 currentTopLevelDestination = parentTopLevelDestination
                 return
