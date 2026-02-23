@@ -50,6 +50,60 @@
 
 ---
 
+## Седьмая итерация: Доработка FAB согласно iOS-логике 🚧
+
+### Проблема
+
+В Android FAB отображается по условию `isOwner && canCreateEntry && !isDeleting`, что дублирует логику — `canCreateEntry` уже включает проверку владельца внутри себя (см. `JournalAccess.canCreateEntry`).
+
+### iOS-реализация (эталон)
+
+```swift
+@ViewBuilder
+var addEntryButtonIfNeeded: some View {
+    let canCreateEntry = JournalAccess.canCreateEntry(
+        journalOwnerId: userId,
+        journalCommentAccess: currentJournal.commentAccessType,
+        mainUserId: defaults.mainUserInfo?.id,
+        mainUserFriendsIds: defaults.friendsIdsList
+    )
+    if canCreateEntry {
+        Button { showCreateEntrySheet = true } label: {
+            Icons.Regular.plus.view
+                .symbolVariant(.circle)
+        }
+        .tint(.accent)
+        .disabled(currentState.isLoading)  // ← отключение при загрузке
+        .sheet(isPresented: $showCreateEntrySheet) { ... }
+    }
+}
+```
+
+### Требуемые изменения
+
+1. **Убрать дублирование `isOwner`** в условии FAB — оставить только `canCreateEntry`
+2. **Добавить отключение FAB при `isRefreshing`** (аналог `isLoading` в iOS)
+
+### Изменения в коде
+
+**JournalEntriesScreen.kt** (строки 177-202):
+
+```kotlin
+// Было:
+if (isOwner && contentState.canCreateEntry && !isDeleting) {
+
+// Должно быть:
+if (contentState.canCreateEntry && !isDeleting && !isRefreshing) {
+```
+
+### Unit-тесты
+
+- FAB виден при `canCreateEntry = true`, скрыт при `false`
+- FAB отключен при `isRefreshing = true`
+- FAB не зависит от `isOwner` напрямую (логика инкапсулирована в `canCreateEntry`)
+
+---
+
 ## Связанные документы
 
 - [План JournalsListScreen](./doc-journals-list-screen.md)
