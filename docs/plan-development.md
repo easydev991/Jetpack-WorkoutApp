@@ -11,29 +11,35 @@
 ### Android-приложение (Jetpack-WorkoutApp)
 
 - 🚧 **В активной разработке**
-- ✅ Дизайн-система: 28 компонентов
-- ✅ Модели данных: 17 API + 4 доменные + 14 UI моделей
+- ✅ Дизайн-система: 31 компонент
+- ✅ Модели данных: 17 API + 6 доменные + 15 UI моделей
 - ✅ API клиент SWApi: 57 endpoints
 - ✅ Безопасность токена: шифрование, интерцепторы
-- ✅ Use Cases: авторизация, справочники, дневники (17 use cases)
-- ✅ ViewModels: 13 ViewModels (Auth, Login, ThemeIcon, Events, Profile, MainActivity, FriendsList, Blacklist, UserTrainingParks, Journals, JournalEntries, TextEntry)
+- ✅ Use Cases: авторизация, справочники, дневники (32 use cases)
+- ✅ ViewModels: 36 ViewModels (Auth, Login, Register, ThemeIcon, Events, Profile, EditProfile, MainActivity, FriendsList, Blacklist, UserTrainingParks, Journals, JournalEntries, TextEntry, ChangePassword, SearchUser, OtherUserProfile, Dialogs)
 - ✅ Namespace: `com.swparks`
 
 #### Реализованные экраны
 
-**Полностью реализованы:** RootScreen, MoreScreen, ThemeIconScreen, LoginScreen (Domain, Data, UI слои, тесты)
+**Полностью реализованы (Domain, Data, UI, тесты):**
+- RootScreen, MoreScreen, ThemeIconScreen, LoginScreen
+- EditProfileScreen (включает выбор страны/города), ChangePasswordScreen, OtherUserProfileScreen, SearchUserScreen
+- RegisterUserScreen (включает выбор страны/города)
+- MyFriendsScreen (включает запросы в друзья), MyBlacklistScreen, UserFriendsScreen, ProfileRootScreen, UserTrainingParksScreen
+- JournalsListScreen (100% - 4 итерации, включает создание/удаление, унифицированные уведомления), JournalEntriesScreen (6 итераций, включает создание/редактирование/удаление записей), JournalSettingsDialog
+- TextEntryScreen, MessagesRootScreen
 
-**Частично реализованы (базовый функционал):** EventsScreen, ParksRootScreen, ParksAddedByUserScreen, ProfileRootScreen, MyFriendsScreen, UserTrainingParksScreen, MyBlacklistScreen, JournalsListScreen, JournalEntriesScreen, JournalSettingsDialog
+**Частично реализованы (базовый функционал):** EventsScreen, ParksRootScreen, ParksAddedByUserScreen, FeedbackSender, ItemListScreen
 
-**Не реализованы:** MessagesRootScreen (заглушка), большинство детальных экранов
+**Не реализованы:** большинство детальных экранов (EventDetailScreen, EditEventScreen, ParksListScreen, ParksMapScreen, ParkDetailScreen, EditParkScreen, ChatScreen)
 
 #### Реализованные модели данных
 
-**API модели (17):** User, Park, Event, Comment, Photo, JournalResponse, JournalEntryResponse, DialogResponse, MessageResponse, City, Country, Gender, ParkType, ParkSize, EventKind, EventType, SocialUpdates, ApiFriendAction, ApiBlacklistOption
+**API модели (17):** User, Park, Event, Comment, Photo, JournalResponse, JournalEntryResponse, DialogResponse, MessageResponse, City, Country, ParkType, ParkSize, EventKind, EventType, SocialUpdates, ApiFriendAction, ApiBlacklistOption
 
-**Доменные модели (4):** AppIcon, AppTheme, Journal, JournalEntry
+**Доменные модели (6):** AppIcon, AppTheme, Journal, JournalEntry, FriendAction, EditProfileLocations
 
-**UI модели (14):** LoginCredentials, ParkForm, EventForm, MainUserForm, RegistrationRequest, ResetPasswordRequest, EditJournalSettingsRequest, FriendAction, BlacklistAction, Gender, JournalAccess, TextEntryOption, EditInfo, TextEntryMode
+**UI модели (15):** LoginCredentials, ParkForm, EventForm, MainUserForm, RegisterForm, ResetPasswordRequest, EditJournalSettingsRequest, FriendAction, BlacklistAction, Gender, JournalAccess, TextEntryOption, EditInfo, EventKind, EventType, TextEntryMode
 
 #### Реализованная архитектура
 
@@ -43,9 +49,9 @@
 
 **Security:** CryptoManager (AES-128-GCM-HKDF), EncryptedStringSerializer
 
-**Domain Layer:** 17 use cases (авторизация, справочники, дневники), IconManager, исключения (ServerException, NetworkException)
+**Domain Layer:** 32 use cases (авторизация, справочники, дневники, смена пароля, удаление пользователя), IconManager, исключения (ServerException, NetworkException)
 
-**UI layer:** 13 ViewModels
+**UI layer:** 36 ViewModels
 
 ---
 
@@ -79,33 +85,38 @@
 
 ---
 
-### 2. Авторизация (Auth) - ⚠️ ЧАСТИЧНО ЗАВЕРШЕНО
+### 2. Авторизация (Auth) - ✅ ЗАВЕРШЕНО
 
-**Экраны:** ✅ LoginScreen, ❌ Интеграция при запуске
+**Экраны:**
+- ✅ LoginScreen (Domain, Data, UI, тесты)
+- ✅ RegisterUserScreen (Domain, Data, UI, тесты, включает выбор страны/города)
 
-**Статус:** ✅ LoginScreen: Domain, Data, UI, тесты | ❌ Интеграция при запуске (требуется)
+**Статус:** Полный стек (Domain, Data, UI, тесты)
 
 **Детальный план:** `docs/screens/2_Login_Screen.md`
 
 ---
 
-### 3. Вкладка "Профиль" (Profile)
+### 3. Вкладка "Профиль" (Profile) - ✅ ЗАВЕРШЕНО
 
 **Экраны:**
-- ProfileScreen - просмотр профиля
-- EditProfileScreen - редактирование профиля
-- ChangePasswordScreen - смена пароля
-- FriendsScreen - список друзей
-- FriendRequestsScreen - запросы в друзья
-- UserParksScreen - площадки пользователя
-- BlacklistScreen - черный список
-- JournalsScreen - дневники (навигация)
+- ✅ ProfileRootScreen - просмотр профиля (Domain, Data, UI, тесты)
+- ✅ EditProfileScreen - редактирование профиля (Domain, Data, UI, тесты, включает выбор страны/города)
+- ✅ ChangePasswordScreen - смена пароля (Domain, Data, UI, тесты)
+- ✅ MyFriendsScreen - список друзей (Domain, Data, UI, тесты, включает запросы в друзья)
+- ✅ UserFriendsScreen - друзья пользователя (Domain, Data, UI, тесты)
+- ✅ UserTrainingParksScreen - площадки пользователя (Domain, Data, UI, тесты)
+- ✅ MyBlacklistScreen - черный список (Domain, Data, UI, тесты)
+- ✅ OtherUserProfileScreen - профиль другого пользователя (Domain, Data, UI, тесты)
+- ✅ SearchUserScreen - поиск пользователей (Domain, Data, UI, тесты)
 
 **Основные функции:**
 - Отображение профиля, друзей, площадок
-- Управление друзьями и черным списком
-- Редактирование профиля
+- Управление друзьями и черным списком (включая запросы в друзья)
+- Редактирование профиля (включая выбор страны/города)
 - Поиск пользователей
+- Просмотр профилей других пользователей
+- Смена пароля
 
 **Детальные планы:**
 - `docs/screens/3.1_Profile_Screen.md`
@@ -114,7 +125,6 @@
 - `docs/screens/3.3_Friends_Screen.md`
 - `docs/screens/3.4_Blacklist_Screen.md`
 - `docs/screens/3.5_UserParks_Screen.md`
-- `docs/screens/3.6_Journals_Screen.md`
 
 ---
 
@@ -172,11 +182,11 @@
 
 ---
 
-### 6. Вкладка "Сообщения" (Messages)
+### 6. Вкладка "Сообщения" (Messages) - ⚠️ ЧАСТИЧНО ЗАВЕРШЕНО
 
 **Экраны:**
-- DialogsListScreen - список диалогов
-- ChatScreen - чат с пользователем
+- ✅ MessagesRootScreen - список диалогов (UI, тесты)
+- ❌ ChatScreen - чат с пользователем (не реализован)
 
 **Основные функции:**
 - Отправка сообщений из профиля
@@ -196,53 +206,56 @@
 
 ---
 
-### 7. Дневники (Journals)
+### 7. Дневники (Journals) - ⚠️ ЧАСТИЧНО ЗАВЕРШЕНО
 
 **Экраны:**
-- JournalsListScreen - список дневников
-- JournalDetailScreen - дневник с записями
-- EditJournalScreen - создание/редактирование дневника
-- EditJournalEntryScreen - создание/редактирование записи
-- JournalAccessSettingsScreen - настройки доступа
+- ✅ JournalsListScreen - список дневников (Domain, Data, UI, тесты) - 100% реализован (3 итерации: базовый экран, удаление, создание, унифицированные уведомления)
+- ✅ JournalEntriesScreen - дневник с записями (Domain, Data, UI, тесты) - включает детальный просмотр, создание, редактирование и удаление записей (6 итераций)
+- ✅ JournalSettingsDialog - настройки дневника (UI, тесты) - редактирование названия и уровней доступа
 
 **Основные функции:**
-- Просмотр/комментирование дневников (при доступе)
-- Создание/редактирование дневников и записей
-- Настройки доступа (публичный/приватный)
+- Просмотр списка дневников с Pull-to-Refresh
+- Создание дневников через FAB и TextEntrySheet
+- Удаление дневников с диалогом подтверждения
+- Просмотр дневника с записями (детальная информация)
+- Создание записей через FAB и TextEntrySheet
+- Редактирование записей через TextEntrySheet (режим EditJournalEntry)
+- Удаление записей с диалогом подтверждения (кроме первой записи)
+- Редактирование названия и настроек доступа дневника через JournalSettingsDialog
+- Унифицированные уведомления через UserNotifier
 
 **Технические задачи:**
 - API endpoints для дневников (реализованы в SWApi)
-- Список дневников
-- Просмотр дневника с записями
-- Комментарии
-- Настройки доступа
+- Список дневников с кешированием
+- Просмотр дневника с записями (offline-first)
+- Создание/удаление дневников
+- Создание/удаление/редактирование записей
+- Настройки доступа (название, просмотр, комментарии)
 
 **Детальные планы:**
-- `docs/screens/7_Journals_Screen.md`
-- `docs/screens/7.1_Journal_Detail_Screen.md`
-- `docs/screens/7.2_Edit_Journal_Screen.md`
-- `docs/screens/7.3_Edit_Journal_Entry_Screen.md`
-- `docs/screens/7.4_Journal_Access_Settings_Screen.md`
+- `docs/screens/doc-journals-list-screen.md` - 100% завершен (4 итерации: базовый экран, удаление, создание, унификация уведомлений)
+- `docs/screens/doc-journal-entries-screen.md` - реализован (6 итераций с багфиксами)
+- `docs/screens/doc-journal-settings-dialog.md` - реализован
 
 ---
 
 ## Технологический стек
 
-**Основные:** Kotlin 2.3.0, Jetpack Compose (BOM 2026.01.00), Material 3, Android Gradle Plugin 9.0.0, Java 17
+**Основные:** Kotlin 2.3.10, Jetpack Compose (BOM 2026.02.00), Material 3, Android Gradle Plugin 9.0.1, Java 17
 
 **Требования:** minSdk 26, targetSdk 35, compileSdk 36
 
-**Архитектура:** ViewModel 2.10.0, Navigation 2.9.6, Lifecycle 2.10.0, Room 2.8.4
+**Архитектура:** ViewModel 2.10.0, Navigation 2.9.7, Lifecycle 2.10.0, Room 2.8.4
 
-**Сеть:** Retrofit 3.0.0, Kotlinx Serialization 1.9.0, Coroutines 1.10.2
+**Сеть:** Retrofit 3.0.0, Kotlinx Serialization 1.10.0, Coroutines 1.10.2
 
 **Изображения:** Coil Compose 2.7.0
 
 **Хранение:** DataStore 1.2.0, Room 2.8.4
 
-**Качество:** KtLint 14.0.1, Detekt 1.23.8, KSP 2.3.2
+**Качество:** KtLint 14.0.1, Detekt 1.23.8, KSP 2.3.4
 
-**Тестирование:** JUnit 4.13.2, MockK 1.14.7, Turbine 1.1.0, Compose UI Test
+**Тестирование:** JUnit 4.13.2, MockK 1.14.9, Turbine 1.2.1, Compose UI Test, Robolectric 4.16.1
 
 ---
 
@@ -291,7 +304,7 @@ app/src/androidTest/java/com/swparks/    # Интеграционные и UI т
 
 ### Компоненты дизайн-системы
 
-- ✅ 28 компонентов готовы к использованию
+- ✅ 31 компонент готов к использованию
 
 ---
 
@@ -331,11 +344,11 @@ app/src/androidTest/java/com/swparks/    # Интеграционные и UI т
 
 ### Тестирование
 
-**766+ unit-тестов:** Data, Domain, Model, ViewModel, UI state, Utils, Network
+**85+ unit-тестов:** Data, Domain, Model, ViewModel, UI state, Utils, Network
 
-**2 интеграционных теста:** CryptoManagerIntegrationTest, JournalEntryDaoTest
-
-**UI-тесты:** LoginScreen, MoreScreen (11), ThemeIconScreen (11), MyFriendsScreen, MyBlacklistScreen, ProfileRootScreen, RootScreen, JournalsListScreen, JournalEntriesScreen, JournalSettingsDialog, TextEntryScreen
+**17 интеграционных и UI тестов:**
+- Интеграционные: CryptoManagerIntegrationTest, JournalEntryDaoTest
+- UI тесты: LoginScreen, MoreScreen, ThemeIconScreen, MyFriendsScreen, MyBlacklistScreen, ProfileRootScreen, UserFriendsScreen, OtherUserProfileScreen, SearchUserScreen, RootScreen, JournalsListScreen, JournalEntriesScreen, JournalSettingsDialog, TextEntryScreen, MessagesRootScreen
 
 ---
 
@@ -348,3 +361,5 @@ app/src/androidTest/java/com/swparks/    # Интеграционные и UI т
 - **2026-01-31:** Авторизация (Auth) - LoginScreen завершен
 - **2026-02-07:** Дизайн-система (28 компонентов), новые экраны (MyFriendsScreen, ParksAddedByUserScreen), database слой
 - **2026-02-11:** Дневники (Journals) - 13 ViewModels, 10 экранов (с тестами), 17 use cases, 766+ unit-тестов, 2 интеграционных теста
+- **2026-02-23:** Обновление документации - 31 компонент дизайн-системы, 32 use cases, 36 ViewModels, 85+ unit-тестов, 17 интеграционных и UI тестов, новые экраны (EditProfileScreen, RegisterUserScreen, OtherUserProfileScreen, SearchUserScreen, ChangePasswordScreen, MessagesRootScreen), UI модели (RegisterForm), новые доменные модели (FriendAction, EditProfileLocations)
+- **2026-02-23:** Актуализация статусов - вкладка "Профиль" ✅ ЗАВЕРШЕНО, JournalsListScreen 100% реализован (4 итерации: базовый экран, удаление, создание, унифицированные уведомления), JournalEntriesScreen реализован (6 итераций с багфиксами, включает создание/редактирование/удаление записей), JournalSettingsDialog реализован, уточнение функционала (запросы в друзья в MyFriendsScreen, выбор страны/города встроен в EditProfileScreen и RegisterUserScreen)
