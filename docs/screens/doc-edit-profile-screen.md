@@ -27,7 +27,7 @@ EditProfileScreen
 │   ├── FormCardContainer (GenderPicker)
 │   ├── FormCardContainer (BirthdayPicker)
 │   └── FormCardContainer (CountryPicker, CityPicker)
-└── LoadingOverlayView (isSaving/isUploadingAvatar/isDeleting)
+└── LoadingOverlayView (isLoading)
 ```
 
 ### Состояние UI
@@ -46,10 +46,7 @@ data class EditProfileUiState(
     val avatarError: String?,
     val emailError: String?,
     val birthDateError: String?,
-    val isLoading: Boolean,
-    val isSaving: Boolean,
-    val isUploadingAvatar: Boolean,
-    val isDeleting: Boolean
+    val isLoading: Boolean
 ) {
     val hasChanges: Boolean
     val canSave: Boolean

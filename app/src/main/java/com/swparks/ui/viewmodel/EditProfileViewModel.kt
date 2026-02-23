@@ -259,23 +259,18 @@ class EditProfileViewModel(
         }
 
         // Проверяем валидность состояния для сохранения
-        if (!currentState.hasChanges || currentState.isSaving) {
+        if (!currentState.hasChanges || currentState.isLoading) {
             when {
                 !currentState.hasChanges -> logger.w(TAG, "Попытка сохранить без изменений")
-                currentState.isSaving -> logger.w(TAG, "Сохранение уже в процессе")
+                currentState.isLoading -> logger.w(TAG, "Сохранение уже в процессе")
             }
             return
         }
 
         logger.i(TAG, "Начало сохранения профиля")
 
-        // Устанавливаем состояние сохранения
-        _uiState.update {
-            it.copy(
-                isSaving = true,
-                isUploadingAvatar = currentState.selectedAvatarUri != null
-            )
-        }
+        // Устанавливаем состояние загрузки
+        _uiState.update { it.copy(isLoading = true) }
 
         viewModelScope.launch {
             // Подготавливаем изображение если выбрано
@@ -311,8 +306,7 @@ class EditProfileViewModel(
                 val errorMessage = resources.getString(R.string.avatar_error_read_failed)
                 _uiState.update {
                     it.copy(
-                        isSaving = false,
-                        isUploadingAvatar = false,
+                        isLoading = false,
                         avatarError = errorMessage
                     )
                 }
@@ -346,15 +340,14 @@ class EditProfileViewModel(
                         initialCity = it.selectedCity,
                         selectedAvatarUri = null,
                         avatarError = null,
-                        isSaving = false,
-                        isUploadingAvatar = false
+                        isLoading = false
                     )
                 }
                 _events.emit(EditProfileEvent.NavigateBack)
             },
             onFailure = { error ->
                 logger.e(TAG, "Ошибка сохранения профиля: ${error.message}", error)
-                _uiState.update { it.copy(isSaving = false, isUploadingAvatar = false) }
+                _uiState.update { it.copy(isLoading = false) }
                 userNotifier.handleError(
                     AppError.Generic(
                         error.message ?: "Ошибка сохранения профиля",
@@ -481,15 +474,15 @@ class EditProfileViewModel(
         val currentState = _uiState.value
 
         // Предотвращаем повторный клик во время удаления
-        if (currentState.isDeleting) {
+        if (currentState.isLoading) {
             logger.w(TAG, "Удаление уже в процессе")
             return
         }
 
         logger.i(TAG, "Начало удаления профиля")
 
-        // Устанавливаем состояние удаления
-        _uiState.update { it.copy(isDeleting = true) }
+        // Устанавливаем состояние загрузки
+        _uiState.update { it.copy(isLoading = true) }
 
         viewModelScope.launch {
             val result = deleteUserUseCase()
@@ -497,12 +490,12 @@ class EditProfileViewModel(
             result.fold(
                 onSuccess = {
                     logger.i(TAG, "Профиль успешно удален")
-                    _uiState.update { it.copy(isDeleting = false) }
+                    _uiState.update { it.copy(isLoading = false) }
                     _events.emit(EditProfileEvent.NavigateToLogin)
                 },
                 onFailure = { error ->
                     logger.e(TAG, "Ошибка удаления профиля: ${error.message}", error)
-                    _uiState.update { it.copy(isDeleting = false) }
+                    _uiState.update { it.copy(isLoading = false) }
                     userNotifier.handleError(
                         AppError.Generic(
                             error.message ?: "Ошибка удаления профиля",

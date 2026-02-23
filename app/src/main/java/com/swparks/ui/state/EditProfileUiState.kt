@@ -20,9 +20,7 @@ import com.swparks.ui.model.MainUserForm
  * @param avatarError Ошибка при обработке фото
  * @param emailError Ошибка валидации email
  * @param birthDateError Ошибка валидации даты рождения
- * @param isLoading Индикатор загрузки
- * @param isSaving Индикатор сохранения
- * @param isUploadingAvatar Индикатор загрузки аватара
+ * @param isLoading Индикатор загрузки (начальная загрузка, сохранение, удаление)
  */
 data class EditProfileUiState(
     val userForm: MainUserForm = MainUserForm(
@@ -46,10 +44,7 @@ data class EditProfileUiState(
     val avatarError: String? = null,
     val emailError: String? = null,
     val birthDateError: String? = null,
-    val isLoading: Boolean = true,
-    val isSaving: Boolean = false,
-    val isUploadingAvatar: Boolean = false,
-    val isDeleting: Boolean = false
+    val isLoading: Boolean = true
 ) {
     /**
      * Вычисляемое свойство - есть ли изменения в форме.

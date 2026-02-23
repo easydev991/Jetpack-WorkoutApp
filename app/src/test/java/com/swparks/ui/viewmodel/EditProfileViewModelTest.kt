@@ -409,8 +409,7 @@ class EditProfileViewModelTest {
             "Не удалось прочитать изображение",
             state.avatarError
         )
-        assertFalse("isSaving должен быть false", state.isSaving)
-        assertFalse("isUploadingAvatar должен быть false", state.isUploadingAvatar)
+        assertFalse("isLoading должен быть false", state.isLoading)
 
         verify {
             userNotifier.handleError(any<AppError>())
@@ -467,10 +466,9 @@ class EditProfileViewModelTest {
         viewModel.onSaveClick()
         advanceUntilIdle()
 
-        // Then - после завершения флаги должны быть false
+        // Then - после завершения флаг должен быть false
         val state = viewModel.uiState.value
-        assertFalse("isSaving должен быть false после завершения", state.isSaving)
-        assertFalse("isUploadingAvatar должен быть false после завершения", state.isUploadingAvatar)
+        assertFalse("isLoading должен быть false после завершения", state.isLoading)
     }
 
     @Test
@@ -705,7 +703,7 @@ class EditProfileViewModelTest {
     // ==================== Тесты удаления профиля ====================
 
     @Test
-    fun onDeleteProfileClick_whenSuccess_setsIsDeletingAndNavigatesToLogin() = runTest {
+    fun onDeleteProfileClick_whenSuccess_setsIsLoadingAndNavigatesToLogin() = runTest {
         // Given
         coEvery { deleteUserUseCase() } returns Result.success(Unit)
         val viewModel = createViewModel()
@@ -717,12 +715,12 @@ class EditProfileViewModelTest {
 
         // Then
         val state = viewModel.uiState.value
-        assertFalse("isDeleting должен быть false после завершения", state.isDeleting)
+        assertFalse("isLoading должен быть false после завершения", state.isLoading)
         coVerify(exactly = 1) { deleteUserUseCase() }
     }
 
     @Test
-    fun onDeleteProfileClick_whenSuccess_resetsIsDeleting() = runTest {
+    fun onDeleteProfileClick_whenSuccess_resetsIsLoading() = runTest {
         // Given
         coEvery { deleteUserUseCase() } returns Result.success(Unit)
         val viewModel = createViewModel()
@@ -732,9 +730,9 @@ class EditProfileViewModelTest {
         viewModel.onDeleteProfileClick()
         advanceUntilIdle()
 
-        // Then - isDeleting должен быть false после успешного удаления
+        // Then - isLoading должен быть false после успешного удаления
         val state = viewModel.uiState.value
-        assertFalse("isDeleting должен быть false после успешного удаления", state.isDeleting)
+        assertFalse("isLoading должен быть false после успешного удаления", state.isLoading)
         coVerify(exactly = 1) { deleteUserUseCase() }
     }
 
@@ -755,7 +753,7 @@ class EditProfileViewModelTest {
 
         // When - вызываем дважды подряд быстро
         viewModel.onDeleteProfileClick()
-        // Второй вызов должен быть проигнорирован (isDeleting уже true)
+        // Второй вызов должен быть проигнорирован (isLoading уже true)
         viewModel.onDeleteProfileClick()
         advanceUntilIdle()
 
@@ -764,7 +762,7 @@ class EditProfileViewModelTest {
     }
 
     @Test
-    fun onDeleteProfileClick_whenError_handlesErrorAndResetsIsDeleting() = runTest {
+    fun onDeleteProfileClick_whenError_handlesErrorAndResetsIsLoading() = runTest {
         // Given
         val error = RuntimeException("Delete failed")
         coEvery { deleteUserUseCase() } returns Result.failure(error)
@@ -777,7 +775,7 @@ class EditProfileViewModelTest {
 
         // Then
         val state = viewModel.uiState.value
-        assertFalse("isDeleting должен быть false после ошибки", state.isDeleting)
+        assertFalse("isLoading должен быть false после ошибки", state.isLoading)
         coVerify(exactly = 1) { userNotifier.handleError(any()) }
     }
 

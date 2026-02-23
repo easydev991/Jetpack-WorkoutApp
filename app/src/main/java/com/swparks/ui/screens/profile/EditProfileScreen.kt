@@ -150,7 +150,7 @@ fun EditProfileScreen(
         },
         bottomBar = {
             SaveButton(
-                enabled = uiState.canSave && !uiState.isSaving,
+                enabled = uiState.canSave && !uiState.isLoading,
                 onClick = viewModel::onSaveClick
             )
         },
@@ -168,7 +168,7 @@ fun EditProfileScreen(
                     ),
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
             ) {
-                val isEnabled = !uiState.isSaving
+                val isEnabled = !uiState.isLoading
 
                 // Секция аватара
                 AvatarSection(
@@ -247,8 +247,8 @@ fun EditProfileScreen(
                 }
             }
 
-            // Оверлей загрузки при сохранении, загрузке аватара или удалении профиля
-            if (uiState.isSaving || uiState.isUploadingAvatar || uiState.isDeleting) {
+            // Оверлей загрузки при сохранении или удалении профиля
+            if (uiState.isLoading) {
                 LoadingOverlayView()
             }
         }
