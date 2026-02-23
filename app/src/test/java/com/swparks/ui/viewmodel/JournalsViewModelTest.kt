@@ -1090,4 +1090,81 @@ class JournalsViewModelTest {
             state is JournalsUiState.Content
         )
     }
+
+    /**
+     * Тест 29: При успешном сохранении вызывается UserNotifier для уведомления
+     */
+    @Test
+    fun testEditJournalSettings_success_callsUserNotifier() = runTest {
+        // Given
+        val testJournalId = 1L
+
+        coEvery {
+            editJournalSettingsUseCase(any(), any(), any(), any(), any())
+        } returns Result.success(Unit)
+
+        coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
+
+        // When
+        viewModel = JournalsViewModel(
+            testUserId,
+            getJournalsUseCase,
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            editJournalSettingsUseCase,
+            userNotifier,
+            resources
+        )
+        advanceUntilIdle()
+
+        viewModel.editJournalSettings(
+            journalId = testJournalId,
+            title = "Новое название",
+            viewAccess = JournalAccess.ALL,
+            commentAccess = JournalAccess.ALL
+        )
+        advanceUntilIdle()
+
+        // Then - проверяем, что UserNotifier был вызван
+        coVerify(atLeast = 1) { userNotifier.showInfo(any<String>()) }
+    }
+
+    /**
+     * Тест 30: При ошибке сохранения вызывается UserNotifier с сообщением об ошибке
+     */
+    @Test
+    fun testEditJournalSettings_failure_callsUserNotifierWithError() = runTest {
+        // Given
+        val testJournalId = 1L
+
+        coEvery {
+            editJournalSettingsUseCase(any(), any(), any(), any(), any())
+        } returns Result.failure(Exception("Ошибка сохранения"))
+
+        val testJournal = testJournal.copy(id = testJournalId)
+        coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
+
+        // When
+        viewModel = JournalsViewModel(
+            testUserId,
+            getJournalsUseCase,
+            syncJournalsUseCase,
+            deleteJournalUseCase,
+            editJournalSettingsUseCase,
+            userNotifier,
+            resources
+        )
+        advanceUntilIdle()
+
+        viewModel.editJournalSettings(
+            journalId = testJournalId,
+            title = "Новое название",
+            viewAccess = JournalAccess.ALL,
+            commentAccess = JournalAccess.ALL
+        )
+        advanceUntilIdle()
+
+        // Then - проверяем, что UserNotifier был вызван с ошибкой
+        coVerify(atLeast = 1) { userNotifier.handleError(any()) }
+    }
 }

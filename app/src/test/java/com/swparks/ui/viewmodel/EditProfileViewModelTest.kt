@@ -3,7 +3,6 @@ package com.swparks.ui.viewmodel
 import android.net.Uri
 import android.util.Log
 import com.swparks.R
-import java.time.LocalDate
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
@@ -39,6 +38,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.time.LocalDate
 
 /**
  * Unit тесты для EditProfileViewModel.
@@ -890,6 +890,9 @@ class EditProfileViewModelTest {
 
         // Then
         val state = viewModel.uiState.value
-        assertNull("Ошибка даты рождения должна быть сброшена после resetChanges", state.birthDateError)
+        assertNull(
+            "Ошибка даты рождения должна быть сброшена после resetChanges",
+            state.birthDateError
+        )
     }
 }
