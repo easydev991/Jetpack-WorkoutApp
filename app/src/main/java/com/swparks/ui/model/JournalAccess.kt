@@ -35,12 +35,11 @@ fun JournalAccess.canCreateEntry(
 ): Boolean {
     if (mainUserId == null) return false
     val isOwner = journalOwnerId == mainUserId
-    // Проверяем, является ли владелец дневника другом текущего пользователя
     val isFriend = mainUserFriendsIds.contains(journalOwnerId)
 
     return when (this) {
-        JournalAccess.ALL -> true // уже проверили, что mainUserId != null
-        JournalAccess.FRIENDS -> isFriend || isOwner // владелец всегда может создавать записи
+        JournalAccess.ALL -> true
+        JournalAccess.FRIENDS -> isFriend
         JournalAccess.NOBODY -> isOwner
     }
 }

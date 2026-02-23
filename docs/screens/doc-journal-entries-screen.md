@@ -11,6 +11,7 @@
 | Четвертая | Багфиксы: FAB, пустое поле при редактировании, обновление списка, свайпы |
 | Пятая | Кнопка настроек в TopAppBar, JournalSettingsDialog, IJournalSettingsViewModel |
 | Шестая | Багфиксы настроек: видимость кнопки, обновление заголовка, проверка кэша |
+| Седьмая | Доработка FAB по iOS-логике: убрано дублирование isOwner, отключение при обновлении |
 
 ## Статистика тестов
 
@@ -23,6 +24,7 @@
 | Четвертая | 10 | + 116 обновлено |
 | Пятая | 10 | Настройки дневника |
 | Шестая | 2 | Багфиксы настроек |
+| Седьмая | 2 | Доработка FAB по iOS-логике |
 
 ---
 
@@ -50,57 +52,76 @@
 
 ---
 
-## Седьмая итерация: Доработка FAB согласно iOS-логике 🚧
+## Седьмая итерация: Доработка FAB согласно iOS-логике ✅
 
 ### Проблема
 
-В Android FAB отображается по условию `isOwner && canCreateEntry && !isDeleting`, что дублирует логику — `canCreateEntry` уже включает проверку владельца внутри себя (см. `JournalAccess.canCreateEntry`).
+В Android было несколько проблем с логикой FAB:
+
+1. **Дублирование `isOwner`** — FAB проверял `isOwner && canCreateEntry`, но `canCreateEntry` должен полностью инкапсулировать логику прав доступа
+2. **Отсутствие отключения при обновлении** — iOS отключает кнопку при `isLoading`, а Android нет
+3. **Неверная логика для `FRIENDS`** — в Android владелец мог создавать записи при `FRIENDS` без добавления себя в друзья
 
 ### iOS-реализация (эталон)
 
 ```swift
-@ViewBuilder
-var addEntryButtonIfNeeded: some View {
-    let canCreateEntry = JournalAccess.canCreateEntry(
-        journalOwnerId: userId,
-        journalCommentAccess: currentJournal.commentAccessType,
-        mainUserId: defaults.mainUserInfo?.id,
-        mainUserFriendsIds: defaults.friendsIdsList
-    )
-    if canCreateEntry {
-        Button { showCreateEntrySheet = true } label: {
-            Icons.Regular.plus.view
-                .symbolVariant(.circle)
-        }
-        .tint(.accent)
-        .disabled(currentState.isLoading)  // ← отключение при загрузке
-        .sheet(isPresented: $showCreateEntrySheet) { ... }
+public static func canCreateEntry(
+    journalOwnerId: Int,
+    journalCommentAccess: Self,
+    mainUserId: Int?,
+    mainUserFriendsIds: [Int]
+) -> Bool {
+    let isOwner = journalOwnerId == mainUserId
+    let isFriend = mainUserFriendsIds.contains(journalOwnerId)
+    switch journalCommentAccess {
+    case .all:
+        return mainUserId != nil
+    case .friends:
+        return isFriend
+    case .nobody:
+        return isOwner
     }
 }
 ```
 
-### Требуемые изменения
+### Исправления в коде
 
-1. **Убрать дублирование `isOwner`** в условии FAB — оставить только `canCreateEntry`
-2. **Добавить отключение FAB при `isRefreshing`** (аналог `isLoading` в iOS)
+**1. JournalAccess.kt** — исправлена логика для FRIENDS:
 
-### Изменения в коде
+```kotlin
+// Было: return isFriend || isOwner // владелец всегда может создавать записи
+// Стало:
+return when (this) {
+    JournalAccess.ALL -> true
+    JournalAccess.FRIENDS -> isFriend  // только друзья (без исключения для владельца)
+    JournalAccess.NOBODY -> isOwner
+}
+```
 
-**JournalEntriesScreen.kt** (строки 177-202):
+**2. JournalEntriesScreen.kt** — убрано дублирование `isOwner`:
 
 ```kotlin
 // Было:
 if (isOwner && contentState.canCreateEntry && !isDeleting) {
 
-// Должно быть:
+// Стало:
 if (contentState.canCreateEntry && !isDeleting && !isRefreshing) {
 ```
 
 ### Unit-тесты
 
-- FAB виден при `canCreateEntry = true`, скрыт при `false`
-- FAB отключен при `isRefreshing = true`
-- FAB не зависит от `isOwner` напрямую (логика инкапсулирована в `canCreateEntry`)
+Исправленные тесты в `JournalAccessTest`:
+- ✅ `canCreateEntry with FRIENDS and owner returns false` — владелец не может при FRIENDS без себя в друзьях
+- ✅ `canCreateEntry with NOBODY and owner returns true` — владелец может при NOBODY
+
+Исправленные тесты в `JournalEntriesViewModelTest`:
+- ✅ `testCanCreateEntry_FRIENDS_isOwner_returnsFalse` — изменён с `assertTrue` на `assertFalse`
+
+### Проверка
+
+```bash
+./gradlew :app:test  # Все тесты проходят
+```
 
 ---
 

@@ -675,10 +675,10 @@ class JournalEntriesViewModelTest {
     }
 
     /**
-     * Тест 22: canCreateEntry возвращает true для JournalAccess.FRIENDS для владельца
+     * Тест 22: canCreateEntry возвращает false для JournalAccess.FRIENDS для владельца (без себя в друзьях)
      */
     @Test
-    fun testCanCreateEntry_FRIENDS_isOwner_returnsTrue() = runTest {
+    fun testCanCreateEntry_FRIENDS_isOwner_returnsFalse() = runTest {
         // Given
         coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns emptyFlow()
         coEvery {
@@ -691,15 +691,15 @@ class JournalEntriesViewModelTest {
         // When
         viewModel = createViewModel(
             currentUserId = testUserId, // текущий пользователь - владелец
-            friends = emptyList(),
+            friends = emptyList(), // владелец не добавил себя в друзья
             commentAccess = JournalAccess.FRIENDS
         )
         advanceUntilIdle()
 
         // Then
         val canCreate = viewModel.canCreateEntry.value
-        assertTrue(
-            "Владелец всегда может создавать записи",
+        assertFalse(
+            "При JournalAccess.FRIENDS владелец должен быть в списке друзей для создания записей",
             canCreate
         )
     }

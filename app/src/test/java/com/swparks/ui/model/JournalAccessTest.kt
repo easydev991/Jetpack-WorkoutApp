@@ -58,14 +58,14 @@ class JournalAccessTest {
     }
 
     @Test
-    fun `canCreateEntry with FRIENDS and owner returns true`() {
+    fun `canCreateEntry with FRIENDS and owner returns false`() {
         val result = JournalAccess.FRIENDS.canCreateEntry(
             journalOwnerId = journalOwnerId,
             mainUserId = journalOwnerId,
             mainUserFriendsIds = emptyList()
         )
 
-        assertTrue(result)
+        assertFalse(result)
     }
 
     @Test

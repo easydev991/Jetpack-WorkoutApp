@@ -178,7 +178,7 @@ fun JournalEntriesScreen(
             when (uiState) {
                 is JournalEntriesUiState.Content -> {
                     val contentState = uiState as JournalEntriesUiState.Content
-                    if (isOwner && contentState.canCreateEntry && !isDeleting) {
+                    if (contentState.canCreateEntry && !isDeleting && !isRefreshing) {
                         FloatingActionButton(
                             onClick = {
                                 textEntryMode = TextEntryMode.NewForJournal(
