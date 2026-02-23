@@ -86,8 +86,8 @@
 
 ## Связанные документы
 
-- [План JournalEntriesScreen](./7.1_JournalEntriesScreen.md)
-- [План TextEntryScreen](./7.2_TextEntryScreen.md) - экран ввода текста с Mode enum и Bottom Sheet
+- [План JournalEntriesScreen](./doc-journal-entries-screen.md)
+- [План TextEntryScreen](./doc-text-entry-screen.md) - экран ввода текста с Mode enum и Bottom Sheet
 
 ---
 
@@ -116,10 +116,3 @@
 - **Созданные:** `AppNotification.kt`
 - **Измененные:** `UserNotifier.kt`, `UserNotifierImpl.kt`, `AppError.kt`, `RootScreen.kt`, `IJournalsViewModel.kt`, `JournalsViewModel.kt`, `IJournalEntriesViewModel.kt`, `JournalEntriesViewModel.kt`, `JournalsListScreen.kt`, `JournalEntriesScreen.kt`, `strings.xml` (добавлена строка `info`), `strings-ru/strings.xml`
 - **Тесты:** `UserNotifierImplTest.kt`, `JournalsViewModelTest.kt`, `JournalEntriesViewModelTest.kt`
-
----
-
-## Пятая итерация: TODO
-
-- Добавить фильтрацию и сортировку дневников
-- Добавить индикатор количества записей в дневнике

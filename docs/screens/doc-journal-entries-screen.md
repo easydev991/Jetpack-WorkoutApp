@@ -52,6 +52,6 @@
 
 ## Связанные документы
 
-- [План JournalsListScreen](./7_Journals_List_Screen.md)
-- [План TextEntryScreen](./7.2_TextEntryScreen.md)
-- [JournalSettingsDialog](./JournalSettingsDialog.md)
+- [План JournalsListScreen](./doc-journals-list-screen.md)
+- [План TextEntryScreen](./doc-text-entry-screen.md)
+- [JournalSettingsDialog](./doc-journal-settings-dialog.md)

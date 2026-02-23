@@ -63,7 +63,7 @@
 
 ## Этап 7: Интеграция с экранами
 
-> **Примечание:** Интеграция с JournalEntriesScreen перенесена в план [JournalEntriesScreen](./7.1_JournalEntriesScreen.md) - см. "Третья итерация".
+> **Примечание:** Интеграция с JournalEntriesScreen перенесена в план [JournalEntriesScreen](./doc-journal-entries-screen.md) - см. "Третья итерация".
 
 ### Интеграция с ParkDetailScreen
 
@@ -122,5 +122,5 @@
 
 ## Связанные документы
 
-- [План JournalsListScreen](./7_Journals_List_Screen.md)
-- [План JournalEntriesScreen](./7.1_JournalEntriesScreen.md)
+- [План JournalsListScreen](./doc-journals-list-screen.md)
+- [План JournalEntriesScreen](./doc-journal-entries-screen.md)
