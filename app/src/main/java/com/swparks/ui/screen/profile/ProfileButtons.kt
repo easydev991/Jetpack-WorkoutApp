@@ -126,11 +126,15 @@ fun JournalsButton(
     ) {
         FormRowView(
             leadingText = stringResource(id = R.string.journals),
-            trailingText = pluralStringResource(
-                id = R.plurals.journalsCount,
-                count = journalsCount,
-                journalsCount
-            ),
+            trailingText = if (journalsCount > 0) {
+                pluralStringResource(
+                    id = R.plurals.journalsCount,
+                    count = journalsCount,
+                    journalsCount
+                )
+            } else {
+                ""
+            },
             enabled = enabled
         )
     }

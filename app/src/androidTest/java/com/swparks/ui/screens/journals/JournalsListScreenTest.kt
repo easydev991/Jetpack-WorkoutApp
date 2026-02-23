@@ -5,7 +5,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -411,8 +410,8 @@ class JournalsListScreenTest {
     }
 
     @Test
-    fun journalsListScreen_createButtonIsDisabled_whenRefreshing() {
-        // Given
+    fun journalsListScreen_createButtonNotShown_whenRefreshing() {
+        // Given - EmptyStateView не показывается во время загрузки
         val state = JournalsUiState.Content(journals = emptyList())
         val viewModel = FakeJournalsViewModel(
             uiState = MutableStateFlow(state),
@@ -438,11 +437,11 @@ class JournalsListScreenTest {
             }
         }
 
-        // Then - Кнопка "Создать дневник" должна быть неактивной при обновлении
+        // Then - Кнопка "Создать дневник" НЕ отображается во время загрузки
+        // (EmptyStateView показывается только после завершения загрузки)
         composeTestRule
             .onNodeWithText(context.getString(R.string.create_journal))
-            .assertIsDisplayed()
-            .assertIsNotEnabled()
+            .assertDoesNotExist()
     }
 
     @Test
@@ -711,5 +710,173 @@ class JournalsListScreenTest {
         composeTestRule
             .onNodeWithText(context.getString(R.string.journal_settings))
             .assertDoesNotExist()
+    }
+
+    // ==================== Tests for EmptyStateView behavior for other users ====================
+
+    @Test
+    fun journalsListScreen_emptyStateNotShown_forOtherUserWhenRefreshing() {
+        // Given - авторизованный пользователь открывает чужой дневник, идет загрузка
+        val currentUserId = 1L
+        val profileUserId = 2L
+        val state = JournalsUiState.Content(journals = emptyList())
+        val viewModel = FakeJournalsViewModel(
+            uiState = MutableStateFlow(state),
+            isRefreshing = MutableStateFlow(true) // Идет загрузка
+        )
+
+        // When
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = currentUserId, name = "testuser", image = null))
+
+            JetpackWorkoutAppTheme {
+                JournalsListScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    appState = appState,
+                    userId = profileUserId, // Чужой профиль
+                    viewModel = viewModel,
+                    onBackClick = {},
+                    onJournalClick = { _, _, _, _, _ -> },
+                    parentPaddingValues = PaddingValues()
+                )
+            }
+        }
+
+        // Then - EmptyStateView НЕ отображается, пока идет загрузка
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.journals_empty))
+            .assertDoesNotExist()
+
+        // Кнопка создания тоже не отображается (чужой профиль)
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.create_journal))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun journalsListScreen_emptyStateNotShown_forOtherUserWhenNotRefreshing() {
+        // Given - авторизованный пользователь открывает чужой дневник, загрузка завершена
+        // EmptyStateView НЕ показывается для чужих дневников вообще (нельзя создавать чужие дневники)
+        val currentUserId = 1L
+        val profileUserId = 2L
+        val state = JournalsUiState.Content(journals = emptyList())
+        val viewModel = FakeJournalsViewModel(
+            uiState = MutableStateFlow(state),
+            isRefreshing = MutableStateFlow(false) // Загрузка завершена
+        )
+
+        // When
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = currentUserId, name = "testuser", image = null))
+
+            JetpackWorkoutAppTheme {
+                JournalsListScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    appState = appState,
+                    userId = profileUserId, // Чужой профиль
+                    viewModel = viewModel,
+                    onBackClick = {},
+                    onJournalClick = { _, _, _, _, _ -> },
+                    parentPaddingValues = PaddingValues()
+                )
+            }
+        }
+
+        // Then - EmptyStateView НЕ отображается для чужих дневников вообще
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.journals_empty))
+            .assertDoesNotExist()
+
+        // Кнопка создания тоже НЕ отображается (чужой профиль)
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.create_journal))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun journalsListScreen_emptyStateNotShown_forOwnerWhenRefreshing() {
+        // Given - владелец открывает свой дневник, идет загрузка
+        // EmptyStateView НЕ показывается во время загрузки
+        val userId = 1L
+        val state = JournalsUiState.Content(journals = emptyList())
+        val viewModel = FakeJournalsViewModel(
+            uiState = MutableStateFlow(state),
+            isRefreshing = MutableStateFlow(true) // Идет загрузка
+        )
+
+        // When
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = userId, name = "testuser", image = null))
+
+            JetpackWorkoutAppTheme {
+                JournalsListScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    appState = appState,
+                    userId = userId, // Свой профиль
+                    viewModel = viewModel,
+                    onBackClick = {},
+                    onJournalClick = { _, _, _, _, _ -> },
+                    parentPaddingValues = PaddingValues()
+                )
+            }
+        }
+
+        // Then - EmptyStateView НЕ отображается во время загрузки
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.journals_empty))
+            .assertDoesNotExist()
+
+        // Кнопка создания тоже НЕ отображается во время загрузки
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.create_journal))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun journalsListScreen_emptyStateShown_forOwnerWhenNotRefreshing() {
+        // Given - владелец открывает свой дневник, загрузка завершена
+        // EmptyStateView показывается только после завершения загрузки
+        val userId = 1L
+        val state = JournalsUiState.Content(journals = emptyList())
+        val viewModel = FakeJournalsViewModel(
+            uiState = MutableStateFlow(state),
+            isRefreshing = MutableStateFlow(false) // Загрузка завершена
+        )
+
+        // When
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = userId, name = "testuser", image = null))
+
+            JetpackWorkoutAppTheme {
+                JournalsListScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    appState = appState,
+                    userId = userId, // Свой профиль
+                    viewModel = viewModel,
+                    onBackClick = {},
+                    onJournalClick = { _, _, _, _, _ -> },
+                    parentPaddingValues = PaddingValues()
+                )
+            }
+        }
+
+        // Then - EmptyStateView отображается для владельца после загрузки
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.journals_empty))
+            .assertIsDisplayed()
+
+        // Кнопка создания отображается и активна
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.create_journal))
+            .assertIsDisplayed()
+            .assertHasClickAction()
     }
 }

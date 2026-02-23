@@ -186,13 +186,36 @@ interface UserDao {
      */
     @Query(
         """
-        UPDATE users SET friendRequestCount = 
-        CASE WHEN CAST(friendRequestCount AS INTEGER) > 0 
-        THEN CAST(friendRequestCount AS INTEGER) - 1 ELSE 0 END 
+        UPDATE users SET friendRequestCount =
+        CASE WHEN CAST(friendRequestCount AS INTEGER) > 0
+        THEN CAST(friendRequestCount AS INTEGER) - 1 ELSE 0 END
         WHERE isCurrentUser = 1
         """
     )
     suspend fun decrementFriendRequestCount()
+
+    /**
+     * Увеличить счетчик дневников текущего пользователя на 1
+     */
+    @Query(
+        """
+        UPDATE users SET journalCount = COALESCE(journalCount, 0) + 1
+        WHERE isCurrentUser = 1
+        """
+    )
+    suspend fun incrementJournalCount()
+
+    /**
+     * Уменьшить счетчик дневников текущего пользователя на 1
+     */
+    @Query(
+        """
+        UPDATE users SET journalCount =
+        CASE WHEN journalCount > 0 THEN journalCount - 1 ELSE 0 END
+        WHERE isCurrentUser = 1
+        """
+    )
+    suspend fun decrementJournalCount()
 
     // Очистка всех данных пользователя при logout
 

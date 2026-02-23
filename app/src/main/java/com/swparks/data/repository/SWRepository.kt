@@ -957,6 +957,8 @@ class SWRepositoryImp(
                 TAG,
                 "Ответ сервера при создании дневника: код=${response.code()}, успешно=${response.isSuccessful}"
             )
+            // Обновляем счётчик дневников текущего пользователя
+            userDao.incrementJournalCount()
             Result.success(Unit)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "создании дневника"))
@@ -975,6 +977,8 @@ class SWRepositoryImp(
                 response.isSuccessful -> {
                     Log.i(TAG, "Дневник успешно удален на сервере")
                     journalDao.deleteById(journalId)
+                    // Обновляем счётчик дневников текущего пользователя
+                    userDao.decrementJournalCount()
                     Result.success(Unit)
                 }
 
@@ -982,6 +986,8 @@ class SWRepositoryImp(
                     // Дневник уже удален на сервере — синхронизируем локальный кэш
                     Log.i(TAG, "Дневник уже удален на сервере (404), удаляем из локального кэша")
                     journalDao.deleteById(journalId)
+                    // Обновляем счётчик дневников текущего пользователя
+                    userDao.decrementJournalCount()
                     Result.success(Unit)
                 }
 

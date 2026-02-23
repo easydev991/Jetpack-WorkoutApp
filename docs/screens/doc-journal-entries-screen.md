@@ -14,7 +14,7 @@
 | Седьмая | Доработка FAB по iOS-логике: убрано дублирование isOwner, отключение при обновлении |
 | Восьмая ✅ | Редактирование/удаление своих записей в чужих дневниках |
 | Девятая ✅ | Синхронизация друзей: очистка флагов при обновлении |
-| Десятая 📋 | EmptyStateView: не показывать при загрузке и без прав создания |
+| Десятая ✅ | EmptyStateView: не показывать при загрузке и без прав создания |
 
 ## Статистика тестов
 
@@ -30,7 +30,7 @@
 | Седьмая | 2 | Доработка FAB по iOS-логике |
 | Восьмая | 10 | Редактирование/удаление своих записей в чужих дневниках |
 | Девятая | 4 | Синхронизация друзей |
-| Десятая | — | EmptyStateView (TODO) |
+| Десятая | 4 | EmptyStateView для чужих дневников |
 
 ---
 
@@ -305,13 +305,13 @@ userDao.insertAll(friends.map { it.toEntity(isFriend = true) })
 
 ---
 
-## Десятая итерация: EmptyStateView для чужих дневников 📋
+## Десятая итерация: EmptyStateView для чужих дневников ✅
 
 ### Проблема
 
 При открытии чужого дневника без записей EmptyStateView кратковременно показывается во время загрузки (пока `isRefreshing=true`). Это создаёт визуальный артефакт, аналогичный багу в JournalsListScreen (коммит c7d9ee7).
 
-### Текущее поведение
+### До исправления
 
 ```kotlin
 if (entries.isEmpty()) {
@@ -330,18 +330,7 @@ if (entries.isEmpty()) {
 1. EmptyStateView показывается во время загрузки (`isRefreshing=true`)
 2. FAB не показывается во время загрузки, но EmptyStateView с кнопкой "Создать" — показывается
 
-### Требуемое поведение
-
-EmptyStateView показывается только при выполнении **всех** условий:
-- `entries.isEmpty()` — список записей пуст
-- `!isRefreshing` — загрузка завершена
-- `canCreateEntry` — пользователь имеет право создавать записи
-
-Для чужих дневников где `canCreateEntry=false` (например, `NOBODY`):
-- EmptyStateView не показывается вообще
-- Пользователь видит пустой экран
-
-### Реализация
+### После исправления
 
 **1. ContentScreen в JournalEntriesScreen.kt:**
 
@@ -370,13 +359,13 @@ if (entries.isEmpty()) {
 | Чужой дневник, пуст, NOBODY-доступ | ❌ | Нельзя создавать записи |
 | Чужой дневник, пуст, FRIENDS-доступ (не друг) | ❌ | Нельзя создавать записи |
 
-### Unit-тесты
+### UI-тесты
 
-Добавить тесты в `JournalEntriesScreenTest.kt`:
-- `emptyStateNotShown_whenRefreshing` — EmptyStateView не показывается во время загрузки
-- `emptyStateShown_forOwnerWhenNotRefreshing` — EmptyStateView показывается для владельца после загрузки
-- `emptyStateShown_forForeignJournalWithAllAccess` — EmptyStateView показывается при ALL-доступе
-- `emptyStateNotShown_forForeignJournalWithNobodyAccess` — EmptyStateView не показывается при NOBODY-доступе
+Добавлено 4 теста в `JournalEntriesScreenTest.kt`:
+- `testEmptyState_notShown_whenRefreshing` — EmptyStateView не показывается во время загрузки
+- `testEmptyState_shown_forForeignJournalWithAllAccess` — EmptyStateView показывается при ALL-доступе в чужом дневнике
+- `testEmptyState_notShown_forForeignJournalWithNobodyAccess` — EmptyStateView не показывается при NOBODY-доступе
+- `testEmptyState_notShown_forForeignJournalWithFriendsAccessNotFriend` — EmptyStateView не показывается при FRIENDS-доступе (не друг)
 
 ### Связанные документы
 

@@ -338,13 +338,16 @@ private fun ContentScreen(
         }
     ) {
         if (journals.isEmpty()) {
-            // Заглушка при пустом списке
-            EmptyStateView(
-                text = stringResource(R.string.journals_empty),
-                buttonTitle = stringResource(R.string.create_journal),
-                enabled = !isRefreshing && !isDeleting,
-                onButtonClick = onCreateJournalClick
-            )
+            // EmptyStateView показывается только для владельца после завершения загрузки
+            // Для чужих дневников EmptyStateView не показывается вообще (нельзя создавать чужие дневники)
+            if (isOwner && !isRefreshing) {
+                EmptyStateView(
+                    text = stringResource(R.string.journals_empty),
+                    buttonTitle = stringResource(R.string.create_journal),
+                    enabled = !isDeleting,
+                    onButtonClick = onCreateJournalClick
+                )
+            }
         } else {
             // Список дневников
             Box(modifier = Modifier.fillMaxSize()) {
@@ -483,7 +486,7 @@ private fun DeleteConfirmationDialog(
 // ==================== PREVIEWS ====================
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true, locale = "ru", name = "Empty Journals List")
+@Preview(showBackground = true, locale = "ru", name = "Empty Journals List - Owner")
 @Composable
 private fun JournalsListScreenEmptyPreview() {
     JetpackWorkoutAppTheme {
@@ -491,6 +494,47 @@ private fun JournalsListScreenEmptyPreview() {
             journals = emptyList(),
             isRefreshing = false,
             isDeleting = false,
+            isOwner = true,
+            onRefresh = {},
+            onJournalClick = { _, _, _, _, _ -> },
+            onDeleteClick = {},
+            onSetupClick = {},
+            onCreateJournalClick = {}
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, locale = "ru", name = "Empty Journals List - Other User Loading")
+@Composable
+private fun JournalsListScreenEmptyOtherUserLoadingPreview() {
+    // Чужой дневник, идет загрузка - EmptyStateView не показывается
+    JetpackWorkoutAppTheme {
+        ContentScreen(
+            journals = emptyList(),
+            isRefreshing = true,
+            isDeleting = false,
+            isOwner = false,
+            onRefresh = {},
+            onJournalClick = { _, _, _, _, _ -> },
+            onDeleteClick = {},
+            onSetupClick = {},
+            onCreateJournalClick = {}
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, locale = "ru", name = "Empty Journals List - Other User Loaded")
+@Composable
+private fun JournalsListScreenEmptyOtherUserLoadedPreview() {
+    // Чужой дневник, загрузка завершена - EmptyStateView показывается
+    JetpackWorkoutAppTheme {
+        ContentScreen(
+            journals = emptyList(),
+            isRefreshing = false,
+            isDeleting = false,
+            isOwner = false,
             onRefresh = {},
             onJournalClick = { _, _, _, _, _ -> },
             onDeleteClick = {},
@@ -538,6 +582,7 @@ private fun JournalsListScreenWithItemsPreview() {
             journals = sampleJournals,
             isRefreshing = false,
             isDeleting = false,
+            isOwner = true,
             onRefresh = {},
             onJournalClick = { _, _, _, _, _ -> },
             onDeleteClick = {},

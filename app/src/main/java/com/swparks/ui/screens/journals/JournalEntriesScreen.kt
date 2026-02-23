@@ -376,12 +376,13 @@ private fun ContentScreen(
         }
     ) {
         if (entries.isEmpty()) {
-            // Заглушка при пустом списке записей
-            if (canCreateEntry) {
+            // EmptyStateView показывается только после завершения загрузки
+            // и если пользователь имеет право создавать записи
+            if (!isRefreshing && canCreateEntry) {
                 EmptyStateView(
                     text = stringResource(R.string.entries_empty),
                     buttonTitle = stringResource(R.string.create_entry),
-                    enabled = !isRefreshing && !isDeleting,
+                    enabled = !isDeleting,
                     onButtonClick = {
                         onAddEntryClick()
                     }

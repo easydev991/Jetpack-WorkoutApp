@@ -692,10 +692,11 @@ class JournalEntriesScreenTest {
     }
 
     /**
-     * Тест 14: Проверка, что кнопка EmptyStateView отключена при isRefreshing = true
+     * Тест 14: Проверка, что EmptyStateView не отображается при isRefreshing = true
+     * (Десятая итерация: EmptyStateView не показывается во время загрузки)
      */
     @Test
-    fun testEmptyState_buttonIsDisabled_whenRefreshing() {
+    fun testEmptyState_notShown_whenRefreshing() {
         // Given
         val viewModel = FakeJournalEntriesViewModel(
             uiState = MutableStateFlow(
@@ -711,11 +712,13 @@ class JournalEntriesScreenTest {
         // When
         setContent(viewModel = viewModel)
 
-        // Then - Кнопка EmptyStateView отключена
+        // Then - EmptyStateView не отображается во время загрузки
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.entries_empty))
+            .assertDoesNotExist()
         composeTestRule
             .onNodeWithText(context.getString(R.string.create_entry))
-            .assertIsDisplayed()
-            .assertIsNotEnabled()
+            .assertDoesNotExist()
     }
 
     /**
@@ -732,34 +735,6 @@ class JournalEntriesScreenTest {
                 )
             ),
             isRefreshing = MutableStateFlow(false),
-            isDeleting = MutableStateFlow(true),
-            canCreateEntry = MutableStateFlow(true)
-        )
-
-        // When
-        setContent(viewModel = viewModel)
-
-        // Then - Кнопка EmptyStateView отключена
-        composeTestRule
-            .onNodeWithText(context.getString(R.string.create_entry))
-            .assertIsDisplayed()
-            .assertIsNotEnabled()
-    }
-
-    /**
-     * Тест 16: Проверка, что кнопка EmptyStateView отключена при isRefreshing и isDeleting = true
-     */
-    @Test
-    fun testEmptyState_buttonIsDisabled_whenRefreshingAndDeleting() {
-        // Given
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = emptyList(),
-                    canCreateEntry = true
-                )
-            ),
-            isRefreshing = MutableStateFlow(true),
             isDeleting = MutableStateFlow(true),
             canCreateEntry = MutableStateFlow(true)
         )
@@ -1084,12 +1059,18 @@ class JournalEntriesScreenTest {
             }
         }
 
-        // Then - Открываем меню записи
+        // Then - Запись отображается
+        composeTestRule
+            .onNodeWithText("Аноним")
+            .assertIsDisplayed()
+
+        // Для записи без автора нет доступных действий (EDIT, DELETE),
+        // поэтому кнопка меню не отображается вообще
         composeTestRule
             .onNodeWithTag("MenuButton", useUnmergedTree = true)
-            .performClick()
+            .assertDoesNotExist()
 
-        // Проверяем, что действие EDIT отсутствует
+        // Действие EDIT также отсутствует
         composeTestRule
             .onNodeWithText(context.getString(R.string.edit))
             .assertDoesNotExist()
@@ -1400,5 +1381,170 @@ class JournalEntriesScreenTest {
         composeTestRule
             .onNodeWithText(context.getString(R.string.delete))
             .assertIsDisplayed()
+    }
+
+    // ==================== Десятая итерация: EmptyStateView для чужих дневников ====================
+
+    /**
+     * Тест 28: EmptyStateView показывается в чужом дневнике при ALL-доступе
+     * (Десятая итерация: EmptyStateView для чужих дневников)
+     */
+    @Test
+    fun testEmptyState_shown_forForeignJournalWithAllAccess() {
+        // Given - Чужой дневник с ALL-доступом (canCreateEntry = true)
+        val foreignOwnerId = 999L // Другой ID владельца
+        val viewModel = FakeJournalEntriesViewModel(
+            uiState = MutableStateFlow(
+                JournalEntriesUiState.Content(
+                    entries = emptyList(),
+                    canCreateEntry = true // ALL-доступ разрешает создавать записи
+                )
+            ),
+            isRefreshing = MutableStateFlow(false),
+            canCreateEntry = MutableStateFlow(true)
+        )
+
+        // When
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID, // Текущий пользователь != foreignOwnerId
+                    name = "testuser",
+                    image = null
+                )
+            )
+
+            JetpackWorkoutAppTheme {
+                JournalEntriesScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    journalId = TEST_JOURNAL_ID,
+                    journalTitle = TEST_JOURNAL_TITLE,
+                    journalOwnerId = foreignOwnerId, // Чужой дневник
+                    viewModel = viewModel,
+                    appState = appState,
+                    onBackClick = {},
+                    parentPaddingValues = PaddingValues()
+                )
+            }
+        }
+
+        // Then - EmptyStateView отображается, так как ALL-доступ разрешает создавать записи
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.entries_empty))
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.create_entry))
+            .assertIsDisplayed()
+            .assertHasClickAction()
+    }
+
+    /**
+     * Тест 29: EmptyStateView не показывается в чужом дневнике при NOBODY-доступе
+     * (Десятая итерация: EmptyStateView для чужих дневников)
+     */
+    @Test
+    fun testEmptyState_notShown_forForeignJournalWithNobodyAccess() {
+        // Given - Чужой дневник с NOBODY-доступом (canCreateEntry = false)
+        val foreignOwnerId = 999L // Другой ID владельца
+        val viewModel = FakeJournalEntriesViewModel(
+            uiState = MutableStateFlow(
+                JournalEntriesUiState.Content(
+                    entries = emptyList(),
+                    canCreateEntry = false // NOBODY-доступ запрещает создавать записи
+                )
+            ),
+            isRefreshing = MutableStateFlow(false),
+            canCreateEntry = MutableStateFlow(false)
+        )
+
+        // When
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID, // Текущий пользователь != foreignOwnerId
+                    name = "testuser",
+                    image = null
+                )
+            )
+
+            JetpackWorkoutAppTheme {
+                JournalEntriesScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    journalId = TEST_JOURNAL_ID,
+                    journalTitle = TEST_JOURNAL_TITLE,
+                    journalOwnerId = foreignOwnerId, // Чужой дневник
+                    viewModel = viewModel,
+                    appState = appState,
+                    onBackClick = {},
+                    parentPaddingValues = PaddingValues()
+                )
+            }
+        }
+
+        // Then - EmptyStateView не отображается, так как нет прав на создание записей
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.entries_empty))
+            .assertDoesNotExist()
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.create_entry))
+            .assertDoesNotExist()
+    }
+
+    /**
+     * Тест 30: EmptyStateView не показывается в чужом дневнике при FRIENDS-доступе (не друг)
+     * (Десятая итерация: EmptyStateView для чужих дневников)
+     */
+    @Test
+    fun testEmptyState_notShown_forForeignJournalWithFriendsAccessNotFriend() {
+        // Given - Чужой дневник с FRIENDS-доступом, текущий пользователь не в друзьях
+        val foreignOwnerId = 999L // Другой ID владельца
+        val viewModel = FakeJournalEntriesViewModel(
+            uiState = MutableStateFlow(
+                JournalEntriesUiState.Content(
+                    entries = emptyList(),
+                    canCreateEntry = false // FRIENDS-доступ, но пользователь не в друзьях
+                )
+            ),
+            isRefreshing = MutableStateFlow(false),
+            canCreateEntry = MutableStateFlow(false)
+        )
+
+        // When
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID, // Текущий пользователь != foreignOwnerId
+                    name = "testuser",
+                    image = null
+                )
+            )
+
+            JetpackWorkoutAppTheme {
+                JournalEntriesScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    journalId = TEST_JOURNAL_ID,
+                    journalTitle = TEST_JOURNAL_TITLE,
+                    journalOwnerId = foreignOwnerId, // Чужой дневник
+                    viewModel = viewModel,
+                    appState = appState,
+                    onBackClick = {},
+                    parentPaddingValues = PaddingValues()
+                )
+            }
+        }
+
+        // Then - EmptyStateView не отображается, так как пользователь не в друзьях
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.entries_empty))
+            .assertDoesNotExist()
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.create_entry))
+            .assertDoesNotExist()
     }
 }
