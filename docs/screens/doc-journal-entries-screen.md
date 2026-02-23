@@ -148,13 +148,43 @@ canDeleteEntry = isOwner,
 
 ### План доработки
 
-1. **Добавить проверку автора записи** — изменить `canEditEntry` и `canDeleteEntry`:
-   - `canEditEntry = { entry -> entry.authorId != null && (isOwner || entry.authorId == currentUser?.id) }`
-   - `canDeleteEntry = isOwner || entry.authorId == currentUser?.id`
+#### Вариант реализации: Логика во ViewModel (для тестируемости)
 
-2. **Обновить логику формирования действий** — убедиться, что для своих записей добавляются оба действия:
-   - `EDIT` — если `canEditEntry(entry)`
-   - `DELETE` — если `canDeleteEntry && entry.id != firstEntryId`
+Рекомендуется вынести логику определения доступных действий в `JournalEntriesViewModel`, чтобы можно было написать unit-тесты.
+
+**1. Добавить методы в JournalEntriesViewModel:**
+
+```kotlin
+// Определение доступных действий для записи
+fun canEditEntry(entry: JournalEntry): Boolean {
+    if (entry.authorId == null) return false
+    val currentUserId = currentUser?.id ?: return false
+    return isOwner || entry.authorId == currentUserId
+}
+
+fun canDeleteEntry(entry: JournalEntry): Boolean {
+    val currentUserId = currentUser?.id ?: return false
+    return isOwner || entry.authorId == currentUserId
+}
+```
+
+**2. Передать лямбды в Screen:**
+
+```kotlin
+val canEditEntry: (JournalEntry) -> Boolean = viewModel::canEditEntry
+val canDeleteEntry: (JournalEntry) -> Boolean = viewModel::canDeleteEntry
+```
+
+**3. Обновить логику в Screen:**
+
+```kotlin
+canEditEntry = canEditEntry,
+canDeleteEntry = { entry -> canDeleteEntry(entry) },
+```
+
+#### Альтернативный вариант: Логика в Screen (без тестов)
+
+Оставить логику в JournalEntriesScreen как есть, но без возможности unit-тестирования.
 
 ### Примеры сценариев
 
@@ -164,6 +194,16 @@ canDeleteEntry = isOwner,
 | Чужая запись в своём дневнике | ❌ | ❌ (только владелец дневника) |
 | Своя запись в чужом дневнике | ✅ | ✅ |
 | Чужая запись в чужом дневнике | ❌ | ❌ |
+
+### Unit-тесты (для варианта с ViewModel)
+
+Добавить тесты в `JournalEntriesViewModelTest`:
+- `testCanEditEntry_ownEntryInOwnJournal_returnsTrue` — своя запись в своём дневнике
+- `testCanEditEntry_ownEntryInForeignJournal_returnsTrue` — своя запись в чужом дневнике
+- `testCanEditEntry_foreignEntry_returnsFalse` — чужая запись
+- `testCanEditEntry_notLoggedIn_returnsFalse` — не авторизован
+- `testCanDeleteEntry_ownEntry_returnsTrue` — удаление своей записи
+- `testCanDeleteEntry_foreignEntry_returnsFalse` — нельзя удалить чужую запись
 
 ### Связанные документы
 
