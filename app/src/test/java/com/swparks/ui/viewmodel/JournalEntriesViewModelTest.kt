@@ -799,59 +799,51 @@ class JournalEntriesViewModelTest {
     // ==================== ТЕСТЫ ДЛЯ РЕДАКТИРОВАНИЯ ЗАПИСЕЙ ====================
 
     /**
-     * Тест 26: canEditEntry возвращает true для автора записи
+     * Тест 26: canEditEntry возвращает true для автора записи в чужом дневнике
      */
     @Test
     fun testCanEditEntry_author_returnsTrue() = runTest {
         // Given
-        val currentUserId = testUserId
+        val journalOwnerId = 100L
+        val currentUserId = 200L
         val entry = testEntry.copy(authorId = currentUserId)
-        coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns emptyFlow()
-        coEvery {
-            syncJournalEntriesUseCase(
-                testUserId,
-                testJournalId
-            )
-        } returns Result.success(Unit)
+        coEvery { getJournalEntriesUseCase(any(), any()) } returns emptyFlow()
+        coEvery { syncJournalEntriesUseCase(any(), any()) } returns Result.success(Unit)
 
         // When
-        viewModel = createViewModel(currentUserId = currentUserId)
+        viewModel = createViewModel(currentUserId = currentUserId, journalOwnerId = journalOwnerId)
         advanceUntilIdle()
 
         val result = viewModel.canEditEntry(entry)
 
         // Then
         assertTrue(
-            "Автор записи может редактировать её",
+            "Автор записи может редактировать её в чужом дневнике",
             result
         )
     }
 
     /**
-     * Тест 27: canEditEntry возвращает false для не-автора записи
+     * Тест 27: canEditEntry возвращает false для чужой записи в чужом дневнике
      */
     @Test
     fun testCanEditEntry_notAuthor_returnsFalse() = runTest {
         // Given
-        val currentUserId = 100L // другой пользователь
-        val entry = testEntry.copy(authorId = testUserId) // запись другого автора
-        coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns emptyFlow()
-        coEvery {
-            syncJournalEntriesUseCase(
-                testUserId,
-                testJournalId
-            )
-        } returns Result.success(Unit)
+        val journalOwnerId = 100L
+        val currentUserId = 200L
+        val entry = testEntry.copy(authorId = 300L)
+        coEvery { getJournalEntriesUseCase(any(), any()) } returns emptyFlow()
+        coEvery { syncJournalEntriesUseCase(any(), any()) } returns Result.success(Unit)
 
         // When
-        viewModel = createViewModel(currentUserId = currentUserId)
+        viewModel = createViewModel(currentUserId = currentUserId, journalOwnerId = journalOwnerId)
         advanceUntilIdle()
 
         val result = viewModel.canEditEntry(entry)
 
         // Then
         assertFalse(
-            "Не-автор записи не может редактировать её",
+            "Не-автор записи не может редактировать её в чужом дневнике",
             result
         )
     }
@@ -1050,5 +1042,204 @@ class JournalEntriesViewModelTest {
 
         // Then - getJournal НЕ должен быть вызван, т.к. дневник уже в кэше
         coVerify(exactly = 0) { swRepository.getJournal(any(), any()) }
+    }
+
+    // ==================== ТЕСТЫ ДЛЯ РЕДАКТИРОВАНИЯ/УДАЛЕНИЯ СВОИХ ЗАПИСЕЙ В ЧУЖИХ ДНЕВНИКАХ ====================
+
+    /**
+     * Тест: canEditEntry возвращает true для владельца дневника (любая запись)
+     */
+    @Test
+    fun canEditEntry_journalOwner_returnsTrue() = runTest {
+        // Given
+        val journalOwnerId = 100L
+        val currentUserId = journalOwnerId
+        val foreignAuthorId = 200L
+        val entry = testEntry.copy(authorId = foreignAuthorId)
+        coEvery { getJournalEntriesUseCase(any(), any()) } returns emptyFlow()
+        coEvery { syncJournalEntriesUseCase(any(), any()) } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel(currentUserId = currentUserId, journalOwnerId = journalOwnerId)
+        advanceUntilIdle()
+
+        val result = viewModel.canEditEntry(entry)
+
+        // Then
+        assertTrue(
+            "Владелец дневника может редактировать любую запись",
+            result
+        )
+    }
+
+    /**
+     * Тест: canEditEntry возвращает true для автора записи в чужом дневнике
+     */
+    @Test
+    fun canEditEntry_authorInForeignJournal_returnsTrue() = runTest {
+        // Given
+        val journalOwnerId = 100L
+        val currentUserId = 200L // не владелец дневника
+        val currentUserIsAuthor = currentUserId
+        val entry = testEntry.copy(authorId = currentUserIsAuthor)
+        coEvery { getJournalEntriesUseCase(any(), any()) } returns emptyFlow()
+        coEvery { syncJournalEntriesUseCase(any(), any()) } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel(currentUserId = currentUserId, journalOwnerId = journalOwnerId)
+        advanceUntilIdle()
+
+        val result = viewModel.canEditEntry(entry)
+
+        // Then
+        assertTrue(
+            "Автор записи может редактировать её в чужом дневнике",
+            result
+        )
+    }
+
+    /**
+     * Тест: canEditEntry возвращает false когда пользователь не авторизован
+     */
+    @Test
+    fun canEditEntry_notLoggedIn_returnsFalse() = runTest {
+        // Given
+        val entry = testEntry.copy(authorId = testUserId)
+        coEvery { getJournalEntriesUseCase(any(), any()) } returns emptyFlow()
+        coEvery { syncJournalEntriesUseCase(any(), any()) } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel(currentUserId = null)
+        advanceUntilIdle()
+
+        val result = viewModel.canEditEntry(entry)
+
+        // Then
+        assertFalse(
+            "Не авторизованный пользователь не может редактировать записи",
+            result
+        )
+    }
+
+    /**
+     * Тест: canEditEntry возвращает false для записи без автора
+     */
+    @Test
+    fun canEditEntry_entryWithoutAuthor_returnsFalse() = runTest {
+        // Given
+        val entry = testEntry.copy(authorId = null)
+        coEvery { getJournalEntriesUseCase(any(), any()) } returns emptyFlow()
+        coEvery { syncJournalEntriesUseCase(any(), any()) } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel(currentUserId = testUserId)
+        advanceUntilIdle()
+
+        val result = viewModel.canEditEntry(entry)
+
+        // Then
+        assertFalse(
+            "Запись без автора нельзя редактировать",
+            result
+        )
+    }
+
+    /**
+     * Тест: canDeleteEntry возвращает true для автора записи
+     */
+    @Test
+    fun canDeleteEntry_author_returnsTrue() = runTest {
+        // Given
+        val currentUserId = testUserId
+        val entry = testEntry.copy(authorId = currentUserId)
+        coEvery { getJournalEntriesUseCase(any(), any()) } returns emptyFlow()
+        coEvery { syncJournalEntriesUseCase(any(), any()) } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel(currentUserId = currentUserId)
+        advanceUntilIdle()
+
+        val result = viewModel.canDeleteEntry(entry)
+
+        // Then
+        assertTrue(
+            "Автор записи может удалить её",
+            result
+        )
+    }
+
+    /**
+     * Тест: canDeleteEntry возвращает true для владельца дневника
+     */
+    @Test
+    fun canDeleteEntry_journalOwner_returnsTrue() = runTest {
+        // Given
+        val journalOwnerId = 100L
+        val currentUserId = journalOwnerId
+        val foreignAuthorId = 200L
+        val entry = testEntry.copy(authorId = foreignAuthorId)
+        coEvery { getJournalEntriesUseCase(any(), any()) } returns emptyFlow()
+        coEvery { syncJournalEntriesUseCase(any(), any()) } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel(currentUserId = currentUserId, journalOwnerId = journalOwnerId)
+        advanceUntilIdle()
+
+        val result = viewModel.canDeleteEntry(entry)
+
+        // Then
+        assertTrue(
+            "Владелец дневника может удалить любую запись",
+            result
+        )
+    }
+
+    /**
+     * Тест: canDeleteEntry возвращает false для чужой записи в чужом дневнике
+     */
+    @Test
+    fun canDeleteEntry_foreignEntryInForeignJournal_returnsFalse() = runTest {
+        // Given
+        val journalOwnerId = 100L
+        val currentUserId = 200L
+        val foreignAuthorId = 300L
+        val entry = testEntry.copy(authorId = foreignAuthorId)
+        coEvery { getJournalEntriesUseCase(any(), any()) } returns emptyFlow()
+        coEvery { syncJournalEntriesUseCase(any(), any()) } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel(currentUserId = currentUserId, journalOwnerId = journalOwnerId)
+        advanceUntilIdle()
+
+        val result = viewModel.canDeleteEntry(entry)
+
+        // Then
+        assertFalse(
+            "Нельзя удалить чужую запись в чужом дневнике",
+            result
+        )
+    }
+
+    /**
+     * Тест: canDeleteEntry возвращает false когда пользователь не авторизован
+     */
+    @Test
+    fun canDeleteEntry_notLoggedIn_returnsFalse() = runTest {
+        // Given
+        val entry = testEntry.copy(authorId = testUserId)
+        coEvery { getJournalEntriesUseCase(any(), any()) } returns emptyFlow()
+        coEvery { syncJournalEntriesUseCase(any(), any()) } returns Result.success(Unit)
+
+        // When
+        viewModel = createViewModel(currentUserId = null)
+        advanceUntilIdle()
+
+        val result = viewModel.canDeleteEntry(entry)
+
+        // Then
+        assertFalse(
+            "Не авторизованный пользователь не может удалять записи",
+            result
+        )
     }
 }

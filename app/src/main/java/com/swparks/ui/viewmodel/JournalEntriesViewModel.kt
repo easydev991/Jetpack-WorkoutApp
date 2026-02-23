@@ -346,14 +346,31 @@ class JournalEntriesViewModel(
     /**
      * Проверить, можно ли редактировать запись.
      *
-     * Редактировать записи может только автор записи.
+     * Редактировать записи может владелец дневника или автор записи.
      *
      * @param entry Запись в дневнике
-     * @return true если редактирование разрешено (автор записи)
+     * @return true если редактирование разрешено
      */
     override fun canEditEntry(entry: com.swparks.domain.model.JournalEntry): Boolean {
-        val currentUserId = _currentUserId.value
-        return currentUserId == entry.authorId
+        val currentUserId = _currentUserId.value ?: return false
+        if (entry.authorId == null) return false
+        val isOwner = journalOwnerId == currentUserId
+        return isOwner || entry.authorId == currentUserId
+    }
+
+    /**
+     * Проверить, можно ли удалить запись.
+     *
+     * Удалять записи может владелец дневника или автор записи.
+     * Первая запись (с минимальным id) не может быть удалена.
+     *
+     * @param entry Запись в дневнике
+     * @return true если удаление разрешено
+     */
+    override fun canDeleteEntry(entry: com.swparks.domain.model.JournalEntry): Boolean {
+        val currentUserId = _currentUserId.value ?: return false
+        val isOwner = journalOwnerId == currentUserId
+        return isOwner || entry.authorId == currentUserId
     }
 
     /**

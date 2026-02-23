@@ -117,6 +117,10 @@ fun JournalEntriesScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isDeleting by viewModel.isDeleting.collectAsState()
 
+    // Функции для проверки прав на редактирование/удаление записей
+    val canEditEntry: (JournalEntry) -> Boolean = { entry -> viewModel.canEditEntry(entry) }
+    val canDeleteEntry: (JournalEntry) -> Boolean = { entry -> viewModel.canDeleteEntry(entry) }
+
     // Проверка: просмотр собственного дневника или чужого
     val isOwner = appState.currentUser?.id == journalOwnerId
 
@@ -232,33 +236,26 @@ fun JournalEntriesScreen(
                         entries = contentState.entries,
                         isRefreshing = isRefreshing,
                         isDeleting = isDeleting,
-                        canCreateEntry = contentState.canCreateEntry && isOwner,
-                        isOwner = isOwner,
+                        canCreateEntry = contentState.canCreateEntry,
+                        canEditEntry = canEditEntry,
+                        canDeleteEntry = canDeleteEntry,
                         canReportEntry = false, // Скрыто до доработки функционала жалоб
                         firstEntryId = contentState.firstEntryId,
                         onRefresh = { viewModel.loadEntries() },
-                        onDeleteEntry = if (isOwner) {
-                            { entryId ->
-                                showDeleteDialog = true
-                                entryToDelete = entryId
-                            }
-                        } else {
-                            {}
+                        onDeleteEntry = { entryId ->
+                            showDeleteDialog = true
+                            entryToDelete = entryId
                         },
-                        onEditEntry = if (isOwner) {
-                            { entry ->
-                                textEntryMode = TextEntryMode.EditJournalEntry(
-                                    ownerId = journalOwnerId,
-                                    editInfo = EditInfo(
-                                        parentObjectId = journalId,
-                                        entryId = entry.id,
-                                        oldEntry = entry.message ?: ""
-                                    )
+                        onEditEntry = { entry ->
+                            textEntryMode = TextEntryMode.EditJournalEntry(
+                                ownerId = journalOwnerId,
+                                editInfo = EditInfo(
+                                    parentObjectId = journalId,
+                                    entryId = entry.id,
+                                    oldEntry = entry.message ?: ""
                                 )
-                                showTextEntrySheet = true
-                            }
-                        } else {
-                            {}
+                            )
+                            showTextEntrySheet = true
                         },
                         onReportEntry = { entry ->
                             val complaint = com.swparks.util.Complaint.JournalEntry(
@@ -267,7 +264,7 @@ fun JournalEntriesScreen(
                             )
                             com.swparks.ui.screens.more.sendComplaint(complaint, context)
                         },
-                        onAddEntryClick = if (isOwner) {
+                        onAddEntryClick = if (contentState.canCreateEntry) {
                             {
                                 textEntryMode = TextEntryMode.NewForJournal(
                                     ownerId = journalOwnerId,
@@ -351,7 +348,8 @@ private fun ContentScreen(
     isRefreshing: Boolean,
     isDeleting: Boolean,
     canCreateEntry: Boolean = true,
-    isOwner: Boolean = false,
+    canEditEntry: (JournalEntry) -> Boolean = { false },
+    canDeleteEntry: (JournalEntry) -> Boolean = { false },
     canReportEntry: Boolean = false,
     firstEntryId: Long? = null,
     onRefresh: () -> Unit,
@@ -394,8 +392,8 @@ private fun ContentScreen(
             EntriesList(
                 entries = entries,
                 enabled = !isRefreshing && !isDeleting,
-                canEditEntry = { entry -> entry.authorId != null && isOwner },
-                canDeleteEntry = isOwner,
+                canEditEntry = canEditEntry,
+                canDeleteEntry = canDeleteEntry,
                 canReportEntry = canReportEntry,
                 firstEntryId = firstEntryId,
                 onDeleteEntry = onDeleteEntry,
@@ -416,13 +414,12 @@ private fun ContentScreen(
  *
  * @param canReportEntry Если true - показывать действие REPORT (для чужих дневников)
  */
-@Suppress("UnusedParameter")
 @Composable
 private fun EntriesList(
     entries: List<JournalEntry>,
     enabled: Boolean = true,
     canEditEntry: (JournalEntry) -> Boolean = { false },
-    canDeleteEntry: Boolean = false,
+    canDeleteEntry: (JournalEntry) -> Boolean = { false },
     canReportEntry: Boolean = false,
     firstEntryId: Long? = null,
     onDeleteEntry: (Long) -> Unit = {},
@@ -449,8 +446,8 @@ private fun EntriesList(
                 actions.add(JournalAction.EDIT)
             }
             // Первую запись (с минимальным id) нельзя удалить
-            // Удалять может только владелец дневника
-            if (canDeleteEntry && entry.id != firstEntryId) {
+            // Удалять может владелец дневника или автор записи
+            if (canDeleteEntry(entry) && entry.id != firstEntryId) {
                 actions.add(JournalAction.DELETE)
             }
             // Жалоба доступна только для чужих дневников
@@ -546,7 +543,6 @@ private fun JournalEntriesScreenEmptyPreview() {
             isRefreshing = false,
             isDeleting = false,
             canCreateEntry = true,
-            isOwner = true,
             firstEntryId = null,
             onRefresh = {},
             onDeleteEntry = {},
@@ -599,7 +595,6 @@ private fun JournalEntriesScreenWithItemsPreview() {
             isRefreshing = false,
             isDeleting = false,
             canCreateEntry = true,
-            isOwner = true,
             firstEntryId = 1,
             onRefresh = {},
             onDeleteEntry = {},

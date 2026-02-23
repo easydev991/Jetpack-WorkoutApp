@@ -12,7 +12,7 @@
 | Пятая | Кнопка настроек в TopAppBar, JournalSettingsDialog, IJournalSettingsViewModel |
 | Шестая | Багфиксы настроек: видимость кнопки, обновление заголовка, проверка кэша |
 | Седьмая | Доработка FAB по iOS-логике: убрано дублирование isOwner, отключение при обновлении |
-| Восьмая | Редактирование/удаление своих записей в чужих дневниках |
+| Восьмая ✅ | Редактирование/удаление своих записей в чужих дневниках |
 
 ## Статистика тестов
 
@@ -26,7 +26,7 @@
 | Пятая | 10 | Настройки дневника |
 | Шестая | 2 | Багфиксы настроек |
 | Седьмая | 2 | Доработка FAB по iOS-логике |
-| Восьмая | TBD | Редактирование/удаление своих записей в чужих дневниках |
+| Восьмая | 10 | Редактирование/удаление своих записей в чужих дневниках |
 
 ---
 
@@ -127,85 +127,81 @@ if (contentState.canCreateEntry && !isDeleting && !isRefreshing) {
 
 ---
 
-## Восьмая итерация: Редактирование/удаление своих записей в чужих дневниках
+## Восьмая итерация: Редактирование/удаление своих записей в чужих дневниках ✅
 
 ### Проблема
 
-Сейчас пользователь может создавать записи в чужих дневниках (если разрешено доступом), но не может их редактировать или удалять. Логика `canEditEntry` и `canDeleteEntry` проверяет только `isOwner` (владелец дневника), но не учитывает `authorId` записи.
+Сейчас пользователь может создавать записи в чужих дневниках (если разрешено доступом), но не может их редактировать или удалять. Логика `canEditEntry` и `canDeleteEntry` проверяла только `isOwner` (владелец дневника), но не учитывала `authorId` записи.
 
-### Требуемое поведение
+### Реализация
 
-Если `entry.authorId == currentUser.id`, пользователь должен иметь возможность:
-- **EDIT** — редактировать свою запись
-- **DELETE** — удалять свою запись (кроме первой записи в дневнике)
+Логика вынесена в ViewModel для возможности unit-тестирования.
 
-### Текущий код (JournalEntriesScreen.kt)
+**1. IJournalEntriesViewModel.kt** — добавлен новый метод:
 
 ```kotlin
-canEditEntry = { entry -> entry.authorId != null && isOwner },
-canDeleteEntry = isOwner,
+fun canDeleteEntry(entry: JournalEntry): Boolean
 ```
 
-### План доработки
-
-#### Вариант реализации: Логика во ViewModel (для тестируемости)
-
-Рекомендуется вынести логику определения доступных действий в `JournalEntriesViewModel`, чтобы можно было написать unit-тесты.
-
-**1. Добавить методы в JournalEntriesViewModel:**
+**2. JournalEntriesViewModel.kt** — обновлена логика:
 
 ```kotlin
-// Определение доступных действий для записи
-fun canEditEntry(entry: JournalEntry): Boolean {
+// canEditEntry
+override fun canEditEntry(entry: JournalEntry): Boolean {
+    val currentUserId = _currentUserId.value ?: return false
     if (entry.authorId == null) return false
-    val currentUserId = currentUser?.id ?: return false
+    val isOwner = journalOwnerId == currentUserId
     return isOwner || entry.authorId == currentUserId
 }
 
-fun canDeleteEntry(entry: JournalEntry): Boolean {
-    val currentUserId = currentUser?.id ?: return false
+// canDeleteEntry
+override fun canDeleteEntry(entry: JournalEntry): Boolean {
+    val currentUserId = _currentUserId.value ?: return false
+    val isOwner = journalOwnerId == currentUserId
     return isOwner || entry.authorId == currentUserId
 }
 ```
 
-**2. Передать лямбды в Screen:**
+**3. JournalEntriesScreen.kt** — передача функций из ViewModel:
 
 ```kotlin
-val canEditEntry: (JournalEntry) -> Boolean = viewModel::canEditEntry
-val canDeleteEntry: (JournalEntry) -> Boolean = viewModel::canDeleteEntry
+val canEditEntry: (JournalEntry) -> Boolean = { entry -> viewModel.canEditEntry(entry) }
+val canDeleteEntry: (JournalEntry) -> Boolean = { entry -> viewModel.canDeleteEntry(entry) }
 ```
 
-**3. Обновить логику в Screen:**
-
-```kotlin
-canEditEntry = canEditEntry,
-canDeleteEntry = { entry -> canDeleteEntry(entry) },
-```
-
-#### Альтернативный вариант: Логика в Screen (без тестов)
-
-Оставить логику в JournalEntriesScreen как есть, но без возможности unit-тестирования.
-
-### Примеры сценариев
+### Сценарии
 
 | Сценарий | canEditEntry | canDeleteEntry |
 |----------|--------------|----------------|
 | Своя запись в своём дневнике | ✅ | ✅ |
-| Чужая запись в своём дневнике | ❌ | ❌ (только владелец дневника) |
+| Чужая запись в своём дневнике | ❌ | ❌ |
 | Своя запись в чужом дневнике | ✅ | ✅ |
 | Чужая запись в чужом дневнике | ❌ | ❌ |
+| Не авторизован | ❌ | ❌ |
 
-### Unit-тесты (для варианта с ViewModel)
+### Unit-тесты
 
-Добавить тесты в `JournalEntriesViewModelTest`:
-- `testCanEditEntry_ownEntryInOwnJournal_returnsTrue` — своя запись в своём дневнике
-- `testCanEditEntry_ownEntryInForeignJournal_returnsTrue` — своя запись в чужом дневнике
-- `testCanEditEntry_foreignEntry_returnsFalse` — чужая запись
-- `testCanEditEntry_notLoggedIn_returnsFalse` — не авторизован
-- `testCanDeleteEntry_ownEntry_returnsTrue` — удаление своей записи
-- `testCanDeleteEntry_foreignEntry_returnsFalse` — нельзя удалить чужую запись
+Добавлено 10 тестов в `JournalEntriesViewModelTest`:
+- `canEditEntry_journalOwner_returnsTrue`
+- `canEditEntry_authorInForeignJournal_returnsTrue`
+- `canEditEntry_notLoggedIn_returnsFalse`
+- `canEditEntry_entryWithoutAuthor_returnsFalse`
+- `canDeleteEntry_author_returnsTrue`
+- `canDeleteEntry_journalOwner_returnsTrue`
+- `canDeleteEntry_foreignEntryInForeignJournal_returnsFalse`
+- `canDeleteEntry_notLoggedIn_returnsFalse`
+- Обновлены `testCanEditEntry_author_returnsTrue` и `testCanEditEntry_notAuthor_returnsFalse`
 
-### Связанные документы
+### Проверка
+
+```bash
+./gradlew test  # Все тесты проходят
+./gradlew ktlintCheck  # Линтер проходит
+```
+
+---
+
+## Связанные документы
 
 - [План JournalsListScreen](./doc-journals-list-screen.md)
 - [План TextEntryScreen](./doc-text-entry-screen.md)
