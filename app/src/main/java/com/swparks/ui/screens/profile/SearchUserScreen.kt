@@ -1,6 +1,5 @@
 package com.swparks.ui.screens.profile
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,6 +40,7 @@ import com.swparks.ui.ds.SWTextField
 import com.swparks.ui.ds.TextFieldConfig
 import com.swparks.ui.ds.UserRowView
 import com.swparks.ui.state.SearchUserUiState
+import com.swparks.ui.utils.disabledIf
 import com.swparks.ui.viewmodel.ISearchUserViewModel
 
 /**
@@ -51,6 +51,7 @@ import com.swparks.ui.viewmodel.ISearchUserViewModel
  * @param onBackClick Callback для навигации назад
  * @param onUserClick Callback для навигации на профиль найденного пользователя
  * @param parentPaddingValues Паддинги для учета BottomNavigationBar
+ * @param currentUserId ID текущего авторизованного пользователя (для блокировки собственного профиля)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,7 +60,8 @@ fun SearchUserScreen(
     viewModel: ISearchUserViewModel,
     onBackClick: () -> Unit,
     onUserClick: (Long) -> Unit,
-    parentPaddingValues: PaddingValues
+    parentPaddingValues: PaddingValues,
+    currentUserId: Long? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -73,7 +75,8 @@ fun SearchUserScreen(
         onUserClick = onUserClick,
         onBackClick = onBackClick,
         onRetry = { viewModel.onSearch() },
-        parentPaddingValues = parentPaddingValues
+        parentPaddingValues = parentPaddingValues,
+        currentUserId = currentUserId
     )
 }
 
@@ -91,6 +94,7 @@ fun SearchUserScreen(
  * @param onBackClick Callback для навигации назад
  * @param onRetry Callback при повторной попытке после ошибки
  * @param parentPaddingValues Паддинги для учета BottomNavigationBar
+ * @param currentUserId ID текущего авторизованного пользователя (для блокировки собственного профиля)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,7 +107,8 @@ fun SearchUserScreenContent(
     onUserClick: (Long) -> Unit,
     onBackClick: () -> Unit,
     onRetry: () -> Unit,
-    parentPaddingValues: PaddingValues
+    parentPaddingValues: PaddingValues,
+    currentUserId: Long? = null
 ) {
     // Сохраняем последний "показываемый" контент (не Loading)
     // Это позволяет отображать предыдущий контент под LoadingOverlayView
@@ -176,7 +181,8 @@ fun SearchUserScreenContent(
                         UsersList(
                             users = state.users,
                             onUserClick = onUserClick,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
+                            currentUserId = currentUserId
                         )
                     }
 
@@ -217,7 +223,8 @@ fun SearchUserScreenContent(
 private fun UsersList(
     users: List<com.swparks.data.model.User>,
     onUserClick: (Long) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    currentUserId: Long? = null
 ) {
     LazyColumn(
         modifier = modifier,
@@ -233,8 +240,12 @@ private fun UsersList(
             items = users,
             key = { it.id }
         ) { user ->
+            val isDisabled = user.id == currentUserId
             Box(
-                modifier = Modifier.clickable { onUserClick(user.id) }
+                modifier = Modifier.disabledIf(
+                    disabled = isDisabled,
+                    onClick = { onUserClick(user.id) }
+                )
             ) {
                 UserRowView(
                     modifier = Modifier.fillMaxWidth(),

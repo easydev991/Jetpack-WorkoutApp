@@ -1,6 +1,5 @@
 package com.swparks.ui.screens.profile
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +33,7 @@ import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.SectionView
 import com.swparks.ui.ds.UserRowView
 import com.swparks.ui.state.FriendsListUiState
+import com.swparks.ui.utils.disabledIf
 import com.swparks.ui.viewmodel.IFriendsListViewModel
 
 /**
@@ -44,6 +44,7 @@ import com.swparks.ui.viewmodel.IFriendsListViewModel
  * @param onBackClick Callback для навигации назад
  * @param onFriendClick Callback для навигации на профиль друга
  * @param parentPaddingValues Паддинги для учета BottomNavigationBar
+ * @param currentUserId ID текущего авторизованного пользователя (для блокировки собственного профиля)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,7 +53,8 @@ fun MyFriendsScreen(
     viewModel: IFriendsListViewModel,
     onBackClick: () -> Unit,
     onFriendClick: (Long) -> Unit,
-    parentPaddingValues: PaddingValues
+    parentPaddingValues: PaddingValues,
+    currentUserId: Long? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isProcessing by viewModel.isProcessing.collectAsState()
@@ -65,12 +67,23 @@ fun MyFriendsScreen(
         onAcceptFriendRequest = { viewModel.onAcceptFriendRequest(it) },
         onDeclineFriendRequest = { viewModel.onDeclineFriendRequest(it) },
         onFriendClick = onFriendClick,
-        isProcessing = isProcessing
+        isProcessing = isProcessing,
+        currentUserId = currentUserId
     )
 }
 
 /**
  * Stateless контент экрана списка друзей
+ *
+ * @param modifier Модификатор
+ * @param uiState Текущее состояние UI
+ * @param onBackClick Callback для навигации назад
+ * @param parentPaddingValues Паддинги для учета BottomNavigationBar
+ * @param onAcceptFriendRequest Callback при принятии заявки в друзья
+ * @param onDeclineFriendRequest Callback при отклонении заявки в друзья
+ * @param onFriendClick Callback при клике на друга
+ * @param isProcessing Флаг блокировки при обработке запроса
+ * @param currentUserId ID текущего авторизованного пользователя (для блокировки собственного профиля)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,7 +95,8 @@ fun MyFriendsScreenContent(
     onAcceptFriendRequest: (Long) -> Unit,
     onDeclineFriendRequest: (Long) -> Unit,
     onFriendClick: (Long) -> Unit,
-    isProcessing: Boolean = false
+    isProcessing: Boolean = false,
+    currentUserId: Long? = null
 ) {
     Scaffold(
         modifier = modifier,
@@ -131,7 +145,8 @@ fun MyFriendsScreenContent(
                             onDeclineFriendRequest = onDeclineFriendRequest,
                             onFriendClick = onFriendClick,
                             modifier = Modifier.fillMaxSize(),
-                            enabled = !isProcessing
+                            enabled = !isProcessing,
+                            currentUserId = currentUserId
                         )
                         // Индикатор загрузки поверх при обработке запроса
                         if (isProcessing) {
@@ -146,6 +161,15 @@ fun MyFriendsScreenContent(
 
 /**
  * Контент с данными друзей и заявок
+ *
+ * @param friendRequests Список заявок в друзья
+ * @param friends Список друзей
+ * @param onAcceptFriendRequest Callback при принятии заявки
+ * @param onDeclineFriendRequest Callback при отклонении заявки
+ * @param onFriendClick Callback при клике на друга
+ * @param modifier Модификатор
+ * @param enabled Флаг блокировки при обработке запроса
+ * @param currentUserId ID текущего авторизованного пользователя (для блокировки собственного профиля)
  */
 @Composable
 private fun SuccessContent(
@@ -155,7 +179,8 @@ private fun SuccessContent(
     onDeclineFriendRequest: (Long) -> Unit,
     onFriendClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    currentUserId: Long? = null
 ) {
     LazyColumn(
         modifier = modifier,
@@ -218,11 +243,12 @@ private fun SuccessContent(
                         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
                     ) {
                         friends.forEach { user ->
+                            val isDisabled = user.id == currentUserId || !enabled
                             Box(
-                                modifier = Modifier
-                                    .clickable(enabled = enabled) {
-                                        onFriendClick(user.id)
-                                    }
+                                modifier = Modifier.disabledIf(
+                                    disabled = isDisabled,
+                                    onClick = { onFriendClick(user.id) }
+                                )
                             ) {
                                 UserRowView(
                                     modifier = Modifier,

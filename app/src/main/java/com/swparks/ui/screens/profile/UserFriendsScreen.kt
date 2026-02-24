@@ -1,6 +1,5 @@
 package com.swparks.ui.screens.profile
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -27,6 +26,7 @@ import com.swparks.data.model.User
 import com.swparks.ui.ds.EmptyStateView
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.UserRowView
+import com.swparks.ui.utils.disabledIf
 import com.swparks.ui.viewmodel.UserFriendsUiState
 import com.swparks.ui.viewmodel.UserFriendsViewModel
 
@@ -38,6 +38,7 @@ import com.swparks.ui.viewmodel.UserFriendsViewModel
  * @param onBackClick Callback для навигации назад
  * @param onUserClick Callback для навигации на профиль пользователя
  * @param parentPaddingValues Паддинги для учета BottomNavigationBar
+ * @param currentUserId ID текущего авторизованного пользователя (для блокировки собственного профиля)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,7 +47,8 @@ fun UserFriendsScreen(
     viewModel: UserFriendsViewModel,
     onBackClick: () -> Unit,
     onUserClick: (Long) -> Unit,
-    parentPaddingValues: PaddingValues
+    parentPaddingValues: PaddingValues,
+    currentUserId: Long? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -56,12 +58,21 @@ fun UserFriendsScreen(
         onBackClick = onBackClick,
         onUserClick = onUserClick,
         parentPaddingValues = parentPaddingValues,
-        onRefresh = { viewModel.refresh() }
+        onRefresh = { viewModel.refresh() },
+        currentUserId = currentUserId
     )
 }
 
 /**
  * Stateless контент экрана списка друзей пользователя
+ *
+ * @param modifier Модификатор
+ * @param uiState Текущее состояние UI
+ * @param onBackClick Callback для навигации назад
+ * @param onUserClick Callback для навигации на профиль пользователя
+ * @param parentPaddingValues Паддинги для учета BottomNavigationBar
+ * @param onRefresh Callback для обновления данных
+ * @param currentUserId ID текущего авторизованного пользователя (для блокировки собственного профиля)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,7 +82,8 @@ fun UserFriendsScreenContent(
     onBackClick: () -> Unit,
     onUserClick: (Long) -> Unit,
     parentPaddingValues: PaddingValues,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    currentUserId: Long? = null
 ) {
     Scaffold(
         modifier = modifier,
@@ -120,7 +132,8 @@ fun UserFriendsScreenContent(
                         FriendsList(
                             friends = uiState.friends,
                             onUserClick = onUserClick,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
+                            currentUserId = currentUserId
                         )
                     }
                 }
@@ -131,12 +144,18 @@ fun UserFriendsScreenContent(
 
 /**
  * Список друзей
+ *
+ * @param friends Список друзей
+ * @param onUserClick Callback при клике на пользователя
+ * @param modifier Модификатор
+ * @param currentUserId ID текущего авторизованного пользователя (для блокировки собственного профиля)
  */
 @Composable
 private fun FriendsList(
     friends: List<User>,
     onUserClick: (Long) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    currentUserId: Long? = null
 ) {
     LazyColumn(
         modifier = modifier,
@@ -150,8 +169,12 @@ private fun FriendsList(
     ) {
         items(friends.size) { index ->
             val user = friends[index]
+            val isDisabled = user.id == currentUserId
             Box(
-                modifier = Modifier.clickable { onUserClick(user.id) }
+                modifier = Modifier.disabledIf(
+                    disabled = isDisabled,
+                    onClick = { onUserClick(user.id) }
+                )
             ) {
                 UserRowView(
                     modifier = Modifier,

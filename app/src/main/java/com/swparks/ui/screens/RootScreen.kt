@@ -329,7 +329,8 @@ fun RootScreen(appState: AppState) {
                             Screen.OtherUserProfile.createRoute(userId, source)
                         )
                     },
-                    parentPaddingValues = paddingValues
+                    parentPaddingValues = paddingValues,
+                    currentUserId = currentUser?.id
                 )
             }
 
@@ -384,7 +385,8 @@ fun RootScreen(appState: AppState) {
                             Screen.OtherUserProfile.createRoute(userId, "profile")
                         )
                     },
-                    parentPaddingValues = paddingValues
+                    parentPaddingValues = paddingValues,
+                    currentUserId = currentUser?.id
                 )
             }
 
@@ -429,7 +431,8 @@ fun RootScreen(appState: AppState) {
                                 Screen.OtherUserProfile.createRoute(clickedUserId, source)
                             )
                         },
-                        parentPaddingValues = paddingValues
+                        parentPaddingValues = paddingValues,
+                        currentUserId = currentUser?.id
                     )
                 }
             }
