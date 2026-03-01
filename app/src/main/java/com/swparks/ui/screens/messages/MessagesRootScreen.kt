@@ -66,7 +66,8 @@ fun MessagesRootScreen(
     onShowLoginSheet: () -> Unit,
     onShowRegisterSheet: () -> Unit = {},
     onNavigateToFriends: () -> Unit = {},
-    onNavigateToSearchUsers: () -> Unit = {}
+    onNavigateToSearchUsers: () -> Unit = {},
+    onNavigateToChat: (dialogId: Long, userId: Int, userName: String, userImage: String?) -> Unit = { _, _, _, _ -> }
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
@@ -113,8 +114,14 @@ fun MessagesRootScreen(
             currentUser = appState.currentUser,
             onRefresh = { viewModel.refresh() },
             onDismissSyncError = { viewModel.dismissSyncError() },
-            onDialogClick = { dialogId, userId ->
-                viewModel.onDialogClick(dialogId, userId)
+            onDialogClick = { dialog ->
+                viewModel.onDialogClick(dialog.id, dialog.anotherUserId)
+                onNavigateToChat(
+                    dialog.id,
+                    dialog.anotherUserId ?: 0,
+                    dialog.name ?: "",
+                    dialog.image
+                )
             },
             onMarkAsRead = { dialogId, userId ->
                 viewModel.markDialogAsRead(dialogId, userId)
@@ -177,7 +184,7 @@ fun DialogsContent(
     currentUser: com.swparks.data.model.User?,
     onRefresh: () -> Unit,
     onDismissSyncError: () -> Unit,
-    onDialogClick: (Long, Int?) -> Unit,
+    onDialogClick: (DialogEntity) -> Unit,
     onMarkAsRead: (Long, Int) -> Unit,
     onDeleteClick: (DialogEntity) -> Unit,
     onNavigateToFriends: () -> Unit,
@@ -360,7 +367,7 @@ private fun EmptyStateViewForDialogs(
 fun DialogsList(
     dialogs: List<DialogEntity>,
     isRefreshing: Boolean,
-    onDialogClick: (Long, Int?) -> Unit,
+    onDialogClick: (DialogEntity) -> Unit,
     onLongClick: (DialogEntity, Offset, Offset) -> Unit
 ) {
     val context = LocalContext.current
@@ -397,7 +404,7 @@ fun DialogsList(
                     }
                 ),
                 onClick = {
-                    onDialogClick(dialog.id, dialog.anotherUserId)
+                    onDialogClick(dialog)
                 }
             )
         }

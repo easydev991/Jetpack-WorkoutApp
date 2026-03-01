@@ -67,6 +67,7 @@ import com.swparks.network.SWApi
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.viewmodel.BlacklistViewModel
 import com.swparks.ui.viewmodel.ChangePasswordViewModel
+import com.swparks.ui.viewmodel.ChatViewModel
 import com.swparks.ui.viewmodel.DialogsViewModel
 import com.swparks.ui.viewmodel.EditProfileViewModel
 import com.swparks.ui.viewmodel.FriendsListViewModel
@@ -160,6 +161,9 @@ interface AppContainer {
 
     /** Фабрика для DialogsViewModel */
     fun dialogsViewModelFactory(): DialogsViewModel
+
+    /** Фабрика для ChatViewModel */
+    fun chatViewModelFactory(): ChatViewModel
 
     /** Фабрика для SearchUserViewModel */
     fun searchUserViewModelFactory(): SearchUserViewModel
@@ -537,6 +541,12 @@ class DefaultAppContainer(context: Context) : AppContainer {
         swRepository = swRepository,
         logger = logger,
         resources = resourcesProvider
+    )
+
+    /** Factory метод для создания ChatViewModel */
+    override fun chatViewModelFactory() = ChatViewModel(
+        swApi = provideMessagesApi(),
+        userNotifier = userNotifier
     )
 
     /** Factory метод для создания SearchUserViewModel */

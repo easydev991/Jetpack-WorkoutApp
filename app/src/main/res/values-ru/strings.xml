@@ -389,4 +389,8 @@
     <!-- Диалог удаления профиля -->
     <string name="delete_profile_title">Удаление профиля</string>
     <string name="delete_profile_message">Все данные вашего профиля будут необратимо удалены</string>
+
+    <!-- Экран чата -->
+    <string name="chat_empty_messages">Сообщений пока нет</string>
+    <string name="refresh">Обновить</string>
 </resources>

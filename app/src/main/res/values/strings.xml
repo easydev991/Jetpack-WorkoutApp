@@ -375,4 +375,8 @@
     <!-- Delete profile dialog -->
     <string name="delete_profile_title">Delete profile</string>
     <string name="delete_profile_message">All your profile data will be permanently deleted</string>
+
+    <!-- Chat screen -->
+    <string name="chat_empty_messages">No messages yet</string>
+    <string name="refresh">Refresh</string>
 </resources>

@@ -145,9 +145,21 @@ sealed class Screen(
     }
 
     // Экраны сообщений
-    object Chat : Screen("chat/{dialogId}?source={source}", parentTab = Messages) {
-        fun createRoute(dialogId: Long, source: String = "messages") =
-            "chat/$dialogId?source=$source"
+    object Chat : Screen(
+        "chat/{dialogId}?userId={userId}&userName={userName}&userImage={userImage}&source={source}",
+        parentTab = Messages
+    ) {
+        fun createRoute(
+            dialogId: Long,
+            userId: Int,
+            userName: String,
+            userImage: String?,
+            source: String = "messages"
+        ): String {
+            val encodedName = android.net.Uri.encode(userName)
+            val encodedImage = userImage?.let { android.net.Uri.encode(it) } ?: ""
+            return "chat/$dialogId?userId=$userId&userName=$encodedName&userImage=$encodedImage&source=$source"
+        }
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "messages"

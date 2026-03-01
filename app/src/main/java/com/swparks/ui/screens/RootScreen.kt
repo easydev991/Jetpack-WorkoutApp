@@ -35,6 +35,7 @@ import com.swparks.ui.screens.events.EventsScreen
 import com.swparks.ui.screens.events.EventsTopAppBar
 import com.swparks.ui.screens.journals.JournalEntriesScreen
 import com.swparks.ui.screens.journals.JournalsListScreen
+import com.swparks.ui.screens.messages.ChatScreen
 import com.swparks.ui.screens.messages.MessagesRootScreen
 import com.swparks.ui.screens.messages.MessagesTopAppBar
 import com.swparks.ui.screens.more.MoreScreen
@@ -243,6 +244,11 @@ fun RootScreen(appState: AppState) {
                     },
                     onNavigateToSearchUsers = {
                         appState.navController.navigate(Screen.UserSearch.createRoute("messages"))
+                    },
+                    onNavigateToChat = { dialogId, userId, userName, userImage ->
+                        appState.navController.navigate(
+                            Screen.Chat.createRoute(dialogId, userId, userName, userImage, "messages")
+                        )
                     }
                 )
             }
@@ -302,9 +308,52 @@ fun RootScreen(appState: AppState) {
                 // TODO: Реализовать EditEventScreen
             }
 
-            // Экраны сообщений (будут добавлены позже)
-            composable(route = Screen.Chat.route) {
-                // TODO: Реализовать ChatScreen
+            // Экран чата
+            composable(
+                route = Screen.Chat.route,
+                arguments = listOf(
+                    androidx.navigation.navArgument("dialogId") { type = androidx.navigation.NavType.LongType },
+                    androidx.navigation.navArgument("userId") { type = androidx.navigation.NavType.IntType },
+                    androidx.navigation.navArgument("userName") { type = androidx.navigation.NavType.StringType },
+                    androidx.navigation.navArgument("userImage") {
+                        type = androidx.navigation.NavType.StringType
+                        defaultValue = ""
+                    },
+                    androidx.navigation.navArgument("source") {
+                        defaultValue = "messages"
+                    }
+                )
+            ) { navBackStackEntry ->
+                val arguments = navBackStackEntry.arguments
+                val dialogId = arguments?.getLong("dialogId") ?: 0L
+                val userId = arguments?.getInt("userId") ?: 0
+                val userName = arguments?.getString("userName") ?: ""
+                val userImage = arguments?.getString("userImage")?.takeIf { it.isNotEmpty() }
+
+                val chatViewModel = remember(appContainer) {
+                    appContainer.chatViewModelFactory()
+                }
+
+                ChatScreen(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    viewModel = chatViewModel,
+                    userName = userName,
+                    userImage = userImage,
+                    currentUserId = currentUser?.id,
+                    onBackClick = { appState.navController.popBackStack() },
+                    onAvatarClick = {
+                        appState.navController.navigate(
+                            Screen.OtherUserProfile.createRoute(userId.toLong(), "messages")
+                        )
+                    }
+                )
+
+                // Загружаем сообщения при первом отображении
+                LaunchedEffect(dialogId) {
+                    chatViewModel.loadMessages(dialogId)
+                }
             }
 
             composable(
