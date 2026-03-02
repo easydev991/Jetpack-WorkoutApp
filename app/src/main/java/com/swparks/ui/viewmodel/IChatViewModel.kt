@@ -1,7 +1,9 @@
 package com.swparks.ui.viewmodel
 
 import androidx.compose.runtime.MutableState
+import com.swparks.ui.state.ChatEvent
 import com.swparks.ui.state.ChatUiState
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -20,6 +22,11 @@ interface IChatViewModel {
      * Индикатор отправки сообщения.
      */
     val isLoading: StateFlow<Boolean>
+
+    /**
+     * События чата для коммуникации с родительскими экранами.
+     */
+    val events: SharedFlow<ChatEvent>
 
     /**
      * Текст сообщения для отправки.

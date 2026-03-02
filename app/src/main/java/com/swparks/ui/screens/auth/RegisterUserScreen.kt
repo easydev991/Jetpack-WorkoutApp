@@ -32,7 +32,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -60,6 +59,7 @@ import com.swparks.ui.ds.SWTextField
 import com.swparks.ui.ds.TextFieldConfig
 import com.swparks.ui.model.Gender
 import com.swparks.ui.state.RegisterEvent
+import com.swparks.ui.utils.disabledAlpha
 import com.swparks.ui.viewmodel.IRegisterViewModel
 import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
@@ -491,7 +491,7 @@ private fun PolicyToggle(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .alpha(if (enabled) 1f else 0.5f),
+            .disabledAlpha(!enabled),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
     ) {

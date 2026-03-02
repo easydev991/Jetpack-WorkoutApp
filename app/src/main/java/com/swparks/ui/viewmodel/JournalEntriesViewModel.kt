@@ -375,10 +375,10 @@ class JournalEntriesViewModel(
         Log.d(TAG, "entry.authorId=${entry.authorId}, entry.id=${entry.id}")
         Log.d(TAG, "==================")
 
-        if (currentUserId == null) return false
-        if (entry.authorId == null) return false
         val isOwner = journalOwnerId == currentUserId
-        return isOwner || entry.authorId == currentUserId
+        return currentUserId != null &&
+            entry.authorId != null &&
+            (isOwner || entry.authorId == currentUserId)
     }
 
     /**

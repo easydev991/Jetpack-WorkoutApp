@@ -30,12 +30,12 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  *
  * @property topStartCorner Радиус верхнего левого угла
  * @property bottomEndCorner Радиус нижнего правого угла
- * @property boxPaddingValues Отступ сбоку, чтобы сообщение не занимало всю ширину экрана
+ * @property contentPadding Отступ сбоку от края экрана (минимальный отступ)
  */
 enum class MessageType(
     val topStartCorner: Dp,
     val bottomEndCorner: Dp,
-    val boxPaddingValues: PaddingValues
+    val contentPadding: PaddingValues
 ) {
     INCOMING(
         0.dp,
@@ -72,16 +72,18 @@ fun MessageBubbleView(
     Column(
         verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_xxsmall_plus)),
         horizontalAlignment = if (isIncoming) Alignment.Start else Alignment.End,
-        modifier = modifier
+        modifier = modifier.fillMaxWidth()
     ) {
         Row(
             horizontalArrangement = if (isIncoming)
-                Arrangement.Start else Arrangement.End
+                Arrangement.Start else Arrangement.End,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(messageType.contentPadding)
         ) {
             Box(
                 contentAlignment = if (isIncoming) Alignment.TopStart else Alignment.TopEnd,
                 modifier = Modifier
-                    .padding(messageType.boxPaddingValues)
                     .clip(
                         RoundedCornerShape(
                             topStart = messageType.topStartCorner,

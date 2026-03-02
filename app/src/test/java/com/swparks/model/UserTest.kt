@@ -1,15 +1,33 @@
 package com.swparks.model
 
+import android.util.Log
 import com.swparks.data.model.Park
 import com.swparks.data.model.User
 import com.swparks.ui.model.Gender
+import io.mockk.every
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
 class UserTest {
+    @Before
+    fun setup() {
+        mockkStatic(Log::class)
+        every { Log.w(any(), any<String>()) } returns 0
+        every { Log.w(any(), any<String>(), any()) } returns 0
+    }
+
+    @After
+    fun tearDown() {
+        unmockkAll()
+    }
+
     // Вспомогательные методы для создания тестовых данных
     private fun createTestPark(id: Long = 1L) = Park(
         id = id,

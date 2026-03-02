@@ -54,6 +54,7 @@ fun ChatInputBar(
                 text = text,
                 labelID = R.string.message_placeholder,
                 singleLine = false,
+                enabled = !isLoading,
                 onTextChange = onTextChange
             )
         )

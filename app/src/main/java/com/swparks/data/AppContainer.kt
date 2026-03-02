@@ -546,6 +546,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
     /** Factory метод для создания ChatViewModel */
     override fun chatViewModelFactory() = ChatViewModel(
         swApi = provideMessagesApi(),
+        swRepository = swRepository,
         userNotifier = userNotifier
     )
 

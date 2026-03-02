@@ -37,6 +37,7 @@ object DateFormatter {
      * @param showTimeInThisYear Показывать время для дат в этом году (по умолчанию - true)
      * @return Отформатированная строка даты или пустая строка при ошибке
      */
+    @Suppress("TooGenericExceptionCaught")
     fun formatDate(
         context: Context,
         dateString: String?,

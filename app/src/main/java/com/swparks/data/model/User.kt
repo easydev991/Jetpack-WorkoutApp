@@ -1,5 +1,6 @@
 package com.swparks.data.model
 
+import android.util.Log
 import com.swparks.data.datetime.FlexibleDateDeserializer
 import com.swparks.ui.model.Gender
 import kotlinx.serialization.SerialName
@@ -108,8 +109,10 @@ data class User(
                 // Если дата рождения в будущем - возвращаем 0
                 if (years < 0) 0 else years
             } catch (e: DateTimeParseException) {
+                Log.w("User", "Не удалось разобрать дату рождения: $birthDate", e)
                 0
             } catch (e: IllegalArgumentException) {
+                Log.w("User", "Некорректная дата рождения: $birthDate", e)
                 0
             }
         }

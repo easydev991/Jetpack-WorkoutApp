@@ -8,9 +8,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -35,6 +35,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -48,6 +49,7 @@ import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.MessageBubbleView
 import com.swparks.ui.ds.MessageType
 import com.swparks.ui.ds.SWAsyncImage
+import com.swparks.ui.state.ChatEvent
 import com.swparks.ui.state.ChatUiState
 import com.swparks.ui.viewmodel.IChatViewModel
 import com.swparks.util.DateFormatter
@@ -58,37 +60,52 @@ import kotlinx.coroutines.flow.distinctUntilChanged
  *
  * @param modifier Модификатор
  * @param viewModel ViewModel для управления состоянием
+ * @param otherUserId ID собеседника (для отправки сообщений)
  * @param userName Имя собеседника для отображения в TopAppBar
  * @param userImage URL аватара собеседника
  * @param currentUserId ID текущего пользователя (для определения типа сообщения)
  * @param onBackClick Callback при нажатии на кнопку назад
  * @param onAvatarClick Callback при нажатии на аватар (переход в профиль)
+ * @param onMessageSent Callback при успешной отправке сообщения (для обновления списка диалогов)
  */
 @Composable
 fun ChatScreen(
     modifier: Modifier = Modifier,
     viewModel: IChatViewModel,
+    otherUserId: Int,
     userName: String,
     userImage: String?,
     currentUserId: Int?,
     onBackClick: () -> Unit,
-    onAvatarClick: () -> Unit
+    onAvatarClick: () -> Unit,
+    onMessageSent: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val messageText by viewModel.messageText
+
+    // Подписываемся на события чата
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is ChatEvent.MessageSent -> {
+                    onMessageSent()
+                }
+            }
+        }
+    }
 
     ChatContent(
         modifier = modifier,
         uiState = uiState,
         isLoading = isLoading,
         messageText = messageText,
+        otherUserId = otherUserId,
         userName = userName,
         userImage = userImage,
         currentUserId = currentUserId,
         onMessageTextChange = { viewModel.messageText.value = it },
         onSendClick = { userId ->
-            // userId передается из ChatContent для markAsRead
             viewModel.sendMessage(userId)
         },
         onRefresh = { viewModel.refreshMessages() },
@@ -100,6 +117,8 @@ fun ChatScreen(
 
 /**
  * Контент экрана чата без ViewModel для тестирования.
+ *
+ * @param otherUserId ID собеседника (для отправки сообщений)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -108,6 +127,7 @@ fun ChatContent(
     uiState: ChatUiState,
     isLoading: Boolean,
     messageText: String,
+    otherUserId: Int,
     userName: String,
     userImage: String?,
     currentUserId: Int?,
@@ -120,7 +140,6 @@ fun ChatContent(
 ) {
     val scrollState = rememberLazyListState()
     val topAppBarState = rememberTopAppBarState()
-    val context = LocalContext.current
 
     Scaffold(
         modifier = modifier,
@@ -135,18 +154,12 @@ fun ChatContent(
             )
         },
         bottomBar = {
-            // Определяем userId собеседника для отправки сообщений
-            val otherUserId = when (val state = uiState) {
-                is ChatUiState.Success -> state.messages.firstOrNull()?.userId
-                else -> null
-            }
-
             ChatInputBar(
                 text = messageText,
                 onTextChange = onMessageTextChange,
                 isLoading = isLoading,
                 onSendClick = {
-                    otherUserId?.let { onSendClick(it) }
+                    onSendClick(otherUserId)
                 }
             )
         }
@@ -156,13 +169,13 @@ fun ChatContent(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            when (val state = uiState) {
+            when (uiState) {
                 is ChatUiState.Loading -> {
                     LoadingOverlayView()
                 }
 
                 is ChatUiState.Success -> {
-                    if (state.messages.isEmpty()) {
+                    if (uiState.messages.isEmpty()) {
                         // Пустой диалог
                         Box(
                             modifier = Modifier.fillMaxSize(),
@@ -176,11 +189,16 @@ fun ChatContent(
                         }
                     } else {
                         MessagesList(
-                            messages = state.messages,
+                            messages = uiState.messages,
                             currentUserId = currentUserId,
                             scrollState = scrollState,
                             onMarkAsRead = onMarkAsRead
                         )
+                    }
+
+                    // LoadingOverlay при отправке сообщения
+                    if (isLoading) {
+                        LoadingOverlayView()
                     }
                 }
 
@@ -275,7 +293,7 @@ private fun ChatTopAppBar(
     onBackClick: () -> Unit,
     onAvatarClick: () -> Unit,
     onRefresh: () -> Unit,
-    scrollBehavior: TopAppBarScrollBehavior
+    scrollBehavior: androidx.compose.material3.TopAppBarScrollBehavior
 ) {
     CenterAlignedTopAppBar(
         title = {
@@ -284,7 +302,10 @@ private fun ChatTopAppBar(
                 horizontalArrangement = Arrangement.Center
             ) {
                 // Аватар справа от имени (кликабельный)
-                IconButton(onClick = onAvatarClick) {
+                IconButton(
+                    onClick = onAvatarClick,
+                    modifier = Modifier.testTag("AvatarButton")
+                ) {
                     SWAsyncImage(
                         config = AsyncImageConfig(
                             imageStringURL = userImage,
@@ -323,9 +344,6 @@ private fun ChatTopAppBar(
         scrollBehavior = scrollBehavior
     )
 }
-
-// Type alias для совместимости с Material3
-private typealias TopAppBarScrollBehavior = androidx.compose.material3.TopAppBarScrollBehavior
 
 // Preview-функции
 
@@ -370,6 +388,7 @@ fun ChatContentPreview() {
                 uiState = ChatUiState.Success(messages),
                 isLoading = false,
                 messageText = "",
+                otherUserId = 2,
                 userName = "Иван Петров",
                 userImage = null,
                 currentUserId = 1,
@@ -396,6 +415,7 @@ fun ChatContentLoadingPreview() {
                 uiState = ChatUiState.Loading,
                 isLoading = false,
                 messageText = "",
+                otherUserId = 2,
                 userName = "Иван Петров",
                 userImage = null,
                 currentUserId = 1,
@@ -422,6 +442,7 @@ fun ChatContentEmptyPreview() {
                 uiState = ChatUiState.Success(emptyList()),
                 isLoading = false,
                 messageText = "",
+                otherUserId = 2,
                 userName = "Иван Петров",
                 userImage = null,
                 currentUserId = 1,

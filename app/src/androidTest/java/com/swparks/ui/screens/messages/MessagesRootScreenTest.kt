@@ -39,7 +39,7 @@ class MessagesRootScreenTest {
         currentUser: User? = null,
         onRefresh: () -> Unit = {},
         onDismissSyncError: () -> Unit = {},
-        onDialogClick: (Long, Int?) -> Unit = { _, _ -> },
+        onDialogClick: (DialogEntity) -> Unit = { },
         onMarkAsRead: (Long, Int) -> Unit = { _, _ -> },
         onDeleteClick: (DialogEntity) -> Unit = { },
         onNavigateToFriends: () -> Unit = {},
@@ -121,7 +121,7 @@ class MessagesRootScreenTest {
         // When
         setContent(
             uiState = uiState,
-            onDialogClick = { _, _ -> clickCalled = true }
+            onDialogClick = { _ -> clickCalled = true }
         )
 
         // Then - клик по диалогу вызывает callback
@@ -262,9 +262,9 @@ class MessagesRootScreenTest {
         // When
         setContent(
             uiState = DialogsUiState.Success(dialogs),
-            onDialogClick = { dialogId, userId ->
-                clickedDialogId = dialogId
-                clickedUserId = userId
+            onDialogClick = { dialog ->
+                clickedDialogId = dialog.id
+                clickedUserId = dialog.anotherUserId
             }
         )
 

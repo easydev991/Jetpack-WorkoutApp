@@ -247,7 +247,13 @@ fun RootScreen(appState: AppState) {
                     },
                     onNavigateToChat = { dialogId, userId, userName, userImage ->
                         appState.navController.navigate(
-                            Screen.Chat.createRoute(dialogId, userId, userName, userImage, "messages")
+                            Screen.Chat.createRoute(
+                                dialogId,
+                                userId,
+                                userName,
+                                userImage,
+                                "messages"
+                            )
                         )
                     }
                 )
@@ -312,9 +318,15 @@ fun RootScreen(appState: AppState) {
             composable(
                 route = Screen.Chat.route,
                 arguments = listOf(
-                    androidx.navigation.navArgument("dialogId") { type = androidx.navigation.NavType.LongType },
-                    androidx.navigation.navArgument("userId") { type = androidx.navigation.NavType.IntType },
-                    androidx.navigation.navArgument("userName") { type = androidx.navigation.NavType.StringType },
+                    androidx.navigation.navArgument("dialogId") {
+                        type = androidx.navigation.NavType.LongType
+                    },
+                    androidx.navigation.navArgument("userId") {
+                        type = androidx.navigation.NavType.IntType
+                    },
+                    androidx.navigation.navArgument("userName") {
+                        type = androidx.navigation.NavType.StringType
+                    },
                     androidx.navigation.navArgument("userImage") {
                         type = androidx.navigation.NavType.StringType
                         defaultValue = ""
@@ -339,14 +351,19 @@ fun RootScreen(appState: AppState) {
                         .fillMaxSize()
                         .padding(paddingValues),
                     viewModel = chatViewModel,
+                    otherUserId = userId,
                     userName = userName,
                     userImage = userImage,
-                    currentUserId = currentUser?.id,
+                    currentUserId = currentUser?.id?.toInt(),
                     onBackClick = { appState.navController.popBackStack() },
                     onAvatarClick = {
                         appState.navController.navigate(
                             Screen.OtherUserProfile.createRoute(userId.toLong(), "messages")
                         )
+                    },
+                    onMessageSent = {
+                        // Обновляем список диалогов после отправки сообщения
+                        dialogsViewModel.refresh()
                     }
                 )
 
