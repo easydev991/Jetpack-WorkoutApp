@@ -45,7 +45,7 @@ data class JournalEntriesDeps(
     val deleteJournalEntryUseCase: IDeleteJournalEntryUseCase,
     val canDeleteJournalEntryUseCase: ICanDeleteJournalEntryUseCase,
     val editJournalSettingsUseCase: IEditJournalSettingsUseCase,
-    val preferencesRepository: UserPreferencesRepository,
+    val userPreferencesRepository: UserPreferencesRepository,
     val swRepository: SWRepository,
     val savedStateHandle: SavedStateHandle,
     val userNotifier: UserNotifier,
@@ -165,7 +165,7 @@ class JournalEntriesViewModel(
      */
     private fun observeCurrentUserId() {
         viewModelScope.launch {
-            deps.preferencesRepository.currentUserId.collect { userId ->
+            deps.userPreferencesRepository.currentUserId.collect { userId ->
                 _currentUserId.value = userId
             }
         }
@@ -224,7 +224,7 @@ class JournalEntriesViewModel(
             ?: JournalAccess.NOBODY // по умолчанию самый строгий режим
 
         return combine(
-            deps.preferencesRepository.currentUserId,
+            deps.userPreferencesRepository.currentUserId,
             deps.swRepository.getFriendsFlow().map { friends -> friends.map { it.id } }
         ) { currentUserIdParam, friendsIds ->
             // Логирование для отладки FAB

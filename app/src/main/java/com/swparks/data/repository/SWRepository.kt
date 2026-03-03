@@ -8,10 +8,12 @@ import com.swparks.data.ErrorResponse
 import com.swparks.data.NetworkUtils
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.database.dao.DialogDao
+import com.swparks.data.database.dao.EventDao
 import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.toDomain
 import com.swparks.data.database.entity.toEntity
+import com.swparks.data.database.entity.toEvent
 import com.swparks.data.model.ApiBlacklistOption
 import com.swparks.data.model.ApiFriendAction
 import com.swparks.data.model.DialogResponse
@@ -63,6 +65,10 @@ interface SWRepository {
 
     // Flow методы для локального кэша
     fun getCurrentUserFlow(): Flow<User?>
+
+    // Flow методы для мероприятий
+    fun getPastEventsFlow(): Flow<List<Event>>
+    suspend fun syncPastEvents(): Result<Unit>
     fun getFriendsFlow(): Flow<List<User>>
     fun getFriendRequestsFlow(): Flow<List<User>>
     fun getBlacklistFlow(): Flow<List<User>>
@@ -198,7 +204,8 @@ class SWRepositoryImp(
     private val userDao: UserDao,
     private val journalDao: JournalDao,
     private val journalEntryDao: com.swparks.data.database.dao.JournalEntryDao,
-    private val dialogDao: DialogDao
+    private val dialogDao: DialogDao,
+    private val eventDao: EventDao
 ) : SWRepository {
     private companion object {
         const val TAG = "SWRepositoryImp"
@@ -260,6 +267,24 @@ class SWRepositoryImp(
 
     // Существующие методы (для обратной совместимости)
     override suspend fun getPastEvents(): List<Event> = swApi.getPastEvents()
+
+    // Flow методы для мероприятий
+    override fun getPastEventsFlow(): Flow<List<Event>> =
+        eventDao.getAllPastEvents().map { entities ->
+            entities.map { it.toEvent() }
+        }
+
+    override suspend fun syncPastEvents(): Result<Unit> =
+        try {
+            val events = swApi.getPastEvents()
+            val entities = events.map { it.toEntity() }
+            eventDao.replaceAll(entities)
+            Result.success(Unit)
+        } catch (e: IOException) {
+            Result.failure(handleIOException(e, "синхронизации прошедших мероприятий"))
+        } catch (e: HttpException) {
+            Result.failure(handleHttpException(e, "синхронизации прошедших мероприятий"))
+        }
 
     override val isAuthorized: Flow<Boolean>
         get() = preferencesRepository.isAuthorized

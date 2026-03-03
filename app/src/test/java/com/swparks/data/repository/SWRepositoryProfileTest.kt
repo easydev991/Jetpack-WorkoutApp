@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import com.swparks.data.database.dao.DialogDao
+import com.swparks.data.database.dao.EventDao
 import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.UserDao
@@ -42,6 +43,7 @@ class SWRepositoryProfileTest {
     private val mockJournalDao = mockk<JournalDao>(relaxed = true)
     private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
     private val mockDialogDao = mockk<DialogDao>(relaxed = true)
+    private val mockEventDao = mockk<EventDao>(relaxed = true)
 
 
     @Before
@@ -85,7 +87,8 @@ class SWRepositoryProfileTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When
@@ -115,7 +118,8 @@ class SWRepositoryProfileTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When
@@ -154,7 +158,8 @@ class SWRepositoryProfileTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
         val form = MainUserForm(
             name = "testuser",
@@ -202,7 +207,8 @@ class SWRepositoryProfileTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
         val form = MainUserForm(
             name = "testuser",
@@ -238,7 +244,8 @@ class SWRepositoryProfileTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When
@@ -264,7 +271,8 @@ class SWRepositoryProfileTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When
@@ -301,7 +309,8 @@ class SWRepositoryProfileTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When
@@ -353,7 +362,8 @@ class SWRepositoryProfileTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When
@@ -382,7 +392,8 @@ class SWRepositoryProfileTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When
@@ -416,7 +427,8 @@ class SWRepositoryProfileTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When
@@ -451,7 +463,8 @@ class SWRepositoryProfileTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When
@@ -483,7 +496,8 @@ class SWRepositoryProfileTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When
@@ -512,7 +526,8 @@ class SWRepositoryProfileTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When
@@ -539,7 +554,8 @@ class SWRepositoryProfileTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When

@@ -37,29 +37,30 @@ fun CheckmarkRowView(
         config = FormRowConfig(
             modifier = modifier,
             horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall_plus)),
-            verticalPadding = dimensionResource(R.dimen.spacing_small)
-        ) {
-            Text(
-                text = text,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.weight(2f)
-            )
-            AnimatedVisibility(
-                visible = isChecked,
-                enter = fadeIn() + expandHorizontally(),
-                exit = fadeOut() + shrinkHorizontally()
-            ) {
-                Image(
-                    imageVector = Icons.Default.Check,
-                    colorFilter = ColorFilter.tint(
-                        color = MaterialTheme.colorScheme.primary
-                    ),
-                    contentDescription = "Checkmark"
+            verticalPadding = dimensionResource(R.dimen.spacing_small),
+            content = {
+                Text(
+                    text = text,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.weight(2f)
                 )
+                AnimatedVisibility(
+                    visible = isChecked,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally()
+                ) {
+                    Image(
+                        imageVector = Icons.Default.Check,
+                        colorFilter = ColorFilter.tint(
+                            color = MaterialTheme.colorScheme.primary
+                        ),
+                        contentDescription = "Checkmark"
+                    )
+                }
             }
-        }
+        )
     )
 }
 
@@ -78,7 +79,9 @@ fun CheckmarkRowViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             FormCardContainer(
-                modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
+                params = FormCardContainerParams(
+                    modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
+                )
             ) {
                 LazyColumn {
                     items(numbers, key = { it }) {

@@ -49,7 +49,7 @@ class RegisterViewModelTest {
 
     private lateinit var swRepository: SWRepository
     private lateinit var secureTokenRepository: SecureTokenRepository
-    private lateinit var preferencesRepository: UserPreferencesRepository
+    private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var tokenEncoder: TokenEncoder
     private lateinit var countriesRepository: CountriesRepository
     private lateinit var resourcesProvider: ResourcesProvider
@@ -65,7 +65,7 @@ class RegisterViewModelTest {
     fun setup() {
         swRepository = mockk(relaxed = true)
         secureTokenRepository = mockk(relaxed = true)
-        preferencesRepository = mockk(relaxed = true)
+        userPreferencesRepository = mockk(relaxed = true)
         tokenEncoder = mockk(relaxed = true)
         countriesRepository = mockk(relaxed = true)
         resourcesProvider = mockk(relaxed = true)
@@ -90,7 +90,7 @@ class RegisterViewModelTest {
             logger = testLogger,
             swRepository = swRepository,
             secureTokenRepository = secureTokenRepository,
-            preferencesRepository = preferencesRepository,
+            userPreferencesRepository = userPreferencesRepository,
             tokenEncoder = tokenEncoder,
             countriesRepository = countriesRepository,
             resources = resourcesProvider,
@@ -542,7 +542,7 @@ class RegisterViewModelTest {
             )
         }
         coVerify(exactly = 1) { secureTokenRepository.saveAuthToken("test-token") }
-        coVerify(exactly = 1) { preferencesRepository.saveCurrentUserId(testUser.id) }
+        coVerify(exactly = 1) { userPreferencesRepository.saveCurrentUserId(testUser.id) }
     }
 
     @Test

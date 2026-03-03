@@ -81,17 +81,19 @@ fun DialogRowView(
         }
     ) {
         FormCardContainer(
-            modifier = data.modifier,
-            enabled = data.enabled,
-            onClick = onClick,
-            onLongClickWithOffset = if (data.onLongClick != null) {
-                { offsetX, offsetY ->
-                    val localOffset = Offset(offsetX, offsetY)
-                    data.onLongClick.invoke(localOffset, itemPosition)
+            params = FormCardContainerParams(
+                modifier = data.modifier,
+                enabled = data.enabled,
+                onClick = onClick,
+                onLongClickWithOffset = if (data.onLongClick != null) {
+                    { offsetX, offsetY ->
+                        val localOffset = Offset(offsetX, offsetY)
+                        data.onLongClick.invoke(localOffset, itemPosition)
+                    }
+                } else {
+                    null
                 }
-            } else {
-                null
-            }
+            )
         ) {
             FormRowContainer(
                 config = FormRowConfig(

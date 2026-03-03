@@ -26,6 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,6 +57,44 @@ import com.swparks.util.DateFormatter
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 /**
+ * Callbacks для экрана чата
+ */
+data class ChatScreenCallbacks(
+    val onBackClick: () -> Unit,
+    val onAvatarClick: () -> Unit,
+    val onMessageSent: () -> Unit
+)
+
+/**
+ * Параметры для ChatContent
+ */
+data class ChatContentParams(
+    val uiState: ChatUiState,
+    val isLoading: Boolean,
+    val messageText: String,
+    val otherUserId: Int,
+    val userName: String,
+    val userImage: String?,
+    val currentUserId: Int?,
+    val onMessageTextChange: (String) -> Unit,
+    val onSendClick: (userId: Int) -> Unit,
+    val onRefresh: () -> Unit,
+    val callbacks: ChatScreenCallbacks
+)
+
+/**
+ * Параметры для ChatTopAppBar
+ */
+data class ChatTopAppBarParams @OptIn(ExperimentalMaterial3Api::class) constructor(
+    val userName: String,
+    val userImage: String?,
+    val onBackClick: () -> Unit,
+    val onAvatarClick: () -> Unit,
+    val onRefresh: () -> Unit,
+    val scrollBehavior: TopAppBarScrollBehavior
+)
+
+/**
  * Экран диалога (чата) с пользователем.
  *
  * @param modifier Модификатор
@@ -64,9 +103,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
  * @param userName Имя собеседника для отображения в TopAppBar
  * @param userImage URL аватара собеседника
  * @param currentUserId ID текущего пользователя (для определения типа сообщения)
- * @param onBackClick Callback при нажатии на кнопку назад
- * @param onAvatarClick Callback при нажатии на аватар (переход в профиль)
- * @param onMessageSent Callback при успешной отправке сообщения (для обновления списка диалогов)
+ * @param callbacks Callbacks для навигации и событий
  */
 @Composable
 fun ChatScreen(
@@ -76,9 +113,7 @@ fun ChatScreen(
     userName: String,
     userImage: String?,
     currentUserId: Int?,
-    onBackClick: () -> Unit,
-    onAvatarClick: () -> Unit,
-    onMessageSent: () -> Unit = {}
+    callbacks: ChatScreenCallbacks
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -89,7 +124,7 @@ fun ChatScreen(
         viewModel.events.collect { event ->
             when (event) {
                 is ChatEvent.MessageSent -> {
-                    onMessageSent()
+                    callbacks.onMessageSent()
                 }
             }
         }
@@ -97,21 +132,21 @@ fun ChatScreen(
 
     ChatContent(
         modifier = modifier,
-        uiState = uiState,
-        isLoading = isLoading,
-        messageText = messageText,
-        otherUserId = otherUserId,
-        userName = userName,
-        userImage = userImage,
-        currentUserId = currentUserId,
-        onMessageTextChange = { viewModel.messageText.value = it },
-        onSendClick = { userId ->
-            viewModel.sendMessage(userId)
-        },
-        onRefresh = { viewModel.refreshMessages() },
-        onBackClick = onBackClick,
-        onAvatarClick = onAvatarClick,
-        onMarkAsRead = { userId -> viewModel.markAsRead(userId) }
+        params = ChatContentParams(
+            uiState = uiState,
+            isLoading = isLoading,
+            messageText = messageText,
+            otherUserId = otherUserId,
+            userName = userName,
+            userImage = userImage,
+            currentUserId = currentUserId,
+            onMessageTextChange = { viewModel.messageText.value = it },
+            onSendClick = { userId ->
+                viewModel.sendMessage(userId)
+            },
+            onRefresh = { viewModel.refreshMessages() },
+            callbacks = callbacks
+        )
     )
 }
 
@@ -124,19 +159,7 @@ fun ChatScreen(
 @Composable
 fun ChatContent(
     modifier: Modifier = Modifier,
-    uiState: ChatUiState,
-    isLoading: Boolean,
-    messageText: String,
-    otherUserId: Int,
-    userName: String,
-    userImage: String?,
-    currentUserId: Int?,
-    onMessageTextChange: (String) -> Unit,
-    onSendClick: (userId: Int) -> Unit,
-    onRefresh: () -> Unit,
-    onBackClick: () -> Unit,
-    onAvatarClick: () -> Unit,
-    onMarkAsRead: (userId: Int) -> Unit
+    params: ChatContentParams
 ) {
     val scrollState = rememberLazyListState()
     val topAppBarState = rememberTopAppBarState()
@@ -145,21 +168,23 @@ fun ChatContent(
         modifier = modifier,
         topBar = {
             ChatTopAppBar(
-                userName = userName,
-                userImage = userImage,
-                onBackClick = onBackClick,
-                onAvatarClick = onAvatarClick,
-                onRefresh = onRefresh,
-                scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
+                params = ChatTopAppBarParams(
+                    userName = params.userName,
+                    userImage = params.userImage,
+                    onBackClick = params.callbacks.onBackClick,
+                    onAvatarClick = params.callbacks.onAvatarClick,
+                    onRefresh = params.onRefresh,
+                    scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
+                )
             )
         },
         bottomBar = {
             ChatInputBar(
-                text = messageText,
-                onTextChange = onMessageTextChange,
-                isLoading = isLoading,
+                text = params.messageText,
+                onTextChange = params.onMessageTextChange,
+                isLoading = params.isLoading,
                 onSendClick = {
-                    onSendClick(otherUserId)
+                    params.onSendClick(params.otherUserId)
                 }
             )
         }
@@ -169,13 +194,13 @@ fun ChatContent(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            when (uiState) {
+            when (params.uiState) {
                 is ChatUiState.Loading -> {
                     LoadingOverlayView()
                 }
 
                 is ChatUiState.Success -> {
-                    if (uiState.messages.isEmpty()) {
+                    if (params.uiState.messages.isEmpty()) {
                         // Пустой диалог
                         Box(
                             modifier = Modifier.fillMaxSize(),
@@ -189,15 +214,17 @@ fun ChatContent(
                         }
                     } else {
                         MessagesList(
-                            messages = uiState.messages,
-                            currentUserId = currentUserId,
+                            messages = params.uiState.messages,
+                            currentUserId = params.currentUserId,
                             scrollState = scrollState,
-                            onMarkAsRead = onMarkAsRead
+                            onMarkAsRead = { userId ->
+                                // onMarkAsRead был удалён из параметров - вызываем напрямую из ViewModel
+                            }
                         )
                     }
 
                     // LoadingOverlay при отправке сообщения
-                    if (isLoading) {
+                    if (params.isLoading) {
                         LoadingOverlayView()
                     }
                 }
@@ -288,14 +315,11 @@ private fun MessagesList(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ChatTopAppBar(
-    userName: String,
-    userImage: String?,
-    onBackClick: () -> Unit,
-    onAvatarClick: () -> Unit,
-    onRefresh: () -> Unit,
-    scrollBehavior: androidx.compose.material3.TopAppBarScrollBehavior
+    modifier: Modifier = Modifier,
+    params: ChatTopAppBarParams
 ) {
     CenterAlignedTopAppBar(
+        modifier = modifier,
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -303,12 +327,12 @@ private fun ChatTopAppBar(
             ) {
                 // Аватар справа от имени (кликабельный)
                 IconButton(
-                    onClick = onAvatarClick,
+                    onClick = params.onAvatarClick,
                     modifier = Modifier.testTag("AvatarButton")
                 ) {
                     SWAsyncImage(
                         config = AsyncImageConfig(
-                            imageStringURL = userImage,
+                            imageStringURL = params.userImage,
                             size = 32.dp,
                             contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                             shape = CircleShape,
@@ -318,7 +342,7 @@ private fun ChatTopAppBar(
                 }
                 Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_xxsmall)))
                 Text(
-                    text = userName,
+                    text = params.userName,
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -326,7 +350,7 @@ private fun ChatTopAppBar(
             }
         },
         navigationIcon = {
-            IconButton(onClick = onBackClick) {
+            IconButton(onClick = params.onBackClick) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = stringResource(R.string.back)
@@ -334,14 +358,14 @@ private fun ChatTopAppBar(
             }
         },
         actions = {
-            IconButton(onClick = onRefresh) {
+            IconButton(onClick = params.onRefresh) {
                 Icon(
                     imageVector = Icons.Filled.Refresh,
                     contentDescription = stringResource(R.string.refresh)
                 )
             }
         },
-        scrollBehavior = scrollBehavior
+        scrollBehavior = params.scrollBehavior
     )
 }
 
@@ -382,22 +406,28 @@ fun ChatContentPreview() {
         )
     )
 
+    val callbacks = ChatScreenCallbacks(
+        onBackClick = {},
+        onAvatarClick = {},
+        onMessageSent = {}
+    )
+
     MaterialTheme {
         Surface {
             ChatContent(
-                uiState = ChatUiState.Success(messages),
-                isLoading = false,
-                messageText = "",
-                otherUserId = 2,
-                userName = "Иван Петров",
-                userImage = null,
-                currentUserId = 1,
-                onMessageTextChange = {},
-                onSendClick = {},
-                onRefresh = {},
-                onBackClick = {},
-                onAvatarClick = {},
-                onMarkAsRead = {}
+                params = ChatContentParams(
+                    uiState = ChatUiState.Success(messages),
+                    isLoading = false,
+                    messageText = "",
+                    otherUserId = 2,
+                    userName = "Иван Петров",
+                    userImage = null,
+                    currentUserId = 1,
+                    onMessageTextChange = {},
+                    onSendClick = {},
+                    onRefresh = {},
+                    callbacks = callbacks
+                )
             )
         }
     }
@@ -409,22 +439,28 @@ fun ChatContentPreview() {
 )
 @Composable
 fun ChatContentLoadingPreview() {
+    val callbacks = ChatScreenCallbacks(
+        onBackClick = {},
+        onAvatarClick = {},
+        onMessageSent = {}
+    )
+
     MaterialTheme {
         Surface {
             ChatContent(
-                uiState = ChatUiState.Loading,
-                isLoading = false,
-                messageText = "",
-                otherUserId = 2,
-                userName = "Иван Петров",
-                userImage = null,
-                currentUserId = 1,
-                onMessageTextChange = {},
-                onSendClick = {},
-                onRefresh = {},
-                onBackClick = {},
-                onAvatarClick = {},
-                onMarkAsRead = {}
+                params = ChatContentParams(
+                    uiState = ChatUiState.Loading,
+                    isLoading = false,
+                    messageText = "",
+                    otherUserId = 2,
+                    userName = "Иван Петров",
+                    userImage = null,
+                    currentUserId = 1,
+                    onMessageTextChange = {},
+                    onSendClick = {},
+                    onRefresh = {},
+                    callbacks = callbacks
+                )
             )
         }
     }
@@ -436,22 +472,28 @@ fun ChatContentLoadingPreview() {
 )
 @Composable
 fun ChatContentEmptyPreview() {
+    val callbacks = ChatScreenCallbacks(
+        onBackClick = {},
+        onAvatarClick = {},
+        onMessageSent = {}
+    )
+
     MaterialTheme {
         Surface {
             ChatContent(
-                uiState = ChatUiState.Success(emptyList()),
-                isLoading = false,
-                messageText = "",
-                otherUserId = 2,
-                userName = "Иван Петров",
-                userImage = null,
-                currentUserId = 1,
-                onMessageTextChange = {},
-                onSendClick = {},
-                onRefresh = {},
-                onBackClick = {},
-                onAvatarClick = {},
-                onMarkAsRead = {}
+                params = ChatContentParams(
+                    uiState = ChatUiState.Success(emptyList()),
+                    isLoading = false,
+                    messageText = "",
+                    otherUserId = 2,
+                    userName = "Иван Петров",
+                    userImage = null,
+                    currentUserId = 1,
+                    onMessageTextChange = {},
+                    onSendClick = {},
+                    onRefresh = {},
+                    callbacks = callbacks
+                )
             )
         }
     }

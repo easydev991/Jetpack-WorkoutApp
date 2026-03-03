@@ -46,6 +46,7 @@ import com.swparks.R
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.DateTimePickerConfig
 import com.swparks.ui.ds.FormCardContainer
+import com.swparks.ui.ds.FormCardContainerParams
 import com.swparks.ui.ds.ListRowData
 import com.swparks.ui.ds.ListRowView
 import com.swparks.ui.ds.LoadingOverlayView
@@ -137,7 +138,9 @@ fun RegisterUserScreen(
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
             ) {
                 // Текстовые поля
-                FormCardContainer(enabled = !isLoading) {
+                FormCardContainer(
+                    params = FormCardContainerParams(enabled = !isLoading)
+                ) {
                     Column(
                         modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
                         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
@@ -168,7 +171,9 @@ fun RegisterUserScreen(
                     }
                 }
 
-                FormCardContainer(enabled = !isLoading) {
+                FormCardContainer(
+                    params = FormCardContainerParams(enabled = !isLoading)
+                ) {
                     GenderRadioButtons(
                         selectedGenderCode = form.genderCode,
                         enabled = !isLoading,
@@ -176,7 +181,9 @@ fun RegisterUserScreen(
                     )
                 }
 
-                FormCardContainer(enabled = !isLoading) {
+                FormCardContainer(
+                    params = FormCardContainerParams(enabled = !isLoading)
+                ) {
                     BirthdayPicker(
                         birthDate = form.birthDate,
                         error = birthDateError,
@@ -194,7 +201,9 @@ fun RegisterUserScreen(
                 }
 
                 // Пикеры для страны и города
-                FormCardContainer(enabled = !isLoading) {
+                FormCardContainer(
+                    params = FormCardContainerParams(enabled = !isLoading)
+                ) {
                     Column(
                         modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
                         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall))

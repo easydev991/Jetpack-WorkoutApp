@@ -138,7 +138,9 @@ data class JournalRowData(
 @Composable
 fun JournalRowView(data: JournalRowData) {
     var showMenu by remember { mutableStateOf(false) }
-    FormCardContainer(modifier = data.modifier) {
+    FormCardContainer(
+        params = FormCardContainerParams(modifier = data.modifier)
+    ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_xsmall)),
             horizontalAlignment = Alignment.Start,

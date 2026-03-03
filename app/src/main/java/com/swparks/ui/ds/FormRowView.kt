@@ -37,9 +37,12 @@ private object FormRowViewPreviewConstants {
 @Composable
 private fun FormRowViewContainer(
     modifier: Modifier = Modifier,
+    enabled: Boolean,
     content: @Composable () -> Unit
 ) {
-    FormCardContainer {
+    FormCardContainer(
+        params = FormCardContainerParams(enabled = enabled)
+    ) {
         FormRowContainer(
             config = FormRowConfig(
                 modifier = modifier,
@@ -70,7 +73,8 @@ fun FormRowView(
     enabled: Boolean = true
 ) {
     FormRowViewContainer(
-        modifier = modifier.padding(vertical = dimensionResource(id = R.dimen.spacing_small))
+        modifier = modifier.padding(vertical = dimensionResource(id = R.dimen.spacing_small)),
+        enabled = enabled
     ) {
         Text(
             text = leadingText,
@@ -127,7 +131,8 @@ fun SwitchFormRowView(
     onCheckedChange: (Boolean) -> Unit
 ) {
     FormRowViewContainer(
-        modifier = modifier.padding(vertical = dimensionResource(id = R.dimen.spacing_xxsmall))
+        modifier = modifier.padding(vertical = dimensionResource(id = R.dimen.spacing_xxsmall)),
+        enabled = isEnabled
     ) {
         Text(
             text = leadingText,

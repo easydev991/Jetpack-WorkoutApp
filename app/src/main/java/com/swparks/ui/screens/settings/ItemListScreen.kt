@@ -36,6 +36,7 @@ import com.swparks.R
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.CheckmarkRowView
 import com.swparks.ui.ds.FormCardContainer
+import com.swparks.ui.ds.FormCardContainerParams
 import com.swparks.ui.ds.SWButton
 import com.swparks.ui.ds.SWButtonMode
 import com.swparks.ui.ds.SWButtonSize
@@ -125,7 +126,9 @@ private fun ItemListContent(
 
         Spacer(modifier = Modifier.padding(top = dimensionResource(R.dimen.spacing_small)))
 
-        FormCardContainer {
+        FormCardContainer(
+            params = FormCardContainerParams()
+        ) {
             if (state.isEmpty) {
                 EmptyStateView(
                     mode = state.mode,

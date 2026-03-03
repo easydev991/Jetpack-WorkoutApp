@@ -30,7 +30,9 @@ fun UserRowView(
     name: String,
     address: String?
 ) {
-    FormCardContainer(modifier = modifier) {
+    FormCardContainer(
+        params = FormCardContainerParams(modifier = modifier)
+    ) {
         FormRowContainer(
             config = FormRowConfig(
                 horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),

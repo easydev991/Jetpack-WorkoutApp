@@ -58,16 +58,41 @@ import com.swparks.ui.viewmodel.IDialogsViewModel
 import com.swparks.util.DateFormatter
 import com.swparks.util.parseHtmlOrNull
 
+/**
+ * Callbacks для навигации в экране сообщений
+ */
+data class MessagesNavigationCallbacks(
+    val onShowLoginSheet: () -> Unit,
+    val onShowRegisterSheet: () -> Unit,
+    val onNavigateToFriends: () -> Unit,
+    val onNavigateToSearchUsers: () -> Unit,
+    val onNavigateToChat: (dialogId: Long, userId: Int, userName: String, userImage: String?) -> Unit
+)
+
+/**
+ * Параметры для DialogsContent
+ */
+data class DialogsContentParams(
+    val uiState: DialogsUiState,
+    val isRefreshing: Boolean,
+    val isUpdating: Boolean,
+    val syncError: String?,
+    val currentUser: com.swparks.data.model.User?,
+    val onRefresh: () -> Unit,
+    val onDismissSyncError: () -> Unit,
+    val onDialogClick: (DialogEntity) -> Unit,
+    val onMarkAsRead: (Long, Int) -> Unit,
+    val onDeleteClick: (DialogEntity) -> Unit,
+    val onNavigateToFriends: () -> Unit,
+    val onNavigateToSearchUsers: () -> Unit
+)
+
 @Composable
 fun MessagesRootScreen(
     modifier: Modifier = Modifier,
     viewModel: IDialogsViewModel,
     appState: AppState,
-    onShowLoginSheet: () -> Unit,
-    onShowRegisterSheet: () -> Unit = {},
-    onNavigateToFriends: () -> Unit = {},
-    onNavigateToSearchUsers: () -> Unit = {},
-    onNavigateToChat: (dialogId: Long, userId: Int, userName: String, userImage: String?) -> Unit = { _, _, _, _ -> }
+    callbacks: MessagesNavigationCallbacks
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
@@ -100,38 +125,39 @@ fun MessagesRootScreen(
                     start = dimensionResource(R.dimen.spacing_regular),
                     end = dimensionResource(R.dimen.spacing_regular)
                 ),
-            onClickAuth = onShowLoginSheet,
-            onClickRegister = onShowRegisterSheet
+            onClickAuth = callbacks.onShowLoginSheet,
+            onClickRegister = callbacks.onShowRegisterSheet
         )
     } else {
         // Авторизованный пользователь
         DialogsContent(
-            modifier = modifier,
-            uiState = uiState,
-            isRefreshing = isRefreshing,
-            isUpdating = isUpdating,
-            syncError = syncError,
-            currentUser = appState.currentUser,
-            onRefresh = { viewModel.refresh() },
-            onDismissSyncError = { viewModel.dismissSyncError() },
-            onDialogClick = { dialog ->
-                viewModel.onDialogClick(dialog.id, dialog.anotherUserId)
-                onNavigateToChat(
-                    dialog.id,
-                    dialog.anotherUserId ?: 0,
-                    dialog.name ?: "",
-                    dialog.image
-                )
-            },
-            onMarkAsRead = { dialogId, userId ->
-                viewModel.markDialogAsRead(dialogId, userId)
-            },
-            onDeleteClick = { dialog ->
-                dialogToDelete = dialog
-                showDeleteDialog = true
-            },
-            onNavigateToFriends = onNavigateToFriends,
-            onNavigateToSearchUsers = onNavigateToSearchUsers
+            params = DialogsContentParams(
+                uiState = uiState,
+                isRefreshing = isRefreshing,
+                isUpdating = isUpdating,
+                syncError = syncError,
+                currentUser = appState.currentUser,
+                onRefresh = { viewModel.refresh() },
+                onDismissSyncError = { viewModel.dismissSyncError() },
+                onDialogClick = { dialog ->
+                    viewModel.onDialogClick(dialog.id, dialog.anotherUserId)
+                    callbacks.onNavigateToChat(
+                        dialog.id,
+                        dialog.anotherUserId ?: 0,
+                        dialog.name ?: "",
+                        dialog.image
+                    )
+                },
+                onMarkAsRead = { dialogId, userId ->
+                    viewModel.markDialogAsRead(dialogId, userId)
+                },
+                onDeleteClick = { dialog ->
+                    dialogToDelete = dialog
+                    showDeleteDialog = true
+                },
+                onNavigateToFriends = callbacks.onNavigateToFriends,
+                onNavigateToSearchUsers = callbacks.onNavigateToSearchUsers
+            )
         )
     }
 
@@ -177,18 +203,7 @@ fun MessagesRootScreen(
 @Composable
 fun DialogsContent(
     modifier: Modifier = Modifier,
-    uiState: DialogsUiState,
-    isRefreshing: Boolean,
-    isUpdating: Boolean,
-    syncError: String?,
-    currentUser: com.swparks.data.model.User?,
-    onRefresh: () -> Unit,
-    onDismissSyncError: () -> Unit,
-    onDialogClick: (DialogEntity) -> Unit,
-    onMarkAsRead: (Long, Int) -> Unit,
-    onDeleteClick: (DialogEntity) -> Unit,
-    onNavigateToFriends: () -> Unit,
-    onNavigateToSearchUsers: () -> Unit
+    params: DialogsContentParams
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val density = LocalDensity.current
@@ -198,7 +213,7 @@ fun DialogsContent(
     var menuOffset by remember { mutableStateOf(DpOffset.Zero) }
 
     Box(modifier = modifier.fillMaxSize()) {
-        when (uiState) {
+        when (params.uiState) {
             is DialogsUiState.Loading -> {
                 // Показываем LoadingOverlayView при первой загрузке
                 LoadingOverlayView()
@@ -208,21 +223,21 @@ fun DialogsContent(
                 // PullToRefreshBox для обновления
                 val pullRefreshState = rememberPullToRefreshState()
                 PullToRefreshBox(
-                    isRefreshing = isRefreshing,
-                    onRefresh = onRefresh,
+                    isRefreshing = params.isRefreshing,
+                    onRefresh = params.onRefresh,
                     state = pullRefreshState,
                     modifier = Modifier.fillMaxSize(),
                     indicator = {
                         PullToRefreshDefaults.Indicator(
                             state = pullRefreshState,
-                            isRefreshing = isRefreshing,
+                            isRefreshing = params.isRefreshing,
                             modifier = Modifier
                                 .align(Alignment.TopCenter)
                                 .padding(top = dimensionResource(R.dimen.spacing_regular))
                         )
                     }
                 ) {
-                    if (uiState.dialogs.isEmpty()) {
+                    if (params.uiState.dialogs.isEmpty()) {
                         // EmptyStateView с условием по друзьям (центрирование + scroll для pull to refresh)
                         Box(
                             modifier = Modifier
@@ -231,17 +246,17 @@ fun DialogsContent(
                             contentAlignment = Alignment.Center
                         ) {
                             EmptyStateViewForDialogs(
-                                currentUser = currentUser,
-                                onNavigateToFriends = onNavigateToFriends,
-                                onNavigateToSearchUsers = onNavigateToSearchUsers
+                                currentUser = params.currentUser,
+                                onNavigateToFriends = params.onNavigateToFriends,
+                                onNavigateToSearchUsers = params.onNavigateToSearchUsers
                             )
                         }
                     } else {
                         // LazyColumn с DialogRowView
                         DialogsList(
-                            dialogs = uiState.dialogs,
-                            isRefreshing = isRefreshing || isUpdating,
-                            onDialogClick = onDialogClick,
+                            dialogs = params.uiState.dialogs,
+                            isRefreshing = params.isRefreshing || params.isUpdating,
+                            onDialogClick = params.onDialogClick,
                             onLongClick = { dialog, localOffset, itemPosition ->
                                 contextMenuItem = dialog
                                 menuOffset = with(density) {
@@ -263,9 +278,9 @@ fun DialogsContent(
                     contentAlignment = Alignment.Center
                 ) {
                     EmptyStateView(
-                        text = uiState.message,
+                        text = params.uiState.message,
                         buttonTitle = stringResource(R.string.try_again_button),
-                        onButtonClick = onRefresh
+                        onButtonClick = params.onRefresh
                     )
                 }
             }
@@ -278,7 +293,7 @@ fun DialogsContent(
         )
 
         // Индикатор загрузки при удалении или отметке диалога
-        if (isUpdating) {
+        if (params.isUpdating) {
             LoadingOverlayView()
         }
     }
@@ -297,7 +312,7 @@ fun DialogsContent(
                     onClick = {
                         contextMenuItem = null
                         dialog.anotherUserId?.let { userId ->
-                            onMarkAsRead(dialog.id, userId)
+                            params.onMarkAsRead(dialog.id, userId)
                         }
                     },
                     leadingIcon = {
@@ -312,7 +327,7 @@ fun DialogsContent(
                 text = { Text(stringResource(R.string.delete)) },
                 onClick = {
                     contextMenuItem = null
-                    onDeleteClick(dialog)
+                    params.onDeleteClick(dialog)
                 },
                 leadingIcon = {
                     Icon(
@@ -326,13 +341,13 @@ fun DialogsContent(
     }
 
     // Показываем ошибку синхронизации
-    LaunchedEffect(syncError) {
-        syncError?.let { error ->
+    LaunchedEffect(params.syncError) {
+        params.syncError?.let { error ->
             snackbarHostState.showSnackbar(
                 message = error,
                 duration = SnackbarDuration.Short
             )
-            onDismissSyncError()
+            params.onDismissSyncError()
         }
     }
 }

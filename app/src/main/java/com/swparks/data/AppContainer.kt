@@ -11,6 +11,7 @@ import com.swparks.data.crypto.CryptoManager
 import com.swparks.data.crypto.CryptoManagerImpl
 import com.swparks.data.database.SWDatabase
 import com.swparks.data.database.dao.DialogDao
+import com.swparks.data.database.dao.EventDao
 import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.UserDao
@@ -40,8 +41,10 @@ import com.swparks.domain.usecase.DeleteJournalEntryUseCase
 import com.swparks.domain.usecase.DeleteJournalUseCase
 import com.swparks.domain.usecase.DeleteUserUseCase
 import com.swparks.domain.usecase.EditJournalSettingsUseCase
+import com.swparks.domain.usecase.GetFutureEventsUseCase
 import com.swparks.domain.usecase.GetJournalEntriesUseCase
 import com.swparks.domain.usecase.GetJournalsUseCase
+import com.swparks.domain.usecase.GetPastEventsFlowUseCase
 import com.swparks.domain.usecase.ICanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IChangePasswordUseCase
 import com.swparks.domain.usecase.ICreateJournalUseCase
@@ -50,8 +53,11 @@ import com.swparks.domain.usecase.IDeleteJournalUseCase
 import com.swparks.domain.usecase.IDeleteUserUseCase
 import com.swparks.domain.usecase.IEditJournalSettingsUseCase
 import com.swparks.domain.usecase.IGetJournalEntriesUseCase
+import com.swparks.domain.usecase.IGetFutureEventsUseCase
 import com.swparks.domain.usecase.IGetJournalsUseCase
+import com.swparks.domain.usecase.IGetPastEventsFlowUseCase
 import com.swparks.domain.usecase.ILoginUseCase
+import com.swparks.domain.usecase.ISyncPastEventsUseCase
 import com.swparks.domain.usecase.ILogoutUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
 import com.swparks.domain.usecase.ISyncJournalEntriesUseCase
@@ -62,9 +68,11 @@ import com.swparks.domain.usecase.LogoutUseCase
 import com.swparks.domain.usecase.ResetPasswordUseCase
 import com.swparks.domain.usecase.SyncJournalEntriesUseCase
 import com.swparks.domain.usecase.SyncJournalsUseCase
+import com.swparks.domain.usecase.SyncPastEventsUseCase
 import com.swparks.domain.usecase.TextEntryUseCase
 import com.swparks.network.SWApi
 import com.swparks.ui.model.TextEntryMode
+import com.swparks.ui.screens.events.EventsViewModel
 import com.swparks.ui.viewmodel.BlacklistViewModel
 import com.swparks.ui.viewmodel.ChangePasswordViewModel
 import com.swparks.ui.viewmodel.ChatViewModel
@@ -108,6 +116,7 @@ interface AppContainer {
     val journalsRepository: JournalsRepository
     val journalEntriesRepository: JournalEntriesRepository
     val messagesRepository: MessagesRepository
+    val userPreferencesRepository: UserPreferencesRepository
 
     // Сервисы для обработки ошибок
     val logger: Logger
@@ -130,6 +139,11 @@ interface AppContainer {
     val deleteJournalEntryUseCase: IDeleteJournalEntryUseCase
     val canDeleteJournalEntryUseCase: ICanDeleteJournalEntryUseCase
     val textEntryUseCase: ITextEntryUseCase
+
+    // Use cases для мероприятий
+    val getPastEventsFlowUseCase: IGetPastEventsFlowUseCase
+    val syncPastEventsUseCase: ISyncPastEventsUseCase
+    val getFutureEventsUseCase: IGetFutureEventsUseCase
 
     /** Фабрика для ProfileViewModel (единый контейнер обеспечивает одну БД с LoginViewModel). */
     fun profileViewModelFactory(): ProfileViewModel
@@ -179,6 +193,9 @@ interface AppContainer {
 
     /** Фабрика для RegisterViewModel */
     fun registerViewModelFactory(): RegisterViewModel
+
+    /** Фабрика для EventsViewModel */
+    fun eventsViewModelFactory(): EventsViewModel
 
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
@@ -255,6 +272,11 @@ class DefaultAppContainer(context: Context) : AppContainer {
      */
     private val dialogDao: DialogDao by lazy { database.dialogDao() }
 
+    /**
+     * DAO для работы с мероприятиями
+     */
+    private val eventDao: EventDao by lazy { database.eventDao() }
+
     // ==================== Криптография и хранение токена ====================
 
     // Создаем CryptoManager для шифрования токена
@@ -273,7 +295,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
     }
 
     // Создаем UserPreferencesRepository для использования в AuthInterceptor
-    private val preferencesRepository: UserPreferencesRepository by lazy {
+    override val userPreferencesRepository: UserPreferencesRepository by lazy {
         UserPreferencesRepository(appContext.dataStore)
     }
 
@@ -291,7 +313,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
     // Создаем AuthInterceptor для обработки ошибок 401
     private val authInterceptor: AuthInterceptor by lazy {
-        AuthInterceptor(preferencesRepository)
+        AuthInterceptor(userPreferencesRepository)
     }
 
     // LoggingInterceptor для отладки HTTP запросов
@@ -334,7 +356,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
             userDao = userDao,
             journalDao = journalDao,
             journalEntryDao = journalEntryDao,
-            dialogDao = dialogDao
+            dialogDao = dialogDao,
+            eventDao = eventDao
         )
     }
 
@@ -385,7 +408,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
             tokenEncoder,
             secureTokenRepository,
             swRepository,
-            preferencesRepository
+            userPreferencesRepository
         )
     }
 
@@ -419,6 +442,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
     }
 
     // ==================== Use cases для записей дневника ====================
+
     // Примечание: Use Case'ы являются stateless-компонентами и не зависят от конкретных
     // userId и journalId при создании. Эти параметры передаются в методах invoke() Use Case'ов.
 
@@ -429,29 +453,35 @@ class DefaultAppContainer(context: Context) : AppContainer {
     override val syncJournalEntriesUseCase: ISyncJournalEntriesUseCase by lazy {
         SyncJournalEntriesUseCase(journalEntriesRepository)
     }
-
     override val deleteJournalEntryUseCase: IDeleteJournalEntryUseCase by lazy {
         DeleteJournalEntryUseCase(journalEntriesRepository)
     }
-
     override val canDeleteJournalEntryUseCase: ICanDeleteJournalEntryUseCase by lazy {
         CanDeleteJournalEntryUseCase(journalEntriesRepository)
     }
-
     override val deleteJournalUseCase: IDeleteJournalUseCase by lazy {
         DeleteJournalUseCase(swRepository)
     }
-
     override val editJournalSettingsUseCase: IEditJournalSettingsUseCase by lazy {
         EditJournalSettingsUseCase(swRepository)
     }
-
     val createJournalUseCase: ICreateJournalUseCase by lazy {
         CreateJournalUseCase(swRepository)
     }
-
     override val textEntryUseCase: ITextEntryUseCase by lazy {
         TextEntryUseCase(swRepository, createJournalUseCase)
+    }
+
+    // ==================== Use cases для мероприятий ====================
+
+    override val getPastEventsFlowUseCase: IGetPastEventsFlowUseCase by lazy {
+        GetPastEventsFlowUseCase(swRepository)
+    }
+    override val syncPastEventsUseCase: ISyncPastEventsUseCase by lazy {
+        SyncPastEventsUseCase(swRepository)
+    }
+    override val getFutureEventsUseCase: IGetFutureEventsUseCase by lazy {
+        GetFutureEventsUseCase(swRepository)
     }
 
     /** Factory метод для создания ProfileViewModel */
@@ -519,7 +549,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
                 deleteJournalEntryUseCase = deleteJournalEntryUseCase,
                 canDeleteJournalEntryUseCase = canDeleteJournalEntryUseCase,
                 editJournalSettingsUseCase = editJournalSettingsUseCase,
-                preferencesRepository = preferencesRepository,
+                userPreferencesRepository = userPreferencesRepository,
                 swRepository = swRepository,
                 savedStateHandle = savedStateHandle,
                 userNotifier = userNotifier,
@@ -591,11 +621,21 @@ class DefaultAppContainer(context: Context) : AppContainer {
         logger = logger,
         swRepository = swRepository,
         secureTokenRepository = secureTokenRepository,
-        preferencesRepository = preferencesRepository,
+        userPreferencesRepository = userPreferencesRepository,
         tokenEncoder = tokenEncoder,
         countriesRepository = countriesRepository,
         resources = resourcesProvider,
         userNotifier = userNotifier
+    )
+
+    /** Factory метод для создания EventsViewModel */
+    override fun eventsViewModelFactory() = EventsViewModel(
+        getFutureEventsUseCase = getFutureEventsUseCase,
+        getPastEventsFlowUseCase = getPastEventsFlowUseCase,
+        syncPastEventsUseCase = syncPastEventsUseCase,
+        userPreferencesRepository = userPreferencesRepository,
+        userNotifier = userNotifier,
+        logger = logger
     )
 
     // ==================== API клиенты для разных функциональных областей ====================

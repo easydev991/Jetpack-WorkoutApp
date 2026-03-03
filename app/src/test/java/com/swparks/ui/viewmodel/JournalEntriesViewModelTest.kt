@@ -54,7 +54,7 @@ class JournalEntriesViewModelTest {
     private lateinit var deleteJournalEntryUseCase: IDeleteJournalEntryUseCase
     private lateinit var canDeleteJournalEntryUseCase: ICanDeleteJournalEntryUseCase
     private lateinit var editJournalSettingsUseCase: IEditJournalSettingsUseCase
-    private lateinit var preferencesRepository: UserPreferencesRepository
+    private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var swRepository: SWRepository
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var userNotifier: UserNotifier
@@ -89,8 +89,8 @@ class JournalEntriesViewModelTest {
         friends: List<User> = emptyList(),
         commentAccess: JournalAccess = JournalAccess.NOBODY
     ): JournalEntriesViewModel {
-        // Настраиваем моки для preferencesRepository
-        every { preferencesRepository.currentUserId } returns MutableStateFlow(currentUserId)
+        // Настраиваем моки для userPreferencesRepository
+        every { userPreferencesRepository.currentUserId } returns MutableStateFlow(currentUserId)
 
         // Настраиваем моки для swRepository
         every { swRepository.getFriendsFlow() } returns flowOf(friends)
@@ -104,7 +104,7 @@ class JournalEntriesViewModelTest {
             deleteJournalEntryUseCase = deleteJournalEntryUseCase,
             canDeleteJournalEntryUseCase = canDeleteJournalEntryUseCase,
             editJournalSettingsUseCase = editJournalSettingsUseCase,
-            preferencesRepository = preferencesRepository,
+            userPreferencesRepository = userPreferencesRepository,
             swRepository = swRepository,
             savedStateHandle = savedStateHandle,
             userNotifier = userNotifier,
@@ -128,7 +128,7 @@ class JournalEntriesViewModelTest {
         deleteJournalEntryUseCase = mockk(relaxed = true)
         canDeleteJournalEntryUseCase = mockk(relaxed = true)
         editJournalSettingsUseCase = mockk(relaxed = true)
-        preferencesRepository = mockk(relaxed = true)
+        userPreferencesRepository = mockk(relaxed = true)
         swRepository = mockk(relaxed = true)
         savedStateHandle = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)

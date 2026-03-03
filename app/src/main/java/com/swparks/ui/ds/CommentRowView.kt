@@ -268,7 +268,9 @@ private fun getCommentActionColor(action: CommentAction) = when (action) {
 fun CommentRowViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
-            FormCardContainer {
+            FormCardContainer(
+                params = FormCardContainerParams()
+            ) {
                 Column(
                     verticalArrangement = Arrangement.Center
                 ) {

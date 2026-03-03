@@ -35,7 +35,7 @@ import java.time.format.DateTimeFormatter
  * @param logger Логгер для записи сообщений
  * @param swRepository Репозиторий для работы с API
  * @param secureTokenRepository Репозиторий для безопасного хранения токена
- * @param preferencesRepository Репозиторий для хранения настроек
+ * @param userPreferencesRepository Репозиторий для хранения настроек
  * @param tokenEncoder Кодировщик токена
  * @param countriesRepository Репозиторий для работы со странами и городами
  * @param resources Провайдер строковых ресурсов
@@ -46,7 +46,7 @@ class RegisterViewModel(
     private val logger: Logger,
     private val swRepository: SWRepository,
     private val secureTokenRepository: SecureTokenRepository,
-    private val preferencesRepository: UserPreferencesRepository,
+    private val userPreferencesRepository: UserPreferencesRepository,
     private val tokenEncoder: TokenEncoder,
     private val countriesRepository: CountriesRepository,
     private val resources: ResourcesProvider,
@@ -236,7 +236,7 @@ class RegisterViewModel(
                     secureTokenRepository.saveAuthToken(token)
 
                     // Сохраняем userId
-                    preferencesRepository.saveCurrentUserId(user.id)
+                    userPreferencesRepository.saveCurrentUserId(user.id)
 
                     // Отправляем событие успеха
                     _registerEvents.send(RegisterEvent.Success(user.id))

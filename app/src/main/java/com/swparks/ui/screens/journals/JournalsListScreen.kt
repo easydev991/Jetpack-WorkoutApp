@@ -66,6 +66,35 @@ import com.swparks.ui.viewmodel.JournalsEvent
 import com.swparks.util.DateFormatter
 
 /**
+ * Параметры навигации для перехода к записям дневника
+ */
+data class JournalNavigationParams(
+    val journalId: Long,
+    val journalOwnerId: Long,
+    val journalTitle: String,
+    val viewAccess: String,
+    val commentAccess: String
+)
+
+/**
+ * Callbacks для экрана списка дневников
+ */
+data class JournalsListCallbacks(
+    val onBackClick: () -> Unit,
+    val onJournalClick: (JournalNavigationParams) -> Unit
+)
+
+/**
+ * Конфигурация отображения для владельца дневников
+ */
+data class OwnerDisplayConfig(
+    val isOwner: Boolean,
+    val onDeleteClick: (Journal) -> Unit,
+    val onSetupClick: (Journal) -> Unit,
+    val onCreateJournalClick: () -> Unit
+)
+
+/**
  * Экран списка дневников пользователя
  *
  * @param modifier Модификатор
@@ -73,8 +102,7 @@ import com.swparks.util.DateFormatter
  * @param userId Идентификатор пользователя
  * @param viewModel ViewModel для управления состоянием экрана
  * @param source Источник навигации для сохранения активной вкладки
- * @param onBackClick Callback для навигации назад
- * @param onJournalClick Callback для навигации к записям дневника
+ * @param callbacks Callbacks для навигации
  * @param parentPaddingValues Паддинги для учета BottomNavigationBar
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -85,14 +113,7 @@ fun JournalsListScreen(
     userId: Long,
     viewModel: IJournalsViewModel,
     source: String = "profile",
-    onBackClick: () -> Unit,
-    onJournalClick: (
-        journalId: Long,
-        journalOwnerId: Long,
-        journalTitle: String,
-        viewAccess: String,
-        commentAccess: String
-    ) -> Unit,
+    callbacks: JournalsListCallbacks,
     parentPaddingValues: PaddingValues
 ) {
     val layoutDirection = LocalLayoutDirection.current
@@ -128,6 +149,19 @@ fun JournalsListScreen(
         }
     )
 
+    val ownerConfig = OwnerDisplayConfig(
+        isOwner = isOwner,
+        onDeleteClick = { journal ->
+            journalToDelete = journal
+            showDeleteDialog = true
+        },
+        onSetupClick = onSetupClick,
+        onCreateJournalClick = {
+            textEntryMode = TextEntryMode.NewJournal(userId)
+            showTextEntrySheet = true
+        }
+    )
+
     Scaffold(
         modifier = modifier.padding(bottom = parentPaddingValues.calculateBottomPadding()),
         topBar = {
@@ -136,7 +170,7 @@ fun JournalsListScreen(
                     Text(stringResource(R.string.journals_list_title))
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = callbacks.onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back)
@@ -152,11 +186,7 @@ fun JournalsListScreen(
                 is JournalsUiState.Content -> {
                     if (!isDeleting && isOwner) {
                         FloatingActionButton(
-                            onClick = {
-                                // Открыть bottom sheet с режимом создания дневника
-                                textEntryMode = TextEntryMode.NewJournal(userId)
-                                showTextEntrySheet = true
-                            },
+                            onClick = ownerConfig.onCreateJournalClick,
                             modifier = Modifier.testTag("CreateJournalFAB")
                         ) {
                             Icon(
@@ -199,27 +229,9 @@ fun JournalsListScreen(
                         journals = contentState.journals,
                         isRefreshing = isRefreshing,
                         isDeleting = isDeleting,
-                        isOwner = isOwner,
+                        ownerConfig = ownerConfig,
                         onRefresh = { viewModel.loadJournals() },
-                        onJournalClick = onJournalClick,
-                        onDeleteClick = if (isOwner) {
-                            { journal ->
-                                journalToDelete = journal
-                                showDeleteDialog = true
-                            }
-                        } else {
-                            { _ -> }
-                        },
-                        onSetupClick = if (isOwner) onSetupClick else { _ -> },
-                        onCreateJournalClick = if (isOwner) {
-                            {
-                                // Открыть bottom sheet для создания дневника
-                                textEntryMode = TextEntryMode.NewJournal(userId)
-                                showTextEntrySheet = true
-                            }
-                        } else {
-                            { }
-                        }
+                        onJournalClick = callbacks.onJournalClick
                     )
                 }
             }
@@ -298,8 +310,6 @@ private fun JournalsEventHandler(
 
 /**
  * Контент с Pull-to-Refresh и списком дневников
- *
- * @param isOwner Если true - показывать кнопки настроек и удаления; если false - скрыть меню действий
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -307,18 +317,9 @@ private fun ContentScreen(
     journals: List<Journal>,
     isRefreshing: Boolean,
     isDeleting: Boolean,
-    isOwner: Boolean = true,
+    ownerConfig: OwnerDisplayConfig,
     onRefresh: () -> Unit,
-    onJournalClick: (
-        journalId: Long,
-        journalOwnerId: Long,
-        journalTitle: String,
-        viewAccess: String,
-        commentAccess: String
-    ) -> Unit,
-    onDeleteClick: (Journal) -> Unit,
-    onSetupClick: (Journal) -> Unit = {},
-    onCreateJournalClick: () -> Unit = {}
+    onJournalClick: (JournalNavigationParams) -> Unit
 ) {
     val pullRefreshState = rememberPullToRefreshState()
 
@@ -340,12 +341,12 @@ private fun ContentScreen(
         if (journals.isEmpty()) {
             // EmptyStateView показывается только для владельца после завершения загрузки
             // Для чужих дневников EmptyStateView не показывается вообще (нельзя создавать чужие дневники)
-            if (isOwner && !isRefreshing) {
+            if (ownerConfig.isOwner && !isRefreshing) {
                 EmptyStateView(
                     text = stringResource(R.string.journals_empty),
                     buttonTitle = stringResource(R.string.create_journal),
                     enabled = !isDeleting,
-                    onButtonClick = onCreateJournalClick
+                    onButtonClick = ownerConfig.onCreateJournalClick
                 )
             }
         } else {
@@ -354,10 +355,8 @@ private fun ContentScreen(
                 JournalsList(
                     journals = journals,
                     enabled = !isRefreshing && !isDeleting,
-                    isOwner = isOwner,
-                    onJournalClick = onJournalClick,
-                    onDeleteClick = onDeleteClick,
-                    onSetupClick = onSetupClick
+                    ownerConfig = ownerConfig,
+                    onJournalClick = onJournalClick
                 )
 
                 // Индикатор загрузки при удалении
@@ -371,23 +370,13 @@ private fun ContentScreen(
 
 /**
  * Список дневников
- *
- * @param isOwner Если true - показывать кнопки SETUP и DELETE; если false - скрыть меню действий
  */
 @Composable
 private fun JournalsList(
     journals: List<Journal>,
     enabled: Boolean = true,
-    isOwner: Boolean = true,
-    onJournalClick: (
-        journalId: Long,
-        journalOwnerId: Long,
-        journalTitle: String,
-        viewAccess: String,
-        commentAccess: String
-    ) -> Unit = { _, _, _, _, _ -> },
-    onDeleteClick: (Journal) -> Unit = { },
-    onSetupClick: (Journal) -> Unit = { }
+    ownerConfig: OwnerDisplayConfig,
+    onJournalClick: (JournalNavigationParams) -> Unit
 ) {
     val context = LocalContext.current
     LazyColumn(
@@ -407,15 +396,15 @@ private fun JournalsList(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(enabled = enabled) {
-                        val journalTitle = journal.title ?: ""
-                        val viewAccess = journal.viewAccess?.name ?: JournalAccess.NOBODY.name
-                        val commentAccess = journal.commentAccess?.name ?: JournalAccess.NOBODY.name
                         onJournalClick(
-                            journal.id,
-                            journal.ownerId!!,
-                            journalTitle,
-                            viewAccess,
-                            commentAccess
+                            JournalNavigationParams(
+                                journalId = journal.id,
+                                journalOwnerId = journal.ownerId!!,
+                                journalTitle = journal.title ?: "",
+                                viewAccess = journal.viewAccess?.name ?: JournalAccess.NOBODY.name,
+                                commentAccess = journal.commentAccess?.name
+                                    ?: JournalAccess.NOBODY.name
+                            )
                         )
                     }
             ) {
@@ -431,16 +420,16 @@ private fun JournalsList(
                         bodyText = journal.lastMessageText ?: "",
                         mode = JournalRowMode.ROOT,
                         // Показывать действия только для владельца
-                        actions = if (isOwner) {
+                        actions = if (ownerConfig.isOwner) {
                             listOf(JournalAction.SETUP, JournalAction.DELETE)
                         } else {
                             emptyList()
                         },
                         onClickAction = { action ->
                             if (action == JournalAction.DELETE) {
-                                onDeleteClick(journal)
+                                ownerConfig.onDeleteClick(journal)
                             } else if (action == JournalAction.SETUP) {
-                                onSetupClick(journal)
+                                ownerConfig.onSetupClick(journal)
                             }
                         }
                     )
@@ -489,17 +478,20 @@ private fun DeleteConfirmationDialog(
 @Preview(showBackground = true, locale = "ru", name = "Empty Journals List - Owner")
 @Composable
 private fun JournalsListScreenEmptyPreview() {
+    val ownerConfig = OwnerDisplayConfig(
+        isOwner = true,
+        onDeleteClick = {},
+        onSetupClick = {},
+        onCreateJournalClick = {}
+    )
     JetpackWorkoutAppTheme {
         ContentScreen(
             journals = emptyList(),
             isRefreshing = false,
             isDeleting = false,
-            isOwner = true,
+            ownerConfig = ownerConfig,
             onRefresh = {},
-            onJournalClick = { _, _, _, _, _ -> },
-            onDeleteClick = {},
-            onSetupClick = {},
-            onCreateJournalClick = {}
+            onJournalClick = {}
         )
     }
 }
@@ -509,17 +501,20 @@ private fun JournalsListScreenEmptyPreview() {
 @Composable
 private fun JournalsListScreenEmptyOtherUserLoadingPreview() {
     // Чужой дневник, идет загрузка - EmptyStateView не показывается
+    val ownerConfig = OwnerDisplayConfig(
+        isOwner = false,
+        onDeleteClick = {},
+        onSetupClick = {},
+        onCreateJournalClick = {}
+    )
     JetpackWorkoutAppTheme {
         ContentScreen(
             journals = emptyList(),
             isRefreshing = true,
             isDeleting = false,
-            isOwner = false,
+            ownerConfig = ownerConfig,
             onRefresh = {},
-            onJournalClick = { _, _, _, _, _ -> },
-            onDeleteClick = {},
-            onSetupClick = {},
-            onCreateJournalClick = {}
+            onJournalClick = {}
         )
     }
 }
@@ -529,17 +524,20 @@ private fun JournalsListScreenEmptyOtherUserLoadingPreview() {
 @Composable
 private fun JournalsListScreenEmptyOtherUserLoadedPreview() {
     // Чужой дневник, загрузка завершена - EmptyStateView показывается
+    val ownerConfig = OwnerDisplayConfig(
+        isOwner = false,
+        onDeleteClick = {},
+        onSetupClick = {},
+        onCreateJournalClick = {}
+    )
     JetpackWorkoutAppTheme {
         ContentScreen(
             journals = emptyList(),
             isRefreshing = false,
             isDeleting = false,
-            isOwner = false,
+            ownerConfig = ownerConfig,
             onRefresh = {},
-            onJournalClick = { _, _, _, _, _ -> },
-            onDeleteClick = {},
-            onSetupClick = {},
-            onCreateJournalClick = {}
+            onJournalClick = {}
         )
     }
 }
@@ -577,17 +575,20 @@ private fun JournalsListScreenWithItemsPreview() {
         )
     )
 
+    val ownerConfig = OwnerDisplayConfig(
+        isOwner = true,
+        onDeleteClick = {},
+        onSetupClick = {},
+        onCreateJournalClick = {}
+    )
     JetpackWorkoutAppTheme {
         ContentScreen(
             journals = sampleJournals,
             isRefreshing = false,
             isDeleting = false,
-            isOwner = true,
+            ownerConfig = ownerConfig,
             onRefresh = {},
-            onJournalClick = { _, _, _, _, _ -> },
-            onDeleteClick = {},
-            onSetupClick = {},
-            onCreateJournalClick = {}
+            onJournalClick = {}
         )
     }
 }

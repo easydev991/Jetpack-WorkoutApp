@@ -51,8 +51,10 @@ data class ParkRowData(
 @Composable
 fun ParkRowView(data: ParkRowData) {
     FormCardContainer(
-        modifier = data.modifier,
-        onClick = data.onClick
+        params = FormCardContainerParams(
+            modifier = data.modifier,
+            onClick = data.onClick
+        )
     ) {
         FormRowContainer(
             config = FormRowConfig(

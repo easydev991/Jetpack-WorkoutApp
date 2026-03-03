@@ -47,7 +47,9 @@ data class FriendRequestData(
  */
 @Composable
 fun FriendRequestRowView(data: FriendRequestData) {
-    FormCardContainer(modifier = data.modifier) {
+    FormCardContainer(
+        params = FormCardContainerParams(modifier = data.modifier)
+    ) {
         FormRowContainer(
             config = FormRowConfig(
                 verticalAlignment = Alignment.Top,

@@ -46,7 +46,8 @@ class JournalsListScreenTest {
             uiState = MutableStateFlow(JournalsUiState.Content(journals = emptyList())),
             isRefreshing = MutableStateFlow(false)
         ),
-        onBackClick: () -> Unit = {}
+        onBackClick: () -> Unit = {},
+        onJournalClick: (JournalNavigationParams) -> Unit = {}
     ) {
         composeTestRule.setContent {
             val navController = rememberNavController()
@@ -59,8 +60,10 @@ class JournalsListScreenTest {
                     appState = appState,
                     userId = userId,
                     viewModel = viewModel,
-                    onBackClick = onBackClick,
-                    onJournalClick = { _, _, _, _, _ -> },
+                    callbacks = JournalsListCallbacks(
+                        onBackClick = onBackClick,
+                        onJournalClick = onJournalClick
+                    ),
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -87,23 +90,10 @@ class JournalsListScreenTest {
         )
 
         // When
-        composeTestRule.setContent {
-            val navController = rememberNavController()
-            val appState = AppState(navController)
-            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
-
-            JetpackWorkoutAppTheme {
-                JournalsListScreen(
-                    modifier = androidx.compose.ui.Modifier,
-                    appState = appState,
-                    userId = 1L,
-                    viewModel = viewModel,
-                    onBackClick = {},
-                    onJournalClick = { _, _, _, _, _ -> },
-                    parentPaddingValues = PaddingValues()
-                )
-            }
-        }
+        setContent(
+            userId = 1L,
+            viewModel = viewModel
+        )
 
         // Then - AppBar отображается даже при загрузке
         composeTestRule
@@ -121,23 +111,10 @@ class JournalsListScreenTest {
         )
 
         // When
-        composeTestRule.setContent {
-            val navController = rememberNavController()
-            val appState = AppState(navController)
-            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
-
-            JetpackWorkoutAppTheme {
-                JournalsListScreen(
-                    modifier = androidx.compose.ui.Modifier,
-                    appState = appState,
-                    userId = 1L,
-                    viewModel = viewModel,
-                    onBackClick = {},
-                    onJournalClick = { _, _, _, _, _ -> },
-                    parentPaddingValues = PaddingValues()
-                )
-            }
-        }
+        setContent(
+            userId = 1L,
+            viewModel = viewModel
+        )
 
         // Then - Текст о пустом списке отображается
         composeTestRule
@@ -160,23 +137,10 @@ class JournalsListScreenTest {
         )
 
         // When
-        composeTestRule.setContent {
-            val navController = rememberNavController()
-            val appState = AppState(navController)
-            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
-
-            JetpackWorkoutAppTheme {
-                JournalsListScreen(
-                    modifier = androidx.compose.ui.Modifier,
-                    appState = appState,
-                    userId = 1L,
-                    viewModel = viewModel,
-                    onBackClick = {},
-                    onJournalClick = { _, _, _, _, _ -> },
-                    parentPaddingValues = PaddingValues()
-                )
-            }
-        }
+        setContent(
+            userId = 1L,
+            viewModel = viewModel
+        )
 
         // Then - Кнопка "Создать дневник" должна быть кликабельной
         composeTestRule
@@ -208,22 +172,10 @@ class JournalsListScreenTest {
         )
 
         // When
-        composeTestRule.setContent {
-            val navController = rememberNavController()
-            val appState = AppState(navController)
-            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
-            JetpackWorkoutAppTheme {
-                JournalsListScreen(
-                    modifier = androidx.compose.ui.Modifier,
-                    appState = appState,
-                    userId = 1L,
-                    viewModel = viewModel,
-                    onBackClick = {},
-                    onJournalClick = { _, _, _, _, _ -> },
-                    parentPaddingValues = PaddingValues()
-                )
-            }
-        }
+        setContent(
+            userId = 1L,
+            viewModel = viewModel
+        )
 
         // Then - Заголовок дневника отображается
         composeTestRule
@@ -288,23 +240,10 @@ class JournalsListScreenTest {
         )
 
         // When
-        composeTestRule.setContent {
-            val navController = rememberNavController()
-            val appState = AppState(navController)
-            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
-
-            JetpackWorkoutAppTheme {
-                JournalsListScreen(
-                    modifier = androidx.compose.ui.Modifier,
-                    appState = appState,
-                    userId = 1L,
-                    viewModel = viewModel,
-                    onBackClick = {},
-                    onJournalClick = { _, _, _, _, _ -> },
-                    parentPaddingValues = PaddingValues()
-                )
-            }
-        }
+        setContent(
+            userId = 1L,
+            viewModel = viewModel
+        )
 
         // Then - Все дневники отображаются
         journals.forEach { journal ->
@@ -325,23 +264,10 @@ class JournalsListScreenTest {
         )
 
         // When
-        composeTestRule.setContent {
-            val navController = rememberNavController()
-            val appState = AppState(navController)
-            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
-
-            JetpackWorkoutAppTheme {
-                JournalsListScreen(
-                    modifier = androidx.compose.ui.Modifier,
-                    appState = appState,
-                    userId = 1L,
-                    viewModel = viewModel,
-                    onBackClick = {},
-                    onJournalClick = { _, _, _, _, _ -> },
-                    parentPaddingValues = PaddingValues()
-                )
-            }
-        }
+        setContent(
+            userId = 1L,
+            viewModel = viewModel
+        )
 
         // Then - AppBar отображается даже при ошибке
         composeTestRule
@@ -373,23 +299,10 @@ class JournalsListScreenTest {
         )
 
         // When
-        composeTestRule.setContent {
-            val navController = rememberNavController()
-            val appState = AppState(navController)
-            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
-
-            JetpackWorkoutAppTheme {
-                JournalsListScreen(
-                    modifier = androidx.compose.ui.Modifier,
-                    appState = appState,
-                    userId = 1L,
-                    viewModel = viewModel,
-                    onBackClick = {},
-                    onJournalClick = { _, _, _, _, _ -> },
-                    parentPaddingValues = PaddingValues()
-                )
-            }
-        }
+        setContent(
+            userId = 1L,
+            viewModel = viewModel
+        )
 
         // Then - Заголовок дневника отображается
         composeTestRule
@@ -419,23 +332,10 @@ class JournalsListScreenTest {
         )
 
         // When
-        composeTestRule.setContent {
-            val navController = rememberNavController()
-            val appState = AppState(navController)
-            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
-
-            JetpackWorkoutAppTheme {
-                JournalsListScreen(
-                    modifier = androidx.compose.ui.Modifier,
-                    appState = appState,
-                    userId = 1L,
-                    viewModel = viewModel,
-                    onBackClick = {},
-                    onJournalClick = { _, _, _, _, _ -> },
-                    parentPaddingValues = PaddingValues()
-                )
-            }
-        }
+        setContent(
+            userId = 1L,
+            viewModel = viewModel
+        )
 
         // Then - Кнопка "Создать дневник" НЕ отображается во время загрузки
         // (EmptyStateView показывается только после завершения загрузки)
@@ -468,23 +368,10 @@ class JournalsListScreenTest {
         )
 
         // When
-        composeTestRule.setContent {
-            val navController = rememberNavController()
-            val appState = AppState(navController)
-            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
-
-            JetpackWorkoutAppTheme {
-                JournalsListScreen(
-                    modifier = androidx.compose.ui.Modifier,
-                    appState = appState,
-                    userId = 1L,
-                    viewModel = viewModel,
-                    onBackClick = {},
-                    onJournalClick = { _, _, _, _, _ -> },
-                    parentPaddingValues = PaddingValues()
-                )
-            }
-        }
+        setContent(
+            userId = 1L,
+            viewModel = viewModel
+        )
 
         // Then - Элемент дневника отображается, но не кликабелен при обновлении
         composeTestRule
@@ -514,8 +401,10 @@ class JournalsListScreenTest {
                     appState = appState,
                     userId = userId,
                     viewModel = viewModel,
-                    onBackClick = {},
-                    onJournalClick = { _, _, _, _, _ -> },
+                    callbacks = JournalsListCallbacks(
+                        onBackClick = {},
+                        onJournalClick = {}
+                    ),
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -538,7 +427,7 @@ class JournalsListScreenTest {
             isRefreshing = MutableStateFlow(false)
         )
 
-        // When
+        // When - не устанавливаем currentUser в setContent
         composeTestRule.setContent {
             val navController = rememberNavController()
             val appState = AppState(navController)
@@ -550,8 +439,10 @@ class JournalsListScreenTest {
                     appState = appState,
                     userId = userId,
                     viewModel = viewModel,
-                    onBackClick = {},
-                    onJournalClick = { _, _, _, _, _ -> },
+                    callbacks = JournalsListCallbacks(
+                        onBackClick = {},
+                        onJournalClick = {}
+                    ),
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -586,8 +477,10 @@ class JournalsListScreenTest {
                     appState = appState,
                     userId = profileUserId,
                     viewModel = viewModel,
-                    onBackClick = {},
-                    onJournalClick = { _, _, _, _, _ -> },
+                    callbacks = JournalsListCallbacks(
+                        onBackClick = {},
+                        onJournalClick = {}
+                    ),
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -622,8 +515,10 @@ class JournalsListScreenTest {
                     appState = appState,
                     userId = userId,
                     viewModel = viewModel,
-                    onBackClick = {},
-                    onJournalClick = { _, _, _, _, _ -> },
+                    callbacks = JournalsListCallbacks(
+                        onBackClick = {},
+                        onJournalClick = {}
+                    ),
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -737,8 +632,10 @@ class JournalsListScreenTest {
                     appState = appState,
                     userId = profileUserId, // Чужой профиль
                     viewModel = viewModel,
-                    onBackClick = {},
-                    onJournalClick = { _, _, _, _, _ -> },
+                    callbacks = JournalsListCallbacks(
+                        onBackClick = {},
+                        onJournalClick = {}
+                    ),
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -779,8 +676,10 @@ class JournalsListScreenTest {
                     appState = appState,
                     userId = profileUserId, // Чужой профиль
                     viewModel = viewModel,
-                    onBackClick = {},
-                    onJournalClick = { _, _, _, _, _ -> },
+                    callbacks = JournalsListCallbacks(
+                        onBackClick = {},
+                        onJournalClick = {}
+                    ),
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -820,8 +719,10 @@ class JournalsListScreenTest {
                     appState = appState,
                     userId = userId, // Свой профиль
                     viewModel = viewModel,
-                    onBackClick = {},
-                    onJournalClick = { _, _, _, _, _ -> },
+                    callbacks = JournalsListCallbacks(
+                        onBackClick = {},
+                        onJournalClick = {}
+                    ),
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -861,8 +762,10 @@ class JournalsListScreenTest {
                     appState = appState,
                     userId = userId, // Свой профиль
                     viewModel = viewModel,
-                    onBackClick = {},
-                    onJournalClick = { _, _, _, _, _ -> },
+                    callbacks = JournalsListCallbacks(
+                        onBackClick = {},
+                        onJournalClick = {}
+                    ),
                     parentPaddingValues = PaddingValues()
                 )
             }

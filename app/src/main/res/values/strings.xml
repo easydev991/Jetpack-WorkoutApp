@@ -151,6 +151,9 @@
     <string name="app_display_name">App display name</string>
 
     <string name="events_title">Events</string>
+    <string name="events_empty_future">No upcoming events</string>
+    <string name="events_empty_past">No past events</string>
+    <string name="events_fab_description">Create event</string>
     <string name="messages_title">Messages</string>
     <string name="profile_title">Profile</string>
     <string name="more_title">More</string>

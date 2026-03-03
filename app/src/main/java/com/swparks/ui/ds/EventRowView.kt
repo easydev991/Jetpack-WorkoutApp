@@ -48,8 +48,10 @@ data class EventRowData(
 @Composable
 fun EventRowView(data: EventRowData) {
     FormCardContainer(
-        modifier = data.modifier,
-        onClick = data.onClick
+        params = FormCardContainerParams(
+            modifier = data.modifier,
+            onClick = data.onClick
+        )
     ) {
         FormRowContainer(
             config = FormRowConfig(

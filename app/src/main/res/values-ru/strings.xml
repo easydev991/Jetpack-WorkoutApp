@@ -6,6 +6,9 @@
     <string name="filter_parks">Фильтр площадок</string>
     <string name="events">Мероприятия</string>
     <string name="events_title">Мероприятия</string>
+    <string name="events_empty_future">Нет предстоящих мероприятий</string>
+    <string name="events_empty_past">Нет прошедших мероприятий</string>
+    <string name="events_fab_description">Создать мероприятие</string>
     <string name="messages">Сообщения</string>
     <string name="messages_title">Сообщения</string>
     <string name="profile">Профиль</string>

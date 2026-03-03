@@ -34,8 +34,11 @@ import com.swparks.ui.screens.auth.RegisterSheetHost
 import com.swparks.ui.screens.events.EventsScreen
 import com.swparks.ui.screens.events.EventsTopAppBar
 import com.swparks.ui.screens.journals.JournalEntriesScreen
+import com.swparks.ui.screens.journals.JournalsListCallbacks
 import com.swparks.ui.screens.journals.JournalsListScreen
 import com.swparks.ui.screens.messages.ChatScreen
+import com.swparks.ui.screens.messages.ChatScreenCallbacks
+import com.swparks.ui.screens.messages.MessagesNavigationCallbacks
 import com.swparks.ui.screens.messages.MessagesRootScreen
 import com.swparks.ui.screens.messages.MessagesTopAppBar
 import com.swparks.ui.screens.more.MoreScreen
@@ -233,29 +236,31 @@ fun RootScreen(appState: AppState) {
                         .padding(paddingValues),
                     viewModel = dialogsViewModel,
                     appState = appState,
-                    onShowLoginSheet = {
-                        showLoginSheet = true
-                    },
-                    onShowRegisterSheet = {
-                        showRegisterSheet = true
-                    },
-                    onNavigateToFriends = {
-                        appState.navController.navigate(Screen.MyFriends.route)
-                    },
-                    onNavigateToSearchUsers = {
-                        appState.navController.navigate(Screen.UserSearch.createRoute("messages"))
-                    },
-                    onNavigateToChat = { dialogId, userId, userName, userImage ->
-                        appState.navController.navigate(
-                            Screen.Chat.createRoute(
-                                dialogId,
-                                userId,
-                                userName,
-                                userImage,
-                                "messages"
+                    callbacks = MessagesNavigationCallbacks(
+                        onShowLoginSheet = {
+                            showLoginSheet = true
+                        },
+                        onShowRegisterSheet = {
+                            showRegisterSheet = true
+                        },
+                        onNavigateToFriends = {
+                            appState.navController.navigate(Screen.MyFriends.route)
+                        },
+                        onNavigateToSearchUsers = {
+                            appState.navController.navigate(Screen.UserSearch.createRoute("messages"))
+                        },
+                        onNavigateToChat = { dialogId, userId, userName, userImage ->
+                            appState.navController.navigate(
+                                Screen.Chat.createRoute(
+                                    dialogId,
+                                    userId,
+                                    userName,
+                                    userImage,
+                                    "messages"
+                                )
                             )
-                        )
-                    }
+                        }
+                    )
                 )
             }
 
@@ -355,16 +360,18 @@ fun RootScreen(appState: AppState) {
                     userName = userName,
                     userImage = userImage,
                     currentUserId = currentUser?.id?.toInt(),
-                    onBackClick = { appState.navController.popBackStack() },
-                    onAvatarClick = {
-                        appState.navController.navigate(
-                            Screen.OtherUserProfile.createRoute(userId.toLong(), "messages")
-                        )
-                    },
-                    onMessageSent = {
-                        // Обновляем список диалогов после отправки сообщения
-                        dialogsViewModel.refresh()
-                    }
+                    callbacks = ChatScreenCallbacks(
+                        onBackClick = { appState.navController.popBackStack() },
+                        onAvatarClick = {
+                            appState.navController.navigate(
+                                Screen.OtherUserProfile.createRoute(userId.toLong(), "messages")
+                            )
+                        },
+                        onMessageSent = {
+                            // Обновляем список диалогов после отправки сообщения
+                            dialogsViewModel.refresh()
+                        }
+                    )
                 )
 
                 // Загружаем сообщения при первом отображении
@@ -564,19 +571,21 @@ fun RootScreen(appState: AppState) {
                         userId = userId,
                         viewModel = viewModel,
                         source = source,
-                        onBackClick = { appState.navController.popBackStack() },
-                        onJournalClick = { journalId, journalOwnerId, journalTitle, viewAccess, commentAccess ->
-                            appState.navController.navigate(
-                                Screen.JournalEntries.createRoute(
-                                    journalId,
-                                    journalOwnerId,
-                                    journalTitle,
-                                    viewAccess,
-                                    commentAccess,
-                                    source
+                        callbacks = JournalsListCallbacks(
+                            onBackClick = { appState.navController.popBackStack() },
+                            onJournalClick = { params ->
+                                appState.navController.navigate(
+                                    Screen.JournalEntries.createRoute(
+                                        params.journalId,
+                                        params.journalOwnerId,
+                                        params.journalTitle,
+                                        params.viewAccess,
+                                        params.commentAccess,
+                                        source
+                                    )
                                 )
-                            )
-                        },
+                            }
+                        ),
                         parentPaddingValues = paddingValues
                     )
                 }

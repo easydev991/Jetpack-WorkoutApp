@@ -49,18 +49,20 @@ class MessagesRootScreenTest {
             JetpackWorkoutAppTheme {
                 DialogsContent(
                     modifier = androidx.compose.ui.Modifier,
-                    uiState = uiState,
-                    isRefreshing = isRefreshing,
-                    isUpdating = isUpdating,
-                    syncError = syncError,
-                    currentUser = currentUser,
-                    onRefresh = onRefresh,
-                    onDismissSyncError = onDismissSyncError,
-                    onDialogClick = onDialogClick,
-                    onMarkAsRead = onMarkAsRead,
-                    onDeleteClick = onDeleteClick,
-                    onNavigateToFriends = onNavigateToFriends,
-                    onNavigateToSearchUsers = onNavigateToSearchUsers
+                    params = DialogsContentParams(
+                        uiState = uiState,
+                        isRefreshing = isRefreshing,
+                        isUpdating = isUpdating,
+                        syncError = syncError,
+                        currentUser = currentUser,
+                        onRefresh = onRefresh,
+                        onDismissSyncError = onDismissSyncError,
+                        onDialogClick = onDialogClick,
+                        onMarkAsRead = onMarkAsRead,
+                        onDeleteClick = onDeleteClick,
+                        onNavigateToFriends = onNavigateToFriends,
+                        onNavigateToSearchUsers = onNavigateToSearchUsers
+                    )
                 )
             }
         }

@@ -17,65 +17,68 @@ import androidx.compose.ui.res.dimensionResource
 import com.swparks.R
 
 /**
+ * Параметры для FormCardContainer
+ */
+data class FormCardContainerParams(
+    val modifier: Modifier = Modifier,
+    val enabled: Boolean = true,
+    val onClick: (() -> Unit)? = null,
+    val onLongClick: (() -> Unit)? = null,
+    val onLongClickWithOffset: ((offsetX: Float, offsetY: Float) -> Unit)? = null
+)
+
+/**
  * Обертка для добавления тени в светлой теме
  *
- * @param modifier Модификатор
- * @param enabled Возможность кликать по карточке
- * @param onClick Обработчик нажатия
- * @param onLongClick Обработчик долгого нажатия (без позиции)
- * @param onLongClickWithOffset Обработчик долгого нажатия с позицией нажатия
+ * @param params Параметры карточки
  * @param content Контент
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FormCardContainer(
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    onClick: (() -> Unit)? = null,
-    onLongClick: (() -> Unit)? = null,
-    onLongClickWithOffset: ((offsetX: Float, offsetY: Float) -> Unit)? = null,
+    params: FormCardContainerParams,
     content: @Composable (ColumnScope.() -> Unit)
 ) {
     val isLight = MaterialTheme.colorScheme.isLight()
     val interactionSource = remember { MutableInteractionSource() }
 
     val cardModifier = when {
-        onLongClickWithOffset != null && onClick != null -> {
-            modifier.pointerInput(enabled) {
-                if (enabled) {
+        params.onLongClickWithOffset != null && params.onClick != null -> {
+            params.modifier.pointerInput(params.enabled) {
+                if (params.enabled) {
                     detectTapGestures(
-                        onTap = { onClick() },
+                        onTap = { params.onClick() },
                         onLongPress = { offset ->
-                            onLongClickWithOffset(offset.x, offset.y)
+                            params.onLongClickWithOffset(offset.x, offset.y)
                         }
                     )
                 }
             }
         }
 
-        onLongClickWithOffset != null -> {
-            modifier.pointerInput(enabled) {
-                if (enabled) {
+        params.onLongClickWithOffset != null -> {
+            params.modifier.pointerInput(params.enabled) {
+                if (params.enabled) {
                     detectTapGestures(
                         onLongPress = { offset ->
-                            onLongClickWithOffset(offset.x, offset.y)
+                            params.onLongClickWithOffset(offset.x, offset.y)
                         }
                     )
                 }
             }
         }
 
-        onClick != null || onLongClick != null -> {
-            modifier.combinedClickable(
-                enabled = enabled,
+        params.onClick != null || params.onLongClick != null -> {
+            params.modifier.combinedClickable(
+                enabled = params.enabled,
                 indication = null,
                 interactionSource = interactionSource,
-                onClick = onClick ?: {},
-                onLongClick = onLongClick
+                onClick = params.onClick ?: {},
+                onLongClick = params.onLongClick
             )
         }
 
-        else -> modifier
+        else -> params.modifier
     }
 
     Card(

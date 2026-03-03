@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.mutablePreferencesOf
 import app.cash.turbine.test
 import com.swparks.data.database.dao.DialogDao
+import com.swparks.data.database.dao.EventDao
 import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.UserDao
@@ -47,6 +48,7 @@ class SWRepositoryTest {
     private val mockJournalDao = mockk<JournalDao>(relaxed = true)
     private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
     private val mockDialogDao = mockk<DialogDao>(relaxed = true)
+    private val mockEventDao = mockk<EventDao>(relaxed = true)
 
     @Before
     fun setup() {
@@ -117,7 +119,8 @@ class SWRepositoryTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When
@@ -143,7 +146,8 @@ class SWRepositoryTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When & Then
@@ -173,7 +177,8 @@ class SWRepositoryTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When & Then
@@ -199,7 +204,8 @@ class SWRepositoryTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When & Then
@@ -223,7 +229,8 @@ class SWRepositoryTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When & Then
@@ -246,7 +253,8 @@ class SWRepositoryTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When & Then - проверяем, что метод выполнился без ошибок
@@ -271,7 +279,8 @@ class SWRepositoryTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When
@@ -302,7 +311,8 @@ class SWRepositoryTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When
@@ -330,7 +340,8 @@ class SWRepositoryTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When
@@ -358,7 +369,8 @@ class SWRepositoryTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When
@@ -386,7 +398,8 @@ class SWRepositoryTest {
             mockUserDao,
             mockJournalDao,
             mockJournalEntryDao,
-            mockDialogDao
+            mockDialogDao,
+            mockEventDao
         )
 
         // When

@@ -43,25 +43,29 @@ class ChatScreenTest {
         onRefresh: () -> Unit = {},
         onBackClick: () -> Unit = {},
         onAvatarClick: () -> Unit = {},
-        onMarkAsRead: (Int) -> Unit = {}
+        onMessageSent: () -> Unit = {}
     ) {
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
                 ChatContent(
                     modifier = androidx.compose.ui.Modifier,
-                    uiState = uiState,
-                    isLoading = isLoading,
-                    messageText = messageText,
-                    userName = userName,
-                    userImage = userImage,
-                    currentUserId = currentUserId,
-                    otherUserId = otherUserId,
-                    onMessageTextChange = onMessageTextChange,
-                    onSendClick = onSendClick,
-                    onRefresh = onRefresh,
-                    onBackClick = onBackClick,
-                    onAvatarClick = onAvatarClick,
-                    onMarkAsRead = onMarkAsRead
+                    params = ChatContentParams(
+                        uiState = uiState,
+                        isLoading = isLoading,
+                        messageText = messageText,
+                        userName = userName,
+                        userImage = userImage,
+                        currentUserId = currentUserId,
+                        otherUserId = otherUserId,
+                        onMessageTextChange = onMessageTextChange,
+                        onSendClick = onSendClick,
+                        onRefresh = onRefresh,
+                        callbacks = ChatScreenCallbacks(
+                            onBackClick = onBackClick,
+                            onAvatarClick = onAvatarClick,
+                            onMessageSent = onMessageSent
+                        )
+                    )
                 )
             }
         }
