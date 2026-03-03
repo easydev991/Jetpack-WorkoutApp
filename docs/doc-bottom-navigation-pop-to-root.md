@@ -332,6 +332,55 @@ object NewScreen : Screen("new_screen/{itemId}?source={source}", parentTab = Pro
 
 ---
 
+## Открытые баги
+
+### Баг: Двойное выделение вкладок после авторизации 🟡
+
+**Симптомы:**
+- После авторизации на Profile вкладке выделяются ДВЕ вкладки: Parks (первая) И Profile
+- Должна выделяться только Profile вкладка
+- До авторизации логи показывают корректное выделение: `Вкладка profile: selected=true`, остальные `selected=false`
+- После авторизации логи BottomNavigation не вызываются, но визуально виден баг
+
+**Ожидаемое поведение:**
+После успешной авторизации должна оставаться выделенной только Profile вкладка.
+
+**Локализация проблемы:**
+- `RootScreen.kt` - обработка `currentUser` и навигация после авторизации
+- `AppState.kt` - `currentTopLevelDestination` состояние
+- `BottomNavigation.kt` - определение `selected` состояния
+
+**Возможные причины:**
+1. Навигация после авторизации сбрасывает `currentTopLevelDestination` в начальное состояние (Parks)
+2. Рекомпозиция BottomNavigation происходит до обновления AppState
+3. Конфликт между `navigate()` и `onDestinationChanged()` при авторизации
+4. `restoreState = true` в `navigateToTopLevelDestination()` восстанавливает старое состояние
+
+**Логи до авторизации (корректно):**
+```
+BottomNavigationBar: рекомпозиция, currentDestination=profile
+  Вкладка parks: selected=false
+  Вкладка profile: selected=true
+```
+
+**Логи после авторизации (отсутствуют):**
+- Логи BottomNavigation не вызываются
+- Визуально: parks selected=true И profile selected=true
+
+**План исследования:**
+1. Добавить логирование в `AppState.onDestinationChanged()` при авторизации
+2. Проверить, что `navigateToProfileAfterLogin()` корректно обновляет `currentTopLevelDestination`
+3. Исследовать порядок рекомпозиции RootScreen → BottomNavigation при изменении `currentUser`
+4. Проверить, не вызывается ли навигация на Parks после авторизации
+
+**Чек-лист:**
+- [ ] Добавить логирование в AppState.onDestinationChanged()
+- [ ] Проверить навигацию после авторизации в RootScreen
+- [ ] Исследовать порядок рекомпозиции
+- [ ] Проверить restoreState поведение
+
+---
+
 ## Дополнительные улучшения (в будущем)
 
 1. Переход на Navigation 3 (когда станет стабильным)

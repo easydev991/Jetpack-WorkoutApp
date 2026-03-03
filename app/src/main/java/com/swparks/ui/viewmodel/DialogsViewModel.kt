@@ -126,23 +126,16 @@ class DialogsViewModel(
         if (result.isSuccess) {
             hasSuccessfullyLoaded = true
             // После успешной загрузки с сервера, данные сохранены в БД.
-            // Flow из Room должен эмитить обновлённые данные.
-            // Если по какой-то причине Flow не эмитит (например, данные не изменились),
-            // явно читаем текущее состояние из БД и обновляем uiState.
-            val currentState = _uiState.value
-            if (currentState is DialogsUiState.Loading) {
-                // Пытаемся получить данные напрямую из репозитория
-                // Это гарантирует, что uiState будет обновлен даже если Flow не эмитит
-                try {
-                    val dialogs = messagesRepository.dialogs.first()
-                    logger.i(TAG, "Прямое чтение: получено ${dialogs.size} диалогов из БД")
-                    _uiState.value = DialogsUiState.Success(dialogs = dialogs)
-                } catch (e: Exception) {
-                    logger.e(TAG, "Ошибка при прямом чтении диалогов: ${e.message}")
-                    _uiState.value = DialogsUiState.Success(dialogs = emptyList())
-                }
+            // Всегда читаем текущее состояние из БД и обновляем uiState,
+            // независимо от текущего состояния (Loading или Success).
+            // Это гарантирует корректное отображение EmptyStateView после авторизации.
+            try {
+                val dialogs = messagesRepository.dialogs.first()
+                _uiState.value = DialogsUiState.Success(dialogs = dialogs)
+            } catch (e: Exception) {
+                logger.e(TAG, "Ошибка при чтении диалогов: ${e.message}")
+                _uiState.value = DialogsUiState.Success(dialogs = emptyList())
             }
-            // Если уже Success, collect обновит состояние из Room
         } else {
             val currentState = _uiState.value
             // Если кэш пустой и это первая загрузка - показываем Error

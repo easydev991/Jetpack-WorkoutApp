@@ -504,6 +504,94 @@ class DialogsViewModelTest {
     }
 
     /**
+     * Тест для бага EmptyStateView: проверяет что после повторной авторизации с пустым списком
+     * диалогов показывается Success(emptyList()), а не старый Success с диалогами.
+     *
+     * Сценарий:
+     * 1. Пользователь авторизован, имеет диалоги (uiState = Success с диалогами)
+     * 2. Пользователь выходит из аккаунта
+     * 3. Пользователь снова входит, но теперь сервер возвращает пустой список
+     *
+     * Баг: в loadDialogsInternal() есть условие `if (currentState is DialogsUiState.Loading)`,
+     * которое не выполняется, если uiState уже Success. В результате после авторизации
+     * показывается старый список диалогов вместо EmptyStateView.
+     */
+    @Test
+    fun loadDialogsAfterAuth_withPreviouslyCachedDialogs_andEmptyServerResponse_showsEmptyState() = runTest {
+        // Given - сначала есть кэшированные диалоги
+        val cachedDialogs = listOf(testDialog)
+        val dialogFlow = kotlinx.coroutines.flow.MutableStateFlow(cachedDialogs)
+        coEvery { messagesRepository.dialogs } returns dialogFlow
+        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+
+        // When - первая инициализация с кэшированными диалогами
+        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        advanceUntilIdle()
+
+        // Проверяем что состояние Success с диалогами
+        val stateAfterInit = viewModel.uiState.value
+        assertTrue(
+            "Expected Success state after init but got $stateAfterInit",
+            stateAfterInit is DialogsUiState.Success
+        )
+        assertEquals(cachedDialogs, (stateAfterInit as DialogsUiState.Success).dialogs)
+
+        // Симулируем logout -> login: сервер теперь возвращает пустой список
+        dialogFlow.value = emptyList()
+
+        // Вызываем loadDialogsAfterAuth() (как при повторной авторизации)
+        viewModel.loadDialogsAfterAuth()
+        advanceUntilIdle()
+
+        // Then - должен быть Success с пустым списком (EmptyStateView)
+        val stateAfterReAuth = viewModel.uiState.value
+        assertTrue(
+            "Expected Success state with empty list after re-auth but got $stateAfterReAuth",
+            stateAfterReAuth is DialogsUiState.Success
+        )
+        assertTrue(
+            "Expected empty dialog list but got ${(stateAfterReAuth as DialogsUiState.Success).dialogs.size} dialogs",
+            stateAfterReAuth.dialogs.isEmpty()
+        )
+    }
+
+    /**
+     * Тест для бага EmptyStateView: проверяет случай когда Room Flow эмитит данные
+     * с задержкой после успешной загрузки с сервера.
+     *
+     * Сценарий:
+     * 1. Пользователь авторизуется впервые
+     * 2. Сервер возвращает пустой список диалогов
+     * 3. refreshDialogs() завершается успешно
+     * 4. НО Room Flow ещё не эмитит обновление (задержка)
+     * 5. loadDialogsInternal() должен установить Success(emptyList()) независимо от Flow
+     *
+     * Баг: если Room Flow не эмитит сразу после insertAll(), uiState остаётся в Loading.
+     */
+    @Test
+    fun loadDialogsAfterAuth_whenFlowEmitsWithDelay_showsSuccessEmptyState() = runTest {
+        // Given - Flow эмитит данные с задержкой (симулируем Room async behavior)
+        val dialogFlow = kotlinx.coroutines.flow.MutableStateFlow<List<DialogEntity>>(emptyList())
+        coEvery { messagesRepository.dialogs } returns dialogFlow
+        coEvery { messagesRepository.refreshDialogs() } coAnswers {
+            // Симулируем что сервер возвращает пустой список, но Flow обновляется не сразу
+            kotlinx.coroutines.delay(500)
+            Result.success(Unit)
+        }
+
+        // When
+        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        advanceUntilIdle()
+
+        // Then - даже если Flow ещё не эмитит, должен быть Success с пустым списком
+        val state = viewModel.uiState.value
+        assertTrue(
+            "Expected Success state with empty list but got $state",
+            state is DialogsUiState.Success && state.dialogs.isEmpty()
+        )
+    }
+
+    /**
      * Тест: isUpdating = true когда isDeleting = true или isMarkingAsRead = true.
      */
     @Test

@@ -99,6 +99,7 @@ fun EventsScreen(
                 is EventsUIState.InitialLoading -> Box(modifier = Modifier.fillMaxSize()) {
                     LoadingOverlayView()
                 }
+
                 is EventsUIState.Content -> EventsListWithRefresh(
                     events = state.events,
                     selectedTab = state.selectedTab,

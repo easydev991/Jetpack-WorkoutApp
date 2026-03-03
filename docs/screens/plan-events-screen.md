@@ -6,7 +6,7 @@
 **Этап 2: 100%** ✅ (завершён 2026-03-03)
 **Этап 3: 100%** ✅ (завершён 2026-03-03)
 **Этап 4: 100%** ✅ (завершён 2026-03-03)
-**Этап 5: 33%** 🟡 (баг 5.1 ✅, баги: 5.2 pull-to-refresh, 5.3 лишний отступ)
+**Этап 5: 100%** ✅ (баг 5.1 ✅, баг 5.2 ✅, баг 5.3 ✅, баг 5.4 ✅)
 
 ---
 
@@ -207,120 +207,191 @@ EventsViewModel вызывал репозиторий **напрямую**, а J
 
 ---
 
-### Баг 5.2: Pull-to-refresh не работает
+### Баг 5.2: Pull-to-refresh не работает на пустом списке ✅ ИСПРАВЛЕНО
 
 **Проблема:**
-Pull-to-refresh не отображает состояние обновления (индикатор не крутится).
+Pull-to-refresh работает когда список мероприятий есть, но не работает когда список пуст (нет мероприятий). Индикатор обновления не появляется при свайпе вниз.
 
 **Причина:**
-- В JournalsListScreen используется отдельный `isRefreshing: StateFlow<Boolean>`
-- В EventsScreen используется `isLoading` внутри `EventsUIState.Content`
-- PullToRefreshBox требует отдельного `isRefreshing` состояния
+EmptyStateView внутри PullToRefreshBox не имеет достаточной высоты для активации pull-to-refresh жеста. Нужно обернуть EmptyStateView в Box с `fillMaxSize()` и `verticalScroll()` (как в DialogsContent)
 
-**Референс (JournalsListScreen.kt:121-122, 229-233):**
+**Выполненное исправление:**
 
-```kotlin
-val isRefreshing by viewModel.isRefreshing.collectAsState()
-// ...
-PullToRefreshBox(
-    isRefreshing = isRefreshing,
-    onRefresh = onRefresh,
-    // ...
-)
-```
-
-**План исправления:**
-
-1. **IEventsViewModel.kt** - добавить:
+1. **IEventsViewModel.kt** — добавлен `isRefreshing`:
 
    ```kotlin
    val isRefreshing: StateFlow<Boolean>
    ```
 
-2. **EventsViewModel.kt** - добавить:
+2. **EventsViewModel.kt** — добавлены `_isRefreshing` и обновлён `refresh()`:
 
    ```kotlin
    private val _isRefreshing = MutableStateFlow(false)
    override val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
-   ```
 
-   Обновить `refresh()`:
-
-   ```kotlin
    override fun refresh() {
-       logger.d(TAG, "Обновление списка мероприятий")
-       _isRefreshing.value = true
        viewModelScope.launch {
-           when (_selectedTab.value) {
-               EventKind.FUTURE -> loadFutureEventsInternal()
-               EventKind.PAST -> syncPastEventsInternal()
+           _isRefreshing.value = true
+           try {
+               when (_selectedTab.value) {
+                   EventKind.FUTURE -> loadFutureEventsInternal()
+                   EventKind.PAST -> syncPastEventsInternal()
+               }
+           } finally {
+               _isRefreshing.value = false
            }
-           _isRefreshing.value = false
        }
    }
    ```
 
-3. **EventsScreen.kt** - использовать `isRefreshing`:
+3. **EventsScreen.kt** — используется `isRefreshing` и EmptyStateView обёрнут в Box с scroll:
 
    ```kotlin
    val isRefreshing by viewModel.isRefreshing.collectAsState()
-   // ...
+   
    PullToRefreshBox(
        isRefreshing = isRefreshing,
        onRefresh = onRefresh,
-       // ...
-   )
+       modifier = modifier.fillMaxSize()
+   ) {
+       if (events.isEmpty()) {
+           Box(
+               modifier = Modifier
+                   .fillMaxSize()
+                   .verticalScroll(rememberScrollState()),
+               contentAlignment = Alignment.Center
+           ) {
+               EmptyStateView(...)
+           }
+       } else {
+           EventsList(...)
+       }
+   }
+   ```
+
+4. **FakeEventsViewModel.kt** — добавлен `isRefreshing`:
+
+   ```kotlin
+   override val isRefreshing: StateFlow<Boolean> = MutableStateFlow(false)
    ```
 
 **Чек-лист:**
-- [ ] Добавить `isRefreshing` в IEventsViewModel
-- [ ] Добавить `_isRefreshing` в EventsViewModel
-- [ ] Обновить метод `refresh()` для управления `isRefreshing`
-- [ ] Обновить EventsScreen для использования `isRefreshing`
-- [ ] Обновить FakeEventsViewModel
-- [ ] Обновить UI тесты
+- [x] Добавить `isRefreshing` в IEventsViewModel
+- [x] Добавить `_isRefreshing` в EventsViewModel
+- [x] Обновить метод `refresh()` для управления `isRefreshing`
+- [x] Обновить EventsScreen для использования `isRefreshing`
+- [x] Обернуть EmptyStateView в Box с fillMaxSize() и verticalScroll()
+- [x] Обновить FakeEventsViewModel
+- [x] Unit-тесты проходят
 
 ---
 
-### Баг 5.3: Лишний отступ между TopAppBar и контентом
+### Баг 5.4: Список прошедших мероприятий пропадает при переключении вкладок ✅ ИСПРАВЛЕНО
 
-**Проблема:**
-Между TopAppBar и SegmentedButtonRow появляется лишнее пустое пространство.
+**Симптомы:**
+- При первой загрузке список прошедших мероприятий отображается корректно (50 шт.)
+- При переключении FUTURE → PAST → FUTURE → PAST список пропадает
+- Отображается EmptyStateView ("no upcoming events")
+- Логи при первой загрузке: `Получены прошедшие мероприятия из Flow: 50 шт.`
+- Логи при переключении вкладок: только `Переключение вкладки: PAST` (без получения из Flow)
 
-**Причина:**
-Scaffold применяет windowInsets для status bar дважды.
+**Причина (анализ кода EventsViewModel.kt):**
 
-**Референс (JournalsListScreen.kt:182):**
+Проблема в методе `onTabSelected()` (строки 182-199):
 
 ```kotlin
-Scaffold(
-    // ...
-    contentWindowInsets = WindowInsets(0, 0, 0, 0),
-    // ...
-)
+override fun onTabSelected(tab: EventKind) {
+    _selectedTab.value = tab
+
+    if (tab == EventKind.FUTURE) {
+        // FUTURE обновляет UI state из кэша ✅
+        val events = futureEventsCache ?: emptyList()
+        _eventsUIState.value = EventsUIState.Content(...)
+    } else {
+        // PAST только запускает синхронизацию при первой загрузке
+        // НО не обновляет UI state при последующих переключениях! ❌
+        if (!hasLoadedPastEvents) {
+            syncPastEvents()
+        }
+        // ← здесь должен быть код для обновления UI state из кэша PAST
+    }
+}
 ```
 
-**План исправления (EventsScreen.kt):**
+Flow в `observePastEvents()` (строки 165-180) эмитит только при изменении данных в БД:
+- При первой синхронизации — эмитит ✅
+- При последующих переключениях — БД не изменилась, Flow не эмитит ❌
 
-1. Добавить импорт:
+**Выполненное исправление:**
+
+1. **EventsViewModel.kt** — добавлен кэш для PAST:
 
    ```kotlin
-   import androidx.compose.foundation.layout.WindowInsets
+   private var pastEventsCache: List<Event>? = null
    ```
 
-2. Добавить `contentWindowInsets` в Scaffold (строка 57):
+2. **EventsViewModel.kt** — обновлён `observePastEvents()` для сохранения в кэш:
 
    ```kotlin
-   Scaffold(
-       topBar = { EventsTopAppBar() },
-       contentWindowInsets = WindowInsets(0, 0, 0, 0),
-       floatingActionButton = { /* ... */ }
-   ) { paddingValues ->
+   private fun observePastEvents() {
+       viewModelScope.launch {
+           getPastEventsFlowUseCase().collect { pastEvents ->
+               val sortedEvents = pastEvents.sortedByDescending { it.beginDate }
+               pastEventsCache = sortedEvents  // ← кэшируем
+               // ...
+           }
+       }
+   }
+   ```
+
+3. **EventsViewModel.kt** — обновлён `onTabSelected()` для PAST:
+
+   ```kotlin
+   override fun onTabSelected(tab: EventKind) {
+       _selectedTab.value = tab
+
+       if (tab == EventKind.FUTURE) {
+           val events = futureEventsCache ?: emptyList()
+           _eventsUIState.value = EventsUIState.Content(...)
+       } else {
+           val events = pastEventsCache ?: emptyList()
+           _eventsUIState.value = EventsUIState.Content(
+               events = events,
+               selectedTab = EventKind.PAST,
+               isLoading = false
+           )
+
+           if (!hasLoadedPastEvents) {
+               syncPastEvents()
+           }
+       }
+   }
    ```
 
 **Чек-лист:**
-- [ ] Добавить `contentWindowInsets = WindowInsets(0, 0, 0, 0)` в Scaffold
-- [ ] Проверить визуально на устройстве/эмуляторе
+- [x] Добавить `private var pastEventsCache: List<Event>? = null` в EventsViewModel
+- [x] Обновить `observePastEvents()` для сохранения в `pastEventsCache`
+- [x] Обновить `onTabSelected()` для PAST — устанавливать UI state из кэша
+- [x] Unit-тесты проходят
+- [ ] Проверить на устройстве: переключение FUTURE ↔ PAST несколько раз
+
+---
+
+### Баг 5.3: Лишний отступ между TopAppBar и контентом ✅ ИСПРАВЛЕНО
+
+**Проблема:**
+Между TopAppBar и SegmentedButtonRow появлялось лишнее пустое пространство.
+
+**Причина:**
+EventsScreen использовал вложенный Scaffold с собственным TopAppBar, а RootScreen также рендерил EventsTopAppBar. Это приводило к двойному рендерингу TopAppBar и лишним отступам.
+
+**Выполненное исправление:**
+- Удалён вложенный Scaffold из EventsScreen.kt
+- Заменён на простой Box с контентом
+- TopAppBar теперь рендерится только в RootScreen
+
+**Результат:**
+Лишний отступ устранён, TopAppBar отображается корректно.
 
 ---
 
@@ -334,3 +405,8 @@ Scaffold(
 | 2026-03-03 | **Этап 4 завершён**: UI тесты написаны, проходят, код отформатирован |
 | 2026-03-03 | **Этап 5 обновлён**: добавлены баги 5.1 (PAST), 5.2 (pull-to-refresh), 5.3 (отступ) с пошаговым планом исправления |
 | 2026-03-03 | **Баг 5.1 исправлен и проверен**: EventsViewModel переписан на Use Cases, созданы 6 Use Case файлов, тесты обновлены, проверено на устройстве (50 мероприятий загружено) |
+| 2026-03-03 | **Баг 5.3 исправлен**: Удалён вложенный Scaffold из EventsScreen, TopAppBar теперь рендерится только в RootScreen |
+| 2026-03-03 | **Баг 5.2 актуализирован**: Pull-to-refresh работает когда список есть, но не работает на пустом списке |
+| 2026-03-03 | **Баг 5.4 добавлен**: Список прошедших мероприятий пропадает при переключении вкладок (анализ кода + план исправления) |
+| 2026-03-03 | **Баг 5.4 исправлен**: Добавлен pastEventsCache, обновлён onTabSelected() для обновления UI state при переключении |
+| 2026-03-03 | **Баг 5.2 исправлен**: Добавлен isRefreshing StateFlow, EmptyStateView обёрнут в Box с scroll для pull-to-refresh на пустом списке |
