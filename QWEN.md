@@ -212,7 +212,7 @@ app/
 - **Компиляция Kotlin**: JVM Target 17
 - **Compose**: Включена поддержка
 - **ProGuard/R8**: Включена минификация для релизных сборок
-- **Gradle Plugin**: 9.0.1
+- **Gradle Plugin**: 9.1.0
 - **Kotlin Version**: 2.3.10
 
 ## Ключевые компоненты
