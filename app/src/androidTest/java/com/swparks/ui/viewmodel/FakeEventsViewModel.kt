@@ -2,52 +2,39 @@ package com.swparks.ui.viewmodel
 
 import com.swparks.data.model.Event
 import com.swparks.ui.model.EventKind
-import com.swparks.ui.screens.events.EventsUIState
+import com.swparks.ui.state.EventsUIState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-/**
- * Fake-реализация IEventsViewModel для UI тестов.
- *
- * Предоставляет простую реализацию интерфейса с возможностью установки состояния.
- * Используется в Compose UI тестах для проверки разных состояний экрана.
- */
 class FakeEventsViewModel(
-    override val eventsUIState: StateFlow<EventsUIState>,
-    override val isAuthorized: StateFlow<Boolean>,
-    override val selectedTab: StateFlow<EventKind> = MutableStateFlow(EventKind.FUTURE),
-    override val isRefreshing: StateFlow<Boolean> = MutableStateFlow(false)
+    eventsUIState: MutableStateFlow<EventsUIState>,
+    isAuthorized: MutableStateFlow<Boolean>,
+    selectedTab: MutableStateFlow<EventKind> = MutableStateFlow(EventKind.FUTURE),
+    isRefreshing: MutableStateFlow<Boolean> = MutableStateFlow(false)
 ) : IEventsViewModel {
 
-    /**
-     * Функция-заглушка для переключения вкладки.
-     * В тестах состояние устанавливается напрямую через конструктор.
-     */
+    private val _eventsUIState = eventsUIState
+    private val _isAuthorized = isAuthorized
+    private val _selectedTab = selectedTab
+    private val _isRefreshing = isRefreshing
+
+    override val eventsUIState: StateFlow<EventsUIState> = _eventsUIState
+    override val isAuthorized: StateFlow<Boolean> = _isAuthorized
+    override val selectedTab: StateFlow<EventKind> = _selectedTab
+    override val isRefreshing: StateFlow<Boolean> = _isRefreshing
+
     override fun onTabSelected(tab: EventKind) {
-        // Заглушка - не делает ничего в тестах
+        _selectedTab.value = tab
     }
 
-    /**
-     * Функция-заглушка для обновления (pull-to-refresh).
-     * В тестах состояние устанавливается напрямую через конструктор.
-     */
-    override fun refresh() {
-        // Заглушка - не делает ничего в тестах
-    }
+    override fun refresh() {}
 
-    /**
-     * Функция-заглушка для обработки нажатия на мероприятие.
-     * В тестах можно проверить, был ли вызван этот метод.
-     */
-    override fun onEventClick(event: Event) {
-        // Заглушка - не делает ничего в тестах
-    }
+    override fun onEventClick(event: Event) {}
 
-    /**
-     * Функция-заглушка для обработки нажатия на FAB.
-     * В тестах можно проверить, был ли вызван этот метод.
-     */
-    override fun onFabClick() {
-        // Заглушка - не делает ничего в тестах
+    override fun onFabClick() {}
+
+    fun setAddresses(addresses: Map<Pair<Int, Int>, String>) {
+        val currentState = _eventsUIState.value as? EventsUIState.Content ?: return
+        _eventsUIState.value = currentState.copy(addresses = addresses)
     }
 }

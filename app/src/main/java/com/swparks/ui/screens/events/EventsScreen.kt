@@ -15,12 +15,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -31,8 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.swparks.R
 import com.swparks.data.model.Event
@@ -42,6 +38,8 @@ import com.swparks.ui.ds.EventRowData
 import com.swparks.ui.ds.EventRowView
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.model.EventKind
+import com.swparks.ui.state.EventsUIState
+import com.swparks.ui.viewmodel.EventsViewModel
 import com.swparks.ui.viewmodel.IEventsViewModel
 import com.swparks.util.DateFormatter
 
@@ -54,6 +52,7 @@ fun EventsScreen(
     val uiState by viewModel.eventsUIState.collectAsState()
     val isAuthorized by viewModel.isAuthorized.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
+    val selectedTabIndex = if (selectedTab == EventKind.FUTURE) 0 else 1
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val fabDescription = stringResource(id = R.string.events_fab_description)
 
@@ -61,7 +60,8 @@ fun EventsScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            SingleChoiceSegmentedButtonRow(
+            PrimaryTabRow(
+                selectedTabIndex = selectedTabIndex,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -71,27 +71,19 @@ fun EventsScreen(
                     )
             ) {
                 EventKind.entries.forEachIndexed { index, eventKind ->
-                    SegmentedButton(
-                        selected = selectedTab == eventKind,
+                    Tab(
+                        selected = selectedTabIndex == index,
+                        enabled = !isRefreshing,
                         onClick = { viewModel.onTabSelected(eventKind) },
-                        shape = SegmentedButtonDefaults.itemShape(
-                            index = index,
-                            count = EventKind.entries.size
-                        ),
-                        colors = SegmentedButtonDefaults.colors(
-                            activeContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            activeContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            inactiveContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            inactiveContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    ) {
-                        Text(
-                            text = when (eventKind) {
-                                EventKind.FUTURE -> stringResource(id = R.string.future_events)
-                                EventKind.PAST -> stringResource(id = R.string.past_events)
-                            }
-                        )
-                    }
+                        text = {
+                            Text(
+                                text = when (eventKind) {
+                                    EventKind.FUTURE -> stringResource(id = R.string.future_events)
+                                    EventKind.PAST -> stringResource(id = R.string.past_events)
+                                }
+                            )
+                        }
+                    )
                 }
             }
 
@@ -100,13 +92,22 @@ fun EventsScreen(
                     LoadingOverlayView()
                 }
 
-                is EventsUIState.Content -> EventsListWithRefresh(
-                    events = state.events,
-                    selectedTab = state.selectedTab,
-                    isRefreshing = isRefreshing,
-                    onRefresh = { viewModel.refresh() },
-                    onEventClick = { event -> viewModel.onEventClick(event) }
-                )
+                is EventsUIState.Content -> {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        EventsListWithRefresh(
+                            events = state.events,
+                            addresses = state.addresses,
+                            selectedTab = state.selectedTab,
+                            isRefreshing = isRefreshing,
+                            isLoading = state.isLoading,
+                            onRefresh = { viewModel.refresh() },
+                            onEventClick = { event -> viewModel.onEventClick(event) }
+                        )
+                        if (state.isLoading && !isRefreshing) {
+                            LoadingOverlayView()
+                        }
+                    }
+                }
 
                 is EventsUIState.Error -> ErrorContentView(
                     retryAction = { viewModel.refresh() },
@@ -116,17 +117,17 @@ fun EventsScreen(
         }
 
         if (isAuthorized) {
-            ExtendedFloatingActionButton(
+            FloatingActionButton(
                 onClick = { viewModel.onFabClick() },
-                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                text = { Text(text = fabDescription) },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(dimensionResource(id = R.dimen.spacing_regular))
-                    .semantics {
-                        this.contentDescription = fabDescription
-                    }
-            )
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = fabDescription
+                )
+            }
         }
     }
 }
@@ -134,8 +135,10 @@ fun EventsScreen(
 @Composable
 private fun EventsListWithRefresh(
     events: List<Event>,
+    addresses: Map<Pair<Int, Int>, String>,
     selectedTab: EventKind,
     isRefreshing: Boolean,
+    isLoading: Boolean,
     onRefresh: () -> Unit,
     onEventClick: (Event) -> Unit,
     modifier: Modifier = Modifier
@@ -145,7 +148,7 @@ private fun EventsListWithRefresh(
         onRefresh = onRefresh,
         modifier = modifier.fillMaxSize()
     ) {
-        if (events.isEmpty()) {
+        if (events.isEmpty() && !isLoading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -159,9 +162,11 @@ private fun EventsListWithRefresh(
                     }
                 )
             }
-        } else {
+        } else if (events.isNotEmpty()) {
             EventsList(
                 events = events,
+                addresses = addresses,
+                enabled = !isRefreshing && !isLoading,
                 onEventClick = onEventClick
             )
         }
@@ -171,6 +176,8 @@ private fun EventsListWithRefresh(
 @Composable
 private fun EventsList(
     events: List<Event>,
+    addresses: Map<Pair<Int, Int>, String>,
+    enabled: Boolean,
     onEventClick: (Event) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -199,7 +206,9 @@ private fun EventsList(
                         context = context,
                         dateString = event.beginDate
                     ),
-                    address = "${event.countryID}, ${event.cityID}",
+                    address = addresses[event.countryID to event.cityID]
+                        ?: "${event.countryID}, ${event.cityID}",
+                    enabled = enabled,
                     onClick = { onEventClick(event) }
                 )
             )

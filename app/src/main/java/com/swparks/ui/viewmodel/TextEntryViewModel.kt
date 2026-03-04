@@ -163,7 +163,6 @@ class TextEntryViewModel(
                     is TextEntryMode.EditPark -> mode.editInfo.oldEntry
                     is TextEntryMode.EditEvent -> mode.editInfo.oldEntry
                     is TextEntryMode.EditJournalEntry -> mode.editInfo.oldEntry
-                    else -> ""
                 }
                 trimmedText.isNotEmpty() && trimmedText != oldEntry.trim()
             }

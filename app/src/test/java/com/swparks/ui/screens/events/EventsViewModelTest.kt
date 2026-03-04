@@ -1,12 +1,17 @@
 package com.swparks.ui.screens.events
 
 import com.swparks.data.UserPreferencesRepository
+import com.swparks.data.model.City
+import com.swparks.data.model.Country
 import com.swparks.data.model.Event
 import com.swparks.data.model.User
+import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.IGetFutureEventsUseCase
 import com.swparks.domain.usecase.IGetPastEventsFlowUseCase
 import com.swparks.domain.usecase.ISyncPastEventsUseCase
 import com.swparks.ui.model.EventKind
+import com.swparks.ui.state.EventsUIState
+import com.swparks.ui.viewmodel.EventsViewModel
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import io.mockk.coEvery
@@ -38,6 +43,7 @@ class EventsViewModelTest {
     private val mockGetPastEventsFlowUseCase = mockk<IGetPastEventsFlowUseCase>(relaxed = true)
     private val mockSyncPastEventsUseCase = mockk<ISyncPastEventsUseCase>(relaxed = true)
     private val mockUserPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
+    private val mockCountriesRepository = mockk<CountriesRepository>(relaxed = true)
     private val mockUserNotifier = mockk<UserNotifier>(relaxed = true)
     private val mockLogger = mockk<Logger>(relaxed = true)
 
@@ -80,6 +86,7 @@ class EventsViewModelTest {
             getPastEventsFlowUseCase = mockGetPastEventsFlowUseCase,
             syncPastEventsUseCase = mockSyncPastEventsUseCase,
             userPreferencesRepository = mockUserPreferencesRepository,
+            countriesRepository = mockCountriesRepository,
             userNotifier = mockUserNotifier,
             logger = mockLogger
         )
@@ -402,4 +409,209 @@ class EventsViewModelTest {
         val state = viewModel.eventsUIState.value
         assertTrue("State should be Error but was $state", state is EventsUIState.Error)
     }
+
+    // =====================
+    // Test: load addresses when events exist
+    // =====================
+    @Test
+    fun loadAddresses_whenEventsExist_shouldLoadUniqueAddresses() = runTest {
+        // Given
+        val events = listOf(
+            createMockEvent(1L).copy(countryID = 1, cityID = 1),
+            createMockEvent(2L).copy(countryID = 1, cityID = 2),
+            createMockEvent(3L).copy(countryID = 2, cityID = 3)
+        )
+        val mockCountry1 = mockk<Country> { every { name } returns "Россия" }
+        val mockCountry2 = mockk<Country> { every { name } returns "США" }
+        val mockCity1 = mockk<City> { every { name } returns "Москва" }
+        val mockCity2 = mockk<City> { every { name } returns "Санкт-Петербург" }
+        val mockCity3 = mockk<City> { every { name } returns "Нью-Йорк" }
+
+        coEvery { mockGetFutureEventsUseCase() } returns Result.success(events)
+        coEvery { mockCountriesRepository.getCountryById("1") } returns mockCountry1
+        coEvery { mockCountriesRepository.getCountryById("2") } returns mockCountry2
+        coEvery { mockCountriesRepository.getCityById("1") } returns mockCity1
+        coEvery { mockCountriesRepository.getCityById("2") } returns mockCity2
+        coEvery { mockCountriesRepository.getCityById("3") } returns mockCity3
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+
+        // When
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals("Россия, Москва", state.addresses[1 to 1])
+        assertEquals("Россия, Санкт-Петербург", state.addresses[1 to 2])
+        assertEquals("США, Нью-Йорк", state.addresses[2 to 3])
+    }
+
+    @Test
+    fun loadAddresses_whenCountryAndCityExist_shouldReturnFormattedAddress() = runTest {
+        // Given
+        val events = listOf(createMockEvent(1L).copy(countryID = 1, cityID = 1))
+        val mockCountry = mockk<Country> { every { name } returns "Россия" }
+        val mockCity = mockk<City> { every { name } returns "Москва" }
+
+        coEvery { mockGetFutureEventsUseCase() } returns Result.success(events)
+        coEvery { mockCountriesRepository.getCountryById("1") } returns mockCountry
+        coEvery { mockCountriesRepository.getCityById("1") } returns mockCity
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+
+        // When
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals("Россия, Москва", state.addresses[1 to 1])
+    }
+
+    @Test
+    fun loadAddresses_whenOnlyCountryExists_shouldReturnCountryName() = runTest {
+        // Given
+        val events = listOf(createMockEvent(1L).copy(countryID = 1, cityID = 1))
+        val mockCountry = mockk<Country> { every { name } returns "Россия" }
+
+        coEvery { mockGetFutureEventsUseCase() } returns Result.success(events)
+        coEvery { mockCountriesRepository.getCountryById("1") } returns mockCountry
+        coEvery { mockCountriesRepository.getCityById("1") } returns null
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+
+        // When
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals("Россия", state.addresses[1 to 1])
+    }
+
+    @Test
+    fun loadAddresses_whenOnlyCityExists_shouldReturnCityName() = runTest {
+        // Given
+        val events = listOf(createMockEvent(1L).copy(countryID = 1, cityID = 1))
+        val mockCity = mockk<City> { every { name } returns "Москва" }
+
+        coEvery { mockGetFutureEventsUseCase() } returns Result.success(events)
+        coEvery { mockCountriesRepository.getCountryById("1") } returns null
+        coEvery { mockCountriesRepository.getCityById("1") } returns mockCity
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+
+        // When
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals("Москва", state.addresses[1 to 1])
+    }
+
+    @Test
+    fun loadAddresses_whenErrorOccurs_shouldFallbackToIds() = runTest {
+        // Given
+        val events = listOf(createMockEvent(1L).copy(countryID = 99, cityID = 88))
+
+        coEvery { mockGetFutureEventsUseCase() } returns Result.success(events)
+        coEvery { mockCountriesRepository.getCountryById("99") } throws IOException("Network error")
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+
+        // When
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals("99, 88", state.addresses[99 to 88])
+    }
+
+    // =====================
+    // Test: first PAST tab selection loads addresses before showing list
+    // =====================
+    @Test
+    fun onTabSelected_pastFirstTime_loadsAddressesBeforeShowingList() = runTest {
+        // Given
+        val pastEvents = listOf(
+            createMockEvent(1L).copy(countryID = 1, cityID = 1),
+            createMockEvent(2L).copy(countryID = 2, cityID = 2)
+        )
+        val mockCountry1 = mockk<Country> { every { name } returns "Россия" }
+        val mockCountry2 = mockk<Country> { every { name } returns "США" }
+        val mockCity1 = mockk<City> { every { name } returns "Москва" }
+        val mockCity2 = mockk<City> { every { name } returns "Нью-Йорк" }
+
+        coEvery { mockGetFutureEventsUseCase() } returns Result.success(emptyList())
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(pastEvents)
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        coEvery { mockCountriesRepository.getCountryById("1") } returns mockCountry1
+        coEvery { mockCountriesRepository.getCountryById("2") } returns mockCountry2
+        coEvery { mockCountriesRepository.getCityById("1") } returns mockCity1
+        coEvery { mockCountriesRepository.getCityById("2") } returns mockCity2
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When - first switch to PAST
+        viewModel.onTabSelected(EventKind.PAST)
+        advanceUntilIdle()
+
+        // Then - addresses should be loaded before showing list
+        val state = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals(2, state.addresses.size)
+        assertEquals("Россия, Москва", state.addresses[1 to 1])
+        assertEquals("США, Нью-Йорк", state.addresses[2 to 2])
+        assertFalse(state.isLoading)
+    }
+
+    @Test
+    fun loadAddresses_whenCacheExists_shouldUseCache() = runTest {
+        // Given
+        val events1 = listOf(createMockEvent(1L).copy(countryID = 1, cityID = 1))
+        val events2 = listOf(
+            createMockEvent(1L).copy(countryID = 1, cityID = 1),
+            createMockEvent(2L).copy(countryID = 2, cityID = 2)
+        )
+        val mockCountry1 = mockk<Country> { every { name } returns "Россия" }
+        val mockCountry2 = mockk<Country> { every { name } returns "США" }
+        val mockCity1 = mockk<City> { every { name } returns "Москва" }
+        val mockCity2 = mockk<City> { every { name } returns "Нью-Йорк" }
+
+        coEvery { mockGetFutureEventsUseCase() } returns Result.success(events1) andThen Result.success(
+            events2
+        )
+        coEvery { mockCountriesRepository.getCountryById("1") } returns mockCountry1
+        coEvery { mockCountriesRepository.getCountryById("2") } returns mockCountry2
+        coEvery { mockCountriesRepository.getCityById("1") } returns mockCity1
+        coEvery { mockCountriesRepository.getCityById("2") } returns mockCity2
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+
+        // When
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // First load - address for (1, 1) should be loaded
+        val state1 = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals("Россия, Москва", state1.addresses[1 to 1])
+        assertEquals(1, state1.addresses.size)
+
+        // Refresh - should load new address for (2, 2) but keep cached (1, 1)
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        val state2 = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals("Россия, Москва", state2.addresses[1 to 1])
+        assertEquals("США, Нью-Йорк", state2.addresses[2 to 2])
+        assertEquals(2, state2.addresses.size)
+
+        // Verify country (1, 1) was loaded only once (cached on second load)
+        coVerify(exactly = 1) { mockCountriesRepository.getCountryById("1") }
+        coVerify(exactly = 1) { mockCountriesRepository.getCityById("1") }
+    }
 }
+

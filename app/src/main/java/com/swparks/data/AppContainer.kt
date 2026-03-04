@@ -72,12 +72,12 @@ import com.swparks.domain.usecase.SyncPastEventsUseCase
 import com.swparks.domain.usecase.TextEntryUseCase
 import com.swparks.network.SWApi
 import com.swparks.ui.model.TextEntryMode
-import com.swparks.ui.screens.events.EventsViewModel
 import com.swparks.ui.viewmodel.BlacklistViewModel
 import com.swparks.ui.viewmodel.ChangePasswordViewModel
 import com.swparks.ui.viewmodel.ChatViewModel
 import com.swparks.ui.viewmodel.DialogsViewModel
 import com.swparks.ui.viewmodel.EditProfileViewModel
+import com.swparks.ui.viewmodel.EventsViewModel
 import com.swparks.ui.viewmodel.FriendsListViewModel
 import com.swparks.ui.viewmodel.JournalEntriesDeps
 import com.swparks.ui.viewmodel.JournalEntriesViewModel
@@ -634,6 +634,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
         getPastEventsFlowUseCase = getPastEventsFlowUseCase,
         syncPastEventsUseCase = syncPastEventsUseCase,
         userPreferencesRepository = userPreferencesRepository,
+        countriesRepository = countriesRepository,
         userNotifier = userNotifier,
         logger = logger
     )

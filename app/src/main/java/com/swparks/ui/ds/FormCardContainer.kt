@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.dimensionResource
 import com.swparks.R
@@ -82,7 +83,7 @@ fun FormCardContainer(
     }
 
     Card(
-        modifier = cardModifier,
+        modifier = cardModifier.alpha(if (params.enabled) 1f else 0.5f),
         shape = RoundedCornerShape(dimensionResource(R.dimen.spacing_small)),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer

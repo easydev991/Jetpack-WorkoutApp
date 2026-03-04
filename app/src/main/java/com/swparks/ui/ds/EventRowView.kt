@@ -29,6 +29,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * @param name Название мероприятия
  * @param dateString Дата проведения мероприятия
  * @param address Адрес мероприятия (город, страна)
+ * @param enabled Включен ли элемент (если false, нажатия заблокированы)
  * @param onClick Обработчик нажатия на элемент
  */
 data class EventRowData(
@@ -37,6 +38,7 @@ data class EventRowData(
     val name: String,
     val dateString: String,
     val address: String,
+    val enabled: Boolean = true,
     val onClick: (() -> Unit)? = null
 )
 
@@ -50,7 +52,8 @@ fun EventRowView(data: EventRowData) {
     FormCardContainer(
         params = FormCardContainerParams(
             modifier = data.modifier,
-            onClick = data.onClick
+            onClick = data.onClick,
+            enabled = data.enabled
         )
     ) {
         FormRowContainer(

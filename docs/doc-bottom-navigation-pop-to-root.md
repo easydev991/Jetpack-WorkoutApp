@@ -357,6 +357,7 @@ object NewScreen : Screen("new_screen/{itemId}?source={source}", parentTab = Pro
 4. `restoreState = true` в `navigateToTopLevelDestination()` восстанавливает старое состояние
 
 **Логи до авторизации (корректно):**
+
 ```
 BottomNavigationBar: рекомпозиция, currentDestination=profile
   Вкладка parks: selected=false

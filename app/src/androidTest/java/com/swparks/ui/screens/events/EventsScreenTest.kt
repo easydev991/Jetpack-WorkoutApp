@@ -12,6 +12,7 @@ import com.swparks.R
 import com.swparks.data.model.Event
 import com.swparks.data.model.User
 import com.swparks.ui.model.EventKind
+import com.swparks.ui.state.EventsUIState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.FakeEventsViewModel
 import com.swparks.ui.viewmodel.IEventsViewModel
@@ -97,15 +98,64 @@ class EventsScreenTest {
         // When
         setContent(viewModel = viewModel)
 
-        // Then - AppBar отображается
-        composeTestRule
-            .onNodeWithText(context.getString(R.string.events_title))
-            .assertIsDisplayed()
-
-        // LoadingOverlay отображается
+        // Then - LoadingOverlay отображается
         composeTestRule
             .onNodeWithContentDescription(context.getString(R.string.loading_content_description))
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun whenContentWithLoading_showsLoadingOverlay() {
+        // Given
+        val viewModel = FakeEventsViewModel(
+            eventsUIState = MutableStateFlow(
+                EventsUIState.Content(
+                    events = emptyList(),
+                    selectedTab = EventKind.PAST,
+                    isLoading = true
+                )
+            ),
+            isAuthorized = MutableStateFlow(false),
+            selectedTab = MutableStateFlow(EventKind.PAST)
+        )
+
+        // When
+        setContent(viewModel = viewModel)
+
+        // Then - LoadingOverlay отображается поверх контента
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.loading_content_description))
+            .assertIsDisplayed()
+
+        // EmptyStateView НЕ отображается при первичной загрузке
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.events_empty_past))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun whenContentWithRefreshLoading_hidesLoadingOverlay() {
+        // Given - pull-to-refresh in progress
+        val viewModel = FakeEventsViewModel(
+            eventsUIState = MutableStateFlow(
+                EventsUIState.Content(
+                    events = emptyList(),
+                    selectedTab = EventKind.PAST,
+                    isLoading = true
+                )
+            ),
+            isAuthorized = MutableStateFlow(false),
+            selectedTab = MutableStateFlow(EventKind.PAST),
+            isRefreshing = MutableStateFlow(true)
+        )
+
+        // When
+        setContent(viewModel = viewModel)
+
+        // Then - LoadingOverlay НЕ отображается при pull-to-refresh
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.loading_content_description))
+            .assertDoesNotExist()
     }
 
     @Test
@@ -126,12 +176,7 @@ class EventsScreenTest {
         // When
         setContent(viewModel = viewModel)
 
-        // Then - AppBar отображается
-        composeTestRule
-            .onNodeWithText(context.getString(R.string.events_title))
-            .assertIsDisplayed()
-
-        // Мероприятие отображается в списке
+        // Then - мероприятие отображается в списке
         composeTestRule
             .onNodeWithText("Тренировка в парке")
             .assertIsDisplayed()
@@ -150,12 +195,7 @@ class EventsScreenTest {
         // When
         setContent(viewModel = viewModel)
 
-        // Then - AppBar отображается
-        composeTestRule
-            .onNodeWithText(context.getString(R.string.events_title))
-            .assertIsDisplayed()
-
-        // Сообщение об ошибке отображается
+        // Then - сообщение об ошибке отображается
         composeTestRule
             .onNodeWithText(errorMessage, ignoreCase = true)
             .assertIsDisplayed()
@@ -279,6 +319,7 @@ class EventsScreenTest {
             )
             override val isAuthorized = MutableStateFlow(true)
             override val selectedTab = MutableStateFlow(EventKind.FUTURE)
+            override val isRefreshing = MutableStateFlow(false)
             override fun onTabSelected(tab: EventKind) {}
             override fun refresh() {}
             override fun onEventClick(event: Event) {}
@@ -315,6 +356,7 @@ class EventsScreenTest {
             )
             override val isAuthorized = MutableStateFlow(false)
             override val selectedTab = MutableStateFlow(EventKind.FUTURE)
+            override val isRefreshing = MutableStateFlow(false)
             override fun onTabSelected(tab: EventKind) {}
             override fun refresh() {}
             override fun onEventClick(event: Event) {
@@ -352,6 +394,7 @@ class EventsScreenTest {
             )
             override val isAuthorized = MutableStateFlow(false)
             override val selectedTab = MutableStateFlow(EventKind.FUTURE)
+            override val isRefreshing = MutableStateFlow(false)
             override fun onTabSelected(tab: EventKind) {}
             override fun refresh() {
                 refreshCalled = true
@@ -499,5 +542,79 @@ class EventsScreenTest {
             .onNodeWithText(context.getString(R.string.try_again_button))
             .assertIsDisplayed()
             .assertHasClickAction()
+    }
+
+    @Test
+    fun eventsList_whenAddressLoaded_shouldDisplayIt() {
+        // Given
+        val testEvent = createTestEvent(
+            id = 1L,
+            title = "Мероприятие с адресом",
+            beginDate = "2026-03-15"
+        ).copy(countryID = 1, cityID = 1)
+
+        val addresses = mapOf(
+            (1 to 1) to "Россия, Москва"
+        )
+
+        val viewModel = FakeEventsViewModel(
+            eventsUIState = MutableStateFlow(
+                EventsUIState.Content(
+                    events = listOf(testEvent),
+                    selectedTab = EventKind.FUTURE,
+                    addresses = addresses
+                )
+            ),
+            isAuthorized = MutableStateFlow(false),
+            selectedTab = MutableStateFlow(EventKind.FUTURE)
+        )
+
+        // When
+        setContent(viewModel = viewModel)
+
+        // Then - адрес отображается
+        composeTestRule
+            .onNodeWithText("Россия, Москва")
+            .assertIsDisplayed()
+
+        // И название мероприятия тоже отображается
+        composeTestRule
+            .onNodeWithText("Мероприятие с адресом")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun eventsList_whenAddressNotLoaded_shouldFallbackToIds() {
+        // Given
+        val testEvent = createTestEvent(
+            id = 1L,
+            title = "Мероприятие без адреса",
+            beginDate = "2026-03-15"
+        ).copy(countryID = 99, cityID = 88)
+
+        val viewModel = FakeEventsViewModel(
+            eventsUIState = MutableStateFlow(
+                EventsUIState.Content(
+                    events = listOf(testEvent),
+                    selectedTab = EventKind.FUTURE,
+                    addresses = emptyMap()
+                )
+            ),
+            isAuthorized = MutableStateFlow(false),
+            selectedTab = MutableStateFlow(EventKind.FUTURE)
+        )
+
+        // When
+        setContent(viewModel = viewModel)
+
+        // Then - fallback на ID отображается
+        composeTestRule
+            .onNodeWithText("99, 88")
+            .assertIsDisplayed()
+
+        // И название мероприятия тоже отображается
+        composeTestRule
+            .onNodeWithText("Мероприятие без адреса")
+            .assertIsDisplayed()
     }
 }

@@ -2,7 +2,7 @@ package com.swparks.ui.viewmodel
 
 import com.swparks.data.model.Event
 import com.swparks.ui.model.EventKind
-import com.swparks.ui.screens.events.EventsUIState
+import com.swparks.ui.state.EventsUIState
 import kotlinx.coroutines.flow.StateFlow
 
 /**

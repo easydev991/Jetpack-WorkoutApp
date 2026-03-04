@@ -1,4 +1,4 @@
-package com.swparks.ui.screens.events
+package com.swparks.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -8,11 +8,12 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.JetpackWorkoutApplication
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Event
+import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.IGetFutureEventsUseCase
 import com.swparks.domain.usecase.IGetPastEventsFlowUseCase
 import com.swparks.domain.usecase.ISyncPastEventsUseCase
 import com.swparks.ui.model.EventKind
-import com.swparks.ui.viewmodel.IEventsViewModel
+import com.swparks.ui.state.EventsUIState
 import com.swparks.util.AppError
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
@@ -22,17 +23,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
-
-sealed interface EventsUIState {
-    data class Content(
-        val events: List<Event>,
-        val selectedTab: EventKind,
-        val isLoading: Boolean = false
-    ) : EventsUIState
-
-    data class Error(val message: String?) : EventsUIState
-    data object InitialLoading : EventsUIState
-}
 
 /**
  * ViewModel для экрана списка мероприятий.
@@ -48,6 +38,7 @@ sealed interface EventsUIState {
  * @param getPastEventsFlowUseCase Use case для получения потока прошедших мероприятий
  * @param syncPastEventsUseCase Use case для синхронизации прошедших мероприятий
  * @param userPreferencesRepository Репозиторий настроек пользователя
+ * @param countriesRepository Репозиторий для работы со странами и городами
  * @param userNotifier Интерфейс для обработки и отправки ошибок в UI-слой
  * @param logger Логгер для записи отладочной информации
  */
@@ -57,6 +48,7 @@ class EventsViewModel(
     private val getPastEventsFlowUseCase: IGetPastEventsFlowUseCase,
     private val syncPastEventsUseCase: ISyncPastEventsUseCase,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val countriesRepository: CountriesRepository,
     private val userNotifier: UserNotifier,
     private val logger: Logger,
 ) : ViewModel(), IEventsViewModel {
@@ -73,6 +65,7 @@ class EventsViewModel(
                     getPastEventsFlowUseCase = container.getPastEventsFlowUseCase,
                     syncPastEventsUseCase = container.syncPastEventsUseCase,
                     userPreferencesRepository = container.userPreferencesRepository,
+                    countriesRepository = container.countriesRepository,
                     userNotifier = container.userNotifier,
                     logger = container.logger
                 )
@@ -82,8 +75,52 @@ class EventsViewModel(
 
     private var futureEventsCache: List<Event>? = null
     private var pastEventsCache: List<Event>? = null
+    private var addressesCache: Map<Pair<Int, Int>, String> = emptyMap()
 
     private var hasLoadedPastEvents = false
+
+    private suspend fun loadAddress(
+        countryId: Int,
+        cityId: Int
+    ): String {
+        val cacheKey = countryId to cityId
+        addressesCache[cacheKey]?.let { return it }
+
+        return try {
+            val country = countriesRepository.getCountryById(countryId.toString())
+            val city = countriesRepository.getCityById(cityId.toString())
+
+            val address = when {
+                country != null && city != null -> "${country.name}, ${city.name}"
+                country != null -> country.name
+                city != null -> city.name
+                else -> "$countryId, $cityId"
+            }
+            address
+        } catch (e: Exception) {
+            logger.e(TAG, "Ошибка загрузки адреса ($countryId, $cityId): ${e.message}")
+            "$countryId, $cityId"
+        }
+    }
+
+    private suspend fun loadAddresses(
+        events: List<Event>
+    ): Map<Pair<Int, Int>, String> {
+        if (events.isEmpty()) return addressesCache
+
+        val uniqueIds = events.map { it.countryID to it.cityID }.distinct()
+        val newAddresses = mutableMapOf<Pair<Int, Int>, String>()
+
+        uniqueIds.forEach { (countryId, cityId) ->
+            if (!addressesCache.containsKey(countryId to cityId)) {
+                val address = loadAddress(countryId, cityId)
+                newAddresses[countryId to cityId] = address
+            }
+        }
+
+        addressesCache = addressesCache + newAddresses
+        return addressesCache
+    }
 
     private val _selectedTab = MutableStateFlow(EventKind.FUTURE)
     override val selectedTab: StateFlow<EventKind> = _selectedTab.asStateFlow()
@@ -116,11 +153,13 @@ class EventsViewModel(
     private fun loadFutureEventsInternal() {
         viewModelScope.launch {
             logger.d(TAG, "Загрузка будущих мероприятий")
+            val currentAddresses = addressesCache
             _eventsUIState.value =
                 EventsUIState.Content(
                     events = emptyList(),
                     selectedTab = EventKind.FUTURE,
-                    isLoading = true
+                    isLoading = true,
+                    addresses = currentAddresses
                 )
             try {
                 val result = getFutureEventsUseCase()
@@ -128,10 +167,12 @@ class EventsViewModel(
                     onSuccess = { events ->
                         futureEventsCache = events
                         logger.i(TAG, "Загружено ${events.size} будущих мероприятий")
+                        val addresses = loadAddresses(events)
                         _eventsUIState.value = EventsUIState.Content(
                             events = events,
                             selectedTab = EventKind.FUTURE,
-                            isLoading = false
+                            isLoading = false,
+                            addresses = addresses
                         )
                     },
                     onFailure = { exception ->
@@ -140,7 +181,10 @@ class EventsViewModel(
                             "Ошибка загрузки будущих мероприятий: ${exception.message}",
                             exception
                         )
-                        _eventsUIState.value = EventsUIState.Error(message = exception.message)
+                        _eventsUIState.value = EventsUIState.Error(
+                            message = exception.message,
+                            addresses = addressesCache
+                        )
                     }
                 )
             } catch (e: IOException) {
@@ -151,7 +195,10 @@ class EventsViewModel(
                         throwable = e
                     )
                 )
-                _eventsUIState.value = EventsUIState.Error(message = e.message)
+                _eventsUIState.value = EventsUIState.Error(
+                    message = e.message,
+                    addresses = addressesCache
+                )
             } catch (e: HttpException) {
                 val errorMessage = e.message()
                 logger.e(TAG, "Ошибка сервера при загрузке будущих мероприятий: $errorMessage", e)
@@ -161,7 +208,10 @@ class EventsViewModel(
                         message = "Ошибка сервера при загрузке мероприятий: $errorMessage"
                     )
                 )
-                _eventsUIState.value = EventsUIState.Error(message = errorMessage)
+                _eventsUIState.value = EventsUIState.Error(
+                    message = errorMessage,
+                    addresses = addressesCache
+                )
             }
         }
     }
@@ -174,10 +224,12 @@ class EventsViewModel(
                 pastEventsCache = sortedEvents
                 logger.d(TAG, "Получены прошедшие мероприятия из Flow: ${sortedEvents.size} шт.")
                 if (_selectedTab.value == EventKind.PAST) {
+                    val addresses = loadAddresses(sortedEvents)
                     _eventsUIState.value = EventsUIState.Content(
                         events = sortedEvents,
                         selectedTab = EventKind.PAST,
-                        isLoading = false
+                        isLoading = false,
+                        addresses = addresses
                     )
                 }
             }
@@ -193,19 +245,37 @@ class EventsViewModel(
             _eventsUIState.value = EventsUIState.Content(
                 events = events,
                 selectedTab = EventKind.FUTURE,
-                isLoading = false
+                isLoading = false,
+                addresses = addressesCache
             )
         } else {
             val events = pastEventsCache ?: emptyList()
-            _eventsUIState.value = EventsUIState.Content(
-                events = events,
-                selectedTab = EventKind.PAST,
-                isLoading = false
-            )
 
             if (!hasLoadedPastEvents) {
-                logger.d(TAG, "Первая загрузка PAST - запуск синхронизации")
-                syncPastEventsInternal()
+                logger.d(TAG, "Первая загрузка PAST - загрузка адресов перед показом")
+                _eventsUIState.value = EventsUIState.Content(
+                    events = emptyList(),
+                    selectedTab = EventKind.PAST,
+                    isLoading = true,
+                    addresses = addressesCache
+                )
+                viewModelScope.launch {
+                    val addresses = loadAddresses(events)
+                    _eventsUIState.value = EventsUIState.Content(
+                        events = events,
+                        selectedTab = EventKind.PAST,
+                        isLoading = false,
+                        addresses = addresses
+                    )
+                    syncPastEventsInternal()
+                }
+            } else {
+                _eventsUIState.value = EventsUIState.Content(
+                    events = events,
+                    selectedTab = EventKind.PAST,
+                    isLoading = false,
+                    addresses = addressesCache
+                )
             }
         }
     }
@@ -217,7 +287,7 @@ class EventsViewModel(
             try {
                 when (_selectedTab.value) {
                     EventKind.FUTURE -> loadFutureEventsInternal()
-                    EventKind.PAST -> syncPastEventsInternal()
+                    EventKind.PAST -> syncPastEventsInternal(force = true)
                 }
             } finally {
                 _isRefreshing.value = false
@@ -225,8 +295,8 @@ class EventsViewModel(
         }
     }
 
-    private fun syncPastEventsInternal() {
-        if (hasLoadedPastEvents) {
+    private fun syncPastEventsInternal(force: Boolean = false) {
+        if (!force && hasLoadedPastEvents) {
             logger.d(TAG, "Прошедшие мероприятия уже загружены, пропуск синхронизации")
             return
         }
@@ -235,11 +305,17 @@ class EventsViewModel(
                 logger.d(TAG, "Начало синхронизации прошедших мероприятий")
                 val currentState = _eventsUIState.value as? EventsUIState.Content
                 val currentTab = _selectedTab.value
-                _eventsUIState.value = EventsUIState.Content(
-                    events = currentState?.events ?: emptyList(),
-                    selectedTab = currentTab,
-                    isLoading = true
-                )
+
+                val shouldShowLoading = !force && currentState?.events?.isEmpty() != false
+                if (shouldShowLoading) {
+                    _eventsUIState.value = EventsUIState.Content(
+                        events = currentState?.events ?: emptyList(),
+                        selectedTab = currentTab,
+                        isLoading = true,
+                        addresses = addressesCache
+                    )
+                }
+
                 logger.d(TAG, "Вызов syncPastEventsUseCase()")
                 val result = syncPastEventsUseCase()
                 logger.d(TAG, "Результат syncPastEvents: isSuccess=${result.isSuccess}")
@@ -256,12 +332,18 @@ class EventsViewModel(
                                 throwable = exception
                             )
                         )
-                        _eventsUIState.value = EventsUIState.Error(message = exception.message)
+                        _eventsUIState.value = EventsUIState.Error(
+                            message = exception.message,
+                            addresses = addressesCache
+                        )
                     }
                 )
             } catch (e: Exception) {
                 logger.e(TAG, "Исключение при синхронизации прошедших мероприятий: ${e.message}", e)
-                _eventsUIState.value = EventsUIState.Error(message = e.message)
+                _eventsUIState.value = EventsUIState.Error(
+                    message = e.message,
+                    addresses = addressesCache
+                )
             }
         }
     }
