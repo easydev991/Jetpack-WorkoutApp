@@ -141,6 +141,14 @@ setup:
 	@$(MAKE) _install_gemfile_deps
 	@$(MAKE) setup_fastlane
 	@$(MAKE) _check_markdownlint
+	@$(MAKE) _setup_git_hooks
+
+## _setup_git_hooks: Настроить Git hooks для автоматического обновления версий
+_setup_git_hooks:
+	@printf "$(YELLOW)Настройка Git hooks...$(RESET)\n"
+	@chmod +x .githooks/*
+	@git config core.hooksPath .githooks
+	@printf "$(GREEN)Git hooks настроены: .githooks/$(RESET)\n"
 
 ## _check_rbenv: Проверка наличия rbenv
 _check_rbenv:
@@ -295,7 +303,7 @@ screenshots-en:
 	@$(MAKE) _cleanup_screenshots_apk
 
 
-## update_readme: Обновить таблицу со скриншотами в README.md
+## update_readme: Обновить таблицу со скриншотами и версии в README.md
 update_readme:
 	@printf "$(YELLOW)Обновляю таблицу со скриншотами в README.md...$(RESET)\\n"
 	@if [ -f "scripts/update_readme.py" ]; then \
@@ -304,6 +312,13 @@ update_readme:
 		printf "$(RED)Скрипт обновления не найден: scripts/update_readme.py$(RESET)\\n"; \
 		exit 1; \
 	fi
+	@$(MAKE) update_readme_versions
+
+## update_readme_versions: Обновить только версии в README.md (Kotlin, Android SDK, Gradle, AGP)
+update_readme_versions:
+	@printf "$(YELLOW)Обновляю версии в README.md...$(RESET)\n"
+	./gradlew updateReadmeVersions --no-configuration-cache --quiet
+	@printf "$(GREEN)Версии обновлены успешно$(RESET)\n"
 
 ## _build_screenshots_apk: Подготовить APK для скриншотов (удаление старых и сборка новых)
 _build_screenshots_apk:
@@ -372,4 +387,4 @@ release:
 ## all: Полная проверка (сборка + тесты + линтер) и установка APK на устройство
 all: check install
 
-.PHONY: build clean test lint format check install all android-test test-all android-test-report screenshots screenshots-ru screenshots-en update_readme _build_screenshots_apk _cleanup_screenshots_apk _ensure_fastlane setup setup_fastlane update_fastlane fastlane help release apk _check_rbenv _check_ruby _check_ruby_version_file _check_bundler _check_gemfile _install_gemfile_deps _check_markdownlint
+.PHONY: build clean test lint format check install all android-test test-all android-test-report screenshots screenshots-ru screenshots-en update_readme update_readme_versions _build_screenshots_apk _cleanup_screenshots_apk _ensure_fastlane setup setup_fastlane update_fastlane fastlane help release apk _check_rbenv _check_ruby _check_ruby_version_file _check_bundler _check_gemfile _install_gemfile_deps _check_markdownlint _setup_git_hooks
