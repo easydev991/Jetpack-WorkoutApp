@@ -78,14 +78,14 @@
 
 ## Файлы
 
-| Файл | Назначение |
-|------|------------|
-| `MyFriendsScreen.kt` | UI экран списка друзей |
-| `FriendsListViewModel.kt` | ViewModel для управления состоянием |
-| `FriendsListUiState.kt` | Sealed class состояний UI |
-| `IFriendsListViewModel.kt` | Интерфейс ViewModel |
-| `MyFriendsScreenTest.kt` | UI инструментальные тесты |
-| `FriendsListViewModelTest.kt` | Unit-тесты ViewModel |
+| Файл                          | Назначение                          |
+|-------------------------------|-------------------------------------|
+| `MyFriendsScreen.kt`          | UI экран списка друзей              |
+| `FriendsListViewModel.kt`     | ViewModel для управления состоянием |
+| `FriendsListUiState.kt`       | Sealed class состояний UI           |
+| `IFriendsListViewModel.kt`    | Интерфейс ViewModel                 |
+| `MyFriendsScreenTest.kt`      | UI инструментальные тесты           |
+| `FriendsListViewModelTest.kt` | Unit-тесты ViewModel                |
 
 ---
 

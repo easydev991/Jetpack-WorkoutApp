@@ -2,13 +2,13 @@
 
 ## Расположение в коде
 
-| Файл | Назначение |
-|------|------------|
-| `data/database/UserEntity.kt` | Entity с флагами (isFriend, isFriendRequest, isBlacklisted) |
-| `data/database/UserDao.kt` | DAO с Flow методами |
-| `data/database/SWDatabase.kt` | База данных Room |
-| `data/repository/SWRepositoryImpl.kt` | Кэширование, Flow методы |
-| `viewmodel/ProfileViewModel.kt` | Реактивное обновление через `currentUser: StateFlow<User?>` |
+| Файл                                  | Назначение                                                  |
+|---------------------------------------|-------------------------------------------------------------|
+| `data/database/UserEntity.kt`         | Entity с флагами (isFriend, isFriendRequest, isBlacklisted) |
+| `data/database/UserDao.kt`            | DAO с Flow методами                                         |
+| `data/database/SWDatabase.kt`         | База данных Room                                            |
+| `data/repository/SWRepositoryImpl.kt` | Кэширование, Flow методы                                    |
+| `viewmodel/ProfileViewModel.kt`       | Реактивное обновление через `currentUser: StateFlow<User?>` |
 
 ## Стратегия кэширования
 

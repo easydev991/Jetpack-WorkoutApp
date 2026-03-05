@@ -2,16 +2,16 @@
 
 ## Расположение в коде
 
-| Файл | Назначение |
-|------|------------|
-| `domain/repository/CountriesRepository.kt` | Интерфейс репозитория |
-| `data/repository/CountriesRepositoryImpl.kt` | Реализация (чтение из JSON, кэширование) |
-| `domain/usecase/GetCountriesUseCase.kt` | Получить все страны |
-| `domain/usecase/GetCountryByIdUseCase.kt` | Получить страну по ID |
-| `domain/usecase/GetCityByIdUseCase.kt` | Получить город по ID |
-| `domain/usecase/GetCitiesByCountryUseCase.kt` | Получить города страны |
-| `app/src/main/assets/countries.json` | Локальный справочник |
-| `app/src/test/.../CountriesRepositoryTest.kt` | Unit-тесты (12) |
+| Файл                                          | Назначение                               |
+|-----------------------------------------------|------------------------------------------|
+| `domain/repository/CountriesRepository.kt`    | Интерфейс репозитория                    |
+| `data/repository/CountriesRepositoryImpl.kt`  | Реализация (чтение из JSON, кэширование) |
+| `domain/usecase/GetCountriesUseCase.kt`       | Получить все страны                      |
+| `domain/usecase/GetCountryByIdUseCase.kt`     | Получить страну по ID                    |
+| `domain/usecase/GetCityByIdUseCase.kt`        | Получить город по ID                     |
+| `domain/usecase/GetCitiesByCountryUseCase.kt` | Получить города страны                   |
+| `app/src/main/assets/countries.json`          | Локальный справочник                     |
+| `app/src/test/.../CountriesRepositoryTest.kt` | Unit-тесты (12)                          |
 
 ## Реализовано
 

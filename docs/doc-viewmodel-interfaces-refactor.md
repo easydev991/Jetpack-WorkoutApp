@@ -4,14 +4,14 @@
 
 ### Статус на 9 февраля 2026 г (ЗАВЕРШЕНО)
 
-| Этап | Статус | Прогресс |
-|-------|--------|----------|
-| Этап 1: Создание интерфейсов для ViewModel | ✅ ВЫПОЛНЕН | 7/7 |
-| Этап 2: Обновление ViewModel для реализации интерфейсов | ✅ ВЫПОЛНЕН | 7/7 |
-| Этап 3: Обновление UI экранов для использования интерфейсов | ✅ ВЫПОЛНЕН | 7/7 |
-| Этап 4: Создание Fake ViewModels для тестов | ✅ ВЫПОЛНЕН | 5/5 |
-| Этап 5: Обновление UI тестов для использования Fake ViewModels | ✅ ВЫПОЛНЕН | 2/2 |
-| Этап 6: Исправление ошибок компиляции | ✅ ВЫПОЛНЕН | 13/13 |
+| Этап                                                           | Статус     | Прогресс |
+|----------------------------------------------------------------|------------|----------|
+| Этап 1: Создание интерфейсов для ViewModel                     | ✅ ВЫПОЛНЕН | 7/7      |
+| Этап 2: Обновление ViewModel для реализации интерфейсов        | ✅ ВЫПОЛНЕН | 7/7      |
+| Этап 3: Обновление UI экранов для использования интерфейсов    | ✅ ВЫПОЛНЕН | 7/7      |
+| Этап 4: Создание Fake ViewModels для тестов                    | ✅ ВЫПОЛНЕН | 5/5      |
+| Этап 5: Обновление UI тестов для использования Fake ViewModels | ✅ ВЫПОЛНЕН | 2/2      |
+| Этап 6: Исправление ошибок компиляции                          | ✅ ВЫПОЛНЕН | 13/13    |
 
 ### Выполненные задачи
 
@@ -114,15 +114,15 @@
 
 ### ViewModel, требующие интерфейсы
 
-| ViewModel | Экран | UI тест | Приоритет |
-|-----------|-------|---------|-----------|
-| `ThemeIconViewModel` | `ThemeIconScreen` | `ThemeIconScreenTest` | Средний |
-| `BlacklistViewModel` | `MyBlacklistScreen` | `MyBlacklistScreenTest` | Низкий |
-| `FriendsListViewModel` | `MyFriendsScreen` | `MyFriendsScreenTest` | Низкий |
-| `EventsViewModel` | `EventsScreen` | - | Низкий |
-| `UserTrainingParksViewModel` | `UserTrainingParksScreen` | - | Низкий |
-| `ProfileViewModel` | `ProfileRootScreen` | `ProfileRootScreenTest` | Высокий |
-| `LoginViewModel` | `LoginScreen` | `LoginScreenTest` | Высокий |
+| ViewModel                    | Экран                     | UI тест                 | Приоритет |
+|------------------------------|---------------------------|-------------------------|-----------|
+| `ThemeIconViewModel`         | `ThemeIconScreen`         | `ThemeIconScreenTest`   | Средний   |
+| `BlacklistViewModel`         | `MyBlacklistScreen`       | `MyBlacklistScreenTest` | Низкий    |
+| `FriendsListViewModel`       | `MyFriendsScreen`         | `MyFriendsScreenTest`   | Низкий    |
+| `EventsViewModel`            | `EventsScreen`            | -                       | Низкий    |
+| `UserTrainingParksViewModel` | `UserTrainingParksScreen` | -                       | Низкий    |
+| `ProfileViewModel`           | `ProfileRootScreen`       | `ProfileRootScreenTest` | Высокий   |
+| `LoginViewModel`             | `LoginScreen`             | `LoginScreenTest`       | Высокий   |
 
 **Примечание:** `MainActivityViewModel` и `AuthViewModel` не нуждаются в интерфейсах, так как они не используются напрямую в UI экранах.
 

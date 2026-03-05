@@ -30,14 +30,14 @@
 
 ## Затрагиваемые поля
 
-| Модель | Поле | Экран | Режим | Вызов |
-|--------|------|-------|-------|-------|
-| `DialogResponse` | `lastMessageText` | Список диалогов | **Compact** | `.parseHtml(compactMode = true)` |
-| `MessageResponse` | `message` | Чат | **Detail** | `.parseHtml(compactMode = false)` |
-| `JournalResponse` | `lastMessageText` | Список дневников | **Compact** | `.parseHtml(compactMode = true)` |
-| `JournalEntryResponse` | `message` | Записи дневника | **Detail** | `.parseHtml(compactMode = false)` |
-| `Comment` | `body` | Комментарии | **Detail** | `.parseHtml(compactMode = false)` |
-| `Event` | `description` | Детали мероприятия | **Detail** | `.parseHtml(compactMode = false)` |
+| Модель                 | Поле              | Экран              | Режим       | Вызов                             |
+|------------------------|-------------------|--------------------|-------------|-----------------------------------|
+| `DialogResponse`       | `lastMessageText` | Список диалогов    | **Compact** | `.parseHtml(compactMode = true)`  |
+| `MessageResponse`      | `message`         | Чат                | **Detail**  | `.parseHtml(compactMode = false)` |
+| `JournalResponse`      | `lastMessageText` | Список дневников   | **Compact** | `.parseHtml(compactMode = true)`  |
+| `JournalEntryResponse` | `message`         | Записи дневника    | **Detail**  | `.parseHtml(compactMode = false)` |
+| `Comment`              | `body`            | Комментарии        | **Detail**  | `.parseHtml(compactMode = false)` |
+| `Event`                | `description`     | Детали мероприятия | **Detail**  | `.parseHtml(compactMode = false)` |
 
 ### Режимы
 
@@ -178,9 +178,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class HtmlUtilsTest {
-    
+
     // === Базовые тесты ===
-    
+
     @Test
     fun `parseHtml removes paragraph tags`() {
         val html = "<p>Простой текст</p>"

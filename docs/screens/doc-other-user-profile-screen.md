@@ -125,14 +125,14 @@ Auth Error  Loading → getUser
 
 ## Файлы
 
-| Файл | Назначение |
-|------|------------|
+| Файл                                           | Назначение                                                                                                                                                      |
+|------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `ui/screens/profile/OtherUserProfileScreen.kt` | UI экран, компоненты: SendMessageButton, FriendActionButton, BlacklistActionDialog, RemoveFriendDialog, UserNotFoundContent, BlockedByUserContent, ErrorContent |
-| `ui/viewmodel/OtherUserProfileViewModel.kt` | ViewModel для управления состоянием |
-| `ui/viewmodel/OtherUserProfileUiState.kt` | Sealed class состояний UI |
-| `ui/viewmodel/IOtherUserProfileViewModel.kt` | Интерфейс ViewModel |
-| `ui/screen/profile/ProfileButtons.kt` | Переиспользуемые кнопки: FriendsButton, UsedParksButton, AddedParksButton, JournalsButton |
-| `ui/screens/common/TextEntrySheetHost.kt` | Sheet для отправки сообщений |
+| `ui/viewmodel/OtherUserProfileViewModel.kt`    | ViewModel для управления состоянием                                                                                                                             |
+| `ui/viewmodel/OtherUserProfileUiState.kt`      | Sealed class состояний UI                                                                                                                                       |
+| `ui/viewmodel/IOtherUserProfileViewModel.kt`   | Интерфейс ViewModel                                                                                                                                             |
+| `ui/screen/profile/ProfileButtons.kt`          | Переиспользуемые кнопки: FriendsButton, UsedParksButton, AddedParksButton, JournalsButton                                                                       |
+| `ui/screens/common/TextEntrySheetHost.kt`      | Sheet для отправки сообщений                                                                                                                                    |
 
 ---
 
