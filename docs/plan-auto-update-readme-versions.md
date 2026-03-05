@@ -25,6 +25,7 @@
 - [ ] Проверить, что бейджи соответствуют формату для последующей замены
 
 **Ожидаемый результат:**
+
 ```markdown
 <!-- BEGIN_VERSIONS -->
 [<img alt="Kotlin Version" src="https://img.shields.io/badge/Kotlin_Version-...">](https://kotlinlang.org/)
@@ -38,6 +39,7 @@
 - [ ] Реализовать таск `updateReadmeVersions`:
 
   ### Использование Gradle API
+
   - [ ] Считать версии Kotlin и AGP из `gradle/libs.versions.toml` через `libs.versions.toml` (или парсить toml напрямую)
   - [ ] Считать SDK версии (compileSdk, targetSdk, minSdk) через Gradle API:
     - Использовать `project.extensions.getByType<com.android.build.gradle.BaseExtension>()` или
@@ -45,10 +47,12 @@
   - [ ] Считать версию Gradle из `gradle/wrapper/gradle-wrapper.properties`
 
   ### Генерация и обновление
+
   - [ ] Сгенерировать markdown-блок с бейджами
   - [ ] Обновить README.md, заменив содержимое между маркерами
 
   ### Обработка ошибок и логирование
+
   - [ ] Обернуть операции чтения/записи в try/catch
   - [ ] Добавить логирование через `logger.lifecycle()` или `println()`
   - [ ] Выводить понятные сообщения об ошибках с указанием причины
@@ -67,6 +71,7 @@
 - [ ] Добавить инструкцию по установке hook в CONTRIBUTING.md или создать отдельный скрипт установки
 
 **Пример скрипта:**
+
 ```bash
 #!/bin/sh
 ./gradlew updateReadmeVersions
