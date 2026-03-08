@@ -332,53 +332,93 @@ object NewScreen : Screen("new_screen/{itemId}?source={source}", parentTab = Pro
 
 ---
 
-## Открытые баги
+## Исправленные баги
 
-### Баг: Двойное выделение вкладок после авторизации 🟡
+### Баг: двойное выделение вкладок после авторизации ✅
 
-**Симптомы:**
-- После авторизации на Profile вкладке выделяются ДВЕ вкладки: Parks (первая) И Profile
-- Должна выделяться только Profile вкладка
-- До авторизации логи показывают корректное выделение: `Вкладка profile: selected=true`, остальные `selected=false`
-- После авторизации логи BottomNavigation не вызываются, но визуально виден баг
+**Симптомы до исправления:**
+- После логина на экране `Profile` визуально подсвечивались две вкладки: `Parks` и `Profile`
+- В логах навигации активной вкладкой при этом уже был `profile`
+- Баг воспроизводился не всегда: чаще после сложного пути с переходами между вкладками, дочерними экранами и последующим logout/login
 
-**Ожидаемое поведение:**
-После успешной авторизации должна оставаться выделенной только Profile вкладка.
+**Фактическая причина:**
+- Проблема была не в `NavController` и не в `currentTopLevelDestination`
+- `AppState` корректно держал `profile`, но `BottomNavigationBar` не всегда рекомпозировался при смене авторизации, если маршрут оставался тем же
+- Из-за этого нижняя навигация могла оставаться в устаревшем визуальном состоянии после `currentUser -> non-null`
 
-**Локализация проблемы:**
-- `RootScreen.kt` - обработка `currentUser` и навигация после авторизации
-- `AppState.kt` - `currentTopLevelDestination` состояние
-- `BottomNavigation.kt` - определение `selected` состояния
+**Ключевое наблюдение из логов:**
 
-**Возможные причины:**
-1. Навигация после авторизации сбрасывает `currentTopLevelDestination` в начальное состояние (Parks)
-2. Рекомпозиция BottomNavigation происходит до обновления AppState
-3. Конфликт между `navigate()` и `onDestinationChanged()` при авторизации
-4. `restoreState = true` в `navigateToTopLevelDestination()` восстанавливает старое состояние
+Проблемный сценарий выглядел так:
 
-**Логи до авторизации (корректно):**
-
-```
-BottomNavigationBar: рекомпозиция, currentDestination=profile
-  Вкладка parks: selected=false
-  Вкладка profile: selected=true
+```text
+RootScreen: currentUser изменился: 10367, isAuthorized=true
 ```
 
-**Логи после авторизации (отсутствуют):**
-- Логи BottomNavigation не вызываются
-- Визуально: parks selected=true И profile selected=true
+и после этого **не было** новой строки:
 
-**План исследования:**
-1. Добавить логирование в `AppState.onDestinationChanged()` при авторизации
-2. Проверить, что `navigateToProfileAfterLogin()` корректно обновляет `currentTopLevelDestination`
-3. Исследовать порядок рекомпозиции RootScreen → BottomNavigation при изменении `currentUser`
-4. Проверить, не вызывается ли навигация на Parks после авторизации
+```text
+BottomNavigationBar: рекомпозиция, currentDestination=profile, isAuthorized=true
+```
 
-**Чек-лист:**
-- [ ] Добавить логирование в AppState.onDestinationChanged()
-- [ ] Проверить навигацию после авторизации в RootScreen
-- [ ] Исследовать порядок рекомпозиции
-- [ ] Проверить restoreState поведение
+Это означало, что `Profile` уже был активным маршрутом, но сам `BottomNavigationBar` не получил новый проход композиции на изменение auth state.
+
+**Исправление:**
+1. `BottomNavigationBar()` теперь явно читает `appState.isAuthorized`
+2. В лог рекомпозиции добавлен `isAuthorized`, чтобы можно было отследить, что бар действительно пересобрался после login/logout
+3. В `NavigationBarItem` отключён встроенный animated indicator Material 3 (`indicatorColor = Color.Transparent`)
+4. Подсветка выбранной вкладки рисуется явно из нашего `isSelected`, а не полагается на внутреннее transitional state компонента
+5. В `LoginSheetHost` и `RegisterSheetHost` перед закрытием sheet принудительно очищаются focus и keyboard, чтобы не оставлять лишние transient UI state после авторизации
+
+**Актуальное ожидаемое поведение:**
+- После logout на `Profile` нижняя навигация остаётся на `Profile`
+- После повторного login на `Profile` обязательно происходит рекомпозиция:
+
+```text
+BottomNavigationBar: рекомпозиция, currentDestination=profile, isAuthorized=true
+```
+
+- Визуально подсвечивается только одна вкладка: `Profile`
+
+**Минимальные диагностические логи, которые нужно сохранять:**
+- `RootScreen`: изменение `currentUser`
+- `Navigation`: `OnDestinationChangedListener`, `onDestinationChanged()`, `navigateToTopLevelDestination()`
+- `BottomNavigation`: рекомпозиция бара с `currentDestination` и `isAuthorized`, плюс лог клика по вкладке
+
+Этого достаточно, чтобы в будущем отличить:
+- проблему навигационного state
+- проблему отсутствия рекомпозиции
+- проблему чисто визуального состояния нижнего бара
+
+**Обязательное правило для будущей разработки:**
+
+Если экран может менять авторизацию пользователя без смены текущего top-level route
+(например: login sheet, register sheet, re-auth flow, refresh session, восстановление сессии при старте),
+то UI нижней навигации **обязан** зависеть не только от `currentTopLevelDestination`, но и от auth state.
+
+Иначе возможен такой класс багов:
+- маршрут остаётся `profile`
+- `AppState` корректен
+- но `BottomNavigationBar` не рекомпозируется и визуально показывает устаревшую вкладку
+
+**Практическое правило для новых экранов и flow:**
+1. Не полагаться на то, что смена `currentUser` сама по себе приведёт к рекомпозиции нижнего бара
+2. Если flow меняет auth state, проверить, что `BottomNavigationBar` явно читает нужное состояние
+3. Если используется Material 3 navigation, не хранить критичную бизнес-логику только во внутреннем animated state компонента
+4. Для любых новых auth-related flow после реализации прогонять сценарий:
+   - сложная навигация по вкладкам
+   - переход в дочерние экраны
+   - logout
+   - login на `Profile`
+   - проверка единственной активной вкладки
+
+**Контрольный лог успешного сценария:**
+
+```text
+RootScreen: currentUser изменился: 10367, isAuthorized=true
+BottomNavigationBar: рекомпозиция, currentDestination=profile, isAuthorized=true
+```
+
+Если в будущем первая строка есть, а второй нет, значит проблема вернулась.
 
 ---
 

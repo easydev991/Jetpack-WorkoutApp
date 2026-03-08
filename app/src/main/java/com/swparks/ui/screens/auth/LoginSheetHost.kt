@@ -14,6 +14,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.swparks.ui.ds.disableAllGestures
 import com.swparks.ui.viewmodel.ILoginViewModel
@@ -48,6 +50,8 @@ fun LoginSheetHost(
 ) {
     var allowHide by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     // Создаем ViewModel на уровне хоста с явным указанием типа
     val loginViewModel: ILoginViewModel =
@@ -69,6 +73,17 @@ fun LoginSheetHost(
         }
     )
 
+    fun dismissSheet(onComplete: () -> Unit) {
+        focusManager.clearFocus(force = true)
+        keyboardController?.hide()
+        scope.launch {
+            allowHide = true
+            sheetState.hide()
+            allowHide = false
+            onComplete()
+        }
+    }
+
     if (show) {
         ModalBottomSheet(
             onDismissRequest = {
@@ -84,20 +99,10 @@ fun LoginSheetHost(
                 viewModel = loginViewModel,
                 onDismiss = {
                     if (uiState.isBusy) return@LoginScreen
-                    scope.launch {
-                        allowHide = true
-                        sheetState.hide()
-                        allowHide = false
-                        onDismissed()
-                    }
+                    dismissSheet(onDismissed)
                 },
                 onLoginSuccess = { userId ->
-                    scope.launch {
-                        allowHide = true
-                        sheetState.hide()
-                        allowHide = false
-                        onLoginSuccess(userId)
-                    }
+                    dismissSheet { onLoginSuccess(userId) }
                 },
                 onResetSuccess = onResetSuccess, // Передаем обработчик (если нужен проброс наверх)
                 modifier = Modifier.disableAllGestures() // Блокируем все жесты для всего контента sheet

@@ -21,6 +21,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -70,6 +72,8 @@ fun RegisterSheetHost(
 ) {
     var allowHide by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     // Создаем ViewModel через factory метод
     val registerViewModel: IRegisterViewModel = remember(appContainer) {
@@ -115,6 +119,17 @@ fun RegisterSheetHost(
         }
     )
 
+    fun dismissSheet(onComplete: () -> Unit) {
+        focusManager.clearFocus(force = true)
+        keyboardController?.hide()
+        scope.launch {
+            allowHide = true
+            sheetState.hide()
+            allowHide = false
+            onComplete()
+        }
+    }
+
     if (show) {
         ModalBottomSheet(
             onDismissRequest = {
@@ -133,21 +148,11 @@ fun RegisterSheetHost(
                     viewModel = registerViewModel,
                     innerNavController = innerNavController,
                     onRegisterSuccess = { userId ->
-                        scope.launch {
-                            allowHide = true
-                            sheetState.hide()
-                            allowHide = false
-                            onRegisterSuccess(userId)
-                        }
+                        dismissSheet { onRegisterSuccess(userId) }
                     },
                     onClose = {
                         if (uiState.isBusy) return@RegisterNavHost
-                        scope.launch {
-                            allowHide = true
-                            sheetState.hide()
-                            allowHide = false
-                            onDismissed()
-                        }
+                        dismissSheet(onDismissed)
                     },
                     modifier = Modifier.disableAllGestures()
                 )
