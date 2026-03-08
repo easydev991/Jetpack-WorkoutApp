@@ -2,28 +2,38 @@
 
 ## Обзор
 
-Разработка экрана детальной информации о мероприятии для Android-приложения по аналогии с iOS-версией (`EventDetailsScreen.swift`).
+Разработка экрана детальной информации о мероприятии для Android-приложения по аналогии с iOS-версией (`EventDetailsScreen.swift`), но с адаптацией под Android-ограничения по картам:
+
+* **без платных map snapshot сервисов**
+* **без зависимости от Google Static Maps API**
+* **без нестабильных публичных static map endpoint-ов**
+* **с открытием карты/маршрута через внешний map app или browser**
 
 ### Ссылки на референсы
 
-- **iOS:** `SwiftUI-WorkoutApp/SwiftUI-WorkoutApp/Screens/Events/EventDetailsScreen.swift`
-- **Android навигация:** `app/src/main/java/com/swparks/navigation/Destinations.kt` (Screen.EventDetail уже определён)
+* **iOS:** `SwiftUI-WorkoutApp/SwiftUI-WorkoutApp/Screens/Events/EventDetailsScreen.swift`
+* **Android маршруты:** `app/src/main/java/com/swparks/navigation/Destinations.kt` (`Screen.EventDetail` уже определён)
+* **Android корневая навигация:** `RootScreen.kt` (интеграция нового экрана должна выполняться здесь)
+* **Референс по адресам:** `EventsScreen` / `EventsViewModel` (логика получения адреса через `CountriesRepository`)
+* **Референс по авторизации:** `ProfileRootScreen` / `UserPreferencesRepository.currentUserId`
 
-### Структура экрана (сверху вниз)
+---
 
-| Секция               | Описание                               | Компонент                         | Авторизация                        |
-|----------------------|----------------------------------------|-----------------------------------|------------------------------------|
-| Заголовок            | Локализованный текст "Event"           | `Text`                            | Все                                |
-| Название             | Крупным шрифтом title мероприятия      | `Text`                            | Все                                |
-| Дата проведения      | Форматированная дата                   | `DateFormatter.formatDate()`      | Все                                |
-| Место проведения     | Адрес (страна, город)                  | `Text`                            | Все                                |
-| Локация площадки     | Карта + адрес + кнопка маршрута        | **НОВЫЙ:** `ParkLocationInfoView` | Все                                |
-| Участники            | Количество участников + toggle "Пойду" | `SectionView` + `FormRowView`     | **Только авторизованные**          |
-| Фотографии           | Сетка фотографий                       | **НОВЫЙ:** `PhotoSectionView`     | Все                                |
-| Описание             | Текст описания (без HTML)              | `Text`                            | Все                                |
-| Автор                | Информация об организаторе             | ✅ `UserRowView`                   | Все (клик - только авторизованные) |
-| Комментарии          | Список комментариев                    | ✅ `CommentRowView`                | Все                                |
-| Добавить комментарий | Кнопка добавления                      | `Button`                          | **Только авторизованные**          |
+## Структура экрана (сверху вниз)
+
+| Секция               | Описание                                   | Компонент                     | Авторизация                        |
+|----------------------|--------------------------------------------|-------------------------------|------------------------------------|
+| Заголовок            | Локализованный текст "Event"               | `Text`                        | Все                                |
+| Название             | Крупным шрифтом title мероприятия          | `Text`                        | Все                                |
+| Дата проведения      | Форматированная дата                       | `DateFormatter.formatDate()`  | Все                                |
+| Место проведения     | Адрес (страна, город)                      | `Text`                        | Все                                |
+| Локация площадки     | Адрес + действия "Открыть карту"/"Маршрут" | **НОВЫЙ:** `LocationInfoView` | Все                                |
+| Участники            | Количество участников + toggle "Пойду"     | `SectionView` + `FormRowView` | **Только авторизованные**          |
+| Фотографии           | Сетка фотографий                           | **НОВЫЙ:** `PhotoSectionView` | Все                                |
+| Описание             | Текст описания (без HTML)                  | `Text`                        | Все                                |
+| Автор                | Информация об организаторе                 | `UserRowView` + click wrapper | Все (клик — только авторизованные) |
+| Комментарии          | Список комментариев                        | `CommentRowView` + доработка click по автору | Все                    |
+| Добавить комментарий | Кнопка добавления                          | `Button`                      | **Только авторизованные**          |
 
 ---
 
@@ -31,149 +41,95 @@
 
 ### Что СКРЫВАЕТСЯ для неавторизованных (UI не отображается)
 
-| Элемент                       | Условие скрытия          |
-|-------------------------------|--------------------------|
-| Секция участников целиком     | `!isAuthorized`          |
-| Toggle "Пойду на мероприятие" | Внутри секции участников |
-| Кнопка "Добавить комментарий" | `!isAuthorized`          |
-| Меню редактирования/удаления  | `!isEventAuthor`         |
+| Элемент                       | Условие скрытия  |
+|-------------------------------|------------------|
+| Секция участников целиком     | `!isAuthorized`  |
+| Toggle "Пойду на мероприятие" | `!isAuthorized`  |
+| Кнопка "Добавить комментарий" | `!isAuthorized`  |
+| Меню редактирования           | `!isEventAuthor` |
 
 ### Что БЛОКИРУЕТСЯ для неавторизованных (UI виден, действие недоступно)
 
-| Действие                              | Реализация                               |
+| Действие                              | Реализация в первой рабочей версии       |
 |---------------------------------------|------------------------------------------|
 | Переход на профиль автора мероприятия | Клик логируется, навигация не вызывается |
 | Переход на профиль автора комментария | Клик логируется, навигация не вызывается |
 
 ### Что ДОСТУПНО всем (включая неавторизованных)
 
-- Просмотр заголовка, описания, даты, места
-- Просмотр карты и кнопка "Построить маршрут"
-- Просмотр фотографий (открытие галереи)
-- Просмотр организатора (без перехода на профиль)
-- Просмотр комментариев
-- Пожаловаться на фото/комментарий
-- Поделиться мероприятием
+* Просмотр заголовка, описания, даты, места
+* Просмотр адреса и координат
+* Открытие карты
+* Построение маршрута через внешний map app/browser
+* Просмотр фотографий
+* Просмотр организатора (без перехода на профиль)
+* Просмотр комментариев
+* Поделиться мероприятием
 
-### Логика isEventAuthor
+### Логика `isEventAuthor`
 
 ```kotlin
-// В ViewModel:
-val isEventAuthor: Boolean
-    get() = isAuthorized.value && (uiState.value as? EventDetailUIState.Content)
-        ?.event?.author?.id == currentUserId
+val isEventAuthor: StateFlow<Boolean>
 ```
+
+Вычисляется во ViewModel на основе:
+
+* текущего пользователя из `UserPreferencesRepository.currentUserId`
+* `event.author.id`
+
+**Важно:** все идентификаторы пользователя и мероприятия использовать в одном типе: **`Long`**.
 
 ---
 
-## Первая итерация: ТОЛЬКО логирование
+## Принцип реализации карты на Android
 
-**Важно:** В первой итерации все действия пользователей **только логируются** в консоль.
+### Что НЕ используем
 
-| Действие             | Реализация в первой итерации                                                     |
-|----------------------|----------------------------------------------------------------------------------|
-| Toggle "Пойду"       | `logger.d(TAG, "onParticipantToggle: userId=$userId, eventId=$eventId")`         |
-| Клик на автора       | `logger.d(TAG, "onAuthorClick: authorId=$authorId, isAuthorized=$isAuthorized")` |
-| Клик на комментарий  | `logger.d(TAG, "onCommentClick: commentId=$commentId")`                          |
-| Клик на фото         | `logger.d(TAG, "onPhotoClick: photoId=$photoId")`                                |
-| Клик "Маршрут"       | `logger.d(TAG, "onRouteClick: lat=$lat, lon=$lon")`                              |
-| Клик "Поделиться"    | `logger.d(TAG, "onShareClick: eventId=$eventId")`                                |
-| Клик "Редактировать" | `logger.d(TAG, "onEditClick: eventId=$eventId")`                                 |
-| Добавить комментарий | `logger.d(TAG, "onAddCommentClick: eventId=$eventId")`                           |
-| Пожаловаться         | `logger.d(TAG, "onReportClick: type=$type, id=$id")`                             |
+* Google Maps Static API
+* платные map snapshot сервисы
+* публичные нестабильные static map endpoint-ы как production-основу
 
-**Навигация и API запросы добавляются в следующих итерациях.**
+### Что используем в первой версии
+
+* текстовый адрес
+* при необходимости координаты
+* кнопку **"Открыть на карте"**
+* кнопку **"Построить маршрут"**
+* открытие внешнего приложения карты или browser через Intent / map URL
+
+### Почему так
+
+На iOS аналогичный сценарий удобно закрывается через `MapKit`, но на Android нет равноценного встроенного бесплатного системного решения для embedded snapshot-карты. Поэтому на первой итерации оптимальный и устойчивый путь — не встраивать snapshot, а использовать внешний map client.
 
 ---
 
-## Этап 1: Новые компоненты дизайн-системы
+## Этап 0: Подготовка архитектуры
 
-### 1.1. Компонент ParkLocationInfoView
+### 0.1. Уточнение модели и контрактов
 
-**Файл:** `app/src/main/java/com/swparks/ui/ds/ParkLocationInfoView.kt`
+**Задачи:**
 
-**Описание:** Компонент для отображения локации площадки со статичным снапшотом карты, адресом и кнопкой построения маршрута.
+* Зафиксировать, что `eventId`, `authorId`, `currentUserId`, `commentAuthorId` имеют тип `Long`
+* Убрать лишнее дублирование состояния
+* Оставить back navigation в UI/navigation layer, а не во ViewModel
+* Переименовать новый location-компонент в общий, не привязанный к park:
 
-**Параметры:**
-
-```kotlin
-data class ParkLocationInfoConfig(
-    val latitude: String,
-    val longitude: String,
-    val address: String,
-    val onRouteClick: () -> Unit
-)
-```
-
-**Структура:**
-- Снапшот карты (статичное изображение) - использовать Google Maps Static API или OpenStreetMap
-- Текстовый адрес
-- Кнопка "Построить маршрут" → открывает Google Maps через Intent
-
-**Зависимости:**
-- Coil для загрузки изображения карты
-- Android Intent для открытия Google Maps навигации
-
-**Пример Google Maps Static API:**
-
-```
-https://maps.googleapis.com/maps/api/staticmap?center=$lat,$lon&zoom=15&size=400x200&markers=$lat,$lon&key=API_KEY
-```
-
-**Альтернатива без API ключа (OpenStreetMap):**
-
-```
-https://staticmap.openstreetmap.de/staticmap.php?center=$lat,$lon&zoom=15&size=400x200&markers=$lat,$lon
-```
+    * `LocationInfoView`
+* Зафиксировать, как обрабатывается клик по автору для существующих `UserRowView` и `CommentRowView`
 
 **Критерии завершения:**
-- [ ] Компонент отображает снапшот карты
-- [ ] Отображается адрес
-- [ ] Кнопка открывает Google Maps с координатами
-- [ ] Поддержка темной темы
-- [ ] Preview функции для светлой/темной темы
+
+* [ ] Типы ID унифицированы
+* [ ] Архитектурные решения по карте зафиксированы
+* [ ] Компонент называется нейтрально и может переиспользоваться
+* [ ] `onBackClick()` не закладывается в интерфейс ViewModel
+* [ ] Понятно, нужен ли wrapper или расширение API для клика по автору
 
 ---
 
-### 1.2. Компонент PhotoSectionView
+## Этап 1: UI State и ViewModel с реальной загрузкой
 
-**Файл:** `app/src/main/java/com/swparks/ui/ds/PhotoSectionView.kt`
-
-**Описание:** Адаптивная сетка фотографий с поддержкой полноэкранного просмотра.
-
-**Параметры:**
-
-```kotlin
-data class PhotoSectionConfig(
-    val photos: List<Photo>,
-    val canDelete: Boolean,
-    val onPhotoClick: (Photo) -> Unit,
-    val onDeleteClick: ((Photo) -> Unit)? = null,
-    val onReportClick: (() -> Unit)? = null
-)
-```
-
-**Структура:**
-- Адаптивная сетка:
-  - 1 фото → 1 столбец (на всю ширину)
-  - 2 фото → 2 столбца
-  - 3+ фото → 3 столбца
-- Использовать `LazyVerticalGrid` или `Row` с `Modifier.weight()`
-- Каждый элемент - `SWAsyncImage` с закругленными углами
-- При клике → переход на экран галереи (EventGallery)
-
-**Критерии завершения:**
-- [ ] Адаптивная сетка 1/2/3 столбца
-- [ ] Корректная загрузка изображений через Coil
-- [ ] Обработка клика на фото (логирование)
-- [ ] Поддержка темной темы
-- [ ] Preview функции
-
----
-
-## Этап 2: UI State и ViewModel
-
-### 2.1. UI State
+### 1.1. UI State
 
 **Файл:** `app/src/main/java/com/swparks/ui/state/EventDetailUIState.kt`
 
@@ -182,25 +138,38 @@ data class PhotoSectionConfig(
 ```kotlin
 sealed class EventDetailUIState {
     data object InitialLoading : EventDetailUIState()
+
     data class Content(
         val event: Event,
-        val address: String,
-        val isLoading: Boolean = false,
-        val isParticipating: Boolean = false,
-        val currentUserId: Int? = null  // ID текущего пользователя для проверки isEventAuthor
+        val address: String
     ) : EventDetailUIState()
-    data class Error(val message: String?) : EventDetailUIState()
+
+    data class Error(
+        val message: String?
+    ) : EventDetailUIState()
 }
 ```
 
+**Отдельные StateFlow во ViewModel:**
+
+* `isRefreshing: StateFlow<Boolean>`
+* `isAuthorized: StateFlow<Boolean>`
+* `isEventAuthor: StateFlow<Boolean>`
+
+**Важно:**
+
+* `currentUserId` не хранить внутри `Content`, если он нужен только для вычисления `isEventAuthor`
+* `isLoading` внутри `Content` не дублировать, так как initial loading и refresh уже разведены по отдельным state
+
 **Критерии завершения:**
-- [ ] Sealed class с состояниями InitialLoading, Content, Error
-- [ ] Content содержит все необходимые данные для отображения
-- [ ] Content содержит currentUserId для проверки авторства
+
+* [ ] Sealed class с состояниями `InitialLoading`, `Content`, `Error`
+* [ ] Нет дублирования loading-состояний
+* [ ] Нет лишних полей в `Content`
 
 ---
 
-### 2.2. ViewModel Interface
+### 1.2. ViewModel Interface
 
 **Файл:** `app/src/main/java/com/swparks/ui/viewmodel/IEventDetailViewModel.kt`
 
@@ -211,121 +180,170 @@ interface IEventDetailViewModel {
     val uiState: StateFlow<EventDetailUIState>
     val isRefreshing: StateFlow<Boolean>
     val isAuthorized: StateFlow<Boolean>
-    val isEventAuthor: StateFlow<Boolean>  // Является ли текущий пользователь автором мероприятия
+    val isEventAuthor: StateFlow<Boolean>
 
-    // Навигация
-    fun onBackClick()
-    fun onEditClick()          // Только для автора (isEventAuthor)
+    fun onEditClick()
     fun onShareClick()
 
-    // Участие
-    fun onParticipantToggle()  // Только для авторизованных
-    fun onParticipantsCountClick()  // Только для авторизованных
+    fun onParticipantToggle()
+    fun onParticipantsCountClick()
 
-    // Профили
-    fun onAuthorClick()        // Блокируется для неавторизованных
-    fun onCommentAuthorClick(commentId: Long)  // Блокируется для неавторизованных
+    fun onAuthorClick(authorId: Long)
+    fun onCommentAuthorClick(authorId: Long)
 
-    // Локация
-    fun onRouteClick()         // Доступно всем
+    fun onOpenMapClick()
+    fun onRouteClick()
 
-    // Фото
     fun onPhotoClick(photo: Photo)
-    fun onPhotoReportClick(photo: Photo)  // Доступно всем (кроме автора - у него delete)
+    fun onPhotoReportClick(photo: Photo)
 
-    // Комментарии
-    fun onAddCommentClick()    // Только для авторизованных
+    fun onAddCommentClick()
     fun onCommentActionClick(commentId: Long, action: CommentAction)
 
-    // Обновление
     fun refresh()
 }
 ```
 
 **Критерии завершения:**
-- [ ] Интерфейс определён
-- [ ] isAuthorized и isEventAuthor для условного отображения UI
-- [ ] Все методы описаны с учётом авторизации
+
+* [ ] Интерфейс определён
+* [ ] Нет `onBackClick()`
+* [ ] Все пользовательские действия покрыты отдельными методами
+* [ ] Действия карты разделены на `onOpenMapClick()` и `onRouteClick()`
+* [ ] Методы клика по пользователю принимают `authorId`, а не `commentId`
 
 ---
 
-### 2.3. ViewModel Implementation
+### 1.3. ViewModel Implementation
 
 **Файл:** `app/src/main/java/com/swparks/ui/viewmodel/EventDetailViewModel.kt`
 
 **Зависимости:**
-- `SWRepository` - для `getEvent(id: Long)`
-- `CountriesRepository` - для получения адреса
-- `UserPreferencesRepository` - для проверки авторизации и получения currentUserId
-- `Logger` - для логирования
-- `UserNotifier` - для обработки ошибок
+
+* `SWRepository` — для `getEvent(id: Long)`
+* `CountriesRepository` — для получения адреса
+* `UserPreferencesRepository` — для авторизации и `currentUserId`
+* `Logger` — для логирования
+* `UserNotifier` — для обработки ошибок
 
 **Инициализация:**
-- Получить `eventId` из SavedStateHandle
-- Загрузить данные мероприятия через `repository.getEvent(id)`
-- Загрузить адрес через `countriesRepository`
-- Получить currentUserId из preferences для проверки isEventAuthor
 
-**Логика isEventAuthor:**
+* Получить `eventId` из `SavedStateHandle`
+* Загрузить данные мероприятия через `repository.getEvent(id)`
+* Построить адрес через `CountriesRepository`
+* Получить `currentUserId` из preferences
+* Вычислить `isAuthorized`
+* Вычислить `isEventAuthor`
 
-```kotlin
-private val _isEventAuthor = MutableStateFlow(false)
-val isEventAuthor: StateFlow<Boolean> = _isEventAuthor
+**Логика адреса:**
 
-// Обновляется при загрузке данных:
-_isEventAuthor.value = isAuthorized && event.author?.id == currentUserId
-```
+* Переиспользовать подход из `EventsScreen`
+* Поддержать fallback при неполных country/city данных
 
-**Factory:**
+**Логика загрузки:**
 
-```kotlin
-companion object {
-    val Factory: ViewModelProvider.Factory = viewModelFactory {
-        initializer {
-            val application = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as JetpackWorkoutApplication
-            val savedStateHandle = createSavedStateHandle()
-            val eventId = savedStateHandle.get<Long>("eventId") ?: 0L
-            // ... создание ViewModel
-        }
-    }
-}
-```
-
-**Первая итерация - только логирование:**
-
-Все методы в первой итерации только логируют действия:
-
-```kotlin
-override fun onParticipantToggle() {
-    logger.d(TAG, "onParticipantToggle: eventId=$eventId, isAuthorized=${isAuthorized.value}")
-}
-
-override fun onAuthorClick() {
-    val authorId = (uiState.value as? EventDetailUIState.Content)?.event?.author?.id
-    logger.d(TAG, "onAuthorClick: authorId=$authorId, isAuthorized=${isAuthorized.value}")
-    // Навигация не вызывается в первой итерации
-}
-
-override fun onEditClick() {
-    logger.d(TAG, "onEditClick: eventId=$eventId, isEventAuthor=${isEventAuthor.value}")
-    // Навигация не вызывается в первой итерации
-}
-// ... остальные методы аналогично
-```
+* initial loading → `InitialLoading`
+* успешная загрузка → `Content`
+* ошибка → `Error`
+* pull-to-refresh обновляет данные реально, а не только логирует
 
 **Критерии завершения:**
-- [ ] ViewModel загружает данные мероприятия
-- [ ] Обработка состояний загрузки/ошибки
-- [ ] Factory с получением eventId из SavedStateHandle
-- [ ] isAuthorized и isEventAuthor корректно вычисляются
-- [ ] Все методы логируют действия в консоль
-- [ ] Навигация и API не вызываются (только логирование)
+
+* [ ] ViewModel реально загружает мероприятие
+* [ ] Pull-to-refresh реально обновляет данные
+* [ ] Адрес строится через `CountriesRepository`
+* [ ] `isAuthorized` и `isEventAuthor` корректно вычисляются
+* [ ] Ошибки уходят через `UserNotifier` и/или `Error` state
+* [ ] Логирование действий пользователей добавлено
 
 ---
 
-## Этап 3: UI Screen
+## Этап 2: Новый компонент LocationInfoView
 
-### 3.1. EventDetailScreen
+### 2.1. Компонент LocationInfoView
+
+**Файл:** `app/src/main/java/com/swparks/ui/ds/LocationInfoView.kt`
+
+**Описание:** Компонент для отображения адреса и действий, связанных с локацией мероприятия, без встроенного snapshot карты.
+
+**Параметры:**
+
+```kotlin
+data class LocationInfoConfig(
+    val latitude: String?,
+    val longitude: String?,
+    val address: String,
+    val onOpenMapClick: () -> Unit,
+    val onRouteClick: () -> Unit
+)
+```
+
+**Структура:**
+
+* Иконка/визуальный блок локации
+* Текстовый адрес
+* При необходимости строка с координатами
+* Кнопка "Открыть на карте"
+* Кнопка "Построить маршрут"
+
+**Реализация действий:**
+
+* Открытие внешнего map app/browser через Intent
+* При отсутствии подходящего приложения — fallback на browser
+* В первой итерации допустимо логирование результата открытия
+
+**Критерии завершения:**
+
+* [ ] Компонент отображает адрес
+* [ ] Кнопка "Открыть на карте" работает
+* [ ] Кнопка "Построить маршрут" работает
+* [ ] Есть fallback при отсутствии map app
+* [ ] Поддержка темной темы
+* [ ] Preview для светлой/темной темы
+
+---
+
+## Этап 3: Новый компонент PhotoSectionView
+
+### 3.1. Компонент PhotoSectionView
+
+**Файл:** `app/src/main/java/com/swparks/ui/ds/PhotoSectionView.kt`
+
+**Описание:** Адаптивная сетка фотографий с поддержкой последующего перехода в галерею.
+
+**Параметры:**
+
+```kotlin
+data class PhotoSectionConfig(
+    val photos: List<Photo>,
+    val canDelete: Boolean,
+    val onPhotoClick: (Photo) -> Unit,
+    val onDeleteClick: ((Photo) -> Unit)? = null,
+    val onReportClick: ((Photo) -> Unit)? = null
+)
+```
+
+**Структура:**
+
+* 1 фото → 1 столбец
+* 2 фото → 2 столбца
+* 3+ фото → 3 столбца
+* `SWAsyncImage` с закруглениями
+* клик по фото → пока логирование / позже навигация в галерею
+
+**Критерии завершения:**
+
+* [ ] Адаптивная сетка 1/2/3 столбца
+* [ ] Корректная загрузка изображений
+* [ ] Обработка клика на фото
+* [ ] Поддержка темной темы
+* [ ] Preview функции
+
+---
+
+## Этап 4: UI Screen
+
+### 4.1. EventDetailScreen
 
 **Файл:** `app/src/main/java/com/swparks/ui/screens/events/EventDetailScreen.kt`
 
@@ -337,105 +355,86 @@ fun EventDetailScreen(
     modifier: Modifier = Modifier,
     viewModel: IEventDetailViewModel = viewModel<EventDetailViewModel>(factory = EventDetailViewModel.Factory),
     onBack: () -> Unit,
-    // Callback-и для будущей навигации (пока не вызываются, только логируются)
     onEdit: (Long) -> Unit = {},
     onShare: (String) -> Unit = {},
     onParticipants: (Long) -> Unit = {},
-    onAuthor: (Int) -> Unit = {},
+    onAuthor: (Long) -> Unit = {},
     onGallery: (Long) -> Unit = {},
-    onAddComment: (Long) -> Unit = {},
-    onRoute: (String, String) -> Unit = {}
+    onAddComment: (Long) -> Unit = {}
 )
 ```
 
-**Условное отображение по авторизации:**
+**Основные правила:**
 
-```kotlin
-val isAuthorized by viewModel.isAuthorized.collectAsState()
-val isEventAuthor by viewModel.isEventAuthor.collectAsState()
+* back обрабатывается через `onBack()`
+* UI читает:
 
-// В LazyColumn:
+    * `uiState`
+    * `isRefreshing`
+    * `isAuthorized`
+    * `isEventAuthor`
 
-// 1. Секция участников - ТОЛЬКО для авторизованных
-if (isAuthorized) {
-    ParticipantsSection(
-        event = event,
-        onToggle = viewModel::onParticipantToggle,
-        onCountClick = viewModel::onParticipantsCountClick
-    )
-}
+**Основные секции:**
 
-// 2. Кнопка "Добавить комментарий" - ТОЛЬКО для авторизованных
-if (isAuthorized) {
-    Button(onClick = viewModel::onAddCommentClick) {
-        Text(stringResource(R.string.event_add_comment))
-    }
-}
+1. `Scaffold` с `TopAppBar`
 
-// 3. Меню редактирования - ТОЛЬКО для автора мероприятия
-if (isEventAuthor) {
-    IconButton(onClick = viewModel::onEditClick) {
-        Icon(Icons.Default.Edit, contentDescription = "Edit")
-    }
-}
+    * Назад
+    * Заголовок `event_detail_title`
+    * Меню:
 
-// 4. Автор - виден всем, но клик работает только для авторизованных
-UserRowView(
-    user = event.author,
-    onClick = {
-        if (isAuthorized) {
-            viewModel.onAuthorClick()
-            // onAuthor(authorId) - в следующей итерации
-        } else {
-            viewModel.onAuthorClick()  // Логирует с isAuthorized=false
-        }
-    }
-)
-```
+        * редактировать — только для автора
+        * поделиться — для всех
 
-**Основные компоненты:**
+2. `PullToRefreshBox`
 
-1. **Scaffold с TopAppBar**
-   - Кнопка "Назад" → `onBack()`
-   - Название "Event" (локализованное)
-   - Меню с действиями:
-     - Редактировать (если `isEventAuthor`)
-     - Поделиться (всегда)
+    * реальный refresh через `viewModel.refresh()`
 
-2. **PullToRefreshBox** для обновления данных
+3. Содержимое:
 
-3. **Секции (в LazyColumn):**
-   - Заголовок мероприятия (title) - крупный шрифт
-   - Дата проведения
-   - Место проведения (адрес)
-   - ParkLocationInfoView (карта + кнопка маршрута) - доступно всем
-   - **Секция участников** - `if (isAuthorized)` → скрыта для неавторизованных
-   - PhotoSectionView (если есть фото) - доступно всем
-   - Описание (если есть)
-   - Автор (UserRowView) - виден всем, клик логируется
-   - Комментарии (SectionView + список CommentRowView) - видны всем
-   - **Кнопка "Добавить комментарий"** - `if (isAuthorized)` → скрыта для неавторизованных
+    * title
+    * date
+    * address
+    * `LocationInfoView`
+    * participants section (`if (isAuthorized)`)
+    * `PhotoSectionView`
+    * description
+    * author (`UserRowView`)
+    * comments (`CommentRowView`)
+    * add comment button (`if (isAuthorized)`)
 
-4. **LoadingOverlayView** для первичной загрузки
+4. Состояния:
+
+    * `InitialLoading` → `LoadingOverlayView`
+    * `Error` → `ErrorContentView`
+    * `Content` → основной контент
+
+**Правила интеракций:**
+
+* во время `isRefreshing` отключать кликабельные действия, где это уместно
+* у автора показывать edit action
+* для неавторизованного пользователя клик по автору/автору комментария только логируется
+* для `UserRowView` использовать внешний clickable wrapper, а для `CommentRowView` предусмотреть расширение API или отдельную обёртку для клика по автору
 
 **Критерии завершения:**
-- [ ] Экран отображает все секции
-- [ ] Pull-to-refresh работает
-- [ ] LoadingOverlayView показывается при первичной загрузке
-- [ ] Секция участников скрыта для неавторизованных
-- [ ] Кнопка "Добавить комментарий" скрыта для неавторизованных
-- [ ] Меню редактирования показывается только автору
-- [ ] Все клики логируются через ViewModel
-- [ ] Поддержка темной темы
+
+* [ ] Экран отображает все основные секции
+* [ ] Pull-to-refresh работает с реальными данными
+* [ ] `LoadingOverlayView` показывается на первичной загрузке
+* [ ] `ErrorContentView` отображается при ошибке
+* [ ] Секция участников скрыта для неавторизованных
+* [ ] Кнопка "Добавить комментарий" скрыта для неавторизованных
+* [ ] Меню редактирования видно только автору
+* [ ] Клики корректно обрабатываются через ViewModel
+* [ ] Поддержка темной темы
 
 ---
 
-## Этап 4: Локализация
+## Этап 5: Локализация
 
-### 4.1. Строковые ресурсы
+### 5.1. Строковые ресурсы
 
-**Файл:** `app/src/main/res/values/strings.xml` (английский)
-**Файл:** `app/src/main/res/values-ru/strings.xml` (русский)
+**Файл:** `app/src/main/res/values/strings.xml`
+**Файл:** `app/src/main/res/values-ru/strings.xml`
 
 **Необходимые строки:**
 
@@ -449,27 +448,31 @@ UserRowView(
 | `event_author`         | Organizer      | Организатор          |
 | `event_comments`       | Comments       | Комментарии          |
 | `event_add_comment`    | Add comment    | Добавить комментарий |
+| `event_open_map`       | Open on map    | Открыть на карте     |
 | `event_build_route`    | Build route    | Построить маршрут    |
 | `event_edit`           | Edit event     | Редактировать        |
 | `event_share`          | Share          | Поделиться           |
 | `event_no_description` | No description | Нет описания         |
+| `event_location`       | Location       | Локация              |
 
 **Критерии завершения:**
-- [ ] Все строки локализованы на русский и английский
-- [ ] Использованы в UI компонентах
+
+* [ ] Все строки локализованы
+* [ ] Использованы в UI
 
 ---
 
-## Этап 5: Навигация
+## Этап 6: Интеграция в навигацию
 
-### 5.1. Интеграция в Navigation.kt
+### 6.1. Интеграция в RootScreen / основной NavHost
 
-**Файл:** `app/src/main/java/com/swparks/navigation/Navigation.kt`
+**Файл:** `RootScreen.kt`
 
 **Добавить:**
-- Composable для `Screen.EventDetail`
-- Получение `eventId` и `source` из аргументов
-- Передача callback-ов для навигации
+
+* `composable` для `Screen.EventDetail`
+* получение `eventId` и `source` из аргументов
+* передача callback-ов
 
 **Пример:**
 
@@ -481,63 +484,87 @@ composable(
         navArgument("source") { type = NavType.StringType; defaultValue = "events" }
     )
 ) { backStackEntry ->
-    val eventId = backStackEntry.arguments?.getLong("eventId") ?: 0L
     EventDetailScreen(
         onBack = { navController.popBackStack() },
-        onEdit = { id -> navController.navigate(Screen.EditEvent.createRoute(id, source)) },
-        // ... другие callback-и
+        onEdit = { id -> /* следующая итерация */ },
+        onShare = { /* следующая итерация */ },
+        onParticipants = { /* следующая итерация */ },
+        onAuthor = { /* следующая итерация */ },
+        onGallery = { /* следующая итерация */ },
+        onAddComment = { /* следующая итерация */ }
     )
 }
 ```
 
-### 5.2. Обновление EventsViewModel
+### 6.2. Обновление источника перехода
 
-**Файл:** `app/src/main/java/com/swparks/ui/viewmodel/EventsViewModel.kt`
+**Файл:** `EventsScreen` / `EventsViewModel` / место клика по карточке мероприятия
 
 **Добавить:**
-- Навигация на EventDetailScreen при клике на мероприятие
-- Передача source параметра
+
+* переход на `Screen.EventDetail`
+* передача `eventId`
+* передача `source`
 
 **Критерии завершения:**
-- [ ] Навигация работает из списка мероприятий
-- [ ] Корректная передача eventId
-- [ ] Кнопка "Назад" работает
+
+* [ ] Навигация на EventDetail работает
+* [ ] `eventId` передаётся корректно
+* [ ] Кнопка "Назад" работает
+* [ ] Экран открывается из списка мероприятий
 
 ---
 
-## Этап 6: Тестирование
+## Этап 7: Тестирование
 
-### 6.1. Unit-тесты ViewModel
+### 7.1. Unit-тесты ViewModel
 
 **Файл:** `app/src/test/java/com/swparks/ui/viewmodel/EventDetailViewModelTest.kt`
 
 **Тест-кейсы:**
-- [ ] Успешная загрузка мероприятия
-- [ ] Обработка ошибки сети
-- [ ] Обработка ошибки сервера
-- [ ] Pull-to-refresh обновляет данные
-- [ ] Логирование действий
 
-### 6.2. Preview компонентов
+* [ ] Успешная загрузка мероприятия
+* [ ] Ошибка сети
+* [ ] Ошибка сервера
+* [ ] Pull-to-refresh повторно загружает данные
+* [ ] Адрес собирается через `CountriesRepository`
+* [ ] `isAuthorized` корректно вычисляется
+* [ ] `isEventAuthor` корректно вычисляется
+* [ ] Действия пользователя логируются
+* [ ] `onOpenMapClick()` и `onRouteClick()` формируют корректные данные
+
+### 7.2. UI / Preview
 
 **Добавить Preview для:**
-- [ ] ParkLocationInfoView
-- [ ] PhotoSectionView (с 1, 2, 3+ фото)
-- [ ] EventDetailScreen (состояния: loading, content, error)
+
+* [ ] `LocationInfoView`
+* [ ] `PhotoSectionView` (1, 2, 3+ фото)
+* [ ] `EventDetailScreen` (`loading`, `content`, `error`)
+
+### 7.3. UI-сценарии
+
+**Проверить:**
+
+* [ ] Неавторизованный пользователь не видит participants section
+* [ ] Неавторизованный пользователь не видит кнопку add comment
+* [ ] Авторизованный пользователь видит participants section
+* [ ] Автор мероприятия видит edit action
+* [ ] При refresh действия корректно блокируются
+* [ ] При отсутствии map app срабатывает fallback
+* [ ] Ошибка загрузки показывает `ErrorContentView`
 
 ---
 
 ## Порядок реализации
 
-1. **Этап 1.1** → ParkLocationInfoView (новый компонент)
-2. **Этап 1.2** → PhotoSectionView (новый компонент)
-3. **Этап 2.1** → EventDetailUIState
-4. **Этап 2.2** → IEventDetailViewModel
-5. **Этап 2.3** → EventDetailViewModel
-6. **Этап 4** → Локализация
-7. **Этап 3** → EventDetailScreen
-8. **Этап 5** → Навигация
-9. **Этап 6** → Тестирование
+1. **Этап 0** → Подготовка архитектуры
+2. **Этап 1** → UI State + ViewModel + реальная загрузка
+3. **Этап 2** → `LocationInfoView`
+4. **Этап 3** → `PhotoSectionView`
+5. **Этап 4** → `EventDetailScreen`
+6. **Этап 5** → Локализация
+7. **Этап 6** → Навигация
+8. **Этап 7** → Тестирование
 
 ---
 
@@ -546,8 +573,8 @@ composable(
 | Компонент            | Файл                          | Статус  |
 |----------------------|-------------------------------|---------|
 | `SectionView`        | `ui/ds/SectionView.kt`        | ✅ Готов |
-| `UserRowView`        | `ui/ds/UserRowView.kt`        | ✅ Готов |
-| `CommentRowView`     | `ui/ds/CommentRowView.kt`     | ✅ Готов |
+| `UserRowView`        | `ui/ds/UserRowView.kt`        | ⚠️ База готова, нужен clickable wrapper |
+| `CommentRowView`     | `ui/ds/CommentRowView.kt`     | ⚠️ База готова, нужен click support по автору |
 | `LoadingOverlayView` | `ui/ds/LoadingOverlayView.kt` | ✅ Готов |
 | `FormCardContainer`  | `ui/ds/FormCardContainer.kt`  | ✅ Готов |
 | `FormRowView`        | `ui/ds/FormRowView.kt`        | ✅ Готов |
@@ -559,35 +586,44 @@ composable(
 
 ## Примечания
 
-1. **Карты:** Для снапшота карты можно использовать OpenStreetMap Static API (без API ключа) или Google Maps Static API (требует ключ).
+1. **Карты:** в первой версии не использовать map snapshot. Вместо этого показывать адрес и открывать внешний map app/browser через Intent.
 
-2. **Первая итерация - только логирование:** Все действия пользователей (toggle, клики, навигация) только логируются в консоль через `logger.d()`. Навигация и API запросы добавляются в следующих итерациях.
+2. **Реальная загрузка уже в первой рабочей версии:** получение event, адреса и refresh должны быть рабочими сразу. Только часть действий может оставаться на этапе логирования.
 
-3. **Авторизация:** Экран должен корректно работать для:
-   - **Неавторизованных пользователей** - скрыты секция участников и кнопка добавления комментария
-   - **Авторизованных пользователей** - полный функционал просмотра
-   - **Авторов мероприятия** - дополнительное меню редактирования/удаления
+3. **Авторизация:** экран должен корректно работать для:
 
-4. **Фото:** Полноэкранный просмотр (EventGallery) будет реализован отдельной задачей. В первой итерации клик на фото только логируется.
+    * **неавторизованных пользователей** — скрыты participants section и add comment
+    * **авторизованных пользователей** — доступен полный сценарий просмотра
+    * **автора мероприятия** — видно edit action
 
-5. **Календарь:** Добавление в календарь не включено в первую итерацию (iOS имеет эту функцию).
+4. **Фото:** переход в полноценную галерею можно перенести на следующую итерацию. В первой рабочей версии клик по фото может только логироваться.
+
+5. **Комментарии и social actions:** в первой рабочей версии допустимо оставить без API-интеграции, но UI и точки расширения должны быть готовы.
+
+6. **Навигация:** интеграцию делать через `RootScreen`, а не через `Navigation.kt`, так как `Navigation.kt` относится к нижней навигации.
 
 ---
 
-## Следующие итерации (не включены в первую)
+## Следующие итерации (после первой рабочей версии)
 
-1. **Итерация 2 - Навигация:**
-   - Переход на профиль автора
-   - Переход на экран участников
-   - Переход на экран галереи
-   - Переход на редактирование мероприятия
+### Итерация 2 — Реальная навигация
 
-2. **Итерация 3 - API интеграция:**
-   - Toggle "Пойду" с оптимистичным обновлением
-   - Добавление комментария
-   - Удаление/редактирование мероприятия (для автора)
+* Переход на профиль автора
+* Переход на экран участников
+* Переход на экран галереи
+* Переход на редактирование мероприятия
+* Реальный share flow
 
-3. **Итерация 4 - Расширенный функционал:**
-   - Добавление в календарь
-   - Пожаловаться на фото/комментарий
-   - Pull-to-refresh с реальными данными
+### Итерация 3 — API интеграция
+
+* Toggle "Пойду" с optimistic update
+* Добавление комментария
+* Действия над комментариями
+* Редактирование/удаление мероприятия для автора
+
+### Итерация 4 — Расширенный функционал
+
+* Добавление в календарь
+* Жалобы на фото/комментарии
+* Дополнительные action sheet / menu сценарии
+* Отдельное R&D по встроенному preview карты без платных сервисов
