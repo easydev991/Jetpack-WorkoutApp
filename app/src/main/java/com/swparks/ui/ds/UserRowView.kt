@@ -16,22 +16,30 @@ import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 /**
+ * Данные для отображения карточки пользователя.
+ */
+data class UserRowData(
+    val modifier: Modifier = Modifier,
+    val enabled: Boolean = true,
+    val imageStringURL: String?,
+    val name: String,
+    val address: String?,
+    val onClick: (() -> Unit)? = null
+)
+
+/**
  * Вьюшка с краткой информацией о пользователе
  *
- * @param modifier Модификатор
- * @param imageStringURL Ссылка на аватар пользователя
- * @param name Имя
- * @param address Адрес в формате "Россия, Москва"
+ * @param data Данные для отображения и поведения карточки пользователя
  */
 @Composable
-fun UserRowView(
-    modifier: Modifier = Modifier,
-    imageStringURL: String?,
-    name: String,
-    address: String?
-) {
+fun UserRowView(data: UserRowData) {
     FormCardContainer(
-        params = FormCardContainerParams(modifier = modifier)
+        params = FormCardContainerParams(
+            modifier = data.modifier,
+            enabled = data.enabled,
+            onClick = data.onClick
+        )
     ) {
         FormRowContainer(
             config = FormRowConfig(
@@ -40,7 +48,7 @@ fun UserRowView(
                 content = {
                     SWAsyncImage(
                         config = AsyncImageConfig(
-                            imageStringURL = imageStringURL,
+                            imageStringURL = data.imageStringURL,
                             size = 42.dp,
                             shape = CircleShape
                         )
@@ -49,13 +57,13 @@ fun UserRowView(
                         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall))
                     ) {
                         Text(
-                            text = name,
+                            text = data.name,
                             maxLines = 1,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
-                        if (!address.isNullOrBlank()) {
+                        if (!data.address.isNullOrBlank()) {
                             Text(
-                                text = address,
+                                text = data.address,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -77,9 +85,11 @@ fun UserRowViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             UserRowView(
-                imageStringURL = null,
-                name = "yellowmouse215",
-                address = "Россия, Москва"
+                data = UserRowData(
+                    imageStringURL = null,
+                    name = "yellowmouse215",
+                    address = "Россия, Москва"
+                )
             )
         }
     }

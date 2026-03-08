@@ -31,9 +31,9 @@ import com.swparks.ui.ds.FriendRequestData
 import com.swparks.ui.ds.FriendRequestRowView
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.SectionView
+import com.swparks.ui.ds.UserRowData
 import com.swparks.ui.ds.UserRowView
 import com.swparks.ui.state.FriendsListUiState
-import com.swparks.ui.utils.disabledIf
 import com.swparks.ui.viewmodel.IFriendsListViewModel
 
 /**
@@ -244,19 +244,16 @@ private fun SuccessContent(
                     ) {
                         friends.forEach { user ->
                             val isDisabled = user.id == currentUserId || !enabled
-                            Box(
-                                modifier = Modifier.disabledIf(
-                                    disabled = isDisabled,
-                                    onClick = { onFriendClick(user.id) }
-                                )
-                            ) {
-                                UserRowView(
+                            UserRowView(
+                                data = UserRowData(
                                     modifier = Modifier,
+                                    enabled = !isDisabled,
                                     imageStringURL = user.image,
                                     name = user.name,
-                                    address = null
+                                    address = null,
+                                    onClick = { onFriendClick(user.id) }
                                 )
-                            }
+                            )
                         }
                     }
                 }

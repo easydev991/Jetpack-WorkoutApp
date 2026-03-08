@@ -25,8 +25,8 @@ import com.swparks.R
 import com.swparks.data.model.User
 import com.swparks.ui.ds.EmptyStateView
 import com.swparks.ui.ds.LoadingOverlayView
+import com.swparks.ui.ds.UserRowData
 import com.swparks.ui.ds.UserRowView
-import com.swparks.ui.utils.disabledIf
 import com.swparks.ui.viewmodel.UserFriendsUiState
 import com.swparks.ui.viewmodel.UserFriendsViewModel
 
@@ -170,19 +170,16 @@ private fun FriendsList(
         items(friends.size) { index ->
             val user = friends[index]
             val isDisabled = user.id == currentUserId
-            Box(
-                modifier = Modifier.disabledIf(
-                    disabled = isDisabled,
-                    onClick = { onUserClick(user.id) }
-                )
-            ) {
-                UserRowView(
+            UserRowView(
+                data = UserRowData(
                     modifier = Modifier,
+                    enabled = !isDisabled,
                     imageStringURL = user.image,
                     name = user.name,
-                    address = null
+                    address = null,
+                    onClick = { onUserClick(user.id) }
                 )
-            }
+            )
         }
     }
 }

@@ -71,9 +71,11 @@ fun SectionViewPreview() {
                 titleBottomPadding = dimensionResource(R.dimen.spacing_xxsmall)
             ) {
                 UserRowView(
-                    imageStringURL = null,
-                    name = "Alica",
-                    address = "Россия, Арзамас"
+                    data = UserRowData(
+                        imageStringURL = null,
+                        name = "Alica",
+                        address = "Россия, Арзамас"
+                    )
                 )
             }
             HorizontalDivider()

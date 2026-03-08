@@ -1,6 +1,5 @@
 package com.swparks.ui.screens.profile
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,7 +16,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import com.swparks.R
 import com.swparks.data.model.User
 import com.swparks.ui.ds.LoadingOverlayView
+import com.swparks.ui.ds.UserRowData
 import com.swparks.ui.ds.UserRowView
 import com.swparks.ui.model.BlacklistAction
 import com.swparks.ui.state.BlacklistUiState
@@ -213,20 +212,16 @@ private fun SuccessContent(
         if (blacklist.isNotEmpty()) {
             items(count = blacklist.size) { index ->
                 val user = blacklist[index]
-                Box {
-                    Surface(
-                        modifier = Modifier.clickable(enabled = enabled) { onShowRemoveDialog(user) },
-                        color = MaterialTheme.colorScheme.surface,
-                        shape = MaterialTheme.shapes.small
-                    ) {
-                        UserRowView(
-                            modifier = Modifier,
-                            imageStringURL = user.image,
-                            name = user.name,
-                            address = null
-                        )
-                    }
-                }
+                UserRowView(
+                    data = UserRowData(
+                        modifier = Modifier,
+                        enabled = enabled,
+                        imageStringURL = user.image,
+                        name = user.name,
+                        address = null,
+                        onClick = { onShowRemoveDialog(user) }
+                    )
+                )
             }
         }
 

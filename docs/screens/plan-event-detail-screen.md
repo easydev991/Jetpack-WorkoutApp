@@ -31,7 +31,7 @@
 | Участники            | Количество участников + toggle "Пойду"     | `SectionView` + `FormRowView` | **Только авторизованные**          |
 | Фотографии           | Сетка фотографий                           | **НОВЫЙ:** `PhotoSectionView` | Все                                |
 | Описание             | Текст описания (без HTML)                  | `Text`                        | Все                                |
-| Автор                | Информация об организаторе                 | `UserRowView` + click wrapper | Все (клик — только авторизованные) |
+| Автор                | Информация об организаторе                 | `UserRowView`                 | Все (клик — только авторизованные) |
 | Комментарии          | Список комментариев                        | `CommentRowView` + доработка click по автору | Все                    |
 | Добавить комментарий | Кнопка добавления                          | `Button`                      | **Только авторизованные**          |
 
@@ -114,7 +114,7 @@ val isEventAuthor: StateFlow<Boolean>
 * Оставить back navigation в UI/navigation layer, а не во ViewModel
 * Переименовать новый location-компонент в общий, не привязанный к park:
 
-    * `LocationInfoView`
+  * `LocationInfoView`
 * Зафиксировать, как обрабатывается клик по автору для существующих `UserRowView` и `CommentRowView`
 
 **Критерии завершения:**
@@ -123,7 +123,7 @@ val isEventAuthor: StateFlow<Boolean>
 * [ ] Архитектурные решения по карте зафиксированы
 * [ ] Компонент называется нейтрально и может переиспользоваться
 * [ ] `onBackClick()` не закладывается в интерфейс ViewModel
-* [ ] Понятно, нужен ли wrapper или расширение API для клика по автору
+* [ ] Понятно, какие компоненты уже поддерживают `onClick`, а какие требуют расширения API
 
 ---
 
@@ -369,10 +369,10 @@ fun EventDetailScreen(
 * back обрабатывается через `onBack()`
 * UI читает:
 
-    * `uiState`
-    * `isRefreshing`
-    * `isAuthorized`
-    * `isEventAuthor`
+  * `uiState`
+  * `isRefreshing`
+  * `isAuthorized`
+  * `isEventAuthor`
 
 **Основные секции:**
 
@@ -413,7 +413,7 @@ fun EventDetailScreen(
 * во время `isRefreshing` отключать кликабельные действия, где это уместно
 * у автора показывать edit action
 * для неавторизованного пользователя клик по автору/автору комментария только логируется
-* для `UserRowView` использовать внешний clickable wrapper, а для `CommentRowView` предусмотреть расширение API или отдельную обёртку для клика по автору
+* для автора использовать встроенные `enabled`/`onClick` в `UserRowView`, а для `CommentRowView` предусмотреть расширение API или отдельную обёртку для клика по автору
 
 **Критерии завершения:**
 
@@ -573,7 +573,7 @@ composable(
 | Компонент            | Файл                          | Статус  |
 |----------------------|-------------------------------|---------|
 | `SectionView`        | `ui/ds/SectionView.kt`        | ✅ Готов |
-| `UserRowView`        | `ui/ds/UserRowView.kt`        | ⚠️ База готова, нужен clickable wrapper |
+| `UserRowView`        | `ui/ds/UserRowView.kt`        | ✅ Готов, поддерживает `enabled` и `onClick` |
 | `CommentRowView`     | `ui/ds/CommentRowView.kt`     | ⚠️ База готова, нужен click support по автору |
 | `LoadingOverlayView` | `ui/ds/LoadingOverlayView.kt` | ✅ Готов |
 | `FormCardContainer`  | `ui/ds/FormCardContainer.kt`  | ✅ Готов |

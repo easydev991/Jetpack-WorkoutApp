@@ -38,9 +38,9 @@ import com.swparks.ui.ds.ErrorContentView
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.SWTextField
 import com.swparks.ui.ds.TextFieldConfig
+import com.swparks.ui.ds.UserRowData
 import com.swparks.ui.ds.UserRowView
 import com.swparks.ui.state.SearchUserUiState
-import com.swparks.ui.utils.disabledIf
 import com.swparks.ui.viewmodel.ISearchUserViewModel
 
 /**
@@ -241,19 +241,16 @@ private fun UsersList(
             key = { it.id }
         ) { user ->
             val isDisabled = user.id == currentUserId
-            Box(
-                modifier = Modifier.disabledIf(
-                    disabled = isDisabled,
-                    onClick = { onUserClick(user.id) }
-                )
-            ) {
-                UserRowView(
+            UserRowView(
+                data = UserRowData(
                     modifier = Modifier.fillMaxWidth(),
+                    enabled = !isDisabled,
                     imageStringURL = user.image,
                     name = user.name,
-                    address = null
+                    address = null,
+                    onClick = { onUserClick(user.id) }
                 )
-            }
+            )
         }
     }
 }
