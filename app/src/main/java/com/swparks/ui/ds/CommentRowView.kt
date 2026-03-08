@@ -2,6 +2,7 @@ package com.swparks.ui.ds
 
 import android.content.res.Configuration
 import androidx.annotation.StringRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -94,6 +95,7 @@ data class CommentActionsMenuConfig(
  * @param bodyText Текст комментария
  * @param enabled Доступность кнопки с действиями
  * @param byMainUser Является ли автором основной пользователь приложения
+ * @param onAuthorClick Действие при нажатии на автора комментария
  * @param onClickAction Действие при нажатии на кнопку с тремя точками справа
  */
 data class CommentRowData(
@@ -104,6 +106,7 @@ data class CommentRowData(
     val bodyText: String,
     val enabled: Boolean = true,
     val byMainUser: Boolean = false,
+    val onAuthorClick: (() -> Unit)? = null,
     val onClickAction: (CommentAction) -> Unit
 )
 
@@ -134,7 +137,9 @@ fun CommentRowView(data: CommentRowData) {
             CommentHeader(
                 imageStringURL = data.imageStringURL,
                 authorName = data.authorName,
-                dateString = data.dateString
+                dateString = data.dateString,
+                enabled = data.enabled,
+                onAuthorClick = data.onAuthorClick
             )
             CommentActionsMenu(
                 config = CommentActionsMenuConfig(
@@ -159,9 +164,17 @@ fun CommentRowView(data: CommentRowData) {
 private fun CommentHeader(
     imageStringURL: String?,
     authorName: String,
-    dateString: String
+    dateString: String,
+    enabled: Boolean,
+    onAuthorClick: (() -> Unit)?
 ) {
+    val clickableModifier = if (onAuthorClick != null) {
+        Modifier.clickable(enabled = enabled, onClick = onAuthorClick)
+    } else {
+        Modifier
+    }
     Row(
+        modifier = clickableModifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
     ) {

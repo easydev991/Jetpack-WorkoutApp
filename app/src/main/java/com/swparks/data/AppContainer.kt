@@ -77,6 +77,7 @@ import com.swparks.ui.viewmodel.ChangePasswordViewModel
 import com.swparks.ui.viewmodel.ChatViewModel
 import com.swparks.ui.viewmodel.DialogsViewModel
 import com.swparks.ui.viewmodel.EditProfileViewModel
+import com.swparks.ui.viewmodel.EventDetailViewModel
 import com.swparks.ui.viewmodel.EventsViewModel
 import com.swparks.ui.viewmodel.FriendsListViewModel
 import com.swparks.ui.viewmodel.JournalEntriesDeps
@@ -109,6 +110,7 @@ private object NetworkTimeouts {
     const val CALL_SECONDS = 60L
 }
 
+@Suppress("TooManyFunctions")
 interface AppContainer {
     val swRepository: SWRepository
     val secureTokenRepository: SecureTokenRepository
@@ -197,6 +199,9 @@ interface AppContainer {
     /** Фабрика для EventsViewModel */
     fun eventsViewModelFactory(): EventsViewModel
 
+    /** Фабрика для EventDetailViewModel */
+    fun eventDetailViewModelFactory(savedStateHandle: SavedStateHandle): EventDetailViewModel
+
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
     fun provideProfileApi(): SWApi
@@ -211,6 +216,7 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
     name = "user_preferences"
 )
 
+@Suppress("TooManyFunctions")
 class DefaultAppContainer(context: Context) : AppContainer {
     private val appContext: Context = context.applicationContext
     private val baseUrl = "https://workout.su/api/v3/"
@@ -638,6 +644,17 @@ class DefaultAppContainer(context: Context) : AppContainer {
         userNotifier = userNotifier,
         logger = logger
     )
+
+    /** Factory метод для создания EventDetailViewModel */
+    override fun eventDetailViewModelFactory(savedStateHandle: SavedStateHandle) =
+        EventDetailViewModel(
+            swRepository = swRepository,
+            countriesRepository = countriesRepository,
+            userPreferencesRepository = userPreferencesRepository,
+            savedStateHandle = savedStateHandle,
+            userNotifier = userNotifier,
+            logger = logger
+        )
 
     // ==================== API клиенты для разных функциональных областей ====================
     // Все фабричные методы возвращают один и тот же экземпляр SWApi для консистентности

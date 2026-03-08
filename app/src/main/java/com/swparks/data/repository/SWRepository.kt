@@ -126,6 +126,7 @@ interface SWRepository {
     suspend fun saveEvent(id: Long?, form: EventForm, photos: List<ByteArray>?): Result<Event>
     suspend fun changeIsGoingToEvent(go: Boolean, eventId: Long): Result<Unit>
     suspend fun deleteEvent(eventId: Long): Result<Unit>
+    suspend fun deleteEventPhoto(eventId: Long, photoId: Long): Result<Unit>
 
     // 3.6. Сообщения
     suspend fun getDialogs(): Result<List<DialogResponse>>
@@ -812,6 +813,16 @@ class SWRepositoryImp(
             Result.failure(handleIOException(e, "удалении мероприятия"))
         } catch (e: HttpException) {
             Result.failure(handleHttpException(e, "удалении мероприятия"))
+        }
+
+    override suspend fun deleteEventPhoto(eventId: Long, photoId: Long): Result<Unit> =
+        try {
+            swApi.deleteEventPhoto(eventId, photoId)
+            Result.success(Unit)
+        } catch (e: IOException) {
+            Result.failure(handleIOException(e, "удалении фото мероприятия"))
+        } catch (e: HttpException) {
+            Result.failure(handleHttpException(e, "удалении фото мероприятия"))
         }
 
     // 3.6. Сообщения

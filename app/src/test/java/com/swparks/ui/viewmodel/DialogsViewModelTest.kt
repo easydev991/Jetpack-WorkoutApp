@@ -517,43 +517,44 @@ class DialogsViewModelTest {
      * показывается старый список диалогов вместо EmptyStateView.
      */
     @Test
-    fun loadDialogsAfterAuth_withPreviouslyCachedDialogs_andEmptyServerResponse_showsEmptyState() = runTest {
-        // Given - сначала есть кэшированные диалоги
-        val cachedDialogs = listOf(testDialog)
-        val dialogFlow = kotlinx.coroutines.flow.MutableStateFlow(cachedDialogs)
-        coEvery { messagesRepository.dialogs } returns dialogFlow
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+    fun loadDialogsAfterAuth_withPreviouslyCachedDialogs_andEmptyServerResponse_showsEmptyState() =
+        runTest {
+            // Given - сначала есть кэшированные диалоги
+            val cachedDialogs = listOf(testDialog)
+            val dialogFlow = kotlinx.coroutines.flow.MutableStateFlow(cachedDialogs)
+            coEvery { messagesRepository.dialogs } returns dialogFlow
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
-        // When - первая инициализация с кэшированными диалогами
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
-        advanceUntilIdle()
+            // When - первая инициализация с кэшированными диалогами
+            viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+            advanceUntilIdle()
 
-        // Проверяем что состояние Success с диалогами
-        val stateAfterInit = viewModel.uiState.value
-        assertTrue(
-            "Expected Success state after init but got $stateAfterInit",
-            stateAfterInit is DialogsUiState.Success
-        )
-        assertEquals(cachedDialogs, (stateAfterInit as DialogsUiState.Success).dialogs)
+            // Проверяем что состояние Success с диалогами
+            val stateAfterInit = viewModel.uiState.value
+            assertTrue(
+                "Expected Success state after init but got $stateAfterInit",
+                stateAfterInit is DialogsUiState.Success
+            )
+            assertEquals(cachedDialogs, (stateAfterInit as DialogsUiState.Success).dialogs)
 
-        // Симулируем logout -> login: сервер теперь возвращает пустой список
-        dialogFlow.value = emptyList()
+            // Симулируем logout -> login: сервер теперь возвращает пустой список
+            dialogFlow.value = emptyList()
 
-        // Вызываем loadDialogsAfterAuth() (как при повторной авторизации)
-        viewModel.loadDialogsAfterAuth()
-        advanceUntilIdle()
+            // Вызываем loadDialogsAfterAuth() (как при повторной авторизации)
+            viewModel.loadDialogsAfterAuth()
+            advanceUntilIdle()
 
-        // Then - должен быть Success с пустым списком (EmptyStateView)
-        val stateAfterReAuth = viewModel.uiState.value
-        assertTrue(
-            "Expected Success state with empty list after re-auth but got $stateAfterReAuth",
-            stateAfterReAuth is DialogsUiState.Success
-        )
-        assertTrue(
-            "Expected empty dialog list but got ${(stateAfterReAuth as DialogsUiState.Success).dialogs.size} dialogs",
-            stateAfterReAuth.dialogs.isEmpty()
-        )
-    }
+            // Then - должен быть Success с пустым списком (EmptyStateView)
+            val stateAfterReAuth = viewModel.uiState.value
+            assertTrue(
+                "Expected Success state with empty list after re-auth but got $stateAfterReAuth",
+                stateAfterReAuth is DialogsUiState.Success
+            )
+            assertTrue(
+                "Expected empty dialog list but got ${(stateAfterReAuth as DialogsUiState.Success).dialogs.size} dialogs",
+                stateAfterReAuth.dialogs.isEmpty()
+            )
+        }
 
     /**
      * Тест для бага EmptyStateView: проверяет случай когда Room Flow эмитит данные

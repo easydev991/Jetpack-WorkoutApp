@@ -198,6 +198,11 @@
     <string name="save">Save</string>
 
     <string name="event_title">Event</string>
+    <string name="event_open_map">Open on map</string>
+    <string name="event_build_route">Build route</string>
+    <string name="event_add_to_calendar">Add to calendar</string>
+    <string name="event_delete_confirm_title">Delete event?</string>
+    <string name="event_delete_photo_confirm_title">Delete photo?</string>
     <string name="event_details_placeholder">Add some details about the upcoming event</string>
     <string name="date_time">Date and time</string>
     <string name="date">Date</string>

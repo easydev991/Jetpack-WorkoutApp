@@ -12,6 +12,8 @@
 ### Ссылки на референсы
 
 * **iOS:** `SwiftUI-WorkoutApp/SwiftUI-WorkoutApp/Screens/Events/EventDetailsScreen.swift`
+* **iOS фото-секция:** `SwiftUI-WorkoutApp/SwiftUI-WorkoutApp/Screens/Common/PhotoSection/PhotoSectionView.swift`
+* **iOS фото full screen:** `SwiftUI-WorkoutApp/SwiftUI-WorkoutApp/Screens/Common/PhotoSection/PhotoDetailScreen.swift`
 * **Android маршруты:** `app/src/main/java/com/swparks/navigation/Destinations.kt` (`Screen.EventDetail` уже определён)
 * **Android корневая навигация:** `RootScreen.kt` (интеграция нового экрана должна выполняться здесь)
 * **Референс по адресам:** `EventsScreen` / `EventsViewModel` (логика получения адреса через `CountriesRepository`)
@@ -28,6 +30,7 @@
 | Дата проведения      | Форматированная дата                       | `DateFormatter.formatDate()`  | Все                                |
 | Место проведения     | Адрес (страна, город)                      | `Text`                        | Все                                |
 | Локация площадки     | Адрес + действия "Открыть карту"/"Маршрут" | **НОВЫЙ:** `LocationInfoView` | Все                                |
+| Календарь            | Кнопка "Добавить в календарь" для предстоящего события | `Button`            | Все, только для `isCurrent`        |
 | Участники            | Количество участников + toggle "Пойду"     | `SectionView` + `FormRowView` | **Только авторизованные**          |
 | Фотографии           | Сетка фотографий                           | **НОВЫЙ:** `PhotoSectionView` | Все                                |
 | Описание             | Текст описания (без HTML)                  | `Text`                        | Все                                |
@@ -47,6 +50,8 @@
 | Toggle "Пойду на мероприятие" | `!isAuthorized`  |
 | Кнопка "Добавить комментарий" | `!isAuthorized`  |
 | Меню редактирования           | `!isEventAuthor` |
+| Меню удаления мероприятия     | `!isEventAuthor` |
+| Действие удаления фото        | `!isEventAuthor` |
 
 ### Что БЛОКИРУЕТСЯ для неавторизованных (UI виден, действие недоступно)
 
@@ -66,6 +71,28 @@
 * Просмотр комментариев
 * Поделиться мероприятием
 
+### Политика интеракций первой рабочей версии
+
+В первой рабочей версии экран уже должен:
+
+* реально загружать данные мероприятия
+* реально обновляться через pull-to-refresh
+* реально открывать карту и маршрут через внешний map app/browser
+* реально открывать системный экран добавления события в календарь через Android Intent для предстоящего события
+* реально удалять мероприятие для автора после подтверждения в alert/dialog
+* реально удалять фото мероприятия для автора после подтверждения в alert/dialog
+
+При этом остальные пользовательские действия на экране пока только логируются через `Logger`:
+
+* toggle "Пойду на мероприятие" — только для авторизованных пользователей
+* клик по количеству участников
+* клик по автору мероприятия
+* клик по автору комментария
+* клик по фото
+* клик "Поделиться"
+* клик "Редактировать"
+* клик "Добавить комментарий"
+
 ### Логика `isEventAuthor`
 
 ```kotlin
@@ -78,6 +105,22 @@ val isEventAuthor: StateFlow<Boolean>
 * `event.author.id`
 
 **Важно:** все идентификаторы пользователя и мероприятия использовать в одном типе: **`Long`**.
+
+### Правило авторских действий
+
+Действия, изменяющие мероприятие, доступны только авторизованному пользователю, который является автором мероприятия (`isEventAuthor == true`):
+
+* редактирование мероприятия
+* удаление мероприятия
+* удаление фото мероприятия
+
+### Что НЕ переносим из iOS в первую Android-версию
+
+Из iOS-референса берём общую верстку, порядок секций и условия отображения, но не переносим платформенные или пока не реализованные сценарии:
+
+* жалоба на фото
+* жалоба на комментарий
+* полноэкранный просмотр фото как обязательную часть первой версии
 
 ---
 
@@ -105,6 +148,8 @@ val isEventAuthor: StateFlow<Boolean>
 
 ## Этап 0: Подготовка архитектуры
 
+**Текущий статус (2026-03-09):** архитектурный baseline зафиксирован; остаются точечные уточнения API UI-компонентов перед этапами 2–4.
+
 ### 0.1. Уточнение модели и контрактов
 
 **Задачи:**
@@ -112,6 +157,15 @@ val isEventAuthor: StateFlow<Boolean>
 * Зафиксировать, что `eventId`, `authorId`, `currentUserId`, `commentAuthorId` имеют тип `Long`
 * Убрать лишнее дублирование состояния
 * Оставить back navigation в UI/navigation layer, а не во ViewModel
+* Расширить контракт data layer для удаления фото мероприятия:
+
+  * endpoint уже есть в `SWApi.deleteEventPhoto(eventId, photoId)`
+  * в `SWRepository` / его реализации нужно добавить соответствующий метод
+* Зафиксировать источник `eventId`:
+
+  * `eventId` известен уже в списке мероприятий
+  * переход на детальный экран выполняется с передачей `eventId` в маршрут `Screen.EventDetail`
+  * ViewModel читает `eventId` из `SavedStateHandle` по аргументу маршрута
 * Переименовать новый location-компонент в общий, не привязанный к park:
 
   * `LocationInfoView`
@@ -119,15 +173,24 @@ val isEventAuthor: StateFlow<Boolean>
 
 **Критерии завершения:**
 
-* [ ] Типы ID унифицированы
-* [ ] Архитектурные решения по карте зафиксированы
-* [ ] Компонент называется нейтрально и может переиспользоваться
-* [ ] `onBackClick()` не закладывается в интерфейс ViewModel
-* [ ] Понятно, какие компоненты уже поддерживают `onClick`, а какие требуют расширения API
+* [x] Типы ID унифицированы
+* [x] Архитектурные решения по карте зафиксированы в плане (без реализации map snapshot на этом этапе)
+* [x] Компонент называется нейтрально и может переиспользоваться (`LocationInfoView`, реализация на этапе 2)
+* [x] `onBackClick()` не закладывается в интерфейс ViewModel
+* [x] Контракт удаления фото мероприятия описан до уровня repository
+* [x] Источник `eventId` и путь его передачи до ViewModel однозначно описаны
+* [ ] Понятно, какие компоненты уже поддерживают `onClick`, а какие требуют расширения API (закрыть при реализации `EventDetailScreen` и финализации интеграции `CommentRowView`)
+
+**Граница этапа 0 (чтобы избежать двусмысленности):**
+
+* Этап 0 фиксирует архитектурные решения и контракты.
+* Фактическая UI-реализация (`LocationInfoView`, `PhotoSectionView`, `EventDetailScreen`) выполняется только в этапах 2–4.
 
 ---
 
 ## Этап 1: UI State и ViewModel с реальной загрузкой
+
+**Текущий статус (2026-03-09):** в работе, основная часть ViewModel-логики реализована.
 
 ### 1.1. UI State
 
@@ -163,9 +226,9 @@ sealed class EventDetailUIState {
 
 **Критерии завершения:**
 
-* [ ] Sealed class с состояниями `InitialLoading`, `Content`, `Error`
-* [ ] Нет дублирования loading-состояний
-* [ ] Нет лишних полей в `Content`
+* [x] Sealed class с состояниями `InitialLoading`, `Content`, `Error`
+* [x] Нет дублирования loading-состояний
+* [x] Нет лишних полей в `Content`
 
 ---
 
@@ -183,6 +246,7 @@ interface IEventDetailViewModel {
     val isEventAuthor: StateFlow<Boolean>
 
     fun onEditClick()
+    fun onDeleteClick()
     fun onShareClick()
 
     fun onParticipantToggle()
@@ -194,8 +258,9 @@ interface IEventDetailViewModel {
     fun onOpenMapClick()
     fun onRouteClick()
 
+    fun onAddToCalendarClick()
     fun onPhotoClick(photo: Photo)
-    fun onPhotoReportClick(photo: Photo)
+    fun onPhotoDeleteClick(photo: Photo)
 
     fun onAddCommentClick()
     fun onCommentActionClick(commentId: Long, action: CommentAction)
@@ -206,11 +271,14 @@ interface IEventDetailViewModel {
 
 **Критерии завершения:**
 
-* [ ] Интерфейс определён
-* [ ] Нет `onBackClick()`
-* [ ] Все пользовательские действия покрыты отдельными методами
-* [ ] Действия карты разделены на `onOpenMapClick()` и `onRouteClick()`
-* [ ] Методы клика по пользователю принимают `authorId`, а не `commentId`
+* [x] Интерфейс определён
+* [x] Нет `onBackClick()`
+* [x] Все пользовательские действия покрыты отдельными методами
+* [x] Действия карты разделены на `onOpenMapClick()` и `onRouteClick()`
+* [x] Методы клика по пользователю принимают `authorId`, а не `commentId`
+* [x] В интерфейсе нет методов для жалоб на фото/комментарии, которых пока нет в Android
+* [x] В интерфейсе есть действия для удаления мероприятия, удаления фото и добавления в календарь
+* [x] `onCommentActionClick(...)` зарезервирован под следующие итерации и не требует показа `REPORT` в первой версии
 
 ---
 
@@ -220,7 +288,7 @@ interface IEventDetailViewModel {
 
 **Зависимости:**
 
-* `SWRepository` — для `getEvent(id: Long)`
+* `SWRepository` — для `getEvent(id: Long)`, `deleteEvent(eventId: Long)` и удаления фото мероприятия после расширения repository-контракта
 * `CountriesRepository` — для получения адреса
 * `UserPreferencesRepository` — для авторизации и `currentUserId`
 * `Logger` — для логирования
@@ -228,17 +296,29 @@ interface IEventDetailViewModel {
 
 **Инициализация:**
 
-* Получить `eventId` из `SavedStateHandle`
+* Получить `eventId` из `SavedStateHandle` по route argument `eventId`
 * Загрузить данные мероприятия через `repository.getEvent(id)`
 * Построить адрес через `CountriesRepository`
 * Получить `currentUserId` из preferences
 * Вычислить `isAuthorized`
 * Вычислить `isEventAuthor`
 
+**Если `eventId` отсутствует:**
+
+* записать ошибку в лог
+* перевести экран в `Error`
+* не выполнять запрос `getEvent()`
+
 **Логика адреса:**
 
 * Переиспользовать подход из `EventsScreen`
-* Поддержать fallback при неполных country/city данных
+* Зафиксировать порядок fallback:
+
+  * `страна + город`
+  * `страна`
+  * `город`
+  * `event.address`, если сервер его прислал
+  * строка вида `"countryId, cityId"`
 
 **Логика загрузки:**
 
@@ -247,14 +327,30 @@ interface IEventDetailViewModel {
 * ошибка → `Error`
 * pull-to-refresh обновляет данные реально, а не только логирует
 
+**Дополнительные действия первой версии:**
+
+* удаление мероприятия для автора выполняется реально через repository endpoint, но только после подтверждения в alert/dialog
+* удаление фото мероприятия для автора выполняется реально через repository endpoint, но только после подтверждения в alert/dialog
+* добавление в календарь выполняется нативно через Android `Intent` / `CalendarContract`, без внешних зависимостей
+
 **Критерии завершения:**
 
-* [ ] ViewModel реально загружает мероприятие
-* [ ] Pull-to-refresh реально обновляет данные
-* [ ] Адрес строится через `CountriesRepository`
-* [ ] `isAuthorized` и `isEventAuthor` корректно вычисляются
-* [ ] Ошибки уходят через `UserNotifier` и/или `Error` state
-* [ ] Логирование действий пользователей добавлено
+* [x] ViewModel реально загружает мероприятие
+* [x] Pull-to-refresh реально обновляет данные
+* [x] Адрес строится через `CountriesRepository`
+* [x] `isAuthorized` и `isEventAuthor` корректно вычисляются
+* [x] Ошибки уходят через `UserNotifier` и/или `Error` state
+* [x] Логирование действий пользователей добавлено
+* [x] При отсутствии `eventId` экран корректно переходит в `Error`
+* [x] Удаление мероприятия для автора работает
+* [x] Удаление фото мероприятия для автора работает
+* [x] Перед удалением мероприятия показывается confirm alert/dialog
+* [x] Перед удалением фото показывается confirm alert/dialog
+* [ ] Добавление события в календарь открывается нативно через Android Intent
+
+**Осталось для полного закрытия Этапа 1:**
+
+* Подключить обработку `EventDetailEvent.OpenCalendar` в UI-слое `EventDetailScreen`/`RootScreen` с реальным Android `Intent` (`CalendarContract`) и проверить сценарий на устройстве/эмуляторе.
 
 ---
 
@@ -309,7 +405,7 @@ data class LocationInfoConfig(
 
 **Файл:** `app/src/main/java/com/swparks/ui/ds/PhotoSectionView.kt`
 
-**Описание:** Адаптивная сетка фотографий с поддержкой последующего перехода в галерею.
+**Описание:** Адаптивная сетка фотографий, визуально ориентированная на iOS-референс, но без Android-сценариев жалоб и удаления фото в первой версии.
 
 **Параметры:**
 
@@ -318,8 +414,7 @@ data class PhotoSectionConfig(
     val photos: List<Photo>,
     val canDelete: Boolean,
     val onPhotoClick: (Photo) -> Unit,
-    val onDeleteClick: ((Photo) -> Unit)? = null,
-    val onReportClick: ((Photo) -> Unit)? = null
+    val onDeleteClick: ((Photo) -> Unit)? = null
 )
 ```
 
@@ -329,7 +424,13 @@ data class PhotoSectionConfig(
 * 2 фото → 2 столбца
 * 3+ фото → 3 столбца
 * `SWAsyncImage` с закруглениями
-* клик по фото → пока логирование / позже навигация в галерею
+* клик по фото → пока логирование / позже навигация в галерею или photo detail
+
+**Важно для первой версии:**
+
+* не показывать действие "Пожаловаться на фото"
+* удаление фото доступно только при `isEventAuthor == true`
+* полноэкранный photo detail можно отложить на следующую итерацию, если удаление фото решается без него
 
 **Критерии завершения:**
 
@@ -356,11 +457,13 @@ fun EventDetailScreen(
     viewModel: IEventDetailViewModel = viewModel<EventDetailViewModel>(factory = EventDetailViewModel.Factory),
     onBack: () -> Unit,
     onEdit: (Long) -> Unit = {},
+    onDelete: (Long) -> Unit = {},
     onShare: (String) -> Unit = {},
     onParticipants: (Long) -> Unit = {},
     onAuthor: (Long) -> Unit = {},
     onGallery: (Long) -> Unit = {},
-    onAddComment: (Long) -> Unit = {}
+    onAddComment: (Long) -> Unit = {},
+    onAddToCalendar: (Event) -> Unit = {}
 )
 ```
 
@@ -383,6 +486,7 @@ fun EventDetailScreen(
     * Меню:
 
         * редактировать — только для автора
+        * удалить — только для автора
         * поделиться — для всех
 
 2. `PullToRefreshBox`
@@ -395,6 +499,7 @@ fun EventDetailScreen(
     * date
     * address
     * `LocationInfoView`
+    * add to calendar button (`if (event.isCurrent)`)
     * participants section (`if (isAuthorized)`)
     * `PhotoSectionView`
     * description
@@ -411,9 +516,21 @@ fun EventDetailScreen(
 **Правила интеракций:**
 
 * во время `isRefreshing` отключать кликабельные действия, где это уместно
-* у автора показывать edit action
+* у автора показывать edit и delete actions
 * для неавторизованного пользователя клик по автору/автору комментария только логируется
 * для автора использовать встроенные `enabled`/`onClick` в `UserRowView`, а для `CommentRowView` предусмотреть расширение API или отдельную обёртку для клика по автору
+* меню действий комментария в первой версии не показывать, чтобы не выводить неподдерживаемый `REPORT`
+* удаление мероприятия и удаление фото должны идти через confirm alert/dialog по аналогии с подтверждением удаления в Journals flow
+
+**Условия отображения секций по iOS-референсу:**
+
+* секция участников отображается только для авторизованных
+* строка с количеством участников отображается, если у события есть участники
+* toggle "Пойду на мероприятие" отображается только для предстоящего (`isCurrent`) события и только для авторизованных
+* кнопка "Добавить в календарь" отображается только для предстоящего (`isCurrent`) события
+* секция фотографий отображается, только если фотографии есть
+* секция описания отображается, только если описание не пустое
+* блок автора и комментарии отображаются всегда
 
 **Критерии завершения:**
 
@@ -423,9 +540,14 @@ fun EventDetailScreen(
 * [ ] `ErrorContentView` отображается при ошибке
 * [ ] Секция участников скрыта для неавторизованных
 * [ ] Кнопка "Добавить комментарий" скрыта для неавторизованных
-* [ ] Меню редактирования видно только автору
+* [ ] Меню редактирования и удаления видно только автору
 * [ ] Клики корректно обрабатываются через ViewModel
 * [ ] Поддержка темной темы
+* [ ] На Android не отображаются жалобы на фото/комментарии
+* [ ] Кнопка "Добавить в календарь" открывает системный календарь
+* [ ] Удаление фото доступно только при `isEventAuthor == true`
+* [ ] Удаление мероприятия требует явного подтверждения в alert/dialog
+* [ ] Удаление фото требует явного подтверждения в alert/dialog
 
 ---
 
@@ -450,7 +572,14 @@ fun EventDetailScreen(
 | `event_add_comment`    | Add comment    | Добавить комментарий |
 | `event_open_map`       | Open on map    | Открыть на карте     |
 | `event_build_route`    | Build route    | Построить маршрут    |
+| `event_add_to_calendar`| Add to calendar| Добавить в календарь |
 | `event_edit`           | Edit event     | Редактировать        |
+| `event_delete`         | Delete event   | Удалить мероприятие  |
+| `event_delete_photo`   | Delete photo   | Удалить фото         |
+| `event_delete_confirm_title` | Delete? | Удалить? |
+| `event_delete_photo_confirm_title` | Delete photo? | Удалить фото? |
+| `common_delete`        | Delete         | Удалить              |
+| `common_cancel`        | Cancel         | Отмена               |
 | `event_share`          | Share          | Поделиться           |
 | `event_no_description` | No description | Нет описания         |
 | `event_location`       | Location       | Локация              |
@@ -487,11 +616,13 @@ composable(
     EventDetailScreen(
         onBack = { navController.popBackStack() },
         onEdit = { id -> /* следующая итерация */ },
+        onDelete = { id -> /* закрыть экран после успешного удаления */ },
         onShare = { /* следующая итерация */ },
         onParticipants = { /* следующая итерация */ },
         onAuthor = { /* следующая итерация */ },
         onGallery = { /* следующая итерация */ },
-        onAddComment = { /* следующая итерация */ }
+        onAddComment = { /* следующая итерация */ },
+        onAddToCalendar = { event -> /* открыть Android календарь через Intent */ }
     )
 }
 ```
@@ -532,6 +663,11 @@ composable(
 * [ ] `isEventAuthor` корректно вычисляется
 * [ ] Действия пользователя логируются
 * [ ] `onOpenMapClick()` и `onRouteClick()` формируют корректные данные
+* [ ] При отсутствии `eventId` ViewModel уходит в `Error` без сетевого запроса
+* [ ] Удаление мероприятия вызывает repository endpoint
+* [ ] Удаление фото вызывает repository endpoint
+* [ ] Удаление мероприятия не вызывает repository до подтверждения в alert/dialog
+* [ ] Удаление фото не вызывает repository до подтверждения в alert/dialog
 
 ### 7.2. UI / Preview
 
@@ -549,9 +685,15 @@ composable(
 * [ ] Неавторизованный пользователь не видит кнопку add comment
 * [ ] Авторизованный пользователь видит participants section
 * [ ] Автор мероприятия видит edit action
+* [ ] Автор мероприятия видит delete action
 * [ ] При refresh действия корректно блокируются
 * [ ] При отсутствии map app срабатывает fallback
 * [ ] Ошибка загрузки показывает `ErrorContentView`
+* [ ] Toggle "Пойду" виден только для авторизованного пользователя и только для предстоящего события
+* [ ] Кнопка "Добавить в календарь" видна только для предстоящего события
+* [ ] Жалобы на фото и комментарии не отображаются в UI
+* [ ] При удалении мероприятия сначала показывается alert/dialog с кнопками `Удалить` и `Отмена`
+* [ ] При удалении фото сначала показывается alert/dialog с кнопками `Удалить` и `Отмена`
 
 ---
 
@@ -594,13 +736,15 @@ composable(
 
     * **неавторизованных пользователей** — скрыты participants section и add comment
     * **авторизованных пользователей** — доступен полный сценарий просмотра
-    * **автора мероприятия** — видно edit action
+    * **автора мероприятия** — видны edit/delete action и доступно удаление фото
 
-4. **Фото:** переход в полноценную галерею можно перенести на следующую итерацию. В первой рабочей версии клик по фото может только логироваться.
+4. **Фото:** переход в полноценную галерею или photo detail можно перенести на следующую итерацию. В первой рабочей версии клик по фото может только логироваться, но удаление фото для автора должно быть поддержано через confirm alert/dialog.
 
-5. **Комментарии и social actions:** в первой рабочей версии допустимо оставить без API-интеграции, но UI и точки расширения должны быть готовы.
+5. **Комментарии и social actions:** в первой рабочей версии допустимо оставить без API-интеграции, но UI и точки расширения должны быть готовы. Жалобы на фото и комментарии в Android пока не выводить.
 
-6. **Навигация:** интеграцию делать через `RootScreen`, а не через `Navigation.kt`, так как `Navigation.kt` относится к нижней навигации.
+6. **Календарь:** если событие предстоящее (`isCurrent == true`), нужно показать кнопку добавления в календарь и открывать системный календарь через стандартный Android Intent без сторонних зависимостей.
+
+7. **Навигация:** интеграцию делать через `RootScreen`, а не через `Navigation.kt`, так как `Navigation.kt` относится к нижней навигации.
 
 ---
 
@@ -619,11 +763,8 @@ composable(
 * Toggle "Пойду" с optimistic update
 * Добавление комментария
 * Действия над комментариями
-* Редактирование/удаление мероприятия для автора
 
 ### Итерация 4 — Расширенный функционал
 
-* Добавление в календарь
-* Жалобы на фото/комментарии
 * Дополнительные action sheet / menu сценарии
 * Отдельное R&D по встроенному preview карты без платных сервисов

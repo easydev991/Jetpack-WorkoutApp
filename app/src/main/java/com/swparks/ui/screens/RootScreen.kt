@@ -33,6 +33,7 @@ import com.swparks.ui.screens.auth.LoginSheetHost
 import com.swparks.ui.screens.auth.RegisterSheetHost
 import com.swparks.ui.screens.events.EventsScreen
 import com.swparks.ui.screens.events.EventsTopAppBar
+import com.swparks.ui.screens.events.EventDetailScreen
 import com.swparks.ui.screens.journals.JournalEntriesScreen
 import com.swparks.ui.screens.journals.JournalsListCallbacks
 import com.swparks.ui.screens.journals.JournalsListScreen
@@ -306,9 +307,30 @@ fun RootScreen(appState: AppState) {
                 // TODO: Реализовать EditParkScreen
             }
 
-            // Детальные экраны мероприятий (будут добавлены позже)
-            composable(route = Screen.EventDetail.route) {
-                // TODO: Реализовать EventDetailScreen
+            // Детальные экраны мероприятий
+            composable(
+                route = Screen.EventDetail.route,
+                arguments = listOf(
+                    androidx.navigation.navArgument("eventId") {
+                        type = androidx.navigation.NavType.LongType
+                    },
+                    androidx.navigation.navArgument("source") {
+                        type = androidx.navigation.NavType.StringType
+                        defaultValue = "events"
+                    }
+                )
+            ) { navBackStackEntry ->
+                val eventDetailViewModel = remember(navBackStackEntry, appContainer) {
+                    appContainer.eventDetailViewModelFactory(navBackStackEntry.savedStateHandle)
+                }
+
+                EventDetailScreen(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    viewModel = eventDetailViewModel,
+                    onBack = { appState.navController.popBackStack() }
+                )
             }
 
             composable(route = Screen.CreateEvent.route) {
