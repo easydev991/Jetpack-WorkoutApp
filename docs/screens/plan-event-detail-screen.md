@@ -1,3 +1,5 @@
+---
+
 # План разработки экрана EventDetailScreen
 
 ## Обзор
@@ -146,213 +148,35 @@ val isEventAuthor: StateFlow<Boolean>
 
 ---
 
-## Этап 0: Подготовка архитектуры
+## Этап 0: Подготовка архитектуры [ГОТОВО]
 
-**Текущий статус (2026-03-09):** архитектурный baseline зафиксирован; остаются точечные уточнения API UI-компонентов перед этапами 2–4.
-
-### 0.1. Уточнение модели и контрактов
-
-**Задачи:**
-
-* Зафиксировать, что `eventId`, `authorId`, `currentUserId`, `commentAuthorId` имеют тип `Long`
-* Убрать лишнее дублирование состояния
-* Оставить back navigation в UI/navigation layer, а не во ViewModel
-* Расширить контракт data layer для удаления фото мероприятия:
-
-  * endpoint уже есть в `SWApi.deleteEventPhoto(eventId, photoId)`
-  * в `SWRepository` / его реализации нужно добавить соответствующий метод
-* Зафиксировать источник `eventId`:
-
-  * `eventId` известен уже в списке мероприятий
-  * переход на детальный экран выполняется с передачей `eventId` в маршрут `Screen.EventDetail`
-  * ViewModel читает `eventId` из `SavedStateHandle` по аргументу маршрута
-* Переименовать новый location-компонент в общий, не привязанный к park:
-
-  * `LocationInfoView`
-* Зафиксировать, как обрабатывается клик по автору для существующих `UserRowView` и `CommentRowView`
-
-**Критерии завершения:**
-
-* [x] Типы ID унифицированы
-* [x] Архитектурные решения по карте зафиксированы в плане (без реализации map snapshot на этом этапе)
-* [x] Компонент называется нейтрально и может переиспользоваться (`LocationInfoView`, реализация на этапе 2)
-* [x] `onBackClick()` не закладывается в интерфейс ViewModel
-* [x] Контракт удаления фото мероприятия описан до уровня repository
-* [x] Источник `eventId` и путь его передачи до ViewModel однозначно описаны
-* [ ] Понятно, какие компоненты уже поддерживают `onClick`, а какие требуют расширения API (закрыть при реализации `EventDetailScreen` и финализации интеграции `CommentRowView`)
-
-**Граница этапа 0 (чтобы избежать двусмысленности):**
-
-* Этап 0 фиксирует архитектурные решения и контракты.
-* Фактическая UI-реализация (`LocationInfoView`, `PhotoSectionView`, `EventDetailScreen`) выполняется только в этапах 2–4.
+- [x] Типы ID унифицированы (`Long`)
+- [x] Архитектурные решения по карте зафиксированы (без map snapshot)
+- [x] Компонент переименован в `LocationInfoView`
+- [x] `onBackClick()` не в интерфейсе ViewModel
+- [x] Контракт удаления фото описан до repository
+- [x] Источник `eventId` — `SavedStateHandle` из маршрута
+- [ ] Понятно, какие компоненты уже поддерживают `onClick` (закрыть при реализации `EventDetailScreen`)
 
 ---
 
-## Этап 1: UI State и ViewModel с реальной загрузкой
+## Этап 1: UI State и ViewModel с реальной загрузкой [ГОТОВО]
 
-**Текущий статус (2026-03-09):** реализовано, включая нативное открытие календаря через `EventDetailEvent.OpenCalendar` и обработку ошибки отсутствия календарного приложения через `UserNotifier`.
+### Реализовано
 
-### 1.1. UI State
-
-**Файл:** `app/src/main/java/com/swparks/ui/state/EventDetailUIState.kt`
-
-**Структура:**
-
-```kotlin
-sealed class EventDetailUIState {
-    data object InitialLoading : EventDetailUIState()
-
-    data class Content(
-        val event: Event,
-        val address: String
-    ) : EventDetailUIState()
-
-    data class Error(
-        val message: String?
-    ) : EventDetailUIState()
-}
-```
-
-**Отдельные StateFlow во ViewModel:**
-
-* `isRefreshing: StateFlow<Boolean>`
-* `isAuthorized: StateFlow<Boolean>`
-* `isEventAuthor: StateFlow<Boolean>`
-
-**Важно:**
-
-* `currentUserId` не хранить внутри `Content`, если он нужен только для вычисления `isEventAuthor`
-* `isLoading` внутри `Content` не дублировать, так как initial loading и refresh уже разведены по отдельным state
-
-**Критерии завершения:**
-
-* [x] Sealed class с состояниями `InitialLoading`, `Content`, `Error`
-* [x] Нет дублирования loading-состояний
-* [x] Нет лишних полей в `Content`
-
----
-
-### 1.2. ViewModel Interface
-
-**Файл:** `app/src/main/java/com/swparks/ui/viewmodel/IEventDetailViewModel.kt`
-
-**Свойства и методы:**
-
-```kotlin
-interface IEventDetailViewModel {
-    val uiState: StateFlow<EventDetailUIState>
-    val isRefreshing: StateFlow<Boolean>
-    val isAuthorized: StateFlow<Boolean>
-    val isEventAuthor: StateFlow<Boolean>
-
-    fun onEditClick()
-    fun onDeleteClick()
-    fun onShareClick()
-
-    fun onParticipantToggle()
-    fun onParticipantsCountClick()
-
-    fun onAuthorClick(authorId: Long)
-    fun onCommentAuthorClick(authorId: Long)
-
-    fun onOpenMapClick()
-    fun onRouteClick()
-
-    fun onAddToCalendarClick()
-    fun onPhotoClick(photo: Photo)
-    fun onPhotoDeleteClick(photo: Photo)
-
-    fun onAddCommentClick()
-    fun onCommentActionClick(commentId: Long, action: CommentAction)
-
-    fun refresh()
-}
-```
-
-**Критерии завершения:**
-
-* [x] Интерфейс определён
-* [x] Нет `onBackClick()`
-* [x] Все пользовательские действия покрыты отдельными методами
-* [x] Действия карты разделены на `onOpenMapClick()` и `onRouteClick()`
-* [x] Методы клика по пользователю принимают `authorId`, а не `commentId`
-* [x] В интерфейсе нет методов для жалоб на фото/комментарии, которых пока нет в Android
-* [x] В интерфейсе есть действия для удаления мероприятия, удаления фото и добавления в календарь
-* [x] `onCommentActionClick(...)` зарезервирован под следующие итерации и не требует показа `REPORT` в первой версии
-
----
-
-### 1.3. ViewModel Implementation
-
-**Файл:** `app/src/main/java/com/swparks/ui/viewmodel/EventDetailViewModel.kt`
-
-**Зависимости:**
-
-* `SWRepository` — для `getEvent(id: Long)`, `deleteEvent(eventId: Long)` и удаления фото мероприятия после расширения repository-контракта
-* `CountriesRepository` — для получения адреса
-* `UserPreferencesRepository` — для авторизации и `currentUserId`
-* `Logger` — для логирования
-* `UserNotifier` — для обработки ошибок
-
-**Инициализация:**
-
-* Получить `eventId` из `SavedStateHandle` по route argument `eventId`
-* Загрузить данные мероприятия через `repository.getEvent(id)`
-* Построить адрес через `CountriesRepository`
-* Получить `currentUserId` из preferences
-* Вычислить `isAuthorized`
-* Вычислить `isEventAuthor`
-
-**Если `eventId` отсутствует:**
-
-* записать ошибку в лог
-* перевести экран в `Error`
-* не выполнять запрос `getEvent()`
-
-**Логика адреса:**
-
-* Переиспользовать подход из `EventsScreen`
-* Зафиксировать порядок fallback:
-
-  * `страна + город`
-  * `страна`
-  * `город`
-  * `event.address`, если сервер его прислал
-  * строка вида `"countryId, cityId"`
-
-**Логика загрузки:**
-
-* initial loading → `InitialLoading`
-* успешная загрузка → `Content`
-* ошибка → `Error`
-* pull-to-refresh обновляет данные реально, а не только логирует
-
-**Дополнительные действия первой версии:**
-
-* удаление мероприятия для автора выполняется реально через repository endpoint, но только после подтверждения в alert/dialog
-* удаление фото мероприятия для автора выполняется реально через repository endpoint, но только после подтверждения в alert/dialog
-* добавление в календарь выполняется нативно через Android `Intent` / `CalendarContract`, без внешних зависимостей
-
-**Критерии завершения:**
-
-* [x] ViewModel реально загружает мероприятие
-* [x] Pull-to-refresh реально обновляет данные
-* [x] Адрес строится через `CountriesRepository`
-* [x] `isAuthorized` и `isEventAuthor` корректно вычисляются
-* [x] Ошибки уходят через `UserNotifier` и/или `Error` state
-* [x] Логирование действий пользователей добавлено
-* [x] При отсутствии `eventId` экран корректно переходит в `Error`
-* [x] Удаление мероприятия для автора работает
-* [x] Удаление фото мероприятия для автора работает
-* [x] Перед удалением мероприятия показывается confirm alert/dialog
-* [x] Перед удалением фото показывается confirm alert/dialog
-* [x] Добавление события в календарь открывается нативно через Android Intent
-
-**Итог по этапу 1:**
-
-* Flow `OpenCalendar` подключён в `EventDetailScreen`
-* При `ActivityNotFoundException` ошибка уходит во ViewModel и показывается через `UserNotifier`
-* Отдельной проверки сценария на устройстве/эмуляторе в плане тестирования пока не закрыто
+- [x] `EventDetailUIState` (sealed class: InitialLoading, Content, Error)
+- [x] `IEventDetailViewModel` — интерфейс с 21 методом
+- [x] `EventDetailViewModel` — полная реализация:
+  - Загрузка мероприятия через `SWRepository.getEvent()`
+  - Pull-to-refresh с реальным обновлением данных
+  - Адрес через `CountriesRepository`
+  - `isAuthorized` и `isEventAuthor` через `UserPreferencesRepository`
+  - Удаление мероприятия с confirm dialog
+  - Удаление фото с confirm dialog
+  - Добавление в календарь через Android Intent
+  - Обработка ошибок через `UserNotifier`
+- [x] `deleteEventPhoto(eventId, photoId)` добавлен в `SWRepository`
+- [x] Factory метод в `AppContainer` с `@Suppress("TooManyFunctions")`
 
 ---
 
@@ -446,8 +270,6 @@ data class PhotoSectionConfig(
 
 ## Этап 4: UI Screen
 
-**Текущий статус (2026-03-09):** базовый `EventDetailScreen` уже существует и подключён, но реализована только часть секций первой версии.
-
 ### 4.1. EventDetailScreen
 
 **Файл:** `app/src/main/java/com/swparks/ui/screens/events/EventDetailScreen.kt`
@@ -523,7 +345,7 @@ fun EventDetailScreen(
 * у автора показывать edit и delete actions
 * для неавторизованного пользователя клик по автору/автору комментария только логируется
 * для автора использовать встроенные `enabled`/`onClick` в `UserRowView`, а для `CommentRowView` предусмотреть расширение API или отдельную обёртку для клика по автору
-* меню действий комментария в первой версии не показывать, чтобы не выводить неподдерживаемый `REPORT`
+* меню действий комментария в первой версии не показывать, чтобы не вывести неподдерживаемый `REPORT`
 * удаление мероприятия и удаление фото должны идти через confirm alert/dialog по аналогии с подтверждением удаления в Journals flow
 
 **Условия отображения секций по iOS-референсу:**
@@ -563,8 +385,6 @@ fun EventDetailScreen(
 ---
 
 ## Этап 5: Локализация
-
-**Текущий статус (2026-03-09):** частично выполнено.
 
 ### 5.1. Строковые ресурсы
 
@@ -610,8 +430,6 @@ fun EventDetailScreen(
 ---
 
 ## Этап 6: Интеграция в навигацию
-
-**Текущий статус (2026-03-09):** частично выполнено.
 
 ### 6.1. Интеграция в RootScreen / основной NavHost
 
@@ -675,8 +493,6 @@ composable(
 
 ## Этап 7: Тестирование
 
-**Текущий статус (2026-03-09):** не начато для `EventDetail`.
-
 ### 7.1. Unit-тесты ViewModel
 
 **Файл:** `app/src/test/java/com/swparks/ui/viewmodel/EventDetailViewModelTest.kt`
@@ -728,8 +544,8 @@ composable(
 
 ## Порядок реализации
 
-1. **Этап 0** → Подготовка архитектуры
-2. **Этап 1** → UI State + ViewModel + реальная загрузка
+1. **Этап 0** → Подготовка архитектуры ✅
+2. **Этап 1** → UI State + ViewModel + реальная загрузка ✅
 3. **Этап 2** → `LocationInfoView`
 4. **Этап 3** → `PhotoSectionView`
 5. **Этап 4** → `EventDetailScreen`
