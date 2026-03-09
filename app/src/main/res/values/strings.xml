@@ -198,6 +198,8 @@
     <string name="save">Save</string>
 
     <string name="event_title">Event</string>
+    <string name="event_description">Description</string>
+    <string name="event_author">Organizer</string>
     <string name="event_open_map">Open on map</string>
     <string name="event_build_route">Build route</string>
     <string name="event_add_to_calendar">Add to calendar</string>

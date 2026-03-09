@@ -198,6 +198,8 @@
     <string name="save">Сохранить</string>
 
     <string name="event_title">Мероприятие</string>
+    <string name="event_description">Описание</string>
+    <string name="event_author">Организатор</string>
     <string name="event_open_map">Открыть на карте</string>
     <string name="event_build_route">Построить маршрут</string>
     <string name="event_add_to_calendar">Добавить в календарь</string>

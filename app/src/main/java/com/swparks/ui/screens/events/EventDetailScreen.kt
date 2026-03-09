@@ -5,13 +5,8 @@ package com.swparks.ui.screens.events
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.provider.CalendarContract
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -38,26 +33,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
 import com.swparks.data.model.Comment
-import com.swparks.ui.ds.ButtonConfig
-import com.swparks.ui.ds.CommentRowData
-import com.swparks.ui.ds.CommentRowView
 import com.swparks.ui.ds.ErrorContentView
-import com.swparks.ui.ds.FormRowView
 import com.swparks.ui.ds.LoadingOverlayView
-import com.swparks.ui.ds.LocationInfoConfig
-import com.swparks.ui.ds.LocationInfoView
-import com.swparks.ui.ds.SWButton
-import com.swparks.ui.ds.SWButtonMode
-import com.swparks.ui.ds.SWButtonSize
-import com.swparks.ui.ds.UserRowData
-import com.swparks.ui.ds.UserRowView
 import com.swparks.ui.state.EventDetailUIState
 import com.swparks.ui.viewmodel.EventDetailEvent
 import com.swparks.ui.viewmodel.IEventDetailViewModel
@@ -76,6 +57,7 @@ fun EventDetailScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isAuthorized by viewModel.isAuthorized.collectAsState()
     val isEventAuthor by viewModel.isEventAuthor.collectAsState()
+    val currentUserId by viewModel.currentUserId.collectAsState()
 
     var showDeleteEventDialog by remember { mutableStateOf(false) }
     var showDeletePhotoDialog by remember { mutableStateOf(false) }
@@ -179,128 +161,55 @@ fun EventDetailScreen(
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(
-                            dimensionResource(R.dimen.spacing_small)
+                            dimensionResource(R.dimen.spacing_regular)
                         )
                     ) {
                         item {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(dimensionResource(R.dimen.spacing_regular)),
-                                verticalArrangement = Arrangement.spacedBy(
-                                    dimensionResource(R.dimen.spacing_small)
-                                )
-                            ) {
-                                Text(
-                                    text = state.event.title,
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-
-                                LabeledValueRow(
-                                    label = stringResource(R.string.`when`),
-                                    value = DateFormatter.formatDate(
-                                        context = context,
-                                        dateString = state.event.beginDate
-                                    )
-                                )
-
-                                LabeledValueRow(
-                                    label = stringResource(R.string.where),
-                                    value = state.address
-                                )
-
-                                val eventAddress = state.event.address
-                                if (!eventAddress.isNullOrBlank()) {
-                                    LabeledValueRow(
-                                        label = stringResource(R.string.address),
-                                        value = eventAddress
-                                    )
-                                }
-
-                                LocationInfoView(
-                                    config = LocationInfoConfig(
-                                        latitude = state.event.latitude,
-                                        longitude = state.event.longitude,
-                                        address = state.address,
-                                        onOpenMapClick = viewModel::onOpenMapClick,
-                                        onRouteClick = viewModel::onRouteClick
-                                    )
-                                )
-                                if (state.event.isCurrent) {
-                                    SWButton(
-                                        config = ButtonConfig(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            size = SWButtonSize.LARGE,
-                                            mode = SWButtonMode.FILLED,
-                                            text = stringResource(R.string.event_add_to_calendar),
-                                            enabled = !isRefreshing,
-                                            onClick = viewModel::onAddToCalendarClick
-                                        )
-                                    )
-                                }
-                                if (isAuthorized) {
-                                    state.event.trainingUsersCount?.let { count ->
-                                        FormRowView(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            leadingText = stringResource(R.string.participants),
-                                            trailingText = pluralStringResource(
-                                                id = R.plurals.peopleCount,
-                                                count = count,
-                                                count
-                                            ),
-                                            enabled = !isRefreshing,
-                                            onClick = {
-                                                Log.d(
-                                                    "EventDetailScreen",
-                                                    "Нажаты участники: count=$count"
-                                                )
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        item {
-                            UserRowView(
-                                data = UserRowData(
-                                    modifier = Modifier.padding(
-                                        horizontal = dimensionResource(R.dimen.spacing_regular)
-                                    ),
-                                    enabled = isAuthorized && !isRefreshing,
-                                    imageStringURL = state.event.author.image,
-                                    name = state.event.author.name,
-                                    address = state.address,
-                                    onClick = {
-                                        onNavigateToUserProfile(state.event.author.id)
-                                    }
+                            EventHeaderMapCalendarSection(
+                                event = state.event,
+                                address = state.address,
+                                isRefreshing = isRefreshing,
+                                callbacks = EventHeaderCallbacks(
+                                    onOpenMapClick = viewModel::onOpenMapClick,
+                                    onRouteClick = viewModel::onRouteClick,
+                                    onAddToCalendarClick = viewModel::onAddToCalendarClick
                                 )
                             )
                         }
 
+                        item {
+                            EventParticipantsSection(
+                                event = state.event,
+                                isAuthorized = isAuthorized,
+                                isRefreshing = isRefreshing,
+                                onParticipantToggle = viewModel::onParticipantToggle,
+                                onClickParticipants = viewModel::onParticipantsCountClick
+                            )
+                        }
+
+                        if (state.event.description.isNotBlank()) {
+                            item {
+                                EventDescriptionSection(description = state.event.description)
+                            }
+                        }
+
+                        item {
+                            EventAuthorSection(
+                                event = state.event,
+                                address = state.address,
+                                isAuthorized = isAuthorized,
+                                isRefreshing = isRefreshing,
+                                onAuthorClick = onNavigateToUserProfile
+                            )
+                        }
+
                         items(state.event.comments.orEmpty(), key = Comment::id) { comment ->
-                            val author = comment.user
-                            CommentRowView(
-                                data = CommentRowData(
-                                    modifier = Modifier.padding(
-                                        horizontal = dimensionResource(R.dimen.spacing_regular)
-                                    ),
-                                    imageStringURL = author?.image,
-                                    authorName = author?.name ?: "",
-                                    dateString = DateFormatter.formatDate(
-                                        context = context,
-                                        dateString = comment.date
-                                    ),
-                                    bodyText = comment.parsedBody.orEmpty(),
-                                    enabled = isAuthorized,
-                                    byMainUser = false,
-                                    onAuthorClick = {
-                                        author?.id?.let(onNavigateToUserProfile)
-                                    },
-                                    onClickAction = { action ->
-                                        viewModel.onCommentActionClick(comment.id, action)
-                                    }
-                                )
+                            EventCommentItem(
+                                comment = comment,
+                                isAuthorized = isAuthorized,
+                                currentUserId = currentUserId,
+                                onAuthorClick = onNavigateToUserProfile,
+                                onActionClick = viewModel::onCommentActionClick
                             )
                         }
                     }
@@ -378,79 +287,11 @@ fun EventDetailScreen(
  * @param value Текст значения (отображается справа, выравнивание по правому краю)
  * @param modifier Modifier для компонента
  */
-@Composable
-private fun LabeledValueRow(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(
-            dimensionResource(R.dimen.spacing_xxsmall)
-        )
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Medium
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.End
-        )
-    }
-}
-
 @Suppress("UnusedPrivateMember")
-@Preview(name = "Short text", showBackground = true)
+@Preview(name = "EventDetailScreen", showBackground = true)
 @Composable
-private fun LabeledValueRowShortPreview() {
+private fun EventDetailScreenPreview() {
     MaterialTheme {
-        LabeledValueRow(
-            label = "Когда",
-            value = "15 марта 2026",
-            modifier = Modifier.padding(dimensionResource(R.dimen.spacing_regular))
-        )
-    }
-}
-
-@Suppress("UnusedPrivateMember")
-@Preview(name = "Long text", showBackground = true)
-@Composable
-private fun LabeledValueRowLongPreview() {
-    MaterialTheme {
-        LabeledValueRow(
-            label = "Адрес",
-            value = "г. Москва, парк Горького, Центральная аллея, д. 1, около главного входа",
-            modifier = Modifier.padding(dimensionResource(R.dimen.spacing_regular))
-        )
-    }
-}
-
-@Suppress("UnusedPrivateMember")
-@Preview(name = "Mixed texts", showBackground = true)
-@Composable
-private fun LabeledValueRowMixedPreview() {
-    MaterialTheme {
-        Column(
-            modifier = Modifier.padding(dimensionResource(R.dimen.spacing_regular)),
-            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
-        ) {
-            LabeledValueRow(
-                label = "Когда",
-                value = "15 марта"
-            )
-            LabeledValueRow(
-                label = "Где",
-                value = "Парк"
-            )
-            LabeledValueRow(
-                label = "Адрес",
-                value = "г. Москва, парк Горького, Центральная аллея, д. 1"
-            )
-        }
+        Text("EventDetailScreen Preview")
     }
 }

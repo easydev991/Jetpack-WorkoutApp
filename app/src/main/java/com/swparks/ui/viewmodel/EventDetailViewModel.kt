@@ -153,6 +153,10 @@ class EventDetailViewModel(
     private val _isEventAuthor = MutableStateFlow(false)
     override val isEventAuthor: StateFlow<Boolean> = _isEventAuthor.asStateFlow()
 
+    // Текущий пользователь
+    private val _currentUserId = MutableStateFlow<Long?>(null)
+    override val currentUserId: StateFlow<Long?> = _currentUserId.asStateFlow()
+
     // URI для карты
     override val mapUriSet: MapUriSet?
         get() {
@@ -178,9 +182,6 @@ class EventDetailViewModel(
     private val _events = MutableSharedFlow<EventDetailEvent>()
     override val events: SharedFlow<EventDetailEvent> = _events.asSharedFlow()
 
-    // Текущий пользователь
-    private var currentUserId: Long? = null
-
     // Фото для удаления (временно хранится до подтверждения)
     private var pendingDeletePhoto: Photo? = null
 
@@ -199,7 +200,7 @@ class EventDetailViewModel(
         }
         viewModelScope.launch {
             userPreferencesRepository.currentUserId.collect { userId ->
-                currentUserId = userId
+                _currentUserId.value = userId
                 updateIsEventAuthor()
                 logger.d(TAG, "Текущий userId: $userId")
             }
@@ -210,10 +211,11 @@ class EventDetailViewModel(
         val currentState = _uiState.value
         if (currentState is EventDetailUIState.Content) {
             val eventAuthorId = currentState.event.author.id
-            _isEventAuthor.value = currentUserId != null && currentUserId == eventAuthorId
+            _isEventAuthor.value = _currentUserId.value != null && _currentUserId.value == eventAuthorId
             logger.d(
                 TAG,
-                "isEventAuthor: ${_isEventAuthor.value} (currentUserId=$currentUserId, authorId=$eventAuthorId)"
+                "isEventAuthor: ${_isEventAuthor.value} " +
+                    "(currentUserId=${_currentUserId.value}, authorId=$eventAuthorId)"
             )
         }
     }

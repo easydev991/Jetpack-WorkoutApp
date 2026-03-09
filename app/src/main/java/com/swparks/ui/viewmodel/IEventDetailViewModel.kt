@@ -40,6 +40,11 @@ interface IEventDetailViewModel {
     val isEventAuthor: StateFlow<Boolean>
 
     /**
+     * Идентификатор текущего авторизованного пользователя.
+     */
+    val currentUserId: StateFlow<Long?>
+
+    /**
      * Набор URI для работы с картой (geo, browser, navigation, route).
      * Вычисляется на основе координат мероприятия.
      */
