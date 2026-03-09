@@ -3,6 +3,7 @@ package com.swparks.util
 import android.content.Context
 import android.util.Log
 import androidx.annotation.VisibleForTesting
+import com.swparks.util.DateFormatter.parseIsoDate
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.ZoneId
@@ -143,6 +144,22 @@ object DateFormatter {
         }
 
         throw IllegalArgumentException("Не удалось распарсить дату: $dateString")
+    }
+
+    /**
+     * Парсит дату из формата ISO8601 и возвращает время в миллисекундах
+     *
+     * Поддерживаемые форматы такие же, как в [parseIsoDate]
+     *
+     * @param dateString Дата в формате ISO8601
+     * @return Время в миллисекундах или null, если дату невозможно распарсить
+     */
+    fun parseIsoDateToMillis(dateString: String): Long? {
+        return try {
+            parseIsoDate(dateString).time
+        } catch (_: Exception) {
+            null
+        }
     }
 }
 

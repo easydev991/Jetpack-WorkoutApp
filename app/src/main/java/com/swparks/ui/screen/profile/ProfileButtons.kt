@@ -1,7 +1,5 @@
 package com.swparks.ui.screen.profile
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -25,25 +23,18 @@ fun FriendsButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(
-                enabled = enabled,
-                onClick = onClick
-            )
-    ) {
-        FormRowView(
-            leadingText = stringResource(id = R.string.friends),
-            trailingText = pluralStringResource(
-                id = R.plurals.friendsCount,
-                count = friendsCount,
-                friendsCount
-            ),
-            badgeValue = if (friendRequestsCount > 0) friendRequestsCount else null,
-            enabled = enabled
-        )
-    }
+    FormRowView(
+        modifier = modifier.fillMaxWidth(),
+        leadingText = stringResource(id = R.string.friends),
+        trailingText = pluralStringResource(
+            id = R.plurals.friendsCount,
+            count = friendsCount,
+            friendsCount
+        ),
+        badgeValue = if (friendRequestsCount > 0) friendRequestsCount else null,
+        enabled = enabled,
+        onClick = onClick
+    )
 }
 
 /**
@@ -56,24 +47,17 @@ fun UsedParksButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(
-                enabled = enabled,
-                onClick = onClick
-            )
-    ) {
-        FormRowView(
-            leadingText = stringResource(id = R.string.where_trains),
-            trailingText = pluralStringResource(
-                id = R.plurals.parksCount,
-                count = parksCount,
-                parksCount
-            ),
-            enabled = enabled
-        )
-    }
+    FormRowView(
+        modifier = modifier.fillMaxWidth(),
+        leadingText = stringResource(id = R.string.where_trains),
+        trailingText = pluralStringResource(
+            id = R.plurals.parksCount,
+            count = parksCount,
+            parksCount
+        ),
+        enabled = enabled,
+        onClick = onClick
+    )
 }
 
 /**
@@ -86,24 +70,17 @@ fun AddedParksButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(
-                enabled = enabled,
-                onClick = onClick
-            )
-    ) {
-        FormRowView(
-            leadingText = stringResource(id = R.string.male_added_parks),
-            trailingText = pluralStringResource(
-                id = R.plurals.parksCount,
-                count = addedParksCount,
-                addedParksCount
-            ),
-            enabled = enabled
-        )
-    }
+    FormRowView(
+        modifier = modifier.fillMaxWidth(),
+        leadingText = stringResource(id = R.string.male_added_parks),
+        trailingText = pluralStringResource(
+            id = R.plurals.parksCount,
+            count = addedParksCount,
+            addedParksCount
+        ),
+        enabled = enabled,
+        onClick = onClick
+    )
 }
 
 /**
@@ -116,26 +93,42 @@ fun JournalsButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(
-                enabled = enabled,
-                onClick = onClick
+    FormRowView(
+        modifier = modifier.fillMaxWidth(),
+        leadingText = stringResource(id = R.string.journals),
+        trailingText = if (journalsCount > 0) {
+            pluralStringResource(
+                id = R.plurals.journalsCount,
+                count = journalsCount,
+                journalsCount
             )
-    ) {
-        FormRowView(
-            leadingText = stringResource(id = R.string.journals),
-            trailingText = if (journalsCount > 0) {
-                pluralStringResource(
-                    id = R.plurals.journalsCount,
-                    count = journalsCount,
-                    journalsCount
-                )
-            } else {
-                ""
-            },
-            enabled = enabled
-        )
-    }
+        } else {
+            ""
+        },
+        enabled = enabled,
+        onClick = onClick
+    )
+}
+
+/**
+ * Кнопка перехода к черному списку.
+ */
+@Composable
+fun BlacklistButton(
+    blacklistCount: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    FormRowView(
+        modifier = modifier.fillMaxWidth(),
+        leadingText = stringResource(id = R.string.black_list),
+        trailingText = pluralStringResource(
+            id = R.plurals.peopleCount,
+            count = blacklistCount,
+            blacklistCount
+        ),
+        enabled = enabled,
+        onClick = onClick
+    )
 }

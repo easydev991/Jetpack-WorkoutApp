@@ -48,6 +48,7 @@ import com.swparks.util.DateFormatter
 fun EventsScreen(
     modifier: Modifier = Modifier,
     viewModel: IEventsViewModel = viewModel<EventsViewModel>(factory = EventsViewModel.Factory),
+    onNavigateToEventDetail: (Long) -> Unit = {},
 ) {
     val uiState by viewModel.eventsUIState.collectAsState()
     val isAuthorized by viewModel.isAuthorized.collectAsState()
@@ -101,7 +102,10 @@ fun EventsScreen(
                             isRefreshing = isRefreshing,
                             isLoading = state.isLoading,
                             onRefresh = { viewModel.refresh() },
-                            onEventClick = { event -> viewModel.onEventClick(event) }
+                            onEventClick = { event ->
+                                viewModel.onEventClick(event)
+                                onNavigateToEventDetail(event.id)
+                            }
                         )
                         if (state.isLoading && !isRefreshing) {
                             LoadingOverlayView()

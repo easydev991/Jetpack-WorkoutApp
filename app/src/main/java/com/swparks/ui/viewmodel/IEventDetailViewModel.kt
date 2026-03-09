@@ -2,6 +2,7 @@ package com.swparks.ui.viewmodel
 
 import com.swparks.data.model.Photo
 import com.swparks.ui.ds.CommentAction
+import com.swparks.ui.model.MapUriSet
 import com.swparks.ui.state.EventDetailUIState
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,6 +40,12 @@ interface IEventDetailViewModel {
     val isEventAuthor: StateFlow<Boolean>
 
     /**
+     * Набор URI для работы с картой (geo, browser, navigation, route).
+     * Вычисляется на основе координат мероприятия.
+     */
+    val mapUriSet: MapUriSet?
+
+    /**
      * Обработка нажатия на кнопку редактирования мероприятия.
      */
     fun onEditClick()
@@ -74,20 +81,6 @@ interface IEventDetailViewModel {
      * Обработка нажатия на количество участников.
      */
     fun onParticipantsCountClick()
-
-    /**
-     * Обработка нажатия на автора мероприятия.
-     *
-     * @param authorId Идентификатор автора
-     */
-    fun onAuthorClick(authorId: Long)
-
-    /**
-     * Обработка нажатия на автора комментария.
-     *
-     * @param authorId Идентификатор автора комментария
-     */
-    fun onCommentAuthorClick(authorId: Long)
 
     /**
      * Обработка нажатия на кнопку "Открыть на карте".

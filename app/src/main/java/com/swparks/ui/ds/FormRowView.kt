@@ -38,10 +38,14 @@ private object FormRowViewPreviewConstants {
 private fun FormRowViewContainer(
     modifier: Modifier = Modifier,
     enabled: Boolean,
+    onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     FormCardContainer(
-        params = FormCardContainerParams(enabled = enabled)
+        params = FormCardContainerParams(
+            enabled = enabled,
+            onClick = onClick
+        )
     ) {
         FormRowContainer(
             config = FormRowConfig(
@@ -62,19 +66,23 @@ private fun FormRowViewContainer(
  * @param leadingText Текст слева
  * @param trailingText Текст справа
  * @param badgeValue Цифра в бейджике (если передать null, то без бейджика)
- * @param enabled Влияет на отображение шеврона справа
+ * @param enabled Влияет на отображение шеврона и доступность нажатия
+ * @param onClick Callback при нажатии. Если null, то клик не обрабатывается
  */
+@Suppress("LongParameterList")
 @Composable
 fun FormRowView(
     modifier: Modifier = Modifier,
     leadingText: String,
     trailingText: String = "",
     badgeValue: Int? = null,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    onClick: (() -> Unit)? = null
 ) {
     FormRowViewContainer(
         modifier = modifier.padding(vertical = dimensionResource(id = R.dimen.spacing_small)),
-        enabled = enabled
+        enabled = enabled,
+        onClick = onClick
     ) {
         Text(
             text = leadingText,
@@ -103,7 +111,7 @@ fun FormRowView(
                 )
             }
             AnimatedVisibility(
-                visible = enabled,
+                visible = enabled && onClick != null,
                 enter = fadeIn() + expandHorizontally(),
                 exit = fadeOut() + shrinkHorizontally()
             ) {
@@ -131,7 +139,7 @@ fun SwitchFormRowView(
     onCheckedChange: (Boolean) -> Unit
 ) {
     FormRowViewContainer(
-        modifier = modifier.padding(vertical = dimensionResource(id = R.dimen.spacing_xxsmall)),
+        modifier = modifier,
         enabled = isEnabled
     ) {
         Text(

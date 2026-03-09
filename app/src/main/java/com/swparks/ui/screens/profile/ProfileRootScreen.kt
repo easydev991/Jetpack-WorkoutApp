@@ -1,6 +1,5 @@
 package com.swparks.ui.screens.profile
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +33,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
@@ -42,7 +40,6 @@ import com.swparks.data.AppContainer
 import com.swparks.navigation.AppState
 import com.swparks.navigation.Screen
 import com.swparks.ui.ds.ButtonConfig
-import com.swparks.ui.ds.FormRowView
 import com.swparks.ui.ds.IncognitoProfileView
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.SWButton
@@ -50,6 +47,11 @@ import com.swparks.ui.ds.SWButtonMode
 import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.ds.UserProfileCardView
 import com.swparks.ui.ds.UserProfileData
+import com.swparks.ui.screen.profile.AddedParksButton
+import com.swparks.ui.screen.profile.BlacklistButton
+import com.swparks.ui.screen.profile.FriendsButton
+import com.swparks.ui.screen.profile.JournalsButton
+import com.swparks.ui.screen.profile.UsedParksButton
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.IProfileViewModel
 import com.swparks.ui.viewmodel.ProfileUiState
@@ -322,166 +324,6 @@ private fun EditProfileButton(
             onClick = onClick
         )
     )
-}
-
-/**
- * Кнопка "Друзья"
- */
-@Composable
-private fun FriendsButton(
-    friendsCount: Int,
-    friendRequestsCount: Int,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(
-                enabled = enabled,
-                onClick = onClick
-            )
-    ) {
-        FormRowView(
-            leadingText = stringResource(id = R.string.friends),
-            trailingText = if (friendsCount > 0) {
-                pluralStringResource(
-                    id = R.plurals.friendsCount,
-                    count = friendsCount,
-                    friendsCount
-                )
-            } else {
-                ""
-            },
-            badgeValue = if (friendRequestsCount > 0) friendRequestsCount else null,
-            enabled = enabled
-        )
-    }
-}
-
-/**
- * Кнопка "Где тренируется"
- */
-@Composable
-private fun UsedParksButton(
-    parksCount: Int,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(
-                enabled = enabled,
-                onClick = onClick
-            )
-    ) {
-        FormRowView(
-            leadingText = stringResource(id = R.string.where_trains),
-            trailingText = pluralStringResource(
-                id = R.plurals.parksCount,
-                count = parksCount,
-                parksCount
-            ),
-            enabled = enabled
-        )
-    }
-}
-
-/**
- * Кнопка "Добавленные площадки"
- */
-@Composable
-private fun AddedParksButton(
-    addedParksCount: Int,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(
-                enabled = enabled,
-                onClick = onClick
-            )
-    ) {
-        FormRowView(
-            leadingText = stringResource(id = R.string.male_added_parks),
-            trailingText = pluralStringResource(
-                id = R.plurals.parksCount,
-                count = addedParksCount,
-                addedParksCount
-            ),
-            enabled = enabled
-        )
-    }
-}
-
-/**
- * Кнопка "Дневники"
- */
-@Composable
-private fun JournalsButton(
-    journalsCount: Int,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(
-                enabled = enabled,
-                onClick = onClick
-            )
-    ) {
-        FormRowView(
-            leadingText = stringResource(id = R.string.journals),
-            trailingText = if (journalsCount > 0) {
-                pluralStringResource(
-                    id = R.plurals.journalsCount,
-                    count = journalsCount,
-                    journalsCount
-                )
-            } else {
-                ""
-            },
-            enabled = enabled
-        )
-    }
-}
-
-/**
- * Кнопка "Черный список"
- */
-@Composable
-private fun BlacklistButton(
-    blacklistCount: Int,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(
-                enabled = enabled,
-                onClick = onClick
-            )
-    ) {
-        FormRowView(
-            leadingText = stringResource(id = R.string.black_list),
-            trailingText = pluralStringResource(
-                id = R.plurals.peopleCount,
-                count = blacklistCount,
-                blacklistCount
-            ),
-            enabled = enabled
-        )
-    }
 }
 
 /**

@@ -5,18 +5,25 @@ package com.swparks.ui.screens.events
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.provider.CalendarContract
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -33,30 +40,36 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.core.net.toUri
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
 import com.swparks.data.model.Comment
+import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.CommentRowData
 import com.swparks.ui.ds.CommentRowView
 import com.swparks.ui.ds.ErrorContentView
+import com.swparks.ui.ds.FormRowView
 import com.swparks.ui.ds.LoadingOverlayView
+import com.swparks.ui.ds.LocationInfoConfig
+import com.swparks.ui.ds.LocationInfoView
+import com.swparks.ui.ds.SWButton
+import com.swparks.ui.ds.SWButtonMode
+import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.ds.UserRowData
 import com.swparks.ui.ds.UserRowView
 import com.swparks.ui.state.EventDetailUIState
 import com.swparks.ui.viewmodel.EventDetailEvent
 import com.swparks.ui.viewmodel.IEventDetailViewModel
 import com.swparks.util.DateFormatter
-import java.text.ParseException
-import java.text.SimpleDateFormat
-import java.util.Locale
-import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventDetailScreen(
     modifier: Modifier = Modifier,
     viewModel: IEventDetailViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToUserProfile: (Long) -> Unit
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -75,7 +88,7 @@ fun EventDetailScreen(
                 EventDetailEvent.EventDeleted -> onBack()
                 is EventDetailEvent.PhotoDeleted -> Unit
                 is EventDetailEvent.OpenCalendar -> {
-                    val beginTime = parseEventDateToMillis(event.beginDate)
+                    val beginTime = DateFormatter.parseIsoDateToMillis(event.beginDate)
                     val intent = Intent(Intent.ACTION_INSERT).apply {
                         data = CalendarContract.Events.CONTENT_URI
                         putExtra(CalendarContract.Events.TITLE, event.title)
@@ -92,28 +105,26 @@ fun EventDetailScreen(
                 }
 
                 is EventDetailEvent.OpenMap -> {
-                    val geoUri = "geo:${event.latitude},${event.longitude}?q=${event.latitude},${event.longitude}"
-                        .toUri()
-                    val intent = Intent(Intent.ACTION_VIEW, geoUri)
-                    try {
-                        context.startActivity(intent)
-                    } catch (_: ActivityNotFoundException) {
-                        val browserUri =
-                            "https://maps.google.com/?q=${event.latitude},${event.longitude}".toUri()
-                        context.startActivity(Intent(Intent.ACTION_VIEW, browserUri))
+                    viewModel.mapUriSet?.let { mapUriSet ->
+                        val intent = Intent(Intent.ACTION_VIEW, mapUriSet.geoUri)
+                        try {
+                            context.startActivity(intent)
+                        } catch (_: ActivityNotFoundException) {
+                            context.startActivity(Intent(Intent.ACTION_VIEW, mapUriSet.browserUri))
+                        }
                     }
                 }
 
                 is EventDetailEvent.BuildRoute -> {
-                    val navigationUri =
-                        "google.navigation:q=${event.latitude},${event.longitude}".toUri()
-                    val navigationIntent = Intent(Intent.ACTION_VIEW, navigationUri)
-                    try {
-                        context.startActivity(navigationIntent)
-                    } catch (_: ActivityNotFoundException) {
-                        val browserUri =
-                            "https://maps.google.com/?daddr=${event.latitude},${event.longitude}".toUri()
-                        context.startActivity(Intent(Intent.ACTION_VIEW, browserUri))
+                    viewModel.mapUriSet?.let { mapUriSet ->
+                        val navigationIntent = Intent(Intent.ACTION_VIEW, mapUriSet.navigationUri)
+                        try {
+                            context.startActivity(navigationIntent)
+                        } catch (_: ActivityNotFoundException) {
+                            context.startActivity(
+                                Intent(Intent.ACTION_VIEW, mapUriSet.browserRouteUri)
+                            )
+                        }
                     }
                 }
             }
@@ -124,7 +135,25 @@ fun EventDetailScreen(
         modifier = modifier,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.event_title)) }
+                title = { Text(stringResource(R.string.event_title)) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back)
+                        )
+                    }
+                },
+                actions = {
+                    if (isAuthorized && isEventAuthor) {
+                        IconButton(onClick = viewModel::onDeleteClick) {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = stringResource(R.string.delete)
+                            )
+                        }
+                    }
+                }
             )
         }
     ) { paddingValues ->
@@ -159,55 +188,75 @@ fun EventDetailScreen(
                                     .fillMaxWidth()
                                     .padding(dimensionResource(R.dimen.spacing_regular)),
                                 verticalArrangement = Arrangement.spacedBy(
-                                    dimensionResource(R.dimen.spacing_xsmall)
+                                    dimensionResource(R.dimen.spacing_small)
                                 )
                             ) {
-                                Text(text = state.event.title)
                                 Text(
-                                    text = DateFormatter.formatDate(
+                                    text = state.event.title,
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+
+                                LabeledValueRow(
+                                    label = stringResource(R.string.`when`),
+                                    value = DateFormatter.formatDate(
                                         context = context,
                                         dateString = state.event.beginDate
                                     )
                                 )
-                                Text(text = state.address)
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(
-                                        dimensionResource(R.dimen.spacing_xsmall)
+
+                                LabeledValueRow(
+                                    label = stringResource(R.string.where),
+                                    value = state.address
+                                )
+
+                                val eventAddress = state.event.address
+                                if (!eventAddress.isNullOrBlank()) {
+                                    LabeledValueRow(
+                                        label = stringResource(R.string.address),
+                                        value = eventAddress
                                     )
-                                ) {
-                                    Button(onClick = viewModel::onOpenMapClick) {
-                                        Text(text = stringResource(R.string.event_open_map))
-                                    }
-                                    Button(onClick = viewModel::onRouteClick) {
-                                        Text(text = stringResource(R.string.event_build_route))
-                                    }
                                 }
+
+                                LocationInfoView(
+                                    config = LocationInfoConfig(
+                                        latitude = state.event.latitude,
+                                        longitude = state.event.longitude,
+                                        address = state.address,
+                                        onOpenMapClick = viewModel::onOpenMapClick,
+                                        onRouteClick = viewModel::onRouteClick
+                                    )
+                                )
                                 if (state.event.isCurrent) {
-                                    Button(onClick = viewModel::onAddToCalendarClick) {
-                                        Text(
-                                            text = stringResource(R.string.event_add_to_calendar)
-                                        )
-                                    }
-                                }
-                                if (isAuthorized && isEventAuthor) {
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(
-                                            dimensionResource(R.dimen.spacing_xsmall)
-                                        )
-                                    ) {
-                                        Button(onClick = viewModel::onDeleteClick) {
-                                            Text(text = stringResource(R.string.delete))
-                                        }
-                                    }
-                                }
-                                if (state.event.trainingUsersCount != null) {
-                                    Text(
-                                        text = pluralStringResource(
-                                            id = R.plurals.peopleCount,
-                                            count = state.event.trainingUsersCount,
-                                            state.event.trainingUsersCount
+                                    SWButton(
+                                        config = ButtonConfig(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            size = SWButtonSize.LARGE,
+                                            mode = SWButtonMode.FILLED,
+                                            text = stringResource(R.string.event_add_to_calendar),
+                                            enabled = !isRefreshing,
+                                            onClick = viewModel::onAddToCalendarClick
                                         )
                                     )
+                                }
+                                if (isAuthorized) {
+                                    state.event.trainingUsersCount?.let { count ->
+                                        FormRowView(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            leadingText = stringResource(R.string.participants),
+                                            trailingText = pluralStringResource(
+                                                id = R.plurals.peopleCount,
+                                                count = count,
+                                                count
+                                            ),
+                                            enabled = !isRefreshing,
+                                            onClick = {
+                                                Log.d(
+                                                    "EventDetailScreen",
+                                                    "Нажаты участники: count=$count"
+                                                )
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -218,12 +267,12 @@ fun EventDetailScreen(
                                     modifier = Modifier.padding(
                                         horizontal = dimensionResource(R.dimen.spacing_regular)
                                     ),
-                                    enabled = isAuthorized,
+                                    enabled = isAuthorized && !isRefreshing,
                                     imageStringURL = state.event.author.image,
                                     name = state.event.author.name,
                                     address = state.address,
                                     onClick = {
-                                        viewModel.onAuthorClick(state.event.author.id)
+                                        onNavigateToUserProfile(state.event.author.id)
                                     }
                                 )
                             )
@@ -246,7 +295,7 @@ fun EventDetailScreen(
                                     enabled = isAuthorized,
                                     byMainUser = false,
                                     onAuthorClick = {
-                                        author?.id?.let(viewModel::onCommentAuthorClick)
+                                        author?.id?.let(onNavigateToUserProfile)
                                     },
                                     onClickAction = { action ->
                                         viewModel.onCommentActionClick(comment.id, action)
@@ -321,30 +370,87 @@ fun EventDetailScreen(
     }
 }
 
-@Suppress("ReturnCount", "TooGenericExceptionCaught")
-private fun parseEventDateToMillis(dateString: String): Long? {
-    val patterns = listOf(
-        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-        "yyyy-MM-dd'T'HH:mm:ss'Z'",
-        "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
-        "yyyy-MM-dd'T'HH:mm:ssXXX",
-        "yyyy-MM-dd'T'HH:mm:ss",
-        "yyyy-MM-dd"
-    )
+/**
+ * Строка с меткой слева и значением справа.
+ * Используется для отображения информации вида "Метка: Значение".
+ *
+ * @param label Текст метки (отображается слева полужирным шрифтом)
+ * @param value Текст значения (отображается справа, выравнивание по правому краю)
+ * @param modifier Modifier для компонента
+ */
+@Composable
+private fun LabeledValueRow(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(
+            dimensionResource(R.dimen.spacing_xxsmall)
+        )
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.End
+        )
+    }
+}
 
-    patterns.forEach { pattern ->
-        try {
-            val parser = SimpleDateFormat(pattern, Locale.US).apply {
-                timeZone = TimeZone.getTimeZone("UTC")
-                isLenient = false
-            }
-            return parser.parse(dateString)?.time
-        } catch (_: ParseException) {
-            // Пробуем следующий формат.
-        } catch (_: IllegalArgumentException) {
-            // Некорректный шаблон или значение timezone.
+@Suppress("UnusedPrivateMember")
+@Preview(name = "Short text", showBackground = true)
+@Composable
+private fun LabeledValueRowShortPreview() {
+    MaterialTheme {
+        LabeledValueRow(
+            label = "Когда",
+            value = "15 марта 2026",
+            modifier = Modifier.padding(dimensionResource(R.dimen.spacing_regular))
+        )
+    }
+}
+
+@Suppress("UnusedPrivateMember")
+@Preview(name = "Long text", showBackground = true)
+@Composable
+private fun LabeledValueRowLongPreview() {
+    MaterialTheme {
+        LabeledValueRow(
+            label = "Адрес",
+            value = "г. Москва, парк Горького, Центральная аллея, д. 1, около главного входа",
+            modifier = Modifier.padding(dimensionResource(R.dimen.spacing_regular))
+        )
+    }
+}
+
+@Suppress("UnusedPrivateMember")
+@Preview(name = "Mixed texts", showBackground = true)
+@Composable
+private fun LabeledValueRowMixedPreview() {
+    MaterialTheme {
+        Column(
+            modifier = Modifier.padding(dimensionResource(R.dimen.spacing_regular)),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
+        ) {
+            LabeledValueRow(
+                label = "Когда",
+                value = "15 марта"
+            )
+            LabeledValueRow(
+                label = "Где",
+                value = "Парк"
+            )
+            LabeledValueRow(
+                label = "Адрес",
+                value = "г. Москва, парк Горького, Центральная аллея, д. 1"
+            )
         }
     }
-
-    return null
 }

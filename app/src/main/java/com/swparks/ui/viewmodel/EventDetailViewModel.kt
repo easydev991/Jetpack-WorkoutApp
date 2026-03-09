@@ -2,12 +2,17 @@ package com.swparks.ui.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Photo
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.ds.CommentAction
+import com.swparks.ui.model.MapUriSet
 import com.swparks.ui.state.EventDetailUIState
 import com.swparks.util.AppError
 import com.swparks.util.Logger
@@ -65,20 +70,14 @@ sealed class EventDetailEvent {
     ) : EventDetailEvent()
 
     /**
-     * Открыть карту по координатам.
-     *
-     * @param latitude Широта
-     * @param longitude Долгота
+     * Открыть карту по координатам мероприятия.
      */
-    data class OpenMap(val latitude: String, val longitude: String) : EventDetailEvent()
+    data object OpenMap : EventDetailEvent()
 
     /**
      * Построить маршрут до мероприятия.
-     *
-     * @param latitude Широта
-     * @param longitude Долгота
      */
-    data class BuildRoute(val latitude: String, val longitude: String) : EventDetailEvent()
+    data object BuildRoute : EventDetailEvent()
 }
 
 /**
@@ -104,10 +103,30 @@ class EventDetailViewModel(
     private val logger: Logger,
 ) : ViewModel(), IEventDetailViewModel {
 
-    private companion object {
-        const val TAG = "EventDetailViewModel"
-        const val EVENT_ID_KEY = "eventId"
-        const val NO_CALENDAR_APP_MESSAGE = "Нет календарного приложения на устройстве."
+    companion object {
+        private const val TAG = "EventDetailViewModel"
+        private const val EVENT_ID_KEY = "eventId"
+        private const val NO_CALENDAR_APP_MESSAGE = "Нет календарного приложения на устройстве."
+
+        fun factory(
+            swRepository: SWRepository,
+            countriesRepository: CountriesRepository,
+            userPreferencesRepository: UserPreferencesRepository,
+            userNotifier: UserNotifier,
+            logger: Logger,
+        ): ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val savedStateHandle = createSavedStateHandle()
+                EventDetailViewModel(
+                    swRepository = swRepository,
+                    countriesRepository = countriesRepository,
+                    userPreferencesRepository = userPreferencesRepository,
+                    savedStateHandle = savedStateHandle,
+                    userNotifier = userNotifier,
+                    logger = logger
+                )
+            }
+        }
     }
 
     private enum class ManageEventAction(val logName: String) {
@@ -133,6 +152,27 @@ class EventDetailViewModel(
     // Автор мероприятия
     private val _isEventAuthor = MutableStateFlow(false)
     override val isEventAuthor: StateFlow<Boolean> = _isEventAuthor.asStateFlow()
+
+    // URI для карты
+    override val mapUriSet: MapUriSet?
+        get() {
+            val currentState = _uiState.value
+            if (currentState !is EventDetailUIState.Content) {
+                return null
+            }
+
+            val latitude = currentState.event.latitude.toDoubleOrNull()
+            val longitude = currentState.event.longitude.toDoubleOrNull()
+
+            return if (latitude != null && longitude != null) {
+                MapUriSet(
+                    latitude = latitude,
+                    longitude = longitude
+                )
+            } else {
+                null
+            }
+        }
 
     // События UI
     private val _events = MutableSharedFlow<EventDetailEvent>()
@@ -447,26 +487,13 @@ class EventDetailViewModel(
         }
     }
 
-    override fun onAuthorClick(authorId: Long) {
-        logger.d(TAG, "Нажат автор мероприятия authorId=$authorId")
-    }
-
-    override fun onCommentAuthorClick(authorId: Long) {
-        logger.d(TAG, "Нажат автор комментария authorId=$authorId")
-    }
-
     override fun onOpenMapClick() {
         val currentState = _uiState.value
         if (currentState is EventDetailUIState.Content) {
             val event = currentState.event
             logger.d(TAG, "Нажата кнопка 'Открыть на карте' для мероприятия id=${event.id}")
             viewModelScope.launch {
-                _events.emit(
-                    EventDetailEvent.OpenMap(
-                        latitude = event.latitude,
-                        longitude = event.longitude
-                    )
-                )
+                _events.emit(EventDetailEvent.OpenMap)
             }
         }
     }
@@ -477,12 +504,7 @@ class EventDetailViewModel(
             val event = currentState.event
             logger.d(TAG, "Нажата кнопка 'Построить маршрут' для мероприятия id=${event.id}")
             viewModelScope.launch {
-                _events.emit(
-                    EventDetailEvent.BuildRoute(
-                        latitude = event.latitude,
-                        longitude = event.longitude
-                    )
-                )
+                _events.emit(EventDetailEvent.BuildRoute)
             }
         }
     }

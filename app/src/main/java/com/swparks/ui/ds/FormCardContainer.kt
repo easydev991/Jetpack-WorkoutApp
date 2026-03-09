@@ -72,7 +72,6 @@ fun FormCardContainer(
         params.onClick != null || params.onLongClick != null -> {
             params.modifier.combinedClickable(
                 enabled = params.enabled,
-                indication = null,
                 interactionSource = interactionSource,
                 onClick = params.onClick ?: {},
                 onLongClick = params.onLongClick

@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.swparks.JetpackWorkoutApplication
@@ -31,9 +32,9 @@ import com.swparks.navigation.Screen
 import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.screens.auth.LoginSheetHost
 import com.swparks.ui.screens.auth.RegisterSheetHost
+import com.swparks.ui.screens.events.EventDetailScreen
 import com.swparks.ui.screens.events.EventsScreen
 import com.swparks.ui.screens.events.EventsTopAppBar
-import com.swparks.ui.screens.events.EventDetailScreen
 import com.swparks.ui.screens.journals.JournalEntriesScreen
 import com.swparks.ui.screens.journals.JournalsListCallbacks
 import com.swparks.ui.screens.journals.JournalsListScreen
@@ -60,6 +61,7 @@ import com.swparks.ui.screens.profile.SelectCountryScreen
 import com.swparks.ui.screens.profile.UserFriendsScreen
 import com.swparks.ui.screens.profile.UserTrainingParksScreen
 import com.swparks.ui.screens.themeicon.ThemeIconScreen
+import com.swparks.ui.viewmodel.EventDetailViewModel
 import com.swparks.ui.viewmodel.ThemeIconViewModel
 import com.swparks.util.toUiText
 import com.swparks.utils.ReadJSONFromAssets
@@ -225,7 +227,10 @@ fun RootScreen(appState: AppState) {
                 EventsScreen(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
+                        .padding(paddingValues),
+                    onNavigateToEventDetail = { eventId ->
+                        appState.navController.navigate(Screen.EventDetail.createRoute(eventId))
+                    }
                 )
             }
 
@@ -319,17 +324,28 @@ fun RootScreen(appState: AppState) {
                         defaultValue = "events"
                     }
                 )
-            ) { navBackStackEntry ->
-                val eventDetailViewModel = remember(navBackStackEntry, appContainer) {
-                    appContainer.eventDetailViewModelFactory(navBackStackEntry.savedStateHandle)
-                }
+            ) {
+                val eventDetailViewModel = viewModel<EventDetailViewModel>(
+                    factory = EventDetailViewModel.factory(
+                        swRepository = appContainer.swRepository,
+                        countriesRepository = appContainer.countriesRepository,
+                        userPreferencesRepository = appContainer.userPreferencesRepository,
+                        userNotifier = appContainer.userNotifier,
+                        logger = appContainer.logger
+                    )
+                )
 
                 EventDetailScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues),
                     viewModel = eventDetailViewModel,
-                    onBack = { appState.navController.popBackStack() }
+                    onBack = { appState.navController.popBackStack() },
+                    onNavigateToUserProfile = { userId ->
+                        appState.navController.navigate(
+                            Screen.OtherUserProfile.createRoute(userId, "events")
+                        )
+                    }
                 )
             }
 

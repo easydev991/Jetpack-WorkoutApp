@@ -1,5 +1,7 @@
 package com.swparks.util
 
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -81,5 +83,102 @@ class DateFormatterTest {
         DateFormatter.parseIsoDate(dateString)
 
         // Then - Ожидается IllegalArgumentException
+    }
+
+    @Test
+    fun parseIsoDateToMillis_whenIso8601WithSeconds_thenReturnsMillis() {
+        // Given
+        val dateString = "2023-01-21T10:05:35+00:00"
+
+        // When
+        val result = DateFormatter.parseIsoDateToMillis(dateString)
+
+        // Then
+        assertTrue(result != null && result > 0)
+    }
+
+    @Test
+    fun parseIsoDateToMillis_whenIso8601WithFractionalSeconds_thenReturnsMillis() {
+        // Given
+        val dateString = "2023-01-21T10:05:35.123+00:00"
+
+        // When
+        val result = DateFormatter.parseIsoDateToMillis(dateString)
+
+        // Then
+        assertTrue(result != null && result > 0)
+    }
+
+    @Test
+    fun parseIsoDateToMillis_whenIso8601WithZ_thenReturnsMillis() {
+        // Given
+        val dateString = "2023-01-21T10:05:35Z"
+
+        // When
+        val result = DateFormatter.parseIsoDateToMillis(dateString)
+
+        // Then
+        assertTrue(result != null && result > 0)
+    }
+
+    @Test
+    fun parseIsoDateToMillis_whenIsoShortDate_thenReturnsMillis() {
+        // Given
+        val dateString = "1992-08-12"
+
+        // When
+        val result = DateFormatter.parseIsoDateToMillis(dateString)
+
+        // Then
+        assertTrue(result != null && result > 0)
+    }
+
+    @Test
+    fun parseIsoDateToMillis_whenServerDateTimeWithoutTimezone_thenReturnsMillis() {
+        // Given
+        val dateString = "2023-01-21T10:05:35"
+
+        // When
+        val result = DateFormatter.parseIsoDateToMillis(dateString)
+
+        // Then
+        assertTrue(result != null && result > 0)
+    }
+
+    @Test
+    fun parseIsoDateToMillis_whenInvalidString_thenReturnsNull() {
+        // Given
+        val dateString = "invalid-date"
+
+        // When
+        val result = DateFormatter.parseIsoDateToMillis(dateString)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun parseIsoDateToMillis_whenEmptyString_thenReturnsNull() {
+        // Given
+        val dateString = ""
+
+        // When
+        val result = DateFormatter.parseIsoDateToMillis(dateString)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun parseIsoDateToMillis_whenConsistentResults_thenReturnSameValue() {
+        // Given
+        val dateString = "2024-03-09T15:30:00Z"
+
+        // When
+        val result1 = DateFormatter.parseIsoDateToMillis(dateString)
+        val result2 = DateFormatter.parseIsoDate(dateString).time
+
+        // Then
+        assertEquals(result1, result2)
     }
 }
