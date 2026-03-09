@@ -745,6 +745,9 @@ fun RootScreen(appState: AppState) {
             onLoginSuccess = { userId ->
                 // Закрываем LoginSheet
                 showLoginSheet = false
+                // Сбрасываем transient visual state в BottomNavigation сразу после успеха логина.
+                // Это закрывает короткое "окно" до обновления currentUser из ProfileViewModel.
+                appState.bumpBottomNavVisualEpoch()
                 // Успешная авторизация - загружаем профиль с сервера
                 profileViewModel.loadProfileFromServer(userId)
                 // Загружаем диалоги
@@ -760,6 +763,8 @@ fun RootScreen(appState: AppState) {
             onRegisterSuccess = { userId ->
                 // Закрываем RegisterSheet
                 showRegisterSheet = false
+                // Аналогично логину: немедленный reset visual state нижней навигации.
+                appState.bumpBottomNavVisualEpoch()
                 // Успешная регистрация - загружаем профиль с сервера
                 profileViewModel.loadProfileFromServer(userId)
                 // Загружаем диалоги

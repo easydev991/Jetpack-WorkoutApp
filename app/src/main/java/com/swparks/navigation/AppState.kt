@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -101,6 +102,18 @@ class AppState(
      */
     fun updateCurrentUser(user: User?) {
         currentUser = user
+    }
+
+    /**
+     * Счётчик для принудительного сброса transient visual state в BottomNavigation.
+     * Используется в auth-flow, где маршрут может не меняться, но UI-низ должен
+     * немедленно обновиться после успеха авторизации.
+     */
+    var bottomNavVisualEpoch by mutableIntStateOf(0)
+        private set
+
+    fun bumpBottomNavVisualEpoch() {
+        bottomNavVisualEpoch++
     }
 
     // ============================================================

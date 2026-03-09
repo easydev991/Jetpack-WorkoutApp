@@ -339,42 +339,38 @@ object NewScreen : Screen("new_screen/{itemId}?source={source}", parentTab = Pro
 **Симптомы до исправления:**
 - После логина на экране `Profile` визуально подсвечивались две вкладки: `Parks` и `Profile`
 - В логах навигации активной вкладкой при этом уже был `profile`
-- Баг воспроизводился не всегда: чаще после сложного пути с переходами между вкладками, дочерними экранами и последующим logout/login
+- Баг воспроизводился чаще в момент ожидания ответа сервера после авторизации, до завершения загрузки профиля
 
 **Фактическая причина:**
-- Проблема была не в `NavController` и не в `currentTopLevelDestination`
-- `AppState` корректно держал `profile`, но `BottomNavigationBar` не всегда рекомпозировался при смене авторизации, если маршрут оставался тем же
-- Из-за этого нижняя навигация могла оставаться в устаревшем визуальном состоянии после `currentUser -> non-null`
+- `NavController` и `currentTopLevelDestination` были корректны, проблема находилась в transient visual state `NavigationBarItem`
+- В auth-flow есть короткое окно между `onLoginSuccess` и фактическим обновлением `currentUser` из `ProfileViewModel`
+- В это окно нативный `NavigationBarItem` мог кратковременно показывать устаревший highlight первой вкладки, хотя route уже корректный
 
 **Ключевое наблюдение из логов:**
 
-Проблемный сценарий выглядел так:
+Сразу после `currentUser` обновление было корректным, но визуальный артефакт ещё мог кратко появляться:
 
 ```text
 RootScreen: currentUser изменился: 10367, isAuthorized=true
-```
-
-и после этого **не было** новой строки:
-
-```text
 BottomNavigationBar: рекомпозиция, currentDestination=profile, isAuthorized=true
 ```
 
-Это означало, что `Profile` уже был активным маршрутом, но сам `BottomNavigationBar` не получил новый проход композиции на изменение auth state.
+Это подтверждает, что проблема была не в state маршрута, а в визуальном состоянии `NavigationBarItem` в переходный момент.
 
 **Исправление:**
-1. `BottomNavigationBar()` теперь явно читает `appState.isAuthorized`
-2. В лог рекомпозиции добавлен `isAuthorized`, чтобы можно было отследить, что бар действительно пересобрался после login/logout
-3. В `NavigationBarItem` отключён встроенный animated indicator Material 3 (`indicatorColor = Color.Transparent`)
-4. Подсветка выбранной вкладки рисуется явно из нашего `isSelected`, а не полагается на внутреннее transitional state компонента
-5. В `LoginSheetHost` и `RegisterSheetHost` перед закрытием sheet принудительно очищаются focus и keyboard, чтобы не оставлять лишние transient UI state после авторизации
+1. Сохранён нативный `NavigationBar` + `NavigationBarItem` (без кастомной вёрстки)
+2. `BottomNavigationBar()` явно читает `appState.isAuthorized`
+3. В `AppState` добавлен `bottomNavVisualEpoch` и метод `bumpBottomNavVisualEpoch()`
+4. В `RootScreen` epoch увеличивается сразу в `onLoginSuccess` и `onRegisterSuccess`, до `loadProfileFromServer(...)`
+5. В `BottomNavigationBar` `key(...)` и `interactionSource` завязаны на `route + isAuthorized + epoch`, чтобы гарантированно сбрасывать transient visual state при auth transition
+6. В `LoginSheetHost` и `RegisterSheetHost` перед закрытием sheet очищаются focus и keyboard
 
 **Актуальное ожидаемое поведение:**
 - После logout на `Profile` нижняя навигация остаётся на `Profile`
-- После повторного login на `Profile` обязательно происходит рекомпозиция:
+- После повторного login на `Profile` происходит рекомпозиция с новым `epoch`:
 
 ```text
-BottomNavigationBar: рекомпозиция, currentDestination=profile, isAuthorized=true
+BottomNavigationBar: рекомпозиция, currentDestination=profile, isAuthorized=true, epoch=<N>
 ```
 
 - Визуально подсвечивается только одна вкладка: `Profile`
@@ -382,7 +378,7 @@ BottomNavigationBar: рекомпозиция, currentDestination=profile, isAut
 **Минимальные диагностические логи, которые нужно сохранять:**
 - `RootScreen`: изменение `currentUser`
 - `Navigation`: `OnDestinationChangedListener`, `onDestinationChanged()`, `navigateToTopLevelDestination()`
-- `BottomNavigation`: рекомпозиция бара с `currentDestination` и `isAuthorized`, плюс лог клика по вкладке
+- `BottomNavigation`: рекомпозиция бара с `currentDestination`, `isAuthorized`, `epoch`, плюс лог клика по вкладке
 
 Этого достаточно, чтобы в будущем отличить:
 - проблему навигационного state
@@ -393,17 +389,18 @@ BottomNavigationBar: рекомпозиция, currentDestination=profile, isAut
 
 Если экран может менять авторизацию пользователя без смены текущего top-level route
 (например: login sheet, register sheet, re-auth flow, refresh session, восстановление сессии при старте),
-то UI нижней навигации **обязан** зависеть не только от `currentTopLevelDestination`, но и от auth state.
+то UI нижней навигации должен иметь явный механизм сброса transient visual state в auth transition
+(в текущей реализации это `bottomNavVisualEpoch`).
 
 Иначе возможен такой класс багов:
 - маршрут остаётся `profile`
 - `AppState` корректен
-- но `BottomNavigationBar` не рекомпозируется и визуально показывает устаревшую вкладку
+- но `NavigationBarItem` кратковременно показывает устаревший highlight
 
 **Практическое правило для новых экранов и flow:**
-1. Не полагаться на то, что смена `currentUser` сама по себе приведёт к рекомпозиции нижнего бара
-2. Если flow меняет auth state, проверить, что `BottomNavigationBar` явно читает нужное состояние
-3. Если используется Material 3 navigation, не хранить критичную бизнес-логику только во внутреннем animated state компонента
+1. Не полагаться только на обновление `currentUser` для корректного визуального состояния `NavigationBarItem`
+2. В новых auth-flow (login/register/re-auth) при необходимости увеличивать `bottomNavVisualEpoch` в точке успеха авторизации
+3. Сохранять нативный `NavigationBarItem`, но контролировать его transient состояние через ключи композиции
 4. Для любых новых auth-related flow после реализации прогонять сценарий:
    - сложная навигация по вкладкам
    - переход в дочерние экраны
@@ -415,10 +412,10 @@ BottomNavigationBar: рекомпозиция, currentDestination=profile, isAut
 
 ```text
 RootScreen: currentUser изменился: 10367, isAuthorized=true
-BottomNavigationBar: рекомпозиция, currentDestination=profile, isAuthorized=true
+BottomNavigationBar: рекомпозиция, currentDestination=profile, isAuthorized=true, epoch=<N>
 ```
 
-Если в будущем первая строка есть, а второй нет, значит проблема вернулась.
+Если после успешной авторизации `epoch` не меняется и снова появляется временный highlight первой вкладки, значит проблема вернулась в auth transition.
 
 ---
 
