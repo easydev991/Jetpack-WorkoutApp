@@ -3,8 +3,8 @@ package com.swparks.data.repository
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.mutablePreferencesOf
 import app.cash.turbine.test
 import com.swparks.data.database.dao.DialogDao
@@ -28,7 +28,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -43,7 +42,7 @@ import java.io.IOException
 @OptIn(ExperimentalCoroutinesApi::class)
 class SWRepositoryTest {
     private val testDispatcher = StandardTestDispatcher()
-    private val isAuthorizedKey = booleanPreferencesKey("isAuthorized")
+    private val currentUserIdKey = longPreferencesKey("currentUserId")
     private val mockUserDao = mockk<UserDao>(relaxed = true)
     private val mockJournalDao = mockk<JournalDao>(relaxed = true)
     private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
@@ -191,11 +190,11 @@ class SWRepositoryTest {
     }
 
     @Test
-    fun isAuthorized_whenCalled_thenDelegatesToUserPreferencesRepository() = runTest {
+    fun isAuthorized_whenUserIdExists_thenReturnsTrue() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
         val mockDataStore = mockk<DataStore<Preferences>>()
-        val preferences = mutablePreferencesOf(isAuthorizedKey to true)
+        val preferences = mutablePreferencesOf(currentUserIdKey to 123L)
         every { mockDataStore.data } returns flowOf(preferences)
 
         val repository = SWRepositoryImp(
@@ -216,11 +215,11 @@ class SWRepositoryTest {
     }
 
     @Test
-    fun isAuthorized_whenCalled_thenReturnsFlowFromPreferencesRepository() = runTest {
+    fun isAuthorized_whenUserIdNotExists_thenReturnsFalse() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
         val mockDataStore = mockk<DataStore<Preferences>>()
-        val preferences = mutablePreferencesOf(isAuthorizedKey to false)
+        val preferences = mutablePreferencesOf()
         every { mockDataStore.data } returns flowOf(preferences)
 
         val repository = SWRepositoryImp(
@@ -238,29 +237,6 @@ class SWRepositoryTest {
             assertEquals(false, awaitItem())
             cancelAndIgnoreRemainingEvents()
         }
-    }
-
-    @Test
-    fun savePreference_whenCalled_thenDelegatesToUserPreferencesRepository() = runTest {
-        // Given
-        val mockApi = mockk<SWApi>()
-        val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao
-        )
-
-        // When & Then - проверяем, что метод выполнился без ошибок
-        repository.savePreference(true)
-        advanceUntilIdle()
-        // Метод выполнился успешно, что означает, что делегирование работает корректно
     }
 
     @Test

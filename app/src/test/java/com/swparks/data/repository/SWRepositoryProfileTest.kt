@@ -51,6 +51,7 @@ class SWRepositoryProfileTest {
         Dispatchers.setMain(testDispatcher)
         mockkStatic(Log::class)
         every { Log.e(any(), any()) } returns 0
+        every { Log.i(any(), any()) } returns 0
     }
 
     @After
@@ -230,13 +231,16 @@ class SWRepositoryProfileTest {
     }
 
     @Test
-    fun deleteUser_whenApiReturnsSuccess_thenReturnsSuccessAndClearsAuth() = runTest {
+    fun deleteUser_whenApiReturnsSuccess_thenReturnsSuccess() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
         coEvery { mockApi.deleteUser() } returns mockk(relaxed = true)
 
-        val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
+        val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
+        coEvery { mockDataStore.updateData(any()) } coAnswers {
+            firstArg<suspend (Preferences) -> Preferences>().invoke(emptyPreferences())
+        }
 
         val repository = SWRepositoryImp(
             mockApi,
@@ -254,6 +258,7 @@ class SWRepositoryProfileTest {
         // Then
         assertTrue(result.isSuccess)
         coVerify { mockApi.deleteUser() }
+        coVerify { mockDataStore.updateData(any()) }
     }
 
     @Test

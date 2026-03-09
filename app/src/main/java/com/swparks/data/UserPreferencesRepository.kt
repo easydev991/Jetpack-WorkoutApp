@@ -3,7 +3,6 @@ package com.swparks.data
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -19,25 +18,9 @@ class UserPreferencesRepository(
     private val dataStore: DataStore<Preferences>
 ) {
     private companion object {
-        val is_authorized = booleanPreferencesKey("isAuthorized")
         val current_user_id = longPreferencesKey("currentUserId")
         const val tag = "UserPreferencesRepository"
     }
-
-    val isAuthorized: Flow<Boolean> = dataStore.data
-        .catch {
-            if (it is IOException) {
-                Log.e(
-                    tag,
-                    "Ошибка при загрузке preferences",
-                    it
-                )
-                emit(emptyPreferences())
-            } else {
-                throw it
-            }
-        }
-        .map { it[is_authorized] ?: false }
 
     /**
      * ID текущего авторизованного пользователя.
@@ -59,11 +42,11 @@ class UserPreferencesRepository(
         .map { it[current_user_id] }
         .distinctUntilChanged()
 
-    suspend fun savePreference(isAuthorized: Boolean) {
-        dataStore.edit {
-            it[is_authorized] = isAuthorized
-        }
-    }
+    /**
+     * Состояние авторизации вычисляется на основе наличия currentUserId.
+     * Если userId есть - пользователь авторизован, иначе - нет.
+     */
+    val isAuthorized: Flow<Boolean> = currentUserId.map { it != null }
 
     /**
      * Сохраняет ID текущего авторизованного пользователя
@@ -88,34 +71,22 @@ class UserPreferencesRepository(
     }
 
     /**
-     * Очищает ID текущего пользователя
+     * Очищает ID текущего пользователя (логаут)
      */
     suspend fun clearCurrentUserId() {
         dataStore.edit {
             it.remove(current_user_id)
         }
-        Log.i(tag, "Очищен текущий userId")
+        Log.i(tag, "Очищен текущий userId (логаут)")
     }
 
     /**
-     * Синхронно очищает токен авторизации
-     * Используется в AuthInterceptor, который работает в не-suspend контексте
-     */
-    fun clearToken() {
-        runBlocking {
-            dataStore.edit {
-                it[is_authorized] = false
-            }
-        }
-    }
-
-    /**
-     * Синхронно очищает все данные пользователя (токен и userId)
+     * Синхронно очищает все данные пользователя
+     * Используется в AuthInterceptor при 401
      */
     fun clearAllUserData() {
         runBlocking {
             dataStore.edit {
-                it[is_authorized] = false
                 it.remove(current_user_id)
             }
         }

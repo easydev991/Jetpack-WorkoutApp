@@ -61,7 +61,6 @@ interface SWRepository {
     // Существующие методы (для обратной совместимости)
     suspend fun getPastEvents(): List<Event>
     val isAuthorized: Flow<Boolean>
-    suspend fun savePreference(isAuthorized: Boolean)
 
     // Flow методы для локального кэша
     fun getCurrentUserFlow(): Flow<User?>
@@ -290,10 +289,6 @@ class SWRepositoryImp(
     override val isAuthorized: Flow<Boolean>
         get() = preferencesRepository.isAuthorized
 
-    override suspend fun savePreference(isAuthorized: Boolean) {
-        preferencesRepository.savePreference(isAuthorized)
-    }
-
     // 3.1. Авторизация
 
     override suspend fun register(
@@ -317,8 +312,6 @@ class SWRepositoryImp(
                 countryId = countryId,
                 cityId = cityId
             )
-            // Сохраняем токен авторизации при успешной регистрации
-            savePreference(true)
             // Сохраняем пользователя в локальный кэш для отображения профиля без запроса
             userDao.insert(user.toEntity(isCurrentUser = true))
             Result.success(user)
@@ -331,9 +324,6 @@ class SWRepositoryImp(
     override suspend fun login(token: String?): Result<LoginSuccess> =
         try {
             val response = swApi.login()
-            // Сохраняем флаг авторизации при успешном входе
-            // Токен уже сохранен в SecureTokenRepository, здесь сохраняем только статус
-            savePreference(true)
             Result.success(response)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "авторизации"))
@@ -372,7 +362,7 @@ class SWRepositoryImp(
 
     // Принудительный логаут (при ошибке 401)
     override suspend fun forceLogout() {
-        savePreference(false)
+        preferencesRepository.clearCurrentUserId()
         Log.i(TAG, "Принудительный логаут выполнен")
     }
 
@@ -448,7 +438,7 @@ class SWRepositoryImp(
         try {
             swApi.deleteUser()
             // Очищаем состояние авторизации при удалении аккаунта
-            savePreference(false)
+            preferencesRepository.clearCurrentUserId()
             Result.success(Unit)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "удалении пользователя"))

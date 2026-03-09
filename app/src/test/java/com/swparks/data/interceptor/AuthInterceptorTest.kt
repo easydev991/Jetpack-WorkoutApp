@@ -44,7 +44,7 @@ class AuthInterceptorTest {
     }
 
     @Test
-    fun intercept_whenResponseCodeIs401_thenLogsErrorAndCallsClearToken() = runTest {
+    fun intercept_whenResponseCodeIs401_thenLogsErrorAndCallsClearAllUserData() = runTest {
         // Given
         val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
         val interceptor = AuthInterceptor(mockPreferencesRepository)
@@ -63,13 +63,13 @@ class AuthInterceptorTest {
         // Then
         verify {
             Log.e("AuthInterceptor", match { it.contains("Ошибка авторизации (401)") })
-            Log.i("AuthInterceptor", "Токен авторизации очищен")
+            Log.i("AuthInterceptor", "Данные авторизации очищены (isAuthorized + currentUserId)")
         }
-        verify { mockPreferencesRepository.clearToken() }
+        verify { mockPreferencesRepository.clearAllUserData() }
     }
 
     @Test
-    fun intercept_whenResponseCodeIs401_onLoginEndpoint_thenDoesNotClearToken() = runTest {
+    fun intercept_whenResponseCodeIs401_onLoginEndpoint_thenDoesNotClearAllUserData() = runTest {
         // Given
         val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
         val interceptor = AuthInterceptor(mockPreferencesRepository)
@@ -86,11 +86,11 @@ class AuthInterceptorTest {
         interceptor.intercept(chain)
 
         // Then
-        verify(exactly = 0) { mockPreferencesRepository.clearToken() }
+        verify(exactly = 0) { mockPreferencesRepository.clearAllUserData() }
     }
 
     @Test
-    fun intercept_whenResponseCodeIs401_onRegisterEndpoint_thenDoesNotClearToken() = runTest {
+    fun intercept_whenResponseCodeIs401_onRegisterEndpoint_thenDoesNotClearAllUserData() = runTest {
         // Given
         val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
         val interceptor = AuthInterceptor(mockPreferencesRepository)
@@ -107,11 +107,11 @@ class AuthInterceptorTest {
         interceptor.intercept(chain)
 
         // Then
-        verify(exactly = 0) { mockPreferencesRepository.clearToken() }
+        verify(exactly = 0) { mockPreferencesRepository.clearAllUserData() }
     }
 
     @Test
-    fun intercept_whenResponseCodeIs401_onResetPasswordEndpoint_thenDoesNotClearToken() = runTest {
+    fun intercept_whenResponseCodeIs401_onResetPasswordEndpoint_thenDoesNotClearAllUserData() = runTest {
         // Given
         val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
         val interceptor = AuthInterceptor(mockPreferencesRepository)
@@ -128,11 +128,11 @@ class AuthInterceptorTest {
         interceptor.intercept(chain)
 
         // Then
-        verify(exactly = 0) { mockPreferencesRepository.clearToken() }
+        verify(exactly = 0) { mockPreferencesRepository.clearAllUserData() }
     }
 
     @Test
-    fun intercept_whenResponseCodeIsNot401_thenDoesNotClearToken() = runTest {
+    fun intercept_whenResponseCodeIsNot401_thenDoesNotClearAllUserData() = runTest {
         // Given
         val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
         val interceptor = AuthInterceptor(mockPreferencesRepository)
@@ -149,11 +149,11 @@ class AuthInterceptorTest {
         interceptor.intercept(chain)
 
         // Then
-        verify(exactly = 0) { mockPreferencesRepository.clearToken() }
+        verify(exactly = 0) { mockPreferencesRepository.clearAllUserData() }
     }
 
     @Test
-    fun intercept_whenResponseCodeIs500_thenDoesNotClearToken() = runTest {
+    fun intercept_whenResponseCodeIs500_thenDoesNotClearAllUserData() = runTest {
         // Given
         val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
         val interceptor = AuthInterceptor(mockPreferencesRepository)
@@ -170,6 +170,6 @@ class AuthInterceptorTest {
         interceptor.intercept(chain)
 
         // Then
-        verify(exactly = 0) { mockPreferencesRepository.clearToken() }
+        verify(exactly = 0) { mockPreferencesRepository.clearAllUserData() }
     }
 }

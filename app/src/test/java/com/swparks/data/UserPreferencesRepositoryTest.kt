@@ -3,8 +3,8 @@ package com.swparks.data
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.mutablePreferencesOf
 import app.cash.turbine.test
 import io.mockk.every
@@ -31,13 +31,14 @@ import java.io.IOException
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserPreferencesRepositoryTest {
     private val testDispatcher = StandardTestDispatcher()
-    private val isAuthorizedKey = booleanPreferencesKey("isAuthorized")
+    private val currentUserIdKey = longPreferencesKey("currentUserId")
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         mockkStatic(Log::class)
         every { Log.e(any(), any(), any()) } returns 0
+        every { Log.i(any(), any()) } returns 0
     }
 
     @After
@@ -47,7 +48,7 @@ class UserPreferencesRepositoryTest {
     }
 
     @Test
-    fun isAuthorized_whenNoValueStored_thenReturnsFalse() = runTest {
+    fun isAuthorized_whenNoUserIdStored_thenReturnsFalse() = runTest {
         // Given
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -61,31 +62,16 @@ class UserPreferencesRepositoryTest {
     }
 
     @Test
-    fun isAuthorized_whenValueIsTrue_thenReturnsTrue() = runTest {
+    fun isAuthorized_whenUserIdExists_thenReturnsTrue() = runTest {
         // Given
         val mockDataStore = mockk<DataStore<Preferences>>()
-        val preferences = mutablePreferencesOf(isAuthorizedKey to true)
+        val preferences = mutablePreferencesOf(currentUserIdKey to 123L)
         every { mockDataStore.data } returns flowOf(preferences)
         val repository = UserPreferencesRepository(mockDataStore)
 
         // When & Then
         repository.isAuthorized.test {
             assertEquals(true, awaitItem())
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun isAuthorized_whenValueIsFalse_thenReturnsFalse() = runTest {
-        // Given
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        val preferences = mutablePreferencesOf(isAuthorizedKey to false)
-        every { mockDataStore.data } returns flowOf(preferences)
-        val repository = UserPreferencesRepository(mockDataStore)
-
-        // When & Then
-        repository.isAuthorized.test {
-            assertEquals(false, awaitItem())
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -125,29 +111,5 @@ class UserPreferencesRepositoryTest {
             assertEquals("Test error", e.message)
         }
         assertTrue("Expected RuntimeException was not thrown", exceptionThrown)
-    }
-
-    @Test
-    fun savePreference_whenCalled_thenSavesValueToDataStore() = runTest {
-        // Given
-        val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
-        val repository = UserPreferencesRepository(mockDataStore)
-
-        // When & Then - проверяем, что метод выполнился без ошибок
-        repository.savePreference(true)
-        advanceUntilIdle()
-        // Метод выполнился успешно, что означает, что edit был вызван
-    }
-
-    @Test
-    fun savePreference_whenCalledWithFalse_thenSavesFalseToDataStore() = runTest {
-        // Given
-        val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
-        val repository = UserPreferencesRepository(mockDataStore)
-
-        // When & Then - проверяем, что метод выполнился без ошибок
-        repository.savePreference(false)
-        advanceUntilIdle()
-        // Метод выполнился успешно, что означает, что edit был вызван
     }
 }

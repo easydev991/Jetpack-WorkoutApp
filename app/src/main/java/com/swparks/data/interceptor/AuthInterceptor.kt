@@ -60,8 +60,8 @@ class AuthInterceptor(
     }
 
     /**
-     * Очищает токен авторизации с защитой от гонок
-     * Устанавливает флаг isAuthorized в false
+     * Очищает данные авторизации с защитой от гонок
+     * Устанавливает флаг isAuthorized в false и очищает currentUserId
      */
     private fun clearToken() {
         // Защита от гонок
@@ -76,8 +76,8 @@ class AuthInterceptor(
                 }
 
                 isLoggingOut = true
-                preferencesRepository.clearToken()
-                Log.i(TAG, "Токен авторизации очищен")
+                preferencesRepository.clearAllUserData()
+                Log.i(TAG, "Данные авторизации очищены (isAuthorized + currentUserId)")
             } finally {
                 isLoggingOut = false
                 logoutMutex.unlock()
