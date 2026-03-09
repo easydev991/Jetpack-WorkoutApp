@@ -104,14 +104,11 @@ fun MessagesRootScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var dialogToDelete by remember { mutableStateOf<DialogEntity?>(null) }
 
-    // Проверяем, есть ли загруженные диалоги (для обработки race condition при авторизации)
-    val hasLoadedDialogs = uiState is DialogsUiState.Success
-
     if (isLoadingDialogs) {
         // Загрузка диалогов после авторизации - показываем LoadingOverlayView
         LoadingOverlayView(modifier = modifier.fillMaxSize())
-    } else if (!appState.isAuthorized && !hasLoadedDialogs) {
-        // Экран для неавторизованного пользователя (но не показываем, если уже есть загруженные диалоги)
+    } else if (!appState.isAuthorized) {
+        // Экран для неавторизованного пользователя
         IncognitoProfileView(
             modifier = modifier
                 .fillMaxWidth()

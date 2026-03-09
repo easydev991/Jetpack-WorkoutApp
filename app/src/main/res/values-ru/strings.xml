@@ -20,7 +20,7 @@
     <string name="loading_content_description">Подождите, идет загрузка</string>
 
     <string name="auth_invitation">Авторизуйтесь, чтобы иметь доступ ко всем возможностям</string>
-    <string name="authorization">Авторизация</string>
+    <string name="authorization">Войти</string>
     <string name="registration_info">Регистрация доступна на сайте workout.su</string>
 
     <string name="future_events">Планируемые</string>

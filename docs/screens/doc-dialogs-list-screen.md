@@ -33,9 +33,13 @@
 
 ### Интеграция авторизации
 
-**UX:** Для неавторизованных — `IncognitoProfileView` с кнопкой "Authorize". Для авторизованных — список диалогов или заглушка "Тут будут ваши сообщения".
+**UX:** Для неавторизованных — `IncognitoProfileView` с кнопками "Authorize" и "Register". Для авторизованных — список диалогов или заглушка "Тут будут ваши сообщения". После logout — корректное отображение `IncognitoProfileView`.
 
-**Реализация:** Параметры `appState: AppState` и `onShowLoginSheet: () -> Unit` в `MessagesRootScreen`. Переиспользование `LoginSheetHost` из `RootScreen`.
+**Реализация:**
+- Параметры `appState: AppState` и `callbacks: MessagesNavigationCallbacks` в `MessagesRootScreen`
+- Проверка `!appState.isAuthorized` для отображения `IncognitoProfileView`
+- Race condition при авторизации обрабатывается через `isLoadingDialogs`: показывается `LoadingOverlayView` во время загрузки диалогов после логина
+- Переиспользование `LoginSheetHost` и `RegisterSheetHost` из `RootScreen`
 
 ---
 
