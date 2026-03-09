@@ -9,8 +9,6 @@
 * Этап 1: UI State + ViewModel + реальная загрузка
 * Этап 2: LocationInfoView + MapUriSet + DateFormatter
 * Этап 6: Навигация (EventsScreen → EventDetailScreen → OtherUserProfile)
-* Factory метод в EventDetailViewModel с createSavedStateHandle()
-* RootScreen использует viewModel() с factory вместо remember()
 * Тесты: MapUriSetTest, DateFormatterTest
 * Локализация: основные строки (event_title, event_open_map, event_build_route, event_add_to_calendar, when, where, participants, address, delete, cancel, back)
 
@@ -23,8 +21,8 @@
 ### 🔧 Исправленные баги
 * **Март 2026:** Исправлен баг с пересозданием EventDetailViewModel при навигации после смены темы
   * Проблема: ViewModel пересоздавалась при возврате на экран после смены темы на ThemeIconScreen
-  * Причина: Использование remember(navBackStackEntry, appContainer) - при restoreState создавался новый NavBackStackEntry, что приводило к смене ключа remember и созданию нового экземпляра ViewModel
-  * Решение: Использование viewModel() с factory методом, использующим createSavedStateHandle(), что позволяет Navigation Compose правильно управлять жизненным циклом ViewModel
+  * Причина: Использование `remember(navBackStackEntry, appContainer)` — при `restoreState` создавался новый `NavBackStackEntry`
+  * Решение: Использование `viewModel()` с factory методом, использующим `createSavedStateHandle()`
 
 ---
 
@@ -177,236 +175,54 @@ val isEventAuthor: StateFlow<Boolean>
 
 ## Этап 0: Подготовка архитектуры [ГОТОВО]
 
-* [x] Типы ID унифицированы (`Long`)
-* [x] Архитектурные решения по карте зафиксированы (без map snapshot)
-* [x] Компонент переименован в `LocationInfoView`
-* [x] `onBackClick()` не в интерфейсе ViewModel
-* [x] Контракт удаления фото описан до repository
-* [x] Источник `eventId` — `SavedStateHandle` из маршрута
-* [x] Компоненты с `onClick`: `UserRowView` (enabled/onClick), `CommentRowView` (onAuthorClick), `FormRowView` (onClick)
+* [x] Типы ID унифицированы (`Long`), архитектурные решения зафиксированы
+* [x] `eventId` из `SavedStateHandle`, компоненты с `onClick` подготовлены
 
 ---
 
 ## Этап 1: UI State и ViewModel с реальной загрузкой [ГОТОВО]
 
-### Реализовано
-
 * [x] `EventDetailUIState` (sealed class: InitialLoading, Content, Error)
 * [x] `IEventDetailViewModel` — интерфейс с 21 методом
-* [x] `EventDetailViewModel` — полная реализация:
-  * Загрузка мероприятия через `SWRepository.getEvent()`
-  * Pull-to-refresh с реальным обновлением данных
-  * Адрес через `CountriesRepository`
-  * `isAuthorized` и `isEventAuthor` через `UserPreferencesRepository`
-  * Удаление мероприятия с confirm dialog
-  * Удаление фото с confirm dialog
-  * Добавление в календарь через Android Intent
-  * Обработка ошибок через `UserNotifier`
-  * **Factory метод с `createSavedStateHandle()`** — позволяет Navigation Compose правильно управлять жизненным циклом ViewModel
+* [x] `EventDetailViewModel` — полная реализация с загрузкой, refresh, адресом, авторизацией, удалением, календарём
 * [x] `deleteEventPhoto(eventId, photoId)` добавлен в `SWRepository`
-* [x] Factory метод в `AppContainer` с `@Suppress("TooManyFunctions")`
+* [x] Factory метод с `createSavedStateHandle()` для корректного lifecycle management
 
 ---
 
-## Этап 2: Новый компонент LocationInfoView [ГОТОВО]
+## Этап 2: Компоненты LocationInfoView, MapUriSet, DateFormatter [ГОТОВО]
+
+### 2.1. LocationInfoView [ГОТОВО]
 
 **Файл:** `app/src/main/java/com/swparks/ui/ds/LocationInfoView.kt`
 
-**Описание:** Компонент для отображения действий, связанных с локацией мероприятия, без встроенного snapshot карты. Адрес отображается отдельно в родительском компоненте.
-
-**Параметры:**
-
-```kotlin
-data class LocationInfoConfig(
-    val latitude: String?,
-    val longitude: String?,
-    val address: String,
-    val onOpenMapClick: () -> Unit,
-    val onRouteClick: () -> Unit
-)
-```
-
-**Структура:**
-
-* Кнопка "Открыть на карте"
-* Кнопка "Построить маршрут"
-
-**Реализация действий:**
-
-* Открытие внешнего map app/browser через Intent
-* При отсутствии подходящего приложения — fallback на browser
-* В первой итерации допустимо логирование результата открытия
+Компонент для отображения действий с локацией (без snapshot карты). Кнопки "Открыть на карте" и "Построить маршрут" через Intent с fallback на browser.
 
 **Критерии завершения:**
 
-* [x] Кнопка "Открыть на карте" работает
-* [x] Кнопка "Построить маршрут" работает
-* [x] Есть fallback при отсутствии map app
-* [x] Поддержка темной темы
-* [x] Preview для светлой/темной темы
+* [x] Кнопки работают, есть fallback, поддержка темной темы, Preview
 
-### 2.2. Уточнение структуры блока даты/места/адреса (по iOS референсу) [ГОТОВО]
+### 2.2. Структура блока даты/места/адреса [ГОТОВО]
 
 **Файл:** `app/src/main/java/com/swparks/ui/screens/events/EventDetailScreen.kt`
 
-**Требование по верстке:**
+* [x] Добавлены 3 строки `Когда` / `Где` / `Адрес` (LabeledValueRow) с `Spacer(weight = 1f)`
+* [x] Строка `Адрес` условно отображается при наличии
 
-* После заголовка мероприятия использовать вертикальный блок из горизонтальных строк (`Row`)
-* Строка 1: слева **"Когда"** (жирный), справа форматированная дата
-* Строка 2: слева **"Где"** (жирный), справа место в формате страна/город (например, "Россия, Москва")
-* Строка 3: слева **"Адрес"** (жирный), справа текст адреса площадки (например, "Парк Победы, Поклонная гора")
-* Во всех строках использовать `Spacer(modifier = Modifier.weight(1f))` между левым и правым текстом
-* Координаты пользователю не показывать
-* Строка "Адрес" отображается только если `event.address` не пустой
-
-**Критерии завершения:**
-
-* [x] Добавлены 3 строки `Когда` / `Где` / `Адрес` в `EventDetailScreen`
-* [x] Левый текст в каждой строке отображается жирным (`FontWeight.Bold`)
-* [x] В каждой строке используется `Spacer(weight = 1f)` для разнесения левого и правого текста
-* [x] Строка `Адрес` выводит `event.address` (условное отображение при наличии адреса)
-
-### 2.3. Рефакторинг: вынести формирование URI в отдельный data class [ГОТОВО]
-
-**Задача:** Создать data class для инкапсуляции логики формирования map URI.
+### 2.3. MapUriSet data class [ГОТОВО]
 
 **Файл:** `app/src/main/java/com/swparks/ui/model/MapUriSet.kt`
 
-**Целевая реализация:**
-
-```kotlin
-package com.swparks.ui.model
-
-import android.net.Uri
-
-/**
- * Набор URI для работы с картой.
- * Создаётся на основе координат и предоставляет готовые URI для разных сценариев.
- */
-data class MapUriSet(
-    latitude: Double,
-    longitude: Double
-) {
-    /**
-     * geo: URI для открытия в нативном приложении карты.
-     * Формат: geo:lat,lng?q=lat,lng
-     */
-    val geoUri: Uri = "geo:$latitude,$longitude?q=$latitude,$longitude".toUri()
-
-    /**
-     * HTTPS URI для открытия в браузере (поиск точки).
-     * Формат: https://maps.google.com/?q=lat,lng
-     */
-    val browserUri: Uri = "https://maps.google.com/?q=$latitude,$longitude".toUri()
-
-    /**
-     * google.navigation: URI для запуска навигации.
-     * Формат: google.navigation:q=lat,lng
-     */
-    val navigationUri: Uri = "google.navigation:q=$latitude,$longitude".toUri()
-
-    /**
-     * HTTPS URI для построения маршрута в браузере.
-     * Формат: https://maps.google.com/?daddr=lat,lng
-     */
-    val browserRouteUri: Uri = "https://maps.google.com/?daddr=$latitude,$longitude".toUri()
-}
-```
-
-**Использование в ViewModel:**
-
-```kotlin
-// EventDetailViewModel
-val mapUriSet: MapUriSet?
-    get() = uiState.valueOrNull?.event?.let {
-        MapUriSet(it.latitude, it.longitude)
-    }
-```
-
-**Использование в UI:**
-
-```kotlin
-val mapUriSet = viewModel.mapUriSet
-if (mapUriSet != null) {
-    // Используем mapUriSet.geoUri, mapUriSet.navigationUri и т.д.
-}
-```
-
-**Преимущества:**
-* Инкапсуляция логики формирования URI в одном месте
-* Простое тестирование через unit-тесты
-* Убираем дублирование кода
-* UI становится чище и декларативнее
-
-**Unit-тесты:**
-
-**Файл:** `app/src/test/java/com/swparks/ui/model/MapUriSetTest.kt`
-
-**Тест-кейсы:**
-
-```kotlin
-class MapUriSetTest {
-    @Test
-    fun geoUri_is_formatted_correctly() {
-        val set = MapUriSet(latitude = 55.7558, longitude = 37.6173)
-        assertEquals("geo:55.7558,37.6173?q=55.7558,37.6173", set.geoUri.toString())
-    }
-
-    @Test
-    fun browserUri_is_formatted_correctly() {
-        val set = MapUriSet(latitude = 55.7558, longitude = 37.6173)
-        assertEquals("https://maps.google.com/?q=55.7558,37.6173", set.browserUri.toString())
-    }
-
-    @Test
-    fun navigationUri_is_formatted_correctly() {
-        val set = MapUriSet(latitude = 55.7558, longitude = 37.6173)
-        assertEquals("google.navigation:q=55.7558,37.6173", set.navigationUri.toString())
-    }
-
-    @Test
-    fun browserRouteUri_is_formatted_correctly() {
-        val set = MapUriSet(latitude = 55.7558, longitude = 37.6173)
-        assertEquals("https://maps.google.com/?daddr=55.7558,37.6173", set.browserRouteUri.toString())
-    }
-
-    @Test
-    fun negative_coordinates_are_handled_correctly() {
-        val set = MapUriSet(latitude = -33.8688, longitude = -151.2093)
-        assertEquals("geo:-33.8688,-151.2093?q=-33.8688,-151.2093", set.geoUri.toString())
-    }
-
-    @Test
-    fun zero_coordinates_are_handled_correctly() {
-        val set = MapUriSet(latitude = 0.0, longitude = 0.0)
-        assertEquals("geo:0.0,0.0?q=0.0,0.0", set.geoUri.toString())
-    }
-}
-```
+Data class для инкапсуляции логики формирования map URI (geoUri, browserUri, navigationUri, browserRouteUri).
 
 **Критерии завершения:**
 
-* [x] Создан data class `MapUriSet` в `ui/model/`
-* [x] ViewModel предоставляет `mapUriSet` как вычисляемое свойство
-* [x] EventDetailScreen использует `MapUriSet` вместо прямого формирования URI
-* [x] Unit-тесты для `MapUriSet` написаны и проходят
-* [x] Сборка и линтинг проходят успешно
+* [x] Создан data class, ViewModel использует, unit-тесты написаны
 
-### 2.4. Рефакторинг: убрать парсинг даты из view-слоя [ГОТОВО]
+### 2.4. Рефакторинг парсинга даты [ГОТОВО]
 
-**Проблема:** в `EventDetailScreen` есть локальная функция `parseEventDateToMillis()`, которая дублирует ISO-парсинг и нарушает разделение ответственности (UI не должен содержать date-parsing логику).
-
-**Почему это важно:**
-* в проекте уже есть общая утилита `DateFormatter.parseIsoDate()` с теми же поддерживаемыми форматами ISO
-* при дублировании парсинга легко получить расхождение форматов между экранами
-* тестируемость и сопровождаемость выше, когда парсинг сосредоточен в одном месте
-
-**План рефакторинга:**
-* [x] Удалить `parseEventDateToMillis()` из `EventDetailScreen`
-* [x] Добавить в `DateFormatter` публичный метод для календарного сценария, например `parseIsoDateToMillis(dateString: String): Long?`
-* [x] Использовать новый метод в обработке `EventDetailEvent.OpenCalendar`
-* [x] Добавить unit-тесты в `DateFormatterTest` для `parseIsoDateToMillis()` на валидных и невалидных форматах
-* [x] Убедиться, что `make format` и `make test` проходят после рефакторинга
+* [x] Удалён `parseEventDateToMillis()` из `EventDetailScreen`
+* [x] Добавлен `parseIsoDateToMillis()` в `DateFormatter`, unit-тесты
 
 ---
 
@@ -666,58 +482,16 @@ fun EventDetailScreen(
 
 **Реализовано:**
 
-* [x] `composable` для `Screen.EventDetail`
-* [x] получение `eventId` и `source` из аргументов через `SavedStateHandle`
-* [x] передача callback-ов
-* [x] **Использование `viewModel()` с factory вместо `remember()`** — обеспечивает корректное управление жизненным циклом ViewModel при навигации
-
-**Текущая реализация:**
-
-```kotlin
-composable(
-    route = Screen.EventDetail.route,
-    arguments = listOf(
-        navArgument("eventId") { type = NavType.LongType },
-        navArgument("source") { type = NavType.StringType; defaultValue = "events" }
-    )
-) {
-    val eventDetailViewModel = viewModel<EventDetailViewModel>(
-        factory = EventDetailViewModel.factory(
-            swRepository = appContainer.swRepository,
-            countriesRepository = appContainer.countriesRepository,
-            userPreferencesRepository = appContainer.userPreferencesRepository,
-            userNotifier = appContainer.userNotifier,
-            logger = appContainer.logger
-        )
-    )
-
-    EventDetailScreen(
-        viewModel = eventDetailViewModel,
-        onBack = { navController.popBackStack() },
-        onNavigateToUserProfile = { userId ->
-            navController.navigate(Screen.OtherUserProfile.createRoute(userId, "events"))
-        }
-    )
-}
-```
+* [x] `composable` для `Screen.EventDetail` с `viewModel()` и factory методом
+* [x] Получение `eventId` и `source` из аргументов через `SavedStateHandle`
+* [x] Callback-и: `onBack`, `onNavigateToUserProfile`
 
 ### 6.2. Обновление источника перехода
 
-**Файл:** `EventsScreen` / `EventsViewModel` / место клика по карточке мероприятия
-
-**Добавить:**
-
-* переход на `Screen.EventDetail`
-* передача `eventId`
-* передача `source`
-
 **Критерии завершения:**
 
-* [x] Навигация на EventDetail работает
-* [x] `eventId` передаётся корректно через `SavedStateHandle`
-* [x] Кнопка "Назад" работает (`navController.popBackStack()`)
-* [x] Экран открывается из списка мероприятий (`EventsScreen.onNavigateToEventDetail`)
-* [x] Навигация на профиль пользователя работает (`onNavigateToUserProfile`)
+* [x] Навигация на EventDetail работает из `EventsScreen.onNavigateToEventDetail`
+* [x] Навигация на профиль пользователя работает через `onNavigateToUserProfile`
 * [x] `source` параметр передаётся (default: "events")
 
 **Реализованная навигация:**
@@ -733,22 +507,11 @@ composable(
 ### 7.0. Выполненные тесты
 
 **MapUriSetTest** ✅ (`app/src/test/java/com/swparks/ui/model/MapUriSetTest.kt`)
-* [x] `geoUri_is_formatted_correctly`
-* [x] `browserUri_is_formatted_correctly`
-* [x] `navigationUri_is_formatted_correctly`
-* [x] `browserRouteUri_is_formatted_correctly`
-* [x] Тесты с отрицательными координатами
-* [x] Тесты с нулевыми координатами
+* [x] Все URI форматируются корректно (geo, browser, navigation, browserRoute)
+* [x] Тесты с отрицательными и нулевыми координатами
 
 **DateFormatterTest** ✅ (`app/src/test/java/com/swparks/util/DateFormatterTest.kt`)
-* [x] `parseIsoDateToMillis` для ISO 8601 с секундами
-* [x] `parseIsoDateToMillis` для ISO 8601 с fractional seconds
-* [x] `parseIsoDateToMillis` для ISO 8601 с Z
-* [x] `parseIsoDateToMillis` для short date
-* [x] `parseIsoDateToMillis` для server datetime without timezone
-* [x] `parseIsoDateToMillis` для invalid string
-* [x] `parseIsoDateToMillis` для empty string
-* [x] `parseIsoDateToMillis` консистентность результатов
+* [x] `parseIsoDateToMillis` для всех ISO форматов и invalid cases
 
 ### 7.1. Unit-тесты ViewModel [НЕ НАЧАТО]
 
@@ -856,14 +619,6 @@ composable(
 ---
 
 ## Технический долг и улучшения
-
-### Исправленные проблемы
-
-1. **Март 2026: Баг с пересозданием EventDetailViewModel**
-   * **Проблема:** ViewModel пересоздавалась при возврате на экран после смены темы
-   * **Причина:** Использование `remember(navBackStackEntry, appContainer)` - при `restoreState` создавался новый `NavBackStackEntry`, что приводило к смене ключа `remember`
-   * **Решение:** Использование `viewModel()` с factory методом, использующим `createSavedStateHandle()`
-   * **Файлы:** `EventDetailViewModel.kt`, `RootScreen.kt`
 
 ### Потенциальные улучшения
 
