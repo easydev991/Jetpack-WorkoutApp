@@ -19,7 +19,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.swparks.R
 import com.swparks.data.model.Comment
 import com.swparks.data.model.Event
@@ -29,6 +28,8 @@ import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.CommentAction
 import com.swparks.ui.ds.CommentRowData
 import com.swparks.ui.ds.CommentRowView
+import com.swparks.ui.ds.FormCardContainer
+import com.swparks.ui.ds.FormCardContainerParams
 import com.swparks.ui.ds.FormRowView
 import com.swparks.ui.ds.LocationInfoConfig
 import com.swparks.ui.ds.LocationInfoView
@@ -172,10 +173,15 @@ internal fun EventDescriptionSection(
         addPaddingToTitle = true,
         modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
     ) {
-        Text(
-            text = parsedDescription,
-            style = MaterialTheme.typography.bodyLarge
-        )
+        FormCardContainer(
+            params = FormCardContainerParams()
+        ) {
+            Text(
+                text = parsedDescription,
+                modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
     }
 }
 

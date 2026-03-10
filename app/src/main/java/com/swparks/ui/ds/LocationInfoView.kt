@@ -51,7 +51,7 @@ fun LocationInfoView(
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall))
     ) {
         SWButton(

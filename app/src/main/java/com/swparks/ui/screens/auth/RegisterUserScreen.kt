@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -508,12 +507,12 @@ private fun PolicyToggle(
             text = annotatedText,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier
+                .weight(1f)
                 .clickable(enabled = enabled) {
                     val intent = Intent(Intent.ACTION_VIEW, agreementUrl.toUri())
                     context.startActivity(intent)
                 }
         )
-        Spacer(modifier = Modifier.weight(1f))
         Switch(
             checked = isAccepted,
             onCheckedChange = onCheckedChange,

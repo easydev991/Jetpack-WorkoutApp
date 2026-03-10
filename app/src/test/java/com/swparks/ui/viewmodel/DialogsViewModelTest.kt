@@ -551,7 +551,8 @@ class DialogsViewModelTest {
                 stateAfterReAuth is DialogsUiState.Success
             )
             assertTrue(
-                "Expected empty dialog list but got ${(stateAfterReAuth as DialogsUiState.Success).dialogs.size} dialogs",
+                "Expected empty dialog list but got " +
+                    "${(stateAfterReAuth as DialogsUiState.Success).dialogs.size} dialogs",
                 stateAfterReAuth.dialogs.isEmpty()
             )
         }

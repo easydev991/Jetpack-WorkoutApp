@@ -18,7 +18,6 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
 import com.swparks.data.model.Comment
 import com.swparks.ui.ds.ErrorContentView
@@ -276,22 +274,5 @@ fun EventDetailScreen(
                 }
             }
         )
-    }
-}
-
-/**
- * Строка с меткой слева и значением справа.
- * Используется для отображения информации вида "Метка: Значение".
- *
- * @param label Текст метки (отображается слева полужирным шрифтом)
- * @param value Текст значения (отображается справа, выравнивание по правому краю)
- * @param modifier Modifier для компонента
- */
-@Suppress("UnusedPrivateMember")
-@Preview(name = "EventDetailScreen", showBackground = true)
-@Composable
-private fun EventDetailScreenPreview() {
-    MaterialTheme {
-        Text("EventDetailScreen Preview")
     }
 }

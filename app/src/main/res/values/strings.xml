@@ -200,6 +200,9 @@
     <string name="event_title">Event</string>
     <string name="event_description">Description</string>
     <string name="event_author">Organizer</string>
+    <string name="event_photos">Photos</string>
+    <string name="event_edit">Edit event</string>
+    <string name="event_share">Share</string>
     <string name="event_open_map">Open on map</string>
     <string name="event_build_route">Build route</string>
     <string name="event_add_to_calendar">Add to calendar</string>

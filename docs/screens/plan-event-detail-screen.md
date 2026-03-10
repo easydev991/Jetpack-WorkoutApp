@@ -2,44 +2,29 @@
 
 # План разработки экрана EventDetailScreen
 
-## Текущий статус: ~90% завершено
+## Текущий статус: ~82% завершено
 
 ### ✅ Выполнено
-* Этап 0: Подготовка архитектуры
-* Этап 1: UI State + ViewModel + реальная загрузка (все методы реализованы)
-* Этап 2: LocationInfoView + MapUriSet + DateFormatter
-* Этап 3: SwitchFormRowView (toggle "Пойду" для авторизованных, только если isCurrent)
-* Этап 3.1: Доработки секций (EventDescriptionSection, EventAuthorSection в SectionView, byMainUser для комментариев)
-* Этап 7: Навигация (EventsScreen → EventDetailScreen → OtherUserProfile)
-* Тесты: MapUriSetTest, DateFormatterTest
-* Локализация: основные строки (event_title, event_description, event_author, event_open_map, event_build_route, event_add_to_calendar, when, where, participants, address, delete, cancel, back, participate_too, add_comment)
-* **Март 2026:** onClickParticipants подключен к ViewModel, логирует нажатие
-* **Март 2026:** Удаление мероприятия и фото реализовано с confirm dialogs
-* **Март 2026:** Календарь, карта и маршрут работают через system intents
+* Этапы 0, 1, 2, 3, 3.1, 6, 7 завершены
+* Реализованы базовый UI, загрузка/refresh, календарь, карта/маршрут, удаление события/фото с подтверждением
+* Подключены ключевые локализованные строки EventDetail, включая `event_photos`, `event_edit`, `event_share`
+* Тесты: `MapUriSetTest`, `DateFormatterTest`
 
 ### ⏳ В работе / Не начато
 * **Этап 4:** PhotoSectionView (компонент не создан) — следующий приоритет
 * **Этап 5:** EventDetailScreen (дописать: PhotoSectionView, add comment button, edit/share actions в TopAppBar)
-* **Этап 6:** Локализация (дописать недостающие строки: event_photos, event_edit, event_share)
 * **Этап 8:** EventDetailViewModelTest (файл не создан)
+* **Этап 9:** Отдельный переиспользуемый экран участников (для EventDetail и ParkDetail), без загрузки из сети, с навигацией в `OtherUserProfileScreen` — см. [plan-participants-screen.md](./plan-participants-screen.md)
 
 ### 🎯 Следующие шаги (приоритет)
 1. **PhotoSectionView** — создать компонент для отображения сетки фотографий мероприятия
 2. **Add comment button** — добавить кнопку "Добавить комментарий" в UI (ViewModel уже готов)
 3. **Edit/Share actions** — добавить пункты меню в TopAppBar (ViewModel уже готов)
-4. **Локализация** — добавить строки event_photos, event_edit, event_share
-5. **EventDetailViewModelTest** — написать unit-тесты для ViewModel
+4. **EventDetailViewModelTest** — написать unit-тесты для ViewModel
 
 ### 🔧 Исправленные баги
-* **Март 2026:** Исправлен баг с пересозданием EventDetailViewModel при навигации после смены темы
-  * Проблема: ViewModel пересоздавалась при возврате на экран после смены темы на ThemeIconScreen
-  * Причина: Использование `remember(navBackStackEntry, appContainer)` — при `restoreState` создавался новый `NavBackStackEntry`
-  * Решение: Использование `viewModel()` с factory методом, использующим `createSavedStateHandle()`
-
-* **Март 2026:** onClickParticipants подключен к ViewModel
-  * Проблема: Клик по количеству участников логировался прямо в Composable, не проходя через ViewModel
-  * Решение: Добавлен параметр `onClickParticipants` в `EventParticipantsSection`, передан `viewModel::onParticipantsCountClick`
-  * Результат: Логирование теперь происходит в `EventDetailViewModel.onParticipantsCountClick()`
+* **Март 2026:** Устранено пересоздание `EventDetailViewModel` после смены темы: переход на `viewModel()` с `createSavedStateHandle()`
+* **Март 2026:** Клик по количеству участников перенесён в ViewModel (`onParticipantsCountClick`)
 
 ---
 
@@ -99,10 +84,10 @@
 
 ### Что БЛОКИРУЕТСЯ для неавторизованных (UI виден, действие недоступно)
 
-| Действие                              | Реализация в первой рабочей версии       |
-|---------------------------------------|------------------------------------------|
-| Переход на профиль автора мероприятия | Клик логируется, навигация не вызывается |
-| Переход на профиль автора комментария | Клик логируется, навигация не вызывается |
+| Действие                              | Реализация в текущей версии                          |
+|---------------------------------------|------------------------------------------------------|
+| Переход на профиль автора мероприятия | Клик отключён (`enabled = false`), навигация не вызывается |
+| Переход на профиль автора комментария | Клик отключён (`enabled = false`), навигация не вызывается |
 
 ### Что ДОСТУПНО всем (включая неавторизованных)
 
@@ -110,10 +95,8 @@
 * Просмотр адреса
 * Открытие карты
 * Построение маршрута через внешний map app/browser
-* Просмотр фотографий
-* Просмотр организатора (без перехода на профиль)
+* Просмотр организатора (переход на профиль доступен только авторизованным)
 * Просмотр комментариев
-* Поделиться мероприятием
 
 ### Политика интеракций первой рабочей версии
 
@@ -130,12 +113,10 @@
 
 * toggle "Пойду на мероприятие" — только для авторизованных пользователей
 * ~~клик по количеству участников~~ ✅ (подключен к ViewModel, логирует)
-* клик по автору мероприятия
-* клик по автору комментария
-* клик по фото
-* клик "Поделиться" — ViewModel метод готов
-* клик "Редактировать" — ViewModel метод готов
-* клик "Добавить комментарий" — ViewModel метод готов
+* клик по фото (после добавления `PhotoSectionView`)
+* клик "Поделиться" — ViewModel метод готов, UI action не добавлен
+* клик "Редактировать" — ViewModel метод готов, UI action не добавлен
+* клик "Добавить комментарий" — ViewModel метод готов, UI кнопка не добавлена
 
 ### Логика `isEventAuthor`
 
@@ -163,7 +144,7 @@ val isEventAuthor: StateFlow<Boolean>
 Из iOS-референса берём общую верстку, порядок секций и условия отображения, но не переносим платформенные или пока не реализованные сценарии:
 
 * жалоба на фото
-* жалоба на комментарий
+* жалоба на комментарий (требование: не показывать в первой версии)
 * полноэкранный просмотр фото как обязательную часть первой версии
 
 ---
@@ -192,42 +173,31 @@ val isEventAuthor: StateFlow<Boolean>
 
 ## Этап 0: Подготовка архитектуры [ГОТОВО]
 
-* [x] Типы ID унифицированы (`Long`), архитектурные решения зафиксированы
-* [x] `eventId` из `SavedStateHandle`, компоненты с `onClick` подготовлены
+* [x] Подготовлена архитектурная основа: унификация ID (`Long`) и получение `eventId` из `SavedStateHandle`
 
 ---
 
 ## Этап 1: UI State и ViewModel с реальной загрузкой [ГОТОВО]
 
-* [x] Реализованы `EventDetailUIState`, `IEventDetailViewModel` (21 метод), `EventDetailViewModel` с загрузкой, refresh, адресом, авторизацией, удалением, календарём
-* [x] `deleteEventPhoto(eventId, photoId)` добавлен в `SWRepository`
-* [x] Factory метод с `createSavedStateHandle()` для корректного lifecycle management
+* [x] Реализованы `EventDetailUIState`, `IEventDetailViewModel`, `EventDetailViewModel`, удаление фото в `SWRepository` и factory с `createSavedStateHandle()`
 
 ---
 
 ## Этап 2: Компоненты LocationInfoView, MapUriSet, DateFormatter [ГОТОВО]
 
-* [x] `LocationInfoView` — кнопки "Открыть на карте" и "Построить маршрут" через Intent с fallback на browser, поддержка темной темы, Preview
-* [x] Структура блока даты/места/адреса — 3 строки `Когда` / `Где` / `Адрес` (LabeledValueRow)
-* [x] `MapUriSet` data class — инкапсуляция логики формирования map URI, unit-тесты
-* [x] Рефакторинг парсинга даты — `parseIsoDateToMillis()` в `DateFormatter`, unit-тесты
+* [x] Реализованы `LocationInfoView`, `MapUriSet`, форматирование даты в `DateFormatter`, блоки `Когда/Где/Адрес` и соответствующие unit-тесты
 
 ---
 
 ## Этап 3: SwitchFormRowView для toggle "Пойду" [ГОТОВО]
 
-* [x] Компонент создан и интегрирован в EventDetailScreen под секцией участников
-* [x] Виден только для авторизованных пользователей и только для предстоящих мероприятий (`isCurrent`)
-* [x] Клик по toggle логируется, поддержка темной темы, Preview функции
+* [x] `SwitchFormRowView` создан и интегрирован: виден только авторизованным для `isCurrent`, с логированием, поддержкой тем и Preview
 
 ---
 
 ## Этап 3.1: Доработки секций EventDetailScreen [ГОТОВО]
 
-* [x] `EventDescriptionSection` — секция с описанием через `parseHtmlOrNull`, обёрнута в `SectionView`, скрыта при отсутствии описания
-* [x] `EventAuthorSection` — секция автора обёрнута в `SectionView` с локализованным заголовком `event_author`
-* [x] `byMainUser` в комментариях — вычисляется по `currentUserId` из ViewModel, передаётся в `EventCommentItem`
-* [x] Локализация — строки `event_description` и `event_author` добавлены в оба файла
+* [x] Доработаны секции описания/автора, вычисление `byMainUser` в комментариях и локализация `event_description`/`event_author`
 
 ---
 
@@ -286,16 +256,9 @@ data class PhotoSectionConfig(
 @Composable
 fun EventDetailScreen(
     modifier: Modifier = Modifier,
-    viewModel: IEventDetailViewModel = viewModel<EventDetailViewModel>(factory = EventDetailViewModel.Factory),
+    viewModel: IEventDetailViewModel,
     onBack: () -> Unit,
-    onEdit: (Long) -> Unit = {},
-    onDelete: (Long) -> Unit = {},
-    onShare: (String) -> Unit = {},
-    onParticipants: (Long) -> Unit = {},
-    onAuthor: (Long) -> Unit = {},
-    onGallery: (Long) -> Unit = {},
-    onAddComment: (Long) -> Unit = {},
-    onAddToCalendar: (Event) -> Unit = {}
+    onNavigateToUserProfile: (Long) -> Unit
 )
 ```
 
@@ -314,7 +277,7 @@ fun EventDetailScreen(
 1. `Scaffold` с `TopAppBar`
 
     * Назад
-    * Заголовок `event_detail_title`
+    * Заголовок `event_title`
     * Меню:
 
         * редактировать — только для автора
@@ -350,9 +313,9 @@ fun EventDetailScreen(
 
 * во время `isRefreshing` отключать кликабельные действия, где это уместно
 * у автора показывать edit и delete actions
-* для неавторизованного пользователя клик по автору/автору комментария только логируется
-* для автора использовать встроенные `enabled`/`onClick` в `UserRowView`, а для `CommentRowView` предусмотреть расширение API или отдельную обёртку для клика по автору
-* меню действий комментария в первой версии не показывать, чтобы не вывести неподдерживаемый `REPORT`
+* для неавторизованного пользователя клик по автору/автору комментария отключён через `enabled = false`
+* для автора использовать встроенные `enabled`/`onClick` в `UserRowView` и `CommentRowView`
+* меню действий комментария в первой версии не показывать, чтобы не вывести неподдерживаемый `REPORT` (сейчас требование не выполнено)
 * удаление мероприятия и удаление фото должны идти через confirm alert/dialog по аналогии с подтверждением удаления в Journals flow
 
 **Условия отображения секций по iOS-референсу:**
@@ -378,12 +341,12 @@ fun EventDetailScreen(
 * [ ] Меню "Поделиться" — UI не добавлен (ViewModel метод готов)
 * [x] Клики корректно обрабатываются через ViewModel
 * [x] Поддержка темной темы (все компоненты поддерживают)
-* [x] На Android не отображаются жалобы на фото/комментарии
+* [ ] На Android не отображаются жалобы на фото/комментарии (`CommentRowView` всё ещё показывает `REPORT` для чужих комментариев)
 * [x] Кнопка "Добавить в календарь" открывает системный календарь
 * [ ] PhotoSectionView не создан — требует реализации
 * [x] Удаление мероприятия требует явного подтверждения в alert/dialog
 * [x] Удаление фото требует явного подтверждения в alert/dialog (логика готова, UI требует PhotoSectionView)
-* [x] Навигация на профиль автора/комментатора работает (через `onNavigateToUserProfile`)
+* [x] Навигация на профиль автора/комментатора работает для авторизованного пользователя (через `onNavigateToUserProfile`)
 
 **Не реализовано:**
 
@@ -391,84 +354,31 @@ fun EventDetailScreen(
 * Кнопка "Добавить комментарий" — UI не добавлен (ViewModel метод готов)
 * Edit action в меню TopAppBar — UI не добавлен (ViewModel метод готов)
 * Share action в меню TopAppBar — UI не добавлен (ViewModel метод готов)
+* В комментариях всё ещё доступен action `REPORT` для чужих комментариев (нужно скрыть для первой версии)
 
 ---
 
-## Этап 6: Локализация [ЧАСТИЧНО]
+## Этап 6: Локализация [ГОТОВО]
 
 ### 6.1. Строковые ресурсы
 
 **Файл:** `app/src/main/res/values/strings.xml`
 **Файл:** `app/src/main/res/values-ru/strings.xml`
 
-**Необходимые строки:**
-
-| Ключ                               | EN              | RU                   |
-|------------------------------------|-----------------|----------------------|
-| `event_detail_title`               | Event           | Мероприятие          |
-| `event_participants`               | Participants    | Участники            |
-| `event_will_attend`                | I will attend   | Пойду                |
-| `event_photos`                     | Photos          | Фотографии           |
-| `event_description`                | Description     | Описание             |
-| `event_author`                     | Organizer       | Организатор          |
-| `event_comments`                   | Comments        | Комментарии          |
-| `event_add_comment`                | Add comment     | Добавить комментарий |
-| `event_open_map`                   | Open on map     | Открыть на карте     |
-| `event_build_route`                | Build route     | Построить маршрут    |
-| `event_add_to_calendar`            | Add to calendar | Добавить в календарь |
-| `event_edit`                       | Edit event      | Редактировать        |
-| `event_delete`                     | Delete event    | Удалить мероприятие  |
-| `event_delete_photo`               | Delete photo    | Удалить фото         |
-| `event_delete_confirm_title`       | Delete?         | Удалить?             |
-| `event_delete_photo_confirm_title` | Delete photo?   | Удалить фото?        |
-| `common_delete`                    | Delete          | Удалить              |
-| `common_cancel`                    | Cancel          | Отмена               |
-| `event_share`                      | Share           | Поделиться           |
-| `event_no_description`             | No description  | Нет описания         |
-| `event_location`                   | Location        | Локация              |
-
 **Критерии завершения:**
 
 * [x] Основные строки локализованы
-* [x] Использованы в UI
+* [x] Добавлены недостающие строки `event_photos`, `event_edit`, `event_share` в `values` и `values-ru`
+* [ ] Новые ключи подключены в UI (зависит от реализации этапа 5)
+* [x] Ключи готовы для оставшихся секций: `event_photos`, `event_edit`, `event_share`
 
-**Реализованные строки:**
-
-| Ключ                               | EN              | RU                   | Статус |
-|------------------------------------|-----------------|----------------------|--------|
-| `event_title`                      | Event           | Мероприятие          | ✅      |
-| `event_open_map`                   | Open on map     | Открыть на карте     | ✅      |
-| `event_build_route`                | Build route     | Построить маршрут    | ✅      |
-| `event_add_to_calendar`            | Add to calendar | Добавить в календарь | ✅      |
-| `event_delete_confirm_title`       | Delete event?   | Удалить мероприятие? | ✅      |
-| `event_delete_photo_confirm_title` | Delete photo?   | Удалить фото?        | ✅      |
-| `when`                             | When            | Когда                | ✅      |
-| `where`                            | Where           | Где                  | ✅      |
-| `participants`                     | Participants    | Участники            | ✅      |
-| `address`                          | Address         | Адрес                | ✅      |
-| `delete`                           | Delete          | Удалить              | ✅      |
-| `cancel`                           | Cancel          | Отмена               | ✅      |
-| `back`                             | Back            | Назад                | ✅      |
-| `participate_too`                  | I am participating | Пойду на мероприятие | ✅   |
-
-**Отсутствующие строки (потребуются для оставшихся секций):**
-
-| Ключ                | EN            | RU                   | Приоритет                      | Статус         |
-|---------------------|---------------|----------------------|--------------------------------|----------------|
-| `event_photos`      | Photos        | Фотографии           | Высокий (для PhotoSectionView) | ❌ Не добавлен |
-| `event_edit`        | Edit event    | Редактировать        | Средний (для меню)             | ❌ Не добавлен |
-| `event_share`       | Share         | Поделиться           | Средний (для меню)             | ❌ Не добавлен |
-
-**Примечание:** Строка `add_comment` уже существует (используется в парках), можно переиспользовать или создать `event_add_comment` для контекста мероприятий.
+**Примечание:** `add_comment` уже существует (переиспользуется для кнопки комментария до выделения отдельного `event_add_comment`).
 
 ---
 
 ## Этап 7: Интеграция в навигацию [ГОТОВО]
 
-* [x] Интеграция в `RootScreen` — `composable` для `Screen.EventDetail` с `viewModel()` и factory методом
-* [x] Получение `eventId` и `source` из аргументов через `SavedStateHandle`
-* [x] Callback-и: `onBack`, `onNavigateToUserProfile`
-* [x] Навигация работает: `EventsScreen` → `EventDetailScreen`, `EventDetailScreen` → `OtherUserProfileScreen`, `EventDetailScreen` → Back
+* [x] Экран интегрирован в `RootScreen` с `viewModel()`/factory, аргументами `eventId`/`source` и рабочей навигацией в профиль/назад
 
 ---
 
@@ -477,11 +387,10 @@ fun EventDetailScreen(
 ### 8.0. Выполненные тесты
 
 **MapUriSetTest** ✅ (`app/src/test/java/com/swparks/ui/model/MapUriSetTest.kt`)
-* [x] Все URI форматируются корректно (geo, browser, navigation, browserRoute)
-* [x] Тесты с отрицательными и нулевыми координатами
+* [x] Покрыты форматы URI (geo/browser/navigation/browserRoute), включая отрицательные и нулевые координаты
 
 **DateFormatterTest** ✅ (`app/src/test/java/com/swparks/util/DateFormatterTest.kt`)
-* [x] `parseIsoDateToMillis` для всех ISO форматов и invalid cases
+* [x] Покрыт `parseIsoDateToMillis` для supported/invalid ISO случаев
 
 ### 8.1. Unit-тесты ViewModel [НЕ НАЧАТО]
 
@@ -518,19 +427,19 @@ fun EventDetailScreen(
 
 **Проверить:**
 
-* [ ] Неавторизованный пользователь не видит participants section
-* [ ] Неавторизованный пользователь не видит кнопку add comment
-* [ ] Авторизованный пользователь видит participants section
+* [x] Неавторизованный пользователь не видит participants section (проверено по коду `EventParticipantsSection`)
+* [x] Неавторизованный пользователь не видит кнопку add comment (кнопка пока не реализована)
+* [x] Авторизованный пользователь видит participants section (проверено по коду `EventParticipantsSection`)
 * [ ] Автор мероприятия видит edit action
-* [ ] Автор мероприятия видит delete action
+* [x] Автор мероприятия видит delete action (иконка в `TopAppBar`)
 * [ ] При refresh действия корректно блокируются
-* [ ] При отсутствии map app срабатывает fallback
-* [ ] Ошибка загрузки показывает `ErrorContentView`
-* [ ] Toggle "Пойду" виден только для авторизованного пользователя и только для предстоящего события
-* [ ] Кнопка "Добавить в календарь" видна только для предстоящего события
-* [ ] Жалобы на фото и комментарии не отображаются в UI
-* [ ] При удалении мероприятия сначала показывается alert/dialog с кнопками `Удалить` и `Отмена`
-* [ ] При удалении фото сначала показывается alert/dialog с кнопками `Удалить` и `Отмена`
+* [x] При отсутствии map app срабатывает fallback (try/catch + browser intent)
+* [x] Ошибка загрузки показывает `ErrorContentView`
+* [x] Toggle "Пойду" виден только для авторизованного пользователя и только для предстоящего события
+* [x] Кнопка "Добавить в календарь" видна только для предстоящего события
+* [ ] Жалобы на фото и комментарии не отображаются в UI (не выполнено: `REPORT` в `CommentRowView`)
+* [x] При удалении мероприятия сначала показывается alert/dialog с кнопками `Удалить` и `Отмена`
+* [x] При удалении фото сначала показывается alert/dialog с кнопками `Удалить` и `Отмена`
 
 ---
 
@@ -545,7 +454,7 @@ fun EventDetailScreen(
 7. **Доработка** → onClickParticipants подключен к ViewModel ✅ (Март 2026)
 8. **Этап 4** → `PhotoSectionView` ⏳ (следующий приоритет)
 9. **Этап 5** → `EventDetailScreen` (дописать: PhotoSectionView, add comment button, edit/share actions)
-10. **Этап 6** → Локализация (дописать: event_photos, event_edit, event_share)
+10. **Этап 6** → Локализация ✅ (добавлены: event_photos, event_edit, event_share)
 11. **Этап 8** → Тестирование (EventDetailViewModelTest)
 
 ---
@@ -580,7 +489,7 @@ fun EventDetailScreen(
 
 4. **Фото:** переход в полноценную галерею или photo detail можно перенести на следующую итерацию. В первой рабочей версии клик по фото может только логироваться, но удаление фото для автора должно быть поддержано через confirm alert/dialog.
 
-5. **Комментарии и social actions:** в первой рабочей версии допустимо оставить без API-интеграции, но UI и точки расширения должны быть готовы. Жалобы на фото и комментарии в Android пока не выводить.
+5. **Комментарии и social actions:** в первой рабочей версии допустимо оставить без API-интеграции, но UI и точки расширения должны быть готовы. По текущему коду `REPORT` для комментариев всё ещё выводится и должен быть скрыт в рамках требований первой версии.
 
 6. **Календарь:** если событие предстоящее (`isCurrent == true`), нужно показать кнопку добавления в календарь и открывать системный календарь через стандартный Android Intent без сторонних зависимостей.
 
@@ -619,8 +528,8 @@ fun EventDetailScreen(
 
 ### Итерация 2 — Реальная навигация
 
-* ~~Переход на профиль автора~~ ✅ (реализовано через `onNavigateToUserProfile`)
-* Переход на экран участников
+* ~~Переход на профиль автора~~ ✅ (реализовано через `onNavigateToUserProfile` для авторизованных пользователей)
+* Переход на экран участников — вынесен в отдельный план: [plan-participants-screen.md](./plan-participants-screen.md)
 * Переход на экран галереи
 * Переход на редактирование мероприятия
 * Реальный share flow
