@@ -33,6 +33,8 @@ import com.swparks.ui.ds.FormCardContainerParams
 import com.swparks.ui.ds.FormRowView
 import com.swparks.ui.ds.LocationInfoConfig
 import com.swparks.ui.ds.LocationInfoView
+import com.swparks.ui.ds.PhotoSectionConfig
+import com.swparks.ui.ds.PhotoSectionView
 import com.swparks.ui.ds.SWButton
 import com.swparks.ui.ds.SWButtonMode
 import com.swparks.ui.ds.SWButtonSize
@@ -208,6 +210,20 @@ internal fun EventAuthorSection(
             )
         )
     }
+}
+
+@Composable
+internal fun EventPhotosSection(
+    photos: List<Photo>,
+    onPhotoClick: (Photo) -> Unit
+) {
+    PhotoSectionView(
+        config = PhotoSectionConfig(
+            photos = photos,
+            onPhotoClick = onPhotoClick
+        ),
+        modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
+    )
 }
 
 @Composable

@@ -6,6 +6,8 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.provider.CalendarContract
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -46,11 +48,11 @@ import com.swparks.util.DateFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventDetailScreen(
-    modifier: Modifier = Modifier,
     viewModel: IEventDetailViewModel,
     onBack: () -> Unit,
     onNavigateToUserProfile: (Long) -> Unit,
-    onNavigateToParticipants: (Long, List<User>) -> Unit
+    onNavigateToParticipants: (Long, List<User>) -> Unit,
+    parentPaddingValues: PaddingValues
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -118,7 +120,8 @@ fun EventDetailScreen(
     }
 
     Scaffold(
-        modifier = modifier,
+        modifier = Modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.event_title)) },
@@ -145,11 +148,15 @@ fun EventDetailScreen(
     ) { paddingValues ->
         when (val state = uiState) {
             EventDetailUIState.InitialLoading -> LoadingOverlayView(
-                modifier = Modifier.padding(paddingValues)
+                modifier = Modifier
+                    .padding(parentPaddingValues)
+                    .padding(paddingValues)
             )
 
             is EventDetailUIState.Error -> ErrorContentView(
-                modifier = Modifier.padding(paddingValues),
+                modifier = Modifier
+                    .padding(parentPaddingValues)
+                    .padding(paddingValues),
                 message = state.message,
                 retryAction = viewModel::refresh
             )
@@ -160,6 +167,7 @@ fun EventDetailScreen(
                     onRefresh = viewModel::refresh,
                     modifier = Modifier
                         .fillMaxSize()
+                        .padding(parentPaddingValues)
                         .padding(paddingValues)
                 ) {
                     LazyColumn(
@@ -194,6 +202,15 @@ fun EventDetailScreen(
                         if (state.event.description.isNotBlank()) {
                             item {
                                 EventDescriptionSection(description = state.event.description)
+                            }
+                        }
+
+                        if (state.event.photos.isNotEmpty()) {
+                            item {
+                                EventPhotosSection(
+                                    photos = state.event.photos,
+                                    onPhotoClick = viewModel::onPhotoClick
+                                )
                             }
                         }
 

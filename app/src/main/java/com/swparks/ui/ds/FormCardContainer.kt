@@ -17,6 +17,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.dimensionResource
 import com.swparks.R
 
+private const val DISABLED_CARD_ALPHA = 0.5f
+
 /**
  * Параметры для FormCardContainer
  */
@@ -82,7 +84,7 @@ fun FormCardContainer(
     }
 
     Card(
-        modifier = cardModifier.alpha(if (params.enabled) 1f else 0.5f),
+        modifier = cardModifier.alpha(if (params.enabled) 1f else DISABLED_CARD_ALPHA),
         shape = RoundedCornerShape(dimensionResource(R.dimen.spacing_small)),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer

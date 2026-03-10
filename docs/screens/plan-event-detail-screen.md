@@ -2,24 +2,23 @@
 
 # План разработки экрана EventDetailScreen
 
-## Текущий статус: ~82% завершено
+## Текущий статус: ~89% завершено
 
 ### ✅ Выполнено
-* Этапы 0, 1, 2, 3, 3.1, 6, 7 завершены
+* Этапы 0, 1, 2, 3, 3.1, 4, 6, 7 завершены
 * Реализованы базовый UI, загрузка/refresh, календарь, карта/маршрут, удаление события/фото с подтверждением
 * Список участников подключен: переход из `EventDetail` в `EventParticipants` работает, список передается и отображается
 * Подключены ключевые локализованные строки EventDetail, включая `event_photos`, `event_edit`, `event_share`
 * Тесты: `MapUriSetTest`, `DateFormatterTest`
 
 ### ⏳ В работе / Не начато
-* **Этап 4:** PhotoSectionView (компонент не создан) — следующий приоритет
-* **Этап 5:** EventDetailScreen (дописать: PhotoSectionView, add comment button, edit/share actions в TopAppBar)
+* **Этап 5:** EventDetailScreen (дописать: add comment button, edit/share actions в TopAppBar)
 * **Этап 8:** EventDetailViewModelTest (файл не создан)
 
 ### 🎯 Следующие шаги (приоритет)
-1. **PhotoSectionView** — создать компонент для отображения сетки фотографий мероприятия
-2. **Add comment button** — добавить кнопку "Добавить комментарий" в UI (ViewModel уже готов)
-3. **Edit/Share actions** — добавить пункты меню в TopAppBar (ViewModel уже готов)
+1. **Add comment button** — добавить кнопку "Добавить комментарий" в UI (ViewModel уже готов)
+2. **Edit/Share actions** — добавить пункты меню в TopAppBar (ViewModel уже готов)
+3. **PhotoDetailScreen** — добавить детальный экран фото и перенести туда удаление фото с confirm alert/dialog
 4. **EventDetailViewModelTest** — написать unit-тесты для ViewModel
 
 ### 🔧 Исправленные баги
@@ -113,7 +112,7 @@
 
 * toggle "Пойду на мероприятие" — только для авторизованных пользователей
 * ~~клик по количеству участников~~ ✅ (подключен: открывает `EventParticipants` с передачей списка участников)
-* клик по фото (после добавления `PhotoSectionView`)
+* клик по фото — секция подключена, действие пока логируется
 * клик "Поделиться" — ViewModel метод готов, UI action не добавлен
 * клик "Редактировать" — ViewModel метод готов, UI action не добавлен
 * клик "Добавить комментарий" — ViewModel метод готов, UI кнопка не добавлена
@@ -214,9 +213,7 @@ val isEventAuthor: StateFlow<Boolean>
 ```kotlin
 data class PhotoSectionConfig(
     val photos: List<Photo>,
-    val canDelete: Boolean,
-    val onPhotoClick: (Photo) -> Unit,
-    val onDeleteClick: ((Photo) -> Unit)? = null
+    val onPhotoClick: (Photo) -> Unit
 )
 ```
 
@@ -231,16 +228,16 @@ data class PhotoSectionConfig(
 **Важно для первой версии:**
 
 * не показывать действие "Пожаловаться на фото"
-* удаление фото доступно только при `isEventAuthor == true`
-* полноэкранный photo detail можно отложить на следующую итерацию, если удаление фото решается без него
+* кнопка удаления не отображается в `PhotoSectionView`
+* удаление фото переносится на будущий `PhotoDetailScreen` (кнопка в `TopAppBar` + confirm alert/dialog)
 
 **Критерии завершения:**
 
-* [ ] Адаптивная сетка 1/2/3 столбца
-* [ ] Корректная загрузка изображений
-* [ ] Обработка клика на фото
-* [ ] Поддержка темной темы
-* [ ] Preview функции
+* [x] Адаптивная сетка 1/2/3 столбца
+* [x] Корректная загрузка изображений
+* [x] Обработка клика на фото
+* [x] Поддержка темной темы
+* [x] Preview функции (отдельно: 1, 2, 4 фото)
 
 ---
 
@@ -343,14 +340,12 @@ fun EventDetailScreen(
 * [x] Поддержка темной темы (все компоненты поддерживают)
 * [ ] На Android не отображаются жалобы на фото/комментарии (`CommentRowView` всё ещё показывает `REPORT` для чужих комментариев)
 * [x] Кнопка "Добавить в календарь" открывает системный календарь
-* [ ] PhotoSectionView не создан — требует реализации
+* [x] PhotoSectionView подключен в EventDetailScreen
 * [x] Удаление мероприятия требует явного подтверждения в alert/dialog
-* [x] Удаление фото требует явного подтверждения в alert/dialog (логика готова, UI требует PhotoSectionView)
+* [x] Удаление фото требует явного подтверждения в alert/dialog (логика готова, перенос UI удаления в `PhotoDetailScreen`)
 * [x] Навигация на профиль автора/комментатора работает для авторизованного пользователя (через `onNavigateToUserProfile`)
 
 **Не реализовано:**
-
-* `PhotoSectionView` — компонент не создан (следующий приоритет)
 * Кнопка "Добавить комментарий" — UI не добавлен (ViewModel метод готов)
 * Edit action в меню TopAppBar — UI не добавлен (ViewModel метод готов)
 * Share action в меню TopAppBar — UI не добавлен (ViewModel метод готов)
@@ -420,7 +415,7 @@ fun EventDetailScreen(
 **Добавить Preview для:**
 
 * [x] `LocationInfoView` — есть для светлой/тёмной темы
-* [ ] `PhotoSectionView` (1, 2, 3+ фото)
+* [x] `PhotoSectionView` (1, 2, 3+ фото)
 * [ ] `EventDetailScreen` (`loading`, `content`, `error`)
 
 ### 8.3. UI-сценарии
@@ -452,8 +447,8 @@ fun EventDetailScreen(
 5. **Исправление бага** → Factory метод с `createSavedStateHandle()` ✅ (Март 2026)
 6. **Этап 3** → `SwitchFormRowView` (toggle "Пойду") ✅
 7. **Доработка** → onClickParticipants подключен к ViewModel ✅ (Март 2026)
-8. **Этап 4** → `PhotoSectionView` ⏳ (следующий приоритет)
-9. **Этап 5** → `EventDetailScreen` (дописать: PhotoSectionView, add comment button, edit/share actions)
+8. **Этап 4** → `PhotoSectionView` ✅ (реализован, включая Preview)
+9. **Этап 5** → `EventDetailScreen` (дописать: add comment button, edit/share actions)
 10. **Этап 6** → Локализация ✅ (добавлены: event_photos, event_edit, event_share)
 11. **Этап 8** → Тестирование (EventDetailViewModelTest)
 
@@ -487,7 +482,7 @@ fun EventDetailScreen(
      * **авторизованных пользователей** — доступен полный сценарий просмотра
      * **автора мероприятия** — видны edit/delete action и доступно удаление фото
 
-4. **Фото:** переход в полноценную галерею или photo detail можно перенести на следующую итерацию. В первой рабочей версии клик по фото может только логироваться, но удаление фото для автора должно быть поддержано через confirm alert/dialog.
+4. **Фото:** `PhotoSectionView` оставлен без кнопки удаления. Удаление фото переносится на `PhotoDetailScreen`: после клика по фото открывается детальный экран, где удаление будет доступно через кнопку в `TopAppBar` и confirm alert/dialog.
 
 5. **Комментарии и social actions:** в первой рабочей версии допустимо оставить без API-интеграции, но UI и точки расширения должны быть готовы. По текущему коду `REPORT` для комментариев всё ещё выводится и должен быть скрыт в рамках требований первой версии.
 

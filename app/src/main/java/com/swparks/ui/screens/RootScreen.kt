@@ -370,9 +370,6 @@ fun RootScreen(appState: AppState) {
                 )
 
                 EventDetailScreen(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
                     viewModel = eventDetailViewModel,
                     onBack = { appState.navController.popBackStack() },
                     onNavigateToUserProfile = { userId ->
@@ -388,7 +385,8 @@ fun RootScreen(appState: AppState) {
                         appState.navController.getBackStackEntry(participantsRoute)
                             .savedStateHandle
                             .set(EVENT_PARTICIPANTS_USERS_JSON_KEY, usersJson)
-                    }
+                    },
+                    parentPaddingValues = paddingValues
                 )
             }
 
