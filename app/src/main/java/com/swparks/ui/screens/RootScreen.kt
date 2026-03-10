@@ -25,13 +25,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.swparks.JetpackWorkoutApplication
 import com.swparks.data.model.Park
+import com.swparks.data.model.User
 import com.swparks.data.preferences.AppSettingsDataStore
 import com.swparks.navigation.AppState
 import com.swparks.navigation.BottomNavigationBar
 import com.swparks.navigation.Screen
 import com.swparks.ui.model.JournalAccess
+import com.swparks.ui.model.ParticipantsMode
 import com.swparks.ui.screens.auth.LoginSheetHost
 import com.swparks.ui.screens.auth.RegisterSheetHost
+import com.swparks.ui.screens.common.ParticipantsScreen
 import com.swparks.ui.screens.events.EventDetailScreen
 import com.swparks.ui.screens.events.EventsScreen
 import com.swparks.ui.screens.events.EventsTopAppBar
@@ -66,6 +69,8 @@ import com.swparks.ui.viewmodel.ThemeIconViewModel
 import com.swparks.util.toUiText
 import com.swparks.utils.ReadJSONFromAssets
 import com.swparks.utils.WorkoutAppJson
+
+private const val EVENT_PARTICIPANTS_USERS_JSON_KEY = "event_participants_users_json"
 
 @Composable
 fun RootScreen(appState: AppState) {
@@ -312,6 +317,35 @@ fun RootScreen(appState: AppState) {
                 // TODO: Реализовать EditParkScreen
             }
 
+            composable(
+                route = Screen.ParkTrainees.route,
+                arguments = listOf(
+                    androidx.navigation.navArgument("parkId") {
+                        type = androidx.navigation.NavType.LongType
+                    },
+                    androidx.navigation.navArgument("source") {
+                        type = androidx.navigation.NavType.StringType
+                        defaultValue = "parks"
+                    }
+                )
+            ) { navBackStackEntry ->
+                val source = navBackStackEntry.arguments?.getString("source") ?: "parks"
+
+                // Список для ParkTrainees должен приходить из ParkDetail (экран в разработке).
+                // Пока используем пустой список как заглушку до реализации ParkDetail.
+                ParticipantsScreen(
+                    mode = ParticipantsMode.Park,
+                    users = emptyList(),
+                    currentUserId = currentUser?.id,
+                    onBack = { appState.navController.popBackStack() },
+                    onUserClick = { userId ->
+                        appState.navController.navigate(
+                            Screen.OtherUserProfile.createRoute(userId, source)
+                        )
+                    }
+                )
+            }
+
             // Детальные экраны мероприятий
             composable(
                 route = Screen.EventDetail.route,
@@ -345,6 +379,15 @@ fun RootScreen(appState: AppState) {
                         appState.navController.navigate(
                             Screen.OtherUserProfile.createRoute(userId, "events")
                         )
+                    },
+                    onNavigateToParticipants = { eventId, users ->
+                        val participantsRoute =
+                            Screen.EventParticipants.createRoute(eventId, "events")
+                        appState.navController.navigate(participantsRoute)
+                        val usersJson = WorkoutAppJson.encodeToString(users)
+                        appState.navController.getBackStackEntry(participantsRoute)
+                            .savedStateHandle
+                            .set(EVENT_PARTICIPANTS_USERS_JSON_KEY, usersJson)
                     }
                 )
             }
@@ -355,6 +398,41 @@ fun RootScreen(appState: AppState) {
 
             composable(route = Screen.EditEvent.route) {
                 // TODO: Реализовать EditEventScreen
+            }
+
+            composable(
+                route = Screen.EventParticipants.route,
+                arguments = listOf(
+                    androidx.navigation.navArgument("eventId") {
+                        type = androidx.navigation.NavType.LongType
+                    },
+                    androidx.navigation.navArgument("source") {
+                        type = androidx.navigation.NavType.StringType
+                        defaultValue = "events"
+                    }
+                )
+            ) { navBackStackEntry ->
+                val source = navBackStackEntry.arguments?.getString("source") ?: "events"
+                val usersJson = navBackStackEntry.savedStateHandle
+                    .get<String>(EVENT_PARTICIPANTS_USERS_JSON_KEY)
+                val users = usersJson?.let {
+                    runCatching { WorkoutAppJson.decodeFromString<List<User>>(it) }
+                        .getOrDefault(emptyList())
+                }.orEmpty()
+
+                // Список участников хранится в savedStateHandle самого экрана
+                // и живет, пока EventParticipants находится в back stack.
+                ParticipantsScreen(
+                    mode = ParticipantsMode.Event,
+                    users = users,
+                    currentUserId = currentUser?.id,
+                    onBack = { appState.navController.popBackStack() },
+                    onUserClick = { userId ->
+                        appState.navController.navigate(
+                            Screen.OtherUserProfile.createRoute(userId, source)
+                        )
+                    }
+                )
             }
 
             // Экран чата

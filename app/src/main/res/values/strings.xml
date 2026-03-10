@@ -79,6 +79,7 @@
     <string name="requests">Requests</string>
     <string name="friends">Friends</string>
     <string name="no_friends_yet">No friends yet</string>
+    <string name="no_participants">No participants yet</string>
     <string name="where_trains">Where trains</string>
     <string name="added_parks">Added parks</string>
     <string name="male_added_parks">Added parks</string>
@@ -216,6 +217,8 @@
     <string name="when">When</string>
     <string name="where">Where</string>
     <string name="participants">Participants</string>
+    <string name="event_participants_title">Event participants</string>
+    <string name="park_trainees_title">Here they train</string>
     <string name="description">Description</string>
     <string name="organized_by">Organized by</string>
     <string name="close">Close</string>

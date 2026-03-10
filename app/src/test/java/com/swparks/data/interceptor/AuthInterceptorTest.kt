@@ -111,25 +111,26 @@ class AuthInterceptorTest {
     }
 
     @Test
-    fun intercept_whenResponseCodeIs401_onResetPasswordEndpoint_thenDoesNotClearAllUserData() = runTest {
-        // Given
-        val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
-        val interceptor = AuthInterceptor(mockPreferencesRepository)
+    fun intercept_whenResponseCodeIs401_onResetPasswordEndpoint_thenDoesNotClearAllUserData() =
+        runTest {
+            // Given
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
+            val interceptor = AuthInterceptor(mockPreferencesRepository)
 
-        val chain = mockk<Interceptor.Chain>()
-        val request = Request.Builder().url("https://example.com/api/reset-password").build()
-        val response = mockk<Response>()
+            val chain = mockk<Interceptor.Chain>()
+            val request = Request.Builder().url("https://example.com/api/reset-password").build()
+            val response = mockk<Response>()
 
-        every { chain.request() } returns request
-        every { chain.proceed(request) } returns response
-        every { response.code } returns 401
+            every { chain.request() } returns request
+            every { chain.proceed(request) } returns response
+            every { response.code } returns 401
 
-        // When
-        interceptor.intercept(chain)
+            // When
+            interceptor.intercept(chain)
 
-        // Then
-        verify(exactly = 0) { mockPreferencesRepository.clearAllUserData() }
-    }
+            // Then
+            verify(exactly = 0) { mockPreferencesRepository.clearAllUserData() }
+        }
 
     @Test
     fun intercept_whenResponseCodeIsNot401_thenDoesNotClearAllUserData() = runTest {

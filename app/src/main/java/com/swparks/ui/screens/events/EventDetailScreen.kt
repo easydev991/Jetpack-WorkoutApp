@@ -35,6 +35,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
 import com.swparks.data.model.Comment
+import com.swparks.data.model.User
 import com.swparks.ui.ds.ErrorContentView
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.state.EventDetailUIState
@@ -48,7 +49,8 @@ fun EventDetailScreen(
     modifier: Modifier = Modifier,
     viewModel: IEventDetailViewModel,
     onBack: () -> Unit,
-    onNavigateToUserProfile: (Long) -> Unit
+    onNavigateToUserProfile: (Long) -> Unit,
+    onNavigateToParticipants: (Long, List<User>) -> Unit
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -106,6 +108,10 @@ fun EventDetailScreen(
                             )
                         }
                     }
+                }
+
+                is EventDetailEvent.NavigateToParticipants -> {
+                    onNavigateToParticipants(event.eventId, event.users)
                 }
             }
         }

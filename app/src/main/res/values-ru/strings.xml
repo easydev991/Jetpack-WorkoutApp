@@ -87,6 +87,7 @@
     <string name="requests">Заявки</string>
     <string name="friends">Друзья</string>
     <string name="no_friends_yet">Друзей пока нет</string>
+    <string name="no_participants">Участников пока нет</string>
     <string name="where_trains">Где тренируется</string>
     <string name="added_parks">Добавленные</string>
     <string name="male_added_parks">Добавил площадки</string>
@@ -216,6 +217,8 @@
     <string name="when">Когда</string>
     <string name="where">Где</string>
     <string name="participants">Участники</string>
+    <string name="event_participants_title">Участники мероприятия</string>
+    <string name="park_trainees_title">Здесь тренируются</string>
     <string name="description">Описание</string>
     <string name="organized_by">Организатор</string>
     <string name="close">Закрыть</string>

@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Photo
+import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.ds.CommentAction
@@ -78,6 +79,17 @@ sealed class EventDetailEvent {
      * Построить маршрут до мероприятия.
      */
     data object BuildRoute : EventDetailEvent()
+
+    /**
+     * Навигация к списку участников мероприятия.
+     *
+     * @param eventId Идентификатор мероприятия
+     * @param users Список участников
+     */
+    data class NavigateToParticipants(
+        val eventId: Long,
+        val users: List<User>
+    ) : EventDetailEvent()
 }
 
 /**
@@ -211,7 +223,8 @@ class EventDetailViewModel(
         val currentState = _uiState.value
         if (currentState is EventDetailUIState.Content) {
             val eventAuthorId = currentState.event.author.id
-            _isEventAuthor.value = _currentUserId.value != null && _currentUserId.value == eventAuthorId
+            _isEventAuthor.value =
+                _currentUserId.value != null && _currentUserId.value == eventAuthorId
             logger.d(
                 TAG,
                 "isEventAuthor: ${_isEventAuthor.value} " +
@@ -486,6 +499,15 @@ class EventDetailViewModel(
                 "Нажато количество участников (${currentState.event.trainingUsersCount}) " +
                     "для мероприятия id=${currentState.event.id}"
             )
+            // Отправляем событие навигации
+            viewModelScope.launch {
+                _events.emit(
+                    EventDetailEvent.NavigateToParticipants(
+                        eventId = currentState.event.id,
+                        users = currentState.event.trainingUsers.orEmpty()
+                    )
+                )
+            }
         }
     }
 

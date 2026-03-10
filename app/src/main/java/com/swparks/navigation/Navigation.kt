@@ -39,9 +39,10 @@ fun BottomNavigationBar(
         ) {
             appState.topLevelDestinations.forEach { destination ->
                 val isSelected = currentDestination?.route == destination.route
-                val interactionSource = remember(destination.route, isAuthorized, bottomNavVisualEpoch) {
-                    MutableInteractionSource()
-                }
+                val interactionSource =
+                    remember(destination.route, isAuthorized, bottomNavVisualEpoch) {
+                        MutableInteractionSource()
+                    }
 
                 NavigationBarItem(
                     selected = isSelected,

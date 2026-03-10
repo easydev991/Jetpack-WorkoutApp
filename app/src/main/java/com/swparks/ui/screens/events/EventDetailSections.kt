@@ -267,7 +267,11 @@ private fun LabeledValueRow(
 }
 
 @Preview(showBackground = true, locale = "ru")
-@Preview(uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES, showBackground = true, locale = "ru")
+@Preview(
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true,
+    locale = "ru"
+)
 @Composable
 internal fun EventHeaderMapCalendarSectionPreview() {
     JetpackWorkoutAppTheme {
@@ -287,7 +291,11 @@ internal fun EventHeaderMapCalendarSectionPreview() {
 }
 
 @Preview(showBackground = true, locale = "ru")
-@Preview(uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES, showBackground = true, locale = "ru")
+@Preview(
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true,
+    locale = "ru"
+)
 @Composable
 internal fun EventParticipantsSectionPreview() {
     JetpackWorkoutAppTheme {
@@ -313,7 +321,11 @@ private const val PREVIEW_DESCRIPTION_HTML =
         "<p>Что будет:</p><ul><li>Разминка</li><li>Подтягивания</li><li>Отжимания</li></ul>"
 
 @Preview(showBackground = true, locale = "ru")
-@Preview(uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES, showBackground = true, locale = "ru")
+@Preview(
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true,
+    locale = "ru"
+)
 @Composable
 internal fun EventDescriptionSectionPreview() {
     JetpackWorkoutAppTheme {
@@ -324,7 +336,11 @@ internal fun EventDescriptionSectionPreview() {
 }
 
 @Preview(showBackground = true, locale = "ru")
-@Preview(uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES, showBackground = true, locale = "ru")
+@Preview(
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true,
+    locale = "ru"
+)
 @Composable
 internal fun EventAuthorSectionPreview() {
     JetpackWorkoutAppTheme {
@@ -341,7 +357,11 @@ internal fun EventAuthorSectionPreview() {
 }
 
 @Preview(showBackground = true, locale = "ru")
-@Preview(uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES, showBackground = true, locale = "ru")
+@Preview(
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true,
+    locale = "ru"
+)
 @Composable
 internal fun EventCommentItemPreview() {
     JetpackWorkoutAppTheme {
