@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 /**
  * ViewModel для экрана чата (диалога).
@@ -58,7 +59,7 @@ class ChatViewModel(
             _uiState.value = ChatUiState.Loading
             try {
                 refreshMessagesInternal(dialogId)
-            } catch (e: Exception) {
+            } catch (e: IOException) {
                 Log.e(TAG, "Ошибка загрузки сообщений: ${e.message}", e)
                 _uiState.value = ChatUiState.Error(e.message ?: "Неизвестная ошибка")
                 userNotifier.handleError(
@@ -77,7 +78,7 @@ class ChatViewModel(
             _isLoading.value = true
             try {
                 refreshMessagesInternal(dialogId)
-            } catch (e: Exception) {
+            } catch (e: IOException) {
                 Log.e(TAG, "Ошибка обновления сообщений: ${e.message}", e)
                 userNotifier.handleError(
                     AppError.Generic(
@@ -110,7 +111,7 @@ class ChatViewModel(
                 refreshMessagesInternal(dialogId)
                 // Эмитим событие об успешной отправке сообщения
                 _events.emit(ChatEvent.MessageSent(dialogId))
-            } catch (e: Exception) {
+            } catch (e: IOException) {
                 Log.e(TAG, "Ошибка отправки сообщения: ${e.message}", e)
                 userNotifier.handleError(
                     AppError.Generic(

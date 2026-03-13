@@ -68,14 +68,6 @@ class LoggingInterceptor : Interceptor {
             val durationMs = (System.nanoTime() - startTime) / NANOS_IN_MILLIS
             Log.e(TAG, "❌ ERROR after ${durationMs}ms: ${request.method} ${request.url}", e)
             throw e
-        } catch (e: Exception) {
-            val durationMs = (System.nanoTime() - startTime) / NANOS_IN_MILLIS
-            Log.e(
-                TAG,
-                "❌ UNEXPECTED ERROR after ${durationMs}ms: ${request.method} ${request.url}",
-                e
-            )
-            throw e
         }
     }
 

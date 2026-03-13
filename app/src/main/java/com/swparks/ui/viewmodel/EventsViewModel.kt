@@ -97,7 +97,7 @@ class EventsViewModel(
                 else -> "$countryId, $cityId"
             }
             address
-        } catch (e: Exception) {
+        } catch (e: IOException) {
             logger.e(TAG, "Ошибка загрузки адреса ($countryId, $cityId): ${e.message}")
             "$countryId, $cityId"
         }
@@ -338,7 +338,7 @@ class EventsViewModel(
                         )
                     }
                 )
-            } catch (e: Exception) {
+            } catch (e: IOException) {
                 logger.e(TAG, "Исключение при синхронизации прошедших мероприятий: ${e.message}", e)
                 _eventsUIState.value = EventsUIState.Error(
                     message = e.message,

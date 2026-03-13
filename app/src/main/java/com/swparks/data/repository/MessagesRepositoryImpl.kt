@@ -8,6 +8,7 @@ import com.swparks.domain.repository.MessagesRepository
 import com.swparks.network.SWApi
 import com.swparks.util.Logger
 import kotlinx.coroutines.flow.Flow
+import java.io.IOException
 
 /**
  * Реализация репозитория для работы с диалогами
@@ -46,7 +47,7 @@ class MessagesRepositoryImpl(
 
         Log.i(TAG, "Успешно сохранено ${remoteDialogs.size} диалогов в БД")
         Result.success(Unit)
-    } catch (e: Exception) {
+    } catch (e: IOException) {
         logger.e(TAG, "Ошибка загрузки диалогов: ${e.message}")
         Result.failure(e)
     }

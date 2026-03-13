@@ -13,6 +13,7 @@ import com.swparks.data.model.LoginSuccess
 import com.swparks.data.model.User
 import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.exception.ServerException
+import com.swparks.domain.model.RegistrationParams
 import com.swparks.network.SWApi
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -336,14 +337,16 @@ class SWRepositoryAuthTest {
 
         // When
         val result = repository.register(
-            name = "testuser",
-            fullName = "Test User",
-            email = "test@example.com",
-            password = "password123",
-            birthDate = "1990-01-01",
-            genderCode = 1,
-            countryId = null,
-            cityId = null
+            RegistrationParams(
+                name = "testuser",
+                fullName = "Test User",
+                email = "test@example.com",
+                password = "password123",
+                birthDate = "1990-01-01",
+                genderCode = 1,
+                countryId = null,
+                cityId = null
+            )
         )
 
         // Then
@@ -397,14 +400,16 @@ class SWRepositoryAuthTest {
 
         // When
         val result = repository.register(
-            name = "testuser",
-            fullName = "Test User",
-            email = "test@example.com",
-            password = "password123",
-            birthDate = "1990-01-01",
-            genderCode = 1,
-            countryId = null,
-            cityId = null
+            RegistrationParams(
+                name = "testuser",
+                fullName = "Test User",
+                email = "test@example.com",
+                password = "password123",
+                birthDate = "1990-01-01",
+                genderCode = 1,
+                countryId = null,
+                cityId = null
+            )
         )
 
         // Then
@@ -658,14 +663,16 @@ class SWRepositoryAuthTest {
 
             // When
             val result = repository.register(
-                name = "testuser",
-                fullName = "Test User",
-                email = "test@example.com",
-                password = "password123",
-                birthDate = "1990-01-01",
-                genderCode = 1,
-                countryId = null,
-                cityId = null
+                RegistrationParams(
+                    name = "testuser",
+                    fullName = "Test User",
+                    email = "test@example.com",
+                    password = "password123",
+                    birthDate = "1990-01-01",
+                    genderCode = 1,
+                    countryId = null,
+                    cityId = null
+                )
             )
 
             // Then

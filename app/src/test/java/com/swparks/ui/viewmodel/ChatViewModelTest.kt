@@ -20,6 +20,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import java.io.IOException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -149,7 +150,7 @@ class ChatViewModelTest {
     fun loadMessages_handlesError_andCallsUserNotifier() = runTest {
         // Given
         val dialogId = 1L
-        val exception = Exception("Network error")
+        val exception = IOException("Network error")
         coEvery { swApi.getMessages(dialogId) } throws exception
 
         // When
@@ -187,7 +188,7 @@ class ChatViewModelTest {
     fun refreshMessages_handlesError_andCallsUserNotifier() = runTest {
         // Given
         val dialogId = 1L
-        coEvery { swApi.getMessages(dialogId) } returns listOf(testMessage) andThenThrows Exception(
+        coEvery { swApi.getMessages(dialogId) } returns listOf(testMessage) andThenThrows IOException(
             "Network error"
         )
 
@@ -279,7 +280,7 @@ class ChatViewModelTest {
         val dialogId = 1L
         val userId = 123
         coEvery { swApi.getMessages(dialogId) } returns listOf(testMessage)
-        coEvery { swApi.sendMessageTo(userId.toLong(), any()) } throws Exception("Network error")
+        coEvery { swApi.sendMessageTo(userId.toLong(), any()) } throws IOException("Network error")
 
         // When
         viewModel = ChatViewModel(swApi, swRepository, userNotifier)

@@ -94,7 +94,7 @@ class CountriesRepositoryImpl(
             logger.i(TAG, "Загружен справочник стран: ${countries.size} стран")
         } catch (e: SerializationException) {
             logger.e(TAG, "Ошибка десериализации JSON: ${e.message}", e)
-        } catch (e: Exception) {
+        } catch (e: IOException) {
             logger.e(TAG, "Ошибка при загрузке справочника стран: ${e.message}", e)
         }
     }

@@ -59,7 +59,7 @@ class JournalEntriesRepositoryImpl(
 
         Log.i(TAG, "Успешно сохранено ${entities.size} записей в БД")
         Result.success(Unit)
-    } catch (e: Exception) {
+    } catch (e: IOException) {
         Log.e(TAG, "Ошибка при загрузке записей: ${e.message}", e)
         Result.failure(e)
     }
@@ -96,10 +96,6 @@ class JournalEntriesRepositoryImpl(
     } catch (e: IOException) {
         val errorMessage = "Ошибка сети при удалении записи"
         Log.e(TAG, "$errorMessage: ${e.message}")
-        Result.failure(NetworkException(errorMessage, e))
-    } catch (e: Exception) {
-        val errorMessage = "Неизвестная ошибка при удалении записи"
-        Log.e(TAG, "$errorMessage: ${e.message}", e)
         Result.failure(NetworkException(errorMessage, e))
     }
 

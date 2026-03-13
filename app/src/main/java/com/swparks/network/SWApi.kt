@@ -28,6 +28,8 @@ interface SWApi {
     // ==================== АВТОРИЗАЦИЯ И ПРОФИЛЬ ====================
 
     // Регистрация
+    // Suppress: API контракт с сервером, нельзя изменить формат запроса
+    @Suppress("LongParameterList")
     @FormUrlEncoded
     @POST("registration")
     suspend fun register(

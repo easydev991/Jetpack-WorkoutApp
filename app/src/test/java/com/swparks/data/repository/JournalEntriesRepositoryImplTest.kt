@@ -196,7 +196,7 @@ class JournalEntriesRepositoryImplTest {
     @Test
     fun testRefreshJournalEntries_error_returnsFailure() = runTest {
         // Given
-        val exception = RuntimeException("Network error: Unable to connect")
+        val exception = IOException("Network error: Unable to connect")
         coEvery { mockApi.getJournalEntries(testUserId, testJournalId) } throws exception
 
         // When

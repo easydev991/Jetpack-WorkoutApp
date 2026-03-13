@@ -8,6 +8,7 @@ import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.model.RegistrationParams
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.model.LoginCredentials
@@ -505,16 +506,7 @@ class RegisterViewModelTest {
         // Given
         fillValidForm()
         coEvery {
-            swRepository.register(
-                name = any(),
-                fullName = any(),
-                email = any(),
-                password = any(),
-                birthDate = any(),
-                genderCode = any(),
-                countryId = any(),
-                cityId = any()
-            )
+            swRepository.register(any<RegistrationParams>())
         } returns Result.success(testUser)
 
         // When
@@ -530,16 +522,7 @@ class RegisterViewModelTest {
         assertEquals(testUser.id, (event as RegisterEvent.Success).userId)
 
         coVerify(exactly = 1) {
-            swRepository.register(
-                name = any(),
-                fullName = any(),
-                email = any(),
-                password = any(),
-                birthDate = any(),
-                genderCode = any(),
-                countryId = any(),
-                cityId = any()
-            )
+            swRepository.register(any<RegistrationParams>())
         }
         coVerify(exactly = 1) { secureTokenRepository.saveAuthToken("test-token") }
         coVerify(exactly = 1) { userPreferencesRepository.saveCurrentUserId(testUser.id) }
@@ -551,16 +534,7 @@ class RegisterViewModelTest {
         fillValidForm()
         val errorMessage = "Пользователь с таким email уже существует"
         coEvery {
-            swRepository.register(
-                name = any(),
-                fullName = any(),
-                email = any(),
-                password = any(),
-                birthDate = any(),
-                genderCode = any(),
-                countryId = any(),
-                cityId = any()
-            )
+            swRepository.register(any<RegistrationParams>())
         } returns Result.failure(Exception(errorMessage))
 
         // When
@@ -592,16 +566,7 @@ class RegisterViewModelTest {
 
         // Then
         coVerify(exactly = 0) {
-            swRepository.register(
-                name = any(),
-                fullName = any(),
-                email = any(),
-                password = any(),
-                birthDate = any(),
-                genderCode = any(),
-                countryId = any(),
-                cityId = any()
-            )
+            swRepository.register(any<RegistrationParams>())
         }
     }
 

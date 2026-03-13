@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.data.UserPreferencesRepository
+import com.swparks.data.model.Comment
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
@@ -622,77 +623,63 @@ class EventDetailViewModel(
 
         logger.d(TAG, "Нажато действие $action для комментария id=$commentId")
 
+        val comment = currentState.event.comments.orEmpty().firstOrNull { it.id == commentId }
+        if (comment == null) {
+            logger.w(TAG, "Комментарий не найден: id=$commentId")
+            return
+        }
+
         when (action) {
-            CommentAction.EDIT -> {
-                val comment = currentState.event.comments
-                    .orEmpty()
-                    .firstOrNull { it.id == commentId }
-                if (comment == null) {
-                    logger.w(TAG, "Комментарий для редактирования не найден: id=$commentId")
-                    return
-                }
-                viewModelScope.launch {
-                    _events.emit(
-                        EventDetailEvent.OpenCommentTextEntry(
-                            mode = TextEntryMode.EditEvent(
-                                editInfo = EditInfo(
-                                    parentObjectId = currentState.event.id,
-                                    entryId = comment.id,
-                                    oldEntry = comment.parsedBody.orEmpty()
-                                )
-                            )
+            CommentAction.EDIT -> handleEditComment(comment, currentState.event.id)
+            CommentAction.REPORT -> handleReportComment(comment, currentState.event.title)
+            CommentAction.DELETE -> handleDeleteComment(comment, commentId)
+        }
+    }
+
+    private fun handleEditComment(comment: Comment, eventId: Long) {
+        viewModelScope.launch {
+            _events.emit(
+                EventDetailEvent.OpenCommentTextEntry(
+                    mode = TextEntryMode.EditEvent(
+                        editInfo = EditInfo(
+                            parentObjectId = eventId,
+                            entryId = comment.id,
+                            oldEntry = comment.parsedBody.orEmpty()
                         )
                     )
-                }
-            }
+                )
+            )
+        }
+    }
 
-            CommentAction.REPORT -> {
-                val comment = currentState.event.comments
-                    .orEmpty()
-                    .firstOrNull { it.id == commentId }
-                if (comment == null) {
-                    logger.w(TAG, "Комментарий для жалобы не найден: id=$commentId")
-                    return
-                }
+    private fun handleReportComment(comment: Comment, eventTitle: String) {
+        val complaintAuthor = comment.user?.name?.ifBlank { UNKNOWN_COMMENT_AUTHOR }
+            ?: UNKNOWN_COMMENT_AUTHOR
+        val complaintText = comment.parsedBody ?: comment.body.orEmpty()
 
-                val complaintAuthor = comment.user?.name?.ifBlank { UNKNOWN_COMMENT_AUTHOR }
-                    ?: UNKNOWN_COMMENT_AUTHOR
-                val complaintText = comment.parsedBody ?: comment.body.orEmpty()
-                val eventTitle = currentState.event.title
-
-                viewModelScope.launch {
-                    _events.emit(
-                        EventDetailEvent.SendCommentComplaint(
-                            complaint = Complaint.EventComment(
-                                eventTitle = eventTitle,
-                                author = complaintAuthor,
-                                commentText = complaintText
-                            )
-                        )
+        viewModelScope.launch {
+            _events.emit(
+                EventDetailEvent.SendCommentComplaint(
+                    complaint = Complaint.EventComment(
+                        eventTitle = eventTitle,
+                        author = complaintAuthor,
+                        commentText = complaintText
                     )
-                }
-            }
+                )
+            )
+        }
+    }
 
-            CommentAction.DELETE -> {
-                val comment = currentState.event.comments
-                    .orEmpty()
-                    .firstOrNull { it.id == commentId }
-                if (comment == null) {
-                    logger.w(TAG, "Комментарий для удаления не найден: id=$commentId")
-                    return
-                }
-                val isOwnComment =
-                    comment.user?.id != null && comment.user.id == _currentUserId.value
-                if (!isOwnComment) {
-                    logger.w(TAG, "Отклонено удаление комментария id=$commentId: не автор")
-                    return
-                }
+    private fun handleDeleteComment(comment: Comment, commentId: Long) {
+        val isOwnComment = comment.user?.id != null && comment.user.id == _currentUserId.value
+        if (!isOwnComment) {
+            logger.w(TAG, "Отклонено удаление комментария id=$commentId: не автор")
+            return
+        }
 
-                pendingDeleteCommentId = commentId
-                viewModelScope.launch {
-                    _events.emit(EventDetailEvent.ShowDeleteCommentConfirmDialog)
-                }
-            }
+        pendingDeleteCommentId = commentId
+        viewModelScope.launch {
+            _events.emit(EventDetailEvent.ShowDeleteCommentConfirmDialog)
         }
     }
 

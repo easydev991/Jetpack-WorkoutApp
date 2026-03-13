@@ -10,6 +10,7 @@ import com.swparks.domain.repository.JournalsRepository
 import com.swparks.network.SWApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.io.IOException
 
 /**
  * Реализация репозитория для работы с дневниками
@@ -55,7 +56,7 @@ class JournalsRepositoryImpl(
 
         Log.i(TAG, "Успешно сохранено ${entities.size} дневников в БД")
         Result.success(Unit)
-    } catch (e: Exception) {
+    } catch (e: IOException) {
         Log.e(TAG, "Ошибка при загрузке дневников: ${e.message}", e)
         Result.failure(e)
     }

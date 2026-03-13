@@ -9,6 +9,7 @@ import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.model.RegistrationParams
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.model.RegisterForm
@@ -216,14 +217,16 @@ class RegisterViewModel(
 
             val currentForm = _form.value
             swRepository.register(
-                name = currentForm.login,
-                fullName = currentForm.fullName,
-                email = currentForm.email,
-                password = currentForm.password,
-                birthDate = currentForm.birthDate!!.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                genderCode = currentForm.genderCode!!,
-                countryId = currentForm.countryId?.toIntOrNull(),
-                cityId = currentForm.cityId?.toIntOrNull()
+                RegistrationParams(
+                    name = currentForm.login,
+                    fullName = currentForm.fullName,
+                    email = currentForm.email,
+                    password = currentForm.password,
+                    birthDate = currentForm.birthDate!!.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                    genderCode = currentForm.genderCode!!,
+                    countryId = currentForm.countryId?.toIntOrNull(),
+                    cityId = currentForm.cityId?.toIntOrNull()
+                )
             )
                 .onSuccess { user ->
                     // Генерируем токен из логина и пароля (как при обычной авторизации)

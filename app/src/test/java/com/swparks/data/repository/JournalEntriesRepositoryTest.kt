@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import java.io.IOException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -114,7 +115,7 @@ class JournalEntriesRepositoryTest {
     @Test
     fun refreshJournalEntries_whenApiThrowsException_thenReturnsFailure() = runTest {
         // Given
-        val exception = RuntimeException("Network error")
+        val exception = IOException("Network error")
         coEvery { mockApi.getJournalEntries(any(), any()) } throws exception
 
         val repository = JournalEntriesRepositoryImpl(mockApi, mockJournalEntryDao)

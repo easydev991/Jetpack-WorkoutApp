@@ -27,6 +27,7 @@ import com.swparks.data.model.SocialUpdates
 import com.swparks.data.model.User
 import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.exception.ServerException
+import com.swparks.domain.model.RegistrationParams
 import com.swparks.network.SWApi
 import com.swparks.ui.model.EditJournalSettingsRequest
 import com.swparks.ui.model.EventForm
@@ -77,16 +78,7 @@ interface SWRepository {
     suspend fun clearUserData()
 
     // 3.1. Авторизация
-    suspend fun register(
-        name: String,
-        fullName: String,
-        email: String,
-        password: String,
-        birthDate: String,
-        genderCode: Int,
-        countryId: Int?,
-        cityId: Int?
-    ): Result<User>
+    suspend fun register(params: RegistrationParams): Result<User>
 
     suspend fun login(token: String?): Result<LoginSuccess>
     suspend fun resetPassword(login: String): Result<Unit>
@@ -291,26 +283,17 @@ class SWRepositoryImp(
 
     // 3.1. Авторизация
 
-    override suspend fun register(
-        name: String,
-        fullName: String,
-        email: String,
-        password: String,
-        birthDate: String,
-        genderCode: Int,
-        countryId: Int?,
-        cityId: Int?
-    ): Result<User> =
+    override suspend fun register(params: RegistrationParams): Result<User> =
         try {
             val user = swApi.register(
-                name = name,
-                fullName = fullName,
-                email = email,
-                password = password,
-                birthDate = birthDate,
-                genderCode = genderCode,
-                countryId = countryId,
-                cityId = cityId
+                name = params.name,
+                fullName = params.fullName,
+                email = params.email,
+                password = params.password,
+                birthDate = params.birthDate,
+                genderCode = params.genderCode,
+                countryId = params.countryId,
+                cityId = params.cityId
             )
             // Сохраняем пользователя в локальный кэш для отображения профиля без запроса
             userDao.insert(user.toEntity(isCurrentUser = true))
@@ -1143,42 +1126,46 @@ class SWRepositoryImp(
             Result.failure(handleHttpException(e, "редактировании комментария"))
         }
 
-        is TextEntryOption.Journal -> {
-// Для дневников редактируются сами записи (сообщения)
-            try {
-                val response = swApi.editJournalEntry(
-                    option.ownerId,
-                    option.journalId,
-                    commentId,
-                    newComment
+        is TextEntryOption.Journal -> editJournalEntry(
+            option.ownerId,
+            option.journalId,
+            commentId,
+            newComment
+        )
+    }
+
+    private suspend fun editJournalEntry(
+        ownerId: Long,
+        journalId: Long,
+        entryId: Long,
+        newMessage: String
+    ): Result<Unit> = try {
+        val response = swApi.editJournalEntry(ownerId, journalId, entryId, newMessage)
+
+        if (response.isSuccessful) {
+            updateLocalJournalEntry(entryId, newMessage)
+            Result.success(Unit)
+        } else {
+            Result.failure(
+                handleHttpException(
+                    HttpException(response),
+                    "редактировании записи в дневнике"
                 )
-
-                if (response.isSuccessful) {
-                    // Обновляем локальный кэш после успешного редактирования
-                    val existingEntry = journalEntryDao.getById(commentId)
-                    if (existingEntry != null) {
-                        val updatedEntry = existingEntry.copy(
-                            message = newComment,
-                            modifyDate = System.currentTimeMillis()
-                        )
-                        journalEntryDao.insert(updatedEntry)
-                    }
-                    Result.success(Unit)
-                } else {
-                    Result.failure(
-                        handleHttpException(
-                            HttpException(response),
-                            "редактировании записи в дневнике"
-                        )
-                    )
-                }
-            } catch (e: IOException) {
-                Result.failure(handleIOException(e, "редактировании записи в дневнике"))
-            } catch (e: HttpException) {
-                Result.failure(handleHttpException(e, "редактировании записи в дневнике"))
-            }
-
+            )
         }
+    } catch (e: IOException) {
+        Result.failure(handleIOException(e, "редактировании записи в дневнике"))
+    } catch (e: HttpException) {
+        Result.failure(handleHttpException(e, "редактировании записи в дневнике"))
+    }
+
+    private suspend fun updateLocalJournalEntry(entryId: Long, newMessage: String) {
+        val existingEntry = journalEntryDao.getById(entryId) ?: return
+        val updatedEntry = existingEntry.copy(
+            message = newMessage,
+            modifyDate = System.currentTimeMillis()
+        )
+        journalEntryDao.insert(updatedEntry)
     }
 
     override suspend fun deleteComment(option: TextEntryOption, commentId: Long): Result<Unit> =

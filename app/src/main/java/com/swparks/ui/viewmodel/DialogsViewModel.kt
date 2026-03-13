@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 /**
  * ViewModel для экрана списка диалогов.
@@ -132,7 +133,7 @@ class DialogsViewModel(
             try {
                 val dialogs = messagesRepository.dialogs.first()
                 _uiState.value = DialogsUiState.Success(dialogs = dialogs)
-            } catch (e: Exception) {
+            } catch (e: IOException) {
                 logger.e(TAG, "Ошибка при чтении диалогов: ${e.message}")
                 _uiState.value = DialogsUiState.Success(dialogs = emptyList())
             }
