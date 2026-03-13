@@ -12,7 +12,6 @@ import com.swparks.data.model.User
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
-import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
@@ -191,18 +190,20 @@ interface SWApi {
     suspend fun deleteTrainHere(@Path("parkId") parkId: Long): Response<Unit>
 
     // Добавить комментарий для площадки
+    @FormUrlEncoded
     @POST("areas/{parkId}/comments")
     suspend fun addCommentToPark(
         @Path("parkId") parkId: Long,
-        @Body comment: String
+        @Field("comment") comment: String
     ): Response<Unit>
 
     // Изменить свой комментарий для площадки
+    @FormUrlEncoded
     @POST("areas/{parkId}/comments/{commentId}")
     suspend fun editParkComment(
         @Path("parkId") parkId: Long,
         @Path("commentId") commentId: Long,
-        @Body comment: String
+        @Field("comment") comment: String
     ): Response<Unit>
 
     // Удалить свой комментарий для площадки
@@ -266,10 +267,11 @@ interface SWApi {
     suspend fun deleteGoToEvent(@Path("eventId") eventId: Long): Response<Unit>
 
     // Добавить комментарий для мероприятия
+    @FormUrlEncoded
     @POST("trainings/{eventId}/comments")
     suspend fun addCommentToEvent(
         @Path("eventId") eventId: Long,
-        @Body comment: String
+        @Field("comment") comment: String
     ): Response<Unit>
 
     // Удалить свой комментарий для мероприятия
@@ -280,11 +282,12 @@ interface SWApi {
     ): Response<Unit>
 
     // Изменить свой комментарий для мероприятия
+    @FormUrlEncoded
     @POST("trainings/{eventId}/comments/{commentId}")
     suspend fun editEventComment(
         @Path("eventId") eventId: Long,
         @Path("commentId") commentId: Long,
-        @Body comment: String
+        @Field("comment") comment: String
     ): Response<Unit>
 
     // Удалить мероприятие

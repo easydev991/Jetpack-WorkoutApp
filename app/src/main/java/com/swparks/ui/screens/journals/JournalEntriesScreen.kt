@@ -103,7 +103,7 @@ fun JournalEntriesScreen(
     ) -> Unit = { show, mode, onDismissed, onSendSuccess ->
         if (show && mode != null) {
             TextEntrySheetHost(
-                show = show,
+                show = true,
                 mode = mode,
                 onDismissed = onDismissed,
                 onSendSuccess = onSendSuccess

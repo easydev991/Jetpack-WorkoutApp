@@ -13,9 +13,13 @@ import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.ds.CommentAction
+import com.swparks.ui.model.EditInfo
 import com.swparks.ui.model.MapUriSet
+import com.swparks.ui.model.TextEntryMode
+import com.swparks.ui.model.TextEntryOption
 import com.swparks.ui.state.EventDetailUIState
 import com.swparks.util.AppError
+import com.swparks.util.Complaint
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -90,6 +94,29 @@ sealed class EventDetailEvent {
         val eventId: Long,
         val users: List<User>
     ) : EventDetailEvent()
+
+    /**
+     * Отправить жалобу на комментарий через почтовый клиент.
+     *
+     * @param complaint Готовая модель жалобы на комментарий к мероприятию
+     */
+    data class SendCommentComplaint(
+        val complaint: Complaint.EventComment
+    ) : EventDetailEvent()
+
+    /**
+     * Открыть TextEntrySheet для создания/редактирования комментария к мероприятию.
+     *
+     * @param mode Режим экрана ввода текста
+     */
+    data class OpenCommentTextEntry(
+        val mode: TextEntryMode
+    ) : EventDetailEvent()
+
+    /**
+     * Показать диалог подтверждения удаления комментария.
+     */
+    data object ShowDeleteCommentConfirmDialog : EventDetailEvent()
 }
 
 /**
@@ -119,6 +146,7 @@ class EventDetailViewModel(
         private const val TAG = "EventDetailViewModel"
         private const val EVENT_ID_KEY = "eventId"
         private const val NO_CALENDAR_APP_MESSAGE = "Нет календарного приложения на устройстве."
+        private const val UNKNOWN_COMMENT_AUTHOR = "неизвестен"
 
         fun factory(
             swRepository: SWRepository,
@@ -196,6 +224,7 @@ class EventDetailViewModel(
 
     // Фото для удаления (временно хранится до подтверждения)
     private var pendingDeletePhoto: Photo? = null
+    private var pendingDeleteCommentId: Long? = null
 
     init {
         logger.d(TAG, "Инициализация EventDetailViewModel")
@@ -324,31 +353,34 @@ class EventDetailViewModel(
                     logger.e(TAG, "eventId отсутствует при refresh")
                     return@launch
                 }
-
-                val result = swRepository.getEvent(eventId)
-                result.fold(
-                    onSuccess = { event ->
-                        logger.i(TAG, "Мероприятие обновлено: ${event.title}")
-                        val address = buildAddress(event.countryID, event.cityID, event.address)
-                        _uiState.value = EventDetailUIState.Content(
-                            event = event,
-                            address = address
-                        )
-                        updateIsEventAuthor()
-                    },
-                    onFailure = { exception ->
-                        logger.e(
-                            TAG,
-                            "Ошибка обновления мероприятия: ${exception.message}",
-                            exception
-                        )
-                        handleError(exception, "обновлении мероприятия")
-                    }
-                )
+                refreshEventContent(eventId)
             } finally {
                 _isRefreshing.value = false
             }
         }
+    }
+
+    private suspend fun refreshEventContent(eventId: Long) {
+        val result = swRepository.getEvent(eventId)
+        result.fold(
+            onSuccess = { event ->
+                logger.i(TAG, "Мероприятие обновлено: ${event.title}")
+                val address = buildAddress(event.countryID, event.cityID, event.address)
+                _uiState.value = EventDetailUIState.Content(
+                    event = event,
+                    address = address
+                )
+                updateIsEventAuthor()
+            },
+            onFailure = { exception ->
+                logger.e(
+                    TAG,
+                    "Ошибка обновления мероприятия: ${exception.message}",
+                    exception
+                )
+                handleError(exception, "обновлении мероприятия")
+            }
+        )
     }
 
     // ==================== Действия редактирования и удаления ====================
@@ -574,11 +606,136 @@ class EventDetailViewModel(
                 TAG,
                 "Нажата кнопка 'Добавить комментарий' для мероприятия id=${currentState.event.id}"
             )
+            viewModelScope.launch {
+                _events.emit(
+                    EventDetailEvent.OpenCommentTextEntry(
+                        mode = TextEntryMode.NewForEvent(currentState.event.id)
+                    )
+                )
+            }
         }
     }
 
     override fun onCommentActionClick(commentId: Long, action: CommentAction) {
+        val currentState = _uiState.value
+        if (currentState !is EventDetailUIState.Content) return
+
         logger.d(TAG, "Нажато действие $action для комментария id=$commentId")
+
+        when (action) {
+            CommentAction.EDIT -> {
+                val comment = currentState.event.comments
+                    .orEmpty()
+                    .firstOrNull { it.id == commentId }
+                if (comment == null) {
+                    logger.w(TAG, "Комментарий для редактирования не найден: id=$commentId")
+                    return
+                }
+                viewModelScope.launch {
+                    _events.emit(
+                        EventDetailEvent.OpenCommentTextEntry(
+                            mode = TextEntryMode.EditEvent(
+                                editInfo = EditInfo(
+                                    parentObjectId = currentState.event.id,
+                                    entryId = comment.id,
+                                    oldEntry = comment.parsedBody.orEmpty()
+                                )
+                            )
+                        )
+                    )
+                }
+            }
+
+            CommentAction.REPORT -> {
+                val comment = currentState.event.comments
+                    .orEmpty()
+                    .firstOrNull { it.id == commentId }
+                if (comment == null) {
+                    logger.w(TAG, "Комментарий для жалобы не найден: id=$commentId")
+                    return
+                }
+
+                val complaintAuthor = comment.user?.name?.ifBlank { UNKNOWN_COMMENT_AUTHOR }
+                    ?: UNKNOWN_COMMENT_AUTHOR
+                val complaintText = comment.parsedBody ?: comment.body.orEmpty()
+                val eventTitle = currentState.event.title
+
+                viewModelScope.launch {
+                    _events.emit(
+                        EventDetailEvent.SendCommentComplaint(
+                            complaint = Complaint.EventComment(
+                                eventTitle = eventTitle,
+                                author = complaintAuthor,
+                                commentText = complaintText
+                            )
+                        )
+                    )
+                }
+            }
+
+            CommentAction.DELETE -> {
+                val comment = currentState.event.comments
+                    .orEmpty()
+                    .firstOrNull { it.id == commentId }
+                if (comment == null) {
+                    logger.w(TAG, "Комментарий для удаления не найден: id=$commentId")
+                    return
+                }
+                val isOwnComment =
+                    comment.user?.id != null && comment.user.id == _currentUserId.value
+                if (!isOwnComment) {
+                    logger.w(TAG, "Отклонено удаление комментария id=$commentId: не автор")
+                    return
+                }
+
+                pendingDeleteCommentId = commentId
+                viewModelScope.launch {
+                    _events.emit(EventDetailEvent.ShowDeleteCommentConfirmDialog)
+                }
+            }
+        }
+    }
+
+    override fun onCommentDeleteConfirm() {
+        val currentState = _uiState.value
+        if (currentState !is EventDetailUIState.Content) return
+        val commentId = pendingDeleteCommentId ?: return
+
+        logger.d(TAG, "Подтверждение удаления комментария id=$commentId")
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            try {
+                val result = swRepository.deleteComment(
+                    option = TextEntryOption.Event(currentState.event.id),
+                    commentId = commentId
+                )
+                result.fold(
+                    onSuccess = {
+                        logger.i(TAG, "Комментарий id=$commentId успешно удален")
+                        refreshEventContent(currentState.event.id)
+                    },
+                    onFailure = { exception ->
+                        logger.e(
+                            TAG,
+                            "Ошибка удаления комментария: ${exception.message}",
+                            exception
+                        )
+                        handleError(exception, "удалении комментария")
+                    }
+                )
+            } catch (e: Exception) {
+                logger.e(TAG, "Исключение при удалении комментария: ${e.message}", e)
+                handleError(e, "удалении комментария")
+            } finally {
+                pendingDeleteCommentId = null
+                _isRefreshing.value = false
+            }
+        }
+    }
+
+    override fun onCommentDeleteDismiss() {
+        logger.d(TAG, "Отмена удаления комментария")
+        pendingDeleteCommentId = null
     }
 
     // ==================== Обработка ошибок ====================
@@ -613,4 +770,5 @@ class EventDetailViewModel(
             }
         }
     }
+
 }

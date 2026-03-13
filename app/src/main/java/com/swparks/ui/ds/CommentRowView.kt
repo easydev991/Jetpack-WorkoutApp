@@ -138,8 +138,8 @@ fun CommentRowView(data: CommentRowData) {
                 imageStringURL = data.imageStringURL,
                 authorName = data.authorName,
                 dateString = data.dateString,
-                enabled = data.enabled,
-                onAuthorClick = data.onAuthorClick
+                enabled = data.enabled && !data.byMainUser,
+                onAuthorClick = if (data.byMainUser) null else data.onAuthorClick
             )
             CommentActionsMenu(
                 config = CommentActionsMenuConfig(

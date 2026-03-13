@@ -2,201 +2,145 @@
 
 # План разработки экрана EventDetailScreen
 
-## Текущий статус: ~89% завершено
+## Текущий статус: ~96% завершено
 
 ### ✅ Выполнено
-* Этапы 0, 1, 2, 3, 3.1, 4, 6, 7 завершены
-* Реализованы базовый UI, загрузка/refresh, календарь, карта/маршрут, удаление события/фото с подтверждением
-* Список участников подключен: переход из `EventDetail` в `EventParticipants` работает, список передается и отображается
-* Подключены ключевые локализованные строки EventDetail, включая `event_photos`, `event_edit`, `event_share`
-* Тесты: `MapUriSetTest`, `DateFormatterTest`
+* Этапы 0-4, 6, 7 завершены
+* Реализованы базовые сценарии экрана: загрузка/refresh, карта/маршрут/календарь, участники, удаление события/фото
+* Комментарии: `REPORT`, `CREATE/EDIT/DELETE`, `TextEntrySheetHost`, confirm-alert, обновление через refresh
+* API комментариев приведён к iOS-контракту (`comment` + корректная обработка non-2xx)
+* Покрытие: `MapUriSetTest`, `DateFormatterTest`, `EventDetailViewModelTest`, `SWRepositoryCommentsTest`
 
 ### ⏳ В работе / Не начато
-* **Этап 5:** EventDetailScreen (дописать: add comment button, edit/share actions в TopAppBar)
-* **Этап 8:** EventDetailViewModelTest (файл не создан)
+* **Этап 5:** EventDetailScreen (дописать: edit/share actions в TopAppBar)
+* **Этап 8:** EventDetailViewModelTest (расширить покрытие beyond `REPORT`)
 
 ### 🎯 Следующие шаги (приоритет)
-1. **Add comment button** — добавить кнопку "Добавить комментарий" в UI (ViewModel уже готов)
-2. **Edit/Share actions** — добавить пункты меню в TopAppBar (ViewModel уже готов)
-3. **PhotoDetailScreen** — добавить детальный экран фото и перенести туда удаление фото с confirm alert/dialog
-4. **EventDetailViewModelTest** — написать unit-тесты для ViewModel
-
-### 🔧 Исправленные баги
-* **Март 2026:** Устранено пересоздание `EventDetailViewModel` после смены темы: переход на `viewModel()` с `createSavedStateHandle()`
-* **Март 2026:** Клик по количеству участников перенесён в ViewModel (`onParticipantsCountClick`)
+1. **Edit/Share actions** — добавить пункты меню в TopAppBar (ViewModel уже готов)
+2. **PhotoDetailScreen** — добавить детальный экран фото и перенести туда удаление фото с confirm alert/dialog
+3. **EventDetailViewModelTest** — расширить набор unit-тестов ViewModel (сеть/ошибки/factory/navigation)
 
 ---
 
 ## Обзор
 
-Разработка экрана детальной информации о мероприятии для Android-приложения по аналогии с iOS-версией (`EventDetailsScreen.swift`), но с адаптацией под Android-ограничения по картам:
+Разработка экрана мероприятия по аналогии с iOS-версией (`EventDetailsScreen.swift`), с адаптацией под Android:
 
-* **без платных map snapshot сервисов**
-* **без зависимости от Google Static Maps API**
-* **без нестабильных публичных static map endpoint-ов**
-* **с открытием карты/маршрута через внешний map app или browser**
+* **Карты:** без платных snapshot сервисов, открытие карты/маршрута через внешний map app/browser
+* **Референсы:** iOS `EventDetailsScreen.swift`, `PhotoSectionView.swift`, `PhotoDetailScreen.swift`
+* **Интеграция:** через `RootScreen.kt`
+* **Авторизация:** через `UserPreferencesRepository.currentUserId`
 
-### Ссылки на референсы
+**Структура экрана:** title, date, address, `LocationInfoView`, calendar, participants, `SwitchFormRowView`, `PhotoSectionView`, description, author, comments, add comment.
 
-* **iOS:** `SwiftUI-WorkoutApp/SwiftUI-WorkoutApp/Screens/Events/EventDetailsScreen.swift`
-* **iOS фото-секция:** `SwiftUI-WorkoutApp/SwiftUI-WorkoutApp/Screens/Common/PhotoSection/PhotoSectionView.swift`
-* **iOS фото full screen:** `SwiftUI-WorkoutApp/SwiftUI-WorkoutApp/Screens/Common/PhotoSection/PhotoDetailScreen.swift`
-* **Android маршруты:** `app/src/main/java/com/swparks/navigation/Destinations.kt` (`Screen.EventDetail` уже определён)
-* **Android корневая навигация:** `RootScreen.kt` (интеграция нового экрана должна выполняться здесь)
-* **Референс по адресам:** `EventsScreen` / `EventsViewModel` (логика получения адреса через `CountriesRepository`)
-* **Референс по авторизации:** `ProfileRootScreen` / `UserPreferencesRepository.currentUserId`
+**Политика авторизации:**
+* неавторизованные — скрыт participants section, add comment disabled
+* авторизованные — полный доступ
+* автор мероприятия — edit/delete actions, удаление фото
 
----
+**Первая рабочая версия:**
+* реальная загрузка event, адреса, refresh
+* открытие карты/маршрута/календаря через Intent
+* удаление мероприятия/фото через confirm dialog
+* часть действий логируется (edit, share, toggle, comments)
 
-## Структура экрана (сверху вниз)
-
-| Секция               | Описание                                               | Компонент                                    | Авторизация                        |
-|----------------------|--------------------------------------------------------|----------------------------------------------|------------------------------------|
-| Заголовок            | Локализованный текст "Event"                           | `Text`                                       | Все                                |
-| Название             | Крупным шрифтом title мероприятия                      | `Text`                                       | Все                                |
-| Когда                | Форматированная дата                                   | `Row` + `Text` + `Spacer`                    | Все                                |
-| Где                  | Место (страна, город)                                  | `Row` + `Text` + `Spacer`                    | Все                                |
-| Адрес                | Адрес площадки                                         | `Row` + `Text` + `Spacer`                    | Все                                |
-| Локация площадки     | Адрес + действия "Открыть карту"/"Маршрут"             | **НОВЫЙ:** `LocationInfoView`                | Все                                |
-| Календарь            | Кнопка "Добавить в календарь" для предстоящего события | `Button`                                     | Все, только для `isCurrent`        |
-| Участники            | Количество участников + toggle "Пойду"                 | `SectionView` + `FormRowView`                | **Только авторизованные**          |
-| Фотографии           | Сетка фотографий                                       | **НОВЫЙ:** `PhotoSectionView`                | Все                                |
-| Описание             | Текст описания (без HTML)                              | `Text`                                       | Все                                |
-| Автор                | Информация об организаторе                             | `UserRowView`                                | Все (клик — только авторизованные) |
-| Комментарии          | Список комментариев                                    | `CommentRowView` + доработка click по автору | Все                                |
-| Добавить комментарий | Кнопка добавления                                      | `Button`                                     | **Только авторизованные**          |
-
----
-
-## Авторизация и различия функционала
-
-### Что СКРЫВАЕТСЯ для неавторизованных (UI не отображается)
-
-| Элемент                       | Условие скрытия  |
-|-------------------------------|------------------|
-| Секция участников целиком     | `!isAuthorized`  |
-| Toggle "Пойду на мероприятие" | `!isAuthorized`  |
-| Кнопка "Добавить комментарий" | `!isAuthorized`  |
-| Меню редактирования           | `!isEventAuthor` |
-| Меню удаления мероприятия     | `!isEventAuthor` |
-| Действие удаления фото        | `!isEventAuthor` |
-
-### Что БЛОКИРУЕТСЯ для неавторизованных (UI виден, действие недоступно)
-
-| Действие                              | Реализация в текущей версии                          |
-|---------------------------------------|------------------------------------------------------|
-| Переход на профиль автора мероприятия | Клик отключён (`enabled = false`), навигация не вызывается |
-| Переход на профиль автора комментария | Клик отключён (`enabled = false`), навигация не вызывается |
-
-### Что ДОСТУПНО всем (включая неавторизованных)
-
-* Просмотр заголовка, описания, даты, места
-* Просмотр адреса
-* Открытие карты
-* Построение маршрута через внешний map app/browser
-* Просмотр организатора (переход на профиль доступен только авторизованным)
-* Просмотр комментариев
-
-### Политика интеракций первой рабочей версии
-
-В первой рабочей версии экран уже должен:
-
-* реально загружать данные мероприятия
-* реально обновляться через pull-to-refresh
-* реально открывать карту и маршрут через внешний map app/browser
-* реально открывать системный экран добавления события в календарь через Android Intent для предстоящего события
-* реально удалять мероприятие для автора после подтверждения в alert/dialog
-* реально удалять фото мероприятия для автора после подтверждения в alert/dialog
-
-При этом остальные пользовательские действия на экране пока только логируются через `Logger`:
-
-* toggle "Пойду на мероприятие" — только для авторизованных пользователей
-* ~~клик по количеству участников~~ ✅ (подключен: открывает `EventParticipants` с передачей списка участников)
-* клик по фото — секция подключена, действие пока логируется
-* клик "Поделиться" — ViewModel метод готов, UI action не добавлен
-* клик "Редактировать" — ViewModel метод готов, UI action не добавлен
-* клик "Добавить комментарий" — ViewModel метод готов, UI кнопка не добавлена
-
-### Логика `isEventAuthor`
-
-```kotlin
-val isEventAuthor: StateFlow<Boolean>
-```
-
-Вычисляется во ViewModel на основе:
-
-* текущего пользователя из `UserPreferencesRepository.currentUserId`
-* `event.author.id`
-
-**Важно:** все идентификаторы пользователя и мероприятия использовать в одном типе: **`Long`**.
-
-### Правило авторских действий
-
-Действия, изменяющие мероприятие, доступны только авторизованному пользователю, который является автором мероприятия (`isEventAuthor == true`):
-
-* редактирование мероприятия
-* удаление мероприятия
-* удаление фото мероприятия
-
-### Что НЕ переносим из iOS в первую Android-версию
-
-Из iOS-референса берём общую верстку, порядок секций и условия отображения, но не переносим платформенные или пока не реализованные сценарии:
-
-* жалоба на фото
-* жалоба на комментарий (требование: не показывать в первой версии)
-* полноэкранный просмотр фото как обязательную часть первой версии
-
----
-
-## Принцип реализации карты на Android
-
-### Что НЕ используем
-
-* Google Maps Static API
-* платные map snapshot сервисы
-* публичные нестабильные static map endpoint-ы как production-основу
-
-### Что используем в первой версии
-
-* текстовый адрес
-* координаты используются только для открытия карты/маршрута (не отображаются в UI)
-* кнопку **"Открыть на карте"**
-* кнопку **"Построить маршрут"**
-* открытие внешнего приложения карты или browser через Intent / map URL
-
-### Почему так
-
-На iOS аналогичный сценарий удобно закрывается через `MapKit`, но на Android нет равноценного встроенного бесплатного системного решения для embedded snapshot-карты. Поэтому на первой итерации оптимальный и устойчивый путь — не встраивать snapshot, а использовать внешний map client.
+**Не переносим в первой версии:**
+* жалоба на фото/комментарий к площадке
+* полноэкранный просмотр фото (переносится на `PhotoDetailScreen`)
 
 ---
 
 ## Этап 0: Подготовка архитектуры [ГОТОВО]
 
-* [x] Подготовлена архитектурная основа: унификация ID (`Long`) и получение `eventId` из `SavedStateHandle`
+* [x] Унифицированы ID (`Long`) и получение `eventId` из `SavedStateHandle`
 
 ---
 
 ## Этап 1: UI State и ViewModel с реальной загрузкой [ГОТОВО]
 
-* [x] Реализованы `EventDetailUIState`, `IEventDetailViewModel`, `EventDetailViewModel`, удаление фото в `SWRepository` и factory с `createSavedStateHandle()`
+* [x] Реализованы `EventDetailUIState`, `IEventDetailViewModel`, `EventDetailViewModel` (удаление фото, factory)
 
 ---
 
 ## Этап 2: Компоненты LocationInfoView, MapUriSet, DateFormatter [ГОТОВО]
 
-* [x] Реализованы `LocationInfoView`, `MapUriSet`, форматирование даты в `DateFormatter`, блоки `Когда/Где/Адрес` и соответствующие unit-тесты
+* [x] Реализованы `LocationInfoView`, `MapUriSet`, `DateFormatter` и блоки `Когда/Где/Адрес` с unit-тестами
 
 ---
 
 ## Этап 3: SwitchFormRowView для toggle "Пойду" [ГОТОВО]
 
-* [x] `SwitchFormRowView` создан и интегрирован: виден только авторизованным для `isCurrent`, с логированием, поддержкой тем и Preview
+* [x] `SwitchFormRowView` создан и интегрирован (`isAuthorized`, `isCurrent`, темы, Preview)
 
 ---
 
 ## Этап 3.1: Доработки секций EventDetailScreen [ГОТОВО]
 
-* [x] Доработаны секции описания/автора, вычисление `byMainUser` в комментариях и локализация `event_description`/`event_author`
+* [x] Доработаны секции описания/автора, `byMainUser` в комментариях, локализация `event_description`/`event_author`
+
+---
+
+## Этап 3.2: Блокировка кнопок LocationInfoView при refresh [ГОТОВО]
+
+* [x] Добавлен `enabled` в `LocationInfoConfig`/`LocationInfoView`; передаётся `!isRefreshing`
+
+---
+
+## Этап 3.3: Секция комментариев и кнопка Add Comment [ГОТОВО]
+
+* [x] Секция комментариев вынесена в `EventDetailSections.kt`
+* [x] Кнопка `Добавить комментарий` всегда видима, `enabled = isAuthorized && !isRefreshing`
+
+---
+
+## Этап 3.4: Интеграция жалобы на чужой комментарий [ГОТОВО]
+
+**Цель:** подключить `CommentAction.REPORT` к отправке email через `Complaint.EventComment`.
+
+**Реализация:**
+* [x] `REPORT` подключён через `EventDetailEvent` + `sendComplaint(...)`
+* [x] Жалоба формируется в ViewModel без зависимости от `Context`
+* [x] Добавлены unit-тесты на базовый и fallback-сценарии
+
+**Критерии завершения:**
+* [x] При нажатии `REPORT` открывается почтовый клиент с предзаполненными темой/телом
+* [x] Тема/тело письма соответствуют формату iOS `Complaint.eventComment`
+* [x] ViewModel не зависит от `Context`
+* [x] Сценарий не ломает `EDIT/DELETE` для своих комментариев
+
+---
+
+## Этап 3.5: Интеграция TextEntrySheetHost для комментариев [ГОТОВО]
+
+**Цель:** открыть экран ввода текста для создания/редактирования комментария прямо из EventDetail.
+
+**Реализация:**
+* [x] Подключён `TextEntrySheetHost` для `CREATE/EDIT` (`NewForEvent`/`EditEvent`)
+* [x] Для `EDIT` передаётся исходный текст комментария
+* [x] После успешной отправки выполняется `refresh()` с `isRefreshing`
+
+**Критерии завершения:**
+* [x] Создание комментария инициируется через `onAddCommentClick`
+* [x] Редактирование комментария инициируется через `onCommentActionClick`
+* [x] Используются существующие эндпоинты `addCommentToEvent` и `editEventComment` (через `TextEntryUseCase`)
+* [x] После отправки комментария экран обновляется с индикатором refresh
+
+---
+
+## Этап 3.6: Удаление комментария с подтверждением [ГОТОВО]
+
+**Цель:** добавить удаление своего комментария (`CommentAction.DELETE`) по аналогии с дневником, через confirm/cancel alert.
+
+**Реализация:**
+* [x] `DELETE` для своего комментария открывает confirm/cancel alert
+* [x] Подтверждение вызывает `deleteEventComment` через `SWRepository.deleteComment(...)`
+* [x] На время удаления включается `isRefreshing`, после успеха данные обновляются
+
+**Критерии завершения:**
+* [x] Есть подтверждение/отмена удаления
+* [x] Удаление доступно только для своего комментария
+* [x] Запрос удаления соответствует iOS API-контракту
+* [x] При ожидании ответа клики по фото/действиям блокируются через `isRefreshing`
 
 ---
 
@@ -206,38 +150,24 @@ val isEventAuthor: StateFlow<Boolean>
 
 **Файл:** `app/src/main/java/com/swparks/ui/ds/PhotoSectionView.kt`
 
-**Описание:** Адаптивная сетка фотографий, визуально ориентированная на iOS-референс, но без Android-сценариев жалоб и удаления фото в первой версии.
-
 **Параметры:**
 
 ```kotlin
 data class PhotoSectionConfig(
     val photos: List<Photo>,
+    val enabled: Boolean,
     val onPhotoClick: (Photo) -> Unit
 )
 ```
 
-**Структура:**
+**Реализация:**
+* [x] Адаптивная сетка: 1 фото → 1 столбец, 2 фото → 2 столбца, 3+ фото → 3 столбца
+* [x] `SWAsyncImage`, поддержка тем и Preview
 
-* 1 фото → 1 столбец
-* 2 фото → 2 столбца
-* 3+ фото → 3 столбца
-* `SWAsyncImage` с закруглениями
-* клик по фото → пока логирование / позже навигация в галерею или photo detail
-
-**Важно для первой версии:**
-
-* не показывать действие "Пожаловаться на фото"
-* кнопка удаления не отображается в `PhotoSectionView`
-* удаление фото переносится на будущий `PhotoDetailScreen` (кнопка в `TopAppBar` + confirm alert/dialog)
+**Важно:** удаление фото переносится на `PhotoDetailScreen`.
 
 **Критерии завершения:**
-
-* [x] Адаптивная сетка 1/2/3 столбца
-* [x] Корректная загрузка изображений
-* [x] Обработка клика на фото
-* [x] Поддержка темной темы
-* [x] Preview функции (отдельно: 1, 2, 4 фото)
+* [x] Реализована адаптивная сетка, загрузка изображений и клик по фото
 
 ---
 
@@ -247,7 +177,7 @@ data class PhotoSectionConfig(
 
 **Файл:** `app/src/main/java/com/swparks/ui/screens/events/EventDetailScreen.kt`
 
-**Структура Composable:**
+**Структура:**
 
 ```kotlin
 @Composable
@@ -259,97 +189,40 @@ fun EventDetailScreen(
 )
 ```
 
-**Основные правила:**
+**Реализовано:**
+* `Scaffold` с `TopAppBar` (назад, заголовок, меню для автора)
+* `PullToRefreshBox` с `viewModel.refresh()`
+* Секции: title, date, address, `LocationInfoView`, calendar, participants, `SwitchFormRowView`, `PhotoSectionView`, description, author, comments, add comment
+* Состояния: `InitialLoading` → `LoadingOverlayView`, `Error` → `ErrorContentView`, `Content` → основной контент
+* Меню удаления видно только автору, подтверждение через alert/dialog
+* Навигация на профиль автора/комментатора для авторизованных
+* `REPORT` комментария открывает email-клиент
 
-* back обрабатывается через `onBack()`
-* UI читает:
-
-  * `uiState`
-  * `isRefreshing`
-  * `isAuthorized`
-  * `isEventAuthor`
-
-**Основные секции:**
-
-1. `Scaffold` с `TopAppBar`
-
-    * Назад
-    * Заголовок `event_title`
-    * Меню:
-
-        * редактировать — только для автора
-        * удалить — только для автора
-        * поделиться — для всех
-
-2. `PullToRefreshBox`
-
-    * реальный refresh через `viewModel.refresh()`
-
-3. Содержимое:
-
-    * title
-    * date
-    * address
-    * `LocationInfoView`
-    * add to calendar button (`if (event.isCurrent)`)
-    * participants section (`if (isAuthorized)`)
-    * `SwitchFormRowView` — toggle "Пойду" (`if (isAuthorized && event.isCurrent)`)
-    * `PhotoSectionView`
-    * description
-    * author (`UserRowView`)
-    * comments (`CommentRowView`)
-    * add comment button (`if (isAuthorized)`)
-
-4. Состояния:
-
-    * `InitialLoading` → `LoadingOverlayView`
-    * `Error` → `ErrorContentView`
-    * `Content` → основной контент
-
-**Правила интеракций:**
-
-* во время `isRefreshing` отключать кликабельные действия, где это уместно
-* у автора показывать edit и delete actions
-* для неавторизованного пользователя клик по автору/автору комментария отключён через `enabled = false`
-* для автора использовать встроенные `enabled`/`onClick` в `UserRowView` и `CommentRowView`
-* меню действий комментария в первой версии не показывать, чтобы не вывести неподдерживаемый `REPORT` (сейчас требование не выполнено)
-* удаление мероприятия и удаление фото должны идти через confirm alert/dialog по аналогии с подтверждением удаления в Journals flow
-
-**Условия отображения секций по iOS-референсу:**
-
-* секция участников отображается только для авторизованных
-* строка с количеством участников отображается, если у события есть участники
-* toggle "Пойду на мероприятие" отображается только для предстоящего (`isCurrent`) события и только для авторизованных
-* кнопка "Добавить в календарь" отображается только для предстоящего (`isCurrent`) события
-* секция фотографий отображается, только если фотографии есть
-* секция описания отображается, только если описание не пустое
-* блок автора и комментарии отображаются всегда
+**Условия отображения (iOS-референс):**
+* participants section — только для авторизованных
+* toggle "Пойду" и кнопка calendar — только для предстоящих (`isCurrent`) событий
+* photo section — только если есть фото
+* description — только если не пустое
+* add comment button — всегда видима, `enabled = isAuthorized && !isRefreshing`
 
 **Критерии завершения:**
-
-* [x] Экран отображает основные секции (title, date, address, author, comments)
-* [x] Pull-to-refresh работает с реальными данными
-* [x] `LoadingOverlayView` показывается на первичной загрузке
-* [x] `ErrorContentView` отображается при ошибке
+* [x] Экран показывает основные секции, pull-to-refresh, состояния загрузки/ошибки
 * [x] Секция участников скрыта для неавторизованных
-* [ ] Кнопка "Добавить комментарий" — UI не добавлен (ViewModel метод готов)
+* [x] Кнопка "Добавить комментарий" добавлена
 * [x] Меню удаления видно только автору
 * [ ] Меню редактирования — UI не добавлен (ViewModel метод готов)
 * [ ] Меню "Поделиться" — UI не добавлен (ViewModel метод готов)
-* [x] Клики корректно обрабатываются через ViewModel
-* [x] Поддержка темной темы (все компоненты поддерживают)
-* [ ] На Android не отображаются жалобы на фото/комментарии (`CommentRowView` всё ещё показывает `REPORT` для чужих комментариев)
+* [x] Клики обрабатываются через ViewModel, тёмная тема поддерживается
+* [x] `REPORT` открывает email-клиент с `Complaint.EventComment`
 * [x] Кнопка "Добавить в календарь" открывает системный календарь
-* [x] PhotoSectionView подключен в EventDetailScreen
-* [x] Удаление мероприятия требует явного подтверждения в alert/dialog
-* [x] Удаление фото требует явного подтверждения в alert/dialog (логика готова, перенос UI удаления в `PhotoDetailScreen`)
-* [x] Навигация на профиль автора/комментатора работает для авторизованного пользователя (через `onNavigateToUserProfile`)
+* [x] `PhotoSectionView` подключен
+* [x] Удаление мероприятия и фото подтверждается через alert/dialog
+* [x] Удаление комментария подтверждается через alert/dialog
+* [x] Навигация на профиль работает
 
 **Не реализовано:**
-* Кнопка "Добавить комментарий" — UI не добавлен (ViewModel метод готов)
 * Edit action в меню TopAppBar — UI не добавлен (ViewModel метод готов)
 * Share action в меню TopAppBar — UI не добавлен (ViewModel метод готов)
-* В комментариях всё ещё доступен action `REPORT` для чужих комментариев (нужно скрыть для первой версии)
 
 ---
 
@@ -357,23 +230,21 @@ fun EventDetailScreen(
 
 ### 6.1. Строковые ресурсы
 
-**Файл:** `app/src/main/res/values/strings.xml`
-**Файл:** `app/src/main/res/values-ru/strings.xml`
+**Файл:** `app/src/main/res/values/strings.xml`, `app/src/main/res/values-ru/strings.xml`
 
 **Критерии завершения:**
-
 * [x] Основные строки локализованы
-* [x] Добавлены недостающие строки `event_photos`, `event_edit`, `event_share` в `values` и `values-ru`
-* [ ] Новые ключи подключены в UI (зависит от реализации этапа 5)
-* [x] Ключи готовы для оставшихся секций: `event_photos`, `event_edit`, `event_share`
+* [x] Добавлены `event_photos`, `event_edit`, `event_share`
+* [ ] Новые ключи подключены в UI (зависит от этапа 5)
 
-**Примечание:** `add_comment` уже существует (переиспользуется для кнопки комментария до выделения отдельного `event_add_comment`).
+**Примечание:** `add_comment` уже существует.
+**Обновлено:** добавлены строки для confirm-алерта удаления комментария.
 
 ---
 
 ## Этап 7: Интеграция в навигацию [ГОТОВО]
 
-* [x] Экран интегрирован в `RootScreen` с `viewModel()`/factory, аргументами `eventId`/`source` и рабочей навигацией в профиль/назад
+* [x] Экран интегрирован в `RootScreen` с `viewModel()`/factory и навигацией
 
 ---
 
@@ -381,150 +252,108 @@ fun EventDetailScreen(
 
 ### 8.0. Выполненные тесты
 
-**MapUriSetTest** ✅ (`app/src/test/java/com/swparks/ui/model/MapUriSetTest.kt`)
-* [x] Покрыты форматы URI (geo/browser/navigation/browserRoute), включая отрицательные и нулевые координаты
+* [x] **MapUriSetTest** — форматы URI (`geo`, `browser`, `navigation`, `browserRoute`), edge-cases координат
+* [x] **DateFormatterTest** — `parseIsoDateToMillis` для valid/invalid ISO
 
-**DateFormatterTest** ✅ (`app/src/test/java/com/swparks/util/DateFormatterTest.kt`)
-* [x] Покрыт `parseIsoDateToMillis` для supported/invalid ISO случаев
+### 8.1. Unit-тесты ViewModel [ЧАСТИЧНО]
 
-### 8.1. Unit-тесты ViewModel [НЕ НАЧАТО]
+**Файл:** `app/src/test/java/com/swparks/ui/viewmodel/EventDetailViewModelTest.kt`
 
-**Файл:** `app/src/test/java/com/swparks/ui/viewmodel/EventDetailViewModelTest.kt` (файл не создан)
+**Выполнено:**
+* [x] Покрыты сценарии `REPORT`, `CREATE`, `EDIT`, `DELETE` комментариев
+* [x] Проверены открытие `TextEntry`, confirm удаления и обновление данных
 
-**Тест-кейсы:**
-
-* [ ] Успешная загрузка мероприятия
-* [ ] Ошибка сети
-* [ ] Ошибка сервера
-* [ ] Pull-to-refresh повторно загружает данные
-* [ ] Адрес собирается через `CountriesRepository`
-* [ ] `isAuthorized` корректно вычисляется
-* [ ] `isEventAuthor` корректно вычисляется
-* [ ] Действия пользователя логируются
-* [ ] `onOpenMapClick()` и `onRouteClick()` формируют корректные данные
-* [ ] При отсутствии `eventId` ViewModel уходит в `Error` без сетевого запроса
-* [ ] Удаление мероприятия вызывает repository endpoint
-* [ ] Удаление фото вызывает repository endpoint
-* [ ] Удаление мероприятия не вызывает repository до подтверждения в alert/dialog
-* [ ] Удаление фото не вызывает repository до подтверждения в alert/dialog
-* [ ] **Factory метод корректно создает ViewModel с SavedStateHandle**
-* [ ] **ViewModel сохраняет состояние при изменении конфигурации**
+**Осталось:**
+* [ ] Успешная загрузка, ошибки сети/сервера
+* [ ] Pull-to-refresh, адрес через `CountriesRepository`
+* [ ] `isAuthorized`, `isEventAuthor`
+* [ ] Действия пользователя, `onOpenMapClick()`, `onRouteClick()`
+* [ ] Отсутствие `eventId` → `Error` без запроса
+* [ ] Удаление мероприятия/фото (с подтверждением и без)
+* [ ] Factory метод с `SavedStateHandle`, сохранение состояния
 
 ### 8.2. UI / Preview [ЧАСТИЧНО]
 
-**Добавить Preview для:**
-
-* [x] `LocationInfoView` — есть для светлой/тёмной темы
+* [x] `LocationInfoView` — светлая/тёмная тема
 * [x] `PhotoSectionView` (1, 2, 3+ фото)
 * [ ] `EventDetailScreen` (`loading`, `content`, `error`)
 
-### 8.3. UI-сценарии
+### 8.3. UI-сценарии [ПРОВЕРЕНО]
 
-**Проверить:**
-
-* [x] Неавторизованный пользователь не видит participants section (проверено по коду `EventParticipantsSection`)
-* [x] Неавторизованный пользователь не видит кнопку add comment (кнопка пока не реализована)
-* [x] Авторизованный пользователь видит participants section (проверено по коду `EventParticipantsSection`)
-* [ ] Автор мероприятия видит edit action
-* [x] Автор мероприятия видит delete action (иконка в `TopAppBar`)
-* [ ] При refresh действия корректно блокируются
-* [x] При отсутствии map app срабатывает fallback (try/catch + browser intent)
+* [x] Неавторизованный не видит `participants section`
+* [x] Кнопка add comment видна неавторизованному, но disabled
+* [x] Авторизованный видит `participants section`
+* [ ] Автор видит edit action
+* [x] Автор видит delete action
+* [x] При refresh действия корректно блокируются (включая секцию фото)
+* [x] При отсутствии map app срабатывает fallback
 * [x] Ошибка загрузки показывает `ErrorContentView`
-* [x] Toggle "Пойду" виден только для авторизованного пользователя и только для предстоящего события
-* [x] Кнопка "Добавить в календарь" видна только для предстоящего события
-* [ ] Жалобы на фото и комментарии не отображаются в UI (не выполнено: `REPORT` в `CommentRowView`)
-* [x] При удалении мероприятия сначала показывается alert/dialog с кнопками `Удалить` и `Отмена`
-* [x] При удалении фото сначала показывается alert/dialog с кнопками `Удалить` и `Отмена`
+* [x] Toggle "Пойду" и кнопка calendar — только для предстоящих событий
+* [x] `REPORT` открывает email-клиент
+* [x] Удаление мероприятия/фото через alert/dialog
+* [x] Удаление комментария через alert/dialog
 
 ---
 
 ## Порядок реализации
 
 1. **Этап 0** → Подготовка архитектуры ✅
-2. **Этап 1** → UI State + ViewModel + реальная загрузка ✅ (все методы реализованы)
+2. **Этап 1** → UI State + ViewModel ✅
 3. **Этап 2** → `LocationInfoView` ✅
 4. **Этап 7** → Навигация ✅
-5. **Исправление бага** → Factory метод с `createSavedStateHandle()` ✅ (Март 2026)
-6. **Этап 3** → `SwitchFormRowView` (toggle "Пойду") ✅
-7. **Доработка** → onClickParticipants подключен к ViewModel ✅ (Март 2026)
-8. **Этап 4** → `PhotoSectionView` ✅ (реализован, включая Preview)
-9. **Этап 5** → `EventDetailScreen` (дописать: add comment button, edit/share actions)
-10. **Этап 6** → Локализация ✅ (добавлены: event_photos, event_edit, event_share)
-11. **Этап 8** → Тестирование (EventDetailViewModelTest)
+5. **Исправление бага** → Factory с `createSavedStateHandle()` ✅ (Март 2026)
+6. **Этап 3** → `SwitchFormRowView` ✅
+7. **Доработка** → onClickParticipants ✅ (Март 2026)
+8. **Этап 3.2** → блокировка `LocationInfoView` при refresh ✅
+9. **Этап 3.3** → секция комментариев + Add comment ✅
+10. **Этап 3.4** → интеграция `REPORT` через email ✅
+11. **Этап 3.5** → интеграция `TextEntrySheetHost` для create/edit комментария ✅
+12. **Этап 3.6** → удаление комментария с confirm-alert ✅
+13. **Этап 4** → `PhotoSectionView` ✅
+14. **Этап 5** → `EventDetailScreen` (дописать: edit/share actions)
+15. **Этап 6** → Локализация ✅
+16. **Этап 8** → Тестирование (EventDetailViewModelTest)
 
 ---
 
 ## Существующие компоненты (переиспользование)
 
-| Компонент            | Файл                          | Статус                                      |
-|----------------------|-------------------------------|---------------------------------------------|
-| `SectionView`        | `ui/ds/SectionView.kt`        | ✅ Готов                                     |
-| `UserRowView`        | `ui/ds/UserRowView.kt`        | ✅ Готов, поддерживает `enabled` и `onClick` |
-| `CommentRowView`     | `ui/ds/CommentRowView.kt`     | ✅ Готов, click по автору уже интегрирован   |
-| `LoadingOverlayView` | `ui/ds/LoadingOverlayView.kt` | ✅ Готов                                     |
-| `FormCardContainer`  | `ui/ds/FormCardContainer.kt`  | ✅ Готов                                     |
-| `FormRowView`        | `ui/ds/FormRowView.kt`        | ✅ Готов                                     |
-| `SWAsyncImage`       | `ui/ds/SWAsyncImage.kt`       | ✅ Готов                                     |
-| `ErrorContentView`   | `ui/ds/ErrorContentView.kt`   | ✅ Готов                                     |
-| `EmptyStateView`     | `ui/ds/EmptyStateView.kt`     | ✅ Готов                                     |
+| Компонент | Статус |
+|-----------|--------|
+| `SectionView`, `UserRowView`, `CommentRowView`, `LoadingOverlayView`, `FormCardContainer`, `FormRowView`, `SWAsyncImage`, `ErrorContentView`, `EmptyStateView` | ✅ Готовы |
 
 ---
 
 ## Примечания
 
-1. **Карты:** в первой версии не использовать map snapshot. Вместо этого показывать адрес и открывать внешний map app/browser через Intent.
-
-2. **Реальная загрузка уже в первой рабочей версии:** получение event, адреса и refresh должны быть рабочими сразу. Только часть действий может оставаться на этапе логирования.
-
-3. **Авторизация:** экран должен корректно работать для:
-
-     * **неавторизованных пользователей** — скрыты participants section и add comment
-     * **авторизованных пользователей** — доступен полный сценарий просмотра
-     * **автора мероприятия** — видны edit/delete action и доступно удаление фото
-
-4. **Фото:** `PhotoSectionView` оставлен без кнопки удаления. Удаление фото переносится на `PhotoDetailScreen`: после клика по фото открывается детальный экран, где удаление будет доступно через кнопку в `TopAppBar` и confirm alert/dialog.
-
-5. **Комментарии и social actions:** в первой рабочей версии допустимо оставить без API-интеграции, но UI и точки расширения должны быть готовы. По текущему коду `REPORT` для комментариев всё ещё выводится и должен быть скрыт в рамках требований первой версии.
-
-6. **Календарь:** если событие предстоящее (`isCurrent == true`), нужно показать кнопку добавления в календарь и открывать системный календарь через стандартный Android Intent без сторонних зависимостей.
-
-7. **Навигация:** интеграцию делать через `RootScreen`, а не через `Navigation.kt`, так как `Navigation.kt` относится к нижней навигации.
-
-8. **ViewModel lifecycle:** Использовать `viewModel()` с factory методом, использующим `createSavedStateHandle()`, для корректного управления жизненным циклом ViewModel при навигации и изменении конфигурации. Это предотвращает пересоздание ViewModel при восстановлении состояния навигации.
+1. **Карты:** без map snapshot, использовать адрес + внешний map app/browser через Intent.
+2. **Реальная загрузка:** event, адрес, refresh работают; ключевые действия логируются.
+3. **Авторизация:**
+   * неавторизованные — скрыт participants section, add comment disabled
+   * авторизованные — полный доступ
+   * автор — edit/delete actions, удаление фото
+4. **Фото:** удаление переносится на `PhotoDetailScreen`.
+5. **Комментарии:** `REPORT` через email; `CREATE/EDIT/DELETE` через backend API.
+6. **Календарь:** системный Intent для предстоящих событий.
+7. **Навигация:** через `RootScreen`.
+8. **ViewModel:** `viewModel()` с factory и `createSavedStateHandle()`.
+9. **Временная заглушка:** удалена (fake-комментарии больше не используются).
 
 ---
 
 ## Технический долг и улучшения
 
-### Потенциальные улучшения
-
-1. **Фото-секция:**
-   * Добавить полноэкранный просмотр фото
-   * Добавить жесты для пролистывания фото
-   * Оптимизировать загрузку изображений
-
-2. **Комментарии:**
-   * Добавить пагинацию для большого количества комментариев
-   * Добавить возможность ответа на комментарий
-   * Добавить редактирование/удаление своих комментариев
-
-3. **Производительность:**
-   * Кэширование адресов в `CountriesRepository`
-   * Оптимизация обновлений UI при refresh
-
-4. **UX:**
-   * Добавить skeleton loading вместо простого LoadingOverlayView
-   * Добавить анимации переходов между секциями
-   * Добавить pull-to-refresh indicator в стиле Material 3
+* **Фото:** полноэкранный просмотр, жесты, оптимизация загрузки
+* **Комментарии:** пагинация, ответы, optimistic UI
+* **Производительность:** кэширование адресов, оптимизация refresh
+* **UX:** skeleton loading, анимации, Material 3 pull-to-refresh
 
 ---
 
-## Следующие итерации (после первой рабочей версии)
+## Следующие итерации
 
-### Итерация 2 — Реальная навигация
+### Итерация 2 — Навигация
 
-* ~~Переход на профиль автора~~ ✅ (реализовано через `onNavigateToUserProfile` для авторизованных пользователей)
-* ~~Переход на экран участников~~ ✅ (реализовано: `EventDetail` → `EventParticipants` с передачей списка)
 * Переход на экран галереи
 * Переход на редактирование мероприятия
 * Реальный share flow
@@ -532,10 +361,10 @@ fun EventDetailScreen(
 ### Итерация 3 — API интеграция
 
 * Toggle "Пойду" с optimistic update
-* Добавление комментария
-* Действия над комментариями
+* Комментарии: optimistic update без полного refresh
+* Расширенные действия над комментариями
 
 ### Итерация 4 — Расширенный функционал
 
 * Дополнительные action sheet / menu сценарии
-* Отдельное R&D по встроенному preview карты без платных сервисов
+* R&D по встроенному preview карты

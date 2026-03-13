@@ -209,6 +209,8 @@
     <string name="event_add_to_calendar">Добавить в календарь</string>
     <string name="event_delete_confirm_title">Удалить мероприятие?</string>
     <string name="event_delete_photo_confirm_title">Удалить фото?</string>
+    <string name="event_delete_comment_confirm_title">Удалить комментарий?</string>
+    <string name="event_delete_comment_confirm_message">Вы уверены, что хотите удалить этот комментарий?</string>
     <string name="event_details_placeholder">Добавьте немного подробностей о предстоящем мероприятии</string>
     <string name="date_time">Дата и время</string>
     <string name="date">Дата</string>

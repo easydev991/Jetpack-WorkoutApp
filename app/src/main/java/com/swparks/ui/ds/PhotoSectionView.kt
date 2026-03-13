@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.Dp
 import com.swparks.R
 import com.swparks.data.model.Photo
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
+import com.swparks.ui.utils.disabledAlpha
 
 private const val ONE_COLUMN = 1
 private const val TWO_COLUMNS = 2
@@ -28,6 +29,7 @@ private const val THREE_COLUMNS = 3
 
 data class PhotoSectionConfig(
     val photos: List<Photo>,
+    val enabled: Boolean = true,
     val onPhotoClick: (Photo) -> Unit
 )
 
@@ -61,6 +63,7 @@ fun PhotoSectionView(
                             PhotoCell(
                                 photo = photo,
                                 size = itemSize,
+                                enabled = config.enabled,
                                 onPhotoClick = config.onPhotoClick
                             )
                         }
@@ -79,6 +82,7 @@ fun PhotoSectionView(
 private fun PhotoCell(
     photo: Photo,
     size: Dp,
+    enabled: Boolean,
     onPhotoClick: (Photo) -> Unit
 ) {
     Box(modifier = Modifier.size(size)) {
@@ -86,7 +90,8 @@ private fun PhotoCell(
             config = AsyncImageConfig(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clickable { onPhotoClick(photo) },
+                    .clickable(enabled = enabled) { onPhotoClick(photo) }
+                    .disabledAlpha(!enabled),
                 imageStringURL = photo.photo,
                 size = size,
                 contentScale = ContentScale.Crop,

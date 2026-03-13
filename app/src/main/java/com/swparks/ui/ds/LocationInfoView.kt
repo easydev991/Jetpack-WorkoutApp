@@ -23,6 +23,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * @param latitude Широта (может быть null, если координаты неизвестны)
  * @param longitude Долгота (может быть null, если координаты неизвестны)
  * @param address Текстовый адрес (не отображается в UI, используется для fallback)
+ * @param enabled Флаг доступности кнопок действий с локацией
  * @param onOpenMapClick Callback при нажатии на кнопку "Открыть на карте"
  * @param onRouteClick Callback при нажатии на кнопку "Построить маршрут"
  */
@@ -30,6 +31,7 @@ data class LocationInfoConfig(
     val latitude: String?,
     val longitude: String?,
     val address: String,
+    val enabled: Boolean = true,
     val onOpenMapClick: () -> Unit,
     val onRouteClick: () -> Unit
 )
@@ -61,6 +63,7 @@ fun LocationInfoView(
                 mode = SWButtonMode.TINTED,
                 imageVector = Icons.Default.Map,
                 text = stringResource(R.string.event_open_map),
+                enabled = config.enabled,
                 onClick = config.onOpenMapClick
             )
         )
@@ -72,6 +75,7 @@ fun LocationInfoView(
                 mode = SWButtonMode.TINTED,
                 imageVector = Icons.Default.Navigation,
                 text = stringResource(R.string.event_build_route),
+                enabled = config.enabled,
                 onClick = config.onRouteClick
             )
         )
@@ -96,6 +100,7 @@ fun LocationInfoViewPreview() {
                     latitude = "55.7558",
                     longitude = "37.6173",
                     address = "Россия, Москва, Парк Горького",
+                    enabled = true,
                     onOpenMapClick = {},
                     onRouteClick = {}
                 ),

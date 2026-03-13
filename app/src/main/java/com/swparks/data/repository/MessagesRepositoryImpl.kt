@@ -47,8 +47,6 @@ class MessagesRepositoryImpl(
         Log.i(TAG, "Успешно сохранено ${remoteDialogs.size} диалогов в БД")
         Result.success(Unit)
     } catch (e: Exception) {
-        // Ошибка возвращается в UI для показа Toast/Alert
-        // При этом Flow выше продолжит показывать старые данные из кэша
         logger.e(TAG, "Ошибка загрузки диалогов: ${e.message}")
         Result.failure(e)
     }

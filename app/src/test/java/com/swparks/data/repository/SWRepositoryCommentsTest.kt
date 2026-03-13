@@ -24,10 +24,13 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import retrofit2.Response
 import java.io.IOException
 
 /**
@@ -63,7 +66,7 @@ class SWRepositoryCommentsTest {
                 parkId = any(),
                 comment = any()
             )
-        } returns mockk(relaxed = true)
+        } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -91,9 +94,12 @@ class SWRepositoryCommentsTest {
     fun addComment_whenOptionIsEvent_thenCallsAddCommentToEvent() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.addCommentToEvent(eventId = any(), comment = any()) } returns mockk(
-            relaxed = true
-        )
+        coEvery {
+            mockApi.addCommentToEvent(
+                eventId = any(),
+                comment = any()
+            )
+        } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -127,7 +133,7 @@ class SWRepositoryCommentsTest {
                 journalId = any(),
                 message = any()
             )
-        } returns mockk(relaxed = true)
+        } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -191,6 +197,41 @@ class SWRepositoryCommentsTest {
     }
 
     @Test
+    fun addComment_whenEventApiReturnsBadRequest_thenReturnsFailure() = runTest {
+        // Given
+        val mockApi = mockk<SWApi>()
+        coEvery {
+            mockApi.addCommentToEvent(
+                eventId = any(),
+                comment = any()
+            )
+        } returns Response.error(
+            400,
+            "bad request".toResponseBody("text/plain".toMediaType())
+        )
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao,
+            mockEventDao
+        )
+        val option = TextEntryOption.Event(id = 456L)
+
+        // When
+        val result = repository.addComment(option, "Test comment")
+
+        // Then
+        assertTrue(result.isFailure)
+    }
+
+    @Test
     fun editComment_whenOptionIsPark_thenCallsEditParkComment() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
@@ -200,7 +241,7 @@ class SWRepositoryCommentsTest {
                 commentId = any(),
                 comment = any()
             )
-        } returns mockk(relaxed = true)
+        } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -240,7 +281,7 @@ class SWRepositoryCommentsTest {
                 commentId = any(),
                 comment = any()
             )
-        } returns mockk(relaxed = true)
+        } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -281,7 +322,7 @@ class SWRepositoryCommentsTest {
                 entryId = any(),
                 newEntryText = any()
             )
-        } returns mockk(relaxed = true)
+        } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -368,12 +409,51 @@ class SWRepositoryCommentsTest {
     }
 
     @Test
+    fun editComment_whenEventApiReturnsBadRequest_thenReturnsFailure() = runTest {
+        // Given
+        val mockApi = mockk<SWApi>()
+        coEvery {
+            mockApi.editEventComment(
+                eventId = any(),
+                commentId = any(),
+                comment = any()
+            )
+        } returns Response.error(
+            400,
+            "bad request".toResponseBody("text/plain".toMediaType())
+        )
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao,
+            mockEventDao
+        )
+        val option = TextEntryOption.Event(id = 456L)
+
+        // When
+        val result = repository.editComment(option, 999L, "Updated comment")
+
+        // Then
+        assertTrue(result.isFailure)
+    }
+
+    @Test
     fun deleteComment_whenOptionIsPark_thenCallsDeleteParkComment() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.deleteParkComment(parkId = any(), commentId = any()) } returns mockk(
-            relaxed = true
-        )
+        coEvery {
+            mockApi.deleteParkComment(
+                parkId = any(),
+                commentId = any()
+            )
+        } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -401,9 +481,12 @@ class SWRepositoryCommentsTest {
     fun deleteComment_whenOptionIsEvent_thenCallsDeleteEventComment() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.deleteEventComment(eventId = any(), commentId = any()) } returns mockk(
-            relaxed = true
-        )
+        coEvery {
+            mockApi.deleteEventComment(
+                eventId = any(),
+                commentId = any()
+            )
+        } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -437,7 +520,7 @@ class SWRepositoryCommentsTest {
                 journalId = any(),
                 entryId = any()
             )
-        } returns mockk(relaxed = true)
+        } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())

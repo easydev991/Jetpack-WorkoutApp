@@ -1040,8 +1040,17 @@ class SWRepositoryImp(
     override suspend fun addComment(option: TextEntryOption, comment: String): Result<Unit> =
         when (option) {
             is TextEntryOption.Park -> try {
-                swApi.addCommentToPark(option.id, comment)
-                Result.success(Unit)
+                val response = swApi.addCommentToPark(option.id, comment)
+                if (response.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(
+                        handleHttpException(
+                            HttpException(response),
+                            "добавлении комментария"
+                        )
+                    )
+                }
             } catch (e: IOException) {
                 Result.failure(handleIOException(e, "добавлении комментария"))
             } catch (e: HttpException) {
@@ -1049,8 +1058,17 @@ class SWRepositoryImp(
             }
 
             is TextEntryOption.Event -> try {
-                swApi.addCommentToEvent(option.id, comment)
-                Result.success(Unit)
+                val response = swApi.addCommentToEvent(option.id, comment)
+                if (response.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(
+                        handleHttpException(
+                            HttpException(response),
+                            "добавлении комментария"
+                        )
+                    )
+                }
             } catch (e: IOException) {
                 Result.failure(handleIOException(e, "добавлении комментария"))
             } catch (e: HttpException) {
@@ -1060,12 +1078,21 @@ class SWRepositoryImp(
             is TextEntryOption.Journal -> {
 // Для дневников создаются новые записи (сообщения)
                 try {
-                    swApi.saveJournalEntry(
+                    val response = swApi.saveJournalEntry(
                         option.ownerId,
                         option.journalId,
                         comment
                     )
-                    Result.success(Unit)
+                    if (response.isSuccessful) {
+                        Result.success(Unit)
+                    } else {
+                        Result.failure(
+                            handleHttpException(
+                                HttpException(response),
+                                "создании записи в дневнике"
+                            )
+                        )
+                    }
                 } catch (e: IOException) {
                     Result.failure(handleIOException(e, "создании записи в дневнике"))
                 } catch (e: HttpException) {
@@ -1081,8 +1108,17 @@ class SWRepositoryImp(
         newComment: String
     ): Result<Unit> = when (option) {
         is TextEntryOption.Park -> try {
-            swApi.editParkComment(option.id, commentId, newComment)
-            Result.success(Unit)
+            val response = swApi.editParkComment(option.id, commentId, newComment)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(
+                    handleHttpException(
+                        HttpException(response),
+                        "редактировании комментария"
+                    )
+                )
+            }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "редактировании комментария"))
         } catch (e: HttpException) {
@@ -1090,8 +1126,17 @@ class SWRepositoryImp(
         }
 
         is TextEntryOption.Event -> try {
-            swApi.editEventComment(option.id, commentId, newComment)
-            Result.success(Unit)
+            val response = swApi.editEventComment(option.id, commentId, newComment)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(
+                    handleHttpException(
+                        HttpException(response),
+                        "редактировании комментария"
+                    )
+                )
+            }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "редактировании комментария"))
         } catch (e: HttpException) {
@@ -1101,24 +1146,32 @@ class SWRepositoryImp(
         is TextEntryOption.Journal -> {
 // Для дневников редактируются сами записи (сообщения)
             try {
-                swApi.editJournalEntry(
+                val response = swApi.editJournalEntry(
                     option.ownerId,
                     option.journalId,
                     commentId,
                     newComment
                 )
 
-                // Обновляем локальный кэш после успешного редактирования
-                val existingEntry = journalEntryDao.getById(commentId)
-                if (existingEntry != null) {
-                    val updatedEntry = existingEntry.copy(
-                        message = newComment,
-                        modifyDate = System.currentTimeMillis()
+                if (response.isSuccessful) {
+                    // Обновляем локальный кэш после успешного редактирования
+                    val existingEntry = journalEntryDao.getById(commentId)
+                    if (existingEntry != null) {
+                        val updatedEntry = existingEntry.copy(
+                            message = newComment,
+                            modifyDate = System.currentTimeMillis()
+                        )
+                        journalEntryDao.insert(updatedEntry)
+                    }
+                    Result.success(Unit)
+                } else {
+                    Result.failure(
+                        handleHttpException(
+                            HttpException(response),
+                            "редактировании записи в дневнике"
+                        )
                     )
-                    journalEntryDao.insert(updatedEntry)
                 }
-
-                Result.success(Unit)
             } catch (e: IOException) {
                 Result.failure(handleIOException(e, "редактировании записи в дневнике"))
             } catch (e: HttpException) {
@@ -1131,8 +1184,17 @@ class SWRepositoryImp(
     override suspend fun deleteComment(option: TextEntryOption, commentId: Long): Result<Unit> =
         when (option) {
             is TextEntryOption.Park -> try {
-                swApi.deleteParkComment(option.id, commentId)
-                Result.success(Unit)
+                val response = swApi.deleteParkComment(option.id, commentId)
+                if (response.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(
+                        handleHttpException(
+                            HttpException(response),
+                            "удалении комментария"
+                        )
+                    )
+                }
             } catch (e: IOException) {
                 Result.failure(handleIOException(e, "удалении комментария"))
             } catch (e: HttpException) {
@@ -1140,8 +1202,17 @@ class SWRepositoryImp(
             }
 
             is TextEntryOption.Event -> try {
-                swApi.deleteEventComment(option.id, commentId)
-                Result.success(Unit)
+                val response = swApi.deleteEventComment(option.id, commentId)
+                if (response.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(
+                        handleHttpException(
+                            HttpException(response),
+                            "удалении комментария"
+                        )
+                    )
+                }
             } catch (e: IOException) {
                 Result.failure(handleIOException(e, "удалении комментария"))
             } catch (e: HttpException) {
@@ -1151,12 +1222,21 @@ class SWRepositoryImp(
             is TextEntryOption.Journal -> {
 // Для дневников удаляются сами записи (сообщения)
                 try {
-                    swApi.deleteJournalEntry(
+                    val response = swApi.deleteJournalEntry(
                         option.ownerId,
                         option.journalId,
                         commentId
                     )
-                    Result.success(Unit)
+                    if (response.isSuccessful) {
+                        Result.success(Unit)
+                    } else {
+                        Result.failure(
+                            handleHttpException(
+                                HttpException(response),
+                                "удалении записи из дневника"
+                            )
+                        )
+                    }
                 } catch (e: IOException) {
                     Result.failure(handleIOException(e, "удалении записи из дневника"))
                 } catch (e: HttpException) {

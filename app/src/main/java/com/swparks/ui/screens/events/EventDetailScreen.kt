@@ -11,15 +11,17 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -36,10 +38,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
-import com.swparks.data.model.Comment
 import com.swparks.data.model.User
 import com.swparks.ui.ds.ErrorContentView
 import com.swparks.ui.ds.LoadingOverlayView
+import com.swparks.ui.model.TextEntryMode
+import com.swparks.ui.screens.common.TextEntrySheetHost
+import com.swparks.ui.screens.more.sendComplaint
 import com.swparks.ui.state.EventDetailUIState
 import com.swparks.ui.viewmodel.EventDetailEvent
 import com.swparks.ui.viewmodel.IEventDetailViewModel
@@ -63,12 +67,16 @@ fun EventDetailScreen(
 
     var showDeleteEventDialog by remember { mutableStateOf(false) }
     var showDeletePhotoDialog by remember { mutableStateOf(false) }
+    var showDeleteCommentDialog by remember { mutableStateOf(false) }
+    var showTextEntrySheet by remember { mutableStateOf(false) }
+    var textEntryMode by remember { mutableStateOf<TextEntryMode?>(null) }
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
                 EventDetailEvent.ShowDeleteConfirmDialog -> showDeleteEventDialog = true
                 is EventDetailEvent.ShowDeletePhotoConfirmDialog -> showDeletePhotoDialog = true
+                EventDetailEvent.ShowDeleteCommentConfirmDialog -> showDeleteCommentDialog = true
                 EventDetailEvent.EventDeleted -> onBack()
                 is EventDetailEvent.PhotoDeleted -> Unit
                 is EventDetailEvent.OpenCalendar -> {
@@ -114,6 +122,18 @@ fun EventDetailScreen(
 
                 is EventDetailEvent.NavigateToParticipants -> {
                     onNavigateToParticipants(event.eventId, event.users)
+                }
+
+                is EventDetailEvent.SendCommentComplaint -> {
+                    sendComplaint(
+                        complaint = event.complaint,
+                        context = context
+                    )
+                }
+
+                is EventDetailEvent.OpenCommentTextEntry -> {
+                    textEntryMode = event.mode
+                    showTextEntrySheet = true
                 }
             }
         }
@@ -209,6 +229,7 @@ fun EventDetailScreen(
                             item {
                                 EventPhotosSection(
                                     photos = state.event.photos,
+                                    isRefreshing = isRefreshing,
                                     onPhotoClick = viewModel::onPhotoClick
                                 )
                             }
@@ -224,13 +245,28 @@ fun EventDetailScreen(
                             )
                         }
 
-                        items(state.event.comments.orEmpty(), key = Comment::id) { comment ->
+                        itemsIndexed(
+                            state.event.comments.orEmpty(),
+                            key = { _, comment -> comment.id }
+                        ) { index, comment ->
                             EventCommentItem(
                                 comment = comment,
-                                isAuthorized = isAuthorized,
+                                enabled = isAuthorized && !isRefreshing,
                                 currentUserId = currentUserId,
+                                showSectionHeader = index == 0,
+                                modifier = Modifier.padding(
+                                    horizontal = dimensionResource(R.dimen.spacing_regular)
+                                ),
                                 onAuthorClick = onNavigateToUserProfile,
                                 onActionClick = viewModel::onCommentActionClick
+                            )
+                        }
+
+                        item {
+                            EventAddCommentButton(
+                                isAuthorized = isAuthorized,
+                                isRefreshing = isRefreshing,
+                                onAddCommentClick = viewModel::onAddCommentClick
                             )
                         }
                     }
@@ -295,6 +331,52 @@ fun EventDetailScreen(
                 ) {
                     Text(text = stringResource(R.string.cancel))
                 }
+            }
+        )
+    }
+
+    if (showDeleteCommentDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteCommentDialog = false
+                viewModel.onCommentDeleteDismiss()
+            },
+            title = { Text(text = stringResource(R.string.event_delete_comment_confirm_title)) },
+            text = { Text(text = stringResource(R.string.event_delete_comment_confirm_message)) },
+            confirmButton = {
+                TextButton(
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    ),
+                    onClick = {
+                        showDeleteCommentDialog = false
+                        viewModel.onCommentDeleteConfirm()
+                    }
+                ) {
+                    Text(text = stringResource(R.string.delete))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteCommentDialog = false
+                        viewModel.onCommentDeleteDismiss()
+                    }
+                ) {
+                    Text(text = stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+
+    if (showTextEntrySheet && textEntryMode != null) {
+        TextEntrySheetHost(
+            show = showTextEntrySheet,
+            mode = checkNotNull(textEntryMode),
+            onDismissed = { showTextEntrySheet = false },
+            onSendSuccess = {
+                showTextEntrySheet = false
+                viewModel.refresh()
             }
         )
     }

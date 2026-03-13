@@ -59,65 +59,68 @@ internal fun EventHeaderMapCalendarSection(
     isRefreshing: Boolean,
     callbacks: EventHeaderCallbacks
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                top = dimensionResource(R.dimen.spacing_regular),
-                start = dimensionResource(R.dimen.spacing_regular),
-                end = dimensionResource(R.dimen.spacing_regular)
-            ),
-        verticalArrangement = Arrangement.spacedBy(
-            dimensionResource(R.dimen.spacing_small)
+    FormCardContainer(
+        params = FormCardContainerParams(
+            Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
         )
     ) {
-        Text(
-            text = event.title,
-            style = MaterialTheme.typography.titleLarge
-        )
-
-        LabeledValueRow(
-            label = stringResource(R.string.`when`),
-            value = DateFormatter.formatDate(
-                context = androidx.compose.ui.platform.LocalContext.current,
-                dateString = event.beginDate
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(dimensionResource(R.dimen.spacing_regular)),
+            verticalArrangement = Arrangement.spacedBy(
+                dimensionResource(R.dimen.spacing_small)
             )
-        )
+        ) {
+            Text(
+                text = event.title,
+                style = MaterialTheme.typography.titleLarge
+            )
 
-        LabeledValueRow(
-            label = stringResource(R.string.where),
-            value = address
-        )
-
-        val eventAddress = event.address
-        if (!eventAddress.isNullOrBlank()) {
             LabeledValueRow(
-                label = stringResource(R.string.address),
-                value = eventAddress
-            )
-        }
-
-        LocationInfoView(
-            config = LocationInfoConfig(
-                latitude = event.latitude,
-                longitude = event.longitude,
-                address = address,
-                onOpenMapClick = callbacks.onOpenMapClick,
-                onRouteClick = callbacks.onRouteClick
-            )
-        )
-
-        if (event.isCurrent) {
-            SWButton(
-                config = ButtonConfig(
-                    modifier = Modifier.fillMaxWidth(),
-                    size = SWButtonSize.LARGE,
-                    mode = SWButtonMode.FILLED,
-                    text = stringResource(R.string.event_add_to_calendar),
-                    enabled = !isRefreshing,
-                    onClick = callbacks.onAddToCalendarClick
+                label = stringResource(R.string.`when`),
+                value = DateFormatter.formatDate(
+                    context = androidx.compose.ui.platform.LocalContext.current,
+                    dateString = event.beginDate
                 )
             )
+
+            LabeledValueRow(
+                label = stringResource(R.string.where),
+                value = address
+            )
+
+            val eventAddress = event.address
+            if (!eventAddress.isNullOrBlank()) {
+                LabeledValueRow(
+                    label = stringResource(R.string.address),
+                    value = eventAddress
+                )
+            }
+
+            LocationInfoView(
+                config = LocationInfoConfig(
+                    latitude = event.latitude,
+                    longitude = event.longitude,
+                    address = address,
+                    enabled = !isRefreshing,
+                    onOpenMapClick = callbacks.onOpenMapClick,
+                    onRouteClick = callbacks.onRouteClick
+                )
+            )
+
+            if (event.isCurrent) {
+                SWButton(
+                    config = ButtonConfig(
+                        modifier = Modifier.fillMaxWidth(),
+                        size = SWButtonSize.LARGE,
+                        mode = SWButtonMode.FILLED,
+                        text = stringResource(R.string.event_add_to_calendar),
+                        enabled = !isRefreshing,
+                        onClick = callbacks.onAddToCalendarClick
+                    )
+                )
+            }
         }
     }
 }
@@ -215,11 +218,13 @@ internal fun EventAuthorSection(
 @Composable
 internal fun EventPhotosSection(
     photos: List<Photo>,
+    isRefreshing: Boolean,
     onPhotoClick: (Photo) -> Unit
 ) {
     PhotoSectionView(
         config = PhotoSectionConfig(
             photos = photos,
+            enabled = !isRefreshing,
             onPhotoClick = onPhotoClick
         ),
         modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
@@ -228,30 +233,74 @@ internal fun EventPhotosSection(
 
 @Composable
 internal fun EventCommentItem(
+    modifier: Modifier = Modifier,
     comment: Comment,
-    isAuthorized: Boolean,
+    enabled: Boolean,
     currentUserId: Long?,
+    showSectionHeader: Boolean = false,
     onAuthorClick: (Long) -> Unit,
     onActionClick: (Long, CommentAction) -> Unit
 ) {
     val author = comment.user
     val byMainUser = author?.id != null && author.id == currentUserId
-    CommentRowView(
-        data = CommentRowData(
-            modifier = Modifier.padding(
-                horizontal = dimensionResource(R.dimen.spacing_regular)
-            ),
-            imageStringURL = author?.image,
-            authorName = author?.name ?: "",
-            dateString = DateFormatter.formatDate(
-                context = androidx.compose.ui.platform.LocalContext.current,
-                dateString = comment.date
-            ),
-            bodyText = comment.parsedBody.orEmpty(),
-            enabled = isAuthorized,
-            byMainUser = byMainUser,
-            onAuthorClick = { author?.id?.let(onAuthorClick) },
-            onClickAction = { action -> onActionClick(comment.id, action) }
+    val commentContent: @Composable () -> Unit = {
+        FormCardContainer(
+            params = FormCardContainerParams(modifier)
+        ) {
+            CommentRowView(
+                data = CommentRowData(
+                    imageStringURL = author?.image,
+                    authorName = author?.name ?: "",
+                    dateString = DateFormatter.formatDate(
+                        context = androidx.compose.ui.platform.LocalContext.current,
+                        dateString = comment.date
+                    ),
+                    bodyText = comment.parsedBody.orEmpty(),
+                    enabled = enabled,
+                    byMainUser = byMainUser,
+                    onAuthorClick = { author?.id?.let(onAuthorClick) },
+                    onClickAction = { action -> onActionClick(comment.id, action) }
+                )
+            )
+        }
+    }
+
+    if (showSectionHeader) {
+        Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))) {
+            Text(
+                text = stringResource(id = R.string.comments).uppercase(),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(
+                    start = dimensionResource(id = R.dimen.spacing_small) + dimensionResource(
+                        R.dimen.spacing_regular
+                    )
+                )
+            )
+            commentContent()
+        }
+    } else {
+        commentContent()
+    }
+}
+
+@Composable
+internal fun EventAddCommentButton(
+    isAuthorized: Boolean,
+    isRefreshing: Boolean,
+    onAddCommentClick: () -> Unit
+) {
+    SWButton(
+        config = ButtonConfig(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
+                .padding(bottom = dimensionResource(R.dimen.spacing_regular)),
+            size = SWButtonSize.LARGE,
+            mode = SWButtonMode.FILLED,
+            text = stringResource(R.string.add_comment),
+            enabled = isAuthorized && !isRefreshing,
+            onClick = onAddCommentClick
         )
     )
 }
@@ -387,8 +436,9 @@ internal fun EventCommentItemPreview() {
             ) {
                 EventCommentItem(
                     comment = previewComment,
-                    isAuthorized = true,
+                    enabled = true,
                     currentUserId = 999L,
+                    modifier = Modifier.fillMaxWidth(),
                     onAuthorClick = {},
                     onActionClick = { _, _ -> }
                 )
@@ -396,8 +446,9 @@ internal fun EventCommentItemPreview() {
                     comment = previewComment.copy(
                         user = previewComment.user?.copy(id = 999L)
                     ),
-                    isAuthorized = true,
+                    enabled = true,
                     currentUserId = 999L,
+                    modifier = Modifier.fillMaxWidth(),
                     onAuthorClick = {},
                     onActionClick = { _, _ -> }
                 )

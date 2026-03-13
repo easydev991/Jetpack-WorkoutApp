@@ -147,6 +147,16 @@ interface IEventDetailViewModel {
     fun onCommentActionClick(commentId: Long, action: CommentAction)
 
     /**
+     * Обработка подтверждения удаления комментария.
+     */
+    fun onCommentDeleteConfirm()
+
+    /**
+     * Обработка отмены удаления комментария.
+     */
+    fun onCommentDeleteDismiss()
+
+    /**
      * Обновление данных мероприятия (pull-to-refresh).
      */
     fun refresh()
