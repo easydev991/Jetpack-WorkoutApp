@@ -20,6 +20,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import retrofit2.HttpException
+import retrofit2.Response
 import java.io.IOException
 
 /**
@@ -201,5 +203,42 @@ class MessagesRepositoryTest {
         assertTrue(result.isSuccess)
         coVerify { mockDialogDao.deleteAll() }
         coVerify { mockDialogDao.insertAll(emptyList()) }
+    }
+
+    // ==================== HttpException Tests ====================
+
+    @Test
+    fun refreshDialogs_onHttpException_returnsFailure() = runTest {
+        // Given
+        val mockResponse = mockk<Response<*>>(relaxed = true)
+        every { mockResponse.code() } returns 500
+        every { mockResponse.message() } returns "Server Error"
+        val httpException = HttpException(mockResponse)
+        coEvery { mockApi.getDialogs() } throws httpException
+
+        // When
+        val result = repository.refreshDialogs()
+
+        // Then
+        assertTrue("Expected Result.failure but got $result", result.isFailure)
+        // DAO не должен вызываться при ошибке
+        coVerify(exactly = 0) { mockDialogDao.deleteAll() }
+        coVerify(exactly = 0) { mockDialogDao.insertAll(any()) }
+    }
+
+    @Test
+    fun refreshDialogs_onHttpException401_returnsFailure() = runTest {
+        // Given
+        val mockResponse = mockk<Response<*>>(relaxed = true)
+        every { mockResponse.code() } returns 401
+        every { mockResponse.message() } returns "Unauthorized"
+        val httpException = HttpException(mockResponse)
+        coEvery { mockApi.getDialogs() } throws httpException
+
+        // When
+        val result = repository.refreshDialogs()
+
+        // Then
+        assertTrue("Expected Result.failure but got $result", result.isFailure)
     }
 }

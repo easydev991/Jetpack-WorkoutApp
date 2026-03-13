@@ -10,6 +10,7 @@ import com.swparks.ui.state.BlacklistUiState
 import com.swparks.util.AppError
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,7 +26,7 @@ import kotlinx.coroutines.launch
  * @param logger Логгер для записи сообщений
  * @param userNotifier Обработчик ошибок для отправки ошибок в UI
  */
-@Suppress("TooGenericExceptionCaught")
+@Suppress("TooGenericExceptionCaught", "InstanceOfCheckForException")
 class BlacklistViewModel(
     private val swRepository: SWRepository,
     private val logger: Logger,
@@ -131,6 +132,7 @@ class BlacklistViewModel(
                     }
                 )
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 val message = "Ошибка при удалении из черного списка: ${e.message}"
                 logger.e(TAG, message)
                 userNotifier.handleError(AppError.Generic(message, e))

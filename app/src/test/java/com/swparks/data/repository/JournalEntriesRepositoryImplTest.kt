@@ -23,6 +23,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
 
@@ -669,5 +670,82 @@ class JournalEntriesRepositoryImplTest {
         // Then
         assertEquals(true, result)
         coVerify(exactly = 1) { mockJournalEntryDao.getMinEntryId(testJournalId) }
+    }
+
+    // ==================== ТЕСТЫ ДЛЯ HttpException ====================
+
+    /**
+     * Тест 19: HttpException при refreshJournalEntries возвращает Result.failure
+     */
+    @Test
+    fun testRefreshJournalEntries_httpException_returnsFailure() = runTest {
+        // Given
+        val mockResponse = mockk<Response<*>>(relaxed = true)
+        every { mockResponse.code() } returns 500
+        every { mockResponse.message() } returns "Server Error"
+        val httpException = HttpException(mockResponse)
+        coEvery { mockApi.getJournalEntries(testUserId, testJournalId) } throws httpException
+
+        // When
+        val result = repository.refreshJournalEntries(testUserId, testJournalId)
+
+        // Then
+        assertTrue("Expected Result.failure but got $result", result.isFailure)
+        coVerify(exactly = 1) { mockApi.getJournalEntries(testUserId, testJournalId) }
+        // DAO не должен вызываться при ошибке
+        coVerify(exactly = 0) { mockJournalEntryDao.deleteByJournalId(any()) }
+        coVerify(exactly = 0) { mockJournalEntryDao.insertAll(any()) }
+    }
+
+    /**
+     * Тест 20: HttpException 401 при refreshJournalEntries возвращает Result.failure
+     */
+    @Test
+    fun testRefreshJournalEntries_httpException401_returnsFailure() = runTest {
+        // Given
+        val mockResponse = mockk<Response<*>>(relaxed = true)
+        every { mockResponse.code() } returns 401
+        every { mockResponse.message() } returns "Unauthorized"
+        val httpException = HttpException(mockResponse)
+        coEvery { mockApi.getJournalEntries(testUserId, testJournalId) } throws httpException
+
+        // When
+        val result = repository.refreshJournalEntries(testUserId, testJournalId)
+
+        // Then
+        assertTrue("Expected Result.failure but got $result", result.isFailure)
+        coVerify(exactly = 1) { mockApi.getJournalEntries(testUserId, testJournalId) }
+    }
+
+    /**
+     * Тест 21: HttpException при deleteJournalEntry возвращает Result.failure
+     * Примечание: deleteJournalEntry использует Response<T>, поэтому HttpException
+     * не выбрасывается Retrofit-ом, но тест добавлен для полноты покрытия
+     */
+    @Test
+    fun testDeleteJournalEntry_httpException_returnsFailure() = runTest {
+        // Given
+        val testEntryId = 1L
+        val mockResponse = mockk<Response<*>>(relaxed = true)
+        every { mockResponse.code() } returns 500
+        every { mockResponse.message() } returns "Server Error"
+        val httpException = HttpException(mockResponse)
+        coEvery {
+            mockApi.deleteJournalEntry(
+                testUserId,
+                testJournalId,
+                testEntryId
+            )
+        } throws httpException
+
+        // When
+        val result = repository.deleteJournalEntry(testUserId, testJournalId, testEntryId)
+
+        // Then
+        assertTrue("Expected Result.failure but got $result", result.isFailure)
+        coVerify(exactly = 1) {
+            mockApi.deleteJournalEntry(testUserId, testJournalId, testEntryId)
+        }
+        coVerify(exactly = 0) { mockJournalEntryDao.deleteById(any()) }
     }
 }

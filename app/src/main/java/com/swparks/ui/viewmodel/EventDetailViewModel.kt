@@ -23,6 +23,7 @@ import com.swparks.util.AppError
 import com.swparks.util.Complaint
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -133,7 +134,7 @@ sealed class EventDetailEvent {
  * @param userNotifier Интерфейс для обработки и отправки ошибок в UI-слой
  * @param logger Логгер для записи отладочной информации
  */
-@Suppress("TooManyFunctions", "TooGenericExceptionCaught")
+@Suppress("TooManyFunctions", "TooGenericExceptionCaught", "InstanceOfCheckForException")
 class EventDetailViewModel(
     private val swRepository: SWRepository,
     private val countriesRepository: CountriesRepository,
@@ -318,6 +319,7 @@ class EventDetailViewModel(
                     }
                 )
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 logger.e(TAG, "Исключение при загрузке мероприятия: ${e.message}", e)
                 handleError(e, "загрузке мероприятия")
                 _uiState.value = EventDetailUIState.Error(e.message)
@@ -339,6 +341,7 @@ class EventDetailViewModel(
             }
             address
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             logger.e(TAG, "Ошибка загрузки адреса ($countryId, $cityId): ${e.message}")
             serverAddress?.takeIf { it.isNotBlank() } ?: "$countryId, $cityId"
         }
@@ -434,6 +437,7 @@ class EventDetailViewModel(
                     }
                 )
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 logger.e(TAG, "Исключение при удалении мероприятия: ${e.message}", e)
                 handleError(e, "удалении мероприятия")
             }
@@ -490,6 +494,7 @@ class EventDetailViewModel(
                         }
                     )
                 } catch (e: Exception) {
+                    if (e is CancellationException) throw e
                     logger.e(TAG, "Исключение при удалении фото: ${e.message}", e)
                     handleError(e, "удалении фото")
                 } finally {
@@ -711,6 +716,7 @@ class EventDetailViewModel(
                     }
                 )
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 logger.e(TAG, "Исключение при удалении комментария: ${e.message}", e)
                 handleError(e, "удалении комментария")
             } finally {

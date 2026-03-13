@@ -5,12 +5,14 @@ import app.cash.turbine.test
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Comment
 import com.swparks.data.model.Event
+import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.ds.CommentAction
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.model.TextEntryOption
+import com.swparks.ui.state.EventDetailUIState
 import com.swparks.util.Logger
 import com.swparks.util.NoOpLogger
 import com.swparks.util.UserNotifier
@@ -246,6 +248,13 @@ class EventDetailViewModelTest {
     }
 
     private fun createEvent(comments: List<Comment>): Event {
+        return createEvent(comments = comments, photos = emptyList())
+    }
+
+    private fun createEvent(
+        comments: List<Comment> = emptyList(),
+        photos: List<Photo> = emptyList()
+    ): Event {
         return Event(
             id = TEST_EVENT_ID,
             title = TEST_EVENT_TITLE,
@@ -261,7 +270,7 @@ class EventDetailViewModelTest {
             trainingUsersCount = 0,
             isCurrent = true,
             address = "Moscow",
-            photos = emptyList(),
+            photos = photos,
             trainingUsers = emptyList(),
             author = User(id = 1L, name = "Организатор", image = null),
             name = "event",
@@ -270,6 +279,69 @@ class EventDetailViewModelTest {
             canEdit = true,
             trainHere = false
         )
+    }
+
+    // === Runtime exception handling tests ===
+
+    @Test
+    fun loadEvent_whenRuntimeException_thenShowsError() = runTest {
+        // Given - мокируем выброс RuntimeException
+        coEvery { swRepository.getEvent(TEST_EVENT_ID) } throws RuntimeException("Unexpected error")
+
+        // When
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then - состояние должно быть Error
+        assertTrue(viewModel.uiState.value is EventDetailUIState.Error)
+    }
+
+    @Test
+    fun onDeleteConfirm_whenRuntimeException_thenHandlesError() = runTest {
+        // Given - загружаем мероприятие
+        coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Мокируем выброс RuntimeException при удалении
+        coEvery { swRepository.deleteEvent(TEST_EVENT_ID) } throws RuntimeException("Unexpected error")
+
+        // When
+        viewModel.onDeleteClick()
+        advanceUntilIdle()
+        viewModel.onDeleteConfirm()
+        advanceUntilIdle()
+
+        // Then - состояние должно остаться Content (ошибка обработана)
+        assertTrue(viewModel.uiState.value is EventDetailUIState.Content)
+    }
+
+    @Test
+    fun onPhotoDeleteConfirm_whenRuntimeException_thenHandlesError() = runTest {
+        // Given - загружаем мероприятие с фото
+        val photo = Photo(id = 1L, photo = "http://example.com/photo.jpg")
+        coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(
+            createEvent(photos = listOf(photo))
+        )
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Мокируем выброс RuntimeException при удалении фото
+        coEvery {
+            swRepository.deleteEventPhoto(
+                TEST_EVENT_ID,
+                1L
+            )
+        } throws RuntimeException("Unexpected error")
+
+        // When
+        viewModel.onPhotoDeleteClick(photo)
+        advanceUntilIdle()
+        viewModel.onPhotoDeleteConfirm()
+        advanceUntilIdle()
+
+        // Then - состояние должно остаться Content (ошибка обработана)
+        assertTrue(viewModel.uiState.value is EventDetailUIState.Content)
     }
 
     private companion object {

@@ -11,6 +11,7 @@ import com.swparks.domain.repository.JournalEntriesRepository
 import com.swparks.network.SWApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import retrofit2.HttpException
 import java.io.IOException
 import com.swparks.domain.model.toDomain as journalEntryToDomain
 
@@ -62,6 +63,9 @@ class JournalEntriesRepositoryImpl(
     } catch (e: IOException) {
         Log.e(TAG, "Ошибка при загрузке записей: ${e.message}", e)
         Result.failure(e)
+    } catch (e: HttpException) {
+        Log.e(TAG, "HTTP ошибка при загрузке записей: ${e.code()} ${e.message()}", e)
+        Result.failure(e)
     }
 
     override suspend fun deleteJournalEntry(
@@ -96,6 +100,10 @@ class JournalEntriesRepositoryImpl(
     } catch (e: IOException) {
         val errorMessage = "Ошибка сети при удалении записи"
         Log.e(TAG, "$errorMessage: ${e.message}")
+        Result.failure(NetworkException(errorMessage, e))
+    } catch (e: HttpException) {
+        val errorMessage = "HTTP ошибка при удалении записи: ${e.code()}"
+        Log.e(TAG, "$errorMessage: ${e.message()}")
         Result.failure(NetworkException(errorMessage, e))
     }
 

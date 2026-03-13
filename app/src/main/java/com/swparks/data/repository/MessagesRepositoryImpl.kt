@@ -8,6 +8,7 @@ import com.swparks.domain.repository.MessagesRepository
 import com.swparks.network.SWApi
 import com.swparks.util.Logger
 import kotlinx.coroutines.flow.Flow
+import retrofit2.HttpException
 import java.io.IOException
 
 /**
@@ -49,6 +50,9 @@ class MessagesRepositoryImpl(
         Result.success(Unit)
     } catch (e: IOException) {
         logger.e(TAG, "Ошибка загрузки диалогов: ${e.message}")
+        Result.failure(e)
+    } catch (e: HttpException) {
+        logger.e(TAG, "HTTP ошибка при загрузке диалогов: ${e.code()} ${e.message()}")
         Result.failure(e)
     }
 }

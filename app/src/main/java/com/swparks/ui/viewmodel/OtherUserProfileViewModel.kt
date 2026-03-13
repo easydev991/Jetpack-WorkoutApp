@@ -16,6 +16,8 @@ import com.swparks.util.AppError
 import com.swparks.util.HttpCodes
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +29,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import retrofit2.HttpException
 
-@Suppress("TooGenericExceptionCaught")
+@Suppress("TooGenericExceptionCaught", "InstanceOfCheckForException")
 class OtherUserProfileViewModel(
     private val userId: Long,
     private val countriesRepository: CountriesRepository,
@@ -95,10 +97,20 @@ class OtherUserProfileViewModel(
                 }
                 _isLoadingCurrentUser.update { false }
                 loadUser()
-            } catch (e: Exception) {
+            } catch (e: TimeoutCancellationException) {
                 logger.e(TAG, "Timeout ожидания currentUser: ${e.message}")
                 _isLoadingCurrentUser.update { false }
                 // При timeout retry бессмысленен — пользователь не авторизован
+                _uiState.update {
+                    OtherUserProfileUiState.Error(
+                        "Ошибка авторизации",
+                        canRetry = false
+                    )
+                }
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                logger.e(TAG, "Ошибка ожидания currentUser: ${e.message}")
+                _isLoadingCurrentUser.update { false }
                 _uiState.update {
                     OtherUserProfileUiState.Error(
                         "Ошибка авторизации",
@@ -194,6 +206,7 @@ class OtherUserProfileViewModel(
                 updateUiStateWithAddress(country, city)
                 logger.i(TAG, "Адрес профиля обновлен")
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 val message = "Ошибка загрузки адреса: ${e.message}"
                 userNotifier.handleError(AppError.Generic(message, e))
                 logger.e(TAG, message)

@@ -11,6 +11,7 @@ import com.swparks.util.AppError
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import com.swparks.util.setValueIfChanged
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -44,7 +45,12 @@ sealed class ProfileUiState {
  * @param logger Логгер для записи сообщений
  * @param userNotifier Обработчик ошибок для отправки ошибок в UI
  */
-@Suppress("UnusedPrivateProperty", "TooGenericExceptionCaught", "MaxLineLength")
+@Suppress(
+    "UnusedPrivateProperty",
+    "TooGenericExceptionCaught",
+    "MaxLineLength",
+    "InstanceOfCheckForException"
+)
 class ProfileViewModel(
     private val countriesRepository: CountriesRepository,
     private val swRepository: SWRepository,
@@ -107,6 +113,7 @@ class ProfileViewModel(
                 logger.i(TAG, "Начало загрузки профиля с сервера: $userId")
                 loadSocialUpdates(userId, updateUiState = true)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 val errorMessage = "Ошибка загрузки профиля и социальных данных: ${e.message}"
                 userNotifier.handleError(AppError.Generic(errorMessage, e))
                 _uiState.update { ProfileUiState.Error(errorMessage) }
@@ -134,6 +141,7 @@ class ProfileViewModel(
 
                 loadSocialUpdates(user.id, updateUiState = false)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 val errorMessage = "Ошибка обновления профиля: ${e.message}"
                 userNotifier.handleError(AppError.Generic(errorMessage, e))
                 logger.e(TAG, errorMessage)
@@ -198,6 +206,7 @@ class ProfileViewModel(
                     logger.i(TAG, "Адрес для профиля обновлен из countriesRepository")
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 val message = "Ошибка загрузки адреса для профиля: ${e.message}"
                 userNotifier.handleError(AppError.Generic(message, e))
 

@@ -20,12 +20,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
-import java.io.IOException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import retrofit2.HttpException
+import retrofit2.Response
+import java.io.IOException
 
 /**
  * Unit тесты для ChatViewModel.
@@ -405,5 +407,73 @@ class ChatViewModelTest {
             assertTrue("Expected MessageSent event", event is ChatEvent.MessageSent)
             assertEquals(dialogId, (event as ChatEvent.MessageSent).dialogId)
         }
+    }
+
+    // ==================== HttpException Tests ====================
+
+    @Test
+    fun loadMessages_handlesHttpException_andCallsUserNotifier() = runTest {
+        // Given
+        val dialogId = 1L
+        val mockResponse = mockk<Response<*>>(relaxed = true)
+        every { mockResponse.code() } returns 500
+        every { mockResponse.message() } returns "Server Error"
+        val httpException = HttpException(mockResponse)
+        coEvery { swApi.getMessages(dialogId) } throws httpException
+
+        // When
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel.loadMessages(dialogId)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue("Expected Error state but got $state", state is ChatUiState.Error)
+        verify { userNotifier.handleError(any<AppError>()) }
+    }
+
+    @Test
+    fun refreshMessages_handlesHttpException_andCallsUserNotifier() = runTest {
+        // Given
+        val dialogId = 1L
+        val mockResponse = mockk<Response<*>>(relaxed = true)
+        every { mockResponse.code() } returns 500
+        every { mockResponse.message() } returns "Server Error"
+        val httpException = HttpException(mockResponse)
+        coEvery { swApi.getMessages(dialogId) } returns listOf(testMessage) andThenThrows httpException
+
+        // When
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel.loadMessages(dialogId)
+        advanceUntilIdle()
+        viewModel.refreshMessages()
+        advanceUntilIdle()
+
+        // Then
+        verify { userNotifier.handleError(any<AppError>()) }
+    }
+
+    @Test
+    fun sendMessage_handlesHttpException_andCallsUserNotifier() = runTest {
+        // Given
+        val dialogId = 1L
+        val userId = 123
+        val mockResponse = mockk<Response<*>>(relaxed = true)
+        every { mockResponse.code() } returns 500
+        every { mockResponse.message() } returns "Server Error"
+        val httpException = HttpException(mockResponse)
+        coEvery { swApi.getMessages(dialogId) } returns listOf(testMessage)
+        coEvery { swApi.sendMessageTo(userId.toLong(), any()) } throws httpException
+
+        // When
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel.loadMessages(dialogId)
+        advanceUntilIdle()
+        viewModel.messageText.value = "Test message"
+        viewModel.sendMessage(userId)
+        advanceUntilIdle()
+
+        // Then
+        verify { userNotifier.handleError(any<AppError>()) }
     }
 }

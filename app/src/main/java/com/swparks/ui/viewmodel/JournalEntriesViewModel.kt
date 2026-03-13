@@ -19,6 +19,7 @@ import com.swparks.ui.model.canCreateEntry
 import com.swparks.ui.state.JournalEntriesUiState
 import com.swparks.util.AppError
 import com.swparks.util.UserNotifier
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -139,6 +140,7 @@ class JournalEntriesViewModel(
                     }
                 )
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Log.e(TAG, "Исключение при загрузке дневника: ${e.message}")
             }
         }
@@ -272,6 +274,7 @@ class JournalEntriesViewModel(
                     }
                 )
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 val message = "Исключение при загрузке записей: ${e.message}"
                 deps.userNotifier.handleError(AppError.Generic(message, e))
                 _isRefreshing.value = false
@@ -320,6 +323,7 @@ class JournalEntriesViewModel(
                         )
                     }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 deps.userNotifier.handleError(
                     AppError.Generic(
                         deps.resources.getString(R.string.error_delete_entry),
@@ -454,6 +458,7 @@ class JournalEntriesViewModel(
                     }
                 )
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Log.e(TAG, "Исключение при редактировании настроек дневника: ${e.message}")
                 handleEditSettingsError(e)
             } finally {

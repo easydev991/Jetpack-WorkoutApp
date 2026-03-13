@@ -13,6 +13,7 @@ import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalsUiState
 import com.swparks.util.AppError
 import com.swparks.util.UserNotifier
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -35,7 +36,7 @@ import kotlinx.coroutines.launch
  * @param userNotifier Обработчик ошибок для отправки ошибок в систему мониторинга
  * @param resources Провайдер строковых ресурсов
  */
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "InstanceOfCheckForException")
 class JournalsViewModel(
     private val userId: Long,
     private val getJournalsUseCase: IGetJournalsUseCase,
@@ -124,6 +125,7 @@ class JournalsViewModel(
                     }
                 )
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Log.e(TAG, "Исключение при загрузке дневников: ${e.message}")
                 _isRefreshing.value = false
                 val currentState = _uiState.value
@@ -175,6 +177,7 @@ class JournalsViewModel(
                         )
                     }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Log.e(TAG, "Исключение при удалении дневника: ${e.message}")
                 userNotifier.handleError(
                     AppError.Generic(
@@ -234,6 +237,7 @@ class JournalsViewModel(
                     }
                 )
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Log.e(TAG, "Исключение при редактировании настроек дневника: ${e.message}")
                 handleJournalSettingsError(null)
             }

@@ -594,6 +594,39 @@ class DialogsViewModelTest {
     }
 
     /**
+     * Тест: fallback при runtime-ошибке чтения из dialogs.first().
+     *
+     * Сценарий:
+     * 1. refreshDialogs() завершается успешно
+     * 2. Но dialogs.first() выбрасывает RuntimeException (например, SQLiteException)
+     * 3. ViewModel должна установить Success(emptyList()) вместо краша
+     */
+    @Test
+    fun loadDialogsInternal_whenDialogsFirstThrowsRuntimeException_fallsBackToEmptyList() =
+        runTest {
+            // Given - refreshDialogs успешен, но dialogs.first() выбрасывает исключение
+            val errorFlow =
+                kotlinx.coroutines.flow.flow<List<DialogEntity>> {
+                    throw RuntimeException("Database corruption error")
+                }
+            coEvery { messagesRepository.dialogs } returns errorFlow
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+
+            // When
+            viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+            advanceUntilIdle()
+
+            // Then - должен быть Success с пустым списком (fallback)
+            val state = viewModel.uiState.value
+            assertTrue(
+                "Expected Success state with empty list as fallback but got $state",
+                state is DialogsUiState.Success && state.dialogs.isEmpty()
+            )
+            // И ошибка должна быть залогирована
+            verify { logger.e(any(), any(), any()) }
+        }
+
+    /**
      * Тест: isUpdating = true когда isDeleting = true или isMarkingAsRead = true.
      */
     @Test

@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 import java.io.IOException
 
 /**
@@ -68,6 +69,15 @@ class ChatViewModel(
                         e
                     )
                 )
+            } catch (e: HttpException) {
+                Log.e(TAG, "HTTP ошибка загрузки сообщений: ${e.code()} ${e.message()}", e)
+                _uiState.value = ChatUiState.Error(e.message())
+                userNotifier.handleError(
+                    AppError.Generic(
+                        e.message(),
+                        e
+                    )
+                )
             }
         }
     }
@@ -83,6 +93,14 @@ class ChatViewModel(
                 userNotifier.handleError(
                     AppError.Generic(
                         e.message ?: "Ошибка обновления сообщений",
+                        e
+                    )
+                )
+            } catch (e: HttpException) {
+                Log.e(TAG, "HTTP ошибка обновления сообщений: ${e.code()} ${e.message()}", e)
+                userNotifier.handleError(
+                    AppError.Generic(
+                        e.message(),
                         e
                     )
                 )
@@ -116,6 +134,14 @@ class ChatViewModel(
                 userNotifier.handleError(
                     AppError.Generic(
                         e.message ?: "Ошибка отправки сообщения",
+                        e
+                    )
+                )
+            } catch (e: HttpException) {
+                Log.e(TAG, "HTTP ошибка отправки сообщения: ${e.code()} ${e.message()}", e)
+                userNotifier.handleError(
+                    AppError.Generic(
+                        e.message(),
                         e
                     )
                 )

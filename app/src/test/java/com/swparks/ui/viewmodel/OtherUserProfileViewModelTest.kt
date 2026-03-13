@@ -388,4 +388,30 @@ class OtherUserProfileViewModelTest {
         assertTrue(state is OtherUserProfileUiState.Error)
         assertTrue(!(state as OtherUserProfileUiState.Error).canRetry)
     }
+
+    // === Runtime exception handling tests ===
+
+    @Test
+    fun loadProfileAddress_whenRuntimeException_thenCallsHandleError() = runTest {
+        val userId = 123L
+        val user = User(id = userId, name = "test", image = null, countryID = 1, cityID = 100)
+        coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+
+        // Мокируем выброс RuntimeException при загрузке страны
+        coEvery { mockCountriesRepository.getCountryById("1") } throws RuntimeException("Unexpected error")
+
+        OtherUserProfileViewModel(
+            userId,
+            mockCountriesRepository,
+            mockSwRepository,
+            mockLogger,
+            mockUserNotifier,
+            mockResources
+        )
+
+        advanceUntilIdle()
+
+        // Then - userNotifier.handleError должен быть вызван
+        coVerify { mockUserNotifier.handleError(any<AppError>()) }
+    }
 }

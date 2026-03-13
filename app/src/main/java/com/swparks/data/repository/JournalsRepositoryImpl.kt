@@ -10,6 +10,7 @@ import com.swparks.domain.repository.JournalsRepository
 import com.swparks.network.SWApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import retrofit2.HttpException
 import java.io.IOException
 
 /**
@@ -58,6 +59,9 @@ class JournalsRepositoryImpl(
         Result.success(Unit)
     } catch (e: IOException) {
         Log.e(TAG, "Ошибка при загрузке дневников: ${e.message}", e)
+        Result.failure(e)
+    } catch (e: HttpException) {
+        Log.e(TAG, "HTTP ошибка при загрузке дневников: ${e.code()} ${e.message()}", e)
         Result.failure(e)
     }
 }

@@ -7,6 +7,7 @@ import com.swparks.data.repository.SWRepository
 import com.swparks.util.AppError
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,7 +31,7 @@ sealed class UserTrainingParksUiState {
  * @param logger Логгер для записи сообщений
  * @param userNotifier Обработчик ошибок для отправки ошибок в UI
  */
-@Suppress("TooGenericExceptionCaught", "MaxLineLength")
+@Suppress("TooGenericExceptionCaught", "MaxLineLength", "InstanceOfCheckForException")
 class UserTrainingParksViewModel(
     private val swRepository: SWRepository,
     private val userId: Long,
@@ -96,6 +97,7 @@ class UserTrainingParksViewModel(
                         logger.e(TAG, errorMessage)
                     }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 val errorMessage = "Неожиданная ошибка при обновлении площадок: ${e.message}"
                 _uiState.update { UserTrainingParksUiState.Error(errorMessage) }
                 userNotifier.handleError(AppError.Generic(errorMessage, e))

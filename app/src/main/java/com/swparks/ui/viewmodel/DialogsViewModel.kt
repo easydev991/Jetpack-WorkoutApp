@@ -8,6 +8,7 @@ import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.MessagesRepository
 import com.swparks.ui.state.DialogsUiState
 import com.swparks.util.Logger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +18,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.io.IOException
 
 /**
  * ViewModel для экрана списка диалогов.
@@ -133,7 +133,9 @@ class DialogsViewModel(
             try {
                 val dialogs = messagesRepository.dialogs.first()
                 _uiState.value = DialogsUiState.Success(dialogs = dialogs)
-            } catch (e: IOException) {
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                // Fallback на случай runtime-ошибки при чтении из Room (например, SQLiteException)
                 logger.e(TAG, "Ошибка при чтении диалогов: ${e.message}")
                 _uiState.value = DialogsUiState.Success(dialogs = emptyList())
             }
