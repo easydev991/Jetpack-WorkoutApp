@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
@@ -302,9 +303,11 @@ class EventDetailViewModel(
                     onSuccess = { event ->
                         logger.i(TAG, "Мероприятие загружено: ${event.title}")
                         val address = buildAddress(event.countryID, event.cityID, event.address)
+                        val authorAddress = buildAuthorAddress(event.author)
                         _uiState.value = EventDetailUIState.Content(
                             event = event,
-                            address = address
+                            address = address,
+                            authorAddress = authorAddress
                         )
                         updateIsEventAuthor()
                     },
@@ -328,22 +331,38 @@ class EventDetailViewModel(
     }
 
     private suspend fun buildAddress(countryId: Int, cityId: Int, serverAddress: String?): String {
-        return try {
-            val country = countriesRepository.getCountryById(countryId.toString())
-            val city = countriesRepository.getCityById(cityId.toString())
+        val address = buildAddressNullable(countryId, cityId, serverAddress)
+        return address ?: "$countryId, $cityId"
+    }
 
-            val address = when {
+    private suspend fun buildAuthorAddress(user: User): String {
+        return buildAddressNullable(user.countryID, user.cityID, null) ?: ""
+    }
+
+    private suspend fun buildAddressNullable(
+        countryId: Int?,
+        cityId: Int?,
+        serverAddress: String?
+    ): String? {
+        if (countryId == null && cityId == null && serverAddress.isNullOrBlank()) {
+            return null
+        }
+
+        return try {
+            val country = countryId?.let { countriesRepository.getCountryById(it.toString()) }
+            val city = cityId?.let { countriesRepository.getCityById(it.toString()) }
+
+            when {
                 country != null && city != null -> "${country.name}, ${city.name}"
                 country != null -> country.name
                 city != null -> city.name
                 !serverAddress.isNullOrBlank() -> serverAddress
-                else -> "$countryId, $cityId"
+                else -> null
             }
-            address
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             logger.e(TAG, "Ошибка загрузки адреса ($countryId, $cityId): ${e.message}")
-            serverAddress?.takeIf { it.isNotBlank() } ?: "$countryId, $cityId"
+            serverAddress?.takeIf { it.isNotBlank() }
         }
     }
 
@@ -370,9 +389,11 @@ class EventDetailViewModel(
             onSuccess = { event ->
                 logger.i(TAG, "Мероприятие обновлено: ${event.title}")
                 val address = buildAddress(event.countryID, event.cityID, event.address)
+                val authorAddress = buildAuthorAddress(event.author)
                 _uiState.value = EventDetailUIState.Content(
                     event = event,
-                    address = address
+                    address = address,
+                    authorAddress = authorAddress
                 )
                 updateIsEventAuthor()
             },
@@ -520,12 +541,57 @@ class EventDetailViewModel(
 
     override fun onParticipantToggle() {
         val currentState = _uiState.value
-        if (currentState is EventDetailUIState.Content) {
-            logger.d(
-                TAG,
-                "Нажат toggle 'Пойду' для мероприятия id=${currentState.event.id}, " +
-                    "текущее состояние: ${currentState.event.trainHere}"
-            )
+        if (currentState !is EventDetailUIState.Content) return
+
+        val currentValue = currentState.event.trainHere ?: false
+        val newValue = !currentValue
+        val eventId = currentState.event.id
+
+        logger.d(
+            TAG,
+            "Toggle 'Пойду' для мероприятия id=$eventId: $currentValue -> $newValue"
+        )
+
+        val optimisticEvent = currentState.event.copy(trainHere = newValue)
+        _uiState.value = currentState.copy(event = optimisticEvent)
+        _isRefreshing.value = true
+
+        viewModelScope.launch {
+            try {
+                val result = swRepository.changeIsGoingToEvent(newValue, eventId)
+                _isRefreshing.value = false
+
+                if (result.isSuccess) {
+                    val currentUser = swRepository.getCurrentUserFlow().first()
+                    val updatedUsers = if (newValue && currentUser != null) {
+                        (currentState.event.trainingUsers.orEmpty() + currentUser)
+                            .distinctBy { it.id }
+                    } else {
+                        currentState.event.trainingUsers.orEmpty()
+                            .filterNot { it.id == _currentUserId.value }
+                    }
+                    val finalEvent = optimisticEvent.copy(
+                        trainingUsers = updatedUsers,
+                        trainingUsersCount = updatedUsers.size
+                    )
+                    _uiState.value = currentState.copy(event = finalEvent)
+                    logger.i(
+                        TAG,
+                        "Участие в мероприятии id=$eventId обновлено: trainHere=$newValue"
+                    )
+                } else {
+                    _uiState.value = currentState
+                    val error = result.exceptionOrNull() ?: Exception("Unknown error")
+                    handleError(error, "изменении участия в мероприятии")
+                    logger.e(TAG, "Ошибка изменения участия: ${error.message}")
+                }
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                _isRefreshing.value = false
+                _uiState.value = currentState
+                handleError(e, "изменении участия в мероприятии")
+                logger.e(TAG, "Исключение при изменении участия: ${e.message}", e)
+            }
         }
     }
 

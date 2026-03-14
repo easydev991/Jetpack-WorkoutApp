@@ -141,14 +141,15 @@ internal fun EventParticipantsSection(
         ),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
     ) {
-        event.trainingUsersCount?.let { count ->
+        val participantsCount = event.trainingUsersCount ?: 0
+        if (participantsCount > 0) {
             FormRowView(
                 modifier = Modifier.fillMaxWidth(),
                 leadingText = stringResource(R.string.participants),
                 trailingText = pluralStringResource(
                     id = R.plurals.peopleCount,
-                    count = count,
-                    count
+                    count = participantsCount,
+                    participantsCount
                 ),
                 enabled = !isRefreshing,
                 onClick = onClickParticipants
@@ -196,6 +197,7 @@ internal fun EventAuthorSection(
     address: String,
     isAuthorized: Boolean,
     isRefreshing: Boolean,
+    isEventAuthor: Boolean,
     onAuthorClick: (Long) -> Unit
 ) {
     SectionView(
@@ -203,9 +205,10 @@ internal fun EventAuthorSection(
         addPaddingToTitle = true,
         modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
     ) {
+        val isEnabled = isAuthorized && !isRefreshing && !isEventAuthor
         UserRowView(
             data = UserRowData(
-                enabled = isAuthorized && !isRefreshing,
+                enabled = isEnabled,
                 imageStringURL = event.author.image,
                 name = event.author.name,
                 address = address,
@@ -415,6 +418,7 @@ internal fun EventAuthorSectionPreview() {
                 address = "Москва",
                 isAuthorized = true,
                 isRefreshing = false,
+                isEventAuthor = false,
                 onAuthorClick = {}
             )
         }

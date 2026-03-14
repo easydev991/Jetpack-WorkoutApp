@@ -203,6 +203,7 @@
     <string name="event_author">Организатор</string>
     <string name="event_photos">Фотографии</string>
     <string name="event_edit">Редактировать</string>
+    <string name="event_actions">Действия</string>
     <string name="event_share">Поделиться</string>
     <string name="event_open_map">На карте</string>
     <string name="event_build_route">Маршрут</string>

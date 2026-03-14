@@ -20,10 +20,12 @@ sealed interface EventDetailUIState {
      *
      * @param event Загруженное мероприятие
      * @param address Адрес мероприятия (страна, город)
+     * @param authorAddress Адрес автора мероприятия (страна, город)
      */
     data class Content(
         val event: Event,
-        val address: String
+        val address: String,
+        val authorAddress: String
     ) : EventDetailUIState
 
     /**

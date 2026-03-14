@@ -6,6 +6,7 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.provider.CalendarContract
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,9 +16,13 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -70,6 +75,7 @@ fun EventDetailScreen(
     var showDeleteCommentDialog by remember { mutableStateOf(false) }
     var showTextEntrySheet by remember { mutableStateOf(false) }
     var textEntryMode by remember { mutableStateOf<TextEntryMode?>(null) }
+    var showEventActionsMenu by remember { mutableStateOf(false) }
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
@@ -155,11 +161,58 @@ fun EventDetailScreen(
                 },
                 actions = {
                     if (isAuthorized && isEventAuthor) {
-                        IconButton(onClick = viewModel::onDeleteClick) {
-                            Icon(
-                                imageVector = Icons.Filled.Delete,
-                                contentDescription = stringResource(R.string.delete)
-                            )
+                        Box {
+                            IconButton(
+                                onClick = { showEventActionsMenu = true },
+                                enabled = !isRefreshing
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.MoreVert,
+                                    contentDescription = stringResource(R.string.event_actions)
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showEventActionsMenu,
+                                onDismissRequest = { showEventActionsMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(text = stringResource(R.string.event_edit))
+                                    },
+                                    trailingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Filled.Edit,
+                                            contentDescription = null
+                                        )
+                                    },
+                                    onClick = {
+                                        showEventActionsMenu = false
+                                        android.util.Log.d(
+                                            "EventDetailScreen",
+                                            "Edit event clicked"
+                                        )
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = stringResource(R.string.delete),
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    },
+                                    trailingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Filled.Delete,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    },
+                                    onClick = {
+                                        showEventActionsMenu = false
+                                        viewModel.onDeleteClick()
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -238,9 +291,10 @@ fun EventDetailScreen(
                         item {
                             EventAuthorSection(
                                 event = state.event,
-                                address = state.address,
+                                address = state.authorAddress,
                                 isAuthorized = isAuthorized,
                                 isRefreshing = isRefreshing,
+                                isEventAuthor = isEventAuthor,
                                 onAuthorClick = onNavigateToUserProfile
                             )
                         }
@@ -284,6 +338,9 @@ fun EventDetailScreen(
             title = { Text(text = stringResource(R.string.event_delete_confirm_title)) },
             confirmButton = {
                 TextButton(
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    ),
                     onClick = {
                         showDeleteEventDialog = false
                         viewModel.onDeleteConfirm()
@@ -314,6 +371,9 @@ fun EventDetailScreen(
             title = { Text(text = stringResource(R.string.event_delete_photo_confirm_title)) },
             confirmButton = {
                 TextButton(
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    ),
                     onClick = {
                         showDeletePhotoDialog = false
                         viewModel.onPhotoDeleteConfirm()
