@@ -607,7 +607,7 @@ class DialogsViewModelTest {
             // Given - refreshDialogs успешен, но dialogs.first() выбрасывает исключение
             val errorFlow =
                 kotlinx.coroutines.flow.flow<List<DialogEntity>> {
-                    throw RuntimeException("Database corruption error")
+                    throw IllegalStateException("Database corruption error")
                 }
             coEvery { messagesRepository.dialogs } returns errorFlow
             coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
