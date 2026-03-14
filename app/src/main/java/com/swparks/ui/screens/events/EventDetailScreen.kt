@@ -6,7 +6,6 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.provider.CalendarContract
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,14 +14,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -75,7 +69,6 @@ fun EventDetailScreen(
     var showDeleteCommentDialog by remember { mutableStateOf(false) }
     var showTextEntrySheet by remember { mutableStateOf(false) }
     var textEntryMode by remember { mutableStateOf<TextEntryMode?>(null) }
-    var showEventActionsMenu by remember { mutableStateOf(false) }
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
@@ -160,60 +153,28 @@ fun EventDetailScreen(
                     }
                 },
                 actions = {
+                    val state = uiState
+                    if (state is EventDetailUIState.Content) {
+                        EventShareButton(
+                            isRefreshing = isRefreshing,
+                            onShareClick = {
+                                val sendIntent = Intent().apply {
+                                    action = Intent.ACTION_SEND
+                                    putExtra(Intent.EXTRA_TEXT, state.event.shareLinkStringURL)
+                                    type = "text/plain"
+                                }
+                                context.startActivity(Intent.createChooser(sendIntent, null))
+                            }
+                        )
+                    }
                     if (isAuthorized && isEventAuthor) {
-                        Box {
-                            IconButton(
-                                onClick = { showEventActionsMenu = true },
-                                enabled = !isRefreshing
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.MoreVert,
-                                    contentDescription = stringResource(R.string.event_actions)
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = showEventActionsMenu,
-                                onDismissRequest = { showEventActionsMenu = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(text = stringResource(R.string.event_edit))
-                                    },
-                                    trailingIcon = {
-                                        Icon(
-                                            imageVector = Icons.Filled.Edit,
-                                            contentDescription = null
-                                        )
-                                    },
-                                    onClick = {
-                                        showEventActionsMenu = false
-                                        android.util.Log.d(
-                                            "EventDetailScreen",
-                                            "Edit event clicked"
-                                        )
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            text = stringResource(R.string.delete),
-                                            color = MaterialTheme.colorScheme.error
-                                        )
-                                    },
-                                    trailingIcon = {
-                                        Icon(
-                                            imageVector = Icons.Filled.Delete,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.error
-                                        )
-                                    },
-                                    onClick = {
-                                        showEventActionsMenu = false
-                                        viewModel.onDeleteClick()
-                                    }
-                                )
-                            }
-                        }
+                        EventAuthorActionsButton(
+                            isRefreshing = isRefreshing,
+                            onEditClick = {
+                                android.util.Log.d("EventDetailScreen", "Edit event clicked")
+                            },
+                            onDeleteClick = viewModel::onDeleteClick
+                        )
                     }
                 }
             )

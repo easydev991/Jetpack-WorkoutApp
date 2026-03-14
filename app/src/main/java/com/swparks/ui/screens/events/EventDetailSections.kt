@@ -3,15 +3,29 @@
 package com.swparks.ui.screens.events
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.pluralStringResource
@@ -51,6 +65,80 @@ internal data class EventHeaderCallbacks(
     val onRouteClick: () -> Unit,
     val onAddToCalendarClick: () -> Unit
 )
+
+@Composable
+internal fun EventShareButton(
+    isRefreshing: Boolean,
+    onShareClick: () -> Unit
+) {
+    IconButton(
+        onClick = onShareClick,
+        enabled = !isRefreshing
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Share,
+            contentDescription = stringResource(R.string.event_share)
+        )
+    }
+}
+
+@Composable
+internal fun EventAuthorActionsButton(
+    isRefreshing: Boolean,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
+    var showMenu by remember { mutableStateOf(false) }
+
+    Box {
+        IconButton(
+            onClick = { showMenu = true },
+            enabled = !isRefreshing
+        ) {
+            Icon(
+                imageVector = Icons.Filled.MoreVert,
+                contentDescription = stringResource(R.string.event_actions)
+            )
+        }
+        DropdownMenu(
+            expanded = showMenu,
+            onDismissRequest = { showMenu = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text(text = stringResource(R.string.event_edit)) },
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = null
+                    )
+                },
+                onClick = {
+                    showMenu = false
+                    onEditClick()
+                }
+            )
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        text = stringResource(R.string.delete),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                },
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                },
+                onClick = {
+                    showMenu = false
+                    onDeleteClick()
+                }
+            )
+        }
+    }
+}
 
 @Composable
 internal fun EventHeaderMapCalendarSection(
@@ -455,6 +543,40 @@ internal fun EventCommentItemPreview() {
                     modifier = Modifier.fillMaxWidth(),
                     onAuthorClick = {},
                     onActionClick = { _, _ -> }
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, locale = "ru")
+@Composable
+internal fun EventShareButtonPreview() {
+    JetpackWorkoutAppTheme {
+        Surface {
+            Row {
+                EventShareButton(isRefreshing = false, onShareClick = {})
+                EventShareButton(isRefreshing = true, onShareClick = {})
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, locale = "ru")
+@Composable
+internal fun EventAuthorActionsButtonPreview() {
+    JetpackWorkoutAppTheme {
+        Surface {
+            Row {
+                EventAuthorActionsButton(
+                    isRefreshing = false,
+                    onEditClick = {},
+                    onDeleteClick = {}
+                )
+                EventAuthorActionsButton(
+                    isRefreshing = true,
+                    onEditClick = {},
+                    onDeleteClick = {}
                 )
             }
         }

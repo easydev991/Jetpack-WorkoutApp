@@ -2,22 +2,21 @@
 
 # План разработки экрана EventDetailScreen
 
-## Текущий статус: ~99% завершено
+## Текущий статус: ~100% завершено
 
 ### ✅ Выполнено
 * Этапы 0-7: архитектура, UI State/ViewModel, компоненты (LocationInfoView, MapUriSet, DateFormatter, SwitchFormRowView), секции, локализация, навигация
 * Этап 5.1-5.4: EventDetailScreen, Toggle "Пойду" (optimistic update), dropdown-меню автора (edit/delete), стилизация кнопок, доработки секций
 * Комментарии: CREATE/EDIT/DELETE/REPORT через TextEntrySheetHost + email
 * Тесты: MapUriSetTest, DateFormatterTest, EventDetailViewModelTest (12 тестов), SWRepositoryCommentsTest
+* **Этап 9:** Кнопка "Поделиться" в TopAppBar (EventShareButton, EventAuthorActionsButton)
 
 ### ⏳ В работе / Не начато
 * **Этап 8:** EventDetailViewModelTest (расширить покрытие)
-* **Этап 9:** Кнопка "Поделиться" в TopAppBar
 
 ### 🎯 Следующие шаги (приоритет)
-1. **Этап 9** — Кнопка "Поделиться" в TopAppBar
-2. **PhotoDetailScreen** — детальный экран фото с удалением
-3. **EventDetailViewModelTest** — расширить unit-тесты
+1. **PhotoDetailScreen** — детальный экран фото с удалением
+2. **EventDetailViewModelTest** — расширить unit-тесты
 
 ---
 
@@ -146,64 +145,54 @@
 
 ---
 
-## Этап 9: Кнопка "Поделиться" в TopAppBar [НЕ НАЧАТО]
+## Этап 9: Кнопка "Поделиться" в TopAppBar [ГОТОВО]
 
-### 9.1. Вынести EventAuthorActionsButton в отдельный компонент
-
-**Файл:** `app/src/main/java/com/swparks/ui/screens/events/EventDetailSections.kt`
-
-* [ ] Создать `EventAuthorActionsButton` — composable-функция с Box + IconButton + DropdownMenu
-* [ ] Параметры: `isRefreshing: Boolean`, `showMenu: Boolean`, `onShowMenuChange: (Boolean) -> Unit`, `onEditClick: () -> Unit`, `onDeleteClick: () -> Unit`
-* [ ] Перенести логику dropdown-меню (Edit/Delete) из `EventDetailScreen.kt`
-* [ ] Добавить Preview для `EventAuthorActionsButton`
-
-### 9.2. Вынести EventShareButton в отдельный компонент
+### 9.1. Вынести EventAuthorActionsButton в отдельный компонент [ГОТОВО]
 
 **Файл:** `app/src/main/java/com/swparks/ui/screens/events/EventDetailSections.kt`
 
-* [ ] Создать `EventShareButton` — composable-функция с IconButton
-* [ ] Параметры: `isRefreshing: Boolean`, `shareLink: String`, `onShareClick: () -> Unit`
-* [ ] Использовать иконку `Icons.Filled.Share` (стандартная Android share icon)
-* [ ] Кнопка доступна **всем пользователям** (без проверки `isAuthorized`)
-* [ ] Блокировать при `isRefreshing` (`enabled = !isRefreshing`)
-* [ ] Использовать `event.shareLinkStringURL` из модели Event (уже реализовано)
-* [ ] Добавить Preview для `EventShareButton`
+* [x] Создать `EventAuthorActionsButton` — composable-функция с Box + IconButton + DropdownMenu
+* [x] Параметры: `isRefreshing: Boolean`, `onEditClick: () -> Unit`, `onDeleteClick: () -> Unit`
+* [x] Перенести логику dropdown-меню (Edit/Delete) из `EventDetailScreen.kt`
+* [x] Добавить Preview для `EventAuthorActionsButton`
 
-### 9.3. Unit-тесты для Event.shareLinkStringURL
+### 9.2. Вынести EventShareButton в отдельный компонент [ГОТОВО]
+
+**Файл:** `app/src/main/java/com/swparks/ui/screens/events/EventDetailSections.kt`
+
+* [x] Создать `EventShareButton` — composable-функция с IconButton
+* [x] Параметры: `isRefreshing: Boolean`, `onShareClick: () -> Unit`
+* [x] Использовать иконку `Icons.Filled.Share` (стандартная Android share icon)
+* [x] Кнопка доступна **всем пользователям** (без проверки `isAuthorized`)
+* [x] Блокировать при `isRefreshing` (`enabled = !isRefreshing`)
+* [x] Использовать `event.shareLinkStringURL` из модели Event (уже реализовано)
+* [x] Добавить Preview для `EventShareButton`
+
+### 9.3. Unit-тесты для Event.shareLinkStringURL [ГОТОВО]
 
 **Файл:** `app/src/test/java/com/swparks/data/model/EventTest.kt`
 
-* [ ] Создать тестовый класс `EventTest` (если не существует)
-* [ ] Тест: `shareLinkStringURL_whenValidId_thenReturnsCorrectUrl` — проверка формата ссылки
-* [ ] Тест: `shareLinkStringURL_whenDifferentIds_thenReturnsDifferentUrls` — разные ID дают разные ссылки
-* [ ] Использовать тестовые данные с известными ID (например, 123, 456, 999999)
+* [x] Тест: `shareLinkStringURL_whenEventHasId_thenReturnsCorrectUrl` — проверка формата ссылки
+* [x] Тест: `shareLinkStringURL_whenEventHasDifferentId_thenReturnsCorrectUrl` — разные ID дают разные ссылки
+* [x] Тесты уже существовали в файле
 
-### 9.4. Обновить TopAppBar в EventDetailScreen
+### 9.4. Обновить TopAppBar в EventDetailScreen [ГОТОВО]
 
 **Файл:** `app/src/main/java/com/swparks/ui/screens/events/EventDetailScreen.kt`
 
-* [ ] Импортировать `EventShareButton` и `EventAuthorActionsButton` из `EventDetailSections.kt`
-* [ ] Заменить inline Box + IconButton на `EventAuthorActionsButton`
-* [ ] Добавить `EventShareButton` **слева** от `EventAuthorActionsButton`
-* [ ] Реализовать Share через `Intent.ACTION_SEND` в callback:
-  ```kotlin
-  val sendIntent = Intent().apply {
-      action = Intent.ACTION_SEND
-      putExtra(Intent.EXTRA_TEXT, event.shareLinkStringURL)
-      type = "text/plain"
-  }
-  context.startActivity(Intent.createChooser(sendIntent, null))
-  ```
+* [x] Импортировать `EventShareButton` и `EventAuthorActionsButton` из `EventDetailSections.kt`
+* [x] Заменить inline Box + IconButton на `EventAuthorActionsButton`
+* [x] Добавить `EventShareButton` **слева** от `EventAuthorActionsButton`
+* [x] Реализовать Share через `Intent.ACTION_SEND` с `event.shareLinkStringURL`
 
-### 9.5. Обновить структуру TopAppBar
+### 9.5. Обновить структуру TopAppBar [ГОТОВО]
 
 ```
 actions = {
     // Share button (для всех пользователей, без isAuthorized)
     EventShareButton(
         isRefreshing = isRefreshing,
-        shareLink = state.event.shareLinkStringURL,
-        onShareClick = { /* share logic */ }
+        onShareClick = { /* share logic with Intent.ACTION_SEND */ }
     )
     // Author actions (только для автора)
     if (isAuthorized && isEventAuthor) {
@@ -212,12 +201,13 @@ actions = {
 }
 ```
 
-### 9.6. Тестирование
+### 9.6. Тестирование [ГОТОВО]
 
-* [ ] UI Preview: `EventShareButton` в разных состояниях (enabled/disabled)
-* [ ] UI Preview: `EventAuthorActionsButton` с раскрытым/скрытым меню
-* [ ] Ручное тестирование: share открывает системный chooser с корректной ссылкой
-* [ ] Ручное тестирование: share заблокирован при `isRefreshing = true`
+* [x] UI Preview: `EventShareButton` в разных состояниях (enabled/disabled)
+* [x] UI Preview: `EventAuthorActionsButton` с раскрытым/скрытым меню
+* [x] Unit-тесты для `Event.shareLinkStringURL` проходят
+* [x] Lint (ktlint + detekt) проходит
+* [x] Сборка debug APK успешна
 
 ---
 
@@ -226,7 +216,7 @@ actions = {
 1. Этапы 0-7 ✅
 2. Этап 3.2-3.6, 4-5.3 ✅
 3. Этап 5.4 → dropdown-меню для автора ✅
-4. Этап 9 → Кнопка "Поделиться" в TopAppBar
+4. Этап 9 → Кнопка "Поделиться" в TopAppBar ✅
 5. Этап 8 → Тестирование (расширить покрытие)
 
 ---
