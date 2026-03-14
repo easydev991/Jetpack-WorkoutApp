@@ -4,156 +4,124 @@ Guidelines for AI coding agents working in this repository.
 
 ## Project Overview
 
-Android application "SW Parks" (Street Workout Parks) built with Kotlin and Jetpack Compose. A port of the iOS version (SwiftUI-WorkoutApp).
+Android application "SW Parks" (Street Workout Parks), built with Kotlin and Jetpack Compose. A port of the iOS version (SwiftUI-WorkoutApp).
 
-- **Package**: `com.swparks`
-- **Min SDK**: 26 (Android 8.0)
-- **Target SDK**: 35
-- **Kotlin**: 2.3.10
+- Package: `com.swparks`
+- Min SDK: 26
+- Target SDK: 35
+- Kotlin: 2.3.10
 
-## Build/Lint/Test Commands
+## AI Workflow
 
-### Build
+- Serena MCP is available in this repository.
+- Use Serena first for symbol search, references, and structure.
+- Prefer symbol-level navigation over full-file reads.
+- Read only the minimal relevant code needed for the task.
+- Avoid scanning many large files sequentially.
+- Use broad reads only for final verification or very small files.
+
+Preferred order:
+
+1. Find relevant symbols/files with Serena
+2. Read only needed sections
+3. Make changes
+4. Re-check affected usages
+5. Run relevant tests/lint
+
+Prefer Serena especially for:
+
+- refactoring
+- finding usages/references
+- ViewModel / UseCase / Repository relationships
+- navigation changes
+- impact analysis
+
+## Build / Lint / Test
 
 ```bash
-make build              # Build debug APK
-./gradlew assembleDebug # Direct gradle
-make clean              # Clean build cache
+make build
+./gradlew assembleDebug
+make clean
+
+make lint
+./gradlew ktlintCheck
+./gradlew app:detekt
+
+make format
+./gradlew ktlintFormat
 ```
 
-### Lint
+## Test
 
 ```bash
-make lint               # Run ktlint + detekt + markdownlint
-./gradlew ktlintCheck   # ktlint only
-./gradlew app:detekt    # detekt only
-```
-
-### Format
-
-```bash
-make format             # Auto-fix ktlint + detekt + markdown
-./gradlew ktlintFormat  # ktlint only
-```
-
-### Tests
-
-```bash
-make test                          # All unit tests
-./gradlew test                     # All unit tests (direct)
+make test
+./gradlew :app:testDebugUnitTest
 
 # Single test class
-./gradlew test --tests "com.swparks.domain.usecase.LoginUseCaseTest"
+./gradlew :app:testDebugUnitTest --tests "com.swparks.domain.usecase.LoginUseCaseTest"
 
 # Single test method
-./gradlew test --tests "com.swparks.domain.usecase.LoginUseCaseTest.invoke_whenValidCredentials_thenSavesTokenAndCallsLogin"
+./gradlew :app:testDebugUnitTest --tests "com.swparks.domain.usecase.LoginUseCaseTest.invoke_whenValidCredentials_thenSavesTokenAndCallsLogin"
 
 # Android instrumented tests
 make android-test
 ./gradlew connectedDebugAndroidTest
 ```
 
-### Full Check
-
-```bash
-make check              # Build + tests + linters
-make all                # check + install on device
-```
-
 ## Code Style
 
-### Imports Order
+### Imports
 
-1. AndroidX imports
-2. Kotlin imports
-3. Third-party libraries (alphabetical)
-4. Project imports (`com.swparks.*`)
+Order imports as:
+
+1. AndroidX
+2. Kotlin
+3. Third-party libraries
+4. com.swparks.*
 
 Separate groups with blank lines. Remove unused imports.
 
-### Naming Conventions
+### Naming
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Classes | PascalCase | `LoginViewModel` |
-| Functions | camelCase | `loginUser()` |
-| Variables | camelCase | `currentUser` |
-| Constants | UPPER_SNAKE_CASE | `MAX_RETRY_COUNT` |
-| Packages | lowercase | `com.swparks.domain.usecase` |
-| Composable functions | PascalCase | `LoginScreen()` |
+- Classes: PascalCase
+- Functions/variables: camelCase
+- Constants: UPPER_SNAKE_CASE
+- Packages: lowercase
+- Composables: PascalCase
 
 ### Types
 
-- **Data classes** for models: `data class User(val id: Long, val name: String)`
-- **Sealed classes** for UI states and results:
-
-  ```kotlin
-  sealed class LoginUiState {
-      data object Idle : LoginUiState()
-      data object Loading : LoginUiState()
-      data class Error(val message: String, val cause: Throwable?) : LoginUiState()
-  }
-  ```
-
-- **Sealed classes** for navigation routes
-- **Extension functions** for readability
+- Use data classes for models
+- Use sealed classes for UI state and navigation
+- Use extension functions when they improve readability
 
 ### Null Safety
 
-Never use `!!`. Use safe alternatives:
+Never use `!!`.
+
+Prefer:
 
 ```kotlin
-// Preferred approaches:
 val itemId = checkNotNull(savedStateHandle["itemId"]) { "ItemId is required" }
 user?.let { processUser(it) }
 val name = user?.name ?: "Unknown"
-
-// NEVER do this:
-val itemId = savedStateHandle["itemId"]!!  // Forbidden
 ```
 
 ### Error Handling
 
-**In Use Cases** — return `Result<T>`:
+- In UseCases, return `Result<T>`
+- In ViewModels, use sealed UI state
+- For one-off events (navigation, toast), use `Channel`
 
-```kotlin
-suspend operator fun invoke(): Result<Data> = try {
-    val data = repository.getData()
-    Result.success(data)
-} catch (e: IOException) {
-    Result.failure(NetworkException("Network error: ${e.message}", e))
-}
-```
+### Comments and Logs
 
-**In ViewModels** — use sealed UI states:
-
-```kotlin
-sealed class ScreenState {
-    data object Loading : ScreenState()
-    data class Success(val data: Data) : ScreenState()
-    data class Error(val message: String) : ScreenState()
-}
-```
-
-**One-off events** (navigation, toasts) — use `Channel`:
-
-```kotlin
-private val _events = Channel<Event>(Channel.BUFFERED)
-val events = _events.receiveAsFlow()
-
-// Send event
-_events.send(Event.Success)
-```
-
-### Comments
-
-- KDoc for public APIs
-- Explain "why", not "what"
-- Logs in Russian: `Log.e("Tag", "Ошибка загрузки: ${e.message}")`
+- Add KDoc for public APIs
+- Explain why, not what
+- Write logs in Russian
 
 ## Architecture
 
-### Three Layers
+### Layers
 
 ```
 UI Layer (Compose + ViewModels)
@@ -163,105 +131,62 @@ Domain Layer (Use Cases)
 Data Layer (Repositories + API + Room + DataStore)
 ```
 
-### Key Patterns
+### Patterns
 
-- **MVVM**: ViewModel manages UI state, Compose renders
-- **Unidirectional Data Flow**: State flows down, events flow up
-- **Repository Pattern**: Single API for data access
-- **Manual DI**: Factory methods in `AppContainer` (no Hilt)
+- MVVM
+- Unidirectional Data Flow
+- Repository Pattern
+- Manual DI via AppContainer (no Hilt)
 
 ### AppState
 
-Global state for navigation and auth:
+- Global state for navigation and auth
+- `isAuthorized = currentUser != null`
 
-```kotlin
-class AppState {
-    var currentUser by mutableStateOf<User?>(null)
-        private set
-    
-    val isAuthorized: Boolean
-        get() = currentUser != null
-}
-```
+### Data Strategy
 
-### Data Strategies
-
-| Data Type | Strategy |
-|-----------|----------|
-| Parks, Cities | Cache-first with server sync |
-| Events | Online-first, future events not cached |
-| Journals | Offline-first with sync |
-| Messages | Online-first with fallback cache |
-| Auth | Online-only |
+- Parks, Cities: cache-first with server sync
+- Events: online-first
+- Journals: offline-first with sync
+- Messages: online-first with fallback cache
+- Auth: online-only
 
 ## Testing
 
-### TDD Order
+- TDD order: Tests → Logic → UI
 
-**Tests → Logic → UI**
-
-1. Write failing test first
-2. Implement minimal code to pass
-3. Refactor while keeping tests green
-
-### Test Naming
+### Test naming
 
 ```kotlin
 @Test
-fun functionName_whenCondition_thenExpectedResult() {
-    // Given: setup
-    // When: action
-    // Then: assertions
-}
+fun functionName_whenCondition_thenExpectedResult()
 ```
 
-### Test Libraries
+### Libraries
 
-- **JUnit 4** — test framework
-- **MockK** — mocking (`mockk`, `coEvery`, `coVerify`)
-- **kotlinx.coroutines.test** — `runTest`, `advanceUntilIdle`
-- **Turbine** — Flow testing
-- **Robolectric** — Android unit tests
+- JUnit 4
+- MockK
+- kotlinx.coroutines.test
+- Turbine
+- Robolectric
 
-### Test Locations
+### Locations
 
-```
-app/src/test/java/com/swparks/          # Unit tests
-app/src/androidTest/java/com/swparks/   # Instrumented tests
-```
-
-### Example Test
-
-```kotlin
-@Test
-fun login_whenValidCredentials_thenReturnsSuccess() = runTest {
-    // Given
-    val credentials = LoginCredentials("user@test.com", "password")
-    coEvery { loginUseCase(credentials) } returns Result.success(loginSuccess)
-
-    // When
-    viewModel.login()
-    advanceUntilIdle()
-
-    // Then
-    assertTrue(viewModel.uiState.value is LoginUiState.Idle)
-}
-```
+- `app/src/test/java/com/swparks/`
+- `app/src/androidTest/java/com/swparks/`
 
 ## Key Files
 
-| File | Purpose |
-|------|---------|
-| `app/build.gradle.kts` | Dependencies, build config |
-| `config/detekt/detekt.yml` | Detekt rules |
-| `Makefile` | Build commands |
-| `.cursor/rules/*.mdc` | Cursor AI rules |
-| `docs/plan-development.md` | Development roadmap |
+- `app/build.gradle.kts`
+- `config/detekt/detekt.yml`
+- `Makefile`
+- `.cursor/rules/*.mdc`
+- `docs/plan-development.md`
 
 ## Pre-Commit Checklist
 
-- [ ] `make format` passes
-- [ ] `make lint` passes
-- [ ] `make test` passes
-- [ ] No crashes on app launch
-- [ ] No deprecated API usage
+- `make format`
+- `make lint`
+- `make test`
+- No crashes on app launch
+- No deprecated API usage
