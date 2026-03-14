@@ -168,7 +168,6 @@ app/
 │   │   │   ├── theme/      # Тема приложения
 │   │   │   └── viewmodel/  # ViewModel классы
 │   │   ├── util/           # Утилиты
-│   │   ├── utils/          # Дополнительные утилиты
 │   │   ├── viewmodel/      # ViewModels верхнего уровня
 │   │   ├── JetpackWorkoutApplication.kt
 │   │   └── MainActivity.kt

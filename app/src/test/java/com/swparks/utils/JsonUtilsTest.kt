@@ -1,6 +1,7 @@
 package com.swparks.utils
 
 import com.swparks.data.model.Event
+import com.swparks.util.WorkoutAppJson
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

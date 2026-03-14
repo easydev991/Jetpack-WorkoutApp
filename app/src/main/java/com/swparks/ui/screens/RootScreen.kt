@@ -66,9 +66,9 @@ import com.swparks.ui.screens.profile.UserTrainingParksScreen
 import com.swparks.ui.screens.themeicon.ThemeIconScreen
 import com.swparks.ui.viewmodel.EventDetailViewModel
 import com.swparks.ui.viewmodel.ThemeIconViewModel
+import com.swparks.util.WorkoutAppJson
+import com.swparks.util.readJSONFromAssets
 import com.swparks.util.toUiText
-import com.swparks.utils.ReadJSONFromAssets
-import com.swparks.utils.WorkoutAppJson
 
 private const val EVENT_PARTICIPANTS_USERS_JSON_KEY = "event_participants_users_json"
 
@@ -160,7 +160,7 @@ fun RootScreen(appState: AppState) {
 
     // Загружаем parks для использования в TopBar и в ParksRootScreen
     val parks = remember {
-        val oldParks = ReadJSONFromAssets(context, "parks.json")
+        val oldParks = readJSONFromAssets(context, "parks.json")
         WorkoutAppJson.decodeFromString<List<Park>>(oldParks)
     }
 

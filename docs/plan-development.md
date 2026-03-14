@@ -281,8 +281,7 @@ app/src/main/java/com/swparks/
 │   ├── viewmodel/     # ViewModels
 │   └── theme/         # Тема
 ├── navigation/        # Навигация
-├── util/              # Утилиты
-└── utils/             # Дополнительные утилиты
+└── util/              # Утилиты
 ```
 
 ### Структура тестов

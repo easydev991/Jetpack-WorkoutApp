@@ -3,6 +3,7 @@ package com.swparks.util
 import android.content.Context
 import android.os.Build
 import com.swparks.R
+import kotlinx.serialization.json.Json
 
 sealed class LocationFeedback {
     abstract val subject: String
@@ -43,4 +44,12 @@ sealed class LocationFeedback {
             return "Android SDK: $androidSdk\nApp Version: $appVersion\n\n$question"
         }
     }
+}
+
+/**
+ * Объект с настройками Json для десериализации данных
+ */
+val WorkoutAppJson = Json {
+    isLenient = true
+    ignoreUnknownKeys = true
 }

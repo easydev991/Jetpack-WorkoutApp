@@ -8,7 +8,7 @@ import com.swparks.domain.exception.ServerException
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.network.SWApi
 import com.swparks.util.Logger
-import com.swparks.utils.ReadJSONFromAssets
+import com.swparks.util.readJSONFromAssets
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -70,7 +70,7 @@ class CountriesRepositoryImpl(
 
         try {
             // Используем существующую функцию для чтения JSON из assets
-            val jsonString = ReadJSONFromAssets(context, "countries.json")
+            val jsonString = readJSONFromAssets(context, "countries.json")
 
             if (jsonString.isEmpty()) {
                 logger.e(TAG, "Не удалось прочитать countries.json: пустая строка")

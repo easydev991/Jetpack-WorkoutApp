@@ -2,6 +2,7 @@ package com.swparks.utils
 
 import android.content.Context
 import android.content.res.AssetManager
+import com.swparks.util.readJSONFromAssets
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -34,7 +35,7 @@ class ReadJSONFromAssetsTest {
         every { android.util.Log.i(any(), any()) } returns 0
 
         // When
-        val result = ReadJSONFromAssets(mockContext, "test.json")
+        val result = readJSONFromAssets(mockContext, "test.json")
 
         // Then
         assertEquals(testJsonContent, result)
@@ -51,7 +52,7 @@ class ReadJSONFromAssetsTest {
         every { android.util.Log.i(any(), any()) } returns 0
 
         // When
-        val result = ReadJSONFromAssets(mockContext, "nonexistent.json")
+        val result = readJSONFromAssets(mockContext, "nonexistent.json")
 
         // Then
         assertEquals("", result)
@@ -69,7 +70,7 @@ class ReadJSONFromAssetsTest {
         every { android.util.Log.i(any(), any()) } returns 0
 
         // When
-        val result = ReadJSONFromAssets(mockContext, "test.json")
+        val result = readJSONFromAssets(mockContext, "test.json")
 
         // Then
         assertEquals("", result)
