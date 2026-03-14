@@ -40,6 +40,14 @@ interface EventDao {
     suspend fun deleteAll()
 
     /**
+     * Удалить мероприятие по ID
+     *
+     * @param eventId Идентификатор мероприятия
+     */
+    @Query("DELETE FROM events WHERE id = :eventId")
+    suspend fun deleteById(eventId: Long)
+
+    /**
      * Заменить все мероприятия (транзакция)
      *
      * Удаляет старые и вставляет новые мероприятия атомарно.

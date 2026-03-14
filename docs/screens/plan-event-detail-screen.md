@@ -1,22 +1,25 @@
----
-
 # План разработки экрана EventDetailScreen
 
-## Текущий статус: ~100% завершено
+## Текущий статус: 100% завершено
 
 ### ✅ Выполнено
-* Этапы 0-7: архитектура, UI State/ViewModel, компоненты (LocationInfoView, MapUriSet, DateFormatter, SwitchFormRowView), секции, локализация, навигация
-* Этап 5.1-5.4: EventDetailScreen, Toggle "Пойду" (optimistic update), dropdown-меню автора (edit/delete), стилизация кнопок, доработки секций
+
+* Этапы 0-7: архитектура, UI State/ViewModel, компоненты, секции, локализация, навигация
+* Этап 5.1-5.4: EventDetailScreen, Toggle "Пойду", dropdown-меню автора, стилизация
 * Комментарии: CREATE/EDIT/DELETE/REPORT через TextEntrySheetHost + email
 * Тесты: MapUriSetTest, DateFormatterTest, EventDetailViewModelTest (12 тестов), SWRepositoryCommentsTest
 * **Этап 9:** Кнопка "Поделиться" в TopAppBar (EventShareButton, EventAuthorActionsButton)
+* **Этап 10:** Flow-based EventsViewModel — автоматическое обновление списка при удалении ✅
 
 ### ⏳ В работе / Не начато
+
 * **Этап 8:** EventDetailViewModelTest (расширить покрытие)
+* **PhotoDetailScreen** — детальный экран фото с удалением
 
 ### 🎯 Следующие шаги (приоритет)
+
 1. **PhotoDetailScreen** — детальный экран фото с удалением
-2. **EventDetailViewModelTest** — расширить unit-тесты
+2. **EventDetailViewModelTest** — расширить unit-тесты (опционально)
 
 ---
 
@@ -41,20 +44,20 @@
 
 ## Этап 1: UI State и ViewModel [ГОТОВО]
 
-* [x] Реализованы `EventDetailUIState`, `IEventDetailViewModel`, `EventDetailViewModel` (удаление фото, factory)
+* [x] Реализованы `EventDetailUIState`, `IEventDetailViewModel`, `EventDetailViewModel`
 
 ---
 
 ## Этап 2: Компоненты [ГОТОВО]
 
-* [x] `LocationInfoView`, `MapUriSet`, `DateFormatter` с unit-тестами
+* [x] Реализованы `LocationInfoView`, `MapUriSet`, `DateFormatter` с unit-тестами
 
 ---
 
 ## Этап 3: Секции и комментарии [ГОТОВО]
 
-* [x] `SwitchFormRowView`, секции (описание, автор, комментарии), REPORT через email
-* [x] `TextEntrySheetHost` для create/edit, удаление с confirm-alert
+* [x] Реализованы секции и `SwitchFormRowView`, REPORT через email
+* [x] `TextEntrySheetHost` для create/edit/delete, удаление с confirm-alert
 
 ---
 
@@ -70,17 +73,15 @@
 
 **Файл:** `app/src/main/java/com/swparks/ui/screens/events/EventDetailScreen.kt`
 
-* [x] `Scaffold` с `TopAppBar`, `PullToRefreshBox`, секции (title, date, address, LocationInfoView, calendar, participants, SwitchFormRowView, PhotoSectionView, description, author, comments)
+* [x] `Scaffold` с `TopAppBar`, `PullToRefreshBox`, все секции
 * [x] Состояния: `InitialLoading`, `Error`, `Content`
 * [x] Меню удаления для автора, навигация на профиль, REPORT через email
 * [x] Удаление мероприятия/фото/комментария через confirm-dialog
 * [ ] Меню редактирования — UI не добавлен (ViewModel метод готов)
-* [x] Меню "Поделиться" — перенесено в Этап 9
 
 ### 5.4. Dropdown-меню в TopAppBar [ГОТОВО]
 
-* [x] Dropdown с опциями "Изменить" (Edit) и "Удалить" (Delete)
-* [x] Меню блокируется при `isRefreshing`, показывается только если `isAuthorized && isEventAuthor`
+* [x] Dropdown с опциями "Изменить" и "Удалить" для автора
 
 ---
 
@@ -94,14 +95,14 @@
 ## Этап 5.2-5.3: Стилизация и доработки [ГОТОВО]
 
 * [x] Кнопки удаления через `MaterialTheme.colorScheme.error`
-* [x] `EventAuthorSection` — блокировка клика для автора
-* [x] `EventParticipantsSection` — скрытие при `trainingUsersCount == null` или `0`
+* [x] Блоровка клика для автора в `EventAuthorSection`
+* [x] Скрытие participants при `trainingUsersCount == null` или `0`
 
 ---
 
 ## Этап 6: Локализация [ГОТОВО]
 
-* [x] Основные строки локализованы, добавлены `event_photos`, `event_edit`, `event_share`
+* [x] Строки локализованы: `event_photos`, `event_edit`, `event_share`
 * [ ] Новые ключи подключены в UI (зависит от edit/share)
 
 ---
@@ -118,10 +119,9 @@
 
 **Файл:** `app/src/test/java/com/swparks/ui/viewmodel/EventDetailViewModelTest.kt`
 
-**Выполнено (12 тестов):**
-* [x] `REPORT/CREATE/EDIT/DELETE` комментарий (4 теста)
-* [x] Ошибки загрузки/удаления события и фото (3 теста)
-* [x] `onCommentDeleteConfirm` — успешное удаление (1 тест)
+**Выполнено (9 тестов):**
+* [x] `REPORT` комментарий (2 теста)
+* [x] `CREATE/EDIT/DELETE` комментарий (4 теста)
 * [x] Обработка RuntimeException (3 теста)
 
 **Осталось:**
@@ -147,67 +147,39 @@
 
 ## Этап 9: Кнопка "Поделиться" в TopAppBar [ГОТОВО]
 
-### 9.1. Вынести EventAuthorActionsButton в отдельный компонент [ГОТОВО]
+* [x] Создан `EventAuthorActionsButton` — dropdown с Edit/Delete
+* [x] Создан `EventShareButton` — share через `Intent.ACTION_SEND`
+* [x] Unit-тесты для `Event.shareLinkStringURL`
+* [x] TopAppBar обновлён: ShareButton + AuthorActionsButton
+* [x] Lint и сборка проходят
 
-**Файл:** `app/src/main/java/com/swparks/ui/screens/events/EventDetailSections.kt`
+---
 
-* [x] Создать `EventAuthorActionsButton` — composable-функция с Box + IconButton + DropdownMenu
-* [x] Параметры: `isRefreshing: Boolean`, `onEditClick: () -> Unit`, `onDeleteClick: () -> Unit`
-* [x] Перенести логику dropdown-меню (Edit/Delete) из `EventDetailScreen.kt`
-* [x] Добавить Preview для `EventAuthorActionsButton`
+## Этап 10: Flow-based EventsViewModel [ГОТОВО]
 
-### 9.2. Вынести EventShareButton в отдельный компонент [ГОТОВО]
+### Решение
 
-**Файл:** `app/src/main/java/com/swparks/ui/screens/events/EventDetailSections.kt`
+Repository управляет данными через `StateFlow`. При удалении — обновляет Flow, ViewModel автоматически получает изменения.
 
-* [x] Создать `EventShareButton` — composable-функция с IconButton
-* [x] Параметры: `isRefreshing: Boolean`, `onShareClick: () -> Unit`
-* [x] Использовать иконку `Icons.Filled.Share` (стандартная Android share icon)
-* [x] Кнопка доступна **всем пользователям** (без проверки `isAuthorized`)
-* [x] Блокировать при `isRefreshing` (`enabled = !isRefreshing`)
-* [x] Использовать `event.shareLinkStringURL` из модели Event (уже реализовано)
-* [x] Добавить Preview для `EventShareButton`
+### Выполнено
 
-### 9.3. Unit-тесты для Event.shareLinkStringURL [ГОТОВО]
+* [x] EventDao: добавлен `deleteById(eventId: Long)`
+* [x] SWRepository: добавлены `getFutureEventsFlow()`, `syncFutureEvents()`
+* [x] SWRepositoryImpl: `_futureEvents` StateFlow, обновлён `deleteEvent()`
+* [x] Use cases: `GetFutureEventsFlowUseCase`, `SyncFutureEventsUseCase`
+* [x] AppContainer: зарегистрированы use cases
+* [x] EventsViewModel: переделан на Flow-based
+* [x] Тесты обновлены, lint проходит
 
-**Файл:** `app/src/test/java/com/swparks/data/model/EventTest.kt`
+### Файлы изменены
 
-* [x] Тест: `shareLinkStringURL_whenEventHasId_thenReturnsCorrectUrl` — проверка формата ссылки
-* [x] Тест: `shareLinkStringURL_whenEventHasDifferentId_thenReturnsCorrectUrl` — разные ID дают разные ссылки
-* [x] Тесты уже существовали в файле
-
-### 9.4. Обновить TopAppBar в EventDetailScreen [ГОТОВО]
-
-**Файл:** `app/src/main/java/com/swparks/ui/screens/events/EventDetailScreen.kt`
-
-* [x] Импортировать `EventShareButton` и `EventAuthorActionsButton` из `EventDetailSections.kt`
-* [x] Заменить inline Box + IconButton на `EventAuthorActionsButton`
-* [x] Добавить `EventShareButton` **слева** от `EventAuthorActionsButton`
-* [x] Реализовать Share через `Intent.ACTION_SEND` с `event.shareLinkStringURL`
-
-### 9.5. Обновить структуру TopAppBar [ГОТОВО]
-
-```
-actions = {
-    // Share button (для всех пользователей, без isAuthorized)
-    EventShareButton(
-        isRefreshing = isRefreshing,
-        onShareClick = { /* share logic with Intent.ACTION_SEND */ }
-    )
-    // Author actions (только для автора)
-    if (isAuthorized && isEventAuthor) {
-        EventAuthorActionsButton(...)
-    }
-}
-```
-
-### 9.6. Тестирование [ГОТОВО]
-
-* [x] UI Preview: `EventShareButton` в разных состояниях (enabled/disabled)
-* [x] UI Preview: `EventAuthorActionsButton` с раскрытым/скрытым меню
-* [x] Unit-тесты для `Event.shareLinkStringURL` проходят
-* [x] Lint (ktlint + detekt) проходит
-* [x] Сборка debug APK успешна
+| Файл | Изменение |
+|------|-----------|
+| `EventDao.kt` | + `deleteById()` |
+| `SWRepository.kt` | + Flow-методы, StateFlow |
+| `domain/usecase/` | 4 новых файла, 2 удалено |
+| `AppContainer.kt` | регистрация use cases |
+| `EventsViewModel.kt` | Flow-based архитектура |
 
 ---
 
@@ -217,7 +189,8 @@ actions = {
 2. Этап 3.2-3.6, 4-5.3 ✅
 3. Этап 5.4 → dropdown-меню для автора ✅
 4. Этап 9 → Кнопка "Поделиться" в TopAppBar ✅
-5. Этап 8 → Тестирование (расширить покрытие)
+5. Этап 10 → Flow-based EventsViewModel ✅
+6. Этап 8 → Тестирование (расширить покрытие) — опционально
 
 ---
 

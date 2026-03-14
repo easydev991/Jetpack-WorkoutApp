@@ -9,8 +9,9 @@ import com.swparks.JetpackWorkoutApplication
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Event
 import com.swparks.domain.repository.CountriesRepository
-import com.swparks.domain.usecase.IGetFutureEventsUseCase
+import com.swparks.domain.usecase.IGetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.IGetPastEventsFlowUseCase
+import com.swparks.domain.usecase.ISyncFutureEventsUseCase
 import com.swparks.domain.usecase.ISyncPastEventsUseCase
 import com.swparks.ui.model.EventKind
 import com.swparks.ui.state.EventsUIState
@@ -21,20 +22,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
 import java.io.IOException
 
 /**
  * ViewModel для экрана списка мероприятий.
  *
  * Управляет загрузкой и отображением мероприятий двух типов:
- * - FUTURE: предстоящие мероприятия (кэш в памяти)
- * - PAST: прошедшие мероприятия (кэш в БД)
+ * - FUTURE: предстоящие мероприятия (Flow из Repository)
+ * - PAST: прошедшие мероприятия (Flow из Room)
  *
  * Обрабатывает сетевые ошибки и ошибки сервера через UserNotifier.
  * Использует Logger для отладочной информации.
  *
- * @param getFutureEventsUseCase Use case для загрузки будущих мероприятий
+ * @param getFutureEventsFlowUseCase Use case для получения потока будущих мероприятий
+ * @param syncFutureEventsUseCase Use case для синхронизации будущих мероприятий
  * @param getPastEventsFlowUseCase Use case для получения потока прошедших мероприятий
  * @param syncPastEventsUseCase Use case для синхронизации прошедших мероприятий
  * @param userPreferencesRepository Репозиторий настроек пользователя
@@ -44,7 +45,8 @@ import java.io.IOException
  */
 @Suppress("LongParameterList")
 class EventsViewModel(
-    private val getFutureEventsUseCase: IGetFutureEventsUseCase,
+    private val getFutureEventsFlowUseCase: IGetFutureEventsFlowUseCase,
+    private val syncFutureEventsUseCase: ISyncFutureEventsUseCase,
     private val getPastEventsFlowUseCase: IGetPastEventsFlowUseCase,
     private val syncPastEventsUseCase: ISyncPastEventsUseCase,
     private val userPreferencesRepository: UserPreferencesRepository,
@@ -61,7 +63,8 @@ class EventsViewModel(
                     this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as JetpackWorkoutApplication
                 val container = application.container
                 EventsViewModel(
-                    getFutureEventsUseCase = container.getFutureEventsUseCase,
+                    getFutureEventsFlowUseCase = container.getFutureEventsFlowUseCase,
+                    syncFutureEventsUseCase = container.syncFutureEventsUseCase,
                     getPastEventsFlowUseCase = container.getPastEventsFlowUseCase,
                     syncPastEventsUseCase = container.syncPastEventsUseCase,
                     userPreferencesRepository = container.userPreferencesRepository,
@@ -77,6 +80,7 @@ class EventsViewModel(
     private var pastEventsCache: List<Event>? = null
     private var addressesCache: Map<Pair<Int, Int>, String> = emptyMap()
 
+    private var hasLoadedFutureEvents = false
     private var hasLoadedPastEvents = false
 
     private suspend fun loadAddress(
@@ -138,7 +142,8 @@ class EventsViewModel(
     init {
         logger.d(TAG, "Инициализация EventsViewModel")
         observeAuthorization()
-        loadFutureEventsInternal()
+        observeFutureEvents()
+        syncFutureEventsInternal()
         observePastEvents()
     }
 
@@ -150,36 +155,50 @@ class EventsViewModel(
         }
     }
 
-    private fun loadFutureEventsInternal() {
+    private fun observeFutureEvents() {
         viewModelScope.launch {
-            logger.d(TAG, "Загрузка будущих мероприятий")
-            val currentAddresses = addressesCache
-            _eventsUIState.value =
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.FUTURE,
-                    isLoading = true,
-                    addresses = currentAddresses
-                )
+            logger.d(TAG, "Подписка на Flow будущих мероприятий")
+            getFutureEventsFlowUseCase().collect { events ->
+                logger.d(TAG, "Получены будущие мероприятия из Flow: ${events.size} шт.")
+                futureEventsCache = events
+                if (events.isEmpty() && !hasLoadedFutureEvents) {
+                    return@collect
+                }
+                if (_selectedTab.value == EventKind.FUTURE) {
+                    val addresses = loadAddresses(events)
+                    _eventsUIState.value = EventsUIState.Content(
+                        events = events,
+                        selectedTab = EventKind.FUTURE,
+                        isLoading = false,
+                        addresses = addresses
+                    )
+                }
+            }
+        }
+    }
+
+    private fun syncFutureEventsInternal(force: Boolean = false) {
+        if (!force && hasLoadedFutureEvents) {
+            logger.d(TAG, "Будущие мероприятия уже загружены, пропуск синхронизации")
+            return
+        }
+        viewModelScope.launch {
             try {
-                val result = getFutureEventsUseCase()
+                logger.d(TAG, "Начало синхронизации будущих мероприятий")
+
+                val result = syncFutureEventsUseCase()
                 result.fold(
-                    onSuccess = { events ->
-                        futureEventsCache = events
-                        logger.i(TAG, "Загружено ${events.size} будущих мероприятий")
-                        val addresses = loadAddresses(events)
-                        _eventsUIState.value = EventsUIState.Content(
-                            events = events,
-                            selectedTab = EventKind.FUTURE,
-                            isLoading = false,
-                            addresses = addresses
-                        )
+                    onSuccess = {
+                        hasLoadedFutureEvents = true
+                        logger.i(TAG, "Синхронизация будущих мероприятий успешна")
                     },
                     onFailure = { exception ->
-                        logger.e(
-                            TAG,
-                            "Ошибка загрузки будущих мероприятий: ${exception.message}",
-                            exception
+                        logger.e(TAG, "Ошибка синхронизации: ${exception.message}", exception)
+                        userNotifier.handleError(
+                            AppError.Network(
+                                message = "Не удалось загрузить мероприятия",
+                                throwable = exception
+                            )
                         )
                         _eventsUIState.value = EventsUIState.Error(
                             message = exception.message,
@@ -188,28 +207,9 @@ class EventsViewModel(
                     }
                 )
             } catch (e: IOException) {
-                logger.e(TAG, "Сетевая ошибка при загрузке будущих мероприятий", e)
-                userNotifier.handleError(
-                    AppError.Network(
-                        message = "Не удалось загрузить мероприятия. Проверьте подключение к интернету.",
-                        throwable = e
-                    )
-                )
+                logger.e(TAG, "Исключение при синхронизации: ${e.message}", e)
                 _eventsUIState.value = EventsUIState.Error(
                     message = e.message,
-                    addresses = addressesCache
-                )
-            } catch (e: HttpException) {
-                val errorMessage = e.message()
-                logger.e(TAG, "Ошибка сервера при загрузке будущих мероприятий: $errorMessage", e)
-                userNotifier.handleError(
-                    AppError.Server(
-                        code = e.code(),
-                        message = "Ошибка сервера при загрузке мероприятий: $errorMessage"
-                    )
-                )
-                _eventsUIState.value = EventsUIState.Error(
-                    message = errorMessage,
                     addresses = addressesCache
                 )
             }
@@ -286,7 +286,7 @@ class EventsViewModel(
             _isRefreshing.value = true
             try {
                 when (_selectedTab.value) {
-                    EventKind.FUTURE -> loadFutureEventsInternal()
+                    EventKind.FUTURE -> syncFutureEventsInternal(force = true)
                     EventKind.PAST -> syncPastEventsInternal(force = true)
                 }
             } finally {

@@ -41,7 +41,7 @@ import com.swparks.domain.usecase.DeleteJournalEntryUseCase
 import com.swparks.domain.usecase.DeleteJournalUseCase
 import com.swparks.domain.usecase.DeleteUserUseCase
 import com.swparks.domain.usecase.EditJournalSettingsUseCase
-import com.swparks.domain.usecase.GetFutureEventsUseCase
+import com.swparks.domain.usecase.GetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.GetJournalEntriesUseCase
 import com.swparks.domain.usecase.GetJournalsUseCase
 import com.swparks.domain.usecase.GetPastEventsFlowUseCase
@@ -52,13 +52,14 @@ import com.swparks.domain.usecase.IDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IDeleteJournalUseCase
 import com.swparks.domain.usecase.IDeleteUserUseCase
 import com.swparks.domain.usecase.IEditJournalSettingsUseCase
-import com.swparks.domain.usecase.IGetFutureEventsUseCase
+import com.swparks.domain.usecase.IGetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.IGetJournalEntriesUseCase
 import com.swparks.domain.usecase.IGetJournalsUseCase
 import com.swparks.domain.usecase.IGetPastEventsFlowUseCase
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.ILogoutUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
+import com.swparks.domain.usecase.ISyncFutureEventsUseCase
 import com.swparks.domain.usecase.ISyncJournalEntriesUseCase
 import com.swparks.domain.usecase.ISyncJournalsUseCase
 import com.swparks.domain.usecase.ISyncPastEventsUseCase
@@ -66,6 +67,7 @@ import com.swparks.domain.usecase.ITextEntryUseCase
 import com.swparks.domain.usecase.LoginUseCase
 import com.swparks.domain.usecase.LogoutUseCase
 import com.swparks.domain.usecase.ResetPasswordUseCase
+import com.swparks.domain.usecase.SyncFutureEventsUseCase
 import com.swparks.domain.usecase.SyncJournalEntriesUseCase
 import com.swparks.domain.usecase.SyncJournalsUseCase
 import com.swparks.domain.usecase.SyncPastEventsUseCase
@@ -143,9 +145,10 @@ interface AppContainer {
     val textEntryUseCase: ITextEntryUseCase
 
     // Use cases для мероприятий
+    val getFutureEventsFlowUseCase: IGetFutureEventsFlowUseCase
+    val syncFutureEventsUseCase: ISyncFutureEventsUseCase
     val getPastEventsFlowUseCase: IGetPastEventsFlowUseCase
     val syncPastEventsUseCase: ISyncPastEventsUseCase
-    val getFutureEventsUseCase: IGetFutureEventsUseCase
 
     /** Фабрика для ProfileViewModel (единый контейнер обеспечивает одну БД с LoginViewModel). */
     fun profileViewModelFactory(): ProfileViewModel
@@ -480,14 +483,17 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
     // ==================== Use cases для мероприятий ====================
 
+    override val getFutureEventsFlowUseCase: IGetFutureEventsFlowUseCase by lazy {
+        GetFutureEventsFlowUseCase(swRepository)
+    }
+    override val syncFutureEventsUseCase: ISyncFutureEventsUseCase by lazy {
+        SyncFutureEventsUseCase(swRepository)
+    }
     override val getPastEventsFlowUseCase: IGetPastEventsFlowUseCase by lazy {
         GetPastEventsFlowUseCase(swRepository)
     }
     override val syncPastEventsUseCase: ISyncPastEventsUseCase by lazy {
         SyncPastEventsUseCase(swRepository)
-    }
-    override val getFutureEventsUseCase: IGetFutureEventsUseCase by lazy {
-        GetFutureEventsUseCase(swRepository)
     }
 
     /** Factory метод для создания ProfileViewModel */
@@ -636,7 +642,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
     /** Factory метод для создания EventsViewModel */
     override fun eventsViewModelFactory() = EventsViewModel(
-        getFutureEventsUseCase = getFutureEventsUseCase,
+        getFutureEventsFlowUseCase = getFutureEventsFlowUseCase,
+        syncFutureEventsUseCase = syncFutureEventsUseCase,
         getPastEventsFlowUseCase = getPastEventsFlowUseCase,
         syncPastEventsUseCase = syncPastEventsUseCase,
         userPreferencesRepository = userPreferencesRepository,

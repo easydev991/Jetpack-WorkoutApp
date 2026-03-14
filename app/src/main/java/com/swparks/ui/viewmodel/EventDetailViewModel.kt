@@ -439,6 +439,7 @@ class EventDetailViewModel(
         logger.d(TAG, "Подтверждение удаления мероприятия id=$eventId")
 
         viewModelScope.launch {
+            _isRefreshing.value = true
             try {
                 val result = swRepository.deleteEvent(eventId)
                 result.fold(
@@ -461,6 +462,8 @@ class EventDetailViewModel(
                 if (e is CancellationException) throw e
                 logger.e(TAG, "Исключение при удалении мероприятия: ${e.message}", e)
                 handleError(e, "удалении мероприятия")
+            } finally {
+                _isRefreshing.value = false
             }
         }
     }

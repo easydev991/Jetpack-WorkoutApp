@@ -40,6 +40,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -67,6 +69,8 @@ interface SWRepository {
     fun getCurrentUserFlow(): Flow<User?>
 
     // Flow методы для мероприятий
+    fun getFutureEventsFlow(): Flow<List<Event>>
+    suspend fun syncFutureEvents(): Result<Unit>
     fun getPastEventsFlow(): Flow<List<Event>>
     suspend fun syncPastEvents(): Result<Unit>
     fun getFriendsFlow(): Flow<List<User>>
@@ -216,6 +220,11 @@ class SWRepositoryImp(
     }
 
     /**
+     * In-memory StateFlow для будущих мероприятий
+     */
+    private val _futureEvents = MutableStateFlow<List<Event>>(emptyList())
+
+    /**
      * Обрабатывает IOException и возвращает NetworkException с сообщением для пользователя
      */
     private fun handleIOException(e: IOException, operation: String): NetworkException {
@@ -260,7 +269,21 @@ class SWRepositoryImp(
     // Существующие методы (для обратной совместимости)
     override suspend fun getPastEvents(): List<Event> = swApi.getPastEvents()
 
-    // Flow методы для мероприятий
+    // Flow методы для будущих мероприятий
+    override fun getFutureEventsFlow(): Flow<List<Event>> = _futureEvents.asStateFlow()
+
+    override suspend fun syncFutureEvents(): Result<Unit> =
+        try {
+            val events = swApi.getFutureEvents()
+            _futureEvents.value = events
+            Result.success(Unit)
+        } catch (e: IOException) {
+            Result.failure(handleIOException(e, "синхронизации будущих мероприятий"))
+        } catch (e: HttpException) {
+            Result.failure(handleHttpException(e, "синхронизации будущих мероприятий"))
+        }
+
+    // Flow методы для прошедших мероприятий
     override fun getPastEventsFlow(): Flow<List<Event>> =
         eventDao.getAllPastEvents().map { entities ->
             entities.map { it.toEvent() }
@@ -781,6 +804,8 @@ class SWRepositoryImp(
     override suspend fun deleteEvent(eventId: Long): Result<Unit> =
         try {
             swApi.deleteEvent(eventId)
+            _futureEvents.value = _futureEvents.value.filter { it.id != eventId }
+            eventDao.deleteById(eventId)
             Result.success(Unit)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "удалении мероприятия"))
