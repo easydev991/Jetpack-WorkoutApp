@@ -253,7 +253,10 @@ class EventDetailViewModelTest {
 
     private fun createEvent(
         comments: List<Comment> = emptyList(),
-        photos: List<Photo> = emptyList()
+        photos: List<Photo> = emptyList(),
+        trainHere: Boolean = false,
+        isCurrent: Boolean = true,
+        trainingUsers: List<User> = emptyList()
     ): Event {
         return Event(
             id = TEST_EVENT_ID,
@@ -267,18 +270,256 @@ class EventDetailViewModelTest {
             parkID = null,
             latitude = "55.751244",
             longitude = "37.618423",
-            trainingUsersCount = 0,
-            isCurrent = true,
+            trainingUsersCount = trainingUsers.size,
+            isCurrent = isCurrent,
             address = "Moscow",
             photos = photos,
-            trainingUsers = emptyList(),
+            trainingUsers = trainingUsers,
             author = User(id = 1L, name = "Организатор", image = null),
             name = "event",
             comments = comments,
             isOrganizer = true,
             canEdit = true,
-            trainHere = false
+            trainHere = trainHere
         )
+    }
+
+    // === Load event tests ===
+
+    @Test
+    fun loadEvent_whenSuccess_thenShowsContent() = runTest {
+        // Given
+        coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
+
+        // When
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue(state is EventDetailUIState.Content)
+        val content = state as EventDetailUIState.Content
+        assertEquals(TEST_EVENT_ID, content.event.id)
+        assertEquals(TEST_EVENT_TITLE, content.event.title)
+    }
+
+    @Test
+    fun refresh_whenSuccess_thenUpdatesContent() = runTest {
+        // Given
+        coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        // Then
+        coVerify(exactly = 2) { swRepository.getEvent(TEST_EVENT_ID) }
+        assertTrue(viewModel.uiState.value is EventDetailUIState.Content)
+    }
+
+    // === Participant toggle tests ===
+
+    @Test
+    fun onParticipantToggle_whenSuccess_thenUpdatesTrainHere() = runTest {
+        // Given
+        coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(
+            createEvent(trainHere = false)
+        )
+        coEvery { swRepository.changeIsGoingToEvent(true, TEST_EVENT_ID) } returns Result.success(Unit)
+        coEvery { swRepository.getCurrentUserFlow() } returns flowOf(null)
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onParticipantToggle()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value as EventDetailUIState.Content
+        assertTrue(state.event.trainHere == true)
+    }
+
+    @Test
+    fun onParticipantToggle_whenError_thenRevertsToOriginal() = runTest {
+        // Given
+        coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(
+            createEvent(trainHere = false)
+        )
+        coEvery { swRepository.changeIsGoingToEvent(true, TEST_EVENT_ID) } returns Result.failure(
+            RuntimeException("Network error")
+        )
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onParticipantToggle()
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value as EventDetailUIState.Content
+        assertTrue(state.event.trainHere == false)
+    }
+
+    // === Map actions tests ===
+
+    @Test
+    fun onOpenMapClick_whenContentLoaded_thenEmitsOpenMapEvent() = runTest {
+        // Given
+        coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.events.test {
+            viewModel.onOpenMapClick()
+
+            // Then
+            assertEquals(EventDetailEvent.OpenMap, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun onRouteClick_whenContentLoaded_thenEmitsBuildRouteEvent() = runTest {
+        // Given
+        coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.events.test {
+            viewModel.onRouteClick()
+
+            // Then
+            assertEquals(EventDetailEvent.BuildRoute, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    // === Delete photo success test ===
+
+    @Test
+    fun onPhotoDeleteConfirm_whenSuccess_thenEmitsPhotoDeletedEvent() = runTest {
+        // Given
+        val photo = Photo(id = 1L, photo = "http://example.com/photo.jpg")
+        coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(
+            createEvent(photos = listOf(photo))
+        )
+        coEvery { swRepository.deleteEventPhoto(TEST_EVENT_ID, 1L) } returns Result.success(Unit)
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onPhotoDeleteClick(photo)
+        advanceUntilIdle()
+
+        // When
+        viewModel.events.test {
+            viewModel.onPhotoDeleteConfirm()
+            advanceUntilIdle()
+
+            // Then
+            assertEquals(EventDetailEvent.PhotoDeleted(1L), awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
+        coVerify { swRepository.deleteEventPhoto(TEST_EVENT_ID, 1L) }
+    }
+
+    // === Delete event success test ===
+
+    @Test
+    fun onDeleteConfirm_whenSuccess_thenEmitsEventDeletedEvent() = runTest {
+        // Given
+        coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
+        coEvery { swRepository.deleteEvent(TEST_EVENT_ID) } returns Result.success(Unit)
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onDeleteClick()
+        advanceUntilIdle()
+
+        // When
+        viewModel.events.test {
+            viewModel.onDeleteConfirm()
+            advanceUntilIdle()
+
+            // Then
+            assertEquals(EventDetailEvent.EventDeleted, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
+        coVerify { swRepository.deleteEvent(TEST_EVENT_ID) }
+    }
+
+    // === Participants navigation test ===
+
+    @Test
+    fun onParticipantsCountClick_whenContentLoaded_thenEmitsNavigateToParticipantsEvent() = runTest {
+        // Given
+        val user1 = User(id = 1L, name = "User 1", image = null)
+        val user2 = User(id = 2L, name = "User 2", image = null)
+        coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(
+            createEvent(trainingUsers = listOf(user1, user2))
+        )
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.events.test {
+            viewModel.onParticipantsCountClick()
+
+            // Then
+            val event = awaitItem()
+            assertTrue(event is EventDetailEvent.NavigateToParticipants)
+            val navEvent = event as EventDetailEvent.NavigateToParticipants
+            assertEquals(TEST_EVENT_ID, navEvent.eventId)
+            assertEquals(2, navEvent.users.size)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    // === Calendar tests ===
+
+    @Test
+    fun onAddToCalendarClick_whenCurrentEvent_thenEmitsOpenCalendarEvent() = runTest {
+        // Given
+        coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(
+            createEvent(isCurrent = true)
+        )
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.events.test {
+            viewModel.onAddToCalendarClick()
+
+            // Then
+            val event = awaitItem()
+            assertTrue(event is EventDetailEvent.OpenCalendar)
+            val calendarEvent = event as EventDetailEvent.OpenCalendar
+            assertEquals(TEST_EVENT_TITLE, calendarEvent.title)
+            assertEquals("2026-03-13 12:00:00", calendarEvent.beginDate)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun onAddToCalendarClick_whenPastEvent_thenDoesNotEmitEvent() = runTest {
+        // Given
+        coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(
+            createEvent(isCurrent = false)
+        )
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.events.test {
+            viewModel.onAddToCalendarClick()
+
+            // Then
+            expectNoEvents()
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     // === Runtime exception handling tests ===

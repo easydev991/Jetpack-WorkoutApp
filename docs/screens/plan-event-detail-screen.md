@@ -1,25 +1,24 @@
 # План разработки экрана EventDetailScreen
 
-## Текущий статус: 100% завершено
+## Текущий статус: 95% завершено
 
 ### ✅ Выполнено
 
 * Этапы 0-7: архитектура, UI State/ViewModel, компоненты, секции, локализация, навигация
 * Этап 5.1-5.4: EventDetailScreen, Toggle "Пойду", dropdown-меню автора, стилизация
 * Комментарии: CREATE/EDIT/DELETE/REPORT через TextEntrySheetHost + email
-* Тесты: MapUriSetTest, DateFormatterTest, EventDetailViewModelTest (12 тестов), SWRepositoryCommentsTest
+* Тесты: MapUriSetTest, DateFormatterTest, EventDetailViewModelTest (20 тестов), SWRepositoryCommentsTest
+* **Этап 8:** EventDetailViewModelTest — покрытие расширено (11 новых тестов)
 * **Этап 9:** Кнопка "Поделиться" в TopAppBar (EventShareButton, EventAuthorActionsButton)
-* **Этап 10:** Flow-based EventsViewModel — автоматическое обновление списка при удалении ✅
+* **Этап 10:** Flow-based EventsViewModel — автоматическое обновление списка при удалении
 
 ### ⏳ В работе / Не начато
 
-* **Этап 8:** EventDetailViewModelTest (расширить покрытие)
 * **PhotoDetailScreen** — детальный экран фото с удалением
 
 ### 🎯 Следующие шаги (приоритет)
 
 1. **PhotoDetailScreen** — детальный экран фото с удалением
-2. **EventDetailViewModelTest** — расширить unit-тесты (опционально)
 
 ---
 
@@ -88,7 +87,7 @@
 ## Этап 5.1: Toggle "Пойду" [ГОТОВО]
 
 * [x] Optimistic update с локальным обновлением `trainingUsers`, откат при ошибке
-* [ ] Unit-тесты на успех/ошибка/откат
+* [x] Unit-тесты на успех/ошибка/откат
 
 ---
 
@@ -113,26 +112,27 @@
 
 ---
 
-## Этап 8: Тестирование [ЧАСТИЧНО]
+## Этап 8: Тестирование [ГОТОВО]
 
 ### 8.1. Unit-тесты ViewModel
 
 **Файл:** `app/src/test/java/com/swparks/ui/viewmodel/EventDetailViewModelTest.kt`
 
-**Выполнено (9 тестов):**
+**Выполнено (20 тестов):**
 * [x] `REPORT` комментарий (2 теста)
 * [x] `CREATE/EDIT/DELETE` комментарий (4 теста)
 * [x] Обработка RuntimeException (3 теста)
+* [x] Успешная загрузка события — `loadEvent_whenSuccess_thenShowsContent`
+* [x] Pull-to-refresh — `refresh_whenSuccess_thenUpdatesContent`
+* [x] `onParticipantToggle` — optimistic update + откат при ошибке (2 теста)
+* [x] Действия: `onOpenMapClick()`, `onRouteClick()` (2 теста)
+* [x] Удаление фото — `onPhotoDeleteConfirm_whenSuccess_thenEmitsPhotoDeletedEvent`
+* [x] Удаление мероприятия — `onDeleteConfirm_whenSuccess_thenEmitsEventDeletedEvent`
+* [x] Навигация к участникам — `onParticipantsCountClick_whenContentLoaded_thenEmitsNavigateToParticipantsEvent`
+* [x] Добавление в календарь (2 теста: текущее/прошедшее событие)
 
-**Осталось:**
-* [ ] Успешная загрузка события, pull-to-refresh
-* [ ] `onParticipantToggle` — optimistic update, ошибка, откат
-* [ ] Действия: `onOpenMapClick()`, `onRouteClick()`
-* [ ] Factory метод с `SavedStateHandle`
-* [ ] Удаление фото (успех)
-* [ ] Удаление мероприятия (успех)
-* [ ] Навигация к участникам (`onParticipantsCountClick`)
-* [ ] Добавление в календарь (`onAddToCalendarClick`)
+**Не реализовано:**
+* Factory метод с `SavedStateHandle` — требует AndroidX test infrastructure (`createSavedStateHandle()`)
 
 ### 8.2-8.3. UI / Preview и сценарии [ЧАСТИЧНО]
 
@@ -140,7 +140,7 @@
 * [x] Неавторизованный/авторизованный/автор — корректные права
 * [x] Блокировка при refresh, fallback для map
 * [x] Toggle "Пойду" и calendar — только для предстоящих событий
-* [ ] `EventDetailScreen` (`loading`, `content`, `error`)
+* [ ] `EventDetailScreen` (`loading`, `content`, `error`) — опционально
 * [ ] Автор видит edit action (UI не добавлен)
 
 ---
@@ -190,7 +190,7 @@ Repository управляет данными через `StateFlow`. При уд
 3. Этап 5.4 → dropdown-меню для автора ✅
 4. Этап 9 → Кнопка "Поделиться" в TopAppBar ✅
 5. Этап 10 → Flow-based EventsViewModel ✅
-6. Этап 8 → Тестирование (расширить покрытие) — опционально
+6. Этап 8 → Тестирование (20 тестов) ✅
 
 ---
 
