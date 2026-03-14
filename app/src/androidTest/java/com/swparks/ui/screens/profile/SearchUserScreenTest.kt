@@ -43,13 +43,21 @@ class SearchUserScreenTest {
             JetpackWorkoutAppTheme {
                 SearchUserScreenContent(
                     uiState = uiState,
-                    searchQuery = searchQuery,
-                    onSearchQueryChange = onSearchQueryChange,
-                    onSearch = onSearch,
-                    onUserClick = onUserClick,
-                    onBackClick = onBackClick,
-                    onRetry = onRetry,
-                    parentPaddingValues = PaddingValues()
+                    searchQueryState = SearchQueryState(
+                        query = searchQuery,
+                        onQueryChange = onSearchQueryChange
+                    ),
+                    config = SearchUserConfig(
+                        parentPaddingValues = PaddingValues()
+                    ),
+                    onAction = { action ->
+                        when (action) {
+                            is SearchUserAction.Search -> onSearch()
+                            is SearchUserAction.UserClick -> onUserClick(action.userId)
+                            is SearchUserAction.Back -> onBackClick()
+                            is SearchUserAction.Retry -> onRetry()
+                        }
+                    }
                 )
             }
         }

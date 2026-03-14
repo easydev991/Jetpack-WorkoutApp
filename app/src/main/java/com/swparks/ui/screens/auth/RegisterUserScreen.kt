@@ -65,25 +65,19 @@ import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
 import java.time.ZoneId
 
-/**
- * Экран регистрации нового пользователя.
- *
- * @param modifier Модификатор для расположения экрана
- * @param viewModel ViewModel для управления состоянием экрана
- * @param onRegisterSuccess Callback для уведомления об успешной регистрации с userId
- * @param onClose Callback для закрытия экрана
- * @param onSelectCountry Callback для открытия экрана выбора страны
- * @param onSelectCity Callback для открытия экрана выбора города
- */
+sealed class RegisterNavigationAction {
+    data class RegisterSuccess(val userId: Long) : RegisterNavigationAction()
+    data object Close : RegisterNavigationAction()
+    data object SelectCountry : RegisterNavigationAction()
+    data object SelectCity : RegisterNavigationAction()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterUserScreen(
     modifier: Modifier = Modifier,
     viewModel: IRegisterViewModel,
-    onRegisterSuccess: (Long) -> Unit = {},
-    onClose: () -> Unit = {},
-    onSelectCountry: () -> Unit = {},
-    onSelectCity: () -> Unit = {}
+    onNavigationAction: (RegisterNavigationAction) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val form by viewModel.form.collectAsState()
@@ -101,7 +95,11 @@ fun RegisterUserScreen(
     LaunchedEffect(Unit) {
         viewModel.registerEvents.collectLatest { event ->
             when (event) {
-                is RegisterEvent.Success -> onRegisterSuccess(event.userId)
+                is RegisterEvent.Success -> onNavigationAction(
+                    RegisterNavigationAction.RegisterSuccess(
+                        event.userId
+                    )
+                )
             }
         }
     }
@@ -111,7 +109,7 @@ fun RegisterUserScreen(
         topBar = {
             RegisterTopAppBar(
                 isLoading = isLoading,
-                onClose = onClose
+                onClose = { onNavigationAction(RegisterNavigationAction.Close) }
             )
         },
         bottomBar = {
@@ -210,12 +208,12 @@ fun RegisterUserScreen(
                         CountryPicker(
                             countryName = selectedCountry?.name,
                             enabled = !isLoading,
-                            onClick = onSelectCountry
+                            onClick = { onNavigationAction(RegisterNavigationAction.SelectCountry) }
                         )
                         CityPicker(
                             cityName = selectedCity?.name,
                             enabled = !isLoading,
-                            onClick = onSelectCity
+                            onClick = { onNavigationAction(RegisterNavigationAction.SelectCity) }
                         )
                     }
                 }

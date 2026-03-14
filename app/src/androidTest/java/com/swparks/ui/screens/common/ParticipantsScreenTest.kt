@@ -1,7 +1,6 @@
 package com.swparks.ui.screens.common
 
 import androidx.compose.ui.test.assertCountEquals
-import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -47,11 +46,17 @@ class ParticipantsScreenTest {
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
                 ParticipantsScreen(
-                    mode = mode,
-                    users = users,
-                    currentUserId = currentUserId,
-                    onBack = onBack,
-                    onUserClick = onUserClick
+                    config = ParticipantsConfig(
+                        mode = mode,
+                        users = users,
+                        currentUserId = currentUserId
+                    ),
+                    onAction = { action ->
+                        when (action) {
+                            is ParticipantsAction.Back -> onBack()
+                            is ParticipantsAction.UserClick -> onUserClick(action.userId)
+                        }
+                    }
                 )
             }
         }
@@ -220,10 +225,10 @@ class ParticipantsScreenTest {
             onUserClick = { clickedUserId = it }
         )
 
-        // Then - У текущего пользователя нет onClick и колбэк не вызывается
+        // Then - Текущий пользователь disabled и колбэк не вызывается
         composeTestRule
             .onNodeWithText(currentUser.name)
-            .assertHasNoClickAction()
+            .assertIsNotEnabled()
 
         assertNull("Клик по текущему пользователю не должен вызывать onUserClick", clickedUserId)
     }

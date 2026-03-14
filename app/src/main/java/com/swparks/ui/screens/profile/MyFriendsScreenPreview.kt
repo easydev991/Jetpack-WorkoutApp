@@ -48,14 +48,15 @@ fun MyFriendsScreenSuccessPreview() {
         MyFriendsScreenContent(
             uiState = FriendsListUiState.Success(
                 friends = friends,
-                friendRequests = requests
+                friendRequests = requests,
+                isProcessing = false
             ),
-            onBackClick = {},
-            parentPaddingValues = PaddingValues(0.dp),
-            onAcceptFriendRequest = {},
-            onDeclineFriendRequest = {},
+            config = FriendsScreenConfig(
+                parentPaddingValues = PaddingValues(0.dp),
+                currentUserId = null
+            ),
             onFriendClick = {},
-            isProcessing = false
+            onAction = {}
         )
     }
 }
@@ -66,12 +67,12 @@ fun MyFriendsScreenLoadingPreview() {
     JetpackWorkoutAppTheme {
         MyFriendsScreenContent(
             uiState = FriendsListUiState.Loading,
-            onBackClick = {},
-            parentPaddingValues = PaddingValues(0.dp),
-            onAcceptFriendRequest = {},
-            onDeclineFriendRequest = {},
+            config = FriendsScreenConfig(
+                parentPaddingValues = PaddingValues(0.dp),
+                currentUserId = null
+            ),
             onFriendClick = {},
-            isProcessing = false
+            onAction = {}
         )
     }
 }
@@ -82,12 +83,12 @@ fun MyFriendsScreenErrorPreview() {
     JetpackWorkoutAppTheme {
         MyFriendsScreenContent(
             uiState = FriendsListUiState.Error("Не удалось загрузить список друзей"),
-            onBackClick = {},
-            parentPaddingValues = PaddingValues(0.dp),
-            onAcceptFriendRequest = {},
-            onDeclineFriendRequest = {},
+            config = FriendsScreenConfig(
+                parentPaddingValues = PaddingValues(0.dp),
+                currentUserId = null
+            ),
             onFriendClick = {},
-            isProcessing = false
+            onAction = {}
         )
     }
 }

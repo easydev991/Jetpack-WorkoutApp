@@ -186,13 +186,18 @@ private fun RegisterNavHost(
         composable(RegisterRoutes.REGISTER) {
             RegisterUserScreen(
                 viewModel = viewModel,
-                onRegisterSuccess = onRegisterSuccess,
-                onClose = onClose,
-                onSelectCountry = {
-                    innerNavController.navigate(RegisterRoutes.SELECT_COUNTRY)
-                },
-                onSelectCity = {
-                    innerNavController.navigate(RegisterRoutes.SELECT_CITY)
+                onNavigationAction = { action ->
+                    when (action) {
+                        is RegisterNavigationAction.RegisterSuccess -> onRegisterSuccess(action.userId)
+                        RegisterNavigationAction.Close -> onClose()
+                        RegisterNavigationAction.SelectCountry -> innerNavController.navigate(
+                            RegisterRoutes.SELECT_COUNTRY
+                        )
+
+                        RegisterNavigationAction.SelectCity -> innerNavController.navigate(
+                            RegisterRoutes.SELECT_CITY
+                        )
+                    }
                 }
             )
         }

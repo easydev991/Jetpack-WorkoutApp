@@ -30,9 +30,10 @@ import com.swparks.data.model.User
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.UserRowData
 import com.swparks.ui.ds.UserRowView
-import com.swparks.ui.model.BlacklistAction
+import com.swparks.ui.state.BlacklistAction
 import com.swparks.ui.state.BlacklistUiState
 import com.swparks.ui.viewmodel.IBlacklistViewModel
+import com.swparks.ui.model.BlacklistAction as ApiBlacklistAction
 
 /**
  * Экран черного списка текущего пользователя
@@ -51,25 +52,17 @@ fun MyBlacklistScreen(
     parentPaddingValues: PaddingValues
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val itemToRemove by viewModel.itemToRemove.collectAsState()
-    val showRemoveDialog by viewModel.showRemoveDialog.collectAsState()
-    val isRemoving by viewModel.isRemoving.collectAsState()
-    val showSuccessAlert by viewModel.showSuccessAlert.collectAsState()
-    val unblockedUserName by viewModel.unblockedUserName.collectAsState()
+
     MyBlacklistScreenContent(
         modifier = modifier,
         uiState = uiState,
-        onBackClick = onBackClick,
         parentPaddingValues = parentPaddingValues,
-        onShowRemoveDialog = { viewModel.showRemoveDialog(it) },
-        onRemoveFromBlacklist = { viewModel.removeFromBlacklist(it) },
-        onCancelRemove = { viewModel.cancelRemove() },
-        onDismissSuccessAlert = { viewModel.dismissSuccessAlert() },
-        itemToRemove = itemToRemove,
-        showRemoveDialog = showRemoveDialog,
-        isRemoving = isRemoving,
-        showSuccessAlert = showSuccessAlert,
-        unblockedUserName = unblockedUserName
+        onAction = { action ->
+            when (action) {
+                BlacklistAction.Back -> onBackClick()
+                else -> viewModel.onAction(action)
+            }
+        }
     )
 }
 
@@ -81,17 +74,8 @@ fun MyBlacklistScreen(
 fun MyBlacklistScreenContent(
     modifier: Modifier = Modifier,
     uiState: BlacklistUiState,
-    onBackClick: () -> Unit,
     parentPaddingValues: PaddingValues,
-    onShowRemoveDialog: (User) -> Unit,
-    onRemoveFromBlacklist: (User) -> Unit,
-    onCancelRemove: () -> Unit,
-    onDismissSuccessAlert: () -> Unit,
-    itemToRemove: User?,
-    showRemoveDialog: Boolean,
-    isRemoving: Boolean,
-    showSuccessAlert: Boolean,
-    unblockedUserName: String?
+    onAction: (BlacklistAction) -> Unit
 ) {
     Scaffold(
         modifier = modifier,
@@ -101,7 +85,7 @@ fun MyBlacklistScreenContent(
                     Text(stringResource(R.string.black_list))
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = { onAction(BlacklistAction.Back) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back)
@@ -132,14 +116,12 @@ fun MyBlacklistScreenContent(
 
                 is BlacklistUiState.Success -> {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        // Данные
                         SuccessContent(
                             blacklist = uiState.blacklist,
-                            onShowRemoveDialog = onShowRemoveDialog,
-                            enabled = !uiState.isLoading && !isRemoving
+                            onShowRemoveDialog = { onAction(BlacklistAction.ShowRemoveDialog(it)) },
+                            enabled = !uiState.isLoading && !uiState.isRemoving
                         )
-                        // Индикатор загрузки при обновлении данных или удалении из черного списка
-                        if (uiState.isLoading || isRemoving) {
+                        if (uiState.isLoading || uiState.isRemoving) {
                             LoadingOverlayView()
                         }
                     }
@@ -148,39 +130,39 @@ fun MyBlacklistScreenContent(
         }
     }
 
-    // Диалог подтверждения удаления из черного списка
-    if (showRemoveDialog && itemToRemove != null) {
+    val successState = uiState as? BlacklistUiState.Success
+
+    if (successState?.showRemoveDialog == true && successState.itemToRemove != null) {
         AlertDialog(
-            onDismissRequest = onCancelRemove,
+            onDismissRequest = { onAction(BlacklistAction.CancelRemove) },
             text = {
-                Text(stringResource(BlacklistAction.UNBLOCK.alertMessage))
+                Text(stringResource(ApiBlacklistAction.UNBLOCK.alertMessage))
             },
             confirmButton = {
-                TextButton(onClick = { onRemoveFromBlacklist(itemToRemove) }) {
-                    Text(stringResource(BlacklistAction.UNBLOCK.description))
+                TextButton(onClick = { onAction(BlacklistAction.Remove(successState.itemToRemove!!)) }) {
+                    Text(stringResource(ApiBlacklistAction.UNBLOCK.description))
                 }
             },
             dismissButton = {
-                TextButton(onClick = onCancelRemove) {
+                TextButton(onClick = { onAction(BlacklistAction.CancelRemove) }) {
                     Text(stringResource(R.string.close))
                 }
             }
         )
     }
 
-    // Алерт об успешной разблокировке
-    if (showSuccessAlert) {
+    if (successState?.showSuccessAlert == true) {
         AlertDialog(
-            onDismissRequest = onDismissSuccessAlert,
+            onDismissRequest = { onAction(BlacklistAction.DismissSuccessAlert) },
             title = {
                 Text(stringResource(R.string.alert_reset_password_success_title))
             },
             text = {
-                val userName = unblockedUserName ?: ""
+                val userName = successState.unblockedUserName ?: ""
                 Text(stringResource(R.string.user_unblocked_successfully, userName))
             },
             confirmButton = {
-                TextButton(onClick = onDismissSuccessAlert) {
+                TextButton(onClick = { onAction(BlacklistAction.DismissSuccessAlert) }) {
                     Text(stringResource(R.string.alert_ok))
                 }
             }
@@ -208,7 +190,6 @@ private fun SuccessContent(
         ),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
     ) {
-        // Секция черного списка
         if (blacklist.isNotEmpty()) {
             items(count = blacklist.size) { index ->
                 val user = blacklist[index]
@@ -225,7 +206,6 @@ private fun SuccessContent(
             }
         }
 
-        // Если список пустой
         if (blacklist.isEmpty()) {
             item {
                 Box(

@@ -70,6 +70,26 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.IOtherUserProfileViewModel
 import com.swparks.ui.viewmodel.OtherUserProfileUiState
 
+sealed class ProfileNavigationAction {
+    object Back : ProfileNavigationAction()
+    object NavigateToOwnProfile : ProfileNavigationAction()
+}
+
+data class ProfileContentState(
+    val viewedUser: User?,
+    val country: Country?,
+    val city: City?,
+    val isFriend: Boolean,
+    val isInBlacklist: Boolean,
+    val isRefreshing: Boolean,
+    val isFriendActionLoading: Boolean
+)
+
+sealed class ProfileContentAction {
+    data class SendMessage(val user: User) : ProfileContentAction()
+    object ShowRemoveFriendDialog : ProfileContentAction()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OtherUserProfileScreen(
@@ -77,8 +97,7 @@ fun OtherUserProfileScreen(
     appState: AppState,
     source: String = "profile",
     modifier: Modifier = Modifier,
-    onBack: () -> Unit = {},
-    onNavigateToOwnProfile: () -> Unit = {}
+    onAction: (ProfileNavigationAction) -> Unit = {}
 ) {
     val viewedUser by viewModel.viewedUser.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
@@ -98,8 +117,7 @@ fun OtherUserProfileScreen(
     // Защита от просмотра собственного профиля (если попали через deep link)
     if (viewedUserId != null && viewedUserId == currentUserId) {
         LaunchedEffect(viewedUserId) {
-            // Навигация на собственный профиль вместо onBack (пустой back stack)
-            onNavigateToOwnProfile()
+            onAction(ProfileNavigationAction.NavigateToOwnProfile)
         }
         return
     }
@@ -120,7 +138,7 @@ fun OtherUserProfileScreen(
             OtherUserProfileTopAppBar(
                 isInBlacklist = isInBlacklist,
                 onBlacklistClick = { showBlacklistDialog = true },
-                onBackClick = onBack
+                onBackClick = { onAction(ProfileNavigationAction.Back) }
             )
         }
     ) { paddingValues ->
@@ -153,26 +171,43 @@ fun OtherUserProfileScreen(
                         is OtherUserProfileUiState.Loading -> { /* Контент скрыт */
                         }
 
-                        is OtherUserProfileUiState.UserNotFound -> UserNotFoundContent(onBack = onBack)
-                        is OtherUserProfileUiState.BlockedByUser -> BlockedByUserContent(onBack = onBack)
+                        is OtherUserProfileUiState.UserNotFound -> UserNotFoundContent(
+                            onBack = { onAction(ProfileNavigationAction.Back) }
+                        )
+
+                        is OtherUserProfileUiState.BlockedByUser -> BlockedByUserContent(
+                            onBack = { onAction(ProfileNavigationAction.Back) }
+                        )
+
                         is OtherUserProfileUiState.Success -> {
                             ProfileContent(
-                                viewedUser = viewedUser,
-                                country = state.country,
-                                city = state.city,
-                                isFriend = isFriend,
-                                isInBlacklist = isInBlacklist,
-                                isRefreshing = isRefreshing,
-                                isFriendActionLoading = isFriendActionLoading,
+                                state = ProfileContentState(
+                                    viewedUser = viewedUser,
+                                    country = state.country,
+                                    city = state.city,
+                                    isFriend = isFriend,
+                                    isInBlacklist = isInBlacklist,
+                                    isRefreshing = isRefreshing,
+                                    isFriendActionLoading = isFriendActionLoading
+                                ),
                                 viewModel = viewModel,
                                 appState = appState,
                                 source = source,
-                                onSendMessageClick = { user ->
-                                    textEntryMode =
-                                        TextEntryMode.Message(user.id, user.fullName ?: user.name)
-                                    showTextEntrySheet = true
-                                },
-                                onShowRemoveFriendDialog = { showRemoveFriendDialog = true }
+                                onAction = { action ->
+                                    when (action) {
+                                        is ProfileContentAction.SendMessage -> {
+                                            textEntryMode = TextEntryMode.Message(
+                                                action.user.id,
+                                                action.user.fullName ?: action.user.name
+                                            )
+                                            showTextEntrySheet = true
+                                        }
+
+                                        is ProfileContentAction.ShowRemoveFriendDialog -> {
+                                            showRemoveFriendDialog = true
+                                        }
+                                    }
+                                }
                             )
                         }
 
@@ -202,7 +237,7 @@ fun OtherUserProfileScreen(
         BlacklistActionDialog(
             action = blacklistAction,
             onConfirm = {
-                viewModel.performBlacklistAction(onBlocked = onBack)
+                viewModel.performBlacklistAction(onBlocked = { onAction(ProfileNavigationAction.Back) })
                 showBlacklistDialog = false
             },
             onDismiss = { showBlacklistDialog = false }
@@ -318,23 +353,15 @@ internal fun RemoveFriendDialog(
 
 @Composable
 private fun ProfileContent(
-    viewedUser: User?,
-    country: Country?,
-    city: City?,
-    isFriend: Boolean,
-    isInBlacklist: Boolean,
-    isRefreshing: Boolean,
-    isFriendActionLoading: Boolean,
+    state: ProfileContentState,
     viewModel: IOtherUserProfileViewModel,
     appState: AppState,
     source: String,
-    onSendMessageClick: (User) -> Unit,
-    onShowRemoveFriendDialog: () -> Unit
+    onAction: (ProfileContentAction) -> Unit
 ) {
-    if (viewedUser == null) return
+    val viewedUser = state.viewedUser ?: return
 
-    // Кнопки недоступны если пользователь заблокирован, идет обновление или friend action
-    val buttonsEnabled = !isRefreshing && !isInBlacklist && !isFriendActionLoading
+    val buttonsEnabled = !state.isRefreshing && !state.isInBlacklist && !state.isFriendActionLoading
 
     Column(
         modifier = Modifier
@@ -343,7 +370,7 @@ private fun ProfileContent(
             .padding(dimensionResource(R.dimen.spacing_regular)),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
     ) {
-        val shortAddress = listOfNotNull(country?.name, city?.name).joinToString(", ")
+        val shortAddress = listOfNotNull(state.country?.name, state.city?.name).joinToString(", ")
         UserProfileCardView(
             data = UserProfileData(
                 imageStringURL = viewedUser.image,
@@ -355,17 +382,17 @@ private fun ProfileContent(
         )
 
         SendMessageButton(
-            onClick = { onSendMessageClick(viewedUser) },
+            onClick = { onAction(ProfileContentAction.SendMessage(viewedUser)) },
             enabled = buttonsEnabled
         )
 
         val friendAction =
-            if (isFriend) FriendAction.REMOVE_FRIEND else FriendAction.SEND_FRIEND_REQUEST
+            if (state.isFriend) FriendAction.REMOVE_FRIEND else FriendAction.SEND_FRIEND_REQUEST
         FriendActionButton(
             action = friendAction,
             onClick = {
                 if (friendAction == FriendAction.REMOVE_FRIEND) {
-                    onShowRemoveFriendDialog()
+                    onAction(ProfileContentAction.ShowRemoveFriendDialog)
                 } else {
                     viewModel.performFriendAction()
                 }
@@ -373,7 +400,6 @@ private fun ProfileContent(
             enabled = buttonsEnabled
         )
 
-        // Для чужого профиля friendRequestsCount всегда 0
         if (viewedUser.hasFriends) {
             FriendsButton(
                 friendsCount = viewedUser.friendsCount ?: 0,

@@ -38,9 +38,16 @@ class UserFriendsScreenTest {
             JetpackWorkoutAppTheme {
                 UserFriendsScreenContent(
                     uiState = uiState,
-                    onBackClick = onBackClick,
-                    onUserClick = onUserClick,
-                    parentPaddingValues = PaddingValues(),
+                    config = FriendsScreenConfig(
+                        parentPaddingValues = PaddingValues()
+                    ),
+                    onAction = { action ->
+                        when (action) {
+                            is UserFriendsAction.Back -> onBackClick()
+                            is UserFriendsAction.UserClick -> onUserClick(action.userId)
+                            is UserFriendsAction.Refresh -> onRefresh()
+                        }
+                    },
                     onRefresh = onRefresh
                 )
             }

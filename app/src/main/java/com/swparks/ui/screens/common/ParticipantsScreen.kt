@@ -31,25 +31,33 @@ import com.swparks.ui.model.ParticipantsMode
 import com.swparks.ui.model.getTitleResId
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
+data class ParticipantsConfig(
+    val mode: ParticipantsMode,
+    val users: List<User>,
+    val currentUserId: Long?
+)
+
+sealed class ParticipantsAction {
+    object Back : ParticipantsAction()
+    data class UserClick(val userId: Long) : ParticipantsAction()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ParticipantsScreen(
     modifier: Modifier = Modifier,
-    mode: ParticipantsMode,
-    users: List<User>,
-    currentUserId: Long?,
-    onBack: () -> Unit,
-    onUserClick: (Long) -> Unit
+    config: ParticipantsConfig,
+    onAction: (ParticipantsAction) -> Unit
 ) {
     Scaffold(
         modifier = modifier,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(stringResource(mode.getTitleResId()))
+                    Text(stringResource(config.mode.getTitleResId()))
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { onAction(ParticipantsAction.Back) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back)
@@ -65,7 +73,7 @@ fun ParticipantsScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            if (users.isEmpty()) {
+            if (config.users.isEmpty()) {
                 EmptyStateView(
                     text = stringResource(R.string.no_participants)
                 )
@@ -81,10 +89,10 @@ fun ParticipantsScreen(
                     verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
                 ) {
                     items(
-                        items = users,
+                        items = config.users,
                         key = { it.id }
                     ) { user ->
-                        val isCurrentUser = user.id == currentUserId
+                        val isCurrentUser = user.id == config.currentUserId
                         UserRowView(
                             data = UserRowData(
                                 modifier = Modifier,
@@ -92,7 +100,7 @@ fun ParticipantsScreen(
                                 imageStringURL = user.image,
                                 name = user.name,
                                 address = null,
-                                onClick = { onUserClick(user.id) }
+                                onClick = { onAction(ParticipantsAction.UserClick(user.id)) }
                             )
                         )
                     }
@@ -112,15 +120,16 @@ fun ParticipantsScreen(
 private fun ParticipantsScreenWithUsersPreview() {
     JetpackWorkoutAppTheme {
         ParticipantsScreen(
-            mode = ParticipantsMode.Event,
-            users = listOf(
-                User(id = 1L, name = "CurrentUser", image = null),
-                User(id = 2L, name = "StreetAthlete", image = null),
-                User(id = 3L, name = "WorkoutPro", image = null)
+            config = ParticipantsConfig(
+                mode = ParticipantsMode.Event,
+                users = listOf(
+                    User(id = 1L, name = "CurrentUser", image = null),
+                    User(id = 2L, name = "StreetAthlete", image = null),
+                    User(id = 3L, name = "WorkoutPro", image = null)
+                ),
+                currentUserId = 1L
             ),
-            currentUserId = 1L,
-            onBack = {},
-            onUserClick = {}
+            onAction = {}
         )
     }
 }
@@ -130,11 +139,12 @@ private fun ParticipantsScreenWithUsersPreview() {
 private fun ParticipantsScreenEmptyPreview() {
     JetpackWorkoutAppTheme {
         ParticipantsScreen(
-            mode = ParticipantsMode.Park,
-            users = emptyList(),
-            currentUserId = null,
-            onBack = {},
-            onUserClick = {}
+            config = ParticipantsConfig(
+                mode = ParticipantsMode.Park,
+                users = emptyList(),
+                currentUserId = null
+            ),
+            onAction = {}
         )
     }
 }

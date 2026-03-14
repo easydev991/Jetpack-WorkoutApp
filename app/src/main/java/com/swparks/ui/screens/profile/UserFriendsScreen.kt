@@ -30,36 +30,36 @@ import com.swparks.ui.ds.UserRowView
 import com.swparks.ui.viewmodel.UserFriendsUiState
 import com.swparks.ui.viewmodel.UserFriendsViewModel
 
+sealed class UserFriendsAction {
+    object Back : UserFriendsAction()
+    data class UserClick(val userId: Long) : UserFriendsAction()
+    object Refresh : UserFriendsAction()
+}
+
 /**
  * Экран списка друзей другого пользователя
  *
  * @param modifier Модификатор
  * @param viewModel ViewModel для управления состоянием экрана
- * @param onBackClick Callback для навигации назад
- * @param onUserClick Callback для навигации на профиль пользователя
- * @param parentPaddingValues Паддинги для учета BottomNavigationBar
- * @param currentUserId ID текущего авторизованного пользователя (для блокировки собственного профиля)
+ * @param config Конфигурация экрана с паддингами и ID текущего пользователя
+ * @param onAction Callback для обработки действий (Back, UserClick, Refresh)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserFriendsScreen(
     modifier: Modifier = Modifier,
     viewModel: UserFriendsViewModel,
-    onBackClick: () -> Unit,
-    onUserClick: (Long) -> Unit,
-    parentPaddingValues: PaddingValues,
-    currentUserId: Long? = null
+    config: FriendsScreenConfig,
+    onAction: (UserFriendsAction) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     UserFriendsScreenContent(
         modifier = modifier,
         uiState = uiState,
-        onBackClick = onBackClick,
-        onUserClick = onUserClick,
-        parentPaddingValues = parentPaddingValues,
-        onRefresh = { viewModel.refresh() },
-        currentUserId = currentUserId
+        config = config,
+        onAction = onAction,
+        onRefresh = { viewModel.refresh() }
     )
 }
 
@@ -68,22 +68,18 @@ fun UserFriendsScreen(
  *
  * @param modifier Модификатор
  * @param uiState Текущее состояние UI
- * @param onBackClick Callback для навигации назад
- * @param onUserClick Callback для навигации на профиль пользователя
- * @param parentPaddingValues Паддинги для учета BottomNavigationBar
+ * @param config Конфигурация экрана с паддингами и ID текущего пользователя
+ * @param onAction Callback для обработки действий (Back, UserClick, Refresh)
  * @param onRefresh Callback для обновления данных
- * @param currentUserId ID текущего авторизованного пользователя (для блокировки собственного профиля)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserFriendsScreenContent(
     modifier: Modifier = Modifier,
     uiState: UserFriendsUiState,
-    onBackClick: () -> Unit,
-    onUserClick: (Long) -> Unit,
-    parentPaddingValues: PaddingValues,
-    onRefresh: () -> Unit,
-    currentUserId: Long? = null
+    config: FriendsScreenConfig,
+    onAction: (UserFriendsAction) -> Unit,
+    onRefresh: () -> Unit
 ) {
     Scaffold(
         modifier = modifier,
@@ -93,7 +89,7 @@ fun UserFriendsScreenContent(
                     Text(stringResource(R.string.friends))
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = { onAction(UserFriendsAction.Back) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back)
@@ -107,7 +103,7 @@ fun UserFriendsScreenContent(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(parentPaddingValues)
+                .padding(config.parentPaddingValues)
                 .padding(innerPadding)
         ) {
             when (uiState) {
@@ -131,9 +127,9 @@ fun UserFriendsScreenContent(
                     } else {
                         FriendsList(
                             friends = uiState.friends,
-                            onUserClick = onUserClick,
+                            onUserClick = { onAction(UserFriendsAction.UserClick(it)) },
                             modifier = Modifier.fillMaxSize(),
-                            currentUserId = currentUserId
+                            currentUserId = config.currentUserId
                         )
                     }
                 }

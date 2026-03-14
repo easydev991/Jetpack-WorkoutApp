@@ -50,20 +50,17 @@ class FriendsListViewModel(
     private val _uiState = MutableStateFlow<FriendsListUiState>(FriendsListUiState.Loading)
     override val uiState: StateFlow<FriendsListUiState> = _uiState.asStateFlow()
 
-    // Индикатор загрузки при выполнении запросов к серверу (принятие/отклонение заявки)
     private val _isProcessing = MutableStateFlow(false)
-    override val isProcessing: StateFlow<Boolean> = _isProcessing.asStateFlow()
 
     init {
         viewModelScope.launch {
-            // Подписываемся на потоки из UserDao
-            combine(friendRequests, friends) { requests, friendList ->
-                // Преобразуем UserEntity в User
+            combine(friendRequests, friends, _isProcessing) { requests, friendList, processing ->
                 val requestsUsers = requests.map { it.toDomain() }
                 val friendsUsers = friendList.map { it.toDomain() }
                 FriendsListUiState.Success(
                     friendRequests = requestsUsers,
-                    friends = friendsUsers
+                    friends = friendsUsers,
+                    isProcessing = processing
                 )
             }
                 .collect { state -> _uiState.value = state }

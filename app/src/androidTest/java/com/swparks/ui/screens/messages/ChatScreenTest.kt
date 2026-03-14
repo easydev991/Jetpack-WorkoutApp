@@ -60,11 +60,13 @@ class ChatScreenTest {
                         onMessageTextChange = onMessageTextChange,
                         onSendClick = onSendClick,
                         onRefresh = onRefresh,
-                        callbacks = ChatScreenCallbacks(
-                            onBackClick = onBackClick,
-                            onAvatarClick = onAvatarClick,
-                            onMessageSent = onMessageSent
-                        )
+                        onAction = { action ->
+                            when (action) {
+                                is ChatAction.Back -> onBackClick()
+                                is ChatAction.AvatarClick -> onAvatarClick()
+                                is ChatAction.MessageSent -> onMessageSent()
+                            }
+                        }
                     )
                 )
             }

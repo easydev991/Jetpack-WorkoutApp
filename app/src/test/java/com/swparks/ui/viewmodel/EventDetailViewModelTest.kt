@@ -327,7 +327,9 @@ class EventDetailViewModelTest {
         coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(
             createEvent(trainHere = false)
         )
-        coEvery { swRepository.changeIsGoingToEvent(true, TEST_EVENT_ID) } returns Result.success(Unit)
+        coEvery { swRepository.changeIsGoingToEvent(true, TEST_EVENT_ID) } returns Result.success(
+            Unit
+        )
         coEvery { swRepository.getCurrentUserFlow() } returns flowOf(null)
         val viewModel = createViewModel()
         advanceUntilIdle()
@@ -454,29 +456,30 @@ class EventDetailViewModelTest {
     // === Participants navigation test ===
 
     @Test
-    fun onParticipantsCountClick_whenContentLoaded_thenEmitsNavigateToParticipantsEvent() = runTest {
-        // Given
-        val user1 = User(id = 1L, name = "User 1", image = null)
-        val user2 = User(id = 2L, name = "User 2", image = null)
-        coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(
-            createEvent(trainingUsers = listOf(user1, user2))
-        )
-        val viewModel = createViewModel()
-        advanceUntilIdle()
+    fun onParticipantsCountClick_whenContentLoaded_thenEmitsNavigateToParticipantsEvent() =
+        runTest {
+            // Given
+            val user1 = User(id = 1L, name = "User 1", image = null)
+            val user2 = User(id = 2L, name = "User 2", image = null)
+            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(
+                createEvent(trainingUsers = listOf(user1, user2))
+            )
+            val viewModel = createViewModel()
+            advanceUntilIdle()
 
-        // When
-        viewModel.events.test {
-            viewModel.onParticipantsCountClick()
+            // When
+            viewModel.events.test {
+                viewModel.onParticipantsCountClick()
 
-            // Then
-            val event = awaitItem()
-            assertTrue(event is EventDetailEvent.NavigateToParticipants)
-            val navEvent = event as EventDetailEvent.NavigateToParticipants
-            assertEquals(TEST_EVENT_ID, navEvent.eventId)
-            assertEquals(2, navEvent.users.size)
-            cancelAndIgnoreRemainingEvents()
+                // Then
+                val event = awaitItem()
+                assertTrue(event is EventDetailEvent.NavigateToParticipants)
+                val navEvent = event as EventDetailEvent.NavigateToParticipants
+                assertEquals(TEST_EVENT_ID, navEvent.eventId)
+                assertEquals(2, navEvent.users.size)
+                cancelAndIgnoreRemainingEvents()
+            }
         }
-    }
 
     // === Calendar tests ===
 

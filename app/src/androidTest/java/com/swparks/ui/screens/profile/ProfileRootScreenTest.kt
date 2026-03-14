@@ -29,6 +29,18 @@ class ProfileRootScreenTest {
 
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
+    private fun setContent(viewModel: FakeProfileViewModel) {
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                ProfileRootScreen(
+                    viewModel = viewModel,
+                    config = ProfileRootConfig(),
+                    onAuthAction = {}
+                )
+            }
+        }
+    }
+
     @Test
     fun profileRootScreen_displaysProfile_whenUserAuthorized() {
         // Given
@@ -41,13 +53,7 @@ class ProfileRootScreenTest {
         )
 
         // When
-        composeTestRule.setContent {
-            JetpackWorkoutAppTheme {
-                ProfileRootScreen(
-                    viewModel = viewModel
-                )
-            }
-        }
+        setContent(viewModel)
 
         // Then - проверяем, что имя пользователя отображается
         composeTestRule
@@ -67,13 +73,7 @@ class ProfileRootScreenTest {
         )
 
         // When
-        composeTestRule.setContent {
-            JetpackWorkoutAppTheme {
-                ProfileRootScreen(
-                    viewModel = viewModel
-                )
-            }
-        }
+        setContent(viewModel)
 
         // Then
         val editProfileText = context.getString(R.string.edit_profile)
@@ -94,13 +94,7 @@ class ProfileRootScreenTest {
         )
 
         // When
-        composeTestRule.setContent {
-            JetpackWorkoutAppTheme {
-                ProfileRootScreen(
-                    viewModel = viewModel
-                )
-            }
-        }
+        setContent(viewModel)
 
         // Then
         val logoutText = context.getString(R.string.logout)
@@ -120,13 +114,7 @@ class ProfileRootScreenTest {
         )
 
         // When
-        composeTestRule.setContent {
-            JetpackWorkoutAppTheme {
-                ProfileRootScreen(
-                    viewModel = viewModel
-                )
-            }
-        }
+        setContent(viewModel)
 
         // Then
         val authorizationText = context.getString(R.string.authorization)
@@ -146,13 +134,7 @@ class ProfileRootScreenTest {
         )
 
         // When
-        composeTestRule.setContent {
-            JetpackWorkoutAppTheme {
-                ProfileRootScreen(
-                    viewModel = viewModel
-                )
-            }
-        }
+        setContent(viewModel)
 
         // Then - кнопка "Друзья" не должна отображаться
         val friendsText = context.getString(R.string.friends)
@@ -173,13 +155,7 @@ class ProfileRootScreenTest {
         )
 
         // When
-        composeTestRule.setContent {
-            JetpackWorkoutAppTheme {
-                ProfileRootScreen(
-                    viewModel = viewModel
-                )
-            }
-        }
+        setContent(viewModel)
 
         // Then
         val friendsText = context.getString(R.string.friends)
@@ -200,13 +176,7 @@ class ProfileRootScreenTest {
         )
 
         // When
-        composeTestRule.setContent {
-            JetpackWorkoutAppTheme {
-                ProfileRootScreen(
-                    viewModel = viewModel
-                )
-            }
-        }
+        setContent(viewModel)
 
         // Then - должны увидеть badge с количеством заявок
         composeTestRule

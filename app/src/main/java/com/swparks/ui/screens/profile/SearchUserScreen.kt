@@ -43,25 +43,38 @@ import com.swparks.ui.ds.UserRowView
 import com.swparks.ui.state.SearchUserUiState
 import com.swparks.ui.viewmodel.ISearchUserViewModel
 
+data class SearchUserConfig(
+    val parentPaddingValues: PaddingValues,
+    val currentUserId: Long? = null
+)
+
+data class SearchQueryState(
+    val query: String,
+    val onQueryChange: (String) -> Unit
+)
+
+sealed class SearchUserAction {
+    data object Search : SearchUserAction()
+    data class UserClick(val userId: Long) : SearchUserAction()
+    data object Back : SearchUserAction()
+    data object Retry : SearchUserAction()
+}
+
 /**
  * Экран поиска пользователей.
  *
  * @param modifier Модификатор
  * @param viewModel ViewModel для управления состоянием экрана
- * @param onBackClick Callback для навигации назад
- * @param onUserClick Callback для навигации на профиль найденного пользователя
- * @param parentPaddingValues Паддинги для учета BottomNavigationBar
- * @param currentUserId ID текущего авторизованного пользователя (для блокировки собственного профиля)
+ * @param config Конфигурация экрана с паддингами и ID текущего пользователя
+ * @param onAction Callback для обработки действий
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchUserScreen(
     modifier: Modifier = Modifier,
     viewModel: ISearchUserViewModel,
-    onBackClick: () -> Unit,
-    onUserClick: (Long) -> Unit,
-    parentPaddingValues: PaddingValues,
-    currentUserId: Long? = null
+    config: SearchUserConfig,
+    onAction: (SearchUserAction) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -69,14 +82,12 @@ fun SearchUserScreen(
     SearchUserScreenContent(
         modifier = modifier,
         uiState = uiState,
-        searchQuery = searchQuery,
-        onSearchQueryChange = { viewModel.searchQuery.value = it },
-        onSearch = { viewModel.onSearch() },
-        onUserClick = onUserClick,
-        onBackClick = onBackClick,
-        onRetry = { viewModel.onSearch() },
-        parentPaddingValues = parentPaddingValues,
-        currentUserId = currentUserId
+        searchQueryState = SearchQueryState(
+            query = searchQuery,
+            onQueryChange = { viewModel.searchQuery.value = it }
+        ),
+        config = config,
+        onAction = onAction
     )
 }
 
@@ -87,28 +98,18 @@ fun SearchUserScreen(
  *
  * @param modifier Модификатор
  * @param uiState Текущее состояние UI
- * @param searchQuery Текущий поисковый запрос
- * @param onSearchQueryChange Callback при изменении поискового запроса
- * @param onSearch Callback при выполнении поиска
- * @param onUserClick Callback при клике на пользователя
- * @param onBackClick Callback для навигации назад
- * @param onRetry Callback при повторной попытке после ошибки
- * @param parentPaddingValues Паддинги для учета BottomNavigationBar
- * @param currentUserId ID текущего авторизованного пользователя (для блокировки собственного профиля)
+ * @param searchQueryState Состояние поискового запроса
+ * @param config Конфигурация экрана с паддингами и ID текущего пользователя
+ * @param onAction Callback для обработки действий (Search, UserClick, Back, Retry)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchUserScreenContent(
     modifier: Modifier = Modifier,
     uiState: SearchUserUiState,
-    searchQuery: String,
-    onSearchQueryChange: (String) -> Unit,
-    onSearch: () -> Unit,
-    onUserClick: (Long) -> Unit,
-    onBackClick: () -> Unit,
-    onRetry: () -> Unit,
-    parentPaddingValues: PaddingValues,
-    currentUserId: Long? = null
+    searchQueryState: SearchQueryState,
+    config: SearchUserConfig,
+    onAction: (SearchUserAction) -> Unit
 ) {
     // Сохраняем последний "показываемый" контент (не Loading)
     // Это позволяет отображать предыдущий контент под LoadingOverlayView
@@ -137,7 +138,7 @@ fun SearchUserScreenContent(
                     Text(stringResource(R.string.search_users))
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = { onAction(SearchUserAction.Back) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back)
@@ -151,7 +152,7 @@ fun SearchUserScreenContent(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(parentPaddingValues)
+                .padding(config.parentPaddingValues)
                 .padding(innerPadding)
         ) {
             Column(
@@ -162,12 +163,12 @@ fun SearchUserScreenContent(
                 SWTextField(
                     config = TextFieldConfig(
                         modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular)),
-                        text = searchQuery,
+                        text = searchQueryState.query,
                         labelID = R.string.username_in_english,
                         supportingText = stringResource(R.string.search_min_length_hint),
-                        onTextChange = onSearchQueryChange,
+                        onTextChange = searchQueryState.onQueryChange,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(onSearch = { onSearch() })
+                        keyboardActions = KeyboardActions(onSearch = { onAction(SearchUserAction.Search) })
                     )
                 )
 
@@ -180,9 +181,9 @@ fun SearchUserScreenContent(
                     is SearchUserUiState.Success -> {
                         UsersList(
                             users = state.users,
-                            onUserClick = onUserClick,
+                            onUserClick = { onAction(SearchUserAction.UserClick(it)) },
                             modifier = Modifier.fillMaxSize(),
-                            currentUserId = currentUserId
+                            currentUserId = config.currentUserId
                         )
                     }
 
@@ -196,7 +197,7 @@ fun SearchUserScreenContent(
 
                     is SearchUserUiState.NetworkError -> {
                         ErrorContentView(
-                            retryAction = onRetry,
+                            retryAction = { onAction(SearchUserAction.Retry) },
                             message = stringResource(R.string.search_network_error),
                             modifier = Modifier.fillMaxSize()
                         )

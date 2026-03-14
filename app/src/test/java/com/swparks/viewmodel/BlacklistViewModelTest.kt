@@ -3,6 +3,7 @@ package com.swparks.viewmodel
 import com.swparks.data.model.ApiBlacklistOption
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
+import com.swparks.ui.state.BlacklistAction
 import com.swparks.ui.state.BlacklistUiState
 import com.swparks.ui.viewmodel.BlacklistViewModel
 import com.swparks.ui.viewmodel.MainDispatcherRule
@@ -10,7 +11,6 @@ import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -24,9 +24,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-/**
- * Unit тесты для BlacklistViewModel
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class BlacklistViewModelTest {
 
@@ -57,23 +54,18 @@ class BlacklistViewModelTest {
 
     @Test
     fun uiState_initial_shouldBeLoading() {
-        // Given
-        // When
-        // Then
         val state = blacklistViewModel.uiState.value
         assertTrue("Начальное состояние должно быть Loading", state is BlacklistUiState.Loading)
     }
 
     @Test
     fun uiState_whenDataLoaded_shouldReturnSuccess() = runTest {
-        // Given
-        val testUser1 = mockk<User>(relaxed = true)
-        val testUser2 = mockk<User>(relaxed = true)
+        val testUser1 = User(id = 1L, name = "user1", image = null)
+        val testUser2 = User(id = 2L, name = "user2", image = null)
         val testList = listOf(testUser1, testUser2)
 
         coEvery { swRepository.getBlacklistFlow() } returns flowOf(testList)
 
-        // When
         val viewModel = BlacklistViewModel(
             swRepository,
             logger,
@@ -81,7 +73,6 @@ class BlacklistViewModelTest {
         )
         advanceUntilIdle()
 
-        // Then
         val state = viewModel.uiState.value
         assertTrue("Состояние должно быть Success", state is BlacklistUiState.Success)
         val successState = state as BlacklistUiState.Success
@@ -94,184 +85,160 @@ class BlacklistViewModelTest {
 
     @Test
     fun showRemoveDialog_shouldSetItemToRemoveAndShowDialog() = runTest {
-        // Given
-        val testUser = mockk<User>(relaxed = true).apply {
-            every { id } returns 789L
-        }
-
-        // When
-        blacklistViewModel.showRemoveDialog(testUser)
+        val testUser = User(id = 789L, name = "test", image = null)
+        coEvery { swRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
+        val viewModel = BlacklistViewModel(swRepository, logger, userNotifier)
         advanceUntilIdle()
 
-        // Then
-        assertEquals(
-            "itemToRemove должен быть установлен",
-            testUser,
-            blacklistViewModel.itemToRemove.value
-        )
-        assertEquals(
-            "showRemoveDialog должно быть true",
-            true,
-            blacklistViewModel.showRemoveDialog.value
-        )
+        viewModel.onAction(BlacklistAction.ShowRemoveDialog(testUser))
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value as BlacklistUiState.Success
+        assertEquals("itemToRemove должен быть установлен", testUser, state.itemToRemove)
+        assertTrue("showRemoveDialog должно быть true", state.showRemoveDialog)
     }
 
     @Test
     fun removeFromBlacklist_shouldCallRepositoryAndClearState() = runTest {
-        // Given
-        val testUser = mockk<User>(relaxed = true).apply {
-            every { id } returns 101L
-        }
+        val testUser = User(id = 101L, name = "test", image = null)
+        coEvery { swRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
         coEvery {
-            swRepository.blacklistAction(testUser, ApiBlacklistOption.REMOVE)
+            swRepository.blacklistAction(any<User>(), any<ApiBlacklistOption>())
         } returns Result.success(Unit)
 
-        blacklistViewModel.showRemoveDialog(testUser)
+        val viewModel = BlacklistViewModel(swRepository, logger, userNotifier)
         advanceUntilIdle()
 
-        // When
-        blacklistViewModel.removeFromBlacklist(testUser)
-
-        // Ждем начала операции и проверяем, что isRemoving установлен
+        viewModel.onAction(BlacklistAction.ShowRemoveDialog(testUser))
         advanceUntilIdle()
 
-        // Then
+        val beforeRemoveState = viewModel.uiState.value as BlacklistUiState.Success
+        assertTrue(
+            "showRemoveDialog должно быть true перед Remove",
+            beforeRemoveState.showRemoveDialog
+        )
+
+        viewModel.onAction(BlacklistAction.Remove(testUser))
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        if (state !is BlacklistUiState.Success) {
+            throw AssertionError("Состояние должно быть Success, но получено: $state")
+        }
+
         coVerify(exactly = 1) {
             swRepository.blacklistAction(testUser, ApiBlacklistOption.REMOVE)
         }
+        assertEquals("itemToRemove должен быть null после удаления", null, state.itemToRemove)
         assertEquals(
-            "itemToRemove должен быть null после удаления",
-            null,
-            blacklistViewModel.itemToRemove.value
-        )
-        assertEquals(
-            "showRemoveDialog должно быть false после удаления",
+            "showRemoveDialog должно быть false после удаления, но: itemToRemove=${state.itemToRemove}, isRemoving=${state.isRemoving}, isLoading=${state.isLoading}",
             false,
-            blacklistViewModel.showRemoveDialog.value
+            state.showRemoveDialog
         )
-        assertEquals(
-            "isRemoving должен быть false после завершения",
-            false,
-            blacklistViewModel.isRemoving.value
-        )
+        assertEquals("isRemoving должен быть false после завершения", false, state.isRemoving)
     }
 
     @Test
     fun removeFromBlacklist_onError_shouldClearStateAndReportError() = runTest {
-        // Given
-        val testUser = mockk<User>(relaxed = true).apply {
-            every { id } returns 202L
-        }
+        val testUser = User(id = 202L, name = "test", image = null)
         val testException = Exception("API Error")
+        coEvery { swRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
         coEvery {
-            swRepository.blacklistAction(testUser, ApiBlacklistOption.REMOVE)
+            swRepository.blacklistAction(any<User>(), any<ApiBlacklistOption>())
         } returns Result.failure(testException)
 
-        blacklistViewModel.showRemoveDialog(testUser)
+        val viewModel = BlacklistViewModel(swRepository, logger, userNotifier)
         advanceUntilIdle()
 
-        // When
-        blacklistViewModel.removeFromBlacklist(testUser)
-
-        // Ждем завершения операции
+        viewModel.onAction(BlacklistAction.ShowRemoveDialog(testUser))
         advanceUntilIdle()
 
-        // Then
+        viewModel.onAction(BlacklistAction.Remove(testUser))
+        advanceUntilIdle()
+
         coVerify(exactly = 1) {
             swRepository.blacklistAction(testUser, ApiBlacklistOption.REMOVE)
         }
-        assertEquals(
-            "itemToRemove должен быть очищен даже при ошибке",
-            null,
-            blacklistViewModel.itemToRemove.value
-        )
+        val state = viewModel.uiState.value as BlacklistUiState.Success
+        assertEquals("itemToRemove должен быть очищен даже при ошибке", null, state.itemToRemove)
         assertEquals(
             "showRemoveDialog должно быть false даже при ошибке",
             false,
-            blacklistViewModel.showRemoveDialog.value
+            state.showRemoveDialog
         )
-        assertEquals(
-            "isRemoving должен быть false после ошибки",
-            false,
-            blacklistViewModel.isRemoving.value
-        )
+        assertEquals("isRemoving должен быть false после ошибки", false, state.isRemoving)
     }
 
     @Test
-    fun cancelRemove_shouldClearState() {
-        // Given
-        val testUser = mockk<User>(relaxed = true).apply {
-            every { id } returns 303L
-        }
-        blacklistViewModel.showRemoveDialog(testUser)
+    fun cancelRemove_shouldClearState() = runTest {
+        val testUser = User(id = 303L, name = "test", image = null)
+        coEvery { swRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
 
-        // When
-        blacklistViewModel.cancelRemove()
+        val viewModel = BlacklistViewModel(swRepository, logger, userNotifier)
+        advanceUntilIdle()
 
-        // Then
-        assertEquals("itemToRemove должен быть null", null, blacklistViewModel.itemToRemove.value)
-        assertEquals(
-            "showRemoveDialog должно быть false",
-            false,
-            blacklistViewModel.showRemoveDialog.value
-        )
+        viewModel.onAction(BlacklistAction.ShowRemoveDialog(testUser))
+        advanceUntilIdle()
+
+        viewModel.onAction(BlacklistAction.CancelRemove)
+
+        val state = viewModel.uiState.value as BlacklistUiState.Success
+        assertEquals("itemToRemove должен быть null", null, state.itemToRemove)
+        assertEquals("showRemoveDialog должно быть false", false, state.showRemoveDialog)
     }
 
     @Test
     fun removeFromBlacklist_onSuccess_shouldShowSuccessAlert() = runTest {
-        // Given
         val testName = "Test User"
-        val testUser = mockk<User>(relaxed = true).apply {
-            every { id } returns 404L
-            every { name } returns testName
-        }
+        val testUser = User(id = 404L, name = testName, image = null)
+        coEvery { swRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
         coEvery {
-            swRepository.blacklistAction(testUser, ApiBlacklistOption.REMOVE)
+            swRepository.blacklistAction(any<User>(), any<ApiBlacklistOption>())
         } returns Result.success(Unit)
 
-        blacklistViewModel.showRemoveDialog(testUser)
+        val viewModel = BlacklistViewModel(swRepository, logger, userNotifier)
         advanceUntilIdle()
 
-        // When
-        blacklistViewModel.removeFromBlacklist(testUser)
+        viewModel.onAction(BlacklistAction.ShowRemoveDialog(testUser))
         advanceUntilIdle()
 
-        // Then
-        assertEquals(
+        viewModel.onAction(BlacklistAction.Remove(testUser))
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value as BlacklistUiState.Success
+        assertTrue(
             "showSuccessAlert должно быть true после успешного разблокирования",
-            true,
-            blacklistViewModel.showSuccessAlert.value
+            state.showSuccessAlert
         )
         assertEquals(
             "unblockedUserName должно содержать имя пользователя",
             testName,
-            blacklistViewModel.unblockedUserName.value
+            state.unblockedUserName
         )
     }
 
     @Test
-    fun dismissSuccessAlert_shouldClearSuccessState() {
-        // Given
-        blacklistViewModel.showRemoveDialog(mockk(relaxed = true))
-        // Устанавливаем состояние, как будто алерт уже показан
-        // Прямая установка состояния для теста
-        val testViewModel = BlacklistViewModel(swRepository, logger, userNotifier)
-        testViewModel.showRemoveDialog(mockk(relaxed = true))
-        testViewModel.removeFromBlacklist(mockk(relaxed = true))
+    fun dismissSuccessAlert_shouldClearSuccessState() = runTest {
+        val testName = "Test User"
+        val testUser = User(id = 505L, name = testName, image = null)
+        coEvery { swRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
+        coEvery {
+            swRepository.blacklistAction(any<User>(), ApiBlacklistOption.REMOVE)
+        } returns Result.success(Unit)
 
-        // When
-        testViewModel.dismissSuccessAlert()
+        val viewModel = BlacklistViewModel(swRepository, logger, userNotifier)
+        advanceUntilIdle()
 
-        // Then
-        assertEquals(
-            "showSuccessAlert должно быть false",
-            false,
-            testViewModel.showSuccessAlert.value
-        )
-        assertEquals(
-            "unblockedUserName должно быть null",
-            null,
-            testViewModel.unblockedUserName.value
-        )
+        viewModel.onAction(BlacklistAction.ShowRemoveDialog(testUser))
+        advanceUntilIdle()
+
+        viewModel.onAction(BlacklistAction.Remove(testUser))
+        advanceUntilIdle()
+
+        viewModel.onAction(BlacklistAction.DismissSuccessAlert)
+
+        val state = viewModel.uiState.value as BlacklistUiState.Success
+        assertEquals("showSuccessAlert должно быть false", false, state.showSuccessAlert)
+        assertEquals("unblockedUserName должно быть null", null, state.unblockedUserName)
     }
 }

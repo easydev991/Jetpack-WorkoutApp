@@ -38,6 +38,8 @@ import com.swparks.ui.ds.EventRowData
 import com.swparks.ui.ds.EventRowView
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.model.EventKind
+import com.swparks.ui.state.EventsListAction
+import com.swparks.ui.state.EventsListState
 import com.swparks.ui.state.EventsUIState
 import com.swparks.ui.viewmodel.EventsViewModel
 import com.swparks.ui.viewmodel.IEventsViewModel
@@ -96,15 +98,21 @@ fun EventsScreen(
                 is EventsUIState.Content -> {
                     Box(modifier = Modifier.fillMaxSize()) {
                         EventsListWithRefresh(
-                            events = state.events,
-                            addresses = state.addresses,
-                            selectedTab = state.selectedTab,
-                            isRefreshing = isRefreshing,
-                            isLoading = state.isLoading,
-                            onRefresh = { viewModel.refresh() },
-                            onEventClick = { event ->
-                                viewModel.onEventClick(event)
-                                onNavigateToEventDetail(event.id)
+                            state = EventsListState(
+                                events = state.events,
+                                addresses = state.addresses,
+                                selectedTab = state.selectedTab,
+                                isRefreshing = isRefreshing,
+                                isLoading = state.isLoading
+                            ),
+                            onAction = { action ->
+                                when (action) {
+                                    is EventsListAction.Refresh -> viewModel.refresh()
+                                    is EventsListAction.EventClick -> {
+                                        viewModel.onEventClick(action.event)
+                                        onNavigateToEventDetail(action.event.id)
+                                    }
+                                }
                             }
                         )
                         if (state.isLoading && !isRefreshing) {
@@ -138,21 +146,16 @@ fun EventsScreen(
 
 @Composable
 private fun EventsListWithRefresh(
-    events: List<Event>,
-    addresses: Map<Pair<Int, Int>, String>,
-    selectedTab: EventKind,
-    isRefreshing: Boolean,
-    isLoading: Boolean,
-    onRefresh: () -> Unit,
-    onEventClick: (Event) -> Unit,
+    state: EventsListState,
+    onAction: (EventsListAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
     PullToRefreshBox(
-        isRefreshing = isRefreshing,
-        onRefresh = onRefresh,
+        isRefreshing = state.isRefreshing,
+        onRefresh = { onAction(EventsListAction.Refresh) },
         modifier = modifier.fillMaxSize()
     ) {
-        if (events.isEmpty() && !isLoading) {
+        if (state.events.isEmpty() && !state.isLoading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -160,18 +163,18 @@ private fun EventsListWithRefresh(
                 contentAlignment = Alignment.Center
             ) {
                 EmptyStateView(
-                    text = when (selectedTab) {
+                    text = when (state.selectedTab) {
                         EventKind.FUTURE -> stringResource(id = R.string.events_empty_future)
                         EventKind.PAST -> stringResource(id = R.string.events_empty_past)
                     }
                 )
             }
-        } else if (events.isNotEmpty()) {
+        } else if (state.events.isNotEmpty()) {
             EventsList(
-                events = events,
-                addresses = addresses,
-                enabled = !isRefreshing && !isLoading,
-                onEventClick = onEventClick
+                events = state.events,
+                addresses = state.addresses,
+                enabled = !state.isRefreshing && !state.isLoading,
+                onEventClick = { event -> onAction(EventsListAction.EventClick(event)) }
             )
         }
     }

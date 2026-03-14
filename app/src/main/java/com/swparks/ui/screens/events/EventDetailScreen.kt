@@ -215,11 +215,13 @@ fun EventDetailScreen(
                                 event = state.event,
                                 address = state.address,
                                 isRefreshing = isRefreshing,
-                                callbacks = EventHeaderCallbacks(
-                                    onOpenMapClick = viewModel::onOpenMapClick,
-                                    onRouteClick = viewModel::onRouteClick,
-                                    onAddToCalendarClick = viewModel::onAddToCalendarClick
-                                )
+                                onAction = { action ->
+                                    when (action) {
+                                        EventHeaderAction.OpenMap -> viewModel.onOpenMapClick()
+                                        EventHeaderAction.Route -> viewModel.onRouteClick()
+                                        EventHeaderAction.AddToCalendar -> viewModel.onAddToCalendarClick()
+                                    }
+                                }
                             )
                         }
 
@@ -253,9 +255,11 @@ fun EventDetailScreen(
                             EventAuthorSection(
                                 event = state.event,
                                 address = state.authorAddress,
-                                isAuthorized = isAuthorized,
-                                isRefreshing = isRefreshing,
-                                isEventAuthor = isEventAuthor,
+                                config = EventAuthorConfig(
+                                    isAuthorized = isAuthorized,
+                                    isRefreshing = isRefreshing,
+                                    isEventAuthor = isEventAuthor
+                                ),
                                 onAuthorClick = onNavigateToUserProfile
                             )
                         }
@@ -266,14 +270,26 @@ fun EventDetailScreen(
                         ) { index, comment ->
                             EventCommentItem(
                                 comment = comment,
-                                enabled = isAuthorized && !isRefreshing,
-                                currentUserId = currentUserId,
-                                showSectionHeader = index == 0,
+                                config = CommentItemConfig(
+                                    enabled = isAuthorized && !isRefreshing,
+                                    currentUserId = currentUserId,
+                                    showSectionHeader = index == 0
+                                ),
                                 modifier = Modifier.padding(
                                     horizontal = dimensionResource(R.dimen.spacing_regular)
                                 ),
-                                onAuthorClick = onNavigateToUserProfile,
-                                onActionClick = viewModel::onCommentActionClick
+                                onAction = { action ->
+                                    when (action) {
+                                        is CommentItemAction.AuthorClick -> onNavigateToUserProfile(
+                                            action.userId
+                                        )
+
+                                        is CommentItemAction.CommentAction -> viewModel.onCommentActionClick(
+                                            action.commentId,
+                                            action.action
+                                        )
+                                    }
+                                }
                             )
                         }
 

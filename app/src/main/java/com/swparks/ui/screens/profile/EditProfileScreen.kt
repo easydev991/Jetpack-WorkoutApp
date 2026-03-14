@@ -75,17 +75,21 @@ import androidx.compose.material.icons.Icons.AutoMirrored.Filled as AutoMirrored
 
 private const val GENDER_DROPDOWN_MENU_WIDTH_FRACTION = 0.3f
 
+sealed class EditProfileNavigationAction {
+    object Back : EditProfileNavigationAction()
+    object ChangePassword : EditProfileNavigationAction()
+    object SelectCountry : EditProfileNavigationAction()
+    object SelectCity : EditProfileNavigationAction()
+    object NavigateToLogin : EditProfileNavigationAction()
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun EditProfileScreen(
     modifier: Modifier = Modifier,
     currentUser: User?,
     viewModel: IEditProfileViewModel,
-    onBackClick: () -> Unit,
-    onNavigateToChangePassword: (Long) -> Unit = {},
-    onNavigateToSelectCountry: (Int?) -> Unit = {},
-    onNavigateToSelectCity: (Int?, Int) -> Unit = { _, _ -> },
-    onNavigateToLogin: () -> Unit = {}
+    onAction: (EditProfileNavigationAction) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
@@ -108,14 +112,11 @@ fun EditProfileScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                is EditProfileEvent.NavigateBack -> onBackClick()
-                is EditProfileEvent.NavigateToLogin -> onNavigateToLogin()
-                is EditProfileEvent.NavigateToChangePassword -> onNavigateToChangePassword(event.userId)
-                is EditProfileEvent.NavigateToSelectCountry -> onNavigateToSelectCountry(event.currentCountryId)
-                is EditProfileEvent.NavigateToSelectCity -> onNavigateToSelectCity(
-                    event.currentCityId,
-                    event.countryId
-                )
+                is EditProfileEvent.NavigateBack -> onAction(EditProfileNavigationAction.Back)
+                is EditProfileEvent.NavigateToLogin -> onAction(EditProfileNavigationAction.NavigateToLogin)
+                is EditProfileEvent.NavigateToChangePassword -> onAction(EditProfileNavigationAction.ChangePassword)
+                is EditProfileEvent.NavigateToSelectCountry -> onAction(EditProfileNavigationAction.SelectCountry)
+                is EditProfileEvent.NavigateToSelectCity -> onAction(EditProfileNavigationAction.SelectCity)
             }
         }
     }
@@ -132,7 +133,7 @@ fun EditProfileScreen(
             CenterAlignedTopAppBar(
                 title = { Text(text = stringResource(R.string.edit_profile)) },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = { onAction(EditProfileNavigationAction.Back) }) {
                         Icon(
                             imageVector = AutoMirroredIcons.ArrowBack,
                             contentDescription = stringResource(R.string.back)

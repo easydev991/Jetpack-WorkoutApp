@@ -67,6 +67,32 @@ import com.swparks.ui.viewmodel.IJournalEntriesViewModel
 import com.swparks.ui.viewmodel.JournalEntriesEvent
 import com.swparks.util.DateFormatter
 
+data class EntryPermissions(
+    val canEdit: (JournalEntry) -> Boolean = { false },
+    val canDelete: (JournalEntry) -> Boolean = { false },
+    val canReport: Boolean = false
+)
+
+sealed class EntryAction {
+    data class Delete(val entryId: Long) : EntryAction()
+    data class Edit(val entry: JournalEntry) : EntryAction()
+    data class Report(val entry: JournalEntry) : EntryAction()
+}
+
+data class EntriesContentState(
+    val entries: List<JournalEntry>,
+    val isRefreshing: Boolean,
+    val isDeleting: Boolean,
+    val canCreateEntry: Boolean,
+    val firstEntryId: Long?
+)
+
+sealed class EntriesAction {
+    object Refresh : EntriesAction()
+    data class Entry(val action: EntryAction) : EntriesAction()
+    object AddEntry : EntriesAction()
+}
+
 /**
  * Экран списка записей в дневнике пользователя
  *
@@ -233,47 +259,64 @@ fun JournalEntriesScreen(
                 is JournalEntriesUiState.Content -> {
                     val contentState = uiState as JournalEntriesUiState.Content
                     ContentScreen(
-                        entries = contentState.entries,
-                        isRefreshing = isRefreshing,
-                        isDeleting = isDeleting,
-                        canCreateEntry = contentState.canCreateEntry,
-                        canEditEntry = canEditEntry,
-                        canDeleteEntry = canDeleteEntry,
-                        canReportEntry = false, // Скрыто до доработки функционала жалоб
-                        firstEntryId = contentState.firstEntryId,
-                        onRefresh = { viewModel.loadEntries() },
-                        onDeleteEntry = { entryId ->
-                            showDeleteDialog = true
-                            entryToDelete = entryId
-                        },
-                        onEditEntry = { entry ->
-                            textEntryMode = TextEntryMode.EditJournalEntry(
-                                ownerId = journalOwnerId,
-                                editInfo = EditInfo(
-                                    parentObjectId = journalId,
-                                    entryId = entry.id,
-                                    oldEntry = entry.message ?: ""
-                                )
-                            )
-                            showTextEntrySheet = true
-                        },
-                        onReportEntry = { entry ->
-                            val complaint = com.swparks.util.Complaint.JournalEntry(
-                                author = entry.authorName ?: "неизвестен",
-                                entryText = entry.message ?: ""
-                            )
-                            com.swparks.ui.screens.more.sendComplaint(complaint, context)
-                        },
-                        onAddEntryClick = if (contentState.canCreateEntry) {
-                            {
-                                textEntryMode = TextEntryMode.NewForJournal(
-                                    ownerId = journalOwnerId,
-                                    journalId = journalId
-                                )
-                                showTextEntrySheet = true
+                        state = EntriesContentState(
+                            entries = contentState.entries,
+                            isRefreshing = isRefreshing,
+                            isDeleting = isDeleting,
+                            canCreateEntry = contentState.canCreateEntry,
+                            firstEntryId = contentState.firstEntryId
+                        ),
+                        permissions = EntryPermissions(
+                            canEdit = canEditEntry,
+                            canDelete = canDeleteEntry,
+                            canReport = false
+                        ),
+                        onAction = { action ->
+                            when (action) {
+                                is EntriesAction.Refresh -> viewModel.loadEntries()
+                                is EntriesAction.Entry -> {
+                                    when (val entryAction = action.action) {
+                                        is EntryAction.Delete -> {
+                                            showDeleteDialog = true
+                                            entryToDelete = entryAction.entryId
+                                        }
+
+                                        is EntryAction.Edit -> {
+                                            textEntryMode = TextEntryMode.EditJournalEntry(
+                                                ownerId = journalOwnerId,
+                                                editInfo = EditInfo(
+                                                    parentObjectId = journalId,
+                                                    entryId = entryAction.entry.id,
+                                                    oldEntry = entryAction.entry.message ?: ""
+                                                )
+                                            )
+                                            showTextEntrySheet = true
+                                        }
+
+                                        is EntryAction.Report -> {
+                                            val complaint = com.swparks.util.Complaint.JournalEntry(
+                                                author = entryAction.entry.authorName
+                                                    ?: "неизвестен",
+                                                entryText = entryAction.entry.message ?: ""
+                                            )
+                                            com.swparks.ui.screens.more.sendComplaint(
+                                                complaint,
+                                                context
+                                            )
+                                        }
+                                    }
+                                }
+
+                                is EntriesAction.AddEntry -> {
+                                    if (contentState.canCreateEntry) {
+                                        textEntryMode = TextEntryMode.NewForJournal(
+                                            ownerId = journalOwnerId,
+                                            journalId = journalId
+                                        )
+                                        showTextEntrySheet = true
+                                    }
+                                }
                             }
-                        } else {
-                            {}
                         }
                     )
                 }
@@ -338,73 +381,51 @@ fun JournalEntriesScreen(
 
 /**
  * Контент с Pull-to-Refresh и списком записей
- *
- * @param canReportEntry Если true - показывать действие REPORT (для чужих дневников)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ContentScreen(
-    entries: List<JournalEntry>,
-    isRefreshing: Boolean,
-    isDeleting: Boolean,
-    canCreateEntry: Boolean = true,
-    canEditEntry: (JournalEntry) -> Boolean = { false },
-    canDeleteEntry: (JournalEntry) -> Boolean = { false },
-    canReportEntry: Boolean = false,
-    firstEntryId: Long? = null,
-    onRefresh: () -> Unit,
-    onDeleteEntry: (Long) -> Unit = {},
-    onEditEntry: (JournalEntry) -> Unit = {},
-    onReportEntry: (JournalEntry) -> Unit = {},
-    onAddEntryClick: () -> Unit = {}
+    state: EntriesContentState,
+    permissions: EntryPermissions = EntryPermissions(),
+    onAction: (EntriesAction) -> Unit = {}
 ) {
     val pullRefreshState = rememberPullToRefreshState()
 
     PullToRefreshBox(
-        isRefreshing = isRefreshing,
-        onRefresh = onRefresh,
+        isRefreshing = state.isRefreshing,
+        onRefresh = { onAction(EntriesAction.Refresh) },
         state = pullRefreshState,
         modifier = Modifier.fillMaxSize(),
         indicator = {
             PullToRefreshDefaults.Indicator(
                 state = pullRefreshState,
-                isRefreshing = isRefreshing,
+                isRefreshing = state.isRefreshing,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = dimensionResource(R.dimen.spacing_regular))
             )
         }
     ) {
-        if (entries.isEmpty()) {
-            // EmptyStateView показывается только после завершения загрузки
-            // и если пользователь имеет право создавать записи
-            if (!isRefreshing && canCreateEntry) {
+        if (state.entries.isEmpty()) {
+            if (!state.isRefreshing && state.canCreateEntry) {
                 EmptyStateView(
                     text = stringResource(R.string.entries_empty),
                     buttonTitle = stringResource(R.string.create_entry),
-                    enabled = !isDeleting,
-                    onButtonClick = {
-                        onAddEntryClick()
-                    }
+                    enabled = !state.isDeleting,
+                    onButtonClick = { onAction(EntriesAction.AddEntry) }
                 )
             }
         } else {
-            // Список записей
             EntriesList(
-                entries = entries,
-                enabled = !isRefreshing && !isDeleting,
-                canEditEntry = canEditEntry,
-                canDeleteEntry = canDeleteEntry,
-                canReportEntry = canReportEntry,
-                firstEntryId = firstEntryId,
-                onDeleteEntry = onDeleteEntry,
-                onEditEntry = onEditEntry,
-                onReportEntry = onReportEntry
+                entries = state.entries,
+                enabled = !state.isRefreshing && !state.isDeleting,
+                permissions = permissions,
+                firstEntryId = state.firstEntryId,
+                onAction = { onAction(EntriesAction.Entry(it)) }
             )
         }
 
-        // Индикатор загрузки при удалении записи (поверх всего)
-        if (isDeleting) {
+        if (state.isDeleting) {
             LoadingOverlayView()
         }
     }
@@ -412,20 +433,14 @@ private fun ContentScreen(
 
 /**
  * Список записей в дневнике
- *
- * @param canReportEntry Если true - показывать действие REPORT (для чужих дневников)
  */
 @Composable
 private fun EntriesList(
     entries: List<JournalEntry>,
     enabled: Boolean = true,
-    canEditEntry: (JournalEntry) -> Boolean = { false },
-    canDeleteEntry: (JournalEntry) -> Boolean = { false },
-    canReportEntry: Boolean = false,
+    permissions: EntryPermissions = EntryPermissions(),
     firstEntryId: Long? = null,
-    onDeleteEntry: (Long) -> Unit = {},
-    onEditEntry: (JournalEntry) -> Unit = {},
-    onReportEntry: (JournalEntry) -> Unit = {}
+    onAction: (EntryAction) -> Unit = {}
 ) {
     val context = LocalContext.current
     LazyColumn(
@@ -441,18 +456,14 @@ private fun EntriesList(
             items = entries,
             key = { it.id }
         ) { entry ->
-            // Определяем доступные действия для записи
             val actions = mutableListOf<JournalAction>()
-            if (canEditEntry(entry)) {
+            if (permissions.canEdit(entry)) {
                 actions.add(JournalAction.EDIT)
             }
-            // Первую запись (с минимальным id) нельзя удалить
-            // Удалять может владелец дневника или автор записи
-            if (canDeleteEntry(entry) && entry.id != firstEntryId) {
+            if (permissions.canDelete(entry) && entry.id != firstEntryId) {
                 actions.add(JournalAction.DELETE)
             }
-            // Жалоба доступна только для чужих дневников
-            if (canReportEntry) {
+            if (permissions.canReport) {
                 actions.add(JournalAction.REPORT)
             }
 
@@ -476,20 +487,10 @@ private fun EntriesList(
                         actions = actions,
                         onClickAction = { action ->
                             when (action) {
-                                JournalAction.EDIT -> {
-                                    onEditEntry(entry)
-                                }
-
-                                JournalAction.DELETE -> {
-                                    onDeleteEntry(entry.id)
-                                }
-
-                                JournalAction.REPORT -> {
-                                    onReportEntry(entry)
-                                }
-
-                                else -> {
-                                }
+                                JournalAction.EDIT -> onAction(EntryAction.Edit(entry))
+                                JournalAction.DELETE -> onAction(EntryAction.Delete(entry.id))
+                                JournalAction.REPORT -> onAction(EntryAction.Report(entry))
+                                else -> {}
                             }
                         }
                     )
@@ -540,15 +541,14 @@ private fun DeleteConfirmationDialog(
 private fun JournalEntriesScreenEmptyPreview() {
     JetpackWorkoutAppTheme {
         ContentScreen(
-            entries = emptyList(),
-            isRefreshing = false,
-            isDeleting = false,
-            canCreateEntry = true,
-            firstEntryId = null,
-            onRefresh = {},
-            onDeleteEntry = {},
-            onEditEntry = {},
-            onAddEntryClick = {}
+            state = EntriesContentState(
+                entries = emptyList(),
+                isRefreshing = false,
+                isDeleting = false,
+                canCreateEntry = true,
+                firstEntryId = null
+            ),
+            onAction = {}
         )
     }
 }
@@ -592,15 +592,14 @@ private fun JournalEntriesScreenWithItemsPreview() {
 
     JetpackWorkoutAppTheme {
         ContentScreen(
-            entries = sampleEntries,
-            isRefreshing = false,
-            isDeleting = false,
-            canCreateEntry = true,
-            firstEntryId = 1,
-            onRefresh = {},
-            onDeleteEntry = {},
-            onEditEntry = {},
-            onAddEntryClick = {}
+            state = EntriesContentState(
+                entries = sampleEntries,
+                isRefreshing = false,
+                isDeleting = false,
+                canCreateEntry = true,
+                firstEntryId = 1
+            ),
+            onAction = {}
         )
     }
 }

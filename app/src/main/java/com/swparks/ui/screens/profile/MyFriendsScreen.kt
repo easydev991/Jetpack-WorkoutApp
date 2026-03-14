@@ -36,39 +36,50 @@ import com.swparks.ui.ds.UserRowView
 import com.swparks.ui.state.FriendsListUiState
 import com.swparks.ui.viewmodel.IFriendsListViewModel
 
+data class FriendsScreenConfig(
+    val parentPaddingValues: PaddingValues,
+    val currentUserId: Long? = null
+)
+
+data class FriendsContentState(
+    val friendRequests: List<User>,
+    val friends: List<User>,
+    val enabled: Boolean,
+    val currentUserId: Long?
+)
+
+sealed class FriendAction {
+    data class Accept(val userId: Long) : FriendAction()
+    data class Decline(val userId: Long) : FriendAction()
+    data class Click(val userId: Long) : FriendAction()
+}
+
 /**
  * Экран списка друзей текущего пользователя
  *
  * @param modifier Модификатор
  * @param viewModel ViewModel для управления состоянием экрана
- * @param onBackClick Callback для навигации назад
+ * @param config Конфигурация экрана с паддингами и ID текущего пользователя
  * @param onFriendClick Callback для навигации на профиль друга
- * @param parentPaddingValues Паддинги для учета BottomNavigationBar
- * @param currentUserId ID текущего авторизованного пользователя (для блокировки собственного профиля)
+ * @param onAction Callback для обработки действий с друзьями
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyFriendsScreen(
     modifier: Modifier = Modifier,
     viewModel: IFriendsListViewModel,
-    onBackClick: () -> Unit,
+    config: FriendsScreenConfig,
     onFriendClick: (Long) -> Unit,
-    parentPaddingValues: PaddingValues,
-    currentUserId: Long? = null
+    onAction: (FriendAction) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val isProcessing by viewModel.isProcessing.collectAsState()
 
     MyFriendsScreenContent(
         modifier = modifier,
         uiState = uiState,
-        onBackClick = onBackClick,
-        parentPaddingValues = parentPaddingValues,
-        onAcceptFriendRequest = { viewModel.onAcceptFriendRequest(it) },
-        onDeclineFriendRequest = { viewModel.onDeclineFriendRequest(it) },
+        config = config,
         onFriendClick = onFriendClick,
-        isProcessing = isProcessing,
-        currentUserId = currentUserId
+        onAction = onAction
     )
 }
 
@@ -77,26 +88,18 @@ fun MyFriendsScreen(
  *
  * @param modifier Модификатор
  * @param uiState Текущее состояние UI
- * @param onBackClick Callback для навигации назад
- * @param parentPaddingValues Паддинги для учета BottomNavigationBar
- * @param onAcceptFriendRequest Callback при принятии заявки в друзья
- * @param onDeclineFriendRequest Callback при отклонении заявки в друзья
+ * @param config Конфигурация экрана с паддингами и ID текущего пользователя
  * @param onFriendClick Callback при клике на друга
- * @param isProcessing Флаг блокировки при обработке запроса
- * @param currentUserId ID текущего авторизованного пользователя (для блокировки собственного профиля)
+ * @param onAction Callback для обработки действий с друзьями
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyFriendsScreenContent(
     modifier: Modifier = Modifier,
     uiState: FriendsListUiState,
-    onBackClick: () -> Unit,
-    parentPaddingValues: PaddingValues,
-    onAcceptFriendRequest: (Long) -> Unit,
-    onDeclineFriendRequest: (Long) -> Unit,
+    config: FriendsScreenConfig,
     onFriendClick: (Long) -> Unit,
-    isProcessing: Boolean = false,
-    currentUserId: Long? = null
+    onAction: (FriendAction) -> Unit
 ) {
     Scaffold(
         modifier = modifier,
@@ -106,7 +109,7 @@ fun MyFriendsScreenContent(
                     Text(stringResource(R.string.friends))
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = { onAction(FriendAction.Click(-1)) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back)
@@ -120,7 +123,7 @@ fun MyFriendsScreenContent(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(parentPaddingValues)
+                .padding(config.parentPaddingValues)
                 .padding(innerPadding)
         ) {
             when (uiState) {
@@ -137,19 +140,18 @@ fun MyFriendsScreenContent(
 
                 is FriendsListUiState.Success -> {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        // Данные с блокировкой кнопок при обработке запроса
                         SuccessContent(
-                            friendRequests = uiState.friendRequests,
-                            friends = uiState.friends,
-                            onAcceptFriendRequest = onAcceptFriendRequest,
-                            onDeclineFriendRequest = onDeclineFriendRequest,
+                            state = FriendsContentState(
+                                friendRequests = uiState.friendRequests,
+                                friends = uiState.friends,
+                                enabled = !uiState.isProcessing,
+                                currentUserId = config.currentUserId
+                            ),
                             onFriendClick = onFriendClick,
-                            modifier = Modifier.fillMaxSize(),
-                            enabled = !isProcessing,
-                            currentUserId = currentUserId
+                            onAction = onAction,
+                            modifier = Modifier.fillMaxSize()
                         )
-                        // Индикатор загрузки поверх при обработке запроса
-                        if (isProcessing) {
+                        if (uiState.isProcessing) {
                             LoadingOverlayView()
                         }
                     }
@@ -162,25 +164,17 @@ fun MyFriendsScreenContent(
 /**
  * Контент с данными друзей и заявок
  *
- * @param friendRequests Список заявок в друзья
- * @param friends Список друзей
- * @param onAcceptFriendRequest Callback при принятии заявки
- * @param onDeclineFriendRequest Callback при отклонении заявки
+ * @param state Состояние с данными друзей и заявок
  * @param onFriendClick Callback при клике на друга
+ * @param onAction Callback для обработки действий с друзьями
  * @param modifier Модификатор
- * @param enabled Флаг блокировки при обработке запроса
- * @param currentUserId ID текущего авторизованного пользователя (для блокировки собственного профиля)
  */
 @Composable
 private fun SuccessContent(
-    friendRequests: List<User>,
-    friends: List<User>,
-    onAcceptFriendRequest: (Long) -> Unit,
-    onDeclineFriendRequest: (Long) -> Unit,
+    state: FriendsContentState,
     onFriendClick: (Long) -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    currentUserId: Long? = null
+    onAction: (FriendAction) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     LazyColumn(
         modifier = modifier,
@@ -192,12 +186,10 @@ private fun SuccessContent(
         ),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
     ) {
-        // Определяем, сколько секций будет отображаться
-        val hasFriendRequests = friendRequests.isNotEmpty()
-        val hasFriends = friends.isNotEmpty()
-        val singleSection = hasFriendRequests.xor(hasFriends) // XOR - true если только одна секция
+        val hasFriendRequests = state.friendRequests.isNotEmpty()
+        val hasFriends = state.friends.isNotEmpty()
+        val singleSection = hasFriendRequests.xor(hasFriends)
 
-        // Секция заявок на добавление в друзья
         if (hasFriendRequests) {
             item {
                 SectionView(
@@ -207,16 +199,16 @@ private fun SuccessContent(
                     Column(
                         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
                     ) {
-                        friendRequests.forEach { user ->
+                        state.friendRequests.forEach { user ->
                             FriendRequestRowView(
                                 data = FriendRequestData(
                                     modifier = Modifier,
                                     imageStringURL = user.image,
                                     name = user.name,
                                     address = null,
-                                    onClickAccept = { onAcceptFriendRequest(user.id) },
-                                    onClickDecline = { onDeclineFriendRequest(user.id) },
-                                    enabled = enabled
+                                    onClickAccept = { onAction(FriendAction.Accept(user.id)) },
+                                    onClickDecline = { onAction(FriendAction.Decline(user.id)) },
+                                    enabled = state.enabled
                                 )
                             )
                         }
@@ -224,7 +216,6 @@ private fun SuccessContent(
                 }
             }
 
-            // Divider показываем только если есть обе секции
             if (hasFriends) {
                 item {
                     HorizontalDivider()
@@ -232,7 +223,6 @@ private fun SuccessContent(
             }
         }
 
-        // Секция друзей
         if (hasFriends) {
             item {
                 SectionView(
@@ -242,8 +232,8 @@ private fun SuccessContent(
                     Column(
                         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
                     ) {
-                        friends.forEach { user ->
-                            val isDisabled = user.id == currentUserId || !enabled
+                        state.friends.forEach { user ->
+                            val isDisabled = user.id == state.currentUserId || !state.enabled
                             UserRowView(
                                 data = UserRowData(
                                     modifier = Modifier,
@@ -260,8 +250,7 @@ private fun SuccessContent(
             }
         }
 
-        // Если данных нет - показываем сообщение об отсутствии друзей
-        if (friendRequests.isEmpty() && friends.isEmpty()) {
+        if (state.friendRequests.isEmpty() && state.friends.isEmpty()) {
             item {
                 Box(
                     modifier = Modifier

@@ -57,15 +57,23 @@ import com.swparks.ui.viewmodel.IProfileViewModel
 import com.swparks.ui.viewmodel.ProfileUiState
 import kotlinx.coroutines.launch
 
+data class ProfileRootConfig(
+    val appContainer: AppContainer? = null,
+    val appState: AppState? = null
+)
+
+sealed class ProfileAuthAction {
+    data object ShowLoginSheet : ProfileAuthAction()
+    data object ShowRegisterSheet : ProfileAuthAction()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileRootScreen(
     modifier: Modifier = Modifier,
     viewModel: IProfileViewModel,
-    appContainer: AppContainer? = null,
-    appState: AppState? = null,
-    onShowLoginSheet: () -> Unit = {},
-    onShowRegisterSheet: () -> Unit = {}
+    config: ProfileRootConfig,
+    onAuthAction: (ProfileAuthAction) -> Unit
 ) {
     val scope = rememberCoroutineScope()
 
@@ -100,8 +108,8 @@ fun ProfileRootScreen(
                     start = dimensionResource(R.dimen.spacing_regular),
                     end = dimensionResource(R.dimen.spacing_regular)
                 ),
-            onClickAuth = onShowLoginSheet,
-            onClickRegister = onShowRegisterSheet
+            onClickAuth = { onAuthAction(ProfileAuthAction.ShowLoginSheet) },
+            onClickRegister = { onAuthAction(ProfileAuthAction.ShowRegisterSheet) }
         )
     } else {
         // Авторизован - показываем профиль и кнопки навигации
@@ -164,7 +172,7 @@ fun ProfileRootScreen(
                     // Кнопка "Изменить профиль"
                     EditProfileButton(
                         onClick = {
-                            appState?.navController?.navigate(Screen.EditProfile.route)
+                            config.appState?.navController?.navigate(Screen.EditProfile.route)
                         },
                         enabled = !isRefreshing
                     )
@@ -175,7 +183,7 @@ fun ProfileRootScreen(
                             friendsCount = user.friendsCount ?: 0,
                             friendRequestsCount = user.friendRequestCount?.toIntOrNull() ?: 0,
                             onClick = {
-                                appState?.navController?.navigate(Screen.MyFriends.route)
+                                config.appState?.navController?.navigate(Screen.MyFriends.route)
                             },
                             enabled = !isRefreshing
                         )
@@ -186,7 +194,7 @@ fun ProfileRootScreen(
                         UsedParksButton(
                             parksCount = user.parksCount?.toIntOrNull() ?: 0,
                             onClick = {
-                                appState?.navController?.navigate(
+                                config.appState?.navController?.navigate(
                                     Screen.UserTrainingParks.createRoute(user.id)
                                 )
                             },
@@ -199,7 +207,7 @@ fun ProfileRootScreen(
                         AddedParksButton(
                             addedParksCount = user.addedParks?.size ?: 0,
                             onClick = {
-                                appState?.navController?.navigate(
+                                config.appState?.navController?.navigate(
                                     Screen.UserParks.createRoute(user.id)
                                 )
                             },
@@ -211,7 +219,7 @@ fun ProfileRootScreen(
                     JournalsButton(
                         journalsCount = user.journalCount ?: 0,
                         onClick = {
-                            appState?.navController?.navigate(
+                            config.appState?.navController?.navigate(
                                 Screen.JournalsList.createRoute(user.id)
                             )
                         },
@@ -223,7 +231,55 @@ fun ProfileRootScreen(
                         BlacklistButton(
                             blacklistCount = blacklist.size,
                             onClick = {
-                                appState?.navController?.navigate(Screen.Blacklist.route)
+                                config.appState?.navController?.navigate(Screen.Blacklist.route)
+                            },
+                            enabled = !isRefreshing
+                        )
+                    }
+
+                    // Кнопка "Где тренируется"
+                    if (user.hasUsedParks) {
+                        UsedParksButton(
+                            parksCount = user.parksCount?.toIntOrNull() ?: 0,
+                            onClick = {
+                                config.appState?.navController?.navigate(
+                                    Screen.UserTrainingParks.createRoute(user.id)
+                                )
+                            },
+                            enabled = !isRefreshing
+                        )
+                    }
+
+                    // Кнопка "Добавленные площадки"
+                    if (user.hasAddedParks) {
+                        AddedParksButton(
+                            addedParksCount = user.addedParks?.size ?: 0,
+                            onClick = {
+                                config.appState?.navController?.navigate(
+                                    Screen.UserParks.createRoute(user.id)
+                                )
+                            },
+                            enabled = !isRefreshing
+                        )
+                    }
+
+                    // Кнопка "Дневники" (всегда показываем для главного пользователя)
+                    JournalsButton(
+                        journalsCount = user.journalCount ?: 0,
+                        onClick = {
+                            config.appState?.navController?.navigate(
+                                Screen.JournalsList.createRoute(user.id)
+                            )
+                        },
+                        enabled = !isRefreshing
+                    )
+
+                    // Кнопка "Черный список" - показываем только если черный список не пустой
+                    if (blacklist.isNotEmpty()) {
+                        BlacklistButton(
+                            blacklistCount = blacklist.size,
+                            onClick = {
+                                config.appState?.navController?.navigate(Screen.Blacklist.route)
                             },
                             enabled = !isRefreshing
                         )
@@ -259,7 +315,7 @@ fun ProfileRootScreen(
                     TextButton(
                         onClick = {
                             scope.launch {
-                                appContainer?.logoutUseCase?.invoke()
+                                config.appContainer?.logoutUseCase?.invoke()
                             }
                             showLogoutDialog = false
                         },

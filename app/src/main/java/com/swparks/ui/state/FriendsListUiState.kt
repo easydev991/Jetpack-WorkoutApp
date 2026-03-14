@@ -10,7 +10,8 @@ sealed class FriendsListUiState {
     /** Успешная загрузка с данными */
     data class Success(
         val friendRequests: List<User> = emptyList(),
-        val friends: List<User> = emptyList()
+        val friends: List<User> = emptyList(),
+        val isProcessing: Boolean = false
     ) : FriendsListUiState()
 
     /** Состояние ошибки с сообщением */

@@ -14,13 +14,15 @@ fun SearchUserScreenInitialPreview() {
     JetpackWorkoutAppTheme {
         SearchUserScreenContent(
             uiState = SearchUserUiState.Initial,
-            searchQuery = "",
-            onSearchQueryChange = {},
-            onSearch = {},
-            onUserClick = {},
-            onBackClick = {},
-            onRetry = {},
-            parentPaddingValues = PaddingValues(0.dp)
+            searchQueryState = SearchQueryState(
+                query = "",
+                onQueryChange = {}
+            ),
+            config = SearchUserConfig(
+                parentPaddingValues = PaddingValues(0.dp),
+                currentUserId = null
+            ),
+            onAction = {}
         )
     }
 }
@@ -31,13 +33,15 @@ fun SearchUserScreenLoadingPreview() {
     JetpackWorkoutAppTheme {
         SearchUserScreenContent(
             uiState = SearchUserUiState.Loading,
-            searchQuery = "test",
-            onSearchQueryChange = {},
-            onSearch = {},
-            onUserClick = {},
-            onBackClick = {},
-            onRetry = {},
-            parentPaddingValues = PaddingValues(0.dp)
+            searchQueryState = SearchQueryState(
+                query = "test",
+                onQueryChange = {}
+            ),
+            config = SearchUserConfig(
+                parentPaddingValues = PaddingValues(0.dp),
+                currentUserId = null
+            ),
+            onAction = {}
         )
     }
 }
@@ -72,13 +76,15 @@ fun SearchUserScreenSuccessPreview() {
     JetpackWorkoutAppTheme {
         SearchUserScreenContent(
             uiState = SearchUserUiState.Success(users),
-            searchQuery = "test",
-            onSearchQueryChange = {},
-            onSearch = {},
-            onUserClick = {},
-            onBackClick = {},
-            onRetry = {},
-            parentPaddingValues = PaddingValues(0.dp)
+            searchQueryState = SearchQueryState(
+                query = "test",
+                onQueryChange = {}
+            ),
+            config = SearchUserConfig(
+                parentPaddingValues = PaddingValues(0.dp),
+                currentUserId = null
+            ),
+            onAction = {}
         )
     }
 }
@@ -89,13 +95,15 @@ fun SearchUserScreenEmptyPreview() {
     JetpackWorkoutAppTheme {
         SearchUserScreenContent(
             uiState = SearchUserUiState.Empty,
-            searchQuery = "notfound",
-            onSearchQueryChange = {},
-            onSearch = {},
-            onUserClick = {},
-            onBackClick = {},
-            onRetry = {},
-            parentPaddingValues = PaddingValues(0.dp)
+            searchQueryState = SearchQueryState(
+                query = "notfound",
+                onQueryChange = {}
+            ),
+            config = SearchUserConfig(
+                parentPaddingValues = PaddingValues(0.dp),
+                currentUserId = null
+            ),
+            onAction = {}
         )
     }
 }
@@ -106,13 +114,15 @@ fun SearchUserScreenNetworkErrorPreview() {
     JetpackWorkoutAppTheme {
         SearchUserScreenContent(
             uiState = SearchUserUiState.NetworkError,
-            searchQuery = "test",
-            onSearchQueryChange = {},
-            onSearch = {},
-            onUserClick = {},
-            onBackClick = {},
-            onRetry = {},
-            parentPaddingValues = PaddingValues(0.dp)
+            searchQueryState = SearchQueryState(
+                query = "test",
+                onQueryChange = {}
+            ),
+            config = SearchUserConfig(
+                parentPaddingValues = PaddingValues(0.dp),
+                currentUserId = null
+            ),
+            onAction = {}
         )
     }
 }

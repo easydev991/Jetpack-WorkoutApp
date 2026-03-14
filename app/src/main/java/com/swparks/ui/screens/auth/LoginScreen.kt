@@ -92,9 +92,11 @@ fun LoginScreen(
         Box(modifier = Modifier.fillMaxSize()) {
             LoginContent(
                 viewModel = viewModel,
-                loginError = loginError,
-                resetError = resetError,
-                isLoading = uiState.isBusy,
+                state = LoginContentState(
+                    loginError = loginError,
+                    resetError = resetError,
+                    isLoading = uiState.isBusy
+                ),
                 focusRequester = screenState.focusRequester,
                 onResetPasswordClick = { showForgotPasswordAlertIfNeeded(viewModel, screenState) },
                 modifier = Modifier.padding(paddingValues)
@@ -130,15 +132,22 @@ fun LoginScreen(
 
     // Алерты
     LoginScreenAlerts(
-        showNoInternetAlert = screenState.showNoInternetAlert,
-        showForgotPasswordAlert = screenState.showForgotPasswordAlert,
-        showResetSuccessAlert = screenState.showResetSuccessAlert,
-        onDismissNoInternetAlert = { screenState.setShowNoInternetAlert(false) },
-        onDismissForgotPasswordAlert = {
-            screenState.setShowForgotPasswordAlert(false)
-            screenState.focusRequester.requestFocus()
-        },
-        onDismissResetSuccessAlert = { screenState.setShowResetSuccessAlert(false) }
+        state = LoginAlertsState(
+            showNoInternet = screenState.showNoInternetAlert,
+            showForgotPassword = screenState.showForgotPasswordAlert,
+            showResetSuccess = screenState.showResetSuccessAlert
+        ),
+        onAction = { action ->
+            when (action) {
+                LoginAlertAction.DismissNoInternet -> screenState.setShowNoInternetAlert(false)
+                LoginAlertAction.DismissForgotPassword -> {
+                    screenState.setShowForgotPasswordAlert(false)
+                    screenState.focusRequester.requestFocus()
+                }
+
+                LoginAlertAction.DismissResetSuccess -> screenState.setShowResetSuccessAlert(false)
+            }
+        }
     )
 }
 
@@ -210,13 +219,17 @@ private fun LoginModalAppBar(
     )
 }
 
+private data class LoginContentState(
+    val loginError: String?,
+    val resetError: String?,
+    val isLoading: Boolean
+)
+
 /** Контент экрана авторизации. */
 @Composable
 private fun LoginContent(
     viewModel: ILoginViewModel,
-    loginError: String?,
-    resetError: String?,
-    isLoading: Boolean,
+    state: LoginContentState,
     focusRequester: FocusRequester,
     onResetPasswordClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -236,9 +249,9 @@ private fun LoginContent(
         // Верхний VStack с текстовыми полями
         LoginFieldsColumn(
             viewModel = viewModel,
-            loginError = loginError,
-            resetError = resetError,
-            isLoading = isLoading,
+            loginError = state.loginError,
+            resetError = state.resetError,
+            isLoading = state.isLoading,
             focusRequester = focusRequester
         )
 
@@ -247,8 +260,8 @@ private fun LoginContent(
         // Нижний VStack с кнопками
         ButtonsColumn(
             viewModel = viewModel,
-            loginError = loginError,
-            isLoading = isLoading,
+            loginError = state.loginError,
+            isLoading = state.isLoading,
             onResetPasswordClick = onResetPasswordClick
         )
     }
@@ -265,12 +278,14 @@ private fun LoginFieldsColumn(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))) {
         LoginField(
-            value = viewModel.credentials.login,
-            onValueChange = if (!isLoading) viewModel::onLoginChange else { _ -> },
-            isError = resetError != null,
-            supportingText = resetError ?: "",
-            enabled = !isLoading,
-            focusRequester = focusRequester
+            config = LoginFieldConfig(
+                value = viewModel.credentials.login,
+                isError = resetError != null,
+                supportingText = resetError ?: "",
+                enabled = !isLoading,
+                focusRequester = focusRequester
+            ),
+            onValueChange = if (!isLoading) viewModel::onLoginChange else { _ -> }
         )
 
         PasswordField(
@@ -335,30 +350,34 @@ private data class PasswordFieldConfig(
     val onDone: () -> Unit = {}
 )
 
+data class LoginFieldConfig(
+    val value: String,
+    val isError: Boolean,
+    val supportingText: String,
+    val enabled: Boolean = true,
+    val focusRequester: FocusRequester? = null
+)
+
 /** Поле для ввода логина или email. */
 @Composable
 private fun LoginField(
     modifier: Modifier = Modifier,
-    value: String,
-    onValueChange: (String) -> Unit,
-    isError: Boolean,
-    supportingText: String,
-    enabled: Boolean = true,
-    focusRequester: FocusRequester? = null
+    config: LoginFieldConfig,
+    onValueChange: (String) -> Unit
 ) {
     SWTextField(
         config =
             TextFieldConfig(
                 modifier = modifier,
-                text = value,
+                text = config.value,
                 labelID = R.string.login_or_email,
                 secure = false,
                 singleLine = true,
-                isError = isError,
-                supportingText = supportingText,
-                enabled = enabled,
+                isError = config.isError,
+                supportingText = config.supportingText,
+                enabled = config.enabled,
                 onTextChange = onValueChange,
-                focusRequester = focusRequester
+                focusRequester = config.focusRequester
             )
     )
 }
@@ -445,29 +464,34 @@ private fun HandleLoginErrorsOnly(
     }
 }
 
+data class LoginAlertsState(
+    val showNoInternet: Boolean = false,
+    val showForgotPassword: Boolean = false,
+    val showResetSuccess: Boolean = false
+)
+
+sealed class LoginAlertAction {
+    object DismissNoInternet : LoginAlertAction()
+    object DismissForgotPassword : LoginAlertAction()
+    object DismissResetSuccess : LoginAlertAction()
+}
+
 /** Алерты экрана авторизации. */
 @Composable
 private fun LoginScreenAlerts(
-    showNoInternetAlert: Boolean,
-    showForgotPasswordAlert: Boolean,
-    showResetSuccessAlert: Boolean,
-    onDismissNoInternetAlert: () -> Unit,
-    onDismissForgotPasswordAlert: () -> Unit,
-    onDismissResetSuccessAlert: () -> Unit
+    state: LoginAlertsState,
+    onAction: (LoginAlertAction) -> Unit
 ) {
-    // Алерт "Нет интернета"
-    if (showNoInternetAlert) {
-        NoInternetAlert(onDismiss = onDismissNoInternetAlert)
+    if (state.showNoInternet) {
+        NoInternetAlert(onDismiss = { onAction(LoginAlertAction.DismissNoInternet) })
     }
 
-    // Алерт "Забыли пароль"
-    if (showForgotPasswordAlert) {
-        ForgotPasswordAlert(onDismiss = onDismissForgotPasswordAlert)
+    if (state.showForgotPassword) {
+        ForgotPasswordAlert(onDismiss = { onAction(LoginAlertAction.DismissForgotPassword) })
     }
 
-    // Алерт "Готово" (успешное восстановление)
-    if (showResetSuccessAlert) {
-        ResetSuccessAlert(onDismiss = onDismissResetSuccessAlert)
+    if (state.showResetSuccess) {
+        ResetSuccessAlert(onDismiss = { onAction(LoginAlertAction.DismissResetSuccess) })
     }
 }
 

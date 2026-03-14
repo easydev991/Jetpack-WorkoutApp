@@ -28,11 +28,6 @@ interface IFriendsListViewModel {
     val uiState: StateFlow<FriendsListUiState>
 
     /**
-     * Индикатор обработки запроса (принятие/отклонение заявки).
-     */
-    val isProcessing: StateFlow<Boolean>
-
-    /**
      * Принятие заявки на добавление в друзья.
      *
      * @param userId ID пользователя

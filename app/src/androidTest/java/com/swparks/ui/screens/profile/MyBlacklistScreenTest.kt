@@ -10,6 +10,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.data.model.User
+import com.swparks.ui.state.BlacklistAction
 import com.swparks.ui.state.BlacklistUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import org.junit.Rule
@@ -43,21 +44,32 @@ class MyBlacklistScreenTest {
         showSuccessAlert: Boolean = false,
         unblockedUserName: String? = null
     ) {
+        val testState = when (uiState) {
+            is BlacklistUiState.Success -> uiState.copy(
+                itemToRemove = itemToRemove,
+                showRemoveDialog = showRemoveDialog,
+                isRemoving = isRemoving,
+                showSuccessAlert = showSuccessAlert,
+                unblockedUserName = unblockedUserName
+            )
+
+            else -> uiState
+        }
+
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
                 MyBlacklistScreenContent(
-                    uiState = uiState,
-                    onBackClick = onBackClick,
+                    uiState = testState,
                     parentPaddingValues = PaddingValues(),
-                    onShowRemoveDialog = onShowRemoveDialog,
-                    onRemoveFromBlacklist = onRemoveFromBlacklist,
-                    onCancelRemove = onCancelRemove,
-                    onDismissSuccessAlert = onDismissSuccessAlert,
-                    itemToRemove = itemToRemove,
-                    showRemoveDialog = showRemoveDialog,
-                    isRemoving = isRemoving,
-                    showSuccessAlert = showSuccessAlert,
-                    unblockedUserName = unblockedUserName
+                    onAction = { action ->
+                        when (action) {
+                            is BlacklistAction.Back -> onBackClick()
+                            is BlacklistAction.ShowRemoveDialog -> onShowRemoveDialog(action.user)
+                            is BlacklistAction.Remove -> onRemoveFromBlacklist(action.user)
+                            is BlacklistAction.CancelRemove -> onCancelRemove()
+                            is BlacklistAction.DismissSuccessAlert -> onDismissSuccessAlert()
+                        }
+                    }
                 )
             }
         }

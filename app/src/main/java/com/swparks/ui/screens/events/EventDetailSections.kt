@@ -39,7 +39,6 @@ import com.swparks.data.model.Event
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.ui.ds.ButtonConfig
-import com.swparks.ui.ds.CommentAction
 import com.swparks.ui.ds.CommentRowData
 import com.swparks.ui.ds.CommentRowView
 import com.swparks.ui.ds.FormCardContainer
@@ -60,11 +59,11 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.util.DateFormatter
 import com.swparks.util.parseHtmlOrNull
 
-internal data class EventHeaderCallbacks(
-    val onOpenMapClick: () -> Unit,
-    val onRouteClick: () -> Unit,
-    val onAddToCalendarClick: () -> Unit
-)
+internal sealed class EventHeaderAction {
+    object OpenMap : EventHeaderAction()
+    object Route : EventHeaderAction()
+    object AddToCalendar : EventHeaderAction()
+}
 
 @Composable
 internal fun EventShareButton(
@@ -145,7 +144,7 @@ internal fun EventHeaderMapCalendarSection(
     event: Event,
     address: String,
     isRefreshing: Boolean,
-    callbacks: EventHeaderCallbacks
+    onAction: (EventHeaderAction) -> Unit
 ) {
     FormCardContainer(
         params = FormCardContainerParams(
@@ -192,8 +191,8 @@ internal fun EventHeaderMapCalendarSection(
                     longitude = event.longitude,
                     address = address,
                     enabled = !isRefreshing,
-                    onOpenMapClick = callbacks.onOpenMapClick,
-                    onRouteClick = callbacks.onRouteClick
+                    onOpenMapClick = { onAction(EventHeaderAction.OpenMap) },
+                    onRouteClick = { onAction(EventHeaderAction.Route) }
                 )
             )
 
@@ -205,7 +204,7 @@ internal fun EventHeaderMapCalendarSection(
                         mode = SWButtonMode.FILLED,
                         text = stringResource(R.string.event_add_to_calendar),
                         enabled = !isRefreshing,
-                        onClick = callbacks.onAddToCalendarClick
+                        onClick = { onAction(EventHeaderAction.AddToCalendar) }
                     )
                 )
             }
@@ -279,13 +278,20 @@ internal fun EventDescriptionSection(
     }
 }
 
+data class EventAuthorConfig(
+    val isAuthorized: Boolean,
+    val isRefreshing: Boolean,
+    val isEventAuthor: Boolean
+) {
+    val isEnabled: Boolean
+        get() = isAuthorized && !isRefreshing && !isEventAuthor
+}
+
 @Composable
 internal fun EventAuthorSection(
     event: Event,
     address: String,
-    isAuthorized: Boolean,
-    isRefreshing: Boolean,
-    isEventAuthor: Boolean,
+    config: EventAuthorConfig,
     onAuthorClick: (Long) -> Unit
 ) {
     SectionView(
@@ -293,10 +299,9 @@ internal fun EventAuthorSection(
         addPaddingToTitle = true,
         modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
     ) {
-        val isEnabled = isAuthorized && !isRefreshing && !isEventAuthor
         UserRowView(
             data = UserRowData(
-                enabled = isEnabled,
+                enabled = config.isEnabled,
                 imageStringURL = event.author.image,
                 name = event.author.name,
                 address = address,
@@ -322,18 +327,27 @@ internal fun EventPhotosSection(
     )
 }
 
+internal data class CommentItemConfig(
+    val enabled: Boolean,
+    val currentUserId: Long?,
+    val showSectionHeader: Boolean = false
+)
+
+internal sealed class CommentItemAction {
+    data class AuthorClick(val userId: Long) : CommentItemAction()
+    data class CommentAction(val commentId: Long, val action: com.swparks.ui.ds.CommentAction) :
+        CommentItemAction()
+}
+
 @Composable
 internal fun EventCommentItem(
     modifier: Modifier = Modifier,
     comment: Comment,
-    enabled: Boolean,
-    currentUserId: Long?,
-    showSectionHeader: Boolean = false,
-    onAuthorClick: (Long) -> Unit,
-    onActionClick: (Long, CommentAction) -> Unit
+    config: CommentItemConfig,
+    onAction: (CommentItemAction) -> Unit
 ) {
     val author = comment.user
-    val byMainUser = author?.id != null && author.id == currentUserId
+    val byMainUser = author?.id != null && author.id == config.currentUserId
     val commentContent: @Composable () -> Unit = {
         FormCardContainer(
             params = FormCardContainerParams(modifier)
@@ -347,16 +361,23 @@ internal fun EventCommentItem(
                         dateString = comment.date
                     ),
                     bodyText = comment.parsedBody.orEmpty(),
-                    enabled = enabled,
+                    enabled = config.enabled,
                     byMainUser = byMainUser,
-                    onAuthorClick = { author?.id?.let(onAuthorClick) },
-                    onClickAction = { action -> onActionClick(comment.id, action) }
+                    onAuthorClick = { author?.id?.let { onAction(CommentItemAction.AuthorClick(it)) } },
+                    onClickAction = { action ->
+                        onAction(
+                            CommentItemAction.CommentAction(
+                                comment.id,
+                                action
+                            )
+                        )
+                    }
                 )
             )
         }
     }
 
-    if (showSectionHeader) {
+    if (config.showSectionHeader) {
         Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))) {
             Text(
                 text = stringResource(id = R.string.comments).uppercase(),
@@ -436,11 +457,7 @@ internal fun EventHeaderMapCalendarSectionPreview() {
                 event = previewEvent,
                 address = "Москва, Парк Горького",
                 isRefreshing = false,
-                callbacks = EventHeaderCallbacks(
-                    onOpenMapClick = {},
-                    onRouteClick = {},
-                    onAddToCalendarClick = {}
-                )
+                onAction = {}
             )
         }
     }
@@ -504,9 +521,11 @@ internal fun EventAuthorSectionPreview() {
             EventAuthorSection(
                 event = previewEvent,
                 address = "Москва",
-                isAuthorized = true,
-                isRefreshing = false,
-                isEventAuthor = false,
+                config = EventAuthorConfig(
+                    isAuthorized = true,
+                    isRefreshing = false,
+                    isEventAuthor = false
+                ),
                 onAuthorClick = {}
             )
         }
@@ -528,21 +547,23 @@ internal fun EventCommentItemPreview() {
             ) {
                 EventCommentItem(
                     comment = previewComment,
-                    enabled = true,
-                    currentUserId = 999L,
+                    config = CommentItemConfig(
+                        enabled = true,
+                        currentUserId = 999L
+                    ),
                     modifier = Modifier.fillMaxWidth(),
-                    onAuthorClick = {},
-                    onActionClick = { _, _ -> }
+                    onAction = {}
                 )
                 EventCommentItem(
                     comment = previewComment.copy(
                         user = previewComment.user?.copy(id = 999L)
                     ),
-                    enabled = true,
-                    currentUserId = 999L,
+                    config = CommentItemConfig(
+                        enabled = true,
+                        currentUserId = 999L
+                    ),
                     modifier = Modifier.fillMaxWidth(),
-                    onAuthorClick = {},
-                    onActionClick = { _, _ -> }
+                    onAction = {}
                 )
             }
         }

@@ -58,16 +58,18 @@ import com.swparks.ui.viewmodel.IDialogsViewModel
 import com.swparks.util.DateFormatter
 import com.swparks.util.parseHtmlOrNull
 
-/**
- * Callbacks для навигации в экране сообщений
- */
-data class MessagesNavigationCallbacks(
-    val onShowLoginSheet: () -> Unit,
-    val onShowRegisterSheet: () -> Unit,
-    val onNavigateToFriends: () -> Unit,
-    val onNavigateToSearchUsers: () -> Unit,
-    val onNavigateToChat: (dialogId: Long, userId: Int, userName: String, userImage: String?) -> Unit
-)
+sealed class MessagesNavigationAction {
+    object ShowLoginSheet : MessagesNavigationAction()
+    object ShowRegisterSheet : MessagesNavigationAction()
+    object NavigateToFriends : MessagesNavigationAction()
+    object NavigateToSearchUsers : MessagesNavigationAction()
+    data class NavigateToChat(
+        val dialogId: Long,
+        val userId: Int,
+        val userName: String,
+        val userImage: String?
+    ) : MessagesNavigationAction()
+}
 
 /**
  * Параметры для DialogsContent
@@ -92,7 +94,7 @@ fun MessagesRootScreen(
     modifier: Modifier = Modifier,
     viewModel: IDialogsViewModel,
     appState: AppState,
-    callbacks: MessagesNavigationCallbacks
+    onAction: (MessagesNavigationAction) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
@@ -100,15 +102,12 @@ fun MessagesRootScreen(
     val isLoadingDialogs by viewModel.isLoadingDialogs.collectAsState()
     val isUpdating by viewModel.isUpdating.collectAsState()
 
-    // Состояние для диалога подтверждения удаления
     var showDeleteDialog by remember { mutableStateOf(false) }
     var dialogToDelete by remember { mutableStateOf<DialogEntity?>(null) }
 
     if (isLoadingDialogs) {
-        // Загрузка диалогов после авторизации - показываем LoadingOverlayView
         LoadingOverlayView(modifier = modifier.fillMaxSize())
     } else if (!appState.isAuthorized) {
-        // Экран для неавторизованного пользователя
         IncognitoProfileView(
             modifier = modifier
                 .fillMaxWidth()
@@ -116,11 +115,10 @@ fun MessagesRootScreen(
                     start = dimensionResource(R.dimen.spacing_regular),
                     end = dimensionResource(R.dimen.spacing_regular)
                 ),
-            onClickAuth = callbacks.onShowLoginSheet,
-            onClickRegister = callbacks.onShowRegisterSheet
+            onClickAuth = { onAction(MessagesNavigationAction.ShowLoginSheet) },
+            onClickRegister = { onAction(MessagesNavigationAction.ShowRegisterSheet) }
         )
     } else {
-        // Авторизованный пользователь
         DialogsContent(
             modifier = modifier,
             params = DialogsContentParams(
@@ -133,11 +131,13 @@ fun MessagesRootScreen(
                 onDismissSyncError = { viewModel.dismissSyncError() },
                 onDialogClick = { dialog ->
                     viewModel.onDialogClick(dialog.id, dialog.anotherUserId)
-                    callbacks.onNavigateToChat(
-                        dialog.id,
-                        dialog.anotherUserId ?: 0,
-                        dialog.name ?: "",
-                        dialog.image
+                    onAction(
+                        MessagesNavigationAction.NavigateToChat(
+                            dialogId = dialog.id,
+                            userId = dialog.anotherUserId ?: 0,
+                            userName = dialog.name ?: "",
+                            userImage = dialog.image
+                        )
                     )
                 },
                 onMarkAsRead = { dialogId, userId ->
@@ -147,8 +147,8 @@ fun MessagesRootScreen(
                     dialogToDelete = dialog
                     showDeleteDialog = true
                 },
-                onNavigateToFriends = callbacks.onNavigateToFriends,
-                onNavigateToSearchUsers = callbacks.onNavigateToSearchUsers
+                onNavigateToFriends = { onAction(MessagesNavigationAction.NavigateToFriends) },
+                onNavigateToSearchUsers = { onAction(MessagesNavigationAction.NavigateToSearchUsers) }
             )
         )
     }

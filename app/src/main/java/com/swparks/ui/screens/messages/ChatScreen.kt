@@ -56,13 +56,16 @@ import com.swparks.ui.viewmodel.IChatViewModel
 import com.swparks.util.DateFormatter
 import kotlinx.coroutines.flow.distinctUntilChanged
 
-/**
- * Callbacks для экрана чата
- */
-data class ChatScreenCallbacks(
-    val onBackClick: () -> Unit,
-    val onAvatarClick: () -> Unit,
-    val onMessageSent: () -> Unit
+sealed class ChatAction {
+    object Back : ChatAction()
+    object AvatarClick : ChatAction()
+    object MessageSent : ChatAction()
+}
+
+data class ChatUserParams(
+    val userId: Int,
+    val userName: String,
+    val userImage: String?
 )
 
 /**
@@ -79,7 +82,7 @@ data class ChatContentParams(
     val onMessageTextChange: (String) -> Unit,
     val onSendClick: (userId: Int) -> Unit,
     val onRefresh: () -> Unit,
-    val callbacks: ChatScreenCallbacks
+    val onAction: (ChatAction) -> Unit
 )
 
 /**
@@ -88,8 +91,7 @@ data class ChatContentParams(
 data class ChatTopAppBarParams @OptIn(ExperimentalMaterial3Api::class) constructor(
     val userName: String,
     val userImage: String?,
-    val onBackClick: () -> Unit,
-    val onAvatarClick: () -> Unit,
+    val onAction: (ChatAction) -> Unit,
     val onRefresh: () -> Unit,
     val scrollBehavior: TopAppBarScrollBehavior
 )
@@ -99,32 +101,27 @@ data class ChatTopAppBarParams @OptIn(ExperimentalMaterial3Api::class) construct
  *
  * @param modifier Модификатор
  * @param viewModel ViewModel для управления состоянием
- * @param otherUserId ID собеседника (для отправки сообщений)
- * @param userName Имя собеседника для отображения в TopAppBar
- * @param userImage URL аватара собеседника
+ * @param userParams Параметры собеседника
  * @param currentUserId ID текущего пользователя (для определения типа сообщения)
- * @param callbacks Callbacks для навигации и событий
+ * @param onAction Обработчик действий
  */
 @Composable
 fun ChatScreen(
     modifier: Modifier = Modifier,
     viewModel: IChatViewModel,
-    otherUserId: Int,
-    userName: String,
-    userImage: String?,
+    userParams: ChatUserParams,
     currentUserId: Int?,
-    callbacks: ChatScreenCallbacks
+    onAction: (ChatAction) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val messageText by viewModel.messageText
 
-    // Подписываемся на события чата
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
                 is ChatEvent.MessageSent -> {
-                    callbacks.onMessageSent()
+                    onAction(ChatAction.MessageSent)
                 }
             }
         }
@@ -136,16 +133,16 @@ fun ChatScreen(
             uiState = uiState,
             isLoading = isLoading,
             messageText = messageText,
-            otherUserId = otherUserId,
-            userName = userName,
-            userImage = userImage,
+            otherUserId = userParams.userId,
+            userName = userParams.userName,
+            userImage = userParams.userImage,
             currentUserId = currentUserId,
             onMessageTextChange = { viewModel.messageText.value = it },
             onSendClick = { userId ->
                 viewModel.sendMessage(userId)
             },
             onRefresh = { viewModel.refreshMessages() },
-            callbacks = callbacks
+            onAction = onAction
         )
     )
 }
@@ -171,8 +168,7 @@ fun ChatContent(
                 params = ChatTopAppBarParams(
                     userName = params.userName,
                     userImage = params.userImage,
-                    onBackClick = params.callbacks.onBackClick,
-                    onAvatarClick = params.callbacks.onAvatarClick,
+                    onAction = params.onAction,
                     onRefresh = params.onRefresh,
                     scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
                 )
@@ -325,9 +321,8 @@ private fun ChatTopAppBar(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                // Аватар справа от имени (кликабельный)
                 IconButton(
-                    onClick = params.onAvatarClick,
+                    onClick = { params.onAction(ChatAction.AvatarClick) },
                     modifier = Modifier.testTag("AvatarButton")
                 ) {
                     SWAsyncImage(
@@ -350,7 +345,7 @@ private fun ChatTopAppBar(
             }
         },
         navigationIcon = {
-            IconButton(onClick = params.onBackClick) {
+            IconButton(onClick = { params.onAction(ChatAction.Back) }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = stringResource(R.string.back)
@@ -406,12 +401,6 @@ fun ChatContentPreview() {
         )
     )
 
-    val callbacks = ChatScreenCallbacks(
-        onBackClick = {},
-        onAvatarClick = {},
-        onMessageSent = {}
-    )
-
     MaterialTheme {
         Surface {
             ChatContent(
@@ -426,7 +415,7 @@ fun ChatContentPreview() {
                     onMessageTextChange = {},
                     onSendClick = {},
                     onRefresh = {},
-                    callbacks = callbacks
+                    onAction = {}
                 )
             )
         }
@@ -439,12 +428,6 @@ fun ChatContentPreview() {
 )
 @Composable
 fun ChatContentLoadingPreview() {
-    val callbacks = ChatScreenCallbacks(
-        onBackClick = {},
-        onAvatarClick = {},
-        onMessageSent = {}
-    )
-
     MaterialTheme {
         Surface {
             ChatContent(
@@ -459,7 +442,7 @@ fun ChatContentLoadingPreview() {
                     onMessageTextChange = {},
                     onSendClick = {},
                     onRefresh = {},
-                    callbacks = callbacks
+                    onAction = {}
                 )
             )
         }
@@ -472,12 +455,6 @@ fun ChatContentLoadingPreview() {
 )
 @Composable
 fun ChatContentEmptyPreview() {
-    val callbacks = ChatScreenCallbacks(
-        onBackClick = {},
-        onAvatarClick = {},
-        onMessageSent = {}
-    )
-
     MaterialTheme {
         Surface {
             ChatContent(
@@ -492,7 +469,7 @@ fun ChatContentEmptyPreview() {
                     onMessageTextChange = {},
                     onSendClick = {},
                     onRefresh = {},
-                    callbacks = callbacks
+                    onAction = {}
                 )
             )
         }

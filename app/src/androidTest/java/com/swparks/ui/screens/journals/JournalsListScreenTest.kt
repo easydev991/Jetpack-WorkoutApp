@@ -2,6 +2,8 @@ package com.swparks.ui.screens.journals
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -57,14 +59,18 @@ class JournalsListScreenTest {
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    appState = appState,
-                    userId = userId,
                     viewModel = viewModel,
-                    callbacks = JournalsListCallbacks(
-                        onBackClick = onBackClick,
-                        onJournalClick = onJournalClick
+                    config = JournalsScreenConfig(
+                        appState = appState,
+                        params = JournalsScreenParams(userId = userId),
+                        parentPaddingValues = PaddingValues()
                     ),
-                    parentPaddingValues = PaddingValues()
+                    onAction = { action ->
+                        when (action) {
+                            JournalsListAction.Back -> onBackClick()
+                            is JournalsListAction.JournalClick -> onJournalClick(action.params)
+                        }
+                    }
                 )
             }
         }
@@ -398,14 +404,13 @@ class JournalsListScreenTest {
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    appState = appState,
-                    userId = userId,
                     viewModel = viewModel,
-                    callbacks = JournalsListCallbacks(
-                        onBackClick = {},
-                        onJournalClick = {}
+                    config = JournalsScreenConfig(
+                        appState = appState,
+                        params = JournalsScreenParams(userId = userId),
+                        parentPaddingValues = PaddingValues()
                     ),
-                    parentPaddingValues = PaddingValues()
+                    onAction = {}
                 )
             }
         }
@@ -436,14 +441,13 @@ class JournalsListScreenTest {
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    appState = appState,
-                    userId = userId,
                     viewModel = viewModel,
-                    callbacks = JournalsListCallbacks(
-                        onBackClick = {},
-                        onJournalClick = {}
+                    config = JournalsScreenConfig(
+                        appState = appState,
+                        params = JournalsScreenParams(userId = userId),
+                        parentPaddingValues = PaddingValues()
                     ),
-                    parentPaddingValues = PaddingValues()
+                    onAction = {}
                 )
             }
         }
@@ -474,14 +478,13 @@ class JournalsListScreenTest {
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    appState = appState,
-                    userId = profileUserId,
                     viewModel = viewModel,
-                    callbacks = JournalsListCallbacks(
-                        onBackClick = {},
-                        onJournalClick = {}
+                    config = JournalsScreenConfig(
+                        appState = appState,
+                        params = JournalsScreenParams(userId = profileUserId),
+                        parentPaddingValues = PaddingValues()
                     ),
-                    parentPaddingValues = PaddingValues()
+                    onAction = {}
                 )
             }
         }
@@ -512,14 +515,13 @@ class JournalsListScreenTest {
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    appState = appState,
-                    userId = userId,
                     viewModel = viewModel,
-                    callbacks = JournalsListCallbacks(
-                        onBackClick = {},
-                        onJournalClick = {}
+                    config = JournalsScreenConfig(
+                        appState = appState,
+                        params = JournalsScreenParams(userId = userId),
+                        parentPaddingValues = PaddingValues()
                     ),
-                    parentPaddingValues = PaddingValues()
+                    onAction = {}
                 )
             }
         }
@@ -561,8 +563,8 @@ class JournalsListScreenTest {
             appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
 
             JetpackWorkoutAppTheme {
-                var journalToEditSettings by androidx.compose.runtime.remember {
-                    androidx.compose.runtime.mutableStateOf<Journal?>(journal)
+                var journalToEditSettings by remember {
+                    mutableStateOf<Journal?>(journal)
                 }
 
                 // Обработчик событий ViewModel
@@ -629,14 +631,13 @@ class JournalsListScreenTest {
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    appState = appState,
-                    userId = profileUserId, // Чужой профиль
                     viewModel = viewModel,
-                    callbacks = JournalsListCallbacks(
-                        onBackClick = {},
-                        onJournalClick = {}
+                    config = JournalsScreenConfig(
+                        appState = appState,
+                        params = JournalsScreenParams(userId = profileUserId),
+                        parentPaddingValues = PaddingValues()
                     ),
-                    parentPaddingValues = PaddingValues()
+                    onAction = {}
                 )
             }
         }
@@ -673,14 +674,13 @@ class JournalsListScreenTest {
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    appState = appState,
-                    userId = profileUserId, // Чужой профиль
                     viewModel = viewModel,
-                    callbacks = JournalsListCallbacks(
-                        onBackClick = {},
-                        onJournalClick = {}
+                    config = JournalsScreenConfig(
+                        appState = appState,
+                        params = JournalsScreenParams(userId = profileUserId),
+                        parentPaddingValues = PaddingValues()
                     ),
-                    parentPaddingValues = PaddingValues()
+                    onAction = {}
                 )
             }
         }
@@ -716,14 +716,13 @@ class JournalsListScreenTest {
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    appState = appState,
-                    userId = userId, // Свой профиль
                     viewModel = viewModel,
-                    callbacks = JournalsListCallbacks(
-                        onBackClick = {},
-                        onJournalClick = {}
+                    config = JournalsScreenConfig(
+                        appState = appState,
+                        params = JournalsScreenParams(userId = userId),
+                        parentPaddingValues = PaddingValues()
                     ),
-                    parentPaddingValues = PaddingValues()
+                    onAction = {}
                 )
             }
         }
@@ -759,14 +758,13 @@ class JournalsListScreenTest {
             JetpackWorkoutAppTheme {
                 JournalsListScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    appState = appState,
-                    userId = userId, // Свой профиль
                     viewModel = viewModel,
-                    callbacks = JournalsListCallbacks(
-                        onBackClick = {},
-                        onJournalClick = {}
+                    config = JournalsScreenConfig(
+                        appState = appState,
+                        params = JournalsScreenParams(userId = userId),
+                        parentPaddingValues = PaddingValues()
                     ),
-                    parentPaddingValues = PaddingValues()
+                    onAction = {}
                 )
             }
         }

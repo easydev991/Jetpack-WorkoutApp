@@ -42,16 +42,26 @@ class MyFriendsScreenTest {
         onDeclineFriendRequest: (Long) -> Unit = {},
         onFriendClick: (Long) -> Unit = {}
     ) {
+        val testState = when (uiState) {
+            is FriendsListUiState.Success -> uiState.copy(isProcessing = isProcessing)
+            else -> uiState
+        }
+
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
                 MyFriendsScreenContent(
-                    uiState = uiState,
-                    onBackClick = onBackClick,
-                    parentPaddingValues = PaddingValues(),
-                    onAcceptFriendRequest = onAcceptFriendRequest,
-                    onDeclineFriendRequest = onDeclineFriendRequest,
+                    uiState = testState,
+                    config = FriendsScreenConfig(
+                        parentPaddingValues = PaddingValues()
+                    ),
                     onFriendClick = onFriendClick,
-                    isProcessing = isProcessing
+                    onAction = { action ->
+                        when (action) {
+                            is FriendAction.Accept -> onAcceptFriendRequest(action.userId)
+                            is FriendAction.Decline -> onDeclineFriendRequest(action.userId)
+                            is FriendAction.Click -> if (action.userId == -1L) onBackClick() else Unit
+                        }
+                    }
                 )
             }
         }

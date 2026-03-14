@@ -34,16 +34,21 @@ import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.model.ParticipantsMode
 import com.swparks.ui.screens.auth.LoginSheetHost
 import com.swparks.ui.screens.auth.RegisterSheetHost
+import com.swparks.ui.screens.common.ParticipantsAction
+import com.swparks.ui.screens.common.ParticipantsConfig
 import com.swparks.ui.screens.common.ParticipantsScreen
 import com.swparks.ui.screens.events.EventDetailScreen
 import com.swparks.ui.screens.events.EventsScreen
 import com.swparks.ui.screens.events.EventsTopAppBar
 import com.swparks.ui.screens.journals.JournalEntriesScreen
-import com.swparks.ui.screens.journals.JournalsListCallbacks
+import com.swparks.ui.screens.journals.JournalsListAction
 import com.swparks.ui.screens.journals.JournalsListScreen
+import com.swparks.ui.screens.journals.JournalsScreenConfig
+import com.swparks.ui.screens.journals.JournalsScreenParams
+import com.swparks.ui.screens.messages.ChatAction
 import com.swparks.ui.screens.messages.ChatScreen
-import com.swparks.ui.screens.messages.ChatScreenCallbacks
-import com.swparks.ui.screens.messages.MessagesNavigationCallbacks
+import com.swparks.ui.screens.messages.ChatUserParams
+import com.swparks.ui.screens.messages.MessagesNavigationAction
 import com.swparks.ui.screens.messages.MessagesRootScreen
 import com.swparks.ui.screens.messages.MessagesTopAppBar
 import com.swparks.ui.screens.more.MoreScreen
@@ -52,15 +57,24 @@ import com.swparks.ui.screens.parks.ParksAddedByUserScreen
 import com.swparks.ui.screens.parks.ParksRootScreen
 import com.swparks.ui.screens.parks.ParksTopAppBar
 import com.swparks.ui.screens.profile.ChangePasswordScreen
+import com.swparks.ui.screens.profile.EditProfileNavigationAction
 import com.swparks.ui.screens.profile.EditProfileScreen
+import com.swparks.ui.screens.profile.FriendAction
+import com.swparks.ui.screens.profile.FriendsScreenConfig
 import com.swparks.ui.screens.profile.MyBlacklistScreen
 import com.swparks.ui.screens.profile.MyFriendsScreen
 import com.swparks.ui.screens.profile.OtherUserProfileScreen
+import com.swparks.ui.screens.profile.ProfileAuthAction
+import com.swparks.ui.screens.profile.ProfileNavigationAction
+import com.swparks.ui.screens.profile.ProfileRootConfig
 import com.swparks.ui.screens.profile.ProfileRootScreen
 import com.swparks.ui.screens.profile.ProfileTopAppBar
+import com.swparks.ui.screens.profile.SearchUserAction
+import com.swparks.ui.screens.profile.SearchUserConfig
 import com.swparks.ui.screens.profile.SearchUserScreen
 import com.swparks.ui.screens.profile.SelectCityScreen
 import com.swparks.ui.screens.profile.SelectCountryScreen
+import com.swparks.ui.screens.profile.UserFriendsAction
 import com.swparks.ui.screens.profile.UserFriendsScreen
 import com.swparks.ui.screens.profile.UserTrainingParksScreen
 import com.swparks.ui.screens.themeicon.ThemeIconScreen
@@ -247,50 +261,57 @@ fun RootScreen(appState: AppState) {
                         .padding(paddingValues),
                     viewModel = dialogsViewModel,
                     appState = appState,
-                    callbacks = MessagesNavigationCallbacks(
-                        onShowLoginSheet = {
-                            showLoginSheet = true
-                        },
-                        onShowRegisterSheet = {
-                            showRegisterSheet = true
-                        },
-                        onNavigateToFriends = {
-                            appState.navController.navigate(Screen.MyFriends.route)
-                        },
-                        onNavigateToSearchUsers = {
-                            appState.navController.navigate(Screen.UserSearch.createRoute("messages"))
-                        },
-                        onNavigateToChat = { dialogId, userId, userName, userImage ->
-                            appState.navController.navigate(
-                                Screen.Chat.createRoute(
-                                    dialogId,
-                                    userId,
-                                    userName,
-                                    userImage,
-                                    "messages"
+                    onAction = { action ->
+                        when (action) {
+                            MessagesNavigationAction.ShowLoginSheet -> {
+                                showLoginSheet = true
+                            }
+
+                            MessagesNavigationAction.ShowRegisterSheet -> {
+                                showRegisterSheet = true
+                            }
+
+                            MessagesNavigationAction.NavigateToFriends -> {
+                                appState.navController.navigate(Screen.MyFriends.route)
+                            }
+
+                            MessagesNavigationAction.NavigateToSearchUsers -> {
+                                appState.navController.navigate(Screen.UserSearch.createRoute("messages"))
+                            }
+
+                            is MessagesNavigationAction.NavigateToChat -> {
+                                appState.navController.navigate(
+                                    Screen.Chat.createRoute(
+                                        action.dialogId,
+                                        action.userId,
+                                        action.userName,
+                                        action.userImage,
+                                        "messages"
+                                    )
                                 )
-                            )
+                            }
                         }
-                    )
+                    }
                 )
             }
 
             // Вкладка "Профиль"
             composable(route = Screen.Profile.route) {
-                // Используем единый ProfileViewModel, созданный на уровне RootScreen
                 ProfileRootScreen(
-                    appContainer = appContainer,
-                    viewModel = profileViewModel,
-                    appState = appState,
-                    onShowLoginSheet = {
-                        showLoginSheet = true
-                    },
-                    onShowRegisterSheet = {
-                        showRegisterSheet = true
-                    },
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
+                        .padding(paddingValues),
+                    viewModel = profileViewModel,
+                    config = ProfileRootConfig(
+                        appContainer = appContainer,
+                        appState = appState
+                    ),
+                    onAuthAction = { action ->
+                        when (action) {
+                            ProfileAuthAction.ShowLoginSheet -> showLoginSheet = true
+                            ProfileAuthAction.ShowRegisterSheet -> showRegisterSheet = true
+                        }
+                    }
                 )
             }
 
@@ -334,14 +355,18 @@ fun RootScreen(appState: AppState) {
                 // Список для ParkTrainees должен приходить из ParkDetail (экран в разработке).
                 // Пока используем пустой список как заглушку до реализации ParkDetail.
                 ParticipantsScreen(
-                    mode = ParticipantsMode.Park,
-                    users = emptyList(),
-                    currentUserId = currentUser?.id,
-                    onBack = { appState.navController.popBackStack() },
-                    onUserClick = { userId ->
-                        appState.navController.navigate(
-                            Screen.OtherUserProfile.createRoute(userId, source)
-                        )
+                    config = ParticipantsConfig(
+                        mode = ParticipantsMode.Park,
+                        users = emptyList(),
+                        currentUserId = currentUser?.id
+                    ),
+                    onAction = { action ->
+                        when (action) {
+                            ParticipantsAction.Back -> appState.navController.popBackStack()
+                            is ParticipantsAction.UserClick -> appState.navController.navigate(
+                                Screen.OtherUserProfile.createRoute(action.userId, source)
+                            )
+                        }
                     }
                 )
             }
@@ -421,14 +446,18 @@ fun RootScreen(appState: AppState) {
                 // Список участников хранится в savedStateHandle самого экрана
                 // и живет, пока EventParticipants находится в back stack.
                 ParticipantsScreen(
-                    mode = ParticipantsMode.Event,
-                    users = users,
-                    currentUserId = currentUser?.id,
-                    onBack = { appState.navController.popBackStack() },
-                    onUserClick = { userId ->
-                        appState.navController.navigate(
-                            Screen.OtherUserProfile.createRoute(userId, source)
-                        )
+                    config = ParticipantsConfig(
+                        mode = ParticipantsMode.Event,
+                        users = users,
+                        currentUserId = currentUser?.id
+                    ),
+                    onAction = { action ->
+                        when (action) {
+                            ParticipantsAction.Back -> appState.navController.popBackStack()
+                            is ParticipantsAction.UserClick -> appState.navController.navigate(
+                                Screen.OtherUserProfile.createRoute(action.userId, source)
+                            )
+                        }
                     }
                 )
             }
@@ -470,22 +499,26 @@ fun RootScreen(appState: AppState) {
                         .fillMaxSize()
                         .padding(paddingValues),
                     viewModel = chatViewModel,
-                    otherUserId = userId,
-                    userName = userName,
-                    userImage = userImage,
+                    userParams = ChatUserParams(
+                        userId = userId,
+                        userName = userName,
+                        userImage = userImage
+                    ),
                     currentUserId = currentUser?.id?.toInt(),
-                    callbacks = ChatScreenCallbacks(
-                        onBackClick = { appState.navController.popBackStack() },
-                        onAvatarClick = {
-                            appState.navController.navigate(
-                                Screen.OtherUserProfile.createRoute(userId.toLong(), "messages")
-                            )
-                        },
-                        onMessageSent = {
-                            // Обновляем список диалогов после отправки сообщения
-                            dialogsViewModel.refresh()
+                    onAction = { action ->
+                        when (action) {
+                            ChatAction.Back -> appState.navController.popBackStack()
+                            ChatAction.AvatarClick -> {
+                                appState.navController.navigate(
+                                    Screen.OtherUserProfile.createRoute(userId.toLong(), "messages")
+                                )
+                            }
+
+                            ChatAction.MessageSent -> {
+                                dialogsViewModel.refresh()
+                            }
                         }
-                    )
+                    }
                 )
 
                 // Загружаем сообщения при первом отображении
@@ -510,14 +543,21 @@ fun RootScreen(appState: AppState) {
                 SearchUserScreen(
                     modifier = Modifier.fillMaxSize(),
                     viewModel = viewModel,
-                    onBackClick = { appState.navController.popBackStack() },
-                    onUserClick = { userId ->
-                        appState.navController.navigate(
-                            Screen.OtherUserProfile.createRoute(userId, source)
-                        )
-                    },
-                    parentPaddingValues = paddingValues,
-                    currentUserId = currentUser?.id
+                    config = SearchUserConfig(
+                        parentPaddingValues = paddingValues,
+                        currentUserId = currentUser?.id
+                    ),
+                    onAction = { action ->
+                        when (action) {
+                            SearchUserAction.Back -> appState.navController.popBackStack()
+                            is SearchUserAction.UserClick -> appState.navController.navigate(
+                                Screen.OtherUserProfile.createRoute(action.userId, source)
+                            )
+
+                            SearchUserAction.Search -> viewModel.onSearch()
+                            SearchUserAction.Retry -> viewModel.onSearch()
+                        }
+                    }
                 )
             }
 
@@ -529,18 +569,28 @@ fun RootScreen(appState: AppState) {
                         .padding(paddingValues),
                     currentUser = currentUser,
                     viewModel = editProfileViewModel,
-                    onBackClick = { appState.navController.popBackStack() },
-                    onNavigateToChangePassword = { appState.navController.navigate(Screen.ChangePassword.route) },
-                    onNavigateToSelectCountry = {
-                        appState.navController.navigate(Screen.SelectCountry.route)
-                    },
-                    onNavigateToSelectCity = { _, _ ->
-                        appState.navController.navigate(Screen.SelectCity.route)
-                    },
-                    onNavigateToLogin = {
-                        // После удаления профиля закрываем EditProfileScreen
-                        // и возвращаемся на ProfileRootScreen, который покажет IncognitoProfileView
-                        appState.navController.popBackStack(Screen.Profile.route, inclusive = false)
+                    onAction = { action ->
+                        when (action) {
+                            EditProfileNavigationAction.Back -> appState.navController.popBackStack()
+                            EditProfileNavigationAction.ChangePassword -> appState.navController.navigate(
+                                Screen.ChangePassword.route
+                            )
+
+                            EditProfileNavigationAction.SelectCountry -> appState.navController.navigate(
+                                Screen.SelectCountry.route
+                            )
+
+                            EditProfileNavigationAction.SelectCity -> appState.navController.navigate(
+                                Screen.SelectCity.route
+                            )
+
+                            EditProfileNavigationAction.NavigateToLogin -> {
+                                appState.navController.popBackStack(
+                                    Screen.Profile.route,
+                                    inclusive = false
+                                )
+                            }
+                        }
                     }
                 )
             }
@@ -566,14 +616,22 @@ fun RootScreen(appState: AppState) {
                 MyFriendsScreen(
                     modifier = Modifier.fillMaxSize(),
                     viewModel = viewModel,
-                    onBackClick = { appState.navController.popBackStack() },
+                    config = FriendsScreenConfig(
+                        parentPaddingValues = paddingValues,
+                        currentUserId = currentUser?.id
+                    ),
                     onFriendClick = { userId ->
                         appState.navController.navigate(
                             Screen.OtherUserProfile.createRoute(userId, "profile")
                         )
                     },
-                    parentPaddingValues = paddingValues,
-                    currentUserId = currentUser?.id
+                    onAction = { action ->
+                        when (action) {
+                            is FriendAction.Accept -> viewModel.onAcceptFriendRequest(action.userId)
+                            is FriendAction.Decline -> viewModel.onDeclineFriendRequest(action.userId)
+                            is FriendAction.Click -> appState.navController.popBackStack()
+                        }
+                    }
                 )
             }
 
@@ -612,14 +670,21 @@ fun RootScreen(appState: AppState) {
                     UserFriendsScreen(
                         modifier = Modifier.fillMaxSize(),
                         viewModel = viewModel,
-                        onBackClick = { appState.navController.popBackStack() },
-                        onUserClick = { clickedUserId ->
-                            appState.navController.navigate(
-                                Screen.OtherUserProfile.createRoute(clickedUserId, source)
-                            )
-                        },
-                        parentPaddingValues = paddingValues,
-                        currentUserId = currentUser?.id
+                        config = FriendsScreenConfig(
+                            parentPaddingValues = paddingValues,
+                            currentUserId = currentUser?.id
+                        ),
+                        onAction = { action ->
+                            when (action) {
+                                UserFriendsAction.Back -> appState.navController.popBackStack()
+                                is UserFriendsAction.UserClick -> appState.navController.navigate(
+                                    Screen.OtherUserProfile.createRoute(action.userId, source)
+                                )
+
+                                UserFriendsAction.Refresh -> { /* handled internally */
+                                }
+                            }
+                        }
                     )
                 }
             }
@@ -655,10 +720,14 @@ fun RootScreen(appState: AppState) {
                         viewModel = viewModel,
                         appState = appState,
                         source = source,
-                        onBack = { appState.navController.popBackStack() },
-                        onNavigateToOwnProfile = {
-                            appState.navController.navigate(Screen.Profile.route) {
-                                popUpTo(0) { inclusive = true }
+                        onAction = { action ->
+                            when (action) {
+                                ProfileNavigationAction.Back -> appState.navController.popBackStack()
+                                ProfileNavigationAction.NavigateToOwnProfile -> {
+                                    appState.navController.navigate(Screen.Profile.route) {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                }
                             }
                         }
                     )
@@ -681,26 +750,32 @@ fun RootScreen(appState: AppState) {
                     }
                     JournalsListScreen(
                         modifier = Modifier.fillMaxSize(),
-                        appState = appState,
-                        userId = userId,
                         viewModel = viewModel,
-                        source = source,
-                        callbacks = JournalsListCallbacks(
-                            onBackClick = { appState.navController.popBackStack() },
-                            onJournalClick = { params ->
-                                appState.navController.navigate(
-                                    Screen.JournalEntries.createRoute(
-                                        params.journalId,
-                                        params.journalOwnerId,
-                                        params.journalTitle,
-                                        params.viewAccess,
-                                        params.commentAccess,
-                                        source
-                                    )
-                                )
-                            }
+                        config = JournalsScreenConfig(
+                            appState = appState,
+                            params = JournalsScreenParams(
+                                userId = userId,
+                                source = source
+                            ),
+                            parentPaddingValues = paddingValues
                         ),
-                        parentPaddingValues = paddingValues
+                        onAction = { action ->
+                            when (action) {
+                                JournalsListAction.Back -> appState.navController.popBackStack()
+                                is JournalsListAction.JournalClick -> {
+                                    appState.navController.navigate(
+                                        Screen.JournalEntries.createRoute(
+                                            action.params.journalId,
+                                            action.params.journalOwnerId,
+                                            action.params.journalTitle,
+                                            action.params.viewAccess,
+                                            action.params.commentAccess,
+                                            source
+                                        )
+                                    )
+                                }
+                            }
+                        }
                     )
                 }
             }
