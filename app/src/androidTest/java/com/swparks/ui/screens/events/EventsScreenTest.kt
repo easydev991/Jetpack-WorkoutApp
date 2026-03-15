@@ -14,9 +14,13 @@ import com.swparks.data.model.User
 import com.swparks.ui.model.EventKind
 import com.swparks.ui.state.EventsUIState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
+import com.swparks.ui.viewmodel.EventsEvent
 import com.swparks.ui.viewmodel.FakeEventsViewModel
 import com.swparks.ui.viewmodel.IEventsViewModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -320,6 +324,8 @@ class EventsScreenTest {
             override val isAuthorized = MutableStateFlow(true)
             override val selectedTab = MutableStateFlow(EventKind.FUTURE)
             override val isRefreshing = MutableStateFlow(false)
+            private val _events = MutableSharedFlow<EventsEvent>()
+            override val events: Flow<EventsEvent> = _events.asSharedFlow()
             override fun onTabSelected(tab: EventKind) {}
             override fun refresh() {}
             override fun onEventClick(event: Event) {}
@@ -357,6 +363,8 @@ class EventsScreenTest {
             override val isAuthorized = MutableStateFlow(false)
             override val selectedTab = MutableStateFlow(EventKind.FUTURE)
             override val isRefreshing = MutableStateFlow(false)
+            private val _events = MutableSharedFlow<EventsEvent>()
+            override val events: Flow<EventsEvent> = _events.asSharedFlow()
             override fun onTabSelected(tab: EventKind) {}
             override fun refresh() {}
             override fun onEventClick(event: Event) {
@@ -395,6 +403,8 @@ class EventsScreenTest {
             override val isAuthorized = MutableStateFlow(false)
             override val selectedTab = MutableStateFlow(EventKind.FUTURE)
             override val isRefreshing = MutableStateFlow(false)
+            private val _events = MutableSharedFlow<EventsEvent>()
+            override val events: Flow<EventsEvent> = _events.asSharedFlow()
             override fun onTabSelected(tab: EventKind) {}
             override fun refresh() {
                 refreshCalled = true

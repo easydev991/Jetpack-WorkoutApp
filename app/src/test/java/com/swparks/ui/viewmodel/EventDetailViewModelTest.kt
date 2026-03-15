@@ -447,7 +447,7 @@ class EventDetailViewModelTest {
             advanceUntilIdle()
 
             // Then
-            assertEquals(EventDetailEvent.EventDeleted, awaitItem())
+            assertEquals(EventDetailEvent.EventDeleted(TEST_EVENT_ID), awaitItem())
             cancelAndIgnoreRemainingEvents()
         }
         coVerify { swRepository.deleteEvent(TEST_EVENT_ID) }
@@ -586,6 +586,63 @@ class EventDetailViewModelTest {
 
         // Then - состояние должно остаться Content (ошибка обработана)
         assertTrue(viewModel.uiState.value is EventDetailUIState.Content)
+    }
+
+    @Test
+    fun onEventUpdated_whenContentState_thenUpdatesEventInState() = runTest {
+        // Given
+        coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val updatedEvent = createEvent().copy(title = "Обновленное название")
+
+        // When
+        viewModel.onEventUpdated(updatedEvent)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue(state is EventDetailUIState.Content)
+        assertEquals("Обновленное название", (state as EventDetailUIState.Content).event.title)
+    }
+
+    @Test
+    fun onEventUpdated_whenErrorState_thenUpdatesToContent() = runTest {
+        // Given
+        coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.failure(Exception("Error"))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value is EventDetailUIState.Error)
+
+        val updatedEvent = createEvent()
+
+        // When
+        viewModel.onEventUpdated(updatedEvent)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue(state is EventDetailUIState.Content)
+        assertEquals(TEST_EVENT_ID, (state as EventDetailUIState.Content).event.id)
+    }
+
+    @Test
+    fun onEventUpdated_whenLoadingState_thenUpdatesToContent() = runTest {
+        // Given - не мокаем swRepository.getEvent чтобы остаться в Loading
+        val viewModel = createViewModel()
+        // Не вызываем advanceUntilIdle() чтобы остаться в Loading
+
+        val updatedEvent = createEvent()
+
+        // When
+        viewModel.onEventUpdated(updatedEvent)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue(state is EventDetailUIState.Content)
+        assertEquals(TEST_EVENT_ID, (state as EventDetailUIState.Content).event.id)
     }
 
     private companion object {

@@ -19,6 +19,7 @@
 ## Функциональные требования
 
 ### Основные возможности
+
 1. Отображение сетки фотографий (3 колонки)
 2. Кнопка добавления новых фотографий
 3. Просмотр фото на весь экран
@@ -27,10 +28,12 @@
 6. Подсказка о лимите
 
 ### Источники фото (Android)
+
 - Photo Picker (ActivityResultContracts.PickMultipleVisualMedia) - основной способ
 - Камера (опционально, Phase 2)
 
 ### Ограничения
+
 - Максимальное количество фото: 15 (настраиваемо)
 - Форматы: JPEG, PNG, WebP
 - Поддержка стандартных Material иконок (без кастомных)
@@ -40,6 +43,7 @@
 ## Этап 1: Модели данных
 
 ### 1.1 PickedImageItem sealed class
+
 Файл: `app/src/main/java/com/swparks/ui/model/PickedImageItem.kt`
 
 ```kotlin
@@ -54,6 +58,7 @@ sealed class PickedImageItem {
 - [ ] `AddButton` - кнопка добавления
 
 ### 1.2 PickedImagesState
+
 - [ ] Создать data class для состояния:
   - `images: List<Uri>`
   - `selectionLimit: Int`
@@ -64,6 +69,7 @@ sealed class PickedImageItem {
 ## Этап 2: UI компоненты
 
 ### 2.1 PickedImageCell
+
 Файл: `app/src/main/java/com/swparks/ui/ds/PickedImageCell.kt`
 
 Ячейка для отображения одной фотографии или кнопки добавления.
@@ -85,11 +91,13 @@ sealed class PickedImageItem {
 - [ ] Использовать стандартные Material иконки
 
 ### 2.2 PickedImagesGrid
+
 Файл: `app/src/main/java/com/swparks/ui/ds/PickedImagesGrid.kt`
 
 Основной компонент - сетка фотографий.
 
 **Структура:**
+
 ```
 PickedImagesGrid
 ├── Header (опционально)
@@ -114,6 +122,7 @@ PickedImagesGrid
 - [ ] Обработать клики и долгие нажатия
 
 ### 2.3 Стилизация
+
 - [ ] Использовать Material3 цвета и типографику
 - [ ] Скругление углов: 8.dp
 - [ ] Отступы между ячейками: 12.dp
@@ -124,6 +133,7 @@ PickedImagesGrid
 ## Этап 3: Интеграция с Photo Picker
 
 ### 3.1 PickedImagesController
+
 Файл: `app/src/main/java/com/swparks/ui/ds/PickedImagesController.kt`
 
 Вспомогательный composable для управления выбором фото.
@@ -141,6 +151,7 @@ fun rememberPickedImagesController(
 - [ ] Фильтр только изображений
 
 ### 3.2 Пример использования в экране
+
 - [ ] Показать пример интеграции в EventFormScreen:
   - rememberLauncherForActivityResult
   - Photo Picker launch
@@ -151,6 +162,7 @@ fun rememberPickedImagesController(
 ## Этап 4: Просмотр фото на весь экран
 
 ### 4.1 ImagePreviewDialog
+
 Файл: `app/src/main/java/com/swparks/ui/ds/ImagePreviewDialog.kt`
 
 Диалог для просмотра фото с возможностью удаления.
@@ -174,6 +186,7 @@ fun rememberPickedImagesController(
 ## Этап 5: Локализация
 
 ### 5.1 Строковые ресурсы
+
 Файл: `app/src/main/res/values/strings.xml`
 
 - [ ] `photos_section_header` - "Фотографии (%d)"
@@ -185,6 +198,7 @@ fun rememberPickedImagesController(
 - [ ] `photos_error_load` - "Не удалось загрузить фото"
 
 ### 5.2 Русская локализация
+
 Файл: `app/src/main/res/values-ru/strings.xml`
 - [ ] Добавить переводы
 
@@ -193,11 +207,13 @@ fun rememberPickedImagesController(
 ## Этап 6: Тестирование
 
 ### 6.1 Unit-тесты
+
 - [ ] Тест формирования списка items (images + AddButton)
 - [ ] Тест canAddMore логики
 - [ ] Тест лимита выбора
 
 ### 6.2 UI-тесты
+
 - [ ] Тест отображения пустой сетки
 - [ ] Тест отображения с фотографиями
 - [ ] Тест клика на добавление
@@ -208,12 +224,14 @@ fun rememberPickedImagesController(
 
 ## Зависимости
 
-### Уже существуют в проекте:
+### Уже существуют в проекте
+
 - ✅ Coil для загрузки изображений
 - ✅ Material3 иконки
 - ✅ ActivityResultContracts
 
-### Нужно добавить (опционально):
+### Нужно добавить (опционально)
+
 - [ ] Accompanist Pager для просмотра фото (или собственная реализация)
 
 ---

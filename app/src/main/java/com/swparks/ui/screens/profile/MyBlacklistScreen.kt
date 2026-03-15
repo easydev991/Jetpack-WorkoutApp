@@ -139,7 +139,7 @@ fun MyBlacklistScreenContent(
                 Text(stringResource(ApiBlacklistAction.UNBLOCK.alertMessage))
             },
             confirmButton = {
-                TextButton(onClick = { onAction(BlacklistAction.Remove(successState.itemToRemove!!)) }) {
+                TextButton(onClick = { onAction(BlacklistAction.Remove(successState.itemToRemove)) }) {
                     Text(stringResource(ApiBlacklistAction.UNBLOCK.description))
                 }
             },

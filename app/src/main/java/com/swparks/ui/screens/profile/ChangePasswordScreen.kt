@@ -24,6 +24,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
 import com.swparks.ui.ds.ButtonConfig
+import com.swparks.ui.ds.KeyboardAwareBottomBar
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.SWButton
 import com.swparks.ui.ds.SWButtonMode
@@ -68,10 +69,12 @@ fun ChangePasswordScreen(
             )
         },
         bottomBar = {
-            SaveButton(
-                enabled = uiState.canSave,
-                onClick = viewModel::onSaveClick
-            )
+            KeyboardAwareBottomBar {
+                SaveButton(
+                    enabled = uiState.canSave,
+                    onClick = viewModel::onSaveClick
+                )
+            }
         },
         modifier = modifier
     ) { paddingValues ->
@@ -140,7 +143,6 @@ private fun SaveButton(
 ) {
     SWButton(
         config = ButtonConfig(
-            modifier = Modifier.padding(all = dimensionResource(R.dimen.spacing_regular)),
             mode = SWButtonMode.FILLED,
             size = SWButtonSize.LARGE,
             text = stringResource(R.string.save_changes),

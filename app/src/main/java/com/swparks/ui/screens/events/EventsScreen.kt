@@ -22,6 +22,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -41,6 +42,7 @@ import com.swparks.ui.model.EventKind
 import com.swparks.ui.state.EventsListAction
 import com.swparks.ui.state.EventsListState
 import com.swparks.ui.state.EventsUIState
+import com.swparks.ui.viewmodel.EventsEvent
 import com.swparks.ui.viewmodel.EventsViewModel
 import com.swparks.ui.viewmodel.IEventsViewModel
 import com.swparks.util.DateFormatter
@@ -51,6 +53,7 @@ fun EventsScreen(
     modifier: Modifier = Modifier,
     viewModel: IEventsViewModel = viewModel<EventsViewModel>(factory = EventsViewModel.Factory),
     onNavigateToEventDetail: (Long) -> Unit = {},
+    onNavigateToCreateEvent: () -> Unit = {},
 ) {
     val uiState by viewModel.eventsUIState.collectAsState()
     val isAuthorized by viewModel.isAuthorized.collectAsState()
@@ -58,6 +61,14 @@ fun EventsScreen(
     val selectedTabIndex = if (selectedTab == EventKind.FUTURE) 0 else 1
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val fabDescription = stringResource(id = R.string.events_fab_description)
+
+    LaunchedEffect(viewModel) {
+        viewModel.events.collect { event ->
+            when (event) {
+                EventsEvent.NavigateToCreateEvent -> onNavigateToCreateEvent()
+            }
+        }
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(

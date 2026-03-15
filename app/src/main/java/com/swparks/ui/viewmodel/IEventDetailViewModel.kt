@@ -1,5 +1,6 @@
 package com.swparks.ui.viewmodel
 
+import com.swparks.data.model.Event
 import com.swparks.data.model.Photo
 import com.swparks.ui.ds.CommentAction
 import com.swparks.ui.model.MapUriSet
@@ -168,4 +169,12 @@ interface IEventDetailViewModel {
      * Обновление данных мероприятия (pull-to-refresh).
      */
     fun refresh()
+
+    /**
+     * Обновление мероприятия после редактирования.
+     * Вызывается при возврате с экрана редактирования.
+     *
+     * @param event Обновленное мероприятие
+     */
+    fun onEventUpdated(event: Event)
 }

@@ -228,7 +228,7 @@ class PhotoDetailViewModel(
             return
         }
 
-        performDeletePhoto(currentState, eventId!!)
+        performDeletePhoto(currentState, eventId)
     }
 
     @Suppress("TooGenericExceptionCaught")

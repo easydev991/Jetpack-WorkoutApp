@@ -40,9 +40,12 @@ sealed class Screen(
     object ParkFilter : Screen("park_filter", parentTab = Parks)
 
     object CreateEventForPark :
-        Screen("create_event_for_park/{parkId}?source={source}", parentTab = Parks) {
-        fun createRoute(parkId: Long, source: String = "parks") =
-            "create_event_for_park/$parkId?source=$source"
+        Screen(
+            "create_event_for_park/{parkId}?parkName={parkName}&source={source}",
+            parentTab = Parks
+        ) {
+        fun createRoute(parkId: Long, parkName: String, source: String = "parks") =
+            "create_event_for_park/$parkId?parkName=${android.net.Uri.encode(parkName)}&source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "parks"
@@ -137,6 +140,17 @@ sealed class Screen(
         Screen("add_event_comment/{eventId}?source={source}", parentTab = Events) {
         fun createRoute(eventId: Long, source: String = "events") =
             "add_event_comment/$eventId?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "events"
+            return getScreenBySource(source, default = Events)
+        }
+    }
+
+    object SelectParkForEvent :
+        Screen("select_park_for_event/{userId}?source={source}", parentTab = Events) {
+        fun createRoute(userId: Long, source: String = "events") =
+            "select_park_for_event/$userId?source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "events"
@@ -278,7 +292,7 @@ sealed class Screen(
 
                 // Детальные экраны мероприятий
                 EventDetail, CreateEvent, EditEvent, EventParticipants,
-                EventGallery, AddEventComment,
+                EventGallery, AddEventComment, SelectParkForEvent,
 
                 // Экраны сообщений
                 Chat, Friends, MyFriends, UserSearch,
@@ -327,6 +341,7 @@ sealed class Screen(
                 "event_participants" -> EventParticipants.findParentTab(arguments)
                 "event_gallery" -> EventGallery.findParentTab(arguments)
                 "add_event_comment" -> AddEventComment.findParentTab(arguments)
+                "select_park_for_event" -> SelectParkForEvent.findParentTab(arguments)
 
                 // Экраны сообщений с source параметром
                 "chat" -> Chat.findParentTab(arguments)

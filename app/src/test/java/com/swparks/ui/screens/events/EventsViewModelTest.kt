@@ -13,6 +13,7 @@ import com.swparks.domain.usecase.ISyncPastEventsUseCase
 import com.swparks.ui.model.EventKind
 import com.swparks.ui.state.EventsUIState
 import com.swparks.ui.viewmodel.EventsViewModel
+import com.swparks.util.AppNotification
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import io.mockk.coEvery
@@ -22,6 +23,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -46,24 +48,26 @@ class EventsViewModelTest {
     private val mockCountriesRepository = mockk<CountriesRepository>(relaxed = true)
     private val mockUserNotifier = mockk<UserNotifier>(relaxed = true)
     private val mockLogger = mockk<Logger>(relaxed = true)
+    private val notificationFlow = MutableSharedFlow<AppNotification>(extraBufferCapacity = 10)
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         coEvery { mockSyncFutureEventsUseCase() } returns Result.success(Unit)
         coEvery { mockSyncPastEventsUseCase() } returns Result.success(Unit)
+        every { mockUserNotifier.notificationFlow } returns notificationFlow
     }
 
     @After
     fun tearDown() {
     }
 
-    private fun createMockEvent(id: Long = 1L): Event {
+    private fun createMockEvent(id: Long = 1L, beginDate: String = "2024-01-01"): Event {
         return Event(
             id = id,
             title = "Test Event $id",
             description = "Test Description",
-            beginDate = "2024-01-01",
+            beginDate = beginDate,
             countryID = 1,
             cityID = 1,
             preview = "",
@@ -423,5 +427,321 @@ class EventsViewModelTest {
 
         coVerify(exactly = 1) { mockCountriesRepository.getCountryById("1") }
         coVerify(exactly = 1) { mockCountriesRepository.getCityById("1") }
+    }
+
+
+    // ==================== addCreatedEvent ====================
+
+    @Test
+    fun addCreatedEvent_whenFutureEvent_addsToFutureCache() = runTest {
+        val existingEvent = createMockEvent(1L, "2024-01-15").copy(isCurrent = true)
+        val newEvent = createMockEvent(2L, "2024-01-20").copy(isCurrent = true)
+
+        every { mockGetFutureEventsFlowUseCase() } returns flowOf(listOf(existingEvent))
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        coEvery { mockSyncFutureEventsUseCase() } returns Result.success(Unit)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val stateBefore = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals(1, stateBefore.events.size)
+
+        viewModel.addCreatedEvent(newEvent)
+        advanceUntilIdle()
+
+        val stateAfter = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals(2, stateAfter.events.size)
+        assertTrue(stateAfter.events.any { it.id == 2L })
+        assertEquals(listOf(1L, 2L), stateAfter.events.map { it.id })
+    }
+
+    @Test
+    fun addCreatedEvent_whenPastEvent_addsToPastCache() = runTest {
+        val existingEvent = createMockEvent(1L, "2024-01-15").copy(isCurrent = false)
+        val newEvent = createMockEvent(2L, "2024-01-20").copy(isCurrent = false)
+
+        every { mockGetFutureEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(listOf(existingEvent))
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        coEvery { mockSyncFutureEventsUseCase() } returns Result.success(Unit)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onTabSelected(EventKind.PAST)
+        advanceUntilIdle()
+
+        val stateBefore = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals(1, stateBefore.events.size)
+
+        viewModel.addCreatedEvent(newEvent)
+        advanceUntilIdle()
+
+        val stateAfter = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals(2, stateAfter.events.size)
+        assertTrue(stateAfter.events.any { it.id == 2L })
+        assertEquals(listOf(2L, 1L), stateAfter.events.map { it.id })
+    }
+
+    @Test
+    fun addCreatedEvent_whenOnFutureTab_updatesUI() = runTest {
+        val existingEvent =
+            createMockEvent(1L, "2024-01-15").copy(isCurrent = true, countryID = 1, cityID = 1)
+        val newEvent =
+            createMockEvent(2L, "2024-01-20").copy(isCurrent = true, countryID = 1, cityID = 1)
+        val mockCountry = mockk<Country> { every { name } returns "Россия" }
+        val mockCity = mockk<City> { every { name } returns "Москва" }
+
+        every { mockGetFutureEventsFlowUseCase() } returns flowOf(listOf(existingEvent))
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        coEvery { mockSyncFutureEventsUseCase() } returns Result.success(Unit)
+        coEvery { mockCountriesRepository.getCountryById("1") } returns mockCountry
+        coEvery { mockCountriesRepository.getCityById("1") } returns mockCity
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.addCreatedEvent(newEvent)
+        advanceUntilIdle()
+
+        val state = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals(2, state.events.size)
+        assertEquals(listOf(1L, 2L), state.events.map { it.id })
+    }
+
+    @Test
+    fun addCreatedEvent_whenOnPastTab_doesNotUpdateUI() = runTest {
+        val newEvent = createMockEvent(1L).copy(isCurrent = false)
+
+        every { mockGetFutureEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        coEvery { mockSyncFutureEventsUseCase() } returns Result.success(Unit)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onTabSelected(EventKind.FUTURE)
+        advanceUntilIdle()
+
+        viewModel.addCreatedEvent(newEvent)
+        advanceUntilIdle()
+
+        val state = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals(0, state.events.size)
+    }
+
+    @Test
+    fun removeDeletedEvent_whenFutureEvent_removesFromFutureCache() = runTest {
+        val event1 = createMockEvent(1L, "2024-01-15").copy(isCurrent = true)
+        val event2 = createMockEvent(2L, "2024-01-20").copy(isCurrent = true)
+
+        every { mockGetFutureEventsFlowUseCase() } returns flowOf(listOf(event1, event2))
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        coEvery { mockSyncFutureEventsUseCase() } returns Result.success(Unit)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val stateBefore = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals(2, stateBefore.events.size)
+
+        viewModel.removeDeletedEvent(2L)
+        advanceUntilIdle()
+
+        val stateAfter = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals(1, stateAfter.events.size)
+        assertTrue(stateAfter.events.none { it.id == 2L })
+    }
+
+    @Test
+    fun removeDeletedEvent_whenPastEvent_removesFromPastCache() = runTest {
+        val event1 = createMockEvent(1L, "2023-01-15").copy(isCurrent = false)
+        val event2 = createMockEvent(2L, "2023-01-20").copy(isCurrent = false)
+
+        every { mockGetFutureEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(listOf(event1, event2))
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        coEvery { mockSyncFutureEventsUseCase() } returns Result.success(Unit)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onTabSelected(EventKind.PAST)
+        advanceUntilIdle()
+
+        val stateBefore = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals(2, stateBefore.events.size)
+
+        viewModel.removeDeletedEvent(2L)
+        advanceUntilIdle()
+
+        val stateAfter = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals(1, stateAfter.events.size)
+        assertTrue(stateAfter.events.none { it.id == 2L })
+    }
+
+    @Test
+    fun removeDeletedEvent_whenOnFutureTab_updatesUI() = runTest {
+        val event1 =
+            createMockEvent(1L, "2024-01-15").copy(isCurrent = true, countryID = 1, cityID = 1)
+        val event2 =
+            createMockEvent(2L, "2024-01-20").copy(isCurrent = true, countryID = 1, cityID = 1)
+        val mockCountry = mockk<Country> { every { name } returns "Россия" }
+        val mockCity = mockk<City> { every { name } returns "Москва" }
+
+        every { mockGetFutureEventsFlowUseCase() } returns flowOf(listOf(event1, event2))
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        coEvery { mockSyncFutureEventsUseCase() } returns Result.success(Unit)
+        coEvery { mockCountriesRepository.getCountryById("1") } returns mockCountry
+        coEvery { mockCountriesRepository.getCityById("1") } returns mockCity
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.removeDeletedEvent(1L)
+        advanceUntilIdle()
+
+        val state = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals(1, state.events.size)
+        assertEquals(2L, state.events.first().id)
+    }
+
+    @Test
+    fun removeDeletedEvent_whenEventNotFound_doesNothing() = runTest {
+        val event1 = createMockEvent(1L, "2024-01-15").copy(isCurrent = true)
+
+        every { mockGetFutureEventsFlowUseCase() } returns flowOf(listOf(event1))
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        coEvery { mockSyncFutureEventsUseCase() } returns Result.success(Unit)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.removeDeletedEvent(999L)
+        advanceUntilIdle()
+
+        val state = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals(1, state.events.size)
+    }
+
+    @Test
+    fun onEventUpdated_whenFutureEvent_updatesWithoutDuplicates() = runTest {
+        val existingEvent = createMockEvent(1L, "2024-01-15").copy(
+            isCurrent = true,
+            title = "Old Title",
+            countryID = 1,
+            cityID = 1
+        )
+        val otherEvent = createMockEvent(2L, "2024-01-20").copy(
+            isCurrent = true,
+            countryID = 1,
+            cityID = 1
+        )
+        val updatedEvent = existingEvent.copy(
+            title = "Updated Title",
+            beginDate = "2024-01-10"
+        )
+        val mockCountry = mockk<Country> { every { name } returns "Россия" }
+        val mockCity = mockk<City> { every { name } returns "Москва" }
+
+        every { mockGetFutureEventsFlowUseCase() } returns flowOf(listOf(existingEvent, otherEvent))
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        coEvery { mockCountriesRepository.getCountryById("1") } returns mockCountry
+        coEvery { mockCountriesRepository.getCityById("1") } returns mockCity
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onEventUpdated(updatedEvent)
+        advanceUntilIdle()
+
+        val state = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals(2, state.events.size)
+        assertEquals(1, state.events.count { it.id == 1L })
+        assertEquals("Updated Title", state.events.first { it.id == 1L }.title)
+        assertEquals(listOf(1L, 2L), state.events.map { it.id })
+    }
+
+    @Test
+    fun onEventUpdated_whenEventMovedFromFutureToPast_removesFromFutureUI() = runTest {
+        val eventToMove = createMockEvent(1L, "2024-01-15").copy(
+            isCurrent = true,
+            countryID = 1,
+            cityID = 1
+        )
+        val otherFutureEvent = createMockEvent(2L, "2024-01-20").copy(
+            isCurrent = true,
+            countryID = 1,
+            cityID = 1
+        )
+        val movedEvent = eventToMove.copy(
+            isCurrent = false,
+            beginDate = "2023-12-01"
+        )
+        val mockCountry = mockk<Country> { every { name } returns "Россия" }
+        val mockCity = mockk<City> { every { name } returns "Москва" }
+
+        every { mockGetFutureEventsFlowUseCase() } returns flowOf(listOf(eventToMove, otherFutureEvent))
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        coEvery { mockCountriesRepository.getCountryById("1") } returns mockCountry
+        coEvery { mockCountriesRepository.getCityById("1") } returns mockCity
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onEventUpdated(movedEvent)
+        advanceUntilIdle()
+
+        val state = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals(EventKind.FUTURE, state.selectedTab)
+        assertEquals(1, state.events.size)
+        assertEquals(2L, state.events.first().id)
+        assertTrue(state.events.none { it.id == 1L })
+    }
+
+    @Test
+    fun onEventUpdated_whenPastTabActive_updatesPastUIImmediately() = runTest {
+        val existingPastEvent = createMockEvent(10L, "2023-01-10").copy(
+            isCurrent = false,
+            title = "Past Old",
+            countryID = 1,
+            cityID = 1
+        )
+        val updatedPastEvent = existingPastEvent.copy(
+            title = "Past Updated",
+            beginDate = "2023-01-25"
+        )
+        val mockCountry = mockk<Country> { every { name } returns "Россия" }
+        val mockCity = mockk<City> { every { name } returns "Москва" }
+
+        every { mockGetFutureEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(listOf(existingPastEvent))
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        coEvery { mockCountriesRepository.getCountryById("1") } returns mockCountry
+        coEvery { mockCountriesRepository.getCityById("1") } returns mockCity
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onTabSelected(EventKind.PAST)
+        advanceUntilIdle()
+
+        viewModel.onEventUpdated(updatedPastEvent)
+        advanceUntilIdle()
+
+        val state = viewModel.eventsUIState.value as EventsUIState.Content
+        assertEquals(EventKind.PAST, state.selectedTab)
+        assertEquals(1, state.events.size)
+        assertEquals("Past Updated", state.events.first().title)
+        assertEquals(10L, state.events.first().id)
     }
 }

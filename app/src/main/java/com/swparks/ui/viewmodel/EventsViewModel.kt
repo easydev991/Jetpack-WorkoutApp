@@ -18,11 +18,26 @@ import com.swparks.ui.state.EventsUIState
 import com.swparks.util.AppError
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
+
+/**
+ * События UI экрана списка мероприятий.
+ *
+ * Используются для одноразовых действий навигации.
+ */
+sealed class EventsEvent {
+    /**
+     * Навигация к экрану создания мероприятия.
+     */
+    data object NavigateToCreateEvent : EventsEvent()
+}
 
 /**
  * ViewModel для экрана списка мероприятий.
@@ -139,6 +154,9 @@ class EventsViewModel(
     private val _isRefreshing = MutableStateFlow(false)
     override val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
+    private val _events = Channel<EventsEvent>()
+    override val events: Flow<EventsEvent> = _events.receiveAsFlow()
+
     init {
         logger.d(TAG, "Инициализация EventsViewModel")
         observeAuthorization()
@@ -159,15 +177,16 @@ class EventsViewModel(
         viewModelScope.launch {
             logger.d(TAG, "Подписка на Flow будущих мероприятий")
             getFutureEventsFlowUseCase().collect { events ->
-                logger.d(TAG, "Получены будущие мероприятия из Flow: ${events.size} шт.")
-                futureEventsCache = events
-                if (events.isEmpty() && !hasLoadedFutureEvents) {
+                val sortedEvents = events.sortedBy { it.beginDate }
+                logger.d(TAG, "Получены будущие мероприятия из Flow: ${sortedEvents.size} шт.")
+                futureEventsCache = sortedEvents
+                if (sortedEvents.isEmpty() && !hasLoadedFutureEvents) {
                     return@collect
                 }
                 if (_selectedTab.value == EventKind.FUTURE) {
-                    val addresses = loadAddresses(events)
+                    val addresses = loadAddresses(sortedEvents)
                     _eventsUIState.value = EventsUIState.Content(
-                        events = events,
+                        events = sortedEvents,
                         selectedTab = EventKind.FUTURE,
                         isLoading = false,
                         addresses = addresses
@@ -363,5 +382,139 @@ class EventsViewModel(
 
     override fun onFabClick() {
         logger.d(TAG, "Нажатие FAB: создание мероприятия")
+        viewModelScope.launch {
+            _events.send(EventsEvent.NavigateToCreateEvent)
+        }
+    }
+
+    override fun addCreatedEvent(event: Event) {
+        logger.d(TAG, "Добавление созданного мероприятия в кэш: ${event.id}")
+
+        val isFutureEvent = event.isCurrent
+        if (isFutureEvent) {
+            val currentCache = futureEventsCache ?: emptyList()
+            futureEventsCache = (currentCache + event).sortedBy { it.beginDate }
+
+            if (_selectedTab.value == EventKind.FUTURE) {
+                val events = futureEventsCache ?: emptyList()
+                viewModelScope.launch {
+                    val addresses = loadAddresses(events)
+                    _eventsUIState.value = EventsUIState.Content(
+                        events = events,
+                        selectedTab = EventKind.FUTURE,
+                        isLoading = false,
+                        addresses = addresses
+                    )
+                }
+            }
+        } else {
+            val currentCache = pastEventsCache ?: emptyList()
+            pastEventsCache = (currentCache + event).sortedByDescending { it.beginDate }
+
+            if (_selectedTab.value == EventKind.PAST) {
+                val events = pastEventsCache ?: emptyList()
+                viewModelScope.launch {
+                    val addresses = loadAddresses(events)
+                    _eventsUIState.value = EventsUIState.Content(
+                        events = events,
+                        selectedTab = EventKind.PAST,
+                        isLoading = false,
+                        addresses = addresses
+                    )
+                }
+            }
+        }
+
+        logger.i(
+            TAG,
+            "Мероприятие ${event.id} добавлено в кэш (${if (isFutureEvent) "FUTURE" else "PAST"})"
+        )
+    }
+
+    override fun removeDeletedEvent(eventId: Long) {
+        logger.d(TAG, "Удаление мероприятия из кэша: $eventId")
+
+        val wasInFutureCache = futureEventsCache?.any { it.id == eventId } == true
+        val wasInPastCache = pastEventsCache?.any { it.id == eventId } == true
+
+        if (wasInFutureCache) {
+            val currentCache = futureEventsCache ?: emptyList()
+            futureEventsCache = currentCache.filter { it.id != eventId }
+
+            if (_selectedTab.value == EventKind.FUTURE) {
+                val events = futureEventsCache ?: emptyList()
+                viewModelScope.launch {
+                    val addresses = loadAddresses(events)
+                    _eventsUIState.value = EventsUIState.Content(
+                        events = events,
+                        selectedTab = EventKind.FUTURE,
+                        isLoading = false,
+                        addresses = addresses
+                    )
+                }
+            }
+        } else if (wasInPastCache) {
+            val currentCache = pastEventsCache ?: emptyList()
+            pastEventsCache = currentCache.filter { it.id != eventId }
+
+            if (_selectedTab.value == EventKind.PAST) {
+                val events = pastEventsCache ?: emptyList()
+                viewModelScope.launch {
+                    val addresses = loadAddresses(events)
+                    _eventsUIState.value = EventsUIState.Content(
+                        events = events,
+                        selectedTab = EventKind.PAST,
+                        isLoading = false,
+                        addresses = addresses
+                    )
+                }
+            }
+        }
+
+        logger.i(TAG, "Мероприятие $eventId удалено из кэша")
+    }
+
+    fun onEventUpdated(event: Event) {
+        logger.d(TAG, "Обновление мероприятия в кэше: ${event.id}")
+
+        val futureWithoutEvent = (futureEventsCache ?: emptyList()).filter { it.id != event.id }
+        val pastWithoutEvent = (pastEventsCache ?: emptyList()).filter { it.id != event.id }
+
+        if (event.isCurrent) {
+            futureEventsCache = (futureWithoutEvent + event).sortedBy { it.beginDate }
+            pastEventsCache = pastWithoutEvent
+        } else {
+            futureEventsCache = futureWithoutEvent
+            pastEventsCache = (pastWithoutEvent + event).sortedByDescending { it.beginDate }
+        }
+
+        if (_selectedTab.value == EventKind.FUTURE) {
+            val events = futureEventsCache ?: emptyList()
+            viewModelScope.launch {
+                val addresses = loadAddresses(events)
+                _eventsUIState.value = EventsUIState.Content(
+                    events = events,
+                    selectedTab = EventKind.FUTURE,
+                    isLoading = false,
+                    addresses = addresses
+                )
+            }
+        } else {
+            val events = pastEventsCache ?: emptyList()
+            viewModelScope.launch {
+                val addresses = loadAddresses(events)
+                _eventsUIState.value = EventsUIState.Content(
+                    events = events,
+                    selectedTab = EventKind.PAST,
+                    isLoading = false,
+                    addresses = addresses
+                )
+            }
+        }
+
+        logger.i(
+            TAG,
+            "Мероприятие ${event.id} обновлено в кэше (${if (event.isCurrent) "FUTURE" else "PAST"})"
+        )
     }
 }

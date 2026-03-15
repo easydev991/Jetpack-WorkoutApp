@@ -89,6 +89,7 @@
     <string name="no_friends_yet">Друзей пока нет</string>
     <string name="no_participants">Участников пока нет</string>
     <string name="where_trains">Где тренируется</string>
+    <string name="your_parks">Твои площадки</string>
     <string name="added_parks">Добавленные</string>
     <string name="male_added_parks">Добавил площадки</string>
     <string name="female_added_parks">Добавила площадки</string>
@@ -413,4 +414,20 @@
     <!-- Экран чата -->
     <string name="chat_empty_messages">Сообщений пока нет</string>
     <string name="refresh">Обновить</string>
+
+    <!-- Экран создания/редактирования мероприятия -->
+    <string name="event_form_title_create">Новое мероприятие</string>
+    <string name="event_form_title_edit">Мероприятие</string>
+    <string name="event_form_name_label">Название</string>
+    <string name="event_form_name_placeholder">Название мероприятия</string>
+    <string name="event_form_description_label">Описание</string>
+    <string name="event_form_description_placeholder">Добавьте немного подробностей о предстоящем мероприятии</string>
+    <string name="event_form_park_label">Площадка</string>
+    <string name="event_form_park_select">Выбрать площадку</string>
+    <string name="event_form_date_label">Дата и время</string>
+    <string name="event_form_save">Сохранить</string>
+    <string name="event_form_confirm_close_title">Закрыть?</string>
+    <string name="event_form_confirm_close_message">Несохраненные изменения будут потеряны</string>
+    <string name="event_form_error_create">Ошибка создания мероприятия</string>
+    <string name="event_form_error_edit">Ошибка редактирования мероприятия</string>
 </resources>

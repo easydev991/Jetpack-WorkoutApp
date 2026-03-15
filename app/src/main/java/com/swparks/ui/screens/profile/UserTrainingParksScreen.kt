@@ -35,8 +35,10 @@ import com.swparks.ui.viewmodel.UserTrainingParksUiState
  * @param modifier Modifier для настройки внешнего вида
  * @param viewModel ViewModel для управления данными экрана
  * @param onBackClick Замыкание, вызываемое при нажатии кнопки "Назад"
- * @param onParkClick Замыкание, вызываемое при нажатии на площадку
+ * @param onParkClick Замыкание, вызываемое при нажатии на площадку (обычный режим)
  * @param parentPaddingValues PaddingValues для соблюдения безопасных зон
+ * @param selectionMode Если true, экран работает в режиме выбора площадки
+ * @param onParkSelected Замыкание, вызываемое при выборе площадки в режиме выбора (parkId, parkName)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,16 +47,26 @@ fun UserTrainingParksScreen(
     viewModel: IUserTrainingParksViewModel,
     onBackClick: () -> Unit,
     onParkClick: (Park) -> Unit = { },
-    parentPaddingValues: androidx.compose.foundation.layout.PaddingValues
+    parentPaddingValues: androidx.compose.foundation.layout.PaddingValues,
+    selectionMode: Boolean = false,
+    onParkSelected: ((Long, String) -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val pullRefreshState = rememberPullToRefreshState()
 
+    val handleParkClick: (Park) -> Unit = { park ->
+        if (selectionMode && onParkSelected != null) {
+            onParkSelected(park.id, park.name)
+        } else {
+            onParkClick(park)
+        }
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(onBackClick)
+            TopAppBar(onBackClick, selectionMode)
         },
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->
@@ -76,7 +88,7 @@ fun UserTrainingParksScreen(
             }
         ) {
             Box(modifier = Modifier.padding(innerPadding)) {
-                UserTrainingParksContent(uiState, onParkClick)
+                UserTrainingParksContent(uiState, handleParkClick)
             }
         }
     }
@@ -84,9 +96,15 @@ fun UserTrainingParksScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TopAppBar(onBackClick: () -> Unit) {
+private fun TopAppBar(onBackClick: () -> Unit, selectionMode: Boolean = false) {
     CenterAlignedTopAppBar(
-        title = { Text(stringResource(R.string.where_trains)) },
+        title = {
+            Text(
+                stringResource(
+                    if (selectionMode) R.string.your_parks else R.string.where_trains
+                )
+            )
+        },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(

@@ -3,6 +3,7 @@ package com.swparks.ui.viewmodel
 import com.swparks.data.model.Event
 import com.swparks.ui.model.EventKind
 import com.swparks.ui.state.EventsUIState
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -33,6 +34,11 @@ interface IEventsViewModel {
     val isRefreshing: StateFlow<Boolean>
 
     /**
+     * Одноразовые события UI (навигация и т.д.).
+     */
+    val events: Flow<EventsEvent>
+
+    /**
      * Переключение вкладки.
      *
      * @param tab Выбранная вкладка (FUTURE или PAST)
@@ -55,4 +61,24 @@ interface IEventsViewModel {
      * Обработка нажатия на FAB (создание мероприятия).
      */
     fun onFabClick()
+
+    /**
+     * Добавление созданного мероприятия в список.
+     *
+     * Вызывается при возврате с EventFormScreen после успешного создания мероприятия.
+     * Добавляет мероприятие в кэш и обновляет UI без дополнительного запроса к серверу.
+     *
+     * @param event Созданное мероприятие
+     */
+    fun addCreatedEvent(event: Event)
+
+    /**
+     * Удаление мероприятия из списка.
+     *
+     * Вызывается при возврате с EventDetailScreen после успешного удаления мероприятия.
+     * Удаляет мероприятие из кэша и обновляет UI без дополнительного запроса к серверу.
+     *
+     * @param eventId Идентификатор удаленного мероприятия
+     */
+    fun removeDeletedEvent(eventId: Long)
 }

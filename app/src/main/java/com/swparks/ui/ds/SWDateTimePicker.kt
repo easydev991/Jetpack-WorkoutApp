@@ -39,6 +39,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import java.text.DateFormat
+import java.util.Locale
 
 /**
  * Вариант пикера даты
@@ -107,13 +108,27 @@ fun SWDateTimePicker(config: DateTimePickerConfig) {
         datePickerState.selectedDateMillis = selectedDate
     }
 
-    var selectedHour by remember { mutableIntStateOf(config.initialHour ?: 0) }
-    var selectedMinute by remember { mutableIntStateOf(config.initialMinute ?: 0) }
+    var selectedHour by remember(config.initialHour) {
+        mutableIntStateOf(config.initialHour ?: 0)
+    }
+    var selectedMinute by remember(config.initialMinute) {
+        mutableIntStateOf(config.initialMinute ?: 0)
+    }
     val timePickerState = rememberTimePickerState(
         initialHour = selectedHour,
         initialMinute = selectedMinute,
         is24Hour = true
     )
+
+    LaunchedEffect(config.initialHour, config.initialMinute) {
+        val initialHour = config.initialHour ?: 0
+        val initialMinute = config.initialMinute ?: 0
+
+        selectedHour = initialHour
+        selectedMinute = initialMinute
+        timePickerState.hour = initialHour
+        timePickerState.minute = initialMinute
+    }
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -140,7 +155,12 @@ fun SWDateTimePicker(config: DateTimePickerConfig) {
             if (config.mode.showTimePicker) {
                 SWTimePicker(
                     state = timePickerState,
-                    formattedString = "$selectedHour:$selectedMinute",
+                    formattedString = String.format(
+                        Locale.getDefault(),
+                        "%02d:%02d",
+                        selectedHour,
+                        selectedMinute
+                    ),
                     enabled = config.enabled,
                     onClickSave = { hour, minute ->
                         selectedHour = hour

@@ -36,10 +36,12 @@ import com.swparks.domain.repository.JournalsRepository
 import com.swparks.domain.repository.MessagesRepository
 import com.swparks.domain.usecase.CanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.ChangePasswordUseCase
+import com.swparks.domain.usecase.CreateEventUseCase
 import com.swparks.domain.usecase.CreateJournalUseCase
 import com.swparks.domain.usecase.DeleteJournalEntryUseCase
 import com.swparks.domain.usecase.DeleteJournalUseCase
 import com.swparks.domain.usecase.DeleteUserUseCase
+import com.swparks.domain.usecase.EditEventUseCase
 import com.swparks.domain.usecase.EditJournalSettingsUseCase
 import com.swparks.domain.usecase.GetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.GetJournalEntriesUseCase
@@ -47,10 +49,12 @@ import com.swparks.domain.usecase.GetJournalsUseCase
 import com.swparks.domain.usecase.GetPastEventsFlowUseCase
 import com.swparks.domain.usecase.ICanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IChangePasswordUseCase
+import com.swparks.domain.usecase.ICreateEventUseCase
 import com.swparks.domain.usecase.ICreateJournalUseCase
 import com.swparks.domain.usecase.IDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IDeleteJournalUseCase
 import com.swparks.domain.usecase.IDeleteUserUseCase
+import com.swparks.domain.usecase.IEditEventUseCase
 import com.swparks.domain.usecase.IEditJournalSettingsUseCase
 import com.swparks.domain.usecase.IGetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.IGetJournalEntriesUseCase
@@ -73,6 +77,7 @@ import com.swparks.domain.usecase.SyncJournalsUseCase
 import com.swparks.domain.usecase.SyncPastEventsUseCase
 import com.swparks.domain.usecase.TextEntryUseCase
 import com.swparks.network.SWApi
+import com.swparks.ui.model.EventFormMode
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.viewmodel.BlacklistViewModel
 import com.swparks.ui.viewmodel.ChangePasswordViewModel
@@ -80,6 +85,7 @@ import com.swparks.ui.viewmodel.ChatViewModel
 import com.swparks.ui.viewmodel.DialogsViewModel
 import com.swparks.ui.viewmodel.EditProfileViewModel
 import com.swparks.ui.viewmodel.EventDetailViewModel
+import com.swparks.ui.viewmodel.EventFormViewModel
 import com.swparks.ui.viewmodel.EventsViewModel
 import com.swparks.ui.viewmodel.FriendsListViewModel
 import com.swparks.ui.viewmodel.JournalEntriesDeps
@@ -149,6 +155,8 @@ interface AppContainer {
     val syncFutureEventsUseCase: ISyncFutureEventsUseCase
     val getPastEventsFlowUseCase: IGetPastEventsFlowUseCase
     val syncPastEventsUseCase: ISyncPastEventsUseCase
+    val createEventUseCase: ICreateEventUseCase
+    val editEventUseCase: IEditEventUseCase
 
     /** Фабрика для ProfileViewModel (единый контейнер обеспечивает одну БД с LoginViewModel). */
     fun profileViewModelFactory(): ProfileViewModel
@@ -204,6 +212,9 @@ interface AppContainer {
 
     /** Фабрика для EventDetailViewModel */
     fun eventDetailViewModelFactory(savedStateHandle: SavedStateHandle): EventDetailViewModel
+
+    /** Фабрика для EventFormViewModel */
+    fun eventFormViewModelFactory(mode: EventFormMode): EventFormViewModel
 
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
@@ -495,6 +506,12 @@ class DefaultAppContainer(context: Context) : AppContainer {
     override val syncPastEventsUseCase: ISyncPastEventsUseCase by lazy {
         SyncPastEventsUseCase(swRepository)
     }
+    override val createEventUseCase: ICreateEventUseCase by lazy {
+        CreateEventUseCase(swRepository)
+    }
+    override val editEventUseCase: IEditEventUseCase by lazy {
+        EditEventUseCase(swRepository)
+    }
 
     /** Factory метод для создания ProfileViewModel */
     override fun profileViewModelFactory() = ProfileViewModel(
@@ -661,6 +678,17 @@ class DefaultAppContainer(context: Context) : AppContainer {
             savedStateHandle = savedStateHandle,
             userNotifier = userNotifier,
             logger = logger
+        )
+
+    /** Factory метод для создания EventFormViewModel */
+    override fun eventFormViewModelFactory(mode: EventFormMode) =
+        EventFormViewModel(
+            mode = mode,
+            createEventUseCase = createEventUseCase,
+            editEventUseCase = editEventUseCase,
+            avatarHelper = avatarHelper,
+            logger = logger,
+            userNotifier = userNotifier
         )
 
     // ==================== API клиенты для разных функциональных областей ====================

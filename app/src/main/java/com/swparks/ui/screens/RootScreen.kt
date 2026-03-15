@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.swparks.JetpackWorkoutApplication
 import com.swparks.data.model.Park
 import com.swparks.data.model.User
@@ -30,6 +31,7 @@ import com.swparks.data.preferences.AppSettingsDataStore
 import com.swparks.navigation.AppState
 import com.swparks.navigation.BottomNavigationBar
 import com.swparks.navigation.Screen
+import com.swparks.ui.model.EventFormMode
 import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.model.ParticipantsMode
 import com.swparks.ui.screens.auth.LoginSheetHost
@@ -38,6 +40,8 @@ import com.swparks.ui.screens.common.ParticipantsAction
 import com.swparks.ui.screens.common.ParticipantsConfig
 import com.swparks.ui.screens.common.ParticipantsScreen
 import com.swparks.ui.screens.events.EventDetailScreen
+import com.swparks.ui.screens.events.EventFormNavigationAction
+import com.swparks.ui.screens.events.EventFormScreen
 import com.swparks.ui.screens.events.EventsScreen
 import com.swparks.ui.screens.events.EventsTopAppBar
 import com.swparks.ui.screens.journals.JournalEntriesScreen
@@ -79,12 +83,32 @@ import com.swparks.ui.screens.profile.UserFriendsScreen
 import com.swparks.ui.screens.profile.UserTrainingParksScreen
 import com.swparks.ui.screens.themeicon.ThemeIconScreen
 import com.swparks.ui.viewmodel.EventDetailViewModel
+import com.swparks.ui.viewmodel.EventFormViewModel
+import com.swparks.ui.viewmodel.EventsViewModel
 import com.swparks.ui.viewmodel.ThemeIconViewModel
 import com.swparks.util.WorkoutAppJson
 import com.swparks.util.readJSONFromAssets
 import com.swparks.util.toUiText
 
 private const val EVENT_PARTICIPANTS_USERS_JSON_KEY = "event_participants_users_json"
+private val BOTTOM_BAR_HIDDEN_BASE_ROUTES = setOf(
+    Screen.CreateEvent,
+    Screen.EditEvent,
+    Screen.CreateEventForPark,
+    Screen.SelectParkForEvent,
+    Screen.EditProfile,
+    Screen.ChangePassword
+).map { it.route.substringBefore("/").substringBefore("?") }.toSet()
+
+internal fun shouldShowBottomBar(route: String?): Boolean {
+    val baseRoute = route
+        ?.substringBefore("?")
+        ?.substringBefore("/")
+        .orEmpty()
+
+    if (baseRoute.isBlank()) return true
+    return baseRoute !in BOTTOM_BAR_HIDDEN_BASE_ROUTES
+}
 
 @Composable
 fun RootScreen(appState: AppState) {
@@ -160,6 +184,10 @@ fun RootScreen(appState: AppState) {
         appContainer.blacklistViewModelFactory()
     }
 
+    // Создаем EventsViewModel на уровне RootScreen для возможности обновления
+    // списка мероприятий при возврате с EventFormScreen после создания
+    val eventsViewModel = viewModel<EventsViewModel>(factory = EventsViewModel.Factory)
+
     // Подписываемся на Flow из ProfileViewModel для реактивного обновления
     val currentUser by profileViewModel.currentUser.collectAsState()
 
@@ -218,7 +246,11 @@ fun RootScreen(appState: AppState) {
             }
         },
         bottomBar = {
-            BottomNavigationBar(appState = appState)
+            val navBackStackEntry by appState.navController.currentBackStackEntryAsState()
+            val currentRoute = navBackStackEntry?.destination?.route ?: ""
+            if (shouldShowBottomBar(currentRoute)) {
+                BottomNavigationBar(appState = appState)
+            }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -247,8 +279,12 @@ fun RootScreen(appState: AppState) {
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues),
+                    viewModel = eventsViewModel,
                     onNavigateToEventDetail = { eventId ->
                         appState.navController.navigate(Screen.EventDetail.createRoute(eventId))
+                    },
+                    onNavigateToCreateEvent = {
+                        appState.navController.navigate(Screen.CreateEvent.route)
                     }
                 )
             }
@@ -383,7 +419,7 @@ fun RootScreen(appState: AppState) {
                         defaultValue = "events"
                     }
                 )
-            ) {
+            ) { navBackStackEntry ->
                 val eventDetailViewModel = viewModel<EventDetailViewModel>(
                     factory = EventDetailViewModel.factory(
                         swRepository = appContainer.swRepository,
@@ -394,9 +430,30 @@ fun RootScreen(appState: AppState) {
                     )
                 )
 
+                val updatedEventJson = navBackStackEntry.savedStateHandle
+                    .getStateFlow<String?>("updatedEvent", null)
+                    .collectAsState()
+                    .value
+
+                LaunchedEffect(updatedEventJson) {
+                    if (updatedEventJson != null) {
+                        val updatedEvent =
+                            WorkoutAppJson.decodeFromString<com.swparks.data.model.Event>(
+                                updatedEventJson
+                            )
+                        eventDetailViewModel.onEventUpdated(updatedEvent)
+                        eventsViewModel.onEventUpdated(updatedEvent)
+                        navBackStackEntry.savedStateHandle.remove<String>("updatedEvent")
+                    }
+                }
+
                 EventDetailScreen(
                     viewModel = eventDetailViewModel,
                     onBack = { appState.navController.popBackStack() },
+                    onEventDeleted = { eventId ->
+                        eventsViewModel.removeDeletedEvent(eventId)
+                        appState.navController.popBackStack()
+                    },
                     onNavigateToUserProfile = { userId ->
                         appState.navController.navigate(
                             Screen.OtherUserProfile.createRoute(userId, "events")
@@ -411,16 +468,197 @@ fun RootScreen(appState: AppState) {
                             .savedStateHandle
                             .set(EVENT_PARTICIPANTS_USERS_JSON_KEY, usersJson)
                     },
+                    onNavigateToEditEvent = { event ->
+                        val editRoute = Screen.EditEvent.createRoute(event.id, "events")
+                        appState.navController.navigate(editRoute)
+                        val eventJson = WorkoutAppJson.encodeToString(event)
+                        appState.navController.getBackStackEntry(editRoute)
+                            .savedStateHandle
+                            .set("event", eventJson)
+                    },
                     parentPaddingValues = paddingValues
                 )
             }
 
-            composable(route = Screen.CreateEvent.route) {
-                // TODO: Реализовать CreateEventScreen
+            composable(route = Screen.CreateEvent.route) { navBackStackEntry ->
+                val viewModel: EventFormViewModel = viewModel(
+                    factory = EventFormViewModel.factory(EventFormMode.RegularCreate, appContainer)
+                )
+
+                val selectedParkId = navBackStackEntry.savedStateHandle.get<Long>("selectedParkId")
+                val selectedParkName =
+                    navBackStackEntry.savedStateHandle.get<String>("selectedParkName")
+                if (selectedParkId != null && selectedParkName != null) {
+                    viewModel.onParkSelected(selectedParkId, selectedParkName)
+                    navBackStackEntry.savedStateHandle.remove<Long>("selectedParkId")
+                    navBackStackEntry.savedStateHandle.remove<String>("selectedParkName")
+                }
+
+                EventFormScreen(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    viewModel = viewModel,
+                    onAction = { action ->
+                        when (action) {
+                            is EventFormNavigationAction.Back -> appState.navController.popBackStack()
+                            is EventFormNavigationAction.BackWithCreatedEvent -> {
+                                eventsViewModel.addCreatedEvent(action.event)
+                                appState.navController.popBackStack()
+                            }
+
+                            is EventFormNavigationAction.NavigateToSelectPark -> {
+                                val userId = currentUser?.id ?: return@EventFormScreen
+                                appState.navController.navigate(
+                                    Screen.SelectParkForEvent.createRoute(userId, "events")
+                                )
+                            }
+                        }
+                    }
+                )
             }
 
-            composable(route = Screen.EditEvent.route) {
-                // TODO: Реализовать EditEventScreen
+            composable(
+                route = Screen.EditEvent.route,
+                arguments = listOf(
+                    androidx.navigation.navArgument("eventId") {
+                        type = androidx.navigation.NavType.LongType
+                    },
+                    androidx.navigation.navArgument("source") {
+                        type = androidx.navigation.NavType.StringType
+                        defaultValue = "events"
+                    }
+                )
+            ) { navBackStackEntry ->
+                val eventId = navBackStackEntry.arguments?.getLong("eventId") ?: 0L
+                val event = navBackStackEntry.savedStateHandle.get<String>("event")
+                    ?.let { WorkoutAppJson.decodeFromString<com.swparks.data.model.Event>(it) }
+
+                if (event != null) {
+                    val viewModel: EventFormViewModel = viewModel(
+                        factory = EventFormViewModel.factory(
+                            EventFormMode.EditExisting(eventId = eventId, event = event),
+                            appContainer
+                        )
+                    )
+
+                    val selectedParkId =
+                        navBackStackEntry.savedStateHandle.get<Long>("selectedParkId")
+                    val selectedParkName =
+                        navBackStackEntry.savedStateHandle.get<String>("selectedParkName")
+                    if (selectedParkId != null && selectedParkName != null) {
+                        viewModel.onParkSelected(selectedParkId, selectedParkName)
+                        navBackStackEntry.savedStateHandle.remove<Long>("selectedParkId")
+                        navBackStackEntry.savedStateHandle.remove<String>("selectedParkName")
+                    }
+
+                    EventFormScreen(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        viewModel = viewModel,
+                        onAction = { action ->
+                            when (action) {
+                                is EventFormNavigationAction.Back -> appState.navController.popBackStack()
+                                is EventFormNavigationAction.BackWithCreatedEvent -> {
+                                    val updatedEventJson =
+                                        WorkoutAppJson.encodeToString(action.event)
+                                    appState.navController.previousBackStackEntry
+                                        ?.savedStateHandle
+                                        ?.set("updatedEvent", updatedEventJson)
+                                    appState.navController.popBackStack()
+                                }
+
+                                is EventFormNavigationAction.NavigateToSelectPark -> {
+                                    val userId = currentUser?.id ?: return@EventFormScreen
+                                    appState.navController.navigate(
+                                        Screen.SelectParkForEvent.createRoute(userId, "events")
+                                    )
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+
+            composable(
+                route = Screen.CreateEventForPark.route,
+                arguments = listOf(
+                    androidx.navigation.navArgument("parkId") {
+                        type = androidx.navigation.NavType.LongType
+                    },
+                    androidx.navigation.navArgument("parkName") {
+                        type = androidx.navigation.NavType.StringType
+                    },
+                    androidx.navigation.navArgument("source") {
+                        type = androidx.navigation.NavType.StringType
+                        defaultValue = "parks"
+                    }
+                )
+            ) { navBackStackEntry ->
+                val parkId = navBackStackEntry.arguments?.getLong("parkId") ?: 0L
+                val parkName = navBackStackEntry.arguments?.getString("parkName") ?: ""
+                val viewModel: EventFormViewModel = viewModel(
+                    factory = EventFormViewModel.factory(
+                        EventFormMode.CreateForSelected(parkId = parkId, parkName = parkName),
+                        appContainer
+                    )
+                )
+                EventFormScreen(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    viewModel = viewModel,
+                    onAction = { action ->
+                        when (action) {
+                            is EventFormNavigationAction.Back -> appState.navController.popBackStack()
+                            is EventFormNavigationAction.BackWithCreatedEvent -> {
+                                eventsViewModel.addCreatedEvent(action.event)
+                                appState.navController.popBackStack()
+                            }
+
+                            is EventFormNavigationAction.NavigateToSelectPark -> {
+                                // Игнорируем - в CreateForSelected парк уже выбран
+                            }
+                        }
+                    }
+                )
+            }
+
+            composable(
+                route = Screen.SelectParkForEvent.route,
+                arguments = listOf(
+                    androidx.navigation.navArgument("userId") {
+                        type = androidx.navigation.NavType.LongType
+                    },
+                    androidx.navigation.navArgument("source") {
+                        type = androidx.navigation.NavType.StringType
+                        defaultValue = "events"
+                    }
+                )
+            ) { navBackStackEntry ->
+                val userId = navBackStackEntry.arguments?.getLong("userId") ?: 0L
+                val viewModel = remember(appContainer, userId) {
+                    appContainer.userTrainingParksViewModelFactory(userId)
+                }
+                UserTrainingParksScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    viewModel = viewModel,
+                    onBackClick = { appState.navController.popBackStack() },
+                    selectionMode = true,
+                    onParkSelected = { parkId, parkName ->
+                        appState.navController.previousBackStackEntry?.savedStateHandle?.set(
+                            "selectedParkId",
+                            parkId
+                        )
+                        appState.navController.previousBackStackEntry?.savedStateHandle?.set(
+                            "selectedParkName",
+                            parkName
+                        )
+                        appState.navController.popBackStack()
+                    },
+                    parentPaddingValues = paddingValues
+                )
             }
 
             composable(

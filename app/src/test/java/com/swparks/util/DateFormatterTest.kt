@@ -181,4 +181,32 @@ class DateFormatterTest {
         // Then
         assertEquals(result1, result2)
     }
+
+    @Test
+    fun parseIsoDate_whenUtcTimezone_thenConvertsToLocalTime() {
+        // Given - дата в UTC: 2026-03-15T20:17:09+00:00
+        val dateString = "2026-03-15T20:17:09+00:00"
+
+        // When
+        val date = DateFormatter.parseIsoDate(dateString)
+
+        // Then - проверяем что timestamp соответствует UTC времени
+        // 2026-03-15T20:17:09 UTC = 1773605829000 ms
+        val expectedMillis = 1773605829000L
+        assertEquals(expectedMillis, date.time)
+    }
+
+    @Test
+    fun parseIsoDate_whenUtcPlusOffset_thenCorrectlyParses() {
+        // Given - дата с UTC+offset: 2026-03-15T23:17:09+03:00
+        val dateString = "2026-03-15T23:17:09+03:00"
+
+        // When
+        val date = DateFormatter.parseIsoDate(dateString)
+
+        // Then - это то же самое время что и 2026-03-15T20:17:09+00:00
+        // 2026-03-15T23:17:09+03:00 = 2026-03-15T20:17:09 UTC = 1773605829000 ms
+        val expectedMillis = 1773605829000L
+        assertEquals(expectedMillis, date.time)
+    }
 }

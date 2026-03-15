@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Comment
+import com.swparks.data.model.Event
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.data.model.removePhotoById
@@ -57,8 +58,17 @@ sealed class EventDetailEvent {
 
     /**
      * Мероприятие успешно удалено, нужно закрыть экран.
+     *
+     * @param eventId Идентификатор удаленного мероприятия
      */
-    data object EventDeleted : EventDetailEvent()
+    data class EventDeleted(val eventId: Long) : EventDetailEvent()
+
+    /**
+     * Навигация к экрану редактирования мероприятия.
+     *
+     * @param event Мероприятие для редактирования
+     */
+    data class NavigateToEditEvent(val event: Event) : EventDetailEvent()
 
     /**
      * Фото успешно удалено.
@@ -430,6 +440,9 @@ class EventDetailViewModel(
         val currentState = _uiState.value
         if (currentState is EventDetailUIState.Content) {
             logger.d(TAG, "Нажата кнопка редактирования мероприятия id=${currentState.event.id}")
+            viewModelScope.launch {
+                _events.emit(EventDetailEvent.NavigateToEditEvent(currentState.event))
+            }
         }
     }
 
@@ -462,7 +475,7 @@ class EventDetailViewModel(
                     onSuccess = {
                         logger.i(TAG, "Мероприятие id=$eventId успешно удалено")
                         viewModelScope.launch {
-                            _events.emit(EventDetailEvent.EventDeleted)
+                            _events.emit(EventDetailEvent.EventDeleted(eventId))
                         }
                     },
                     onFailure = { exception ->
@@ -876,6 +889,22 @@ class EventDetailViewModel(
                     )
                 )
             }
+        }
+    }
+
+    override fun onEventUpdated(event: Event) {
+        logger.d(TAG, "Обновление мероприятия после редактирования: ${event.title}")
+
+        viewModelScope.launch {
+            val address = buildAddress(event.countryID, event.cityID, event.address)
+            val authorAddress = buildAuthorAddress(event.author)
+
+            _uiState.value = EventDetailUIState.Content(
+                event = event,
+                address = address,
+                authorAddress = authorAddress
+            )
+            updateIsEventAuthor()
         }
     }
 

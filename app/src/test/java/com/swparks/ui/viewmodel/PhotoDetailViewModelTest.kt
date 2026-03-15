@@ -7,7 +7,6 @@ import com.swparks.ui.state.PhotoDetailAction
 import com.swparks.ui.state.PhotoDetailEvent
 import com.swparks.ui.state.PhotoDetailUIState
 import com.swparks.util.AppError
-import com.swparks.util.Complaint
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import io.mockk.coEvery
@@ -235,7 +234,6 @@ class PhotoDetailViewModelTest {
         val event = viewModel.events.receiveAsFlow().first()
         assertTrue(event is PhotoDetailEvent.SendPhotoComplaint)
         val complaint = (event as PhotoDetailEvent.SendPhotoComplaint).complaint
-        assertTrue(complaint is Complaint.EventPhoto)
         assertEquals(testEventTitle, complaint.eventTitle)
     }
 

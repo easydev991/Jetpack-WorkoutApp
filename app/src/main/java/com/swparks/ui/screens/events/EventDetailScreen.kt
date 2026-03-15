@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
+import com.swparks.data.model.Event
 import com.swparks.data.model.User
 import com.swparks.ui.ds.ErrorContentView
 import com.swparks.ui.ds.LoadingOverlayView
@@ -55,8 +56,10 @@ import com.swparks.util.DateFormatter
 fun EventDetailScreen(
     viewModel: IEventDetailViewModel,
     onBack: () -> Unit,
+    onEventDeleted: (Long) -> Unit,
     onNavigateToUserProfile: (Long) -> Unit,
     onNavigateToParticipants: (Long, List<User>) -> Unit,
+    onNavigateToEditEvent: (Event) -> Unit,
     parentPaddingValues: PaddingValues
 ) {
     val context = LocalContext.current
@@ -80,7 +83,8 @@ fun EventDetailScreen(
                 EventDetailEvent.ShowDeleteConfirmDialog -> showDeleteEventDialog = true
                 is EventDetailEvent.ShowDeletePhotoConfirmDialog -> showDeletePhotoDialog = true
                 EventDetailEvent.ShowDeleteCommentConfirmDialog -> showDeleteCommentDialog = true
-                EventDetailEvent.EventDeleted -> onBack()
+                is EventDetailEvent.EventDeleted -> onEventDeleted(event.eventId)
+                is EventDetailEvent.NavigateToEditEvent -> onNavigateToEditEvent(event.event)
                 is EventDetailEvent.PhotoDeleted -> Unit
                 is EventDetailEvent.OpenCalendar -> {
                     val beginTime = DateFormatter.parseIsoDateToMillis(event.beginDate)
@@ -185,9 +189,7 @@ fun EventDetailScreen(
                     if (isAuthorized && isEventAuthor) {
                         EventAuthorActionsButton(
                             isRefreshing = isRefreshing,
-                            onEditClick = {
-                                android.util.Log.d("EventDetailScreen", "Edit event clicked")
-                            },
+                            onEditClick = viewModel::onEditClick,
                             onDeleteClick = viewModel::onDeleteClick
                         )
                     }

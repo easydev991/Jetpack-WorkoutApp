@@ -81,6 +81,7 @@
     <string name="no_friends_yet">No friends yet</string>
     <string name="no_participants">No participants yet</string>
     <string name="where_trains">Where trains</string>
+    <string name="your_parks">Your parks</string>
     <string name="added_parks">Added parks</string>
     <string name="male_added_parks">Added parks</string>
     <string name="female_added_parks">Added parks</string>
@@ -399,4 +400,20 @@
     <!-- Chat screen -->
     <string name="chat_empty_messages">No messages yet</string>
     <string name="refresh">Refresh</string>
+
+    <!-- Event form screen -->
+    <string name="event_form_title_create">New Event</string>
+    <string name="event_form_title_edit">Event</string>
+    <string name="event_form_name_label">Title</string>
+    <string name="event_form_name_placeholder">Event title</string>
+    <string name="event_form_description_label">Description</string>
+    <string name="event_form_description_placeholder">Add some details about the upcoming event</string>
+    <string name="event_form_park_label">Park</string>
+    <string name="event_form_park_select">Select park</string>
+    <string name="event_form_date_label">Date and time</string>
+    <string name="event_form_save">Save</string>
+    <string name="event_form_confirm_close_title">Close?</string>
+    <string name="event_form_confirm_close_message">Unsaved changes will be lost</string>
+    <string name="event_form_error_create">Failed to create event</string>
+    <string name="event_form_error_edit">Failed to edit event</string>
 </resources>
