@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import retrofit2.Response
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -234,7 +235,7 @@ class SWRepositoryProfileTest {
     fun deleteUser_whenApiReturnsSuccess_thenReturnsSuccess() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.deleteUser() } returns mockk(relaxed = true)
+        coEvery { mockApi.deleteUser() } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())

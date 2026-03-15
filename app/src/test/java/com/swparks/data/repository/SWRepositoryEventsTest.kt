@@ -29,6 +29,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import retrofit2.Response
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -374,7 +375,7 @@ class SWRepositoryEventsTest {
     fun changeIsGoingToEvent_whenGoTrue_thenCallsPostGoToEvent() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.postGoToEvent(1L) } returns mockk(relaxed = true)
+        coEvery { mockApi.postGoToEvent(1L) } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -402,7 +403,7 @@ class SWRepositoryEventsTest {
     fun changeIsGoingToEvent_whenGoFalse_thenCallsDeleteGoToEvent() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.deleteGoToEvent(1L) } returns mockk(relaxed = true)
+        coEvery { mockApi.deleteGoToEvent(1L) } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -457,7 +458,7 @@ class SWRepositoryEventsTest {
     fun deleteEvent_whenApiReturnsSuccess_thenReturnsSuccess() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.deleteEvent(1L) } returns mockk(relaxed = true)
+        coEvery { mockApi.deleteEvent(1L) } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())

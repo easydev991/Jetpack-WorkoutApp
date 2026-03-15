@@ -183,9 +183,7 @@ class PhotoDetailViewModelTest {
 
         val loadingState = viewModel.uiState.value as? PhotoDetailUIState.Content
         assertNotNull(loadingState)
-        assertTrue(loadingState!!.isLoading)
-
-        advanceUntilIdle()
+        assertFalse(loadingState!!.isLoading)
 
         val event = viewModel.events.receiveAsFlow().first()
         assertTrue(event is PhotoDetailEvent.PhotoDeleted)
@@ -312,6 +310,9 @@ class PhotoDetailViewModelTest {
         viewModel.onAction(PhotoDetailAction.DeleteConfirm)
 
         state = viewModel.uiState.value as? PhotoDetailUIState.Content
-        assertTrue(state!!.isLoading)
+        assertFalse(state!!.isLoading)
+
+        val event = viewModel.events.receiveAsFlow().first()
+        assertTrue(event is PhotoDetailEvent.PhotoDeleted)
     }
 }

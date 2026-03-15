@@ -363,7 +363,7 @@ class SWRepositoryJournalsTest {
                 userId = any(),
                 title = any()
             )
-        } returns mockk(relaxed = true)
+        } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())

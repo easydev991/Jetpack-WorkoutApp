@@ -27,6 +27,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import retrofit2.Response
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -183,7 +184,7 @@ class SWRepositoryFriendsTest {
     fun respondToFriendRequest_whenAcceptTrue_thenUpdatesCache() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.acceptFriendRequest(2L) } returns mockk(relaxed = true)
+        coEvery { mockApi.acceptFriendRequest(2L) } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -213,7 +214,7 @@ class SWRepositoryFriendsTest {
     fun respondToFriendRequest_whenAcceptFalse_thenUpdatesCache() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.declineFriendRequest(2L) } returns mockk(relaxed = true)
+        coEvery { mockApi.declineFriendRequest(2L) } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -272,7 +273,7 @@ class SWRepositoryFriendsTest {
     fun friendAction_whenActionAdd_thenCallsSendFriendRequest() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.sendFriendRequest(2L) } returns mockk(relaxed = true)
+        coEvery { mockApi.sendFriendRequest(2L) } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -302,7 +303,7 @@ class SWRepositoryFriendsTest {
     fun friendAction_whenActionRemove_thenCallsDeleteFriend() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.deleteFriend(2L) } returns mockk(relaxed = true)
+        coEvery { mockApi.deleteFriend(2L) } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -394,7 +395,7 @@ class SWRepositoryFriendsTest {
         // Given
         val mockUser = createMockUser(2L)
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.addToBlacklist(2L) } returns mockk(relaxed = true)
+        coEvery { mockApi.addToBlacklist(2L) } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -423,7 +424,7 @@ class SWRepositoryFriendsTest {
         // Given
         val mockUser = createMockUser(2L)
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.deleteFromBlacklist(2L) } returns mockk(relaxed = true)
+        coEvery { mockApi.deleteFromBlacklist(2L) } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())

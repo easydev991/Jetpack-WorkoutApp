@@ -26,6 +26,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import retrofit2.Response
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -346,7 +347,7 @@ class SWRepositoryParksTest {
     fun deletePark_whenApiReturnsSuccess_thenReturnsSuccess() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.deletePark(1L) } returns mockk(relaxed = true)
+        coEvery { mockApi.deletePark(1L) } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -456,7 +457,7 @@ class SWRepositoryParksTest {
     fun changeTrainHereStatus_whenTrainHereTrue_thenCallsPostTrainHere() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.postTrainHere(1L) } returns mockk(relaxed = true)
+        coEvery { mockApi.postTrainHere(1L) } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -484,7 +485,7 @@ class SWRepositoryParksTest {
     fun changeTrainHereStatus_whenTrainHereFalse_thenCallsDeleteTrainHere() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.deleteTrainHere(1L) } returns mockk(relaxed = true)
+        coEvery { mockApi.deleteTrainHere(1L) } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())

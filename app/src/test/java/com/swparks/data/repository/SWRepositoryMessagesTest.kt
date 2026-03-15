@@ -18,6 +18,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import retrofit2.Response
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -201,7 +202,7 @@ class SWRepositoryMessagesTest {
     fun sendMessage_whenApiReturnsSuccess_thenReturnsSuccess() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.sendMessageTo(2L, "Hello") } returns mockk(relaxed = true)
+        coEvery { mockApi.sendMessageTo(2L, "Hello") } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -255,7 +256,7 @@ class SWRepositoryMessagesTest {
     fun markAsRead_whenApiReturnsSuccess_thenReturnsSuccess() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.markAsRead(any()) } returns mockk(relaxed = true)
+        coEvery { mockApi.markAsRead(any()) } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -309,7 +310,7 @@ class SWRepositoryMessagesTest {
     fun deleteDialog_whenApiReturnsSuccess_thenReturnsSuccess() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.deleteDialog(1L) } returns mockk(relaxed = true)
+        coEvery { mockApi.deleteDialog(1L) } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -392,7 +393,7 @@ class SWRepositoryMessagesTest {
     fun markDialogAsRead_whenApiReturnsSuccess_thenReturnsSuccess() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.markAsRead(2L) } returns mockk(relaxed = true)
+        coEvery { mockApi.markAsRead(2L) } returns Response.success(Unit)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())

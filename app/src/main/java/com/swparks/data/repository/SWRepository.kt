@@ -29,6 +29,7 @@ import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.exception.ServerException
 import com.swparks.domain.model.RegistrationParams
 import com.swparks.network.SWApi
+import retrofit2.Response
 import com.swparks.ui.model.EditJournalSettingsRequest
 import com.swparks.ui.model.EventForm
 import com.swparks.ui.model.EventType
@@ -266,6 +267,30 @@ class SWRepositoryImp(
         }
     }
 
+    /**
+     * Обрабатывает неуспешный Response и извлекает сообщение об ошибке
+     */
+    private fun handleResponseError(response: Response<*>, operation: String): ServerException {
+        val statusCode = response.code()
+        Log.e(TAG, "Ошибка сервера $statusCode при $operation")
+
+        return try {
+            val errorBody = response.errorBody()?.string()
+            if (errorBody != null) {
+                Log.e(TAG, "Тело ответа сервера: $errorBody")
+                val errorResponse = json.decodeFromString<ErrorResponse>(errorBody)
+                val errorMessage = errorResponse.realMessage ?: "Ошибка сервера: $statusCode"
+                ServerException(message = errorMessage)
+            } else {
+                val errorMessage = APIError.fromStatusCode(statusCode).errorMessage
+                ServerException(message = errorMessage)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Не удалось десериализовать ответ об ошибке: ${e.message}")
+            ServerException(message = "Ошибка сервера: $statusCode")
+        }
+    }
+
     // Существующие методы (для обратной совместимости)
     override suspend fun getPastEvents(): List<Event> = swApi.getPastEvents()
 
@@ -442,10 +467,13 @@ class SWRepositoryImp(
 
     override suspend fun deleteUser(): Result<Unit> =
         try {
-            swApi.deleteUser()
-            // Очищаем состояние авторизации при удалении аккаунта
-            preferencesRepository.clearCurrentUserId()
-            Result.success(Unit)
+            val response = swApi.deleteUser()
+            if (response.isSuccessful) {
+                preferencesRepository.clearCurrentUserId()
+                Result.success(Unit)
+            } else {
+                Result.failure(handleResponseError(response, "удалении пользователя"))
+            }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "удалении пользователя"))
         } catch (e: HttpException) {
@@ -546,18 +574,22 @@ class SWRepositoryImp(
 
     override suspend fun respondToFriendRequest(userId: Long, accept: Boolean): Result<Unit> =
         try {
-            if (accept) {
+            val response = if (accept) {
                 swApi.acceptFriendRequest(userId)
-                // При принятии: помечаем как друга и увеличиваем счетчик
-                userDao.markAsFriend(userId)
-                userDao.incrementFriendsCount()
             } else {
                 swApi.declineFriendRequest(userId)
             }
-            // В обоих случаях: снимаем флаг заявки и уменьшаем счетчик заявок
-            userDao.removeFriendRequest(userId)
-            userDao.decrementFriendRequestCount()
-            Result.success(Unit)
+            if (response.isSuccessful) {
+                if (accept) {
+                    userDao.markAsFriend(userId)
+                    userDao.incrementFriendsCount()
+                }
+                userDao.removeFriendRequest(userId)
+                userDao.decrementFriendRequestCount()
+                Result.success(Unit)
+            } else {
+                Result.failure(handleResponseError(response, "обработке заявки в друзья"))
+            }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "обработке заявки в друзья"))
         } catch (e: HttpException) {
@@ -566,22 +598,22 @@ class SWRepositoryImp(
 
     override suspend fun friendAction(userId: Long, action: ApiFriendAction): Result<Unit> =
         try {
-            when (action) {
+            val response = when (action) {
                 ApiFriendAction.ADD -> swApi.sendFriendRequest(userId)
                 ApiFriendAction.REMOVE -> swApi.deleteFriend(userId)
             }
-            // Обновляем локальную базу данных после успешного ответа от сервера
-            when (action) {
-                // При отправке заявки не обновляем isFriend - пользователь ещё не стал другом
-                ApiFriendAction.ADD -> { /* noop - заявка отправлена, ждём подтверждения */
+            if (response.isSuccessful) {
+                when (action) {
+                    ApiFriendAction.ADD -> { /* noop - заявка отправлена, ждём подтверждения */ }
+                    ApiFriendAction.REMOVE -> {
+                        userDao.removeFriend(userId)
+                        userDao.decrementFriendsCount()
+                    }
                 }
-                // При удалении из друзей: снимаем флаг и уменьшаем счетчик
-                ApiFriendAction.REMOVE -> {
-                    userDao.removeFriend(userId)
-                    userDao.decrementFriendsCount()
-                }
+                Result.success(Unit)
+            } else {
+                Result.failure(handleResponseError(response, "действии с другом"))
             }
-            Result.success(Unit)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "действии с другом"))
         } catch (e: HttpException) {
@@ -590,16 +622,19 @@ class SWRepositoryImp(
 
     override suspend fun blacklistAction(user: User, option: ApiBlacklistOption): Result<Unit> =
         try {
-            when (option) {
+            val response = when (option) {
                 ApiBlacklistOption.ADD -> swApi.addToBlacklist(user.id)
                 ApiBlacklistOption.REMOVE -> swApi.deleteFromBlacklist(user.id)
             }
-            // Обновляем локальную базу данных после успешного ответа от сервера
-            when (option) {
-                ApiBlacklistOption.ADD -> userDao.addToBlacklist(user.id)
-                ApiBlacklistOption.REMOVE -> userDao.removeFromBlacklist(user.id)
+            if (response.isSuccessful) {
+                when (option) {
+                    ApiBlacklistOption.ADD -> userDao.addToBlacklist(user.id)
+                    ApiBlacklistOption.REMOVE -> userDao.removeFromBlacklist(user.id)
+                }
+                Result.success(Unit)
+            } else {
+                Result.failure(handleResponseError(response, "действии с черным списком"))
             }
-            Result.success(Unit)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "действии с черным списком"))
         } catch (e: HttpException) {
@@ -685,8 +720,12 @@ class SWRepositoryImp(
 
     override suspend fun deletePark(parkId: Long): Result<Unit> =
         try {
-            swApi.deletePark(parkId)
-            Result.success(Unit)
+            val response = swApi.deletePark(parkId)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(handleResponseError(response, "удалении площадки"))
+            }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "удалении площадки"))
         } catch (e: HttpException) {
@@ -705,12 +744,16 @@ class SWRepositoryImp(
 
     override suspend fun changeTrainHereStatus(trainHere: Boolean, parkId: Long): Result<Unit> =
         try {
-            if (trainHere) {
+            val response = if (trainHere) {
                 swApi.postTrainHere(parkId)
             } else {
                 swApi.deleteTrainHere(parkId)
             }
-            Result.success(Unit)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(handleResponseError(response, "изменении статуса тренировки"))
+            }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "изменении статуса тренировки"))
         } catch (e: HttpException) {
@@ -789,12 +832,16 @@ class SWRepositoryImp(
 
     override suspend fun changeIsGoingToEvent(go: Boolean, eventId: Long): Result<Unit> =
         try {
-            if (go) {
+            val response = if (go) {
                 swApi.postGoToEvent(eventId)
             } else {
                 swApi.deleteGoToEvent(eventId)
             }
-            Result.success(Unit)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(handleResponseError(response, "изменении участия в мероприятии"))
+            }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "изменении участия в мероприятии"))
         } catch (e: HttpException) {
@@ -803,10 +850,14 @@ class SWRepositoryImp(
 
     override suspend fun deleteEvent(eventId: Long): Result<Unit> =
         try {
-            swApi.deleteEvent(eventId)
-            _futureEvents.value = _futureEvents.value.filter { it.id != eventId }
-            eventDao.deleteById(eventId)
-            Result.success(Unit)
+            val response = swApi.deleteEvent(eventId)
+            if (response.isSuccessful) {
+                _futureEvents.value = _futureEvents.value.filter { it.id != eventId }
+                eventDao.deleteById(eventId)
+                Result.success(Unit)
+            } else {
+                Result.failure(handleResponseError(response, "удалении мероприятия"))
+            }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "удалении мероприятия"))
         } catch (e: HttpException) {
@@ -862,8 +913,12 @@ class SWRepositoryImp(
 
     override suspend fun sendMessage(message: String, userId: Long): Result<Unit> =
         try {
-            swApi.sendMessageTo(userId, message)
-            Result.success(Unit)
+            val response = swApi.sendMessageTo(userId, message)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(handleResponseError(response, "отправке сообщения"))
+            }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "отправке сообщения"))
         } catch (e: HttpException) {
@@ -872,8 +927,12 @@ class SWRepositoryImp(
 
     override suspend fun markAsRead(userId: Long): Result<Unit> =
         try {
-            swApi.markAsRead(userId)
-            Result.success(Unit)
+            val response = swApi.markAsRead(userId)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(handleResponseError(response, "отметке сообщений прочитанными"))
+            }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "отметке сообщений прочитанными"))
         } catch (e: HttpException) {
@@ -882,30 +941,35 @@ class SWRepositoryImp(
 
     override suspend fun markDialogAsRead(dialogId: Long, userId: Int): Result<Unit> =
         try {
-            swApi.markAsRead(userId.toLong())
-            dialogDao.updateUnreadCount(dialogId)
-            Result.success(Unit)
+            val response = swApi.markAsRead(userId.toLong())
+            if (response.isSuccessful) {
+                dialogDao.updateUnreadCount(dialogId)
+                Result.success(Unit)
+            } else {
+                Result.failure(handleResponseError(response, "отметке сообщений прочитанными"))
+            }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "отметке сообщений прочитанными"))
         } catch (e: HttpException) {
             Result.failure(handleHttpException(e, "отметке сообщений прочитанными"))
         } catch (e: IllegalStateException) {
-            // Ошибка "closed" при таймауте соединения
             Result.failure(NetworkException("Ошибка сети: ${e.message}"))
         }
 
     override suspend fun deleteDialog(dialogId: Long): Result<Unit> =
         try {
-            swApi.deleteDialog(dialogId)
-            // Удаляем из БД после успешного API - это запустит реактивное обновление UI
-            dialogDao.deleteById(dialogId)
-            Result.success(Unit)
+            val response = swApi.deleteDialog(dialogId)
+            if (response.isSuccessful) {
+                dialogDao.deleteById(dialogId)
+                Result.success(Unit)
+            } else {
+                Result.failure(handleResponseError(response, "удалении диалога"))
+            }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "удалении диалога"))
         } catch (e: HttpException) {
             Result.failure(handleHttpException(e, "удалении диалога"))
         } catch (e: IllegalStateException) {
-            // Ошибка "closed" при таймауте соединения
             Result.failure(NetworkException("Ошибка сети: ${e.message}"))
         }
 
@@ -1006,9 +1070,12 @@ class SWRepositoryImp(
                 TAG,
                 "Ответ сервера при создании дневника: код=${response.code()}, успешно=${response.isSuccessful}"
             )
-            // Обновляем счётчик дневников текущего пользователя
-            userDao.incrementJournalCount()
-            Result.success(Unit)
+            if (response.isSuccessful) {
+                userDao.incrementJournalCount()
+                Result.success(Unit)
+            } else {
+                Result.failure(handleResponseError(response, "создании дневника"))
+            }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "создании дневника"))
         } catch (e: HttpException) {
