@@ -29,7 +29,6 @@ import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.exception.ServerException
 import com.swparks.domain.model.RegistrationParams
 import com.swparks.network.SWApi
-import retrofit2.Response
 import com.swparks.ui.model.EditJournalSettingsRequest
 import com.swparks.ui.model.EventForm
 import com.swparks.ui.model.EventType
@@ -51,6 +50,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import retrofit2.HttpException
+import retrofit2.Response
 import java.io.IOException
 
 /**
@@ -604,7 +604,9 @@ class SWRepositoryImp(
             }
             if (response.isSuccessful) {
                 when (action) {
-                    ApiFriendAction.ADD -> { /* noop - заявка отправлена, ждём подтверждения */ }
+                    ApiFriendAction.ADD -> { /* noop - заявка отправлена, ждём подтверждения */
+                    }
+
                     ApiFriendAction.REMOVE -> {
                         userDao.removeFriend(userId)
                         userDao.decrementFriendsCount()

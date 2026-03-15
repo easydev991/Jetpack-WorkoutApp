@@ -105,7 +105,9 @@ fun PhotoDetailSheetHost(
                         showDeleteDialog = showDeleteDialog,
                         onAction = { action ->
                             when (action) {
-                                PhotoDetailAction.DeleteDismiss, PhotoDetailAction.DeleteConfirm -> showDeleteDialog = false
+                                PhotoDetailAction.DeleteDismiss, PhotoDetailAction.DeleteConfirm -> showDeleteDialog =
+                                    false
+
                                 else -> Unit
                             }
                             viewModel.onAction(action)

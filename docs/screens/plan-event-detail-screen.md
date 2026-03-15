@@ -1,6 +1,6 @@
 # План разработки экрана EventDetailScreen
 
-## Текущий статус: 95% завершено
+## Текущий статус: 100% завершено
 
 ### ✅ Выполнено
 
@@ -17,10 +17,11 @@
 | 8    | 20 unit-тестов в `EventDetailViewModelTest`                                                     |
 | 9    | `EventShareButton`, `EventAuthorActionsButton` в TopAppBar                                      |
 | 10   | Flow-based `EventsViewModel`: `getFutureEventsFlow()`, `syncFutureEvents()`                     |
+| 11   | `PhotoDetailScreen`: полноэкранный просмотр фото с zoom, удаление (API), жалоба, 17 тестов      |
 
 ### ⏳ В работе / Не начато
 
-* **Этап 11: PhotoDetailScreen** — детальный экран фото с удалением
+*Нет активных задач*
 
 ---
 
@@ -37,34 +38,7 @@
 
 ---
 
-## Этап 11: PhotoDetailScreen [НЕ НАЧАТО]
-
-### Цель
-
-Детальный экран просмотра фото с возможностью удаления для автора мероприятия.
-
-### Подробный план
-
-См. отдельный документ: **[plan-photo-detail-screen.md](./plan-photo-detail-screen.md)**
-
-### Краткое описание
-
-Первая итерация:
-* Модальный полноэкранный просмотр одной фотографии (ModalBottomSheet)
-* TopAppBar: крестик (закрытие), корзина (автор) или report (авторизованные)
-* Pinch-to-zoom и double-tap для масштабирования
-* Удаление с подтверждением (логирование, без API)
-* Жалоба через email клиент
-
-Future итерации:
-* Галерея (swipe между фото)
-* API интеграция для удаления
-* Обновление списка фото в EventDetailScreen
-
-### Зависимости
-
-* Photo model уже существует
-* `onPhotoClick` в ViewModel уже есть (только логирует)
+> **Детали Этапа 11 (PhotoDetailScreen):** См. [plan-photo-detail-screen.md](./plan-photo-detail-screen.md)
 
 ---
 

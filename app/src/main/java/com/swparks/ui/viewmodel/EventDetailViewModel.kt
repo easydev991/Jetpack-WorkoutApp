@@ -10,8 +10,8 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Comment
 import com.swparks.data.model.Photo
-import com.swparks.data.model.removePhotoById
 import com.swparks.data.model.User
+import com.swparks.data.model.removePhotoById
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.ds.CommentAction

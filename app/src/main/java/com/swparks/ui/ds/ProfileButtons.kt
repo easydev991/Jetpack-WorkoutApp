@@ -1,4 +1,4 @@
-package com.swparks.ui.screen.profile
+package com.swparks.ui.ds
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -6,7 +6,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
-import com.swparks.ui.ds.FormRowView
 
 /**
  * Кнопка перехода к списку друзей.
