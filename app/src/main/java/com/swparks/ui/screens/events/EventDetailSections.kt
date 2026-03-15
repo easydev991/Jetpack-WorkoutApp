@@ -271,7 +271,9 @@ internal fun EventDescriptionSection(
         ) {
             Text(
                 text = parsedDescription,
-                modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(dimensionResource(R.dimen.spacing_small)),
                 style = MaterialTheme.typography.bodyLarge
             )
         }

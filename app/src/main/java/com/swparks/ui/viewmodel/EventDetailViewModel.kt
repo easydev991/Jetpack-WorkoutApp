@@ -10,6 +10,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Comment
 import com.swparks.data.model.Photo
+import com.swparks.data.model.removePhotoById
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.repository.CountriesRepository
@@ -120,6 +121,21 @@ sealed class EventDetailEvent {
      * Показать диалог подтверждения удаления комментария.
      */
     data object ShowDeleteCommentConfirmDialog : EventDetailEvent()
+
+    /**
+     * Навигация к экрану детального просмотра фотографии.
+     *
+     * @param photo Фотография для просмотра
+     * @param eventId Идентификатор мероприятия
+     * @param eventTitle Название мероприятия
+     * @param isEventAuthor Является ли пользователь автором мероприятия
+     */
+    data class NavigateToPhotoDetail(
+        val photo: Photo,
+        val eventId: Long,
+        val eventTitle: String,
+        val isEventAuthor: Boolean
+    ) : EventDetailEvent()
 }
 
 /**
@@ -476,6 +492,19 @@ class EventDetailViewModel(
 
     override fun onPhotoClick(photo: Photo) {
         logger.d(TAG, "Нажата фотография id=${photo.id}")
+        val currentState = _uiState.value
+        if (currentState is EventDetailUIState.Content) {
+            viewModelScope.launch {
+                _events.emit(
+                    EventDetailEvent.NavigateToPhotoDetail(
+                        photo = photo,
+                        eventId = currentState.event.id,
+                        eventTitle = currentState.event.title,
+                        isEventAuthor = _isEventAuthor.value
+                    )
+                )
+            }
+        }
     }
 
     override fun onPhotoDeleteClick(photo: Photo) {
@@ -506,8 +535,14 @@ class EventDetailViewModel(
                     result.fold(
                         onSuccess = {
                             logger.i(TAG, "Фото id=$photoId успешно удалено")
-                            // Обновляем данные мероприятия
-                            refresh()
+                            val updatedPhotos = currentState.event.photos.removePhotoById(photoId)
+                            logger.d(
+                                TAG,
+                                "Перенумерация фото: было ${currentState.event.photos.size}, " +
+                                    "стало ${updatedPhotos.size}"
+                            )
+                            val updatedEvent = currentState.event.copy(photos = updatedPhotos)
+                            _uiState.value = currentState.copy(event = updatedEvent)
                             viewModelScope.launch {
                                 _events.emit(EventDetailEvent.PhotoDeleted(photoId))
                             }
@@ -798,6 +833,17 @@ class EventDetailViewModel(
     override fun onCommentDeleteDismiss() {
         logger.d(TAG, "Отмена удаления комментария")
         pendingDeleteCommentId = null
+    }
+
+    override fun onPhotoDeleted(photoId: Long) {
+        val currentState = _uiState.value
+        if (currentState is EventDetailUIState.Content) {
+            logger.d(TAG, "Локальное удаление фото id=$photoId из UI с перенумерацией")
+            val updatedPhotos = currentState.event.photos.removePhotoById(photoId)
+            _uiState.value = currentState.copy(
+                event = currentState.event.copy(photos = updatedPhotos)
+            )
+        }
     }
 
     // ==================== Обработка ошибок ====================

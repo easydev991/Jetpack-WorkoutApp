@@ -157,6 +157,14 @@ interface IEventDetailViewModel {
     fun onCommentDeleteDismiss()
 
     /**
+     * Обработка удаления фото из PhotoDetailSheetHost.
+     * Удаляет фото из локального состояния без запроса к серверу.
+     *
+     * @param photoId Идентификатор удаленного фото
+     */
+    fun onPhotoDeleted(photoId: Long)
+
+    /**
      * Обновление данных мероприятия (pull-to-refresh).
      */
     fun refresh()

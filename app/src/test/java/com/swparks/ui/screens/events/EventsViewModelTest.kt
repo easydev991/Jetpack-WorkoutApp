@@ -113,6 +113,24 @@ class EventsViewModelTest {
     }
 
     @Test
+    fun init_whenFutureEventsEmpty_showsContentWithEmptyList() = runTest {
+        every { mockGetFutureEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        coVerify { mockSyncFutureEventsUseCase() }
+        val state = viewModel.eventsUIState.value
+        assertTrue("State should be Content but was $state", state is EventsUIState.Content)
+        val contentState = state as EventsUIState.Content
+        assertEquals(EventKind.FUTURE, contentState.selectedTab)
+        assertTrue("Events should be empty", contentState.events.isEmpty())
+        assertFalse(contentState.isLoading)
+    }
+
+    @Test
     fun onTabSelected_past_loadsPastEventsFromCache() = runTest {
         val mockPastEventsList = listOf(createMockEvent(1L))
         every { mockGetFutureEventsFlowUseCase() } returns flowOf(emptyList())

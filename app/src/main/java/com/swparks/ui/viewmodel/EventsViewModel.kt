@@ -191,6 +191,15 @@ class EventsViewModel(
                     onSuccess = {
                         hasLoadedFutureEvents = true
                         logger.i(TAG, "Синхронизация будущих мероприятий успешна")
+                        val events = futureEventsCache
+                        if (_selectedTab.value == EventKind.FUTURE && events != null) {
+                            _eventsUIState.value = EventsUIState.Content(
+                                events = events,
+                                selectedTab = EventKind.FUTURE,
+                                isLoading = false,
+                                addresses = addressesCache
+                            )
+                        }
                     },
                     onFailure = { exception ->
                         logger.e(TAG, "Ошибка синхронизации: ${exception.message}", exception)

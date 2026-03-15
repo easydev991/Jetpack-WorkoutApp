@@ -43,7 +43,9 @@ import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.screens.common.TextEntrySheetHost
 import com.swparks.ui.screens.more.sendComplaint
+import com.swparks.ui.screens.photos.PhotoDetailSheetHost
 import com.swparks.ui.state.EventDetailUIState
+import com.swparks.ui.state.PhotoDetailConfig
 import com.swparks.ui.viewmodel.EventDetailEvent
 import com.swparks.ui.viewmodel.IEventDetailViewModel
 import com.swparks.util.DateFormatter
@@ -69,6 +71,8 @@ fun EventDetailScreen(
     var showDeleteCommentDialog by remember { mutableStateOf(false) }
     var showTextEntrySheet by remember { mutableStateOf(false) }
     var textEntryMode by remember { mutableStateOf<TextEntryMode?>(null) }
+    var showPhotoDetailSheet by remember { mutableStateOf(false) }
+    var photoDetailConfig by remember { mutableStateOf<PhotoDetailConfig?>(null) }
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
@@ -133,6 +137,17 @@ fun EventDetailScreen(
                 is EventDetailEvent.OpenCommentTextEntry -> {
                     textEntryMode = event.mode
                     showTextEntrySheet = true
+                }
+
+                is EventDetailEvent.NavigateToPhotoDetail -> {
+                    photoDetailConfig = PhotoDetailConfig(
+                        photoId = event.photo.id,
+                        eventId = event.eventId,
+                        eventTitle = event.eventTitle,
+                        isEventAuthor = event.isEventAuthor,
+                        photoUrl = event.photo.photo
+                    )
+                    showPhotoDetailSheet = true
                 }
             }
         }
@@ -408,12 +423,27 @@ fun EventDetailScreen(
 
     if (showTextEntrySheet && textEntryMode != null) {
         TextEntrySheetHost(
-            show = showTextEntrySheet,
+            show = true,
             mode = checkNotNull(textEntryMode),
             onDismissed = { showTextEntrySheet = false },
             onSendSuccess = {
                 showTextEntrySheet = false
                 viewModel.refresh()
+            }
+        )
+    }
+
+    val config = photoDetailConfig
+    if (showPhotoDetailSheet && config != null) {
+        PhotoDetailSheetHost(
+            show = true,
+            config = config,
+            onDismissed = { deletedPhotoId ->
+                showPhotoDetailSheet = false
+                photoDetailConfig = null
+                if (deletedPhotoId != null) {
+                    viewModel.onPhotoDeleted(deletedPhotoId)
+                }
             }
         )
     }

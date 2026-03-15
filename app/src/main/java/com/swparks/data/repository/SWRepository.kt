@@ -815,8 +815,23 @@ class SWRepositoryImp(
 
     override suspend fun deleteEventPhoto(eventId: Long, photoId: Long): Result<Unit> =
         try {
-            swApi.deleteEventPhoto(eventId, photoId)
-            Result.success(Unit)
+            val response = swApi.deleteEventPhoto(eventId, photoId)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = if (errorBody != null) {
+                    try {
+                        val errorResponse = json.decodeFromString<ErrorResponse>(errorBody)
+                        errorResponse.realMessage ?: "Ошибка сервера: ${response.code()}"
+                    } catch (e: Exception) {
+                        "Ошибка сервера: ${response.code()}"
+                    }
+                } else {
+                    "Ошибка сервера: ${response.code()}"
+                }
+                Result.failure(ServerException(message = errorMessage))
+            }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "удалении фото мероприятия"))
         } catch (e: HttpException) {
