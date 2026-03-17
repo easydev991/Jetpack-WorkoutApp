@@ -1,8 +1,10 @@
 package com.swparks.ui.screens.events
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -28,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
+import com.swparks.data.model.Event
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.DateTimePickerConfig
 import com.swparks.ui.ds.FormCardContainer
@@ -44,11 +47,13 @@ import com.swparks.ui.ds.SWDateTimePicker
 import com.swparks.ui.ds.SWTextEditor
 import com.swparks.ui.ds.SWTextField
 import com.swparks.ui.ds.TextFieldConfig
+import com.swparks.ui.model.EventForm
 import com.swparks.ui.state.EventFormEvent
+import com.swparks.ui.viewmodel.EventFormAction
 import com.swparks.ui.viewmodel.IEventFormViewModel
 import kotlinx.coroutines.flow.collectLatest
-import java.time.LocalDateTime
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -57,11 +62,18 @@ import androidx.compose.material.icons.Icons.AutoMirrored.Filled as AutoMirrored
 
 sealed class EventFormNavigationAction {
     data object Back : EventFormNavigationAction()
-    data class BackWithCreatedEvent(val event: com.swparks.data.model.Event) :
+    data class BackWithCreatedEvent(val event: Event) :
         EventFormNavigationAction()
 
     data class NavigateToSelectPark(val currentParkId: Long?) : EventFormNavigationAction()
 }
+
+private data class EventFormContentParams(
+    val form: EventForm,
+    val canSelectPark: Boolean,
+    val isEnabled: Boolean,
+    val onAction: (EventFormAction) -> Unit
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,6 +86,65 @@ fun EventFormScreen(
     val scrollState = rememberScrollState()
     var showConfirmDialog by remember { mutableStateOf(false) }
 
+    HandleEventFormEvents(viewModel = viewModel, onAction = onAction)
+
+    Scaffold(
+        topBar = {
+            EventFormTopBar(
+                titleRes = uiState.mode.navigationTitle,
+                onBackClick = {
+                    if (uiState.hasChanges) {
+                        showConfirmDialog = true
+                    } else {
+                        onAction(EventFormNavigationAction.Back)
+                    }
+                }
+            )
+        },
+        bottomBar = {
+            KeyboardAwareBottomBar {
+                SaveButton(
+                    enabled = uiState.canSave && !uiState.isSaving,
+                    onClick = viewModel::onSaveClick
+                )
+            }
+        },
+        modifier = modifier
+    ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            EventFormContent(
+                paddingValues = paddingValues,
+                scrollState = scrollState,
+                params = EventFormContentParams(
+                    form = uiState.form,
+                    canSelectPark = uiState.canSelectPark,
+                    isEnabled = !uiState.isSaving,
+                    onAction = viewModel::onAction
+                )
+            )
+
+            if (uiState.isSaving) {
+                LoadingOverlayView()
+            }
+        }
+    }
+
+    if (showConfirmDialog) {
+        ConfirmCloseDialog(
+            onDismiss = { showConfirmDialog = false },
+            onConfirm = {
+                showConfirmDialog = false
+                onAction(EventFormNavigationAction.Back)
+            }
+        )
+    }
+}
+
+@Composable
+private fun HandleEventFormEvents(
+    viewModel: IEventFormViewModel,
+    onAction: (EventFormNavigationAction) -> Unit
+) {
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
@@ -91,93 +162,70 @@ fun EventFormScreen(
             }
         }
     }
+}
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(text = stringResource(uiState.mode.navigationTitle)) },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        if (uiState.hasChanges) {
-                            showConfirmDialog = true
-                        } else {
-                            onAction(EventFormNavigationAction.Back)
-                        }
-                    }) {
-                        Icon(
-                            imageVector = AutoMirroredIcons.ArrowBack,
-                            contentDescription = stringResource(R.string.back)
-                        )
-                    }
-                }
-            )
-        },
-        bottomBar = {
-            KeyboardAwareBottomBar {
-                SaveButton(
-                    enabled = uiState.canSave && !uiState.isSaving,
-                    onClick = viewModel::onSaveClick
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EventFormTopBar(
+    titleRes: Int,
+    onBackClick: () -> Unit
+) {
+    CenterAlignedTopAppBar(
+        title = { Text(text = stringResource(titleRes)) },
+        navigationIcon = {
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    imageVector = AutoMirroredIcons.ArrowBack,
+                    contentDescription = stringResource(R.string.back)
                 )
-            }
-        },
-        modifier = modifier
-    ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .verticalScroll(scrollState)
-                    .padding(
-                        horizontal = dimensionResource(R.dimen.spacing_regular),
-                        vertical = dimensionResource(R.dimen.spacing_regular)
-                    ),
-                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
-            ) {
-                val isEnabled = !uiState.isSaving
-
-                Column {
-                    TitleField(
-                        value = uiState.form.title,
-                        enabled = isEnabled,
-                        onValueChange = viewModel::onTitleChange
-                    )
-
-                    DescriptionField(
-                        value = uiState.form.description,
-                        enabled = isEnabled,
-                        onValueChange = viewModel::onDescriptionChange
-                    )
-                }
-
-                ParkSelector(
-                    parkName = uiState.form.parkName,
-                    canSelectPark = uiState.canSelectPark,
-                    enabled = isEnabled,
-                    onClick = viewModel::onParkClick
-                )
-
-                DatePickerSection(
-                    date = uiState.form.date,
-                    enabled = isEnabled,
-                    onDateChange = viewModel::onDateChange,
-                    onTimeChange = viewModel::onTimeChange
-                )
-            }
-
-            if (uiState.isSaving) {
-                LoadingOverlayView()
             }
         }
-    }
+    )
+}
 
-    if (showConfirmDialog) {
-        ConfirmCloseDialog(
-            onDismiss = { showConfirmDialog = false },
-            onConfirm = {
-                showConfirmDialog = false
-                onAction(EventFormNavigationAction.Back)
-            }
+@Composable
+private fun EventFormContent(
+    paddingValues: PaddingValues,
+    scrollState: ScrollState,
+    params: EventFormContentParams
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+            .verticalScroll(scrollState)
+            .padding(
+                horizontal = dimensionResource(R.dimen.spacing_regular),
+                vertical = dimensionResource(R.dimen.spacing_regular)
+            ),
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
+    ) {
+        Column {
+            TitleField(
+                value = params.form.title,
+                enabled = params.isEnabled,
+                onValueChange = { params.onAction(EventFormAction.TitleChange(it)) }
+            )
+
+            DescriptionField(
+                value = params.form.description,
+                enabled = params.isEnabled,
+                onValueChange = { params.onAction(EventFormAction.DescriptionChange(it)) }
+            )
+        }
+
+        ParkSelector(
+            parkName = params.form.parkName,
+            canSelectPark = params.canSelectPark,
+            enabled = params.isEnabled,
+            onClick = { params.onAction(EventFormAction.ParkClick) }
+        )
+
+        DatePickerSection(
+            date = params.form.date,
+            enabled = params.isEnabled,
+            onDateChange = { params.onAction(EventFormAction.DateChange(it)) },
+            onTimeChange = { h, m -> params.onAction(EventFormAction.TimeChange(h, m)) }
         )
     }
 }

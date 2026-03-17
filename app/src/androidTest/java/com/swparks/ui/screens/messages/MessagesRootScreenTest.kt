@@ -1,19 +1,25 @@
 package com.swparks.ui.screens.messages
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.data.database.entity.DialogEntity
 import com.swparks.data.model.User
+import com.swparks.navigation.AppState
 import com.swparks.ui.model.Gender
 import com.swparks.ui.state.DialogsUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
+import com.swparks.ui.viewmodel.IDialogsViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -280,6 +286,44 @@ class MessagesRootScreenTest {
         assert(clickedUserId == testUserId) { "Ожидался userId=$testUserId" }
     }
 
+    @Test
+    fun messagesRootScreen_afterRecomposition_usesLatestOnActionCallback() {
+        val viewModel = FakeDialogsViewModel(
+            uiState = MutableStateFlow(DialogsUiState.Success(emptyList()))
+        )
+        val actionVersionState = mutableStateOf(1)
+        var invokedActionVersion = 0
+        val currentUser = createTestUser(friendsCount = 0)
+        val findUserText = context.getString(R.string.dialogs_find_user)
+
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(currentUser)
+            val currentVersion = actionVersionState.value
+
+            JetpackWorkoutAppTheme {
+                MessagesRootScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    viewModel = viewModel,
+                    appState = appState,
+                    onAction = { invokedActionVersion = currentVersion }
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(findUserText, ignoreCase = true).performClick()
+        assert(invokedActionVersion == 1) { "Первый клик должен использовать action callback v1" }
+
+        composeTestRule.runOnUiThread {
+            actionVersionState.value = 2
+        }
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText(findUserText, ignoreCase = true).performClick()
+        assert(invokedActionVersion == 2) { "После рекомпозиции должен вызываться action callback v2" }
+    }
+
     // ========== Helper methods ==========
 
     private fun createTestUser(friendsCount: Int = 0): User {
@@ -313,5 +357,26 @@ class MessagesRootScreenTest {
             unreadCount = 2,
             anotherUserId = anotherUserId
         )
+    }
+
+    private class FakeDialogsViewModel(
+        override val uiState: StateFlow<DialogsUiState> = MutableStateFlow(
+            DialogsUiState.Success(
+                emptyList()
+            )
+        ),
+        override val isRefreshing: StateFlow<Boolean> = MutableStateFlow(false),
+        override val isLoadingDialogs: StateFlow<Boolean> = MutableStateFlow(false),
+        override val syncError: StateFlow<String?> = MutableStateFlow(null),
+        override val isDeleting: StateFlow<Boolean> = MutableStateFlow(false),
+        override val isMarkingAsRead: StateFlow<Boolean> = MutableStateFlow(false),
+        override val isUpdating: StateFlow<Boolean> = MutableStateFlow(false)
+    ) : IDialogsViewModel {
+        override fun refresh() {}
+        override fun loadDialogsAfterAuth() {}
+        override fun onDialogClick(dialogId: Long, userId: Int?) {}
+        override fun dismissSyncError() {}
+        override fun deleteDialog(dialogId: Long) {}
+        override fun markDialogAsRead(dialogId: Long, userId: Int) {}
     }
 }

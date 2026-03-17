@@ -87,11 +87,6 @@ data class DateTimePickerConfig(
     val onClickSaveTime: (Int, Int) -> Unit = { _, _ -> }
 )
 
-/**
- * Пикер для даты/времени. Полезная [статья](https://semicolonspace.com/jetpack-compose-date-picker-material3/)
- *
- * @param config Конфигурация для отображения - [DateTimePickerConfig]
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SWDateTimePicker(config: DateTimePickerConfig) {
@@ -103,7 +98,6 @@ fun SWDateTimePicker(config: DateTimePickerConfig) {
         yearRange = config.yearRange
     )
 
-    // Синхронизация state при изменении selectedDate извне (например, при загрузке профиля)
     LaunchedEffect(selectedDate) {
         datePickerState.selectedDateMillis = selectedDate
     }
@@ -123,52 +117,84 @@ fun SWDateTimePicker(config: DateTimePickerConfig) {
     LaunchedEffect(config.initialHour, config.initialMinute) {
         val initialHour = config.initialHour ?: 0
         val initialMinute = config.initialMinute ?: 0
-
         selectedHour = initialHour
         selectedMinute = initialMinute
         timePickerState.hour = initialHour
         timePickerState.minute = initialMinute
     }
+
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
         modifier = config.modifier.fillMaxWidth()
     ) {
         Text(text = stringResource(id = config.mode.titleID))
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall)),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            SWDatePicker(
-                config = DatePickerConfig(
-                    initialSelectedDateMillis = selectedDate,
-                    formattedString = DateFormat.getDateInstance(DateFormat.MEDIUM)
-                        .format(selectedDate),
-                    state = datePickerState,
-                    enabled = config.enabled,
-                    onClickSaveDate = { dateLong ->
-                        selectedDate = dateLong
-                        config.onClickSaveDate(dateLong)
-                    }
-                )
-            )
-            if (config.mode.showTimePicker) {
-                SWTimePicker(
-                    state = timePickerState,
-                    formattedString = String.format(
-                        Locale.getDefault(),
-                        "%02d:%02d",
-                        selectedHour,
-                        selectedMinute
-                    ),
-                    enabled = config.enabled,
-                    onClickSave = { hour, minute ->
-                        selectedHour = hour
-                        selectedMinute = minute
-                        config.onClickSaveTime(hour, minute)
-                    }
-                )
+        PickerButtons(
+            config = config,
+            state = PickerButtonsState(
+                selectedDate = selectedDate,
+                datePickerState = datePickerState,
+                selectedHour = selectedHour,
+                selectedMinute = selectedMinute,
+                timePickerState = timePickerState
+            ),
+            onDateSelected = { dateLong ->
+                selectedDate = dateLong
+                config.onClickSaveDate(dateLong)
+            },
+            onTimeSelected = { hour, minute ->
+                selectedHour = hour
+                selectedMinute = minute
+                config.onClickSaveTime(hour, minute)
             }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+data class PickerButtonsState(
+    val selectedDate: Long,
+    val datePickerState: DatePickerState,
+    val selectedHour: Int,
+    val selectedMinute: Int,
+    val timePickerState: TimePickerState
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PickerButtons(
+    config: DateTimePickerConfig,
+    state: PickerButtonsState,
+    onDateSelected: (Long) -> Unit,
+    onTimeSelected: (Int, Int) -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall)),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        SWDatePicker(
+            config = DatePickerConfig(
+                initialSelectedDateMillis = state.selectedDate,
+                formattedString = DateFormat.getDateInstance(DateFormat.MEDIUM)
+                    .format(state.selectedDate),
+                state = state.datePickerState,
+                enabled = config.enabled,
+                onClickSaveDate = onDateSelected
+            )
+        )
+        if (config.mode.showTimePicker) {
+            val timeString = String.format(
+                Locale.getDefault(),
+                "%02d:%02d",
+                state.selectedHour,
+                state.selectedMinute
+            )
+            SWTimePicker(
+                state = state.timePickerState,
+                formattedString = timeString,
+                enabled = config.enabled,
+                onClickSave = onTimeSelected
+            )
         }
     }
 }

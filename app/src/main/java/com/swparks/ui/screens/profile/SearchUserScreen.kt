@@ -111,8 +111,6 @@ fun SearchUserScreenContent(
     config: SearchUserConfig,
     onAction: (SearchUserAction) -> Unit
 ) {
-    // Сохраняем последний "показываемый" контент (не Loading)
-    // Это позволяет отображать предыдущий контент под LoadingOverlayView
     var lastVisibleState by remember { mutableStateOf<SearchUserUiState>(SearchUserUiState.Initial) }
 
     LaunchedEffect(uiState) {
@@ -121,9 +119,6 @@ fun SearchUserScreenContent(
         }
     }
 
-    // Определяем, какое состояние отображать:
-    // - Если текущее состояние Loading - показываем предыдущее (lastVisibleState)
-    // - Иначе показываем текущее состояние напрямую (важно для Preview)
     val displayState = if (uiState is SearchUserUiState.Loading) {
         lastVisibleState
     } else {
@@ -132,21 +127,7 @@ fun SearchUserScreenContent(
 
     Scaffold(
         modifier = modifier,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(stringResource(R.string.search_users))
-                },
-                navigationIcon = {
-                    IconButton(onClick = { onAction(SearchUserAction.Back) }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back)
-                        )
-                    }
-                }
-            )
-        },
+        topBar = { SearchUserTopBar(onBack = { onAction(SearchUserAction.Back) }) },
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->
         Box(
@@ -159,61 +140,98 @@ fun SearchUserScreenContent(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
             ) {
-                // Текстовое поле всегда видимо
-                SWTextField(
-                    config = TextFieldConfig(
-                        modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular)),
-                        text = searchQueryState.query,
-                        labelID = R.string.username_in_english,
-                        supportingText = stringResource(R.string.search_min_length_hint),
-                        onTextChange = searchQueryState.onQueryChange,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(onSearch = { onAction(SearchUserAction.Search) })
-                    )
+                SearchInputField(
+                    searchQueryState = searchQueryState,
+                    onSearch = { onAction(SearchUserAction.Search) },
+                    modifier = Modifier.fillMaxWidth()
                 )
 
-                // Контент в зависимости от отображаемого состояния
-                when (val state = displayState) {
-                    is SearchUserUiState.Initial -> {
-                        // Пустой экран - ничего не отображаем
-                    }
-
-                    is SearchUserUiState.Success -> {
-                        UsersList(
-                            users = state.users,
-                            onUserClick = { onAction(SearchUserAction.UserClick(it)) },
-                            modifier = Modifier.fillMaxSize(),
-                            currentUserId = config.currentUserId
-                        )
-                    }
-
-                    is SearchUserUiState.Empty -> {
-                        EmptyResultMessage(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(dimensionResource(R.dimen.spacing_large))
-                        )
-                    }
-
-                    is SearchUserUiState.NetworkError -> {
-                        ErrorContentView(
-                            retryAction = { onAction(SearchUserAction.Retry) },
-                            message = stringResource(R.string.search_network_error),
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
-
-                    is SearchUserUiState.Loading -> {
-                        // Это состояние не должно попадать в lastVisibleState
-                    }
-                }
+                SearchUserStateContent(
+                    displayState = displayState,
+                    currentUserId = config.currentUserId,
+                    onUserClick = { onAction(SearchUserAction.UserClick(it)) },
+                    onRetry = { onAction(SearchUserAction.Retry) },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
 
-            // LoadingOverlayView поверх всего контента при Loading
             if (uiState is SearchUserUiState.Loading) {
                 LoadingOverlayView()
             }
         }
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SearchUserTopBar(onBack: () -> Unit) {
+    CenterAlignedTopAppBar(
+        title = { Text(stringResource(R.string.search_users)) },
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.back)
+                )
+            }
+        }
+    )
+}
+
+@Composable
+private fun SearchInputField(
+    searchQueryState: SearchQueryState,
+    onSearch: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    SWTextField(
+        config = TextFieldConfig(
+            modifier = modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular)),
+            text = searchQueryState.query,
+            labelID = R.string.username_in_english,
+            supportingText = stringResource(R.string.search_min_length_hint),
+            onTextChange = searchQueryState.onQueryChange,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { onSearch() })
+        )
+    )
+}
+
+@Composable
+private fun SearchUserStateContent(
+    displayState: SearchUserUiState,
+    currentUserId: Long?,
+    onUserClick: (Long) -> Unit,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    when (val state = displayState) {
+        is SearchUserUiState.Initial -> {}
+        is SearchUserUiState.Success -> {
+            UsersList(
+                users = state.users,
+                onUserClick = onUserClick,
+                modifier = modifier,
+                currentUserId = currentUserId
+            )
+        }
+
+        is SearchUserUiState.Empty -> {
+            EmptyResultMessage(
+                modifier = modifier.padding(dimensionResource(R.dimen.spacing_large))
+            )
+        }
+
+        is SearchUserUiState.NetworkError -> {
+            ErrorContentView(
+                retryAction = onRetry,
+                message = stringResource(R.string.search_network_error),
+                modifier = modifier
+            )
+        }
+
+        is SearchUserUiState.Loading -> {}
     }
 }
 

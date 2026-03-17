@@ -25,11 +25,20 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import com.swparks.ui.ds.AsyncImageConfig
 import com.swparks.ui.ds.SWAsyncImage
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 private const val MIN_SCALE = 1f
 private const val MAX_SCALE = 5f
 private const val DOUBLE_TAP_SCALE = 2.5f
+
+private data class ImageTransformParams(
+    val imageUrl: String,
+    val imageSize: Dp,
+    val scale: Float,
+    val offsetX: Float,
+    val offsetY: Float
+)
 
 private fun clampOffset(
     rawOffset: Offset,
@@ -48,6 +57,37 @@ private fun clampOffset(
     )
 }
 
+private val zoomAnimationSpec = spring<Float>(
+    dampingRatio = Spring.DampingRatioNoBouncy,
+    stiffness = Spring.StiffnessMedium
+)
+
+private class ZoomState(
+    val scale: Animatable<Float, *>,
+    val offsetX: Animatable<Float, *>,
+    val offsetY: Animatable<Float, *>,
+    val minScale: Float,
+    val maxScale: Float
+) {
+    val isZoomed: Boolean get() = scale.value > minScale
+}
+
+private fun CoroutineScope.animateResetZoom(state: ZoomState) {
+    launch { state.scale.animateTo(state.minScale, zoomAnimationSpec) }
+    launch { state.offsetX.animateTo(0f, zoomAnimationSpec) }
+    launch { state.offsetY.animateTo(0f, zoomAnimationSpec) }
+}
+
+private fun CoroutineScope.animateZoomToTarget(
+    state: ZoomState,
+    targetScale: Float,
+    targetOffset: Offset
+) {
+    launch { state.scale.animateTo(targetScale, zoomAnimationSpec) }
+    launch { state.offsetX.animateTo(targetOffset.x, zoomAnimationSpec) }
+    launch { state.offsetY.animateTo(targetOffset.y, zoomAnimationSpec) }
+}
+
 @Composable
 fun ZoomablePhotoView(
     imageUrl: String,
@@ -58,27 +98,24 @@ fun ZoomablePhotoView(
     imageSize: Dp = Dp.Unspecified
 ) {
     val scope = rememberCoroutineScope()
-
     val scale = remember { Animatable(minScale) }
     val offsetX = remember { Animatable(0f) }
     val offsetY = remember { Animatable(0f) }
-
     var containerSize by remember { mutableStateOf(IntSize.Zero) }
+
+    val zoomState = remember { ZoomState(scale, offsetX, offsetY, minScale, maxScale) }
 
     val transformableState = rememberTransformableState { zoomChange, panChange, _ ->
         scope.launch {
             val currentScale = scale.value
             val newScale = (currentScale * zoomChange).coerceIn(minScale, maxScale)
             val scaleRatio = if (currentScale == 0f) 1f else newScale / currentScale
-
             val rawOffset = if (newScale > minScale) {
                 Offset(offsetX.value, offsetY.value) * scaleRatio + panChange
             } else {
                 Offset.Zero
             }
-
             val clamped = clampOffset(rawOffset, newScale, minScale, containerSize)
-
             scale.snapTo(newScale)
             offsetX.snapTo(clamped.x)
             offsetY.snapTo(clamped.y)
@@ -92,103 +129,89 @@ fun ZoomablePhotoView(
             .pointerInput(minScale, maxScale, doubleTapScale, containerSize) {
                 detectTapGestures(
                     onDoubleTap = { tapOffset ->
-                        scope.launch {
-                            if (scale.value > minScale) {
-                                launch {
-                                    scale.animateTo(
-                                        targetValue = minScale,
-                                        animationSpec = spring(
-                                            dampingRatio = Spring.DampingRatioNoBouncy,
-                                            stiffness = Spring.StiffnessMedium
-                                        )
-                                    )
-                                }
-                                launch {
-                                    offsetX.animateTo(
-                                        targetValue = 0f,
-                                        animationSpec = spring(
-                                            dampingRatio = Spring.DampingRatioNoBouncy,
-                                            stiffness = Spring.StiffnessMedium
-                                        )
-                                    )
-                                }
-                                launch {
-                                    offsetY.animateTo(
-                                        targetValue = 0f,
-                                        animationSpec = spring(
-                                            dampingRatio = Spring.DampingRatioNoBouncy,
-                                            stiffness = Spring.StiffnessMedium
-                                        )
-                                    )
-                                }
-                            } else {
-                                val targetScale = doubleTapScale.coerceIn(minScale, maxScale)
-
-                                val targetOffset = if (containerSize != IntSize.Zero) {
-                                    val center = Offset(
-                                        x = containerSize.width / 2f,
-                                        y = containerSize.height / 2f
-                                    )
-                                    clampOffset(
-                                        rawOffset = (center - tapOffset) * (targetScale - 1f),
-                                        currentScale = targetScale,
-                                        minScale = minScale,
-                                        containerSize = containerSize
-                                    )
-                                } else {
-                                    Offset.Zero
-                                }
-
-                                launch {
-                                    scale.animateTo(
-                                        targetValue = targetScale,
-                                        animationSpec = spring(
-                                            dampingRatio = Spring.DampingRatioNoBouncy,
-                                            stiffness = Spring.StiffnessMedium
-                                        )
-                                    )
-                                }
-                                launch {
-                                    offsetX.animateTo(
-                                        targetValue = targetOffset.x,
-                                        animationSpec = spring(
-                                            dampingRatio = Spring.DampingRatioNoBouncy,
-                                            stiffness = Spring.StiffnessMedium
-                                        )
-                                    )
-                                }
-                                launch {
-                                    offsetY.animateTo(
-                                        targetValue = targetOffset.y,
-                                        animationSpec = spring(
-                                            dampingRatio = Spring.DampingRatioNoBouncy,
-                                            stiffness = Spring.StiffnessMedium
-                                        )
-                                    )
-                                }
-                            }
-                        }
+                        handleDoubleTap(
+                            scope = scope,
+                            zoomState = zoomState,
+                            doubleTapScale = doubleTapScale,
+                            containerSize = containerSize,
+                            tapOffset = tapOffset
+                        )
                     }
                 )
             }
             .transformable(state = transformableState),
         contentAlignment = Alignment.Center
     ) {
-        SWAsyncImage(
-            config = AsyncImageConfig(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer(
-                        scaleX = scale.value,
-                        scaleY = scale.value,
-                        translationX = offsetX.value,
-                        translationY = offsetY.value
-                    ),
-                imageStringURL = imageUrl,
-                size = imageSize,
-                contentScale = ContentScale.Fit,
-                showBorder = false
+        TransformableImage(
+            params = ImageTransformParams(
+                imageUrl = imageUrl,
+                imageSize = imageSize,
+                scale = scale.value,
+                offsetX = offsetX.value,
+                offsetY = offsetY.value
             )
         )
     }
+}
+
+private fun handleDoubleTap(
+    scope: CoroutineScope,
+    zoomState: ZoomState,
+    doubleTapScale: Float,
+    containerSize: IntSize,
+    tapOffset: Offset
+) {
+    scope.launch {
+        if (zoomState.isZoomed) {
+            scope.animateResetZoom(zoomState)
+        } else {
+            val targetScale = doubleTapScale.coerceIn(zoomState.minScale, zoomState.maxScale)
+            val targetOffset = calculateTargetOffset(
+                containerSize = containerSize,
+                tapOffset = tapOffset,
+                targetScale = targetScale,
+                minScale = zoomState.minScale
+            )
+            scope.animateZoomToTarget(zoomState, targetScale, targetOffset)
+        }
+    }
+}
+
+private fun calculateTargetOffset(
+    containerSize: IntSize,
+    tapOffset: Offset,
+    targetScale: Float,
+    minScale: Float
+): Offset {
+    if (containerSize == IntSize.Zero) return Offset.Zero
+    val center = Offset(containerSize.width / 2f, containerSize.height / 2f)
+    return clampOffset(
+        rawOffset = (center - tapOffset) * (targetScale - 1f),
+        currentScale = targetScale,
+        minScale = minScale,
+        containerSize = containerSize
+    )
+}
+
+@Composable
+private fun TransformableImage(
+    params: ImageTransformParams,
+    modifier: Modifier = Modifier
+) {
+    SWAsyncImage(
+        config = AsyncImageConfig(
+            modifier = modifier
+                .fillMaxSize()
+                .graphicsLayer(
+                    scaleX = params.scale,
+                    scaleY = params.scale,
+                    translationX = params.offsetX,
+                    translationY = params.offsetY
+                ),
+            imageStringURL = params.imageUrl,
+            size = params.imageSize,
+            contentScale = ContentScale.Fit,
+            showBorder = false
+        )
+    )
 }

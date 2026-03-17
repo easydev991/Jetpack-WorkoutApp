@@ -64,7 +64,7 @@
 
 - ✅ ParksRootScreen - список всех площадок
 - ✅ EventsScreen - список мероприятий
-- ✅ MessagesRootScreen - список диалогов (заглушка)
+- ✅ MessagesRootScreen - список диалогов
 - ✅ ProfileRootScreen - профиль пользователя с авторизацией
 - ✅ MoreScreen - экран настроек "Ещё"
 
@@ -119,56 +119,54 @@
 - `Screen.Profile` - вкладка Профиль
 - `Screen.More` - вкладка Ещё
 
-### Детальные экраны площадок (8 маршрутов) ⚠️
+### Детальные экраны площадок (9 маршрутов)
 
-- ✅ `Screen.ParkDetail` - детальный экран площадки (TODO в RootScreen)
-- ⏳ `Screen.CreatePark` - создание площадки (TODO в RootScreen)
-- ⏳ `Screen.EditPark` - редактирование площадки (TODO в RootScreen)
-- ⏳ `Screen.ParkFilter` - фильтрация площадок (маршрут есть, экрана нет)
-- ⏳ `Screen.CreateEventForPark` - создание мероприятия для площадки (маршрут есть, экрана нет)
-- ⏳ `Screen.ParkRoute` - маршрут к площадке (маршрут есть, экрана нет)
-- ⏳ `Screen.AddParkComment` - добавление комментария к площадке (маршрут есть, экрана нет)
-- ⏳ `Screen.ParkTrainees` - список тренирующихся на площадке (маршрут есть, экрана нет)
-- ⏳ `Screen.ParkGallery` - галерея фото площадки (маршрут есть, экрана нет)
+- ✅ `Screen.ParkDetail` - реализован
+- ✅ `Screen.CreatePark` - реализован
+- ✅ `Screen.EditPark` - реализован
+- ⏳ `Screen.ParkFilter` - маршрут есть, экран не подключен в RootScreen
+- ✅ `Screen.CreateEventForPark` - реализован
+- ⏳ `Screen.ParkRoute` - маршрут есть, экран не подключен в RootScreen
+- ⏳ `Screen.AddParkComment` - маршрут есть, экран не подключен в RootScreen
+- ✅ `Screen.ParkTrainees` - реализован
+- ⏳ `Screen.ParkGallery` - маршрут есть, экран не подключен в RootScreen
 
-### Детальные экраны мероприятий (6 маршрутов) ⚠️
+### Детальные экраны мероприятий (6 маршрутов)
 
-- ⏳ `Screen.EventDetail` - детальный экран мероприятия (TODO в RootScreen)
-- ⏳ `Screen.CreateEvent` - создание мероприятия (TODO в RootScreen)
-- ⏳ `Screen.EditEvent` - редактирование мероприятия (TODO в RootScreen)
-- ⏳ `Screen.EventParticipants` - список участников мероприятия (маршрут есть, экрана нет)
+- ✅ `Screen.EventDetail` - реализован
+- ✅ `Screen.CreateEvent` - реализован
+- ✅ `Screen.EditEvent` - реализован
+- ✅ `Screen.EventParticipants` - реализован
 - ⏳ `Screen.EventGallery` - галерея фото мероприятия (маршрут есть, экрана нет)
 - ⏳ `Screen.AddEventComment` - добавление комментария к мероприятию (маршрут есть, экрана нет)
 
-### Экраны сообщений (4 маршрута) ⚠️
+### Экраны сообщений (4 маршрута)
 
-- ⏳ `Screen.Chat` - чат с пользователем (TODO в RootScreen)
+- ✅ `Screen.Chat` - реализован
 - ⏳ `Screen.Friends` - список друзей (маршрут есть, экрана нет)
 - ✅ `Screen.MyFriends` - мои друзья (реализован)
-- ⏳ `Screen.UserSearch` - поиск пользователей (TODO в RootScreen)
+- ✅ `Screen.UserSearch` - реализован
 
-### Экраны профиля (14 маршрутов) ⚠️
+### Экраны профиля
 
-- ⏳ `Screen.EditProfile` - редактирование профиля (TODO в RootScreen)
+- ✅ `Screen.EditProfile` - реализован
 - ✅ `Screen.UserParks` - площадки пользователя (реализован через ParksAddedByUserScreen)
-- ⏳ `Screen.UserTrainingParks` - площадки, где тренируется пользователь (TODO в RootScreen)
-- ⏳ `Screen.Blacklist` - черный список (TODO в RootScreen)
-- ⏳ `Screen.JournalsList` - список дневников (TODO в RootScreen)
-- ⏳ `Screen.JournalDetail` - детальный экран дневника (TODO в RootScreen)
-- ⏳ `Screen.CreateJournal` - создание дневника (TODO в RootScreen)
-- ⏳ `Screen.EditJournal` - редактирование дневника (TODO в RootScreen)
-- ⏳ `Screen.AddJournalEntry` - добавление записи в дневник (TODO в RootScreen)
-- ⏳ `Screen.ChangePassword` - смена пароля (TODO в RootScreen)
-- ⏳ `Screen.SelectCountry` - выбор страны (TODO в RootScreen)
-- ⏳ `Screen.SelectCity` - выбор города (TODO в RootScreen)
+- ✅ `Screen.UserTrainingParks` - реализован
+- ✅ `Screen.UserFriends` - реализован
+- ✅ `Screen.OtherUserProfile` - реализован
+- ✅ `Screen.Blacklist` - реализован
+- ✅ `Screen.JournalsList` - реализован
+- ✅ `Screen.JournalEntries` - реализован
+- ✅ `Screen.ChangePassword` - реализован
+- ✅ `Screen.SelectCountry` - реализован
+- ✅ `Screen.SelectCity` - реализован
 
 ### Экраны настроек (1 маршрут) ✅
 
 - ✅ `Screen.ThemeIcon` - выбор иконки приложения (реализован)
 
 **Общее количество маршрутов в Destinations.kt**: 40+
-**Количество реализованных экранов**: 8
-**Количество TODO в RootScreen**: 20+
+**Актуализация**: 2026-03-17. Статусы обновлены по фактическому NavHost в RootScreen.
 
 ## План дальнейших задач
 
@@ -299,7 +297,7 @@ Jetpack WorkoutApp частично следует архитектурному 
 
 ## Технический долг
 
-1. **Не реализованные экраны**: 20+ TODO в RootScreen.kt
+1. **Не реализованные экраны**: часть маршрутов в `Destinations.kt` пока не подключена в `RootScreen` (например, `ParkFilter`, `ParkRoute`, `AddParkComment`, `ParkGallery`, `EventGallery`, `AddEventComment`, `Friends`)
 2. **Маршруты без экранов**: некоторые маршруты в Destinations.kt не имеют соответствующих экранов
 3. **Интеграция с API**: большинство экранов пока работают с заглушками или JSON файлами
 4. **Тестирование навигации**: отсутствуют UI-тесты для навигации

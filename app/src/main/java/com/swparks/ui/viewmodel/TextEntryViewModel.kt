@@ -55,14 +55,9 @@ class TextEntryViewModel(
         )
     }
 
-    /**
-     * Отправляет текст на сервер.
-     * Проверяет валидацию, сетевое подключение и вызывает соответствующий Use Case.
-     */
     override fun onSend() {
         val trimmedText = _uiState.value.text.trim()
 
-        // Объединённая валидация
         val validationError = validateInput(trimmedText)
         if (validationError != null) {
             _uiState.value = _uiState.value.copy(error = validationError)
@@ -71,78 +66,80 @@ class TextEntryViewModel(
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-
-            val result = when (mode) {
-                is TextEntryMode.NewForPark -> textEntryUseCase.addParkComment(
-                    mode.parkId,
-                    trimmedText
-                )
-
-                is TextEntryMode.NewForEvent -> textEntryUseCase.addEventComment(
-                    mode.eventId,
-                    trimmedText
-                )
-
-                is TextEntryMode.NewForJournal -> textEntryUseCase.addJournalEntry(
-                    mode.ownerId,
-                    mode.journalId,
-                    trimmedText
-                )
-
-                is TextEntryMode.NewJournal -> textEntryUseCase.createJournal(
-                    userId = mode.userId,
-                    title = trimmedText
-                )
-
-                is TextEntryMode.EditPark -> textEntryUseCase.editParkComment(
-                    mode.editInfo.parentObjectId,
-                    mode.editInfo.entryId,
-                    trimmedText
-                )
-
-                is TextEntryMode.EditEvent -> textEntryUseCase.editEventComment(
-                    mode.editInfo.parentObjectId,
-                    mode.editInfo.entryId,
-                    trimmedText
-                )
-
-                is TextEntryMode.EditJournalEntry -> textEntryUseCase.editJournalEntry(
-                    mode.ownerId,
-                    mode.editInfo.parentObjectId,
-                    mode.editInfo.entryId,
-                    trimmedText
-                )
-
-                is TextEntryMode.Message -> textEntryUseCase.sendMessageTo(
-                    userId = mode.userId,
-                    message = trimmedText
-                )
-            }
-
+            val result = performSend(trimmedText)
             _uiState.value = _uiState.value.copy(isLoading = false)
-
-            result.fold(
-                onSuccess = {
-                    // Показываем snackbar при успешной отправке сообщения
-                    if (mode is TextEntryMode.Message) {
-                        userNotifier.showInfo(context.getString(R.string.message_sent))
-                    }
-                    _events.trySend(TextEntryEvent.Success)
-                },
-                onFailure = { exception ->
-                    val errorMessage = context.getString(
-                        R.string.text_entry_error,
-                        exception.message ?: ""
-                    )
-                    _events.trySend(TextEntryEvent.Error(errorMessage))
-                    val appError = AppError.Generic(
-                        message = errorMessage,
-                        throwable = exception
-                    )
-                    userNotifier.handleError(appError)
-                }
-            )
+            handleResult(result)
         }
+    }
+
+    private suspend fun performSend(trimmedText: String): Result<Unit> = when (mode) {
+        is TextEntryMode.NewForPark -> textEntryUseCase.addParkComment(
+            mode.parkId,
+            trimmedText
+        )
+
+        is TextEntryMode.NewForEvent -> textEntryUseCase.addEventComment(
+            mode.eventId,
+            trimmedText
+        )
+
+        is TextEntryMode.NewForJournal -> textEntryUseCase.addJournalEntry(
+            mode.ownerId,
+            mode.journalId,
+            trimmedText
+        )
+
+        is TextEntryMode.NewJournal -> textEntryUseCase.createJournal(
+            userId = mode.userId,
+            title = trimmedText
+        )
+
+        is TextEntryMode.EditPark -> textEntryUseCase.editParkComment(
+            mode.editInfo.parentObjectId,
+            mode.editInfo.entryId,
+            trimmedText
+        )
+
+        is TextEntryMode.EditEvent -> textEntryUseCase.editEventComment(
+            mode.editInfo.parentObjectId,
+            mode.editInfo.entryId,
+            trimmedText
+        )
+
+        is TextEntryMode.EditJournalEntry -> textEntryUseCase.editJournalEntry(
+            mode.ownerId,
+            mode.editInfo.parentObjectId,
+            mode.editInfo.entryId,
+            trimmedText
+        )
+
+        is TextEntryMode.Message -> textEntryUseCase.sendMessageTo(
+            userId = mode.userId,
+            message = trimmedText
+        )
+    }
+
+    private fun handleResult(result: Result<Unit>) {
+        result.fold(
+            onSuccess = {
+                if (mode is TextEntryMode.Message) {
+                    userNotifier.showInfo(context.getString(R.string.message_sent))
+                }
+                _events.trySend(TextEntryEvent.Success)
+            },
+            onFailure = { exception ->
+                val errorMessage = context.getString(
+                    R.string.text_entry_error,
+                    exception.message ?: ""
+                )
+                _events.trySend(TextEntryEvent.Error(errorMessage))
+                val appError = AppError.Generic(
+                    message = errorMessage,
+                    throwable = exception
+                )
+                userNotifier.handleError(appError)
+            }
+        )
     }
 
     /**

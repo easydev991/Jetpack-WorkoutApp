@@ -45,6 +45,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.window.DialogProperties
 import com.swparks.R
 import com.swparks.domain.model.Journal
@@ -121,13 +122,67 @@ sealed class JournalsContentAction {
 }
 
 /**
- * Экран списка дневников пользователя
- *
- * @param modifier Модификатор
- * @param viewModel ViewModel для управления состоянием экрана
- * @param config Конфигурация экрана (appState, params, parentPaddingValues)
- * @param onAction Обработчик действий
+ * Состояние диалогов экрана списка дневников
  */
+data class JournalsDialogsState(
+    val showDeleteDialog: Boolean,
+    val journalToDelete: Journal?,
+    val journalToEditSettings: Journal?,
+    val showTextEntrySheet: Boolean,
+    val textEntryMode: TextEntryMode?
+)
+
+/**
+ * Параметры для JournalsMainContent
+ */
+data class JournalsMainContentParams(
+    val uiState: JournalsUiState,
+    val isRefreshing: Boolean,
+    val isDeleting: Boolean,
+    val ownerConfig: OwnerDisplayConfig
+)
+
+/**
+ * Actions для JournalsMainContent
+ */
+sealed class JournalsMainContentAction {
+    object Retry : JournalsMainContentAction()
+    object Refresh : JournalsMainContentAction()
+    data class JournalClick(val params: JournalNavigationParams) : JournalsMainContentAction()
+}
+
+/**
+ * Параметры для JournalsDialogs
+ */
+data class JournalsDialogsParams(
+    val state: JournalsDialogsState,
+    val uiState: JournalsUiState,
+    val viewModel: IJournalsViewModel
+)
+
+/**
+ * Actions для JournalsDialogs
+ */
+data class JournalsDialogsActions(
+    val onDeleteDismiss: () -> Unit,
+    val onDeleteConfirm: () -> Unit,
+    val onSettingsDismiss: () -> Unit,
+    val onTextEntryDismiss: () -> Unit,
+    val onTextEntrySuccess: () -> Unit
+)
+
+/**
+ * Параметры для JournalsScaffoldContent
+ */
+data class JournalsScaffoldContentParams(
+    val innerPadding: PaddingValues,
+    val parentPaddingValues: PaddingValues,
+    val layoutDirection: LayoutDirection,
+    val contentParams: JournalsMainContentParams,
+    val dialogsParams: JournalsDialogsParams,
+    val dialogsActions: JournalsDialogsActions
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JournalsListScreen(
@@ -140,173 +195,235 @@ fun JournalsListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isDeleting by viewModel.isDeleting.collectAsState()
-
-    // Проверка: просмотр собственных дневников или чужих
     val isOwner = config.appState.currentUser?.id == config.params.userId
 
-    // Состояние диалога подтверждения удаления
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    var journalToDelete by remember { mutableStateOf<Journal?>(null) }
+    val dialogState = rememberJournalsDialogState()
+    val ownerConfig = rememberOwnerConfig(isOwner, config.params.userId, dialogState)
 
-    // Состояние диалога настроек дневника
-    var journalToEditSettings by remember { mutableStateOf<Journal?>(null) }
-
-    // Состояние для TextEntrySheet
-    var showTextEntrySheet by remember { mutableStateOf(false) }
-    var textEntryMode by remember { mutableStateOf<TextEntryMode?>(null) }
-
-    // Обработчик для действия SETUP (настройки дневника)
-    val onSetupClick: (Journal) -> Unit = { journal ->
-        journalToEditSettings = journal
-    }
-
-    // Обработчик событий ViewModel для закрытия диалога настроек
     JournalsEventHandler(
         viewModel = viewModel,
-        getJournalToEditSettings = { journalToEditSettings },
-        onJournalSettingsSaved = {
-            journalToEditSettings = null
-        }
-    )
-
-    val ownerConfig = OwnerDisplayConfig(
-        isOwner = isOwner,
-        onDeleteClick = { journal ->
-            journalToDelete = journal
-            showDeleteDialog = true
-        },
-        onSetupClick = onSetupClick,
-        onCreateJournalClick = {
-            textEntryMode = TextEntryMode.NewJournal(config.params.userId)
-            showTextEntrySheet = true
-        }
+        getJournalToEditSettings = { dialogState.journalToEditSettings },
+        onJournalSettingsSaved = { dialogState.journalToEditSettings = null }
     )
 
     Scaffold(
         modifier = modifier.padding(bottom = config.parentPaddingValues.calculateBottomPadding()),
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(stringResource(R.string.journals_list_title))
-                },
-                navigationIcon = {
-                    IconButton(onClick = { onAction(JournalsListAction.Back) }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back)
-                        )
-                    }
-                }
-            )
-        },
+        topBar = { JournalsTopBar(onBackClick = { onAction(JournalsListAction.Back) }) },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
-            // Показывать FAB только если текущий пользователь авторизован И открывает свой профиль
-            when (uiState) {
-                is JournalsUiState.Content -> {
-                    if (!isDeleting && isOwner) {
-                        FloatingActionButton(
-                            onClick = ownerConfig.onCreateJournalClick,
-                            modifier = Modifier.testTag("CreateJournalFAB")
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_add_entry),
-                                contentDescription = stringResource(R.string.fab_create_journal_description)
-                            )
-                        }
-                    }
-                }
-
-                else -> {}
-            }
+            JournalsFab(
+                uiState = uiState,
+                isDeleting = isDeleting,
+                isOwner = isOwner,
+                onCreateClick = ownerConfig.onCreateJournalClick
+            )
         }
     ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(
-                    start = config.parentPaddingValues.calculateStartPadding(layoutDirection),
-                    top = config.parentPaddingValues.calculateTopPadding(),
-                    end = config.parentPaddingValues.calculateEndPadding(layoutDirection)
+        JournalsScaffoldContent(
+            params = JournalsScaffoldContentParams(
+                innerPadding = innerPadding,
+                parentPaddingValues = config.parentPaddingValues,
+                layoutDirection = layoutDirection,
+                contentParams = JournalsMainContentParams(
+                    uiState,
+                    isRefreshing,
+                    isDeleting,
+                    ownerConfig
+                ),
+                dialogsParams = JournalsDialogsParams(dialogState.toState(), uiState, viewModel),
+                dialogsActions = JournalsDialogsActions(
+                    onDeleteDismiss = { dialogState.showDeleteDialog = false },
+                    onDeleteConfirm = {
+                        dialogState.journalToDelete?.let { viewModel.deleteJournal(it.id) }
+                        dialogState.showDeleteDialog = false
+                    },
+                    onSettingsDismiss = { dialogState.journalToEditSettings = null },
+                    onTextEntryDismiss = { dialogState.clearTextEntry() },
+                    onTextEntrySuccess = {
+                        dialogState.clearTextEntry()
+                        viewModel.loadJournals()
+                    }
                 )
-                .padding(innerPadding)
-        ) {
-            when (uiState) {
-                is JournalsUiState.InitialLoading -> {
-                    LoadingOverlayView()
-                }
-
-                is JournalsUiState.Error -> {
-                    ErrorContentView(
-                        retryAction = { viewModel.retry() },
-                        message = (uiState as JournalsUiState.Error).message
-                    )
-                }
-
-                is JournalsUiState.Content -> {
-                    val contentState = uiState as JournalsUiState.Content
-                    ContentScreen(
-                        state = JournalsContentState(
-                            journals = contentState.journals,
-                            isRefreshing = isRefreshing,
-                            isDeleting = isDeleting,
-                            ownerConfig = ownerConfig
-                        ),
-                        onAction = { action ->
-                            when (action) {
-                                JournalsContentAction.Refresh -> viewModel.loadJournals()
-                                is JournalsContentAction.JournalClick -> onAction(
-                                    JournalsListAction.JournalClick(
-                                        action.params
-                                    )
-                                )
-                            }
-                        }
+            ),
+            onContentAction = { action ->
+                when (action) {
+                    is JournalsMainContentAction.Retry -> viewModel.retry()
+                    is JournalsMainContentAction.Refresh -> viewModel.loadJournals()
+                    is JournalsMainContentAction.JournalClick -> onAction(
+                        JournalsListAction.JournalClick(
+                            action.params
+                        )
                     )
                 }
             }
-        }
+        )
+    }
+}
 
-        // Диалог подтверждения удаления
+private class JournalsDialogState {
+    var showDeleteDialog by mutableStateOf(false)
+    var journalToDelete by mutableStateOf<Journal?>(null)
+    var journalToEditSettings by mutableStateOf<Journal?>(null)
+    var showTextEntrySheet by mutableStateOf(false)
+    var textEntryMode by mutableStateOf<TextEntryMode?>(null)
+
+    fun toState() = JournalsDialogsState(
+        showDeleteDialog, journalToDelete, journalToEditSettings, showTextEntrySheet, textEntryMode
+    )
+
+    fun clearTextEntry() {
+        showTextEntrySheet = false
+        textEntryMode = null
+    }
+}
+
+@Composable
+private fun rememberJournalsDialogState(): JournalsDialogState {
+    return remember { JournalsDialogState() }
+}
+
+@Composable
+private fun rememberOwnerConfig(
+    isOwner: Boolean,
+    userId: Long,
+    dialogState: JournalsDialogState
+): OwnerDisplayConfig {
+    return remember(isOwner, userId) {
+        OwnerDisplayConfig(
+            isOwner = isOwner,
+            onDeleteClick = { journal ->
+                dialogState.journalToDelete = journal
+                dialogState.showDeleteDialog = true
+            },
+            onSetupClick = { journal -> dialogState.journalToEditSettings = journal },
+            onCreateJournalClick = {
+                dialogState.textEntryMode = TextEntryMode.NewJournal(userId)
+                dialogState.showTextEntrySheet = true
+            }
+        )
+    }
+}
+
+@Composable
+private fun JournalsScaffoldContent(
+    params: JournalsScaffoldContentParams,
+    onContentAction: (JournalsMainContentAction) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(
+                start = params.parentPaddingValues.calculateStartPadding(params.layoutDirection),
+                top = params.parentPaddingValues.calculateTopPadding(),
+                end = params.parentPaddingValues.calculateEndPadding(params.layoutDirection)
+            )
+            .padding(params.innerPadding)
+    ) {
+        JournalsMainContent(params = params.contentParams, onAction = onContentAction)
+    }
+    JournalsDialogs(params = params.dialogsParams, actions = params.dialogsActions)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun JournalsTopBar(onBackClick: () -> Unit) {
+    CenterAlignedTopAppBar(
+        title = { Text(stringResource(R.string.journals_list_title)) },
+        navigationIcon = {
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.back)
+                )
+            }
+        }
+    )
+}
+
+@Composable
+private fun JournalsFab(
+    uiState: JournalsUiState,
+    isDeleting: Boolean,
+    isOwner: Boolean,
+    onCreateClick: () -> Unit
+) {
+    if (uiState is JournalsUiState.Content && !isDeleting && isOwner) {
+        FloatingActionButton(
+            onClick = onCreateClick,
+            modifier = Modifier.testTag("CreateJournalFAB")
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_add_entry),
+                contentDescription = stringResource(R.string.fab_create_journal_description)
+            )
+        }
+    }
+}
+
+@Composable
+private fun JournalsMainContent(
+    params: JournalsMainContentParams,
+    onAction: (JournalsMainContentAction) -> Unit
+) {
+    when (params.uiState) {
+        is JournalsUiState.InitialLoading -> LoadingOverlayView()
+
+        is JournalsUiState.Error -> ErrorContentView(
+            retryAction = { onAction(JournalsMainContentAction.Retry) },
+            message = params.uiState.message
+        )
+
+        is JournalsUiState.Content -> ContentScreen(
+            state = JournalsContentState(
+                journals = params.uiState.journals,
+                isRefreshing = params.isRefreshing,
+                isDeleting = params.isDeleting,
+                ownerConfig = params.ownerConfig
+            ),
+            onAction = { action ->
+                when (action) {
+                    JournalsContentAction.Refresh -> onAction(JournalsMainContentAction.Refresh)
+                    is JournalsContentAction.JournalClick -> onAction(
+                        JournalsMainContentAction.JournalClick(
+                            action.params
+                        )
+                    )
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun JournalsDialogs(
+    params: JournalsDialogsParams,
+    actions: JournalsDialogsActions
+) {
+    with(params.state) {
         if (showDeleteDialog && journalToDelete != null) {
             DeleteConfirmationDialog(
-                onDismiss = { showDeleteDialog = false },
-                onConfirm = {
-                    journalToDelete?.let { journal ->
-                        viewModel.deleteJournal(journal.id)
-                    }
-                    showDeleteDialog = false
-                }
+                onDismiss = actions.onDeleteDismiss,
+                onConfirm = actions.onDeleteConfirm
             )
         }
 
-        // Диалог настроек дневника
         journalToEditSettings?.let { journal ->
             val isSavingSettings =
-                (uiState as? JournalsUiState.Content)?.isSavingJournalSettings ?: false
+                (params.uiState as? JournalsUiState.Content)?.isSavingJournalSettings ?: false
             JournalSettingsDialog(
                 journal = journal,
-                onDismiss = { journalToEditSettings = null },
-                viewModel = viewModel,
+                onDismiss = actions.onSettingsDismiss,
+                viewModel = params.viewModel,
                 isSaving = isSavingSettings
             )
         }
 
-        // TextEntrySheet для создания дневника
         if (showTextEntrySheet && textEntryMode != null) {
             TextEntrySheetHost(
                 show = showTextEntrySheet,
                 mode = textEntryMode!!,
-                onDismissed = {
-                    showTextEntrySheet = false
-                    textEntryMode = null
-                },
-                onSendSuccess = {
-                    // Обновить список дневников после успешного создания
-                    showTextEntrySheet = false
-                    textEntryMode = null
-                    viewModel.loadJournals()
-                }
+                onDismissed = actions.onTextEntryDismiss,
+                onSendSuccess = actions.onTextEntrySuccess
             )
         }
     }
@@ -410,54 +527,63 @@ private fun JournalsList(
         ),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
     ) {
-        items(
-            items = journals,
-            key = { it.id }
-        ) { journal ->
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(enabled = enabled) {
-                        onJournalClick(
-                            JournalNavigationParams(
-                                journalId = journal.id,
-                                journalOwnerId = journal.ownerId!!,
-                                journalTitle = journal.title ?: "",
-                                viewAccess = journal.viewAccess?.name ?: JournalAccess.NOBODY.name,
-                                commentAccess = journal.commentAccess?.name
-                                    ?: JournalAccess.NOBODY.name
-                            )
-                        )
-                    }
-            ) {
-                JournalRowView(
-                    data = JournalRowData(
-                        modifier = Modifier.fillMaxWidth(),
-                        imageStringURL = journal.lastMessageImage,
-                        title = journal.title ?: "",
-                        dateString = DateFormatter.formatDate(
-                            context = context,
-                            dateString = journal.lastMessageDate
-                        ),
-                        bodyText = journal.lastMessageText ?: "",
-                        mode = JournalRowMode.ROOT,
-                        // Показывать действия только для владельца
-                        actions = if (ownerConfig.isOwner) {
-                            listOf(JournalAction.SETUP, JournalAction.DELETE)
-                        } else {
-                            emptyList()
-                        },
-                        onClickAction = { action ->
-                            if (action == JournalAction.DELETE) {
-                                ownerConfig.onDeleteClick(journal)
-                            } else if (action == JournalAction.SETUP) {
-                                ownerConfig.onSetupClick(journal)
-                            }
-                        }
+        items(items = journals, key = { it.id }) { journal ->
+            JournalItem(
+                journal = journal,
+                enabled = enabled,
+                ownerConfig = ownerConfig,
+                context = context,
+                onClick = onJournalClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun JournalItem(
+    journal: Journal,
+    enabled: Boolean,
+    ownerConfig: OwnerDisplayConfig,
+    context: android.content.Context,
+    onClick: (JournalNavigationParams) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = enabled) {
+                onClick(
+                    JournalNavigationParams(
+                        journalId = journal.id,
+                        journalOwnerId = journal.ownerId!!,
+                        journalTitle = journal.title ?: "",
+                        viewAccess = journal.viewAccess?.name ?: JournalAccess.NOBODY.name,
+                        commentAccess = journal.commentAccess?.name ?: JournalAccess.NOBODY.name
                     )
                 )
             }
-        }
+    ) {
+        JournalRowView(
+            data = JournalRowData(
+                modifier = Modifier.fillMaxWidth(),
+                imageStringURL = journal.lastMessageImage,
+                title = journal.title ?: "",
+                dateString = DateFormatter.formatDate(context, journal.lastMessageDate),
+                bodyText = journal.lastMessageText ?: "",
+                mode = JournalRowMode.ROOT,
+                actions = if (ownerConfig.isOwner) {
+                    listOf(JournalAction.SETUP, JournalAction.DELETE)
+                } else {
+                    emptyList()
+                },
+                onClickAction = { action ->
+                    if (action == JournalAction.DELETE) {
+                        ownerConfig.onDeleteClick(journal)
+                    } else if (action == JournalAction.SETUP) {
+                        ownerConfig.onSetupClick(journal)
+                    }
+                }
+            )
+        )
     }
 }
 

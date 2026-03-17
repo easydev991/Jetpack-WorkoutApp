@@ -16,13 +16,15 @@ import com.swparks.data.model.Park
  *
  * @param parks Список площадок для отображения
  * @param onParkClick Замыкание, вызываемое при клике на площадку
+ * @param enabled Доступность клика по элементам списка
  * @param modifier Modifier для настройки внешнего вида
  */
 @Composable
 fun ParksListView(
+    modifier: Modifier = Modifier,
     parks: List<Park>,
     onParkClick: (Park) -> Unit,
-    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     LazyColumn(
         modifier = modifier,
@@ -44,6 +46,7 @@ fun ParksListView(
                         name = park.name,
                         address = park.address,
                         peopleTrainCount = park.trainingUsersCount ?: 0,
+                        enabled = enabled,
                         onClick = { onParkClick(park) }
                     )
             )

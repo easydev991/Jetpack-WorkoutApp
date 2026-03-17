@@ -53,6 +53,7 @@ import com.swparks.data.model.User
 import com.swparks.domain.model.FriendAction
 import com.swparks.navigation.AppState
 import com.swparks.navigation.Screen
+import com.swparks.navigation.navigateToUserAddedParks
 import com.swparks.ui.ds.AddedParksButton
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.FriendsButton
@@ -85,6 +86,35 @@ data class ProfileContentState(
     val isFriendActionLoading: Boolean
 )
 
+data class ProfileRelationsState(
+    val isFriend: Boolean,
+    val isInBlacklist: Boolean
+)
+
+private data class ProfileDialogState(
+    val showBlacklistDialog: Boolean = false,
+    val showRemoveFriendDialog: Boolean = false,
+    val showTextEntrySheet: Boolean = false,
+    val textEntryMode: TextEntryMode? = null
+)
+
+@Composable
+private fun rememberProfileRelations(
+    viewedUser: User?,
+    currentUser: User?,
+    friends: List<User>,
+    blacklist: List<User>
+): ProfileRelationsState {
+    val viewedUserId = viewedUser?.id
+    val currentUserId = currentUser?.id
+    val isFriend = viewedUserId != null && friends.any { it.id == viewedUserId }
+    val isInBlacklist = viewedUserId != null && blacklist.any { it.id == viewedUserId }
+
+    return remember(viewedUserId, currentUserId, friends, blacklist) {
+        ProfileRelationsState(isFriend, isInBlacklist)
+    }
+}
+
 sealed class ProfileContentAction {
     data class SendMessage(val user: User) : ProfileContentAction()
     object ShowRemoveFriendDialog : ProfileContentAction()
@@ -108,166 +138,303 @@ fun OtherUserProfileScreen(
     val isLoadingCurrentUser by viewModel.isLoadingCurrentUser.collectAsState()
     val isFriendActionLoading by viewModel.isFriendActionLoading.collectAsState()
 
-    // Проверки отношений между currentUser и viewedUser
-    val viewedUserId = viewedUser?.id
-    val currentUserId = currentUser?.id
-    val isFriend = viewedUserId != null && friends.any { it.id == viewedUserId }
-    val isInBlacklist = viewedUserId != null && blacklist.any { it.id == viewedUserId }
+    val relations = rememberProfileRelations(viewedUser, currentUser, friends, blacklist)
 
-    // Защита от просмотра собственного профиля (если попали через deep link)
-    if (viewedUserId != null && viewedUserId == currentUserId) {
-        LaunchedEffect(viewedUserId) {
+    if (viewedUser?.id != null && viewedUser?.id == currentUser?.id) {
+        LaunchedEffect(viewedUser?.id) {
             onAction(ProfileNavigationAction.NavigateToOwnProfile)
         }
         return
     }
 
-    var showBlacklistDialog by remember { mutableStateOf(false) }
-    val blacklistAction = if (isInBlacklist) BlacklistAction.UNBLOCK else BlacklistAction.BLOCK
+    OtherUserProfileScaffold(
+        modifier = modifier,
+        params = OtherUserProfileScaffoldParams(
+            isLoadingCurrentUser = isLoadingCurrentUser,
+            isRefreshing = isRefreshing,
+            isFriendActionLoading = isFriendActionLoading,
+            uiState = uiState,
+            viewedUser = viewedUser,
+            isFriend = relations.isFriend,
+            isInBlacklist = relations.isInBlacklist
+        ),
+        config = ProfileContentConfig(
+            viewModel = viewModel,
+            appState = appState,
+            source = source
+        ),
+        relations = relations,
+        onAction = onAction
+    )
+}
 
-    // Состояние для диалога подтверждения удаления из друзей
-    var showRemoveFriendDialog by remember { mutableStateOf(false) }
-
-    // Состояние для TextEntrySheet (отправка сообщения)
-    var showTextEntrySheet by remember { mutableStateOf(false) }
-    var textEntryMode by remember { mutableStateOf<TextEntryMode?>(null) }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun OtherUserProfileScaffold(
+    modifier: Modifier,
+    params: OtherUserProfileScaffoldParams,
+    config: ProfileContentConfig,
+    relations: ProfileRelationsState,
+    onAction: (ProfileNavigationAction) -> Unit
+) {
+    var dialogState by remember { mutableStateOf(ProfileDialogState()) }
+    val blacklistAction =
+        if (relations.isInBlacklist) BlacklistAction.UNBLOCK else BlacklistAction.BLOCK
 
     Scaffold(
         modifier = modifier,
         topBar = {
             OtherUserProfileTopAppBar(
-                isInBlacklist = isInBlacklist,
-                onBlacklistClick = { showBlacklistDialog = true },
+                isInBlacklist = relations.isInBlacklist,
+                onBlacklistClick = { dialogState = dialogState.copy(showBlacklistDialog = true) },
                 onBackClick = { onAction(ProfileNavigationAction.Back) }
             )
         }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            if (isLoadingCurrentUser) {
-                LoadingOverlayView(modifier = Modifier.fillMaxSize())
-            } else {
-                val pullRefreshState = rememberPullToRefreshState()
-
-                PullToRefreshBox(
-                    isRefreshing = isRefreshing,
-                    onRefresh = { viewModel.refreshUser() },
-                    state = pullRefreshState,
-                    modifier = Modifier.fillMaxSize(),
-                    indicator = {
-                        PullToRefreshDefaults.Indicator(
-                            state = pullRefreshState,
-                            isRefreshing = isRefreshing,
-                            modifier = Modifier
-                                .align(Alignment.TopCenter)
-                                .padding(top = dimensionResource(R.dimen.spacing_regular))
-                        )
-                    }
-                ) {
-                    when (val state = uiState) {
-                        is OtherUserProfileUiState.Loading -> { /* Контент скрыт */
-                        }
-
-                        is OtherUserProfileUiState.UserNotFound -> UserNotFoundContent(
-                            onBack = { onAction(ProfileNavigationAction.Back) }
-                        )
-
-                        is OtherUserProfileUiState.BlockedByUser -> BlockedByUserContent(
-                            onBack = { onAction(ProfileNavigationAction.Back) }
-                        )
-
-                        is OtherUserProfileUiState.Success -> {
-                            ProfileContent(
-                                state = ProfileContentState(
-                                    viewedUser = viewedUser,
-                                    country = state.country,
-                                    city = state.city,
-                                    isFriend = isFriend,
-                                    isInBlacklist = isInBlacklist,
-                                    isRefreshing = isRefreshing,
-                                    isFriendActionLoading = isFriendActionLoading
-                                ),
-                                viewModel = viewModel,
-                                appState = appState,
-                                source = source,
-                                onAction = { action ->
-                                    when (action) {
-                                        is ProfileContentAction.SendMessage -> {
-                                            textEntryMode = TextEntryMode.Message(
-                                                action.user.id,
-                                                action.user.fullName ?: action.user.name
-                                            )
-                                            showTextEntrySheet = true
-                                        }
-
-                                        is ProfileContentAction.ShowRemoveFriendDialog -> {
-                                            showRemoveFriendDialog = true
-                                        }
-                                    }
-                                }
-                            )
-                        }
-
-                        is OtherUserProfileUiState.Error -> {
-                            ErrorContent(
-                                message = state.message,
-                                canRetry = state.canRetry,
-                                onRetry = { viewModel.loadUser() }
-                            )
-                        }
-                    }
+        OtherUserProfileScaffoldContent(
+            paddingValues = paddingValues,
+            params = params,
+            config = config,
+            handlers = ProfileActionHandlers(
+                onProfileAction = onAction,
+                onTextEntryAction = { mode ->
+                    dialogState = dialogState.copy(showTextEntrySheet = true, textEntryMode = mode)
+                },
+                onShowRemoveFriendDialog = {
+                    dialogState = dialogState.copy(showRemoveFriendDialog = true)
                 }
+            )
+        )
+    }
 
-                if (uiState is OtherUserProfileUiState.Loading && !isRefreshing) {
-                    LoadingOverlayView(modifier = Modifier.fillMaxSize())
-                }
-
-                // Блокировка UI при выполнении friend action
-                if (isFriendActionLoading) {
-                    LoadingOverlayView(modifier = Modifier.fillMaxSize())
-                }
+    OtherUserProfileDialogs(
+        state = dialogState,
+        blacklistAction = blacklistAction,
+        handlers = ProfileDialogHandlers(
+            onBlacklistConfirm = {
+                config.viewModel.performBlacklistAction(onBlocked = {
+                    onAction(
+                        ProfileNavigationAction.Back
+                    )
+                })
+                dialogState = dialogState.copy(showBlacklistDialog = false)
+            },
+            onBlacklistDismiss = { dialogState = dialogState.copy(showBlacklistDialog = false) },
+            onRemoveFriendConfirm = {
+                config.viewModel.performFriendAction()
+                dialogState = dialogState.copy(showRemoveFriendDialog = false)
+            },
+            onRemoveFriendDismiss = {
+                dialogState = dialogState.copy(showRemoveFriendDialog = false)
+            },
+            onTextEntryDismiss = {
+                dialogState = dialogState.copy(showTextEntrySheet = false, textEntryMode = null)
+            },
+            onTextEntrySuccess = {
+                dialogState = dialogState.copy(showTextEntrySheet = false, textEntryMode = null)
             }
+        )
+    )
+}
+
+private data class OtherUserProfileScaffoldParams(
+    val isLoadingCurrentUser: Boolean,
+    val isRefreshing: Boolean,
+    val isFriendActionLoading: Boolean,
+    val uiState: OtherUserProfileUiState,
+    val viewedUser: User?,
+    val isFriend: Boolean,
+    val isInBlacklist: Boolean
+)
+
+private data class ProfileNavigationParams(
+    val viewedUser: User,
+    val appState: AppState,
+    val source: String,
+    val buttonsEnabled: Boolean
+)
+
+private data class ProfileContentConfig(
+    val viewModel: IOtherUserProfileViewModel,
+    val appState: AppState,
+    val source: String
+)
+
+private data class ProfileActionHandlers(
+    val onProfileAction: (ProfileNavigationAction) -> Unit,
+    val onTextEntryAction: (TextEntryMode) -> Unit,
+    val onShowRemoveFriendDialog: () -> Unit
+)
+
+private sealed class TextEntryAction {
+    data class Show(val mode: TextEntryMode) : TextEntryAction()
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun OtherUserProfileScaffoldContent(
+    paddingValues: androidx.compose.foundation.layout.PaddingValues,
+    params: OtherUserProfileScaffoldParams,
+    config: ProfileContentConfig,
+    handlers: ProfileActionHandlers,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+    ) {
+        if (params.isLoadingCurrentUser) {
+            LoadingOverlayView(modifier = Modifier.fillMaxSize())
+        } else {
+            ProfilePullToRefreshContent(
+                params = params,
+                config = config,
+                handlers = handlers
+            )
         }
     }
+}
 
-    if (showBlacklistDialog) {
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ProfilePullToRefreshContent(
+    params: OtherUserProfileScaffoldParams,
+    config: ProfileContentConfig,
+    handlers: ProfileActionHandlers
+) {
+    val pullRefreshState = rememberPullToRefreshState()
+
+    PullToRefreshBox(
+        isRefreshing = params.isRefreshing,
+        onRefresh = { config.viewModel.refreshUser() },
+        state = pullRefreshState,
+        modifier = Modifier.fillMaxSize(),
+        indicator = {
+            PullToRefreshDefaults.Indicator(
+                state = pullRefreshState,
+                isRefreshing = params.isRefreshing,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = dimensionResource(R.dimen.spacing_regular))
+            )
+        }
+    ) {
+        ProfileUiStateContent(
+            uiState = params.uiState,
+            params = params,
+            config = config,
+            handlers = handlers
+        )
+    }
+
+    if (params.uiState is OtherUserProfileUiState.Loading && !params.isRefreshing) {
+        LoadingOverlayView(modifier = Modifier.fillMaxSize())
+    }
+
+    if (params.isFriendActionLoading) {
+        LoadingOverlayView(modifier = Modifier.fillMaxSize())
+    }
+}
+
+@Composable
+private fun ProfileUiStateContent(
+    uiState: OtherUserProfileUiState,
+    params: OtherUserProfileScaffoldParams,
+    config: ProfileContentConfig,
+    handlers: ProfileActionHandlers
+) {
+    when (val state = uiState) {
+        is OtherUserProfileUiState.Loading -> { /* Контент скрыт */
+        }
+
+        is OtherUserProfileUiState.UserNotFound -> UserNotFoundContent(
+            onBack = { handlers.onProfileAction(ProfileNavigationAction.Back) }
+        )
+
+        is OtherUserProfileUiState.BlockedByUser -> BlockedByUserContent(
+            onBack = { handlers.onProfileAction(ProfileNavigationAction.Back) }
+        )
+
+        is OtherUserProfileUiState.Success -> {
+            ProfileContent(
+                state = ProfileContentState(
+                    viewedUser = params.viewedUser,
+                    country = state.country,
+                    city = state.city,
+                    isFriend = params.isFriend,
+                    isInBlacklist = params.isInBlacklist,
+                    isRefreshing = params.isRefreshing,
+                    isFriendActionLoading = params.isFriendActionLoading
+                ),
+                viewModel = config.viewModel,
+                appState = config.appState,
+                source = config.source,
+                onAction = { action ->
+                    when (action) {
+                        is ProfileContentAction.SendMessage -> {
+                            handlers.onTextEntryAction(
+                                TextEntryMode.Message(
+                                    action.user.id,
+                                    action.user.fullName ?: action.user.name
+                                )
+                            )
+                        }
+
+                        is ProfileContentAction.ShowRemoveFriendDialog -> {
+                            handlers.onShowRemoveFriendDialog()
+                        }
+                    }
+                }
+            )
+        }
+
+        is OtherUserProfileUiState.Error -> {
+            ErrorContent(
+                message = state.message,
+                canRetry = state.canRetry,
+                onRetry = { config.viewModel.loadUser() }
+            )
+        }
+    }
+}
+
+private data class ProfileDialogHandlers(
+    val onBlacklistConfirm: () -> Unit,
+    val onBlacklistDismiss: () -> Unit,
+    val onRemoveFriendConfirm: () -> Unit,
+    val onRemoveFriendDismiss: () -> Unit,
+    val onTextEntryDismiss: () -> Unit,
+    val onTextEntrySuccess: () -> Unit
+)
+
+@Composable
+private fun OtherUserProfileDialogs(
+    state: ProfileDialogState,
+    blacklistAction: BlacklistAction,
+    handlers: ProfileDialogHandlers
+) {
+    if (state.showBlacklistDialog) {
         BlacklistActionDialog(
             action = blacklistAction,
-            onConfirm = {
-                viewModel.performBlacklistAction(onBlocked = { onAction(ProfileNavigationAction.Back) })
-                showBlacklistDialog = false
-            },
-            onDismiss = { showBlacklistDialog = false }
+            onConfirm = handlers.onBlacklistConfirm,
+            onDismiss = handlers.onBlacklistDismiss
         )
     }
 
-    // Диалог подтверждения удаления из друзей
-    if (showRemoveFriendDialog) {
+    if (state.showRemoveFriendDialog) {
         RemoveFriendDialog(
-            onConfirm = {
-                viewModel.performFriendAction()
-                showRemoveFriendDialog = false
-            },
-            onDismiss = { showRemoveFriendDialog = false }
+            onConfirm = handlers.onRemoveFriendConfirm,
+            onDismiss = handlers.onRemoveFriendDismiss
         )
     }
 
-    // Sheet для отправки сообщения
-    if (showTextEntrySheet && textEntryMode != null) {
+    if (state.showTextEntrySheet && state.textEntryMode != null) {
         TextEntrySheetHost(
             show = true,
-            mode = textEntryMode!!,
-            onDismissed = {
-                showTextEntrySheet = false
-                textEntryMode = null
-            },
-            onSendSuccess = {
-                showTextEntrySheet = false
-                textEntryMode = null
-            }
+            mode = state.textEntryMode,
+            onDismissed = handlers.onTextEntryDismiss,
+            onSendSuccess = handlers.onTextEntrySuccess
         )
     }
 }
@@ -370,24 +537,65 @@ private fun ProfileContent(
             .padding(dimensionResource(R.dimen.spacing_regular)),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
     ) {
-        val shortAddress = listOfNotNull(state.country?.name, state.city?.name).joinToString(", ")
-        UserProfileCardView(
-            data = UserProfileData(
-                imageStringURL = viewedUser.image,
-                userName = viewedUser.fullName ?: viewedUser.name,
-                gender = viewedUser.genderOption?.let { stringResource(it.description) } ?: "",
-                age = viewedUser.age,
-                shortAddress = shortAddress
-            )
+        ProfileHeaderSection(
+            viewedUser = viewedUser,
+            country = state.country,
+            city = state.city
         )
 
+        ProfileActionButtons(
+            viewedUser = viewedUser,
+            isFriend = state.isFriend,
+            buttonsEnabled = buttonsEnabled,
+            viewModel = viewModel,
+            onAction = onAction
+        )
+
+        ProfileNavigationButtons(
+            params = ProfileNavigationParams(
+                viewedUser = viewedUser,
+                appState = appState,
+                source = source,
+                buttonsEnabled = buttonsEnabled
+            )
+        )
+    }
+}
+
+@Composable
+private fun ProfileHeaderSection(
+    viewedUser: User,
+    country: Country?,
+    city: City?
+) {
+    val shortAddress = listOfNotNull(country?.name, city?.name).joinToString(", ")
+    UserProfileCardView(
+        data = UserProfileData(
+            imageStringURL = viewedUser.image,
+            userName = viewedUser.fullName ?: viewedUser.name,
+            gender = viewedUser.genderOption?.let { stringResource(it.description) } ?: "",
+            age = viewedUser.age,
+            shortAddress = shortAddress
+        )
+    )
+}
+
+@Composable
+private fun ProfileActionButtons(
+    viewedUser: User,
+    isFriend: Boolean,
+    buttonsEnabled: Boolean,
+    viewModel: IOtherUserProfileViewModel,
+    onAction: (ProfileContentAction) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))) {
         SendMessageButton(
             onClick = { onAction(ProfileContentAction.SendMessage(viewedUser)) },
             enabled = buttonsEnabled
         )
 
         val friendAction =
-            if (state.isFriend) FriendAction.REMOVE_FRIEND else FriendAction.SEND_FRIEND_REQUEST
+            if (isFriend) FriendAction.REMOVE_FRIEND else FriendAction.SEND_FRIEND_REQUEST
         FriendActionButton(
             action = friendAction,
             onClick = {
@@ -399,63 +607,67 @@ private fun ProfileContent(
             },
             enabled = buttonsEnabled
         )
+    }
+}
 
-        if (viewedUser.hasFriends) {
-            FriendsButton(
-                friendsCount = viewedUser.friendsCount ?: 0,
-                friendRequestsCount = 0,
-                onClick = {
-                    appState.navController.navigate(
-                        Screen.UserFriends.createRoute(
-                            viewedUser.id,
-                            source
+@Composable
+private fun ProfileNavigationButtons(
+    params: ProfileNavigationParams
+) {
+    with(params) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
+        ) {
+            if (viewedUser.hasFriends) {
+                FriendsButton(
+                    friendsCount = viewedUser.friendsCount ?: 0,
+                    friendRequestsCount = 0,
+                    onClick = {
+                        appState.navController.navigate(
+                            Screen.UserFriends.createRoute(viewedUser.id, source)
                         )
-                    )
-                },
-                enabled = buttonsEnabled
-            )
-        }
+                    },
+                    enabled = buttonsEnabled
+                )
+            }
 
-        if (viewedUser.hasUsedParks) {
-            UsedParksButton(
-                parksCount = viewedUser.parksCount?.toIntOrNull() ?: 0,
-                onClick = {
-                    appState.navController.navigate(
-                        Screen.UserTrainingParks.createRoute(
-                            viewedUser.id,
-                            source
+            if (viewedUser.hasUsedParks) {
+                UsedParksButton(
+                    parksCount = viewedUser.parksCount?.toIntOrNull() ?: 0,
+                    onClick = {
+                        appState.navController.navigate(
+                            Screen.UserTrainingParks.createRoute(viewedUser.id, source)
                         )
-                    )
-                },
-                enabled = buttonsEnabled
-            )
-        }
+                    },
+                    enabled = buttonsEnabled
+                )
+            }
 
-        if (viewedUser.hasAddedParks) {
-            AddedParksButton(
-                addedParksCount = viewedUser.addedParks?.size ?: 0,
-                onClick = {
-                    appState.navController.navigate(
-                        Screen.UserParks.createRoute(viewedUser.id, source)
-                    )
-                },
-                enabled = buttonsEnabled
-            )
-        }
-
-        if ((viewedUser.journalCount ?: 0) > 0) {
-            JournalsButton(
-                journalsCount = viewedUser.journalCount ?: 0,
-                onClick = {
-                    appState.navController.navigate(
-                        Screen.JournalsList.createRoute(
-                            viewedUser.id,
-                            source
+            if (viewedUser.hasAddedParks) {
+                AddedParksButton(
+                    addedParksCount = viewedUser.addedParks?.size ?: 0,
+                    onClick = {
+                        appState.navController.navigateToUserAddedParks(
+                            userId = viewedUser.id,
+                            source = source,
+                            addedParks = viewedUser.addedParks.orEmpty()
                         )
-                    )
-                },
-                enabled = buttonsEnabled
-            )
+                    },
+                    enabled = buttonsEnabled
+                )
+            }
+
+            if ((viewedUser.journalCount ?: 0) > 0) {
+                JournalsButton(
+                    journalsCount = viewedUser.journalCount ?: 0,
+                    onClick = {
+                        appState.navController.navigate(
+                            Screen.JournalsList.createRoute(viewedUser.id, source)
+                        )
+                    },
+                    enabled = buttonsEnabled
+                )
+            }
         }
     }
 }

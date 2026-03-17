@@ -68,6 +68,16 @@ class FakeEventFormViewModel(
     override fun onSaveClick() {
     }
 
+    override fun onAction(action: EventFormAction) {
+        when (action) {
+            is EventFormAction.TitleChange -> onTitleChange(action.value)
+            is EventFormAction.DescriptionChange -> onDescriptionChange(action.value)
+            is EventFormAction.ParkClick -> onParkClick()
+            is EventFormAction.DateChange -> onDateChange(action.timestamp)
+            is EventFormAction.TimeChange -> onTimeChange(action.hour, action.minute)
+        }
+    }
+
     fun setLoading(loading: Boolean) {
         _uiState.value = _uiState.value.copy(isLoading = loading)
     }

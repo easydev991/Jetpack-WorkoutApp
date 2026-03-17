@@ -49,20 +49,6 @@ import com.swparks.ui.state.LoginEvent
 import com.swparks.ui.state.LoginUiState
 import com.swparks.ui.viewmodel.ILoginViewModel
 
-/**
- * Экран авторизации.
- *
- * Позволяет пользователю войти в систему или восстановить пароль.
- *
- * ВАЖНО: Этот экран выполняет ТОЛЬКО авторизацию.
- * Загрузка данных пользователя выполняется в ProfileViewModel при открытии профиля.
- *
- * @param modifier Модификатор для расположения экрана
- * @param viewModel ViewModel для управления состоянием экрана
- * @param onDismiss Callback для закрытия модального окна
- * @param onLoginSuccess Callback для уведомления об успешной авторизации с userId
- * @param onResetSuccess Callback для уведомления об успешном сбросе пароля с email
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
@@ -70,7 +56,7 @@ fun LoginScreen(
     viewModel: ILoginViewModel,
     onDismiss: () -> Unit = {},
     onLoginSuccess: (userId: Long) -> Unit = {},
-    onResetSuccess: (String) -> Unit = {} // Новый параметр
+    onResetSuccess: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val loginError by viewModel.loginErrorState.collectAsState()
@@ -81,7 +67,7 @@ fun LoginScreen(
     LaunchedEffect(Unit) { screenState.focusRequester.requestFocus() }
 
     Scaffold(
-        modifier = modifier, // Применяем модификатор к всему Scaffold
+        modifier = modifier,
         topBar = {
             LoginModalAppBar(
                 onDismiss = onDismiss,
@@ -102,35 +88,42 @@ fun LoginScreen(
                 modifier = Modifier.padding(paddingValues)
             )
 
-            // Оверлей загрузки
             if (uiState.isBusy) {
                 LoadingOverlayView()
             }
         }
     }
 
-    // НОВАЯ ОБРАБОТКА СОБЫТИЙ (вместо uiState.Success)
+    HandleLoginEvents(
+        viewModel = viewModel,
+        screenState = screenState,
+        onLoginSuccess = onLoginSuccess,
+        onResetSuccess = onResetSuccess
+    )
+}
+
+
+@Composable
+private fun HandleLoginEvents(
+    viewModel: ILoginViewModel,
+    screenState: LoginScreenState,
+    onLoginSuccess: (Long) -> Unit,
+    onResetSuccess: (String) -> Unit
+) {
     LaunchedEffect(Unit) {
         viewModel.loginEvents.collect { event ->
             when (event) {
-                is LoginEvent.Success -> {
-                    onLoginSuccess(event.userId)
-                }
-
+                is LoginEvent.Success -> onLoginSuccess(event.userId)
                 is LoginEvent.ResetSuccess -> {
-                    // Показываем локальный алерт
                     screenState.setShowResetSuccessAlert(true)
-                    // И уведомляем родителя (если нужно)
                     onResetSuccess(event.email)
                 }
             }
         }
     }
 
-    // Обработка ОШИБОК (остается на uiState)
-    HandleLoginErrorsOnly(uiState, screenState)
+    HandleLoginErrorsOnly(viewModel.uiState.collectAsState().value, screenState)
 
-    // Алерты
     LoginScreenAlerts(
         state = LoginAlertsState(
             showNoInternet = screenState.showNoInternetAlert,

@@ -66,22 +66,7 @@ fun JournalSettingsDialog(
     viewModel: IJournalSettingsViewModel,
     isSaving: Boolean
 ) {
-    // Локальное состояние диалога
-    var title by remember { mutableStateOf(TextFieldValue(journal.title ?: "")) }
-    var viewAccess by remember { mutableStateOf(journal.viewAccess ?: JournalAccess.ALL) }
-    var commentAccess by remember { mutableStateOf(journal.commentAccess ?: JournalAccess.ALL) }
-    var titleAttemptedSave by remember { mutableStateOf(false) }
-
-    // Проверка, есть ли изменения
-    val hasChanges = remember(title.text, viewAccess, commentAccess, journal) {
-        title.text != journal.title ||
-            viewAccess != journal.viewAccess ||
-            commentAccess != journal.commentAccess
-    }
-
-    // Кнопка "Сохранить" активна только если название не пустое и есть изменения
-    val isSaveButtonEnabled = title.text.isNotBlank() && hasChanges
-
+    val state = rememberJournalSettingsDialogState(journal)
     val configuration = LocalWindowInfo.current
 
     AlertDialog(
@@ -89,123 +74,160 @@ fun JournalSettingsDialog(
         modifier = Modifier
             .widthIn(max = configuration.containerDpSize.width - (dimensionResource(R.dimen.spacing_regular)) * 2),
         onDismissRequest = onDismiss,
-        title = {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = stringResource(R.string.journal_settings),
-                    style = MaterialTheme.typography.titleLarge
-                )
-                IconButton(onClick = onDismiss) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = stringResource(R.string.close)
-                    )
-                }
-            }
-        },
-        text = {
-            HorizontalDivider()
-            Column(
-                Modifier
-                    .verticalScroll(rememberScrollState())
-                    .padding(vertical = dimensionResource(R.dimen.spacing_xsmall))
-            ) {
-                // Текстовое поле для названия
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text(stringResource(R.string.journal_title_placeholder)) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = dimensionResource(R.dimen.spacing_xsmall)),
-                    singleLine = true,
-                    isError = title.text.isBlank() && titleAttemptedSave
-                )
-
-                // Кто видит записи
-                SettingsDialogSectionTitle(
-                    text = stringResource(R.string.read_access)
-                )
-                JournalAccessGroup(
-                    options = listOf(
-                        JournalAccessOption(
-                            access = JournalAccess.ALL,
-                            textRes = R.string.everybody_access
-                        ),
-                        JournalAccessOption(
-                            access = JournalAccess.FRIENDS,
-                            textRes = R.string.friends_access
-                        ),
-                        JournalAccessOption(
-                            access = JournalAccess.NOBODY,
-                            textRes = R.string.only_me_access
-                        )
-                    ),
-                    selected = viewAccess,
-                    onSelected = { viewAccess = it }
-                )
-
-                // Кто может оставлять комментарии
-                SettingsDialogSectionTitle(
-                    text = stringResource(R.string.comment_access),
-                    modifier = Modifier
-                        .padding(top = dimensionResource(R.dimen.spacing_xsmall))
-                )
-                JournalAccessGroup(
-                    options = listOf(
-                        JournalAccessOption(
-                            access = JournalAccess.ALL,
-                            textRes = R.string.everybody_access
-                        ),
-                        JournalAccessOption(
-                            access = JournalAccess.FRIENDS,
-                            textRes = R.string.friends_access
-                        ),
-                        JournalAccessOption(
-                            access = JournalAccess.NOBODY,
-                            textRes = R.string.only_me_access
-                        )
-                    ),
-                    selected = commentAccess,
-                    onSelected = { commentAccess = it }
-                )
-                HorizontalDivider(Modifier.padding(top = dimensionResource(R.dimen.spacing_xsmall)))
-            }
-        },
+        title = { DialogTitle(onDismiss) },
+        text = { DialogContent(state) },
         confirmButton = {
-            Button(
-                modifier = Modifier.testTag("saveButton"),
-                onClick = {
-                    if (title.text.isNotBlank()) {
+            SaveButton(
+                isEnabled = state.isSaveButtonEnabled,
+                isSaving = isSaving,
+                onSave = {
+                    if (state.title.text.isNotBlank()) {
                         viewModel.editJournalSettings(
                             journalId = journal.id,
-                            title = title.text,
-                            viewAccess = viewAccess,
-                            commentAccess = commentAccess
+                            title = state.title.text,
+                            viewAccess = state.viewAccess,
+                            commentAccess = state.commentAccess
                         )
-                        // Диалог закроется по событию JournalSettingsSaved
                     } else {
-                        titleAttemptedSave = true
+                        state.titleAttemptedSave = true
                     }
-                },
-                enabled = isSaveButtonEnabled && !isSaving
-            ) {
-                if (isSaving) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text(stringResource(R.string.save))
                 }
-            }
+            )
         }
     )
 }
+
+private class JournalSettingsDialogState(
+    val journal: Journal,
+    title: TextFieldValue,
+    viewAccess: JournalAccess,
+    commentAccess: JournalAccess
+) {
+    var title by mutableStateOf(title)
+    var viewAccess by mutableStateOf(viewAccess)
+    var commentAccess by mutableStateOf(commentAccess)
+    var titleAttemptedSave by mutableStateOf(false)
+
+    val hasChanges: Boolean
+        get() = title.text != journal.title ||
+            viewAccess != journal.viewAccess ||
+            commentAccess != journal.commentAccess
+
+    val isSaveButtonEnabled: Boolean
+        get() = title.text.isNotBlank() && hasChanges
+}
+
+@Composable
+private fun rememberJournalSettingsDialogState(journal: Journal): JournalSettingsDialogState {
+    return remember(journal) {
+        JournalSettingsDialogState(
+            journal = journal,
+            title = TextFieldValue(journal.title ?: ""),
+            viewAccess = journal.viewAccess ?: JournalAccess.ALL,
+            commentAccess = journal.commentAccess ?: JournalAccess.ALL
+        )
+    }
+}
+
+@Composable
+private fun DialogTitle(onDismiss: () -> Unit) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            text = stringResource(R.string.journal_settings),
+            style = MaterialTheme.typography.titleLarge
+        )
+        IconButton(onClick = onDismiss) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = stringResource(R.string.close)
+            )
+        }
+    }
+}
+
+@Composable
+private fun DialogContent(state: JournalSettingsDialogState) {
+    HorizontalDivider()
+    Column(
+        Modifier
+            .verticalScroll(rememberScrollState())
+            .padding(vertical = dimensionResource(R.dimen.spacing_xsmall))
+    ) {
+        TitleField(state)
+        ViewAccessSection(state)
+        CommentAccessSection(state)
+        HorizontalDivider(Modifier.padding(top = dimensionResource(R.dimen.spacing_xsmall)))
+    }
+}
+
+@Composable
+private fun TitleField(state: JournalSettingsDialogState) {
+    OutlinedTextField(
+        value = state.title,
+        onValueChange = { state.title = it },
+        label = { Text(stringResource(R.string.journal_title_placeholder)) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = dimensionResource(R.dimen.spacing_xsmall)),
+        singleLine = true,
+        isError = state.title.text.isBlank() && state.titleAttemptedSave
+    )
+}
+
+@Composable
+private fun ViewAccessSection(state: JournalSettingsDialogState) {
+    SettingsDialogSectionTitle(text = stringResource(R.string.read_access))
+    JournalAccessGroup(
+        options = AccessOptions,
+        selected = state.viewAccess,
+        onSelected = { state.viewAccess = it }
+    )
+}
+
+@Composable
+private fun CommentAccessSection(state: JournalSettingsDialogState) {
+    SettingsDialogSectionTitle(
+        text = stringResource(R.string.comment_access),
+        modifier = Modifier.padding(top = dimensionResource(R.dimen.spacing_xsmall))
+    )
+    JournalAccessGroup(
+        options = AccessOptions,
+        selected = state.commentAccess,
+        onSelected = { state.commentAccess = it }
+    )
+}
+
+@Composable
+private fun SaveButton(
+    isEnabled: Boolean,
+    isSaving: Boolean,
+    onSave: () -> Unit
+) {
+    Button(
+        modifier = Modifier.testTag("saveButton"),
+        onClick = onSave,
+        enabled = isEnabled && !isSaving
+    ) {
+        if (isSaving) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(16.dp),
+                strokeWidth = 2.dp
+            )
+        } else {
+            Text(stringResource(R.string.save))
+        }
+    }
+}
+
+private val AccessOptions = listOf(
+    JournalAccessOption(JournalAccess.ALL, R.string.everybody_access),
+    JournalAccessOption(JournalAccess.FRIENDS, R.string.friends_access),
+    JournalAccessOption(JournalAccess.NOBODY, R.string.only_me_access)
+)
 
 /**
  * Вспомогательный тип для опции доступа

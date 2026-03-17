@@ -19,6 +19,7 @@ import com.swparks.data.interceptor.AuthInterceptor
 import com.swparks.data.interceptor.LoggingInterceptor
 import com.swparks.data.interceptor.RetryInterceptor
 import com.swparks.data.interceptor.TokenInterceptor
+import com.swparks.data.model.Park
 import com.swparks.data.provider.AvatarHelperImpl
 import com.swparks.data.provider.ResourcesProviderImpl
 import com.swparks.data.repository.CountriesRepositoryImpl
@@ -96,6 +97,7 @@ import com.swparks.ui.viewmodel.ProfileViewModel
 import com.swparks.ui.viewmodel.RegisterViewModel
 import com.swparks.ui.viewmodel.SearchUserViewModel
 import com.swparks.ui.viewmodel.TextEntryViewModel
+import com.swparks.ui.viewmodel.UserAddedParksViewModel
 import com.swparks.ui.viewmodel.UserFriendsViewModel
 import com.swparks.ui.viewmodel.UserTrainingParksViewModel
 import com.swparks.util.AndroidLogger
@@ -172,6 +174,13 @@ interface AppContainer {
 
     /** Фабрика для UserTrainingParksViewModel */
     fun userTrainingParksViewModelFactory(userId: Long): UserTrainingParksViewModel
+
+    /** Фабрика для UserAddedParksViewModel */
+    fun userAddedParksViewModelFactory(
+        userId: Long,
+        seedParks: List<Park>?,
+        requiresFetch: Boolean
+    ): UserAddedParksViewModel
 
     /** Фабрика для JournalsViewModel */
     fun journalsViewModelFactory(userId: Long): JournalsViewModel
@@ -548,6 +557,19 @@ class DefaultAppContainer(context: Context) : AppContainer {
     override fun userTrainingParksViewModelFactory(userId: Long) = UserTrainingParksViewModel(
         swRepository = swRepository,
         userId = userId,
+        logger = logger,
+        userNotifier = userNotifier
+    )
+
+    override fun userAddedParksViewModelFactory(
+        userId: Long,
+        seedParks: List<Park>?,
+        requiresFetch: Boolean
+    ) = UserAddedParksViewModel(
+        swRepository = swRepository,
+        userId = userId,
+        seedParks = seedParks,
+        requiresFetch = requiresFetch,
         logger = logger,
         userNotifier = userNotifier
     )

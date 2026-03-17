@@ -76,16 +76,7 @@ fun PhotoDetailSheetHost(
         }
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.events.receiveAsFlow().collect { event ->
-            when (event) {
-                PhotoDetailEvent.CloseScreen -> dismissSheet { onDismissed(null) }
-                PhotoDetailEvent.ShowDeleteConfirmDialog -> showDeleteDialog = true
-                is PhotoDetailEvent.SendPhotoComplaint -> sendComplaint(event.complaint, context)
-                is PhotoDetailEvent.PhotoDeleted -> dismissSheet { onDismissed(event.photoId) }
-            }
-        }
-    }
+    HandleEvents(viewModel, ::dismissSheet, context, onDismissed) { showDeleteDialog = it }
 
     if (show) {
         ModalBottomSheet(
@@ -97,26 +88,64 @@ fun PhotoDetailSheetHost(
                 shouldDismissOnClickOutside = false
             ),
         ) {
-            when (val state = uiState) {
-                is PhotoDetailUIState.Content -> {
-                    PhotoDetailScreen(
-                        state = state,
-                        isAuthorized = isAuthorized,
-                        showDeleteDialog = showDeleteDialog,
-                        onAction = { action ->
-                            when (action) {
-                                PhotoDetailAction.DeleteDismiss, PhotoDetailAction.DeleteConfirm -> showDeleteDialog =
-                                    false
+            SheetContent(
+                uiState = uiState,
+                isAuthorized = isAuthorized,
+                showDeleteDialog = showDeleteDialog,
+                onShowDeleteDialogChange = { showDeleteDialog = it },
+                onAction = viewModel::onAction
+            )
+        }
+    }
+}
 
-                                else -> Unit
-                            }
-                            viewModel.onAction(action)
-                        }
-                    )
-                }
-
-                is PhotoDetailUIState.Error -> Unit
+@Composable
+private fun HandleEvents(
+    viewModel: PhotoDetailViewModel,
+    dismissSheet: (() -> Unit) -> Unit,
+    context: android.content.Context,
+    onDismissed: (Long?) -> Unit,
+    onShowDeleteDialog: (Boolean) -> Unit
+) {
+    LaunchedEffect(viewModel) {
+        viewModel.events.receiveAsFlow().collect { event ->
+            when (event) {
+                PhotoDetailEvent.CloseScreen -> dismissSheet { onDismissed(null) }
+                PhotoDetailEvent.ShowDeleteConfirmDialog -> onShowDeleteDialog(true)
+                is PhotoDetailEvent.SendPhotoComplaint -> sendComplaint(event.complaint, context)
+                is PhotoDetailEvent.PhotoDeleted -> dismissSheet { onDismissed(event.photoId) }
             }
         }
+    }
+}
+
+
+@Composable
+private fun SheetContent(
+    uiState: PhotoDetailUIState,
+    isAuthorized: Boolean,
+    showDeleteDialog: Boolean,
+    onShowDeleteDialogChange: (Boolean) -> Unit,
+    onAction: (PhotoDetailAction) -> Unit
+) {
+    when (val state = uiState) {
+        is PhotoDetailUIState.Content -> {
+            PhotoDetailScreen(
+                state = state,
+                isAuthorized = isAuthorized,
+                showDeleteDialog = showDeleteDialog,
+                onAction = { action ->
+                    when (action) {
+                        PhotoDetailAction.DeleteDismiss,
+                        PhotoDetailAction.DeleteConfirm -> onShowDeleteDialogChange(false)
+
+                        else -> Unit
+                    }
+                    onAction(action)
+                }
+            )
+        }
+
+        is PhotoDetailUIState.Error -> Unit
     }
 }

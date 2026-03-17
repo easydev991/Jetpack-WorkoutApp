@@ -27,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -151,63 +152,78 @@ internal fun EventHeaderMapCalendarSection(
             Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
         )
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(dimensionResource(R.dimen.spacing_regular)),
-            verticalArrangement = Arrangement.spacedBy(
-                dimensionResource(R.dimen.spacing_small)
-            )
-        ) {
-            Text(
-                text = event.title,
-                style = MaterialTheme.typography.titleLarge
-            )
+        EventHeaderContent(
+            event = event,
+            address = address,
+            isRefreshing = isRefreshing,
+            onAction = onAction
+        )
+    }
+}
 
+@Composable
+private fun EventHeaderContent(
+    event: Event,
+    address: String,
+    isRefreshing: Boolean,
+    onAction: (EventHeaderAction) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(dimensionResource(R.dimen.spacing_regular)),
+        verticalArrangement = Arrangement.spacedBy(
+            dimensionResource(R.dimen.spacing_small)
+        )
+    ) {
+        Text(
+            text = event.title,
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        LabeledValueRow(
+            label = stringResource(R.string.`when`),
+            value = DateFormatter.formatDate(
+                context = LocalContext.current,
+                dateString = event.beginDate
+            )
+        )
+
+        LabeledValueRow(
+            label = stringResource(R.string.where),
+            value = address
+        )
+
+        val eventAddress = event.address
+        if (!eventAddress.isNullOrBlank()) {
             LabeledValueRow(
-                label = stringResource(R.string.`when`),
-                value = DateFormatter.formatDate(
-                    context = androidx.compose.ui.platform.LocalContext.current,
-                    dateString = event.beginDate
-                )
+                label = stringResource(R.string.address),
+                value = eventAddress
             )
+        }
 
-            LabeledValueRow(
-                label = stringResource(R.string.where),
-                value = address
+        LocationInfoView(
+            config = LocationInfoConfig(
+                latitude = event.latitude,
+                longitude = event.longitude,
+                address = address,
+                enabled = !isRefreshing,
+                onOpenMapClick = { onAction(EventHeaderAction.OpenMap) },
+                onRouteClick = { onAction(EventHeaderAction.Route) }
             )
+        )
 
-            val eventAddress = event.address
-            if (!eventAddress.isNullOrBlank()) {
-                LabeledValueRow(
-                    label = stringResource(R.string.address),
-                    value = eventAddress
-                )
-            }
-
-            LocationInfoView(
-                config = LocationInfoConfig(
-                    latitude = event.latitude,
-                    longitude = event.longitude,
-                    address = address,
+        if (event.isCurrent) {
+            SWButton(
+                config = ButtonConfig(
+                    modifier = Modifier.fillMaxWidth(),
+                    size = SWButtonSize.LARGE,
+                    mode = SWButtonMode.FILLED,
+                    text = stringResource(R.string.event_add_to_calendar),
                     enabled = !isRefreshing,
-                    onOpenMapClick = { onAction(EventHeaderAction.OpenMap) },
-                    onRouteClick = { onAction(EventHeaderAction.Route) }
+                    onClick = { onAction(EventHeaderAction.AddToCalendar) }
                 )
             )
-
-            if (event.isCurrent) {
-                SWButton(
-                    config = ButtonConfig(
-                        modifier = Modifier.fillMaxWidth(),
-                        size = SWButtonSize.LARGE,
-                        mode = SWButtonMode.FILLED,
-                        text = stringResource(R.string.event_add_to_calendar),
-                        enabled = !isRefreshing,
-                        onClick = { onAction(EventHeaderAction.AddToCalendar) }
-                    )
-                )
-            }
         }
     }
 }
@@ -359,7 +375,7 @@ internal fun EventCommentItem(
                     imageStringURL = author?.image,
                     authorName = author?.name ?: "",
                     dateString = DateFormatter.formatDate(
-                        context = androidx.compose.ui.platform.LocalContext.current,
+                        context = LocalContext.current,
                         dateString = comment.date
                     ),
                     bodyText = comment.parsedBody.orEmpty(),

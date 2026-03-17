@@ -1,5 +1,5 @@
 build:
-  maxIssues: 80  # Current warnings count (78) + buffer (2)
+  maxIssues: 35  # Current warnings count (32) + buffer (3)
   excludeCorrectable: false
   weights:
     # complexity: 2

@@ -29,4 +29,6 @@ interface IEventFormViewModel {
     fun onPhotoRemove(uri: Uri)
 
     fun onSaveClick()
+
+    fun onAction(action: EventFormAction)
 }

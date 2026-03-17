@@ -119,67 +119,95 @@ fun MessagesRootScreen(
             onClickRegister = { onAction(MessagesNavigationAction.ShowRegisterSheet) }
         )
     } else {
-        DialogsContent(
-            modifier = modifier,
-            params = DialogsContentParams(
-                uiState = uiState,
-                isRefreshing = isRefreshing,
-                isUpdating = isUpdating,
-                syncError = syncError,
-                currentUser = appState.currentUser,
-                onRefresh = { viewModel.refresh() },
-                onDismissSyncError = { viewModel.dismissSyncError() },
-                onDialogClick = { dialog ->
-                    viewModel.onDialogClick(dialog.id, dialog.anotherUserId)
-                    onAction(
-                        MessagesNavigationAction.NavigateToChat(
-                            dialogId = dialog.id,
-                            userId = dialog.anotherUserId ?: 0,
-                            userName = dialog.name ?: "",
-                            userImage = dialog.image
-                        )
-                    )
-                },
-                onMarkAsRead = { dialogId, userId ->
-                    viewModel.markDialogAsRead(dialogId, userId)
-                },
-                onDeleteClick = { dialog ->
-                    dialogToDelete = dialog
-                    showDeleteDialog = true
-                },
-                onNavigateToFriends = { onAction(MessagesNavigationAction.NavigateToFriends) },
-                onNavigateToSearchUsers = { onAction(MessagesNavigationAction.NavigateToSearchUsers) }
-            )
+        val params = createDialogsContentParams(
+            uiState = uiState,
+            isRefreshing = isRefreshing,
+            isUpdating = isUpdating,
+            syncError = syncError,
+            currentUser = appState.currentUser,
+            viewModel = viewModel,
+            onAction = onAction,
+            onDeleteClick = { dialog ->
+                dialogToDelete = dialog
+                showDeleteDialog = true
+            }
         )
+        DialogsContent(modifier = modifier, params = params)
     }
 
-    // Диалог подтверждения удаления
-    if (showDeleteDialog && dialogToDelete != null) {
-        AlertDialog(
-            onDismissRequest = {
+    if (showDeleteDialog) {
+        DeleteDialogConfirmation(
+            dialogToDelete = dialogToDelete,
+            onConfirm = {
+                dialogToDelete?.let { viewModel.deleteDialog(it.id) }
                 showDeleteDialog = false
                 dialogToDelete = null
             },
+            onDismiss = {
+                showDeleteDialog = false
+                dialogToDelete = null
+            }
+        )
+    }
+}
+
+
+internal fun createDialogsContentParams(
+    uiState: DialogsUiState,
+    isRefreshing: Boolean,
+    isUpdating: Boolean,
+    syncError: String?,
+    currentUser: com.swparks.data.model.User?,
+    viewModel: IDialogsViewModel,
+    onAction: (MessagesNavigationAction) -> Unit,
+    onDeleteClick: (DialogEntity) -> Unit
+): DialogsContentParams {
+    return DialogsContentParams(
+        uiState = uiState,
+        isRefreshing = isRefreshing,
+        isUpdating = isUpdating,
+        syncError = syncError,
+        currentUser = currentUser,
+        onRefresh = { viewModel.refresh() },
+        onDismissSyncError = { viewModel.dismissSyncError() },
+        onDialogClick = { dialog ->
+            viewModel.onDialogClick(dialog.id, dialog.anotherUserId)
+            onAction(
+                MessagesNavigationAction.NavigateToChat(
+                    dialogId = dialog.id,
+                    userId = dialog.anotherUserId ?: 0,
+                    userName = dialog.name ?: "",
+                    userImage = dialog.image
+                )
+            )
+        },
+        onMarkAsRead = { dialogId, userId ->
+            viewModel.markDialogAsRead(dialogId, userId)
+        },
+        onDeleteClick = onDeleteClick,
+        onNavigateToFriends = { onAction(MessagesNavigationAction.NavigateToFriends) },
+        onNavigateToSearchUsers = { onAction(MessagesNavigationAction.NavigateToSearchUsers) }
+    )
+}
+
+@Composable
+private fun DeleteDialogConfirmation(
+    dialogToDelete: DialogEntity?,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    if (dialogToDelete != null) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
             title = { Text(stringResource(R.string.delete_dialog_title)) },
             text = { Text(stringResource(R.string.delete_dialog_message)) },
             confirmButton = {
-                Button(
-                    onClick = {
-                        dialogToDelete?.let { viewModel.deleteDialog(it.id) }
-                        showDeleteDialog = false
-                        dialogToDelete = null
-                    }
-                ) {
+                Button(onClick = onConfirm) {
                     Text(stringResource(R.string.delete))
                 }
             },
             dismissButton = {
-                TextButton(
-                    onClick = {
-                        showDeleteDialog = false
-                        dialogToDelete = null
-                    }
-                ) {
+                TextButton(onClick = onDismiss) {
                     Text(stringResource(R.string.cancel))
                 }
             },
@@ -200,113 +228,156 @@ fun DialogsContent(
     val snackbarHostState = remember { SnackbarHostState() }
     val density = LocalDensity.current
 
-    // Состояние контекстного меню - на уровне DialogsContent (вне PullToRefreshBox)
     var contextMenuItem by remember { mutableStateOf<DialogEntity?>(null) }
     var menuOffset by remember { mutableStateOf(DpOffset.Zero) }
 
     Box(modifier = modifier.fillMaxSize()) {
-        when (params.uiState) {
-            is DialogsUiState.Loading -> {
-                // Показываем LoadingOverlayView при первой загрузке
-                LoadingOverlayView()
-            }
-
-            is DialogsUiState.Success -> {
-                // PullToRefreshBox для обновления
-                val pullRefreshState = rememberPullToRefreshState()
-                PullToRefreshBox(
-                    isRefreshing = params.isRefreshing,
-                    onRefresh = params.onRefresh,
-                    state = pullRefreshState,
-                    modifier = Modifier.fillMaxSize(),
-                    indicator = {
-                        PullToRefreshDefaults.Indicator(
-                            state = pullRefreshState,
-                            isRefreshing = params.isRefreshing,
-                            modifier = Modifier
-                                .align(Alignment.TopCenter)
-                                .padding(top = dimensionResource(R.dimen.spacing_regular))
-                        )
-                    }
-                ) {
-                    if (params.uiState.dialogs.isEmpty()) {
-                        // EmptyStateView с условием по друзьям (центрирование + scroll для pull to refresh)
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .verticalScroll(rememberScrollState()),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            EmptyStateViewForDialogs(
-                                currentUser = params.currentUser,
-                                onNavigateToFriends = params.onNavigateToFriends,
-                                onNavigateToSearchUsers = params.onNavigateToSearchUsers
-                            )
-                        }
-                    } else {
-                        // LazyColumn с DialogRowView
-                        DialogsList(
-                            dialogs = params.uiState.dialogs,
-                            isRefreshing = params.isRefreshing || params.isUpdating,
-                            onDialogClick = params.onDialogClick,
-                            onLongClick = { dialog, localOffset, itemPosition ->
-                                contextMenuItem = dialog
-                                menuOffset = with(density) {
-                                    DpOffset(
-                                        (itemPosition.x + localOffset.x).toDp(),
-                                        (itemPosition.y + localOffset.y).toDp()
-                                    )
-                                }
-                            }
-                        )
-                    }
-                }
-            }
-
-            is DialogsUiState.Error -> {
-                // Показываем EmptyStateView с возможностью повтора (центрирование)
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    EmptyStateView(
-                        text = params.uiState.message,
-                        buttonTitle = stringResource(R.string.try_again_button),
-                        onButtonClick = params.onRefresh
+        DialogsStateContent(
+            uiState = params.uiState,
+            isRefreshing = params.isRefreshing,
+            isUpdating = params.isUpdating,
+            currentUser = params.currentUser,
+            onRefresh = params.onRefresh,
+            onDialogClick = params.onDialogClick,
+            onNavigateToFriends = params.onNavigateToFriends,
+            onNavigateToSearchUsers = params.onNavigateToSearchUsers,
+            onLongClick = { dialog, localOffset, itemPosition ->
+                contextMenuItem = dialog
+                menuOffset = with(density) {
+                    DpOffset(
+                        (itemPosition.x + localOffset.x).toDp(),
+                        (itemPosition.y + localOffset.y).toDp()
                     )
                 }
             }
-        }
+        )
 
-        // Snackbar для ошибки синхронизации
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
 
-        // Индикатор загрузки при удалении или отметке диалога
         if (params.isUpdating) {
             LoadingOverlayView()
         }
     }
 
-    // Контекстное меню рендерится ПОСЛЕ Box, на уровне DialogsContent (как в JetpackDays)
+    DialogContextMenu(
+        contextMenuItem = contextMenuItem,
+        menuOffset = menuOffset,
+        onDismiss = { contextMenuItem = null },
+        onMarkAsRead = { dialog ->
+            contextMenuItem = null
+            dialog.anotherUserId?.let { userId ->
+                params.onMarkAsRead(dialog.id, userId)
+            }
+        },
+        onDeleteClick = { dialog ->
+            contextMenuItem = null
+            params.onDeleteClick(dialog)
+        }
+    )
+
+    HandleSyncError(
+        syncError = params.syncError,
+        snackbarHostState = snackbarHostState,
+        onDismissSyncError = params.onDismissSyncError
+    )
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DialogsStateContent(
+    uiState: DialogsUiState,
+    isRefreshing: Boolean,
+    isUpdating: Boolean,
+    currentUser: com.swparks.data.model.User?,
+    onRefresh: () -> Unit,
+    onDialogClick: (DialogEntity) -> Unit,
+    onNavigateToFriends: () -> Unit,
+    onNavigateToSearchUsers: () -> Unit,
+    onLongClick: (DialogEntity, Offset, Offset) -> Unit
+) {
+    when (uiState) {
+        is DialogsUiState.Loading -> {
+            LoadingOverlayView()
+        }
+
+        is DialogsUiState.Success -> {
+            val pullRefreshState = rememberPullToRefreshState()
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = onRefresh,
+                state = pullRefreshState,
+                modifier = Modifier.fillMaxSize(),
+                indicator = {
+                    PullToRefreshDefaults.Indicator(
+                        state = pullRefreshState,
+                        isRefreshing = isRefreshing,
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = dimensionResource(R.dimen.spacing_regular))
+                    )
+                }
+            ) {
+                if (uiState.dialogs.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        EmptyStateViewForDialogs(
+                            currentUser = currentUser,
+                            onNavigateToFriends = onNavigateToFriends,
+                            onNavigateToSearchUsers = onNavigateToSearchUsers
+                        )
+                    }
+                } else {
+                    DialogsList(
+                        dialogs = uiState.dialogs,
+                        isRefreshing = isRefreshing || isUpdating,
+                        onDialogClick = onDialogClick,
+                        onLongClick = onLongClick
+                    )
+                }
+            }
+        }
+
+        is DialogsUiState.Error -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                EmptyStateView(
+                    text = uiState.message,
+                    buttonTitle = stringResource(R.string.try_again_button),
+                    onButtonClick = onRefresh
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DialogContextMenu(
+    contextMenuItem: DialogEntity?,
+    menuOffset: DpOffset,
+    onDismiss: () -> Unit,
+    onMarkAsRead: (DialogEntity) -> Unit,
+    onDeleteClick: (DialogEntity) -> Unit
+) {
     contextMenuItem?.let { dialog ->
         DropdownMenu(
             expanded = true,
-            onDismissRequest = { contextMenuItem = null },
+            onDismissRequest = onDismiss,
             offset = menuOffset
         ) {
-            // Mark as read - показываем только если есть непрочитанные сообщения
             if ((dialog.unreadCount ?: 0) > 0) {
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.mark_as_read)) },
-                    onClick = {
-                        contextMenuItem = null
-                        dialog.anotherUserId?.let { userId ->
-                            params.onMarkAsRead(dialog.id, userId)
-                        }
-                    },
+                    onClick = { onMarkAsRead(dialog) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Outlined.MarkEmailRead,
@@ -317,10 +388,7 @@ fun DialogsContent(
             }
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.delete)) },
-                onClick = {
-                    contextMenuItem = null
-                    params.onDeleteClick(dialog)
-                },
+                onClick = { onDeleteClick(dialog) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.Delete,
@@ -331,15 +399,21 @@ fun DialogsContent(
             )
         }
     }
+}
 
-    // Показываем ошибку синхронизации
-    LaunchedEffect(params.syncError) {
-        params.syncError?.let { error ->
+@Composable
+private fun HandleSyncError(
+    syncError: String?,
+    snackbarHostState: SnackbarHostState,
+    onDismissSyncError: () -> Unit
+) {
+    LaunchedEffect(syncError) {
+        syncError?.let { error ->
             snackbarHostState.showSnackbar(
                 message = error,
                 duration = SnackbarDuration.Short
             )
-            params.onDismissSyncError()
+            onDismissSyncError()
         }
     }
 }

@@ -147,11 +147,6 @@ fun ChatScreen(
     )
 }
 
-/**
- * Контент экрана чата без ViewModel для тестирования.
- *
- * @param otherUserId ID собеседника (для отправки сообщений)
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatContent(
@@ -179,56 +174,66 @@ fun ChatContent(
                 text = params.messageText,
                 onTextChange = params.onMessageTextChange,
                 isLoading = params.isLoading,
-                onSendClick = {
-                    params.onSendClick(params.otherUserId)
-                }
+                onSendClick = { params.onSendClick(params.otherUserId) }
             )
         }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            when (params.uiState) {
-                is ChatUiState.Loading -> {
-                    LoadingOverlayView()
-                }
+        ChatScreenContent(
+            uiState = params.uiState,
+            currentUserId = params.currentUserId,
+            isLoading = params.isLoading,
+            scrollState = scrollState,
+            onMarkAsRead = { },
+            modifier = Modifier.padding(paddingValues)
+        )
+    }
+}
 
-                is ChatUiState.Success -> {
-                    if (params.uiState.messages.isEmpty()) {
-                        // Пустой диалог
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = stringResource(R.string.chat_empty_messages),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    } else {
-                        MessagesList(
-                            messages = params.uiState.messages,
-                            currentUserId = params.currentUserId,
-                            scrollState = scrollState,
-                            onMarkAsRead = { userId ->
-                                // onMarkAsRead был удалён из параметров - вызываем напрямую из ViewModel
-                            }
+
+@Composable
+private fun ChatScreenContent(
+    uiState: ChatUiState,
+    currentUserId: Int?,
+    isLoading: Boolean,
+    scrollState: LazyListState,
+    onMarkAsRead: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.fillMaxSize()
+    ) {
+        when (uiState) {
+            is ChatUiState.Loading -> {
+                LoadingOverlayView()
+            }
+
+            is ChatUiState.Success -> {
+                if (uiState.messages.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.chat_empty_messages),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-
-                    // LoadingOverlay при отправке сообщения
-                    if (params.isLoading) {
-                        LoadingOverlayView()
-                    }
+                } else {
+                    MessagesList(
+                        messages = uiState.messages,
+                        currentUserId = currentUserId,
+                        scrollState = scrollState,
+                        onMarkAsRead = onMarkAsRead
+                    )
                 }
 
-                is ChatUiState.Error -> {
-                    // Error state не отображаем - ошибки показываются через тосты
-                    // на корневом экране через UserNotifier
+                if (isLoading) {
+                    LoadingOverlayView()
                 }
+            }
+
+            is ChatUiState.Error -> {
             }
         }
     }

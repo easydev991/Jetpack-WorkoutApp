@@ -48,16 +48,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
 
-/**
- * Экран ввода текста для создания/редактирования комментариев и записей в дневнике.
- *
- * Это "глупый" UI-компонент, который отображает состояние ViewModel и вызывает её методы.
- * Вся логика управления sheet и обработка событий выполняется в [TextEntrySheetHost].
- *
- * @param modifier Модификатор
- * @param ViewModel для управления состоянием экрана
- * @param onDismiss Callback для закрытия экрана (нажатие на кнопку X)
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TextEntryScreen(
@@ -73,9 +63,7 @@ fun TextEntryScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(
-                        text = uiState.mode.getFormattedTitle(resources)
-                    )
+                    Text(text = uiState.mode.getFormattedTitle(resources))
                 },
                 navigationIcon = {
                     IconButton(
@@ -92,46 +80,58 @@ fun TextEntryScreen(
         }
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
-                    .padding(bottom = dimensionResource(R.dimen.spacing_regular))
-            ) {
-                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_regular)))
+            TextEntryContent(
+                uiState = uiState,
+                onTextChanged = viewModel::onTextChanged,
+                onSend = viewModel::onSend,
+                modifier = Modifier.padding(paddingValues)
+            )
 
-                // Текстовое поле
-                SWTextEditor(
-                    text = uiState.text,
-                    onTextChange = viewModel::onTextChanged,
-                    labelID = uiState.mode.getPlaceholder(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 200.dp),
-                    enabled = !uiState.isLoading
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                // Кнопка отправки
-                SWButton(
-                    config = ButtonConfig(
-                        modifier = Modifier.fillMaxWidth(),
-                        size = SWButtonSize.LARGE,
-                        mode = SWButtonMode.FILLED,
-                        text = stringResource(R.string.send_button_text),
-                        enabled = uiState.isSendEnabled && !uiState.isLoading,
-                        onClick = viewModel::onSend
-                    )
-                )
-            }
-
-            // Loading overlay
             if (uiState.isLoading) {
                 LoadingOverlayView()
             }
         }
+    }
+}
+
+
+@Composable
+private fun TextEntryContent(
+    uiState: TextEntryUiState,
+    onTextChanged: (String) -> Unit,
+    onSend: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
+            .padding(bottom = dimensionResource(R.dimen.spacing_regular))
+    ) {
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_regular)))
+
+        SWTextEditor(
+            text = uiState.text,
+            onTextChange = onTextChanged,
+            labelID = uiState.mode.getPlaceholder(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = 200.dp),
+            enabled = !uiState.isLoading
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        SWButton(
+            config = ButtonConfig(
+                modifier = Modifier.fillMaxWidth(),
+                size = SWButtonSize.LARGE,
+                mode = SWButtonMode.FILLED,
+                text = stringResource(R.string.send_button_text),
+                enabled = uiState.isSendEnabled && !uiState.isLoading,
+                onClick = onSend
+            )
+        )
     }
 }
 

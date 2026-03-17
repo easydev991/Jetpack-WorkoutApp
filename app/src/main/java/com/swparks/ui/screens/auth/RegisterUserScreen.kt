@@ -1,10 +1,12 @@
 package com.swparks.ui.screens.auth
 
 import android.content.Intent
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,6 +44,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.core.net.toUri
 import com.swparks.R
+import com.swparks.data.model.City
+import com.swparks.data.model.Country
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.DateTimePickerConfig
 import com.swparks.ui.ds.FormCardContainer
@@ -58,9 +62,11 @@ import com.swparks.ui.ds.SWDateTimePicker
 import com.swparks.ui.ds.SWTextField
 import com.swparks.ui.ds.TextFieldConfig
 import com.swparks.ui.model.Gender
+import com.swparks.ui.model.RegisterForm
 import com.swparks.ui.state.RegisterEvent
 import com.swparks.ui.utils.disabledAlpha
 import com.swparks.ui.viewmodel.IRegisterViewModel
+import com.swparks.ui.viewmodel.RegisterContentAction
 import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
 import java.time.ZoneId
@@ -71,6 +77,21 @@ sealed class RegisterNavigationAction {
     data object SelectCountry : RegisterNavigationAction()
     data object SelectCity : RegisterNavigationAction()
 }
+
+data class RegisterValidationErrors(
+    val loginError: String?,
+    val emailFormatError: String?,
+    val passwordLengthError: String?,
+    val birthDateError: String?
+)
+
+data class RegisterContentParams(
+    val form: RegisterForm,
+    val errors: RegisterValidationErrors,
+    val selectedCountry: Country?,
+    val selectedCity: City?,
+    val isLoading: Boolean
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,26 +104,11 @@ fun RegisterUserScreen(
     val form by viewModel.form.collectAsState()
     val selectedCountry by viewModel.selectedCountry.collectAsState()
     val selectedCity by viewModel.selectedCity.collectAsState()
-    val loginError by viewModel.loginError.collectAsState()
-    val emailFormatError by viewModel.emailFormatError.collectAsState()
-    val passwordLengthError by viewModel.passwordLengthError.collectAsState()
-    val birthDateError by viewModel.birthDateError.collectAsState()
-
+    val errors = rememberValidationErrors(viewModel)
     val scrollState = rememberScrollState()
     val isLoading = uiState.isBusy
 
-    // Обработка событий
-    LaunchedEffect(Unit) {
-        viewModel.registerEvents.collectLatest { event ->
-            when (event) {
-                is RegisterEvent.Success -> onNavigationAction(
-                    RegisterNavigationAction.RegisterSuccess(
-                        event.userId
-                    )
-                )
-            }
-        }
-    }
+    HandleRegisterEvents(viewModel, onNavigationAction)
 
     Scaffold(
         modifier = modifier,
@@ -122,107 +128,214 @@ fun RegisterUserScreen(
             )
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .verticalScroll(scrollState)
-                    .padding(
-                        horizontal = dimensionResource(R.dimen.spacing_regular),
-                        vertical = dimensionResource(R.dimen.spacing_regular)
-                    ),
-                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
-            ) {
-                // Текстовые поля
-                FormCardContainer(
-                    params = FormCardContainerParams(enabled = !isLoading)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
-                        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
-                    ) {
-                        LoginField(
-                            value = form.login,
-                            error = loginError,
-                            enabled = !isLoading,
-                            onValueChange = viewModel::onLoginChange
-                        )
-                        EmailField(
-                            value = form.email,
-                            error = emailFormatError,
-                            enabled = !isLoading,
-                            onValueChange = viewModel::onEmailChange
-                        )
-                        PasswordField(
-                            value = form.password,
-                            error = passwordLengthError,
-                            enabled = !isLoading,
-                            onValueChange = viewModel::onPasswordChange
-                        )
-                        FullNameField(
-                            value = form.fullName,
-                            enabled = !isLoading,
-                            onValueChange = viewModel::onFullNameChange
-                        )
-                    }
-                }
+        RegisterScreenContent(
+            paddingValues = paddingValues,
+            scrollState = scrollState,
+            params = RegisterContentParams(
+                form = form,
+                errors = errors,
+                selectedCountry = selectedCountry,
+                selectedCity = selectedCity,
+                isLoading = isLoading
+            ),
+            onNavigationAction = onNavigationAction,
+            onAction = viewModel::onAction
+        )
+    }
+}
 
-                FormCardContainer(
-                    params = FormCardContainerParams(enabled = !isLoading)
-                ) {
-                    GenderRadioButtons(
-                        selectedGenderCode = form.genderCode,
-                        enabled = !isLoading,
-                        onGenderChange = viewModel::onGenderChange
-                    )
-                }
+@Composable
+private fun rememberValidationErrors(viewModel: IRegisterViewModel): RegisterValidationErrors {
+    val loginError by viewModel.loginError.collectAsState()
+    val emailFormatError by viewModel.emailFormatError.collectAsState()
+    val passwordLengthError by viewModel.passwordLengthError.collectAsState()
+    val birthDateError by viewModel.birthDateError.collectAsState()
+    return remember(loginError, emailFormatError, passwordLengthError, birthDateError) {
+        RegisterValidationErrors(loginError, emailFormatError, passwordLengthError, birthDateError)
+    }
+}
 
-                FormCardContainer(
-                    params = FormCardContainerParams(enabled = !isLoading)
-                ) {
-                    BirthdayPicker(
-                        birthDate = form.birthDate,
-                        error = birthDateError,
-                        enabled = !isLoading,
-                        onBirthDateChange = { timestamp ->
-                            val date = if (timestamp != 0L) {
-                                val millisPerDay = 24L * 60L * 60L * 1000L
-                                LocalDate.ofEpochDay(timestamp / millisPerDay)
-                            } else {
-                                null
-                            }
-                            viewModel.onBirthDateChange(date)
-                        }
-                    )
-                }
-
-                // Пикеры для страны и города
-                FormCardContainer(
-                    params = FormCardContainerParams(enabled = !isLoading)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
-                        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall))
-                    ) {
-                        CountryPicker(
-                            countryName = selectedCountry?.name,
-                            enabled = !isLoading,
-                            onClick = { onNavigationAction(RegisterNavigationAction.SelectCountry) }
-                        )
-                        CityPicker(
-                            cityName = selectedCity?.name,
-                            enabled = !isLoading,
-                            onClick = { onNavigationAction(RegisterNavigationAction.SelectCity) }
-                        )
-                    }
-                }
+@Composable
+private fun HandleRegisterEvents(
+    viewModel: IRegisterViewModel,
+    onNavigationAction: (RegisterNavigationAction) -> Unit
+) {
+    LaunchedEffect(Unit) {
+        viewModel.registerEvents.collectLatest { event ->
+            when (event) {
+                is RegisterEvent.Success -> onNavigationAction(
+                    RegisterNavigationAction.RegisterSuccess(event.userId)
+                )
             }
+        }
+    }
+}
 
-            // Оверлей загрузки
-            if (isLoading) {
-                LoadingOverlayView()
+@Composable
+private fun RegisterScreenContent(
+    paddingValues: PaddingValues,
+    scrollState: ScrollState,
+    params: RegisterContentParams,
+    onNavigationAction: (RegisterNavigationAction) -> Unit,
+    onAction: (RegisterContentAction) -> Unit
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(scrollState)
+                .padding(
+                    horizontal = dimensionResource(R.dimen.spacing_regular),
+                    vertical = dimensionResource(R.dimen.spacing_regular)
+                ),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
+        ) {
+            RegisterFormFieldsSection(
+                form = params.form,
+                errors = params.errors,
+                isLoading = params.isLoading,
+                onAction = onAction
+            )
+
+            RegisterGenderSection(
+                genderCode = params.form.genderCode,
+                isLoading = params.isLoading,
+                onAction = onAction
+            )
+
+            RegisterBirthdaySection(
+                birthDate = params.form.birthDate,
+                birthDateError = params.errors.birthDateError,
+                isLoading = params.isLoading,
+                onAction = onAction
+            )
+
+            RegisterLocationSection(
+                selectedCountry = params.selectedCountry,
+                selectedCity = params.selectedCity,
+                isLoading = params.isLoading,
+                onSelectCountry = { onNavigationAction(RegisterNavigationAction.SelectCountry) },
+                onSelectCity = { onNavigationAction(RegisterNavigationAction.SelectCity) }
+            )
+        }
+
+        if (params.isLoading) {
+            LoadingOverlayView()
+        }
+    }
+}
+
+@Composable
+private fun RegisterFormFieldsSection(
+    form: RegisterForm,
+    errors: RegisterValidationErrors,
+    isLoading: Boolean,
+    onAction: (RegisterContentAction) -> Unit
+) {
+    FormCardContainer(
+        params = FormCardContainerParams(enabled = !isLoading)
+    ) {
+        Column(
+            modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
+        ) {
+            LoginField(
+                value = form.login,
+                error = errors.loginError,
+                enabled = !isLoading,
+                onValueChange = { onAction(RegisterContentAction.LoginChange(it)) }
+            )
+            EmailField(
+                value = form.email,
+                error = errors.emailFormatError,
+                enabled = !isLoading,
+                onValueChange = { onAction(RegisterContentAction.EmailChange(it)) }
+            )
+            PasswordField(
+                value = form.password,
+                error = errors.passwordLengthError,
+                enabled = !isLoading,
+                onValueChange = { onAction(RegisterContentAction.PasswordChange(it)) }
+            )
+            FullNameField(
+                value = form.fullName,
+                enabled = !isLoading,
+                onValueChange = { onAction(RegisterContentAction.FullNameChange(it)) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun RegisterGenderSection(
+    genderCode: Int?,
+    isLoading: Boolean,
+    onAction: (RegisterContentAction) -> Unit
+) {
+    FormCardContainer(
+        params = FormCardContainerParams(enabled = !isLoading)
+    ) {
+        GenderRadioButtons(
+            selectedGenderCode = genderCode,
+            enabled = !isLoading,
+            onGenderChange = { onAction(RegisterContentAction.GenderChange(it)) }
+        )
+    }
+}
+
+@Composable
+private fun RegisterBirthdaySection(
+    birthDate: LocalDate?,
+    birthDateError: String?,
+    isLoading: Boolean,
+    onAction: (RegisterContentAction) -> Unit
+) {
+    FormCardContainer(
+        params = FormCardContainerParams(enabled = !isLoading)
+    ) {
+        BirthdayPicker(
+            birthDate = birthDate,
+            error = birthDateError,
+            enabled = !isLoading,
+            onBirthDateChange = { timestamp ->
+                val date = if (timestamp != 0L) {
+                    val millisPerDay = 24L * 60L * 60L * 1000L
+                    LocalDate.ofEpochDay(timestamp / millisPerDay)
+                } else {
+                    null
+                }
+                onAction(RegisterContentAction.BirthDateChange(date))
             }
+        )
+    }
+}
+
+@Composable
+private fun RegisterLocationSection(
+    selectedCountry: Country?,
+    selectedCity: City?,
+    isLoading: Boolean,
+    onSelectCountry: () -> Unit,
+    onSelectCity: () -> Unit
+) {
+    FormCardContainer(
+        params = FormCardContainerParams(enabled = !isLoading)
+    ) {
+        Column(
+            modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall))
+        ) {
+            CountryPicker(
+                countryName = selectedCountry?.name,
+                enabled = !isLoading,
+                onClick = onSelectCountry
+            )
+            CityPicker(
+                cityName = selectedCity?.name,
+                enabled = !isLoading,
+                onClick = onSelectCity
+            )
         }
     }
 }

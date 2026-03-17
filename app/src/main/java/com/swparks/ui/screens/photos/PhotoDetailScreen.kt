@@ -55,27 +55,11 @@ fun PhotoDetailScreen(
                         }
                     },
                     actions = {
-                        when {
-                            state.isEventAuthor -> {
-                                IconButton(onClick = { onAction(PhotoDetailAction.DeleteClick) }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = stringResource(R.string.delete),
-                                        tint = Color.White
-                                    )
-                                }
-                            }
-
-                            isAuthorized -> {
-                                IconButton(onClick = { onAction(PhotoDetailAction.Report) }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Warning,
-                                        contentDescription = stringResource(R.string.report),
-                                        tint = Color.White
-                                    )
-                                }
-                            }
-                        }
+                        PhotoDetailTopAppBarActions(
+                            isEventAuthor = state.isEventAuthor,
+                            isAuthorized = isAuthorized,
+                            onAction = onAction
+                        )
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent
@@ -101,6 +85,36 @@ fun PhotoDetailScreen(
             onConfirm = { onAction(PhotoDetailAction.DeleteConfirm) },
             onDismiss = { onAction(PhotoDetailAction.DeleteDismiss) }
         )
+    }
+}
+
+
+@Composable
+private fun PhotoDetailTopAppBarActions(
+    isEventAuthor: Boolean,
+    isAuthorized: Boolean,
+    onAction: (PhotoDetailAction) -> Unit
+) {
+    when {
+        isEventAuthor -> {
+            IconButton(onClick = { onAction(PhotoDetailAction.DeleteClick) }) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.delete),
+                    tint = Color.White
+                )
+            }
+        }
+
+        isAuthorized -> {
+            IconButton(onClick = { onAction(PhotoDetailAction.Report) }) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = stringResource(R.string.report),
+                    tint = Color.White
+                )
+            }
+        }
     }
 }
 

@@ -39,6 +39,10 @@ class FakeEventsViewModel(
 
     override fun onFabClick() {}
 
+    override fun addCreatedEvent(event: Event) {}
+
+    override fun removeDeletedEvent(eventId: Long) {}
+
     fun setAddresses(addresses: Map<Pair<Int, Int>, String>) {
         val currentState = _eventsUIState.value as? EventsUIState.Content ?: return
         _eventsUIState.value = currentState.copy(addresses = addresses)

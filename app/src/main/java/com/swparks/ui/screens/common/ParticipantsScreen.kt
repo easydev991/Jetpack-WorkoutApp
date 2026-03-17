@@ -73,38 +73,46 @@ fun ParticipantsScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            if (config.users.isEmpty()) {
-                EmptyStateView(
-                    text = stringResource(R.string.no_participants)
+            ParticipantsContent(config = config, onAction = onAction)
+        }
+    }
+}
+
+@Composable
+private fun ParticipantsContent(
+    config: ParticipantsConfig,
+    onAction: (ParticipantsAction) -> Unit
+) {
+    if (config.users.isEmpty()) {
+        EmptyStateView(
+            text = stringResource(R.string.no_participants)
+        )
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = dimensionResource(R.dimen.spacing_regular),
+                top = dimensionResource(R.dimen.spacing_small),
+                end = dimensionResource(R.dimen.spacing_regular),
+                bottom = dimensionResource(R.dimen.spacing_regular)
+            ),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
+        ) {
+            items(
+                items = config.users,
+                key = { it.id }
+            ) { user ->
+                val isCurrentUser = user.id == config.currentUserId
+                UserRowView(
+                    data = UserRowData(
+                        modifier = Modifier,
+                        enabled = !isCurrentUser,
+                        imageStringURL = user.image,
+                        name = user.name,
+                        address = null,
+                        onClick = { onAction(ParticipantsAction.UserClick(user.id)) }
+                    )
                 )
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        start = dimensionResource(R.dimen.spacing_regular),
-                        top = dimensionResource(R.dimen.spacing_small),
-                        end = dimensionResource(R.dimen.spacing_regular),
-                        bottom = dimensionResource(R.dimen.spacing_regular)
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
-                ) {
-                    items(
-                        items = config.users,
-                        key = { it.id }
-                    ) { user ->
-                        val isCurrentUser = user.id == config.currentUserId
-                        UserRowView(
-                            data = UserRowData(
-                                modifier = Modifier,
-                                enabled = !isCurrentUser,
-                                imageStringURL = user.image,
-                                name = user.name,
-                                address = null,
-                                onClick = { onAction(ParticipantsAction.UserClick(user.id)) }
-                            )
-                        )
-                    }
-                }
             }
         }
     }

@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -60,6 +61,7 @@ class EventsViewModelTest {
 
     @After
     fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     private fun createMockEvent(id: Long = 1L, beginDate: String = "2024-01-01"): Event {
@@ -689,7 +691,12 @@ class EventsViewModelTest {
         val mockCountry = mockk<Country> { every { name } returns "Россия" }
         val mockCity = mockk<City> { every { name } returns "Москва" }
 
-        every { mockGetFutureEventsFlowUseCase() } returns flowOf(listOf(eventToMove, otherFutureEvent))
+        every { mockGetFutureEventsFlowUseCase() } returns flowOf(
+            listOf(
+                eventToMove,
+                otherFutureEvent
+            )
+        )
         every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
         every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
         coEvery { mockCountriesRepository.getCountryById("1") } returns mockCountry

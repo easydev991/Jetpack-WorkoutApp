@@ -3,24 +3,39 @@ package com.swparks.ui.screens.common
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.swparks.JetpackWorkoutApplication
 import com.swparks.ui.ds.disableAllGestures
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.state.TextEntryEvent
+import com.swparks.ui.state.TextEntryUiState
 import com.swparks.ui.viewmodel.ITextEntryViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+private data class SheetContentParams(
+    val sheetState: SheetState,
+    val show: Boolean,
+    val uiState: TextEntryUiState,
+    val viewModel: ITextEntryViewModel,
+    val scope: CoroutineScope,
+    val onDismissed: () -> Unit,
+    val allowHide: MutableState<Boolean>
+)
 
 /**
  * Хост для [TextEntryScreen] в виде модального bottom sheet.
@@ -47,7 +62,7 @@ fun TextEntrySheetHost(
     onDismissed: () -> Unit,
     onSendSuccess: () -> Unit = {}
 ) {
-    var allowHide by remember { mutableStateOf(false) }
+    val allowHide = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     val appContainer =
@@ -61,63 +76,71 @@ fun TextEntrySheetHost(
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
         confirmValueChange = { newValue ->
-            if (newValue == SheetValue.Hidden) allowHide else true
+            if (newValue == SheetValue.Hidden) allowHide.value else true
         }
     )
 
-    // Сбрасываем состояние при каждом открытии sheet
     LaunchedEffect(show) {
         if (show) {
             viewModel.resetState()
         }
     }
 
-    // Обработка событий Success
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
                 is TextEntryEvent.Success -> {
-                    // Логика закрытия sheet и внешний коллбэк
                     scope.launch {
-                        allowHide = true
+                        allowHide.value = true
                         sheetState.hide()
-                        allowHide = false
-                        onSendSuccess() // Внешний коллбэк для родительского компонента
+                        allowHide.value = false
+                        onSendSuccess()
                     }
                 }
 
-                is TextEntryEvent.Error -> {
-                    // Ошибки обрабатываются через userNotifier в ViewModel (Snackbar отображается автоматически)
-                    // Ничего не делаем здесь
-                }
+                is TextEntryEvent.Error -> {}
             }
         }
     }
 
-    if (show) {
-        ModalBottomSheet(
-            onDismissRequest = {
-                // Игнорируем тап вне sheet / системный dismiss
-            },
+    SheetContent(
+        SheetContentParams(
             sheetState = sheetState,
-            dragHandle = {},
-            properties = ModalBottomSheetProperties(
-                shouldDismissOnBackPress = false
-            )
-        ) {
-            TextEntryScreen(
-                modifier = Modifier.disableAllGestures(),
-                viewModel = viewModel,
-                onDismiss = {
-                    if (uiState.isLoading) return@TextEntryScreen
-                    scope.launch {
-                        allowHide = true
-                        sheetState.hide()
-                        allowHide = false
-                        onDismissed()
+            show = show,
+            uiState = uiState,
+            viewModel = viewModel,
+            scope = scope,
+            onDismissed = onDismissed,
+            allowHide = allowHide
+        )
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SheetContent(params: SheetContentParams) {
+    with(params) {
+        if (show) {
+            ModalBottomSheet(
+                onDismissRequest = {},
+                sheetState = sheetState,
+                dragHandle = {},
+                properties = ModalBottomSheetProperties(shouldDismissOnBackPress = false)
+            ) {
+                TextEntryScreen(
+                    modifier = Modifier.disableAllGestures(),
+                    viewModel = viewModel,
+                    onDismiss = {
+                        if (uiState.isLoading) return@TextEntryScreen
+                        scope.launch {
+                            allowHide.value = true
+                            sheetState.hide()
+                            allowHide.value = false
+                            onDismissed()
+                        }
                     }
-                }
-            )
+                )
+            }
         }
     }
 }

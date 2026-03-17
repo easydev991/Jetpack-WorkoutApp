@@ -43,15 +43,22 @@ class EventFormViewModel(
 
     companion object {
         private const val TAG = "EventFormViewModel"
-        private val serverDateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
+        private val serverDateTimeFormatter: DateTimeFormatter =
+            DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
         fun factory(
             mode: EventFormMode,
             appContainer: com.swparks.data.AppContainer
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return appContainer.eventFormViewModelFactory(mode) as T
+                require(modelClass.isAssignableFrom(EventFormViewModel::class.java)) {
+                    "Неизвестный класс ViewModel: ${modelClass.name}, " +
+                        "ожидается: ${EventFormViewModel::class.java.name}"
+                }
+                val viewModel = appContainer.eventFormViewModelFactory(mode)
+                return checkNotNull(modelClass.cast(viewModel)) {
+                    "Не удалось привести ${EventFormViewModel::class.java.name} к ${modelClass.name}"
+                }
             }
         }
     }
@@ -353,4 +360,23 @@ class EventFormViewModel(
             }
         )
     }
+
+
+    override fun onAction(action: EventFormAction) {
+        when (action) {
+            is EventFormAction.TitleChange -> onTitleChange(action.value)
+            is EventFormAction.DescriptionChange -> onDescriptionChange(action.value)
+            is EventFormAction.ParkClick -> onParkClick()
+            is EventFormAction.DateChange -> onDateChange(action.timestamp)
+            is EventFormAction.TimeChange -> onTimeChange(action.hour, action.minute)
+        }
+    }
+}
+
+sealed class EventFormAction {
+    data class TitleChange(val value: String) : EventFormAction()
+    data class DescriptionChange(val value: String) : EventFormAction()
+    data object ParkClick : EventFormAction()
+    data class DateChange(val timestamp: Long) : EventFormAction()
+    data class TimeChange(val hour: Int, val minute: Int) : EventFormAction()
 }

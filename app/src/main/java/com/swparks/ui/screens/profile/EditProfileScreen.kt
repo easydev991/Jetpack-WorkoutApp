@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -84,6 +85,27 @@ sealed class EditProfileNavigationAction {
     object NavigateToLogin : EditProfileNavigationAction()
 }
 
+private data class EditProfileContentParams(
+    val avatarUrl: String?,
+    val selectedAvatarUri: Uri?,
+    val avatarError: String?,
+    val userForm: com.swparks.ui.model.MainUserForm,
+    val emailError: String?,
+    val birthDateError: String?,
+    val selectedCountry: com.swparks.data.model.Country?,
+    val selectedCity: com.swparks.data.model.City?,
+    val isLoading: Boolean,
+    val onChangeAvatarClick: () -> Unit,
+    val onLoginChange: (String) -> Unit,
+    val onEmailChange: (String) -> Unit,
+    val onFullNameChange: (String) -> Unit,
+    val onGenderChange: (Gender) -> Unit,
+    val onBirthDateChange: (Long) -> Unit,
+    val onCountryClick: () -> Unit,
+    val onCityClick: () -> Unit,
+    val onChangePasswordClick: () -> Unit
+)
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun EditProfileScreen(
@@ -96,33 +118,18 @@ fun EditProfileScreen(
     val scrollState = rememberScrollState()
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    // Photo Picker для выбора изображения
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         viewModel.onAvatarSelected(uri)
     }
 
-    // Функция для запуска выбора фото
     val launchPhotoPicker: () -> Unit = {
-        // Используем Photo Picker с ограничением только на изображения
         photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     }
 
-    // Обработка событий
-    LaunchedEffect(Unit) {
-        viewModel.events.collectLatest { event ->
-            when (event) {
-                is EditProfileEvent.NavigateBack -> onAction(EditProfileNavigationAction.Back)
-                is EditProfileEvent.NavigateToLogin -> onAction(EditProfileNavigationAction.NavigateToLogin)
-                is EditProfileEvent.NavigateToChangePassword -> onAction(EditProfileNavigationAction.ChangePassword)
-                is EditProfileEvent.NavigateToSelectCountry -> onAction(EditProfileNavigationAction.SelectCountry)
-                is EditProfileEvent.NavigateToSelectCity -> onAction(EditProfileNavigationAction.SelectCity)
-            }
-        }
-    }
+    HandleEditProfileEvents(viewModel, onAction)
 
-    // Сброс несохранённых изменений при закрытии экрана
     DisposableEffect(Unit) {
         onDispose {
             viewModel.resetChanges()
@@ -131,24 +138,9 @@ fun EditProfileScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(text = stringResource(R.string.edit_profile)) },
-                navigationIcon = {
-                    IconButton(onClick = { onAction(EditProfileNavigationAction.Back) }) {
-                        Icon(
-                            imageVector = AutoMirroredIcons.ArrowBack,
-                            contentDescription = stringResource(R.string.back)
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { showDeleteDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Outlined.Delete,
-                            contentDescription = stringResource(R.string.delete)
-                        )
-                    }
-                }
+            EditProfileTopBar(
+                onBackClick = { onAction(EditProfileNavigationAction.Back) },
+                onDeleteClick = { showDeleteDialog = true }
             )
         },
         bottomBar = {
@@ -161,113 +153,18 @@ fun EditProfileScreen(
         },
         modifier = modifier
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .verticalScroll(scrollState)
-                    .padding(
-                        horizontal = dimensionResource(R.dimen.spacing_regular),
-                        vertical = dimensionResource(R.dimen.spacing_regular)
-                    ),
-                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
-            ) {
-                val isEnabled = !uiState.isLoading
-
-                // Секция аватара
-                AvatarSection(
-                    avatarUrl = currentUser?.image,
-                    selectedAvatarUri = uiState.selectedAvatarUri,
-                    avatarError = uiState.avatarError,
-                    enabled = isEnabled,
-                    onChangeAvatarClick = launchPhotoPicker
-                )
-
-                // Текстовые поля
-                FormCardContainer(
-                    params = FormCardContainerParams(enabled = isEnabled)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
-                        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
-                    ) {
-                        LoginField(
-                            value = uiState.userForm.name,
-                            enabled = isEnabled,
-                            onValueChange = viewModel::onLoginChange
-                        )
-                        EmailField(
-                            value = uiState.userForm.email,
-                            error = uiState.emailError,
-                            enabled = isEnabled,
-                            onValueChange = viewModel::onEmailChange
-                        )
-                        FullNameField(
-                            value = uiState.userForm.fullname,
-                            enabled = isEnabled,
-                            onValueChange = viewModel::onFullNameChange
-                        )
-                        ChangePasswordButton(
-                            enabled = isEnabled,
-                            onClick = viewModel::onChangePasswordClick
-                        )
-                    }
-                }
-                FormCardContainer(
-                    params = FormCardContainerParams(enabled = isEnabled)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
-                    ) {
-                        GenderPicker(
-                            selectedGender = Gender.entries.find { it.rawValue == uiState.userForm.genderCode },
-                            enabled = isEnabled,
-                            onGenderChange = viewModel::onGenderChange
-                        )
-                    }
-                }
-                FormCardContainer(
-                    params = FormCardContainerParams(enabled = isEnabled)
-                ) {
-                    Column(modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small))) {
-                        BirthdayPicker(
-                            birthDate = uiState.userForm.birthDate,
-                            error = uiState.birthDateError,
-                            enabled = isEnabled,
-                            onBirthDateChange = viewModel::onBirthDateChange
-                        )
-                    }
-                }
-                FormCardContainer(
-                    params = FormCardContainerParams(enabled = isEnabled)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
-                        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall))
-                    ) {
-                        CountryPicker(
-                            countryName = uiState.selectedCountry?.name,
-                            enabled = isEnabled,
-                            onClick = viewModel::onCountryClick
-                        )
-                        CityPicker(
-                            cityName = uiState.selectedCity?.name,
-                            enabled = isEnabled,
-                            onClick = viewModel::onCityClick
-                        )
-                    }
-                }
-            }
-
-            // Оверлей загрузки при сохранении или удалении профиля
-            if (uiState.isLoading) {
-                LoadingOverlayView()
-            }
-        }
+        EditProfileContent(
+            params = createContentParams(
+                uiState = uiState,
+                currentUser = currentUser,
+                launchPhotoPicker = launchPhotoPicker,
+                viewModel = viewModel
+            ),
+            paddingValues = paddingValues,
+            scrollState = scrollState
+        )
     }
 
-    // Диалог подтверждения удаления профиля
     if (showDeleteDialog) {
         DeleteProfileDialog(
             onDismiss = { showDeleteDialog = false },
@@ -276,6 +173,233 @@ fun EditProfileScreen(
                 viewModel.onDeleteProfileClick()
             }
         )
+    }
+}
+
+@Composable
+private fun HandleEditProfileEvents(
+    viewModel: IEditProfileViewModel,
+    onAction: (EditProfileNavigationAction) -> Unit
+) {
+    LaunchedEffect(Unit) {
+        viewModel.events.collectLatest { event ->
+            when (event) {
+                is EditProfileEvent.NavigateBack -> onAction(EditProfileNavigationAction.Back)
+                is EditProfileEvent.NavigateToLogin -> onAction(EditProfileNavigationAction.NavigateToLogin)
+                is EditProfileEvent.NavigateToChangePassword -> onAction(EditProfileNavigationAction.ChangePassword)
+                is EditProfileEvent.NavigateToSelectCountry -> onAction(EditProfileNavigationAction.SelectCountry)
+                is EditProfileEvent.NavigateToSelectCity -> onAction(EditProfileNavigationAction.SelectCity)
+            }
+        }
+    }
+}
+
+private fun createContentParams(
+    uiState: com.swparks.ui.state.EditProfileUiState,
+    currentUser: User?,
+    launchPhotoPicker: () -> Unit,
+    viewModel: IEditProfileViewModel
+): EditProfileContentParams = EditProfileContentParams(
+    avatarUrl = currentUser?.image,
+    selectedAvatarUri = uiState.selectedAvatarUri,
+    avatarError = uiState.avatarError,
+    userForm = uiState.userForm,
+    emailError = uiState.emailError,
+    birthDateError = uiState.birthDateError,
+    selectedCountry = uiState.selectedCountry,
+    selectedCity = uiState.selectedCity,
+    isLoading = uiState.isLoading,
+    onChangeAvatarClick = launchPhotoPicker,
+    onLoginChange = viewModel::onLoginChange,
+    onEmailChange = viewModel::onEmailChange,
+    onFullNameChange = viewModel::onFullNameChange,
+    onGenderChange = viewModel::onGenderChange,
+    onBirthDateChange = viewModel::onBirthDateChange,
+    onCountryClick = viewModel::onCountryClick,
+    onCityClick = viewModel::onCityClick,
+    onChangePasswordClick = viewModel::onChangePasswordClick
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditProfileTopBar(
+    onBackClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
+    CenterAlignedTopAppBar(
+        title = { Text(text = stringResource(R.string.edit_profile)) },
+        navigationIcon = {
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    imageVector = AutoMirroredIcons.ArrowBack,
+                    contentDescription = stringResource(R.string.back)
+                )
+            }
+        },
+        actions = {
+            IconButton(onClick = onDeleteClick) {
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = stringResource(R.string.delete)
+                )
+            }
+        }
+    )
+}
+
+@Composable
+private fun EditProfileContent(
+    params: EditProfileContentParams,
+    paddingValues: androidx.compose.foundation.layout.PaddingValues,
+    scrollState: ScrollState
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(scrollState)
+                .padding(
+                    horizontal = dimensionResource(R.dimen.spacing_regular),
+                    vertical = dimensionResource(R.dimen.spacing_regular)
+                ),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
+        ) {
+            val isEnabled = !params.isLoading
+
+            AvatarSection(
+                avatarUrl = params.avatarUrl,
+                selectedAvatarUri = params.selectedAvatarUri,
+                avatarError = params.avatarError,
+                enabled = isEnabled,
+                onChangeAvatarClick = params.onChangeAvatarClick
+            )
+
+            MainFieldsSection(
+                params = params,
+                isEnabled = isEnabled
+            )
+
+            GenderSection(
+                params = params,
+                isEnabled = isEnabled
+            )
+
+            BirthdaySection(
+                params = params,
+                isEnabled = isEnabled
+            )
+
+            LocationSection(
+                params = params,
+                isEnabled = isEnabled
+            )
+        }
+
+        if (params.isLoading) {
+            LoadingOverlayView()
+        }
+    }
+}
+
+@Composable
+private fun MainFieldsSection(
+    params: EditProfileContentParams,
+    isEnabled: Boolean
+) {
+    FormCardContainer(
+        params = FormCardContainerParams(enabled = isEnabled)
+    ) {
+        Column(
+            modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
+        ) {
+            LoginField(
+                value = params.userForm.name,
+                enabled = isEnabled,
+                onValueChange = params.onLoginChange
+            )
+            EmailField(
+                value = params.userForm.email,
+                error = params.emailError,
+                enabled = isEnabled,
+                onValueChange = params.onEmailChange
+            )
+            FullNameField(
+                value = params.userForm.fullname,
+                enabled = isEnabled,
+                onValueChange = params.onFullNameChange
+            )
+            ChangePasswordButton(
+                enabled = isEnabled,
+                onClick = params.onChangePasswordClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun GenderSection(
+    params: EditProfileContentParams,
+    isEnabled: Boolean
+) {
+    FormCardContainer(
+        params = FormCardContainerParams(enabled = isEnabled)
+    ) {
+        Column(
+            modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
+        ) {
+            GenderPicker(
+                selectedGender = Gender.entries.find { it.rawValue == params.userForm.genderCode },
+                enabled = isEnabled,
+                onGenderChange = params.onGenderChange
+            )
+        }
+    }
+}
+
+@Composable
+private fun BirthdaySection(
+    params: EditProfileContentParams,
+    isEnabled: Boolean
+) {
+    FormCardContainer(
+        params = FormCardContainerParams(enabled = isEnabled)
+    ) {
+        Column(modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small))) {
+            BirthdayPicker(
+                birthDate = params.userForm.birthDate,
+                error = params.birthDateError,
+                enabled = isEnabled,
+                onBirthDateChange = params.onBirthDateChange
+            )
+        }
+    }
+}
+
+@Composable
+private fun LocationSection(
+    params: EditProfileContentParams,
+    isEnabled: Boolean
+) {
+    FormCardContainer(
+        params = FormCardContainerParams(enabled = isEnabled)
+    ) {
+        Column(
+            modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall))
+        ) {
+            CountryPicker(
+                countryName = params.selectedCountry?.name,
+                enabled = isEnabled,
+                onClick = params.onCountryClick
+            )
+            CityPicker(
+                cityName = params.selectedCity?.name,
+                enabled = isEnabled,
+                onClick = params.onCityClick
+            )
+        }
     }
 }
 

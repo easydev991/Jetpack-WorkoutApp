@@ -192,78 +192,108 @@ private fun SuccessContent(
 
         if (hasFriendRequests) {
             item {
-                SectionView(
-                    titleID = if (singleSection) null else R.string.requests,
-                    titleBottomPadding = dimensionResource(R.dimen.spacing_xsmall)
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
-                    ) {
-                        state.friendRequests.forEach { user ->
-                            FriendRequestRowView(
-                                data = FriendRequestData(
-                                    modifier = Modifier,
-                                    imageStringURL = user.image,
-                                    name = user.name,
-                                    address = null,
-                                    onClickAccept = { onAction(FriendAction.Accept(user.id)) },
-                                    onClickDecline = { onAction(FriendAction.Decline(user.id)) },
-                                    enabled = state.enabled
-                                )
-                            )
-                        }
-                    }
-                }
+                FriendRequestsSection(
+                    friendRequests = state.friendRequests,
+                    enabled = state.enabled,
+                    singleSection = singleSection,
+                    onAction = onAction
+                )
             }
 
             if (hasFriends) {
-                item {
-                    HorizontalDivider()
-                }
+                item { HorizontalDivider() }
             }
         }
 
         if (hasFriends) {
             item {
-                SectionView(
-                    titleID = if (singleSection) null else R.string.friends,
-                    titleBottomPadding = dimensionResource(R.dimen.spacing_xsmall)
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
-                    ) {
-                        state.friends.forEach { user ->
-                            val isDisabled = user.id == state.currentUserId || !state.enabled
-                            UserRowView(
-                                data = UserRowData(
-                                    modifier = Modifier,
-                                    enabled = !isDisabled,
-                                    imageStringURL = user.image,
-                                    name = user.name,
-                                    address = null,
-                                    onClick = { onFriendClick(user.id) }
-                                )
-                            )
-                        }
-                    }
-                }
+                FriendsSection(
+                    friends = state.friends,
+                    currentUserId = state.currentUserId,
+                    enabled = state.enabled,
+                    singleSection = singleSection,
+                    onFriendClick = onFriendClick
+                )
             }
         }
 
         if (state.friendRequests.isEmpty() && state.friends.isEmpty()) {
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(dimensionResource(R.dimen.spacing_large)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(R.string.no_friends_yet),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                EmptyFriendsContent(modifier = Modifier.fillMaxSize())
             }
         }
+    }
+}
+
+
+@Composable
+private fun FriendRequestsSection(
+    friendRequests: List<User>,
+    enabled: Boolean,
+    singleSection: Boolean,
+    onAction: (FriendAction) -> Unit
+) {
+    SectionView(
+        titleID = if (singleSection) null else R.string.requests,
+        titleBottomPadding = dimensionResource(R.dimen.spacing_xsmall)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))) {
+            friendRequests.forEach { user ->
+                FriendRequestRowView(
+                    data = FriendRequestData(
+                        modifier = Modifier,
+                        imageStringURL = user.image,
+                        name = user.name,
+                        address = null,
+                        onClickAccept = { onAction(FriendAction.Accept(user.id)) },
+                        onClickDecline = { onAction(FriendAction.Decline(user.id)) },
+                        enabled = enabled
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FriendsSection(
+    friends: List<User>,
+    currentUserId: Long?,
+    enabled: Boolean,
+    singleSection: Boolean,
+    onFriendClick: (Long) -> Unit
+) {
+    SectionView(
+        titleID = if (singleSection) null else R.string.friends,
+        titleBottomPadding = dimensionResource(R.dimen.spacing_xsmall)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))) {
+            friends.forEach { user ->
+                val isDisabled = user.id == currentUserId || !enabled
+                UserRowView(
+                    data = UserRowData(
+                        modifier = Modifier,
+                        enabled = !isDisabled,
+                        imageStringURL = user.image,
+                        name = user.name,
+                        address = null,
+                        onClick = { onFriendClick(user.id) }
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyFriendsContent(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.padding(dimensionResource(R.dimen.spacing_large)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = stringResource(R.string.no_friends_yet),
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

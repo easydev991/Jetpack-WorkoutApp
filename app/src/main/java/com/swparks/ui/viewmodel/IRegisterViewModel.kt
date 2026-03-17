@@ -132,6 +132,12 @@ interface IRegisterViewModel {
      */
     fun clearErrors()
 
+
+    /**
+     * Обрабатывает действие из UI.
+     */
+    fun onAction(action: RegisterContentAction)
+
     /**
      * Сбрасывает состояние ViewModel для новой сессии регистрации.
      */

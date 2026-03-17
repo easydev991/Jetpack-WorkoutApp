@@ -31,7 +31,7 @@
 
 **Частично реализованы (базовый функционал):** EventsScreen, ParksRootScreen, ParksAddedByUserScreen, FeedbackSender, ItemListScreen
 
-**Не реализованы:** большинство детальных экранов (EventDetailScreen, EditEventScreen, ParksListScreen, ParksMapScreen, ParkDetailScreen, EditParkScreen, ChatScreen)
+**Не реализованы:** часть экранов вкладки "Площадки" и отдельные специализированные сценарии (в т.ч. ParksMap/ParksList расширенные режимы и связанные подэкраны)
 
 #### Реализованные модели данных
 
@@ -157,16 +157,18 @@
 
 ---
 
-### 5. Вкладка "Мероприятия" (Events)
+### 5. Вкладка "Мероприятия" (Events) - ⚠️ ЧАСТИЧНО ЗАВЕРШЕНО
 
 **Экраны:**
-- EventsScreen - список мероприятий (планируемые/прошедшие)
-- EventDetailScreen - детальная информация
-- EditEventScreen - создание/редактирование мероприятия
+- ✅ EventsScreen - список мероприятий
+- ✅ EventDetailScreen - детальная информация
+- ✅ EditEventScreen - создание/редактирование мероприятия
+- ✅ EventParticipantsScreen - список участников мероприятия
 
 **Основные функции:**
 - Просмотр мероприятий (планируемые/прошедшие)
 - Создание/редактирование мероприятия (до 15 фото)
+- Просмотр участников мероприятия
 - Комментарии, "иду/не иду"
 - Шаринг
 
@@ -367,3 +369,4 @@ app/src/androidTest/java/com/swparks/    # Интеграционные и UI т
 - **2026-02-23:** Обновление документации - 31 компонент дизайн-системы, 32 use cases, 36 ViewModels, 85+ unit-тестов, 17 интеграционных и UI тестов, новые экраны (EditProfileScreen, RegisterUserScreen, OtherUserProfileScreen, SearchUserScreen, ChangePasswordScreen, MessagesRootScreen), UI модели (RegisterForm), новые доменные модели (FriendAction, EditProfileLocations)
 - **2026-02-23:** Актуализация статусов - вкладка "Профиль" ✅ ЗАВЕРШЕНО, JournalsListScreen 100% реализован (4 итерации: базовый экран, удаление, создание, унифицированные уведомления), JournalEntriesScreen реализован (6 итераций с багфиксами, включает создание/редактирование/удаление записей), JournalSettingsDialog реализован, уточнение функционала (запросы в друзья в MyFriendsScreen, выбор страны/города встроен в EditProfileScreen и RegisterUserScreen)
 - **2026-03-02:** Вкладка "Сообщения" (Messages) ✅ ЗАВЕРШЕНО - ChatScreen реализован (ChatViewModel, ChatScreen.kt, 15 unit-тестов), включает: отправка сообщений, markAsRead через repository, обновление списка диалогов через SharedFlow, автопрокрутка, блокировка ввода при отправке
+- **2026-03-17:** Актуализация навигации и документации - в `RootScreen` реализованы и подключены `EventDetail/EditEvent/EventParticipants`, `ParkDetail/CreatePark/EditPark`, `Chat`, а также typed args parsers/coordinators для key navigation flows.

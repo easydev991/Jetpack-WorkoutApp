@@ -32,6 +32,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * @param name Название площадки
  * @param address Адрес площадки (может быть любой, какой пришлет сервер)
  * @param peopleTrainCount Количество людей, тренирующихся на площадке
+ * @param enabled Флаг доступности нажатия на элемент
  * @param onClick Обработчик нажатия на элемент
  */
 data class ParkRowData(
@@ -40,6 +41,7 @@ data class ParkRowData(
     val name: String,
     val address: String? = null,
     val peopleTrainCount: Int,
+    val enabled: Boolean = true,
     val onClick: (() -> Unit)? = null
 )
 
@@ -53,6 +55,7 @@ fun ParkRowView(data: ParkRowData) {
     FormCardContainer(
         params = FormCardContainerParams(
             modifier = data.modifier,
+            enabled = data.enabled,
             onClick = data.onClick
         )
     ) {

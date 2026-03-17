@@ -71,87 +71,127 @@ fun EventsScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            PrimaryTabRow(
+        Column(modifier = Modifier.fillMaxSize()) {
+            EventsTabRow(
                 selectedTabIndex = selectedTabIndex,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = dimensionResource(id = R.dimen.spacing_regular),
-                        end = dimensionResource(id = R.dimen.spacing_regular),
-                        top = dimensionResource(id = R.dimen.spacing_small)
-                    )
-            ) {
-                EventKind.entries.forEachIndexed { index, eventKind ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        enabled = !isRefreshing,
-                        onClick = { viewModel.onTabSelected(eventKind) },
-                        text = {
-                            Text(
-                                text = when (eventKind) {
-                                    EventKind.FUTURE -> stringResource(id = R.string.future_events)
-                                    EventKind.PAST -> stringResource(id = R.string.past_events)
-                                }
-                            )
-                        }
-                    )
-                }
-            }
+                isRefreshing = isRefreshing,
+                onTabSelected = { viewModel.onTabSelected(it) }
+            )
 
-            when (val state = uiState) {
-                is EventsUIState.InitialLoading -> Box(modifier = Modifier.fillMaxSize()) {
-                    LoadingOverlayView()
+            EventsStateContent(
+                uiState = uiState,
+                isRefreshing = isRefreshing,
+                onRefresh = { viewModel.refresh() },
+                onEventClick = { event ->
+                    viewModel.onEventClick(event)
+                    onNavigateToEventDetail(event.id)
                 }
-
-                is EventsUIState.Content -> {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        EventsListWithRefresh(
-                            state = EventsListState(
-                                events = state.events,
-                                addresses = state.addresses,
-                                selectedTab = state.selectedTab,
-                                isRefreshing = isRefreshing,
-                                isLoading = state.isLoading
-                            ),
-                            onAction = { action ->
-                                when (action) {
-                                    is EventsListAction.Refresh -> viewModel.refresh()
-                                    is EventsListAction.EventClick -> {
-                                        viewModel.onEventClick(action.event)
-                                        onNavigateToEventDetail(action.event.id)
-                                    }
-                                }
-                            }
-                        )
-                        if (state.isLoading && !isRefreshing) {
-                            LoadingOverlayView()
-                        }
-                    }
-                }
-
-                is EventsUIState.Error -> ErrorContentView(
-                    retryAction = { viewModel.refresh() },
-                    message = state.message
-                )
-            }
+            )
         }
 
         if (isAuthorized) {
-            FloatingActionButton(
+            CreateEventFab(
                 onClick = { viewModel.onFabClick() },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(dimensionResource(id = R.dimen.spacing_regular))
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = fabDescription
+                description = fabDescription,
+                modifier = Modifier.align(Alignment.BottomEnd)
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EventsTabRow(
+    selectedTabIndex: Int,
+    isRefreshing: Boolean,
+    onTabSelected: (EventKind) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    PrimaryTabRow(
+        selectedTabIndex = selectedTabIndex,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                start = dimensionResource(id = R.dimen.spacing_regular),
+                end = dimensionResource(id = R.dimen.spacing_regular),
+                top = dimensionResource(id = R.dimen.spacing_small)
+            )
+    ) {
+        EventKind.entries.forEachIndexed { index, eventKind ->
+            Tab(
+                selected = selectedTabIndex == index,
+                enabled = !isRefreshing,
+                onClick = { onTabSelected(eventKind) },
+                text = {
+                    Text(
+                        text = when (eventKind) {
+                            EventKind.FUTURE -> stringResource(id = R.string.future_events)
+                            EventKind.PAST -> stringResource(id = R.string.past_events)
+                        }
+                    )
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun EventsStateContent(
+    uiState: EventsUIState,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    onEventClick: (Event) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    when (val state = uiState) {
+        is EventsUIState.InitialLoading -> Box(modifier = modifier.fillMaxSize()) {
+            LoadingOverlayView()
+        }
+
+        is EventsUIState.Content -> {
+            Box(modifier = modifier.fillMaxSize()) {
+                EventsListWithRefresh(
+                    state = EventsListState(
+                        events = state.events,
+                        addresses = state.addresses,
+                        selectedTab = state.selectedTab,
+                        isRefreshing = isRefreshing,
+                        isLoading = state.isLoading
+                    ),
+                    onAction = { action ->
+                        when (action) {
+                            is EventsListAction.Refresh -> onRefresh()
+                            is EventsListAction.EventClick -> onEventClick(action.event)
+                        }
+                    }
                 )
+                if (state.isLoading && !isRefreshing) {
+                    LoadingOverlayView()
+                }
             }
         }
+
+        is EventsUIState.Error -> ErrorContentView(
+            retryAction = onRefresh,
+            message = state.message
+        )
+    }
+}
+
+@Composable
+private fun CreateEventFab(
+    onClick: () -> Unit,
+    description: String,
+    modifier: Modifier = Modifier
+) {
+    FloatingActionButton(
+        onClick = onClick,
+        modifier = modifier.padding(dimensionResource(id = R.dimen.spacing_regular))
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Add,
+            contentDescription = description
+        )
     }
 }
 

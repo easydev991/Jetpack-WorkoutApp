@@ -283,19 +283,19 @@ composable(
 
 ---
 
-## Нереализованные экраны (TODO в RootScreen.kt)
+## Статус экранов в RootScreen (актуализация: 2026-03-17)
 
-Следующие экраны имеют заглушки и требуют реализации:
+Ранее перечисленные здесь экраны уже реализованы и подключены в `RootScreen`:
 
-- [ ] `ParkDetailScreen` - детальный просмотр площадки
-- [ ] `CreateParkScreen` - создание площадки
-- [ ] `EditParkScreen` - редактирование площадки
-- [ ] `EventDetailScreen` - детальный просмотр мероприятия
-- [ ] `CreateEventScreen` - создание мероприятия
-- [ ] `EditEventScreen` - редактирование мероприятия
-- [ ] `ChatScreen` - экран чата
+- [x] `ParkDetailScreen`
+- [x] `CreateParkScreen`
+- [x] `EditParkScreen`
+- [x] `EventDetailScreen`
+- [x] `CreateEventScreen`
+- [x] `EditEventScreen`
+- [x] `ChatScreen`
 
-Эти экраны уже настроены для приема `source` параметра в `Destinations.kt`.
+Маршруты с `source` продолжают использоваться и актуальны.
 
 ---
 

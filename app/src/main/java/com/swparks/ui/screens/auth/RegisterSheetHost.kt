@@ -29,6 +29,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.swparks.data.AppContainer
 import com.swparks.ui.ds.disableAllGestures
+import com.swparks.ui.state.RegisterUiState
 import com.swparks.ui.viewmodel.IRegisterViewModel
 import com.swparks.util.toUiText
 import kotlinx.coroutines.launch
@@ -42,26 +43,6 @@ private object RegisterRoutes {
     const val SELECT_CITY = "select_city"
 }
 
-/**
- * Хост для RegisterUserScreen в виде полноэкранного модального листа.
- *
- * RegisterUserScreen открывается как ModalBottomSheet на весь экран поверх текущего UI.
- * Закрытие листа разрешено только:
- * - по нажатию на крестик в левом верхнем углу (только если !uiState.isBusy)
- * - автоматически после успешной регистрации
- *
- * Закрытие по тапу вне области, свайпу вниз, системной кнопке/жесту "назад" — запрещено.
- *
- * Внутри sheet используется отдельная навигация для переходов между экранами:
- * - RegisterUserScreen (главный экран регистрации)
- * - RegisterSelectCountryScreen (выбор страны)
- * - RegisterSelectCityScreen (выбор города)
- *
- * @param show Флаг для показа/скрытия листа
- * @param appContainer DI контейнер для создания ViewModel
- * @param onDismissed Callback при закрытии листа
- * @param onRegisterSuccess Callback при успешной регистрации с userId
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterSheetHost(
@@ -75,20 +56,16 @@ fun RegisterSheetHost(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    // Создаем ViewModel через factory метод
     val registerViewModel: IRegisterViewModel = remember(appContainer) {
         appContainer.registerViewModelFactory()
     }
     val uiState by registerViewModel.uiState.collectAsState()
 
-    // Создаем внутренний NavController для навигации внутри sheet
     val innerNavController: NavHostController = rememberNavController()
 
-    // SnackbarHostState для отображения ошибок внутри ModalBottomSheet
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
-    // Подписываемся на ошибки из UserNotifier для отображения в Snackbar
     LaunchedEffect(Unit) {
         appContainer.userNotifier.errorFlow.collect { error ->
             val message = error.toUiText(context)
@@ -100,7 +77,6 @@ fun RegisterSheetHost(
         }
     }
 
-    // Сбрасываем состояние при каждом открытии sheet
     LaunchedEffect(show) {
         if (show) {
             registerViewModel.resetForNewSession()
@@ -110,7 +86,6 @@ fun RegisterSheetHost(
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
         confirmValueChange = { newValue ->
-            // Запрещаем любые изменения состояния sheet'а, кроме явного закрытия
             when (newValue) {
                 SheetValue.Expanded -> true
                 SheetValue.PartiallyExpanded -> false
@@ -132,9 +107,7 @@ fun RegisterSheetHost(
 
     if (show) {
         ModalBottomSheet(
-            onDismissRequest = {
-                // Игнорируем тап вне sheet / системный dismiss
-            },
+            onDismissRequest = {},
             sheetState = sheetState,
             dragHandle = null,
             properties = ModalBottomSheetProperties(
@@ -142,28 +115,47 @@ fun RegisterSheetHost(
                 shouldDismissOnClickOutside = false
             ),
         ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                // Внутренняя навигация внутри sheet
-                RegisterNavHost(
-                    viewModel = registerViewModel,
-                    innerNavController = innerNavController,
-                    onRegisterSuccess = { userId ->
-                        dismissSheet { onRegisterSuccess(userId) }
-                    },
-                    onClose = {
-                        if (uiState.isBusy) return@RegisterNavHost
-                        dismissSheet(onDismissed)
-                    },
-                    modifier = Modifier.disableAllGestures()
-                )
-
-                // Snackbar внизу экрана (поверх содержимого sheet)
-                SnackbarHost(
-                    hostState = snackbarHostState,
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                )
-            }
+            RegisterSheetContent(
+                registerViewModel = registerViewModel,
+                innerNavController = innerNavController,
+                snackbarHostState = snackbarHostState,
+                onRegisterSuccess = onRegisterSuccess,
+                onDismissed = onDismissed,
+                uiState = uiState,
+                dismissSheet = { dismissSheet(it) }
+            )
         }
+    }
+}
+
+@Composable
+private fun RegisterSheetContent(
+    registerViewModel: IRegisterViewModel,
+    innerNavController: NavHostController,
+    snackbarHostState: SnackbarHostState,
+    onRegisterSuccess: (userId: Long) -> Unit,
+    onDismissed: () -> Unit,
+    uiState: RegisterUiState,
+    dismissSheet: (() -> Unit) -> Unit
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        RegisterNavHost(
+            viewModel = registerViewModel,
+            innerNavController = innerNavController,
+            onRegisterSuccess = { userId ->
+                dismissSheet { onRegisterSuccess(userId) }
+            },
+            onClose = {
+                if (uiState.isBusy) return@RegisterNavHost
+                dismissSheet(onDismissed)
+            },
+            modifier = Modifier.disableAllGestures()
+        )
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 

@@ -130,44 +130,10 @@ fun MyBlacklistScreenContent(
         }
     }
 
-    val successState = uiState as? BlacklistUiState.Success
-
-    if (successState?.showRemoveDialog == true && successState.itemToRemove != null) {
-        AlertDialog(
-            onDismissRequest = { onAction(BlacklistAction.CancelRemove) },
-            text = {
-                Text(stringResource(ApiBlacklistAction.UNBLOCK.alertMessage))
-            },
-            confirmButton = {
-                TextButton(onClick = { onAction(BlacklistAction.Remove(successState.itemToRemove)) }) {
-                    Text(stringResource(ApiBlacklistAction.UNBLOCK.description))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { onAction(BlacklistAction.CancelRemove) }) {
-                    Text(stringResource(R.string.close))
-                }
-            }
-        )
-    }
-
-    if (successState?.showSuccessAlert == true) {
-        AlertDialog(
-            onDismissRequest = { onAction(BlacklistAction.DismissSuccessAlert) },
-            title = {
-                Text(stringResource(R.string.alert_reset_password_success_title))
-            },
-            text = {
-                val userName = successState.unblockedUserName ?: ""
-                Text(stringResource(R.string.user_unblocked_successfully, userName))
-            },
-            confirmButton = {
-                TextButton(onClick = { onAction(BlacklistAction.DismissSuccessAlert) }) {
-                    Text(stringResource(R.string.alert_ok))
-                }
-            }
-        )
-    }
+    RemoveDialogs(
+        successState = uiState as? BlacklistUiState.Success,
+        onAction = onAction
+    )
 }
 
 /**
@@ -221,5 +187,49 @@ private fun SuccessContent(
                 }
             }
         }
+    }
+}
+
+
+@Composable
+private fun RemoveDialogs(
+    successState: BlacklistUiState.Success?,
+    onAction: (BlacklistAction) -> Unit
+) {
+    if (successState?.showRemoveDialog == true && successState.itemToRemove != null) {
+        AlertDialog(
+            onDismissRequest = { onAction(BlacklistAction.CancelRemove) },
+            text = {
+                Text(stringResource(ApiBlacklistAction.UNBLOCK.alertMessage))
+            },
+            confirmButton = {
+                TextButton(onClick = { onAction(BlacklistAction.Remove(successState.itemToRemove)) }) {
+                    Text(stringResource(ApiBlacklistAction.UNBLOCK.description))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onAction(BlacklistAction.CancelRemove) }) {
+                    Text(stringResource(R.string.close))
+                }
+            }
+        )
+    }
+
+    if (successState?.showSuccessAlert == true) {
+        AlertDialog(
+            onDismissRequest = { onAction(BlacklistAction.DismissSuccessAlert) },
+            title = {
+                Text(stringResource(R.string.alert_reset_password_success_title))
+            },
+            text = {
+                val userName = successState.unblockedUserName ?: ""
+                Text(stringResource(R.string.user_unblocked_successfully, userName))
+            },
+            confirmButton = {
+                TextButton(onClick = { onAction(BlacklistAction.DismissSuccessAlert) }) {
+                    Text(stringResource(R.string.alert_ok))
+                }
+            }
+        )
     }
 }

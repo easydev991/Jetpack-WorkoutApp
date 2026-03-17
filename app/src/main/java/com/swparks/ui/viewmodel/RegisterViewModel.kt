@@ -27,6 +27,15 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+sealed class RegisterContentAction {
+    data class LoginChange(val value: String) : RegisterContentAction()
+    data class EmailChange(val value: String) : RegisterContentAction()
+    data class PasswordChange(val value: String) : RegisterContentAction()
+    data class FullNameChange(val value: String) : RegisterContentAction()
+    data class GenderChange(val value: Int) : RegisterContentAction()
+    data class BirthDateChange(val value: LocalDate?) : RegisterContentAction()
+}
+
 /**
  * ViewModel для управления экраном регистрации.
  *
@@ -158,6 +167,17 @@ class RegisterViewModel(
             resources.getString(R.string.birth_date_in_future)
         } else {
             null
+        }
+    }
+
+    override fun onAction(action: RegisterContentAction) {
+        when (action) {
+            is RegisterContentAction.LoginChange -> onLoginChange(action.value)
+            is RegisterContentAction.EmailChange -> onEmailChange(action.value)
+            is RegisterContentAction.PasswordChange -> onPasswordChange(action.value)
+            is RegisterContentAction.FullNameChange -> onFullNameChange(action.value)
+            is RegisterContentAction.GenderChange -> onGenderChange(action.value)
+            is RegisterContentAction.BirthDateChange -> onBirthDateChange(action.value)
         }
     }
 

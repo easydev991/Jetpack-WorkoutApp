@@ -1,10 +1,13 @@
 package com.swparks.ui.screens.journals
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -71,9 +74,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = journalId,
-                    journalTitle = journalTitle,
-                    journalOwnerId = journalOwnerId,
+                    params = JournalParams(
+                        journalId = journalId,
+                        journalTitle = journalTitle,
+                        journalOwnerId = journalOwnerId,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = onBackClick,
@@ -122,6 +129,105 @@ class JournalEntriesScreenTest {
     }
 
     @Test
+    fun journalEntriesScreen_whenJournalTitleChanges_updatesTopBarTitle() {
+        val uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = emptyList()))
+        val viewModel = FakeJournalEntriesViewModel(
+            uiState = uiState,
+            isRefreshing = MutableStateFlow(false),
+            canCreateEntry = MutableStateFlow(false)
+        )
+        val journalTitleState = mutableStateOf("Title A")
+
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID,
+                    name = "owner",
+                    image = null
+                )
+            )
+
+            JetpackWorkoutAppTheme {
+                JournalEntriesScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = journalTitleState.value,
+                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
+                    viewModel = viewModel,
+                    appState = appState,
+                    onBackClick = {},
+                    parentPaddingValues = PaddingValues()
+                )
+            }
+        }
+
+        composeTestRule.runOnUiThread {
+            journalTitleState.value = "Title B"
+        }
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Title B").assertIsDisplayed()
+    }
+
+    @Test
+    fun journalEntriesScreen_whenCurrentUserChangesFromOwner_hidesSettingsButton() {
+        val uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = emptyList()))
+        val viewModel = FakeJournalEntriesViewModel(
+            uiState = uiState,
+            isRefreshing = MutableStateFlow(false),
+            canCreateEntry = MutableStateFlow(false)
+        )
+        val foreignUserId = TEST_JOURNAL_OWNER_ID + 100
+
+        lateinit var appState: AppState
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            appState = AppState(navController)
+            appState.updateCurrentUser(
+                User(
+                    id = TEST_JOURNAL_OWNER_ID,
+                    name = "owner",
+                    image = null
+                )
+            )
+
+            JetpackWorkoutAppTheme {
+                JournalEntriesScreen(
+                    modifier = androidx.compose.ui.Modifier,
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
+                    viewModel = viewModel,
+                    appState = appState,
+                    onBackClick = {},
+                    parentPaddingValues = PaddingValues()
+                )
+            }
+        }
+
+        val settingsContentDescription = context.getString(R.string.settings)
+        composeTestRule.onNodeWithContentDescription(settingsContentDescription).assertIsDisplayed()
+
+        composeTestRule.runOnUiThread {
+            appState.updateCurrentUser(User(id = foreignUserId, name = "foreign", image = null))
+        }
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onAllNodesWithContentDescription(settingsContentDescription)
+            .assertCountEquals(0)
+    }
+
+    @Test
     fun testInitialState_showsLoadingOverlay() {
         // Given
         val viewModel = FakeJournalEntriesViewModel(
@@ -144,9 +250,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = TEST_JOURNAL_ID,
-                    journalTitle = TEST_JOURNAL_TITLE,
-                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -185,9 +295,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = TEST_JOURNAL_ID,
-                    journalTitle = TEST_JOURNAL_TITLE,
-                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -226,9 +340,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = TEST_JOURNAL_ID,
-                    journalTitle = TEST_JOURNAL_TITLE,
-                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -277,9 +395,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = TEST_JOURNAL_ID,
-                    journalTitle = TEST_JOURNAL_TITLE,
-                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -405,9 +527,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = TEST_JOURNAL_ID,
-                    journalTitle = TEST_JOURNAL_TITLE,
-                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -457,9 +583,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = TEST_JOURNAL_ID,
-                    journalTitle = TEST_JOURNAL_TITLE,
-                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -514,9 +644,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = TEST_JOURNAL_ID,
-                    journalTitle = TEST_JOURNAL_TITLE,
-                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -574,9 +708,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = TEST_JOURNAL_ID,
-                    journalTitle = TEST_JOURNAL_TITLE,
-                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -642,9 +780,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = TEST_JOURNAL_ID,
-                    journalTitle = TEST_JOURNAL_TITLE,
-                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -805,9 +947,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = TEST_JOURNAL_ID,
-                    journalTitle = TEST_JOURNAL_TITLE,
-                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -988,9 +1134,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = TEST_JOURNAL_ID,
-                    journalTitle = TEST_JOURNAL_TITLE,
-                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -1048,9 +1198,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = TEST_JOURNAL_ID,
-                    journalTitle = TEST_JOURNAL_TITLE,
-                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -1111,9 +1265,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = TEST_JOURNAL_ID,
-                    journalTitle = TEST_JOURNAL_TITLE,
-                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -1183,9 +1341,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = TEST_JOURNAL_ID,
-                    journalTitle = TEST_JOURNAL_TITLE,
-                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -1249,9 +1411,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = TEST_JOURNAL_ID,
-                    journalTitle = TEST_JOURNAL_TITLE,
-                    journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -1419,9 +1585,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = TEST_JOURNAL_ID,
-                    journalTitle = TEST_JOURNAL_TITLE,
-                    journalOwnerId = foreignOwnerId, // Чужой дневник
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = foreignOwnerId,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -1474,9 +1644,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = TEST_JOURNAL_ID,
-                    journalTitle = TEST_JOURNAL_TITLE,
-                    journalOwnerId = foreignOwnerId, // Чужой дневник
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = foreignOwnerId,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -1528,9 +1702,13 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    journalId = TEST_JOURNAL_ID,
-                    journalTitle = TEST_JOURNAL_TITLE,
-                    journalOwnerId = foreignOwnerId, // Чужой дневник
+                    params = JournalParams(
+                        journalId = TEST_JOURNAL_ID,
+                        journalTitle = TEST_JOURNAL_TITLE,
+                        journalOwnerId = foreignOwnerId,
+                        journalViewAccess = null,
+                        journalCommentAccess = null
+                    ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},

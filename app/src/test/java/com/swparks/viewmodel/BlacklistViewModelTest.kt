@@ -131,7 +131,8 @@ class BlacklistViewModelTest {
         }
         assertEquals("itemToRemove должен быть null после удаления", null, state.itemToRemove)
         assertEquals(
-            "showRemoveDialog должно быть false после удаления, но: itemToRemove=${state.itemToRemove}, isRemoving=${state.isRemoving}, isLoading=${state.isLoading}",
+            "showRemoveDialog должно быть false после удаления, " +
+                "но: itemToRemove=${state.itemToRemove}, isRemoving=${state.isRemoving}, isLoading=${state.isLoading}",
             false,
             state.showRemoveDialog
         )
