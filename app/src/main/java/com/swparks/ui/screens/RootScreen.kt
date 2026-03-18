@@ -42,11 +42,13 @@ import com.swparks.navigation.setSelectedParkResult
 import com.swparks.ui.common.appViewModel
 import com.swparks.ui.model.EventFormMode
 import com.swparks.ui.model.ParticipantsMode
+import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.screens.auth.LoginSheetHost
 import com.swparks.ui.screens.auth.RegisterSheetHost
 import com.swparks.ui.screens.common.ParticipantsAction
 import com.swparks.ui.screens.common.ParticipantsConfig
 import com.swparks.ui.screens.common.ParticipantsScreen
+import com.swparks.ui.screens.common.TextEntrySheetHost
 import com.swparks.ui.screens.events.EventDetailScreen
 import com.swparks.ui.screens.events.EventFormNavigationAction
 import com.swparks.ui.screens.events.EventFormScreen
@@ -61,6 +63,8 @@ import com.swparks.ui.screens.journals.JournalsScreenParams
 import com.swparks.ui.screens.messages.ChatAction
 import com.swparks.ui.screens.messages.ChatScreen
 import com.swparks.ui.screens.messages.ChatUserParams
+import com.swparks.ui.screens.messages.FriendsPickerConfig
+import com.swparks.ui.screens.messages.MessagesFriendsPickerScreen
 import com.swparks.ui.screens.messages.MessagesNavigationAction
 import com.swparks.ui.screens.messages.MessagesRootScreen
 import com.swparks.ui.screens.messages.MessagesTopAppBar
@@ -116,7 +120,8 @@ private val BOTTOM_BAR_HIDDEN_BASE_ROUTES = setOf(
     Screen.CreateEventForPark,
     Screen.SelectParkForEvent,
     Screen.EditProfile,
-    Screen.ChangePassword
+    Screen.ChangePassword,
+    Screen.FriendsForDialog
 ).map { it.route.substringBefore("/").substringBefore("?") }.toSet()
 
 internal fun shouldShowBottomBar(route: String?): Boolean {
@@ -322,7 +327,7 @@ fun RootScreen(appState: AppState) {
                             }
 
                             MessagesNavigationAction.NavigateToFriends -> {
-                                appState.navController.navigate(Screen.MyFriends.route)
+                                appState.navController.navigate(Screen.FriendsForDialog.route)
                             }
 
                             MessagesNavigationAction.NavigateToSearchUsers -> {
@@ -887,6 +892,49 @@ fun RootScreen(appState: AppState) {
                         }
                     }
                 )
+            }
+
+            composable(route = Screen.FriendsForDialog.route) {
+                val viewModel: FriendsListViewModel = appViewModel {
+                    appContainer.friendsListViewModelFactory()
+                }
+
+                var selectedFriend by remember { mutableStateOf<Pair<Long, String>?>(null) }
+                var showTextEntrySheet by remember { mutableStateOf(false) }
+
+                MessagesFriendsPickerScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    viewModel = viewModel,
+                    config = FriendsPickerConfig(
+                        parentPaddingValues = paddingValues,
+                        currentUserId = currentUser?.id
+                    ),
+                    onFriendClick = { userId, userName ->
+                        selectedFriend = Pair(userId, userName)
+                        showTextEntrySheet = true
+                    },
+                    onBackClick = {
+                        appState.navController.popBackStack()
+                    }
+                )
+
+                if (showTextEntrySheet && selectedFriend != null) {
+                    TextEntrySheetHost(
+                        show = true,
+                        mode = TextEntryMode.Message(
+                            userId = selectedFriend!!.first,
+                            userName = selectedFriend!!.second
+                        ),
+                        onDismissed = {
+                            showTextEntrySheet = false
+                            selectedFriend = null
+                        },
+                        onSendSuccess = {
+                            showTextEntrySheet = false
+                            selectedFriend = null
+                        }
+                    )
+                }
             }
 
             composable(

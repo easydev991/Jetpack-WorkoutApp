@@ -2,6 +2,7 @@ package com.swparks.ui.screens.messages
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,14 +12,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.MarkEmailRead
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
@@ -41,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpOffset
@@ -202,7 +206,12 @@ private fun DeleteDialogConfirmation(
             title = { Text(stringResource(R.string.delete_dialog_title)) },
             text = { Text(stringResource(R.string.delete_dialog_message)) },
             confirmButton = {
-                Button(onClick = onConfirm) {
+                TextButton(
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    ),
+                    onClick = onConfirm
+                ) {
                     Text(stringResource(R.string.delete))
                 }
             },
@@ -256,6 +265,16 @@ fun DialogsContent(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
+
+        if (params.uiState is DialogsUiState.Success && params.uiState.dialogs.isNotEmpty()) {
+            val hasFriends = params.currentUser?.hasFriends ?: false
+            NewDialogFab(
+                enabled = !params.isRefreshing,
+                hasFriends = hasFriends,
+                onNavigateToFriends = params.onNavigateToFriends,
+                onNavigateToSearchUsers = params.onNavigateToSearchUsers
+            )
+        }
 
         if (params.isUpdating) {
             LoadingOverlayView()
@@ -489,6 +508,38 @@ fun DialogsList(
                 }
             )
         }
+    }
+}
+
+@Composable
+private fun BoxScope.NewDialogFab(
+    enabled: Boolean,
+    hasFriends: Boolean,
+    onNavigateToFriends: () -> Unit,
+    onNavigateToSearchUsers: () -> Unit
+) {
+    FloatingActionButton(
+        onClick = {
+            if (enabled) {
+                if (hasFriends) {
+                    onNavigateToFriends()
+                } else {
+                    onNavigateToSearchUsers()
+                }
+            }
+        },
+        modifier = Modifier
+            .align(Alignment.BottomEnd)
+            .padding(
+                end = dimensionResource(R.dimen.spacing_regular),
+                bottom = dimensionResource(R.dimen.spacing_regular)
+            )
+            .testTag("NewDialogFAB")
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Add,
+            contentDescription = stringResource(R.string.dialogs_fab_description)
+        )
     }
 }
 

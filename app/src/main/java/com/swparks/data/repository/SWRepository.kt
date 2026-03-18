@@ -878,6 +878,10 @@ class SWRepositoryImp(
                         val errorResponse = json.decodeFromString<ErrorResponse>(errorBody)
                         errorResponse.realMessage ?: "Ошибка сервера: ${response.code()}"
                     } catch (e: Exception) {
+                        Log.w(
+                            TAG,
+                            "Не удалось распарсить ошибку удаления фото события: ${e.message}"
+                        )
                         "Ошибка сервера: ${response.code()}"
                     }
                 } else {

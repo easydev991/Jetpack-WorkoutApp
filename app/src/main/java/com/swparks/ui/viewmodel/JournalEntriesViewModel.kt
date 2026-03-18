@@ -139,8 +139,9 @@ class JournalEntriesViewModel(
                         // Не показываем ошибку пользователю - записи могут загрузиться успешно
                     }
                 )
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                if (e is CancellationException) throw e
                 Log.e(TAG, "Исключение при загрузке дневника: ${e.message}")
             }
         }
@@ -273,8 +274,9 @@ class JournalEntriesViewModel(
                         }
                     }
                 )
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                if (e is CancellationException) throw e
                 val message = "Исключение при загрузке записей: ${e.message}"
                 deps.userNotifier.handleError(AppError.Generic(message, e))
                 _isRefreshing.value = false
@@ -322,8 +324,9 @@ class JournalEntriesViewModel(
                             )
                         )
                     }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                if (e is CancellationException) throw e
                 deps.userNotifier.handleError(
                     AppError.Generic(
                         deps.resources.getString(R.string.error_delete_entry),
@@ -457,8 +460,9 @@ class JournalEntriesViewModel(
                         handleEditSettingsError(error)
                     }
                 )
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                if (e is CancellationException) throw e
                 Log.e(TAG, "Исключение при редактировании настроек дневника: ${e.message}")
                 handleEditSettingsError(e)
             } finally {

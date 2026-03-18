@@ -182,6 +182,7 @@ sealed class Screen(
     }
 
     object Friends : Screen("friends", parentTab = Messages)
+    object FriendsForDialog : Screen("friends_for_dialog", parentTab = Messages)
     object MyFriends : Screen("my_friends", parentTab = Profile)
     object UserSearch : Screen("user_search?source={source}", parentTab = Messages) {
         fun createRoute(source: String = "messages") = "user_search?source=$source"
@@ -295,7 +296,7 @@ sealed class Screen(
                 EventGallery, AddEventComment, SelectParkForEvent,
 
                 // Экраны сообщений
-                Chat, Friends, MyFriends, UserSearch,
+                Chat, Friends, FriendsForDialog, MyFriends, UserSearch,
 
                 // Экраны профиля
                 EditProfile, UserParks, UserTrainingParks, UserFriends, OtherUserProfile,

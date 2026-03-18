@@ -79,6 +79,7 @@
     <string name="requests">Requests</string>
     <string name="friends">Friends</string>
     <string name="no_friends_yet">No friends yet</string>
+    <string name="select_friend">Select friend</string>
     <string name="no_participants">No participants yet</string>
     <string name="where_trains">Where trains</string>
     <string name="your_parks">Your parks</string>
@@ -343,6 +344,7 @@
     <string name="dialogs_empty">No chats yet</string>
     <string name="dialogs_open_friends">Open friends list</string>
     <string name="dialogs_find_user">Find user</string>
+    <string name="dialogs_fab_description">New chat</string>
     <string name="dialogs_sync_error">Sync error</string>
     <string name="sync_error_message">Sync error</string>
     <string name="default_user_name">User</string>

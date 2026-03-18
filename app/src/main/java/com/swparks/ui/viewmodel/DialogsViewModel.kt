@@ -1,9 +1,11 @@
 package com.swparks.ui.viewmodel
 
+import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.swparks.R
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.event.MessageSentNotifier
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.MessagesRepository
 import com.swparks.ui.state.DialogsUiState
@@ -29,12 +31,14 @@ import kotlinx.coroutines.launch
  * @property swRepository Репозиторий для работы с сервером (удаление диалога)
  * @property logger Логгер для записи ошибок и отладочной информации
  * @property resources Провайдер строковых ресурсов для локализации
+ * @property messageSentNotifier Нотификатор события отправки сообщения
  */
 class DialogsViewModel(
     private val messagesRepository: MessagesRepository,
     private val swRepository: SWRepository,
     private val logger: Logger,
-    private val resources: ResourcesProvider
+    private val resources: ResourcesProvider,
+    private val messageSentNotifier: MessageSentNotifier
 ) : ViewModel(), IDialogsViewModel {
 
     private companion object {
@@ -81,6 +85,14 @@ class DialogsViewModel(
         }
         // Первоначальная загрузка данных
         refresh()
+
+        // Подписываемся на события отправки сообщений для обновления списка диалогов
+        viewModelScope.launch {
+            messageSentNotifier.messageSent.collect {
+                logger.i(TAG, "Получено событие отправки сообщения, обновляем список диалогов")
+                refresh()
+            }
+        }
     }
 
     override fun refresh() {
@@ -133,8 +145,13 @@ class DialogsViewModel(
             try {
                 val dialogs = messagesRepository.dialogs.first()
                 _uiState.value = DialogsUiState.Success(dialogs = dialogs)
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: SQLiteException) {
+                // Fallback на случай runtime-ошибки при чтении из Room
+                logger.e(TAG, "Ошибка SQLite при чтении диалогов: ${e.message}")
+                _uiState.value = DialogsUiState.Success(dialogs = emptyList())
+            } catch (e: IllegalStateException) {
                 // Fallback на случай runtime-ошибки при чтении из Room (например, SQLiteException)
                 logger.e(TAG, "Ошибка при чтении диалогов: ${e.message}")
                 _uiState.value = DialogsUiState.Success(dialogs = emptyList())

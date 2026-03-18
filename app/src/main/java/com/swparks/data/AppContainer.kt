@@ -29,6 +29,7 @@ import com.swparks.data.repository.MessagesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.data.repository.SWRepositoryImp
 import com.swparks.data.serializer.EncryptedStringSerializer
+import com.swparks.domain.event.MessageSentNotifier
 import com.swparks.domain.provider.AvatarHelper
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
@@ -133,6 +134,9 @@ interface AppContainer {
     // Сервисы для обработки ошибок
     val logger: Logger
     val userNotifier: UserNotifier
+
+    // Event notifiers
+    val messageSentNotifier: MessageSentNotifier
 
     // Use cases для авторизации
     val loginUseCase: ILoginUseCase
@@ -250,6 +254,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
     override val logger: Logger = AndroidLogger()
     override val userNotifier: UserNotifier = UserNotifierImpl(logger)
+    override val messageSentNotifier: MessageSentNotifier = MessageSentNotifier()
 
     // ==================== Resources Provider ====================
 
@@ -498,7 +503,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
         CreateJournalUseCase(swRepository)
     }
     override val textEntryUseCase: ITextEntryUseCase by lazy {
-        TextEntryUseCase(swRepository, createJournalUseCase)
+        TextEntryUseCase(swRepository, createJournalUseCase, messageSentNotifier)
     }
 
     // ==================== Use cases для мероприятий ====================
@@ -621,7 +626,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
         messagesRepository = messagesRepository,
         swRepository = swRepository,
         logger = logger,
-        resources = resourcesProvider
+        resources = resourcesProvider,
+        messageSentNotifier = messageSentNotifier
     )
 
     /** Factory метод для создания ChatViewModel */

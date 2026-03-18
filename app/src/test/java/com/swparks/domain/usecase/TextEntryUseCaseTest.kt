@@ -2,12 +2,14 @@ package com.swparks.domain.usecase
 
 import android.util.Log
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.event.MessageSentNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertTrue
@@ -19,6 +21,7 @@ class TextEntryUseCaseTest {
 
     private lateinit var swRepository: SWRepository
     private lateinit var createJournalUseCase: ICreateJournalUseCase
+    private lateinit var messageSentNotifier: MessageSentNotifier
     private lateinit var textEntryUseCase: TextEntryUseCase
 
     private val testOwnerId = 123L
@@ -35,7 +38,8 @@ class TextEntryUseCaseTest {
         every { Log.i(any(), any()) } returns 0
         swRepository = mockk()
         createJournalUseCase = mockk(relaxed = true)
-        textEntryUseCase = TextEntryUseCase(swRepository, createJournalUseCase)
+        messageSentNotifier = mockk(relaxed = true)
+        textEntryUseCase = TextEntryUseCase(swRepository, createJournalUseCase, messageSentNotifier)
     }
 
     @After
@@ -203,5 +207,38 @@ class TextEntryUseCaseTest {
         // Then
         assertTrue(result.isFailure)
         coVerify(exactly = 1) { swRepository.sendMessage(message, userId) }
+    }
+
+    @Test
+    fun sendMessageTo_whenSuccess_notifiesMessageSent() = runTest {
+        // Given
+        val userId = 123L
+        val message = "Hello!"
+        coEvery { swRepository.sendMessage(message, userId) } returns Result.success(Unit)
+
+        // When
+        textEntryUseCase.sendMessageTo(userId, message)
+
+        // Then
+        verify { messageSentNotifier.notifyMessageSent(userId) }
+    }
+
+    @Test
+    fun sendMessageTo_whenError_doesNotNotifyMessageSent() = runTest {
+        // Given
+        val userId = 123L
+        val message = "Hello!"
+        coEvery {
+            swRepository.sendMessage(
+                message,
+                userId
+            )
+        } returns Result.failure(Exception("Error"))
+
+        // When
+        textEntryUseCase.sendMessageTo(userId, message)
+
+        // Then
+        verify(exactly = 0) { messageSentNotifier.notifyMessageSent(any()) }
     }
 }

@@ -35,4 +35,14 @@ class RootScreenBottomBarVisibilityTest {
     fun shouldShowBottomBar_whenUnknownRoute_thenReturnTrue() {
         assertTrue(shouldShowBottomBar("some_new_route/123"))
     }
+
+    @Test
+    fun shouldShowBottomBar_whenFriendsForDialogRoute_thenReturnFalse() {
+        assertFalse(shouldShowBottomBar("friends_for_dialog"))
+    }
+
+    @Test
+    fun shouldShowBottomBar_whenMyFriendsRoute_thenReturnTrue() {
+        assertTrue(shouldShowBottomBar("my_friends"))
+    }
 }

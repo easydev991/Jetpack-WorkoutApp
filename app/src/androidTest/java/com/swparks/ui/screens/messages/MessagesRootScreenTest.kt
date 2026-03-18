@@ -3,8 +3,10 @@ package com.swparks.ui.screens.messages
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.navigation.compose.rememberNavController
@@ -322,6 +324,122 @@ class MessagesRootScreenTest {
 
         composeTestRule.onNodeWithText(findUserText, ignoreCase = true).performClick()
         assert(invokedActionVersion == 2) { "После рекомпозиции должен вызываться action callback v2" }
+    }
+
+    // ========== FAB Tests ==========
+
+    @Test
+    fun dialogsContent_whenDialogsNotEmpty_fabIsDisplayed() {
+        val dialogs = listOf(createTestDialog())
+        val uiState = DialogsUiState.Success(dialogs)
+
+        setContent(uiState = uiState)
+
+        composeTestRule
+            .onNodeWithTag("NewDialogFAB")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun dialogsContent_whenDialogsEmpty_fabIsNotDisplayed() {
+        val uiState = DialogsUiState.Success(emptyList())
+
+        setContent(uiState = uiState)
+
+        composeTestRule
+            .onNodeWithTag("NewDialogFAB")
+            .assertIsNotDisplayed()
+    }
+
+    @Test
+    fun dialogsContent_whenRefreshing_fabClickDoesNotNavigate() {
+        val dialogs = listOf(createTestDialog())
+        val uiState = DialogsUiState.Success(dialogs)
+        val user = createTestUser(friendsCount = 5)
+        var navigateToFriendsCalled = false
+        var navigateToSearchCalled = false
+
+        setContent(
+            uiState = uiState,
+            isRefreshing = true,
+            currentUser = user,
+            onNavigateToFriends = { navigateToFriendsCalled = true },
+            onNavigateToSearchUsers = { navigateToSearchCalled = true }
+        )
+
+        composeTestRule
+            .onNodeWithTag("NewDialogFAB")
+            .performClick()
+
+        assert(!navigateToFriendsCalled) { "FAB click when refreshing should not navigate to friends" }
+        assert(!navigateToSearchCalled) { "FAB click when refreshing should not navigate to search users" }
+    }
+
+    @Test
+    fun dialogsContent_whenNotRefreshing_fabNavigatesCorrectly() {
+        val dialogs = listOf(createTestDialog())
+        val uiState = DialogsUiState.Success(dialogs)
+        val user = createTestUser(friendsCount = 5)
+        var navigateToFriendsCalled = false
+
+        setContent(
+            uiState = uiState,
+            isRefreshing = false,
+            currentUser = user,
+            onNavigateToFriends = { navigateToFriendsCalled = true }
+        )
+
+        composeTestRule
+            .onNodeWithTag("NewDialogFAB")
+            .performClick()
+
+        assert(navigateToFriendsCalled) { "FAB click when not refreshing should navigate" }
+    }
+
+    @Test
+    fun dialogsContent_fabWithFriends_navigatesToFriends() {
+        val dialogs = listOf(createTestDialog())
+        val uiState = DialogsUiState.Success(dialogs)
+        val user = createTestUser(friendsCount = 5)
+        var navigateToFriendsCalled = false
+        var navigateToSearchCalled = false
+
+        setContent(
+            uiState = uiState,
+            currentUser = user,
+            onNavigateToFriends = { navigateToFriendsCalled = true },
+            onNavigateToSearchUsers = { navigateToSearchCalled = true }
+        )
+
+        composeTestRule
+            .onNodeWithTag("NewDialogFAB")
+            .performClick()
+
+        assert(navigateToFriendsCalled) { "FAB click should navigate to friends when user has friends" }
+        assert(!navigateToSearchCalled) { "FAB click should not navigate to search users when user has friends" }
+    }
+
+    @Test
+    fun dialogsContent_fabWithoutFriends_navigatesToSearchUsers() {
+        val dialogs = listOf(createTestDialog())
+        val uiState = DialogsUiState.Success(dialogs)
+        val user = createTestUser(friendsCount = 0)
+        var navigateToFriendsCalled = false
+        var navigateToSearchCalled = false
+
+        setContent(
+            uiState = uiState,
+            currentUser = user,
+            onNavigateToFriends = { navigateToFriendsCalled = true },
+            onNavigateToSearchUsers = { navigateToSearchCalled = true }
+        )
+
+        composeTestRule
+            .onNodeWithTag("NewDialogFAB")
+            .performClick()
+
+        assert(!navigateToFriendsCalled) { "FAB click should not navigate to friends when user has no friends" }
+        assert(navigateToSearchCalled) { "FAB click should navigate to search users when user has no friends" }
     }
 
     // ========== Helper methods ==========

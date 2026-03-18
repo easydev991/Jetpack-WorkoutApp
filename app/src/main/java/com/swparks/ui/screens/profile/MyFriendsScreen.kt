@@ -15,7 +15,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,8 +30,8 @@ import com.swparks.ui.ds.FriendRequestData
 import com.swparks.ui.ds.FriendRequestRowView
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.SectionView
-import com.swparks.ui.ds.UserRowData
-import com.swparks.ui.ds.UserRowView
+import com.swparks.ui.screens.common.EmptyFriendsContent
+import com.swparks.ui.screens.common.FriendsListSection
 import com.swparks.ui.state.FriendsListUiState
 import com.swparks.ui.viewmodel.IFriendsListViewModel
 
@@ -207,11 +206,11 @@ private fun SuccessContent(
 
         if (hasFriends) {
             item {
-                FriendsSection(
+                FriendsListSection(
                     friends = state.friends,
                     currentUserId = state.currentUserId,
                     enabled = state.enabled,
-                    singleSection = singleSection,
+                    showTitle = !singleSection,
                     onFriendClick = onFriendClick
                 )
             }
@@ -219,7 +218,7 @@ private fun SuccessContent(
 
         if (state.friendRequests.isEmpty() && state.friends.isEmpty()) {
             item {
-                EmptyFriendsContent(modifier = Modifier.fillMaxSize())
+                EmptyFriendsContentLegacy(modifier = Modifier.fillMaxSize())
             }
         }
     }
@@ -255,45 +254,8 @@ private fun FriendRequestsSection(
     }
 }
 
-@Composable
-private fun FriendsSection(
-    friends: List<User>,
-    currentUserId: Long?,
-    enabled: Boolean,
-    singleSection: Boolean,
-    onFriendClick: (Long) -> Unit
-) {
-    SectionView(
-        titleID = if (singleSection) null else R.string.friends,
-        titleBottomPadding = dimensionResource(R.dimen.spacing_xsmall)
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))) {
-            friends.forEach { user ->
-                val isDisabled = user.id == currentUserId || !enabled
-                UserRowView(
-                    data = UserRowData(
-                        modifier = Modifier,
-                        enabled = !isDisabled,
-                        imageStringURL = user.image,
-                        name = user.name,
-                        address = null,
-                        onClick = { onFriendClick(user.id) }
-                    )
-                )
-            }
-        }
-    }
-}
 
 @Composable
-private fun EmptyFriendsContent(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.padding(dimensionResource(R.dimen.spacing_large)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = stringResource(R.string.no_friends_yet),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
+private fun EmptyFriendsContentLegacy(modifier: Modifier = Modifier) {
+    EmptyFriendsContent(modifier = modifier)
 }

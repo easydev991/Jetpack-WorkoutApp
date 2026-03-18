@@ -5,6 +5,7 @@ import app.cash.turbine.test
 import com.swparks.R
 import com.swparks.data.database.entity.DialogEntity
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.event.MessageSentNotifier
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.MessagesRepository
 import com.swparks.ui.state.DialogsUiState
@@ -44,6 +45,7 @@ class DialogsViewModelTest {
     private lateinit var swRepository: SWRepository
     private lateinit var logger: Logger
     private lateinit var resources: ResourcesProvider
+    private lateinit var messageSentNotifier: MessageSentNotifier
     private lateinit var viewModel: DialogsViewModel
 
     private val testDialog = DialogEntity(
@@ -68,6 +70,7 @@ class DialogsViewModelTest {
         swRepository = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         resources = mockk(relaxed = true)
+        messageSentNotifier = MessageSentNotifier()
         every { resources.getString(R.string.dialog_delete_error) } returns "Ошибка удаления диалога"
         every { resources.getString(R.string.sync_error_message) } returns "Ошибка синхронизации"
     }
@@ -85,7 +88,13 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
 
         // Then
@@ -100,7 +109,13 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
         viewModel.refresh()
         advanceUntilIdle()
@@ -116,7 +131,13 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
 
         // Then
         viewModel.isRefreshing.test {
@@ -135,7 +156,13 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.failure(Exception("Network error"))
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
 
         // Then
@@ -152,7 +179,13 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.failure(Exception("Network error"))
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
 
         // Then - при пустом кэше и ошибке должен быть Error state
@@ -167,7 +200,13 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
 
         // На этом этапе refresh из init уже завершён (вызван 1 раз)
@@ -191,7 +230,13 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
         viewModel.onDialogClick(dialogId = 1L, userId = 123)
 
@@ -206,7 +251,13 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
         viewModel.onDialogClick(dialogId = 1L, userId = null)
 
@@ -222,7 +273,13 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.failure(Exception("Network error"))
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
 
         // Verify error was set
@@ -253,7 +310,13 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
         // When - инициализация (первая авторизация)
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
 
         // Проверяем что состояние Success с кэшированными данными
@@ -291,7 +354,13 @@ class DialogsViewModelTest {
         coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
 
         // Then - должен быть Success с пустым списком, а не Error
@@ -316,7 +385,13 @@ class DialogsViewModelTest {
         coEvery { swRepository.deleteDialog(dialogId) } returns Result.success(Unit)
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
         viewModel.deleteDialog(dialogId)
         advanceUntilIdle()
@@ -341,7 +416,13 @@ class DialogsViewModelTest {
         }
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
 
         // Test isDeleting flow
@@ -366,7 +447,13 @@ class DialogsViewModelTest {
         coEvery { swRepository.deleteDialog(dialogId) } returns Result.failure(Exception("Network error"))
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
         viewModel.deleteDialog(dialogId)
         advanceUntilIdle()
@@ -387,7 +474,13 @@ class DialogsViewModelTest {
         coEvery { swRepository.deleteDialog(dialogId) } returns Result.failure(Exception("Network error"))
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
         viewModel.deleteDialog(dialogId)
         advanceUntilIdle()
@@ -411,7 +504,13 @@ class DialogsViewModelTest {
         coEvery { swRepository.markDialogAsRead(dialogId, userId) } returns Result.success(Unit)
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
         viewModel.markDialogAsRead(dialogId, userId)
         advanceUntilIdle()
@@ -436,7 +535,13 @@ class DialogsViewModelTest {
         }
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
 
         // Test isMarkingAsRead flow
@@ -467,7 +572,13 @@ class DialogsViewModelTest {
         } returns Result.failure(Exception("Network error"))
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
         viewModel.markDialogAsRead(dialogId, userId)
         advanceUntilIdle()
@@ -494,7 +605,13 @@ class DialogsViewModelTest {
         } returns Result.failure(Exception("Network error"))
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
         viewModel.markDialogAsRead(dialogId, userId)
         advanceUntilIdle()
@@ -526,7 +643,13 @@ class DialogsViewModelTest {
             coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
             // When - первая инициализация с кэшированными диалогами
-            viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+            viewModel = DialogsViewModel(
+                messagesRepository,
+                swRepository,
+                logger,
+                resources,
+                messageSentNotifier
+            )
             advanceUntilIdle()
 
             // Проверяем что состояние Success с диалогами
@@ -582,7 +705,13 @@ class DialogsViewModelTest {
         }
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
 
         // Then - даже если Flow ещё не эмитит, должен быть Success с пустым списком
@@ -613,7 +742,13 @@ class DialogsViewModelTest {
             coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
             // When
-            viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+            viewModel = DialogsViewModel(
+                messagesRepository,
+                swRepository,
+                logger,
+                resources,
+                messageSentNotifier
+            )
             advanceUntilIdle()
 
             // Then - должен быть Success с пустым списком (fallback)
@@ -646,7 +781,13 @@ class DialogsViewModelTest {
         }
 
         // When
-        viewModel = DialogsViewModel(messagesRepository, swRepository, logger, resources)
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
         advanceUntilIdle()
 
         // Test isUpdating flow with deleteDialog
@@ -657,5 +798,30 @@ class DialogsViewModelTest {
             advanceUntilIdle()
             assertEquals(false, awaitItem()) // After deletion
         }
+    }
+
+    // ==================== Тесты для MessageSentNotifier ====================
+
+    @Test
+    fun whenMessageSentEventReceived_callsRefresh() = runTest {
+        val dialogs = listOf(testDialog)
+        coEvery { messagesRepository.dialogs } returns flowOf(dialogs)
+        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+
+        viewModel = DialogsViewModel(
+            messagesRepository,
+            swRepository,
+            logger,
+            resources,
+            messageSentNotifier
+        )
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { messagesRepository.refreshDialogs() }
+
+        messageSentNotifier.notifyMessageSent(123L)
+        advanceUntilIdle()
+
+        coVerify(exactly = 2) { messagesRepository.refreshDialogs() }
     }
 }

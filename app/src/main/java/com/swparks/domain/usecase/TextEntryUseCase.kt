@@ -2,6 +2,7 @@ package com.swparks.domain.usecase
 
 import android.util.Log
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.event.MessageSentNotifier
 import com.swparks.ui.model.TextEntryOption
 
 /**
@@ -12,10 +13,12 @@ import com.swparks.ui.model.TextEntryOption
  *
  * @param swRepository Репозиторий для работы с API
  * @param createJournalUseCase Use case для создания дневника
+ * @param messageSentNotifier Нотификатор события отправки сообщения
  */
 class TextEntryUseCase(
     private val swRepository: SWRepository,
-    private val createJournalUseCase: ICreateJournalUseCase
+    private val createJournalUseCase: ICreateJournalUseCase,
+    private val messageSentNotifier: MessageSentNotifier
 ) : ITextEntryUseCase {
     override suspend fun addJournalEntry(
         ownerId: Long,
@@ -106,6 +109,7 @@ class TextEntryUseCase(
         val result = swRepository.sendMessage(message, userId)
         result.onSuccess {
             Log.i("TextEntryUseCase", "Сообщение отправлено пользователю $userId")
+            messageSentNotifier.notifyMessageSent(userId)
         }
         return result
     }
