@@ -5,9 +5,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
-/**
- * Модель формы для создания/редактирования мероприятия
- */
 @Serializable
 data class EventForm(
     val title: String = "",
@@ -17,7 +14,9 @@ data class EventForm(
     @SerialName("area_id")
     val parkId: Long = 0L,
     @Transient
-    val parkName: String = ""
+    val parkName: String = "",
+    @Transient
+    val photosCount: Int = 0
 ) {
     val isReadyToCreate: Boolean
         get() = title.isNotBlank() && parkId > 0 && date.isNotBlank()

@@ -275,6 +275,14 @@
         <item quantity="other">%1$d photos</item>
     </plurals>
 
+    <!-- Photo picker -->
+    <string name="photos_title">Photos</string>
+    <string name="photos_add">Add photos</string>
+    <string name="photos_view_fullscreen">View fullscreen</string>
+    <string name="photos_add_subtitle_empty">Add photos, max %1$d</string>
+    <string name="photos_add_subtitle_more">Can add %1$d more</string>
+    <string name="photos_max_reached">Maximum number of photos added</string>
+
     <string name="error_label">Error!</string>
     <string name="try_again_button">Try again</string>
 

@@ -288,6 +288,14 @@
         <item quantity="other">%1$d фотографий</item>
     </plurals>
 
+    <!-- Выбор фото -->
+    <string name="photos_title">Фотографии</string>
+    <string name="photos_add">Добавить фото</string>
+    <string name="photos_view_fullscreen">На весь экран</string>
+    <string name="photos_add_subtitle_empty">Добавьте фото, максимум %1$d</string>
+    <string name="photos_add_subtitle_more">Можно добавить ещё %1$d</string>
+    <string name="photos_max_reached">Добавлено максимальное количество фотографий</string>
+
     <string name="error_label">Ошибка!</string>
     <string name="try_again_button">Попробовать снова</string>
 

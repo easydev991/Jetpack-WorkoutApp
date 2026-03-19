@@ -1,5 +1,6 @@
 package com.swparks.ui.screens.events
 
+import android.net.Uri
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,10 +36,12 @@ import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.DateTimePickerConfig
 import com.swparks.ui.ds.FormCardContainer
 import com.swparks.ui.ds.FormCardContainerParams
+import com.swparks.ui.ds.ImagePreviewDialog
 import com.swparks.ui.ds.KeyboardAwareBottomBar
 import com.swparks.ui.ds.ListRowData
 import com.swparks.ui.ds.ListRowView
 import com.swparks.ui.ds.LoadingOverlayView
+import com.swparks.ui.ds.PickedImagesGrid
 import com.swparks.ui.ds.SWButton
 import com.swparks.ui.ds.SWButtonMode
 import com.swparks.ui.ds.SWButtonSize
@@ -47,6 +50,7 @@ import com.swparks.ui.ds.SWDateTimePicker
 import com.swparks.ui.ds.SWTextEditor
 import com.swparks.ui.ds.SWTextField
 import com.swparks.ui.ds.TextFieldConfig
+import com.swparks.ui.ds.rememberPickedImagesController
 import com.swparks.ui.model.EventForm
 import com.swparks.ui.state.EventFormEvent
 import com.swparks.ui.viewmodel.EventFormAction
@@ -72,7 +76,12 @@ private data class EventFormContentParams(
     val form: EventForm,
     val canSelectPark: Boolean,
     val isEnabled: Boolean,
-    val onAction: (EventFormAction) -> Unit
+    val selectedPhotos: List<Uri>,
+    val maxNewPhotos: Int,
+    val onAction: (EventFormAction) -> Unit,
+    val onAddPhotoClick: () -> Unit,
+    val onPhotoRemove: (Uri) -> Unit,
+    val onPhotoPreview: (Uri) -> Unit
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -85,8 +94,19 @@ fun EventFormScreen(
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
     var showConfirmDialog by remember { mutableStateOf(false) }
+    var previewUri by remember { mutableStateOf<Uri?>(null) }
 
-    HandleEventFormEvents(viewModel = viewModel, onAction = onAction)
+    val photoPickerController = rememberPickedImagesController(
+        currentImageCount = uiState.selectedPhotos.size,
+        selectionLimit = uiState.maxNewPhotos,
+        onImagesSelected = viewModel::onPhotoSelected
+    )
+
+    HandleEventFormEvents(
+        viewModel = viewModel,
+        onAction = onAction,
+        onShowPhotoPicker = { photoPickerController.launch() }
+    )
 
     Scaffold(
         topBar = {
@@ -119,7 +139,12 @@ fun EventFormScreen(
                     form = uiState.form,
                     canSelectPark = uiState.canSelectPark,
                     isEnabled = !uiState.isSaving,
-                    onAction = viewModel::onAction
+                    selectedPhotos = uiState.selectedPhotos,
+                    maxNewPhotos = uiState.maxNewPhotos,
+                    onAction = viewModel::onAction,
+                    onAddPhotoClick = viewModel::onAddPhotoClick,
+                    onPhotoRemove = viewModel::onPhotoRemove,
+                    onPhotoPreview = { uri -> previewUri = uri }
                 )
             )
 
@@ -138,12 +163,24 @@ fun EventFormScreen(
             }
         )
     }
+
+    previewUri?.let { uri ->
+        ImagePreviewDialog(
+            uri = uri,
+            onDismiss = { previewUri = null },
+            onDelete = {
+                viewModel.onPhotoRemove(uri)
+                previewUri = null
+            }
+        )
+    }
 }
 
 @Composable
 private fun HandleEventFormEvents(
     viewModel: IEventFormViewModel,
-    onAction: (EventFormNavigationAction) -> Unit
+    onAction: (EventFormNavigationAction) -> Unit,
+    onShowPhotoPicker: () -> Unit
 ) {
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
@@ -158,7 +195,7 @@ private fun HandleEventFormEvents(
                 )
 
                 is EventFormEvent.ShowDatePicker -> {}
-                is EventFormEvent.ShowPhotoPicker -> {}
+                is EventFormEvent.ShowPhotoPicker -> onShowPhotoPicker()
             }
         }
     }
@@ -226,6 +263,17 @@ private fun EventFormContent(
             enabled = params.isEnabled,
             onDateChange = { params.onAction(EventFormAction.DateChange(it)) },
             onTimeChange = { h, m -> params.onAction(EventFormAction.TimeChange(h, m)) }
+        )
+
+        PickedImagesGrid(
+            images = params.selectedPhotos,
+            selectionLimit = params.maxNewPhotos,
+            onAddClick = params.onAddPhotoClick,
+            onRemoveClick = { index ->
+                params.selectedPhotos.getOrNull(index)?.let(params.onPhotoRemove)
+            },
+            onImageClick = { uri, _ -> params.onPhotoPreview(uri) },
+            enabled = params.isEnabled
         )
     }
 }

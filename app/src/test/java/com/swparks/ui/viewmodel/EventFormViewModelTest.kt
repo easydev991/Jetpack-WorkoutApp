@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import app.cash.turbine.test
 import com.swparks.data.model.Event
+import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.domain.provider.AvatarHelper
 import com.swparks.domain.usecase.ICreateEventUseCase
@@ -394,6 +395,160 @@ class EventFormViewModelTest {
 
         // Then
         assertTrue("Photos should be empty", viewModel.uiState.value.selectedPhotos.isEmpty())
+    }
+
+    // ==================== Лимит фото ====================
+
+    @Test
+    fun photosCount_returnsFormPhotosCount() = runTest {
+        // Given
+        val viewModel = createViewModel(EventFormMode.RegularCreate)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(0, viewModel.uiState.value.photosCount)
+    }
+
+    @Test
+    fun maxNewPhotos_returns15_whenNoExistingPhotos() = runTest {
+        // Given
+        val viewModel = createViewModel(EventFormMode.RegularCreate)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(15, viewModel.uiState.value.maxNewPhotos)
+    }
+
+    @Test
+    fun maxNewPhotos_returnsRemaining_whenExistingPhotosPresent() = runTest {
+        // Given
+        val event = createTestEvent().copy(
+            photos = listOf(
+                Photo(1, "photo1"), Photo(2, "photo2"), Photo(3, "photo3")
+            )
+        )
+        val mode = EventFormMode.EditExisting(eventId = 1L, event = event)
+        val viewModel = createViewModel(mode)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(12, viewModel.uiState.value.maxNewPhotos)
+    }
+
+    @Test
+    fun maxNewPhotos_returns0_whenPhotosLimitReached() = runTest {
+        // Given
+        val event = createTestEvent().copy(photos = List(15) { Photo(it.toLong(), "photo$it") })
+        val mode = EventFormMode.EditExisting(eventId = 1L, event = event)
+        val viewModel = createViewModel(mode)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(0, viewModel.uiState.value.maxNewPhotos)
+    }
+
+    @Test
+    fun remainingNewPhotos_returnsMaxNewPhotos_whenNoSelectedPhotos() = runTest {
+        // Given
+        val viewModel = createViewModel(EventFormMode.RegularCreate)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(15, viewModel.uiState.value.remainingNewPhotos)
+    }
+
+    @Test
+    fun remainingNewPhotos_returnsCorrectValue_whenSelectedPhotosPresent() = runTest {
+        // Given
+        val uri = mockk<Uri>()
+        every { avatarHelper.isSupportedMimeType(uri) } returns true
+
+        val viewModel = createViewModel(EventFormMode.RegularCreate)
+        advanceUntilIdle()
+        viewModel.onPhotoSelected(listOf(uri, uri, uri))
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(12, viewModel.uiState.value.remainingNewPhotos)
+    }
+
+    @Test
+    fun remainingNewPhotos_returns0_whenLimitReached() = runTest {
+        // Given
+        val uri = mockk<Uri>()
+        every { avatarHelper.isSupportedMimeType(uri) } returns true
+
+        val viewModel = createViewModel(EventFormMode.RegularCreate)
+        advanceUntilIdle()
+        viewModel.onPhotoSelected(List(15) { uri })
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(0, viewModel.uiState.value.remainingNewPhotos)
+    }
+
+    @Test
+    fun onPhotoSelected_capsToRemainingLimit() = runTest {
+        // Given
+        val event = createTestEvent().copy(photos = List(12) { Photo(it.toLong(), "photo$it") })
+        val mode = EventFormMode.EditExisting(eventId = 1L, event = event)
+
+        val uri = mockk<Uri>()
+        every { avatarHelper.isSupportedMimeType(uri) } returns true
+
+        val viewModel = createViewModel(mode)
+        advanceUntilIdle()
+
+        // When - try to add 5 photos but only 3 slots available
+        viewModel.onPhotoSelected(List(5) { uri })
+        advanceUntilIdle()
+
+        // Then - only 3 photos should be added
+        assertEquals(3, viewModel.uiState.value.selectedPhotos.size)
+        assertEquals(0, viewModel.uiState.value.remainingNewPhotos)
+    }
+
+    @Test
+    fun onPhotoSelected_logsWarning_whenLimitExceeded() = runTest {
+        // Given
+        val event = createTestEvent().copy(photos = List(12) { Photo(it.toLong(), "photo$it") })
+        val mode = EventFormMode.EditExisting(eventId = 1L, event = event)
+
+        val uri = mockk<Uri>()
+        every { avatarHelper.isSupportedMimeType(uri) } returns true
+
+        val viewModel = createViewModel(mode)
+        advanceUntilIdle()
+
+        // When
+        viewModel.onPhotoSelected(List(5) { uri })
+        advanceUntilIdle()
+
+        // Then
+        verify { logger.w(any(), any<String>()) }
+    }
+
+    @Test
+    fun onPhotoSelected_doesNotAddPhotos_whenNoSlotsAvailable() = runTest {
+        // Given
+        val event = createTestEvent().copy(photos = List(15) { Photo(it.toLong(), "photo$it") })
+        val mode = EventFormMode.EditExisting(eventId = 1L, event = event)
+
+        val uri = mockk<Uri>()
+        every { avatarHelper.isSupportedMimeType(uri) } returns true
+
+        val viewModel = createViewModel(mode)
+        advanceUntilIdle()
+
+        // When
+        viewModel.onPhotoSelected(listOf(uri))
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(
+            "Photos should be empty when no slots available",
+            viewModel.uiState.value.selectedPhotos.isEmpty()
+        )
     }
 
     // ==================== hasChanges ====================

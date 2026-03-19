@@ -107,7 +107,8 @@ class EventFormViewModel(
                     description = event.description,
                     date = normalizeDateForServer(event.beginDate),
                     parkId = event.parkID ?: 0L,
-                    parkName = "№${event.parkID ?: 0L}"
+                    parkName = "№${event.parkID ?: 0L}",
+                    photosCount = event.photos.size
                 )
                 EventFormUiState(
                     mode = mode,
@@ -250,10 +251,16 @@ class EventFormViewModel(
             logger.w(TAG, "Некоторые фото имеют неподдерживаемый формат")
         }
 
-        _uiState.update {
-            it.copy(selectedPhotos = it.selectedPhotos + validUris)
+        val remaining = _uiState.value.remainingNewPhotos
+        val cappedUris = validUris.take(remaining)
+        if (validUris.size > remaining) {
+            logger.w(TAG, "Превышен лимит фото: выбрано ${validUris.size}, доступно $remaining")
         }
-        logger.d(TAG, "Выбрано фото: ${validUris.size}")
+
+        _uiState.update {
+            it.copy(selectedPhotos = it.selectedPhotos + cappedUris)
+        }
+        logger.d(TAG, "Выбрано фото: ${cappedUris.size}")
     }
 
     override fun onPhotoRemove(uri: Uri) {

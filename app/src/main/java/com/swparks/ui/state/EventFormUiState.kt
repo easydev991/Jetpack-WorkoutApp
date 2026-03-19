@@ -24,6 +24,19 @@ data class EventFormUiState(
 
     val canSelectPark: Boolean
         get() = mode !is EventFormMode.CreateForSelected
+
+    val photosCount: Int
+        get() = form.photosCount
+
+    val maxNewPhotos: Int
+        get() = (PHOTOS_LIMIT - photosCount).coerceAtLeast(0)
+
+    val remainingNewPhotos: Int
+        get() = (maxNewPhotos - selectedPhotos.size).coerceAtLeast(0)
+
+    companion object {
+        const val PHOTOS_LIMIT = 15
+    }
 }
 
 sealed interface EventFormEvent {
