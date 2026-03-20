@@ -682,7 +682,8 @@ class SWRepositoryImp(
     ): Result<Park> =
         try {
             val photoParts = photos?.mapIndexed { index, bytes ->
-                NetworkUtils.createImagePart(bytes, "photo_$index")
+                val partName = "photo${index + 1}"
+                NetworkUtils.createImagePart(bytes, partName)
             }
 
             val park = if (id != null) {
@@ -804,7 +805,8 @@ class SWRepositoryImp(
     ): Result<Event> =
         try {
             val photoParts = photos?.mapIndexed { index, bytes ->
-                NetworkUtils.createImagePart(bytes, "photo_$index")
+                val partName = "photo${index + 1}"
+                NetworkUtils.createImagePart(bytes, partName)
             }
 
             val event = if (id != null) {

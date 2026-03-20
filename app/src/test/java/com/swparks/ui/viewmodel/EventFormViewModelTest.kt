@@ -817,6 +817,7 @@ class EventFormViewModelTest {
 
         every { avatarHelper.isSupportedMimeType(uri) } returns true
         every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
+        every { ImageUtils.convertToJpeg(imageBytes) } returns imageBytes
         every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
 
         val createdEvent = createTestEvent()

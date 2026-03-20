@@ -300,8 +300,12 @@ class EventFormViewModel(
         return uris.mapNotNull { uri ->
             avatarHelper.uriToByteArray(uri).fold(
                 onSuccess = { bytes ->
-                    val compressed = ImageUtils.compressIfNeeded(bytes)
-                    logger.d(TAG, "Фото подготовлено: ${bytes.size} -> ${compressed.size} bytes")
+                    val jpegBytes = ImageUtils.convertToJpeg(bytes)
+                    val compressed = ImageUtils.compressIfNeeded(jpegBytes)
+                    logger.d(
+                        TAG,
+                        "Фото подготовлено: ${bytes.size} -> ${jpegBytes.size} -> ${compressed.size} bytes"
+                    )
                     compressed
                 },
                 onFailure = { error ->

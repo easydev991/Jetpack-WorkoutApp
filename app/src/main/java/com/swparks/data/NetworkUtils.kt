@@ -40,18 +40,22 @@ object NetworkUtils {
         return value?.let { createPartWithName(name, it) }
     }
 
-    /**
-     * Создает часть multipart-запроса для файла изображения
-     */
-    fun createImagePart(data: ByteArray, name: String): MultipartBody.Part {
-        val requestFile = data.toRequestBody("image/*".toMediaType())
-        return MultipartBody.Part.createFormData(name, "$name.jpg", requestFile)
+    fun createImagePart(
+        data: ByteArray,
+        name: String,
+        filename: String = "$name.jpg",
+        mimeType: String = "image/jpeg"
+    ): MultipartBody.Part {
+        val requestFile = data.toRequestBody(mimeType.toMediaType())
+        return MultipartBody.Part.createFormData(name, filename, requestFile)
     }
 
-    /**
-     * Создает опциональную часть multipart-запроса для файла изображения
-     */
-    fun createOptionalImagePart(data: ByteArray?, name: String): MultipartBody.Part? {
-        return data?.let { createImagePart(it, name) }
+    fun createOptionalImagePart(
+        data: ByteArray?,
+        name: String,
+        filename: String = "$name.jpg",
+        mimeType: String = "image/jpeg"
+    ): MultipartBody.Part? {
+        return data?.let { createImagePart(it, name, filename, mimeType) }
     }
 }

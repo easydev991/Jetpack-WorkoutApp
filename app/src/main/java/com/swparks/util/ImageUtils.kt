@@ -60,6 +60,16 @@ object ImageUtils {
     }
 
     /**
+     * Пытается привести изображение к JPEG-формату.
+     *
+     * Если декодирование не удалось, возвращает исходные данные.
+     */
+    fun convertToJpeg(data: ByteArray, quality: Int = 100): ByteArray {
+        val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size) ?: return data
+        return compressBitmapToJpeg(bitmap, quality).takeIf { it.isNotEmpty() } ?: data
+    }
+
+    /**
      * Сжимает bitmap до достижения нужного размера.
      *
      * @param bitmap Bitmap для сжатия

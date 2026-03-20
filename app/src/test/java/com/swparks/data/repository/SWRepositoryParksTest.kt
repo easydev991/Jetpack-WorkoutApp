@@ -25,8 +25,10 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import okhttp3.MultipartBody
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -341,6 +343,122 @@ class SWRepositoryParksTest {
         // Then
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is NetworkException)
+    }
+
+    @Test
+    fun savePark_withPhotos_createsPhotoPartsWithCorrectNames() = runTest {
+        // Given
+        val mockPark = createMockPark(123L)
+        val mockApi = mockk<SWApi>()
+        val capturedPhotos = mutableListOf<List<MultipartBody.Part>?>()
+        coEvery {
+            mockApi.createPark(
+                address = any(),
+                latitude = any(),
+                longitude = any(),
+                cityId = any(),
+                typeId = any(),
+                sizeId = any(),
+                photos = captureNullable(capturedPhotos)
+            )
+        } returns mockPark
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao,
+            mockEventDao
+        )
+        val form = ParkForm(
+            address = "Test Address",
+            latitude = "0.0",
+            longitude = "0.0",
+            cityId = 1,
+            typeId = 1,
+            sizeId = 1
+        )
+        val photos = listOf(
+            ByteArray(10) { 0xFF.toByte() },
+            ByteArray(10) { 0xFE.toByte() },
+            ByteArray(10) { 0xFD.toByte() }
+        )
+
+        // When
+        val result = repository.savePark(null, form, photos)
+
+        // Then
+        assertTrue(result.isSuccess)
+        val capturedList = capturedPhotos.firstOrNull()
+        assertNotNull(capturedList)
+        assertEquals(3, capturedList?.size)
+
+        val photoNames = capturedList?.map { part ->
+            val contentDisposition = part.headers?.get("Content-Disposition") ?: ""
+            val nameMatch = Regex("""name="([^"]+)"""").find(contentDisposition)
+            nameMatch?.groupValues?.get(1)
+        }
+        assertEquals(listOf("photo1", "photo2", "photo3"), photoNames)
+    }
+
+    @Test
+    fun savePark_withPhotos_usesJpegMimeType() = runTest {
+        // Given
+        val mockPark = createMockPark(123L)
+        val mockApi = mockk<SWApi>()
+        val capturedPhotos = mutableListOf<List<MultipartBody.Part>?>()
+        coEvery {
+            mockApi.editPark(
+                parkId = any(),
+                address = any(),
+                latitude = any(),
+                longitude = any(),
+                cityId = any(),
+                typeId = any(),
+                sizeId = any(),
+                photos = captureNullable(capturedPhotos)
+            )
+        } returns mockPark
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao,
+            mockEventDao
+        )
+        val form = ParkForm(
+            address = "Test Address",
+            latitude = "0.0",
+            longitude = "0.0",
+            cityId = 1,
+            typeId = 1,
+            sizeId = 1
+        )
+        val photos = listOf(ByteArray(10) { 0xFF.toByte() })
+
+        // When
+        val result = repository.savePark(123L, form, photos)
+
+        // Then
+        assertTrue(result.isSuccess)
+        val capturedList = capturedPhotos.firstOrNull()
+        assertNotNull(capturedList)
+        assertEquals(1, capturedList?.size)
+
+        val contentType = capturedList?.first()?.body?.contentType()
+        assertNotNull(contentType)
+        assertEquals("image/jpeg", contentType.toString())
     }
 
     @Test
