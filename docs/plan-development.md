@@ -11,35 +11,36 @@
 ### Android-приложение (Jetpack-WorkoutApp)
 
 - 🚧 **В активной разработке**
-- ✅ Дизайн-система: 31 компонент
-- ✅ Модели данных: 17 API + 6 доменные + 15 UI моделей
+- ✅ Дизайн-система: 41 компонент
+- ✅ Модели данных: 17 API + 7 доменных + 20 UI моделей
 - ✅ API клиент SWApi: 57 endpoints
 - ✅ Безопасность токена: шифрование, интерцепторы
-- ✅ Use Cases: авторизация, справочники, дневники (32 use cases)
-- ✅ ViewModels: 36 ViewModels (Auth, Login, Register, ThemeIcon, Events, Profile, EditProfile, MainActivity, FriendsList, Blacklist, UserTrainingParks, Journals, JournalEntries, TextEntry, ChangePassword, SearchUser, OtherUserProfile, Dialogs)
+- ✅ Use Cases: 24 use case (44 файла с интерфейсами)
+- ✅ ViewModels: 25 ViewModel (48 файлов с интерфейсами и UiState)
 - ✅ Namespace: `com.swparks`
 
 #### Реализованные экраны
 
 **Полностью реализованы (Domain, Data, UI, тесты):**
 - RootScreen, MoreScreen, ThemeIconScreen, LoginScreen
-- EditProfileScreen (включает выбор страны/города), ChangePasswordScreen, OtherUserProfileScreen, SearchUserScreen
-- RegisterUserScreen (включает выбор страны/города)
+- EditProfileScreen (включает SelectCountryScreen/SelectCityScreen), ChangePasswordScreen, OtherUserProfileScreen, SearchUserScreen
+- RegisterUserScreen (включает RegisterSelectCountryScreen/RegisterSelectCityScreen)
 - MyFriendsScreen (включает запросы в друзья), MyBlacklistScreen, UserFriendsScreen, ProfileRootScreen, UserTrainingParksScreen
 - JournalsListScreen (100% - 4 итерации, включает создание/удаление, унифицированные уведомления), JournalEntriesScreen (6 итераций, включает создание/редактирование/удаление записей), JournalSettingsDialog
-- TextEntryScreen, MessagesRootScreen
+- TextEntryScreen, MessagesRootScreen, ChatScreen
+- EventsScreen, EventFormScreen, ParticipantsScreen
 
-**Частично реализованы (базовый функционал):** EventsScreen, ParksRootScreen, ParksAddedByUserScreen, FeedbackSender, ItemListScreen
+**Частично реализованы (базовый функционал):** EventDetailScreen, ParksRootScreen, ParksAddedByUserScreen, PhotoDetailScreen, FeedbackSender, ItemListScreen
 
-**Не реализованы:** часть экранов вкладки "Площадки" и отдельные специализированные сценарии (в т.ч. ParksMap/ParksList расширенные режимы и связанные подэкраны)
+**Не реализованы:** часть экранов вкладки "Площадки" (ParksMap/ParksList расширенные режимы) и отдельные специализированные сценарии
 
 #### Реализованные модели данных
 
-**API модели (17):** User, Park, Event, Comment, Photo, JournalResponse, JournalEntryResponse, DialogResponse, MessageResponse, City, Country, ParkType, ParkSize, EventKind, EventType, SocialUpdates, ApiFriendAction, ApiBlacklistOption
+**API модели (17):** User, Park, Event, Comment, Photo, JournalResponse, JournalEntryResponse, DialogResponse, MessageResponse, City, Country, ParkType, ParkSize, LoginSuccess, SocialUpdates, ApiFriendAction, ApiBlacklistOption
 
-**Доменные модели (6):** AppIcon, AppTheme, Journal, JournalEntry, FriendAction, EditProfileLocations
+**Доменные модели (7):** AppIcon, AppTheme, Journal, JournalEntry, FriendAction, EditProfileLocations, RegistrationParams
 
-**UI модели (15):** LoginCredentials, ParkForm, EventForm, MainUserForm, RegisterForm, ResetPasswordRequest, EditJournalSettingsRequest, FriendAction, BlacklistAction, Gender, JournalAccess, TextEntryOption, EditInfo, EventKind, EventType, TextEntryMode
+**UI модели (20):** LoginCredentials, ParkForm, EventForm, MainUserForm, RegisterForm, EditJournalSettingsRequest, FriendAction, BlacklistAction, Gender, JournalAccess, TextEntryOption, TextEntryMode, EditInfo, EventKind, EventType, EventFormMode, ParticipantsMode, PickedImageItem, PickedImagesState, MapUriSet
 
 #### Реализованная архитектура
 
@@ -49,9 +50,9 @@
 
 **Security:** CryptoManager (AES-128-GCM-HKDF), EncryptedStringSerializer
 
-**Domain Layer:** 32 use cases (авторизация, справочники, дневники, смена пароля, удаление пользователя), IconManager, исключения (ServerException, NetworkException)
+**Domain Layer:** 24 use case (44 файла с интерфейсами: авторизация, справочники, дневники, события, смена пароля, удаление пользователя), IconManager, исключения (ServerException, NetworkException)
 
-**UI layer:** 36 ViewModels
+**UI layer:** 25 ViewModel (48 файлов с интерфейсами и UiState)
 
 ---
 
@@ -274,13 +275,13 @@ app/src/main/java/com/swparks/
 ├── data/              # Data layer (repository, crypto, datetime, interceptor, serialization, database, model)
 │   └── model/         # API модели и DTOs (17 файлов)
 ├── domain/            # Domain layer (exception, usecase, model)
-│   └── model/         # Доменные модели (4 файла)
+│   └── model/         # Доменные модели (7 файлов)
 ├── network/           # API клиенты (SWApi - 57 endpoints)
 ├── ui/
-│   ├── ds/            # Компоненты дизайн-системы (28)
-│   ├── model/         # UI формы и запросы (14 файлов)
-│   ├── screens/       # Экраны приложения
-│   ├── viewmodel/     # ViewModels
+│   ├── ds/            # Компоненты дизайн-системы (41)
+│   ├── model/         # UI формы и запросы (20 файлов)
+│   ├── screens/       # Экраны приложения (32 экрана)
+│   ├── viewmodel/     # ViewModels (25 + интерфейсы)
 │   └── theme/         # Тема
 ├── navigation/        # Навигация
 └── util/              # Утилиты
@@ -289,8 +290,8 @@ app/src/main/java/com/swparks/
 ### Структура тестов
 
 ```
-app/src/test/java/com/swparks/          # Unit-тесты (766+)
-app/src/androidTest/java/com/swparks/    # Интеграционные и UI тесты
+app/src/test/java/com/swparks/          # Unit-тесты (113)
+app/src/androidTest/java/com/swparks/    # Интеграционные и UI тесты (23)
 ```
 
 ---
@@ -309,7 +310,7 @@ app/src/androidTest/java/com/swparks/    # Интеграционные и UI т
 
 ### Компоненты дизайн-системы
 
-- ✅ 31 компонент готов к использованию
+- ✅ 41 компонент готов к использованию
 
 ---
 
@@ -349,11 +350,11 @@ app/src/androidTest/java/com/swparks/    # Интеграционные и UI т
 
 ### Тестирование
 
-**85+ unit-тестов:** Data, Domain, Model, ViewModel, UI state, Utils, Network
+**113 unit-тестов:** Data, Domain, Model, ViewModel, UI state, Utils, Network
 
-**17 интеграционных и UI тестов:**
+**23 интеграционных и UI тестов:**
 - Интеграционные: CryptoManagerIntegrationTest, JournalEntryDaoTest
-- UI тесты: LoginScreen, MoreScreen, ThemeIconScreen, MyFriendsScreen, MyBlacklistScreen, ProfileRootScreen, UserFriendsScreen, OtherUserProfileScreen, SearchUserScreen, RootScreen, JournalsListScreen, JournalEntriesScreen, JournalSettingsDialog, TextEntryScreen, MessagesRootScreen
+- UI тесты: LoginScreen, MoreScreen, ThemeIconScreen, MyFriendsScreen, MyBlacklistScreen, ProfileRootScreen, UserFriendsScreen, OtherUserProfileScreen, SearchUserScreen, RootScreen, JournalsListScreen, JournalEntriesScreen, JournalSettingsDialog, TextEntryScreen, MessagesRootScreen, ChatScreen, EventsScreen, EventFormScreen, ParticipantsScreen
 
 ---
 
@@ -370,3 +371,4 @@ app/src/androidTest/java/com/swparks/    # Интеграционные и UI т
 - **2026-02-23:** Актуализация статусов - вкладка "Профиль" ✅ ЗАВЕРШЕНО, JournalsListScreen 100% реализован (4 итерации: базовый экран, удаление, создание, унифицированные уведомления), JournalEntriesScreen реализован (6 итераций с багфиксами, включает создание/редактирование/удаление записей), JournalSettingsDialog реализован, уточнение функционала (запросы в друзья в MyFriendsScreen, выбор страны/города встроен в EditProfileScreen и RegisterUserScreen)
 - **2026-03-02:** Вкладка "Сообщения" (Messages) ✅ ЗАВЕРШЕНО - ChatScreen реализован (ChatViewModel, ChatScreen.kt, 15 unit-тестов), включает: отправка сообщений, markAsRead через repository, обновление списка диалогов через SharedFlow, автопрокрутка, блокировка ввода при отправке
 - **2026-03-17:** Актуализация навигации и документации - в `RootScreen` реализованы и подключены `EventDetail/EditEvent/EventParticipants`, `ParkDetail/CreatePark/EditPark`, `Chat`, а также typed args parsers/coordinators для key navigation flows.
+- **2026-03-21:** Актуализация метрик проекта - 41 компонент дизайн-системы, 24 use case, 25 ViewModel, 113 unit-тестов, 23 интеграционных/UI тестов, 32 экрана (18 с UI тестами), новые модели (RegistrationParams, EventFormMode, ParticipantsMode, PickedImageItem, PickedImagesState, MapUriSet)
