@@ -25,6 +25,9 @@ import com.swparks.ui.viewmodel.PhotoDetailViewModel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
+internal fun buildPhotoDetailViewModelKey(config: PhotoDetailConfig): String =
+    "photo_${config.ownerType.name}_${config.parentId}_${config.photoId}"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PhotoDetailSheetHost(
@@ -38,13 +41,9 @@ fun PhotoDetailSheetHost(
     val appContainer = (context.applicationContext as JetpackWorkoutApplication).container
 
     val viewModel: PhotoDetailViewModel = viewModel(
-        key = "photo_${config.photoId}",
+        key = buildPhotoDetailViewModelKey(config),
         factory = PhotoDetailViewModel.factoryWithConfig(
-            photoId = config.photoId,
-            eventId = config.eventId,
-            eventTitle = config.eventTitle,
-            isEventAuthor = config.isEventAuthor,
-            photoUrl = config.photoUrl,
+            config = config,
             swRepository = appContainer.swRepository,
             userPreferencesRepository = appContainer.userPreferencesRepository,
             logger = appContainer.logger,

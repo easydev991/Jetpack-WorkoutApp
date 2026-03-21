@@ -31,6 +31,7 @@ import com.swparks.navigation.AppState
 import com.swparks.navigation.BottomNavigationBar
 import com.swparks.navigation.EditEventNavArgsViewModel
 import com.swparks.navigation.EventParticipantsNavArgsViewModel
+import com.swparks.navigation.ParkTraineesNavArgsViewModel
 import com.swparks.navigation.Screen
 import com.swparks.navigation.consumeJournalEntriesArgs
 import com.swparks.navigation.consumeSelectedParkResult
@@ -38,6 +39,7 @@ import com.swparks.navigation.consumeUserAddedParksArgs
 import com.swparks.navigation.consumeUserIdSourceArgs
 import com.swparks.navigation.navigateToEditEvent
 import com.swparks.navigation.navigateToEventParticipants
+import com.swparks.navigation.navigateToParkTrainees
 import com.swparks.navigation.setSelectedParkResult
 import com.swparks.ui.common.appViewModel
 import com.swparks.ui.model.EventFormMode
@@ -70,6 +72,7 @@ import com.swparks.ui.screens.messages.MessagesRootScreen
 import com.swparks.ui.screens.messages.MessagesTopAppBar
 import com.swparks.ui.screens.more.MoreScreen
 import com.swparks.ui.screens.more.MoreTopAppBar
+import com.swparks.ui.screens.parks.ParkDetailScreen
 import com.swparks.ui.screens.parks.ParksAddedByUserScreen
 import com.swparks.ui.screens.parks.ParksRootScreen
 import com.swparks.ui.screens.parks.ParksTopAppBar
@@ -105,6 +108,7 @@ import com.swparks.ui.viewmodel.FriendsListViewModel
 import com.swparks.ui.viewmodel.JournalEntriesViewModel
 import com.swparks.ui.viewmodel.JournalsViewModel
 import com.swparks.ui.viewmodel.OtherUserProfileViewModel
+import com.swparks.ui.viewmodel.ParkDetailViewModel
 import com.swparks.ui.viewmodel.SearchUserViewModel
 import com.swparks.ui.viewmodel.ThemeIconViewModel
 import com.swparks.ui.viewmodel.UserAddedParksViewModel
@@ -286,8 +290,8 @@ fun RootScreen(appState: AppState) {
                         .fillMaxSize()
                         .padding(paddingValues),
                     parks = parks,
-                    onParkClick = {
-                        Log.d("ParksRootScreen", "Нажата площадка: ${it.name}")
+                    onParkClick = { park ->
+                        appState.navController.navigate(Screen.ParkDetail.createRoute(park.id))
                     }
                 )
             }
@@ -380,9 +384,55 @@ fun RootScreen(appState: AppState) {
                 )
             }
 
-            // Детальные экраны площадок (будут добавлены позже)
-            composable(route = Screen.ParkDetail.route) {
-                // TODO: Реализовать ParkDetailScreen
+            composable(
+                route = Screen.ParkDetail.route,
+                arguments = listOf(
+                    androidx.navigation.navArgument("parkId") {
+                        type = androidx.navigation.NavType.LongType
+                    },
+                    androidx.navigation.navArgument("source") {
+                        type = androidx.navigation.NavType.StringType
+                        defaultValue = "parks"
+                    }
+                )
+            ) { navBackStackEntry ->
+                val parkDetailViewModel = viewModel<ParkDetailViewModel>(
+                    factory = ParkDetailViewModel.factory(
+                        swRepository = appContainer.swRepository,
+                        countriesRepository = appContainer.countriesRepository,
+                        userPreferencesRepository = appContainer.userPreferencesRepository,
+                        userNotifier = appContainer.userNotifier,
+                        logger = appContainer.logger
+                    )
+                )
+
+                ParkDetailScreen(
+                    viewModel = parkDetailViewModel,
+                    onBack = { appState.navController.popBackStack() },
+                    onParkDeleted = { parkId ->
+                        Log.d("RootScreen", "Площадка удалена: $parkId")
+                        appState.navController.popBackStack()
+                    },
+                    onNavigateToUserProfile = { userId ->
+                        val source = navBackStackEntry.arguments?.getString("source") ?: "parks"
+                        appState.navController.navigate(
+                            Screen.OtherUserProfile.createRoute(userId, source)
+                        )
+                    },
+                    onNavigateToTrainees = { parkId, source, users ->
+                        appState.navController.navigateToParkTrainees(
+                            parkId = parkId,
+                            source = source,
+                            users = users
+                        )
+                    },
+                    onNavigateToCreateEvent = { parkId, parkName ->
+                        appState.navController.navigate(
+                            Screen.CreateEventForPark.createRoute(parkId, parkName, "parks")
+                        )
+                    },
+                    parentPaddingValues = paddingValues
+                )
             }
 
             composable(route = Screen.CreatePark.route) {
@@ -405,25 +455,31 @@ fun RootScreen(appState: AppState) {
                     }
                 )
             ) { navBackStackEntry ->
-                val source = navBackStackEntry.arguments?.getString("source") ?: "parks"
-
-                // Список для ParkTrainees должен приходить из ParkDetail (экран в разработке).
-                // Пока используем пустой список как заглушку до реализации ParkDetail.
-                ParticipantsScreen(
-                    config = ParticipantsConfig(
-                        mode = ParticipantsMode.Park,
-                        users = emptyList(),
-                        currentUserId = currentUser?.id
-                    ),
-                    onAction = { action ->
-                        when (action) {
-                            ParticipantsAction.Back -> appState.navController.popBackStack()
-                            is ParticipantsAction.UserClick -> appState.navController.navigate(
-                                Screen.OtherUserProfile.createRoute(action.userId, source)
-                            )
-                        }
-                    }
+                val parkTraineesArgsViewModel: ParkTraineesNavArgsViewModel = viewModel(
+                    factory = ParkTraineesNavArgsViewModel.factory(navBackStackEntry)
                 )
+                val parkTraineesArgs = parkTraineesArgsViewModel.args
+
+                if (parkTraineesArgs != null) {
+                    ParticipantsScreen(
+                        config = ParticipantsConfig(
+                            mode = ParticipantsMode.Park,
+                            users = parkTraineesArgs.users,
+                            currentUserId = currentUser?.id
+                        ),
+                        onAction = { action ->
+                            when (action) {
+                                ParticipantsAction.Back -> appState.navController.popBackStack()
+                                is ParticipantsAction.UserClick -> appState.navController.navigate(
+                                    Screen.OtherUserProfile.createRoute(
+                                        action.userId,
+                                        parkTraineesArgs.source
+                                    )
+                                )
+                            }
+                        }
+                    )
+                }
             }
 
             // Детальные экраны мероприятий
@@ -861,7 +917,7 @@ fun RootScreen(appState: AppState) {
                         viewModel = viewModel,
                         onBackClick = { appState.navController.popBackStack() },
                         onParkClick = { park ->
-                            Log.d("RootScreen", "Нажата площадка: ${park.name}")
+                            appState.navController.navigate(Screen.ParkDetail.createRoute(park.id, "profile"))
                         },
                         parentPaddingValues = paddingValues
                     )

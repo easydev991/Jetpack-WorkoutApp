@@ -115,6 +115,7 @@ interface SWRepository {
     suspend fun getParksForUser(userId: Long): Result<List<Park>>
     suspend fun changeTrainHereStatus(trainHere: Boolean, parkId: Long): Result<Unit>
     suspend fun getUpdatedParks(date: String): Result<List<Park>>
+    suspend fun deleteParkPhoto(parkId: Long, photoId: Long): Result<Unit>
 
     // 3.5. Мероприятия
     suspend fun getEvents(type: EventType): Result<List<Event>>
@@ -771,6 +772,35 @@ class SWRepositoryImp(
             Result.failure(handleIOException(e, "загрузке обновленных площадок"))
         } catch (e: HttpException) {
             Result.failure(handleHttpException(e, "загрузке обновленных площадок"))
+        }
+
+    override suspend fun deleteParkPhoto(parkId: Long, photoId: Long): Result<Unit> =
+        try {
+            val response = swApi.deleteParkPhoto(parkId, photoId)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = if (errorBody != null) {
+                    try {
+                        val errorResponse = json.decodeFromString<ErrorResponse>(errorBody)
+                        errorResponse.realMessage ?: "Ошибка сервера: ${response.code()}"
+                    } catch (e: Exception) {
+                        Log.w(
+                            TAG,
+                            "Не удалось распарсить ошибку удаления фото площадки: ${e.message}"
+                        )
+                        "Ошибка сервера: ${response.code()}"
+                    }
+                } else {
+                    "Ошибка сервера: ${response.code()}"
+                }
+                Result.failure(ServerException(message = errorMessage))
+            }
+        } catch (e: IOException) {
+            Result.failure(handleIOException(e, "удалении фото площадки"))
+        } catch (e: HttpException) {
+            Result.failure(handleHttpException(e, "удалении фото площадки"))
         }
 
     // 3.5. Мероприятия

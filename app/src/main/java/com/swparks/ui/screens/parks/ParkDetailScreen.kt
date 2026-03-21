@@ -1,10 +1,9 @@
 @file:Suppress("LongMethod", "CyclomaticComplexMethod")
 
-package com.swparks.ui.screens.events
+package com.swparks.ui.screens.parks
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.provider.CalendarContract
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -14,9 +13,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,40 +42,48 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
-import com.swparks.data.model.Event
 import com.swparks.data.model.User
 import com.swparks.ui.ds.ErrorContentView
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.screens.common.TextEntrySheetHost
 import com.swparks.ui.screens.more.sendComplaint
+import com.swparks.ui.screens.parks.sections.CommentItemAction
+import com.swparks.ui.screens.parks.sections.CommentItemConfig
+import com.swparks.ui.screens.parks.sections.ParkAddCommentButton
+import com.swparks.ui.screens.parks.sections.ParkAuthorConfig
+import com.swparks.ui.screens.parks.sections.ParkAuthorSection
+import com.swparks.ui.screens.parks.sections.ParkCommentItem
+import com.swparks.ui.screens.parks.sections.ParkHeaderAction
+import com.swparks.ui.screens.parks.sections.ParkHeaderMapSection
+import com.swparks.ui.screens.parks.sections.ParkParticipantsSection
+import com.swparks.ui.screens.parks.sections.ParkPhotosSection
 import com.swparks.ui.screens.photos.PhotoDetailSheetHost
-import com.swparks.ui.state.EventDetailUIState
+import com.swparks.ui.state.ParkDetailUIState
 import com.swparks.ui.state.PhotoDetailConfig
 import com.swparks.ui.state.PhotoOwner
-import com.swparks.ui.viewmodel.EventDetailEvent
-import com.swparks.ui.viewmodel.IEventDetailViewModel
-import com.swparks.util.DateFormatter
+import com.swparks.ui.viewmodel.IParkDetailViewModel
+import com.swparks.ui.viewmodel.ParkDetailEvent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventDetailScreen(
-    viewModel: IEventDetailViewModel,
+fun ParkDetailScreen(
+    viewModel: IParkDetailViewModel,
     onBack: () -> Unit,
-    onEventDeleted: (Long) -> Unit,
+    onParkDeleted: (Long) -> Unit,
     onNavigateToUserProfile: (Long) -> Unit,
-    onNavigateToParticipants: (Long, List<User>) -> Unit,
-    onNavigateToEditEvent: (Event) -> Unit,
+    onNavigateToTrainees: (Long, String, List<User>) -> Unit,
+    onNavigateToCreateEvent: (Long, String) -> Unit,
     parentPaddingValues: PaddingValues
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isAuthorized by viewModel.isAuthorized.collectAsState()
-    val isEventAuthor by viewModel.isEventAuthor.collectAsState()
+    val isParkAuthor by viewModel.isParkAuthor.collectAsState()
     val currentUserId by viewModel.currentUserId.collectAsState()
 
-    var showDeleteEventDialog by remember { mutableStateOf(false) }
+    var showDeleteParkDialog by remember { mutableStateOf(false) }
     var showDeletePhotoDialog by remember { mutableStateOf(false) }
     var showDeleteCommentDialog by remember { mutableStateOf(false) }
     var showTextEntrySheet by remember { mutableStateOf(false) }
@@ -81,30 +94,12 @@ fun EventDetailScreen(
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
-                EventDetailEvent.ShowDeleteConfirmDialog -> showDeleteEventDialog = true
-                is EventDetailEvent.ShowDeletePhotoConfirmDialog -> showDeletePhotoDialog = true
-                EventDetailEvent.ShowDeleteCommentConfirmDialog -> showDeleteCommentDialog = true
-                is EventDetailEvent.EventDeleted -> onEventDeleted(event.eventId)
-                is EventDetailEvent.NavigateToEditEvent -> onNavigateToEditEvent(event.event)
-                is EventDetailEvent.PhotoDeleted -> Unit
-                is EventDetailEvent.OpenCalendar -> {
-                    val beginTime = DateFormatter.parseIsoDateToMillis(event.beginDate)
-                    val intent = Intent(Intent.ACTION_INSERT).apply {
-                        data = CalendarContract.Events.CONTENT_URI
-                        putExtra(CalendarContract.Events.TITLE, event.title)
-                        putExtra(CalendarContract.Events.EVENT_LOCATION, event.address)
-                        if (beginTime != null) {
-                            putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, beginTime)
-                        }
-                    }
-                    try {
-                        context.startActivity(intent)
-                    } catch (_: ActivityNotFoundException) {
-                        viewModel.onAddToCalendarFailed()
-                    }
-                }
-
-                is EventDetailEvent.OpenMap -> {
+                ParkDetailEvent.ShowDeleteConfirmDialog -> showDeleteParkDialog = true
+                is ParkDetailEvent.ShowDeletePhotoConfirmDialog -> showDeletePhotoDialog = true
+                ParkDetailEvent.ShowDeleteCommentConfirmDialog -> showDeleteCommentDialog = true
+                is ParkDetailEvent.ParkDeleted -> onParkDeleted(event.parkId)
+                is ParkDetailEvent.PhotoDeleted -> Unit
+                is ParkDetailEvent.OpenMap -> {
                     viewModel.mapUriSet?.let { mapUriSet ->
                         val intent = Intent(Intent.ACTION_VIEW, mapUriSet.geoUri)
                         try {
@@ -115,7 +110,7 @@ fun EventDetailScreen(
                     }
                 }
 
-                is EventDetailEvent.BuildRoute -> {
+                is ParkDetailEvent.BuildRoute -> {
                     viewModel.mapUriSet?.let { mapUriSet ->
                         val navigationIntent = Intent(Intent.ACTION_VIEW, mapUriSet.navigationUri)
                         try {
@@ -128,33 +123,39 @@ fun EventDetailScreen(
                     }
                 }
 
-                is EventDetailEvent.NavigateToParticipants -> {
-                    onNavigateToParticipants(event.eventId, event.users)
+                is ParkDetailEvent.NavigateToTrainees -> {
+                    onNavigateToTrainees(event.parkId, "park", event.users)
                 }
 
-                is EventDetailEvent.SendCommentComplaint -> {
+                is ParkDetailEvent.NavigateToCreateEvent -> {
+                    onNavigateToCreateEvent(event.parkId, event.parkName)
+                }
+
+                is ParkDetailEvent.SendCommentComplaint -> {
                     sendComplaint(
                         complaint = event.complaint,
                         context = context
                     )
                 }
 
-                is EventDetailEvent.OpenCommentTextEntry -> {
+                is ParkDetailEvent.OpenCommentTextEntry -> {
                     textEntryMode = event.mode
                     showTextEntrySheet = true
                 }
 
-                is EventDetailEvent.NavigateToPhotoDetail -> {
+                is ParkDetailEvent.NavigateToPhotoDetail -> {
                     photoDetailConfig = PhotoDetailConfig(
                         photoId = event.photo.id,
-                        parentId = event.eventId,
-                        parentTitle = event.eventTitle,
-                        isAuthor = event.isEventAuthor,
+                        parentId = event.parkId,
+                        parentTitle = event.parkTitle,
+                        isAuthor = event.isParkAuthor,
                         photoUrl = event.photo.photo,
-                        ownerType = PhotoOwner.Event
+                        ownerType = PhotoOwner.Park
                     )
                     showPhotoDetailSheet = true
                 }
+
+                is ParkDetailEvent.ParkUpdated -> Unit
             }
         }
     }
@@ -164,7 +165,7 @@ fun EventDetailScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.event_title)) },
+                title = { Text(stringResource(R.string.park_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -175,21 +176,21 @@ fun EventDetailScreen(
                 },
                 actions = {
                     val state = uiState
-                    if (state is EventDetailUIState.Content) {
-                        EventShareButton(
+                    if (state is ParkDetailUIState.Content) {
+                        ParkShareButton(
                             isRefreshing = isRefreshing,
                             onShareClick = {
                                 val sendIntent = Intent().apply {
                                     action = Intent.ACTION_SEND
-                                    putExtra(Intent.EXTRA_TEXT, state.event.shareLinkStringURL)
+                                    putExtra(Intent.EXTRA_TEXT, state.park.shareLinkStringURL)
                                     type = "text/plain"
                                 }
                                 context.startActivity(Intent.createChooser(sendIntent, null))
                             }
                         )
                     }
-                    if (isAuthorized && isEventAuthor) {
-                        EventAuthorActionsButton(
+                    if (isAuthorized && isParkAuthor) {
+                        ParkAuthorActionsButton(
                             isRefreshing = isRefreshing,
                             onEditClick = viewModel::onEditClick,
                             onDeleteClick = viewModel::onDeleteClick
@@ -200,13 +201,13 @@ fun EventDetailScreen(
         }
     ) { paddingValues ->
         when (val state = uiState) {
-            EventDetailUIState.InitialLoading -> LoadingOverlayView(
+            ParkDetailUIState.InitialLoading -> LoadingOverlayView(
                 modifier = Modifier
                     .padding(parentPaddingValues)
                     .padding(paddingValues)
             )
 
-            is EventDetailUIState.Error -> ErrorContentView(
+            is ParkDetailUIState.Error -> ErrorContentView(
                 modifier = Modifier
                     .padding(parentPaddingValues)
                     .padding(paddingValues),
@@ -214,7 +215,7 @@ fun EventDetailScreen(
                 retryAction = viewModel::refresh
             )
 
-            is EventDetailUIState.Content -> {
+            is ParkDetailUIState.Content -> {
                 PullToRefreshBox(
                     isRefreshing = isRefreshing,
                     onRefresh = viewModel::refresh,
@@ -230,40 +231,36 @@ fun EventDetailScreen(
                         )
                     ) {
                         item {
-                            EventHeaderMapCalendarSection(
-                                event = state.event,
+                            ParkHeaderMapSection(
+                                park = state.park,
                                 address = state.address,
+                                isAuthorized = isAuthorized,
                                 isRefreshing = isRefreshing,
                                 onAction = { action ->
                                     when (action) {
-                                        EventHeaderAction.OpenMap -> viewModel.onOpenMapClick()
-                                        EventHeaderAction.Route -> viewModel.onRouteClick()
-                                        EventHeaderAction.AddToCalendar -> viewModel.onAddToCalendarClick()
+                                        ParkHeaderAction.OpenMap -> viewModel.onOpenMapClick()
+                                        ParkHeaderAction.Route -> viewModel.onRouteClick()
+                                        ParkHeaderAction.CreateEvent -> viewModel.onCreateEventClick()
                                     }
                                 }
                             )
                         }
 
                         item {
-                            EventParticipantsSection(
-                                event = state.event,
+                            ParkParticipantsSection(
+                                park = state.park,
                                 isAuthorized = isAuthorized,
                                 isRefreshing = isRefreshing,
-                                onParticipantToggle = viewModel::onParticipantToggle,
-                                onClickParticipants = viewModel::onParticipantsCountClick
+                                onParticipantToggle = viewModel::onTrainHereToggle,
+                                onClickParticipants = viewModel::onTraineesCountClick
                             )
                         }
 
-                        if (state.event.description.isNotBlank()) {
+                        val photos = state.park.photos.orEmpty()
+                        if (photos.isNotEmpty()) {
                             item {
-                                EventDescriptionSection(description = state.event.description)
-                            }
-                        }
-
-                        if (state.event.photos.isNotEmpty()) {
-                            item {
-                                EventPhotosSection(
-                                    photos = state.event.photos,
+                                ParkPhotosSection(
+                                    photos = photos,
                                     isRefreshing = isRefreshing,
                                     onPhotoClick = viewModel::onPhotoClick
                                 )
@@ -271,23 +268,23 @@ fun EventDetailScreen(
                         }
 
                         item {
-                            EventAuthorSection(
-                                event = state.event,
+                            ParkAuthorSection(
+                                park = state.park,
                                 address = state.authorAddress,
-                                config = EventAuthorConfig(
+                                config = ParkAuthorConfig(
                                     isAuthorized = isAuthorized,
                                     isRefreshing = isRefreshing,
-                                    isEventAuthor = isEventAuthor
+                                    isParkAuthor = isParkAuthor
                                 ),
                                 onAuthorClick = onNavigateToUserProfile
                             )
                         }
 
                         itemsIndexed(
-                            state.event.comments.orEmpty(),
+                            state.park.comments.orEmpty(),
                             key = { _, comment -> comment.id }
                         ) { index, comment ->
-                            EventCommentItem(
+                            ParkCommentItem(
                                 comment = comment,
                                 config = CommentItemConfig(
                                     enabled = isAuthorized && !isRefreshing,
@@ -313,7 +310,7 @@ fun EventDetailScreen(
                         }
 
                         item {
-                            EventAddCommentButton(
+                            ParkAddCommentButton(
                                 isAuthorized = isAuthorized,
                                 isRefreshing = isRefreshing,
                                 onAddCommentClick = viewModel::onAddCommentClick
@@ -325,20 +322,20 @@ fun EventDetailScreen(
         }
     }
 
-    if (showDeleteEventDialog) {
+    if (showDeleteParkDialog) {
         AlertDialog(
             onDismissRequest = {
-                showDeleteEventDialog = false
+                showDeleteParkDialog = false
                 viewModel.onDeleteDismiss()
             },
-            title = { Text(text = stringResource(R.string.event_delete_confirm_title)) },
+            title = { Text(text = stringResource(R.string.delete_ground)) },
             confirmButton = {
                 TextButton(
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = MaterialTheme.colorScheme.error
                     ),
                     onClick = {
-                        showDeleteEventDialog = false
+                        showDeleteParkDialog = false
                         viewModel.onDeleteConfirm()
                     }
                 ) {
@@ -348,7 +345,7 @@ fun EventDetailScreen(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        showDeleteEventDialog = false
+                        showDeleteParkDialog = false
                         viewModel.onDeleteDismiss()
                     }
                 ) {
@@ -450,5 +447,79 @@ fun EventDetailScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun ParkShareButton(
+    isRefreshing: Boolean,
+    onShareClick: () -> Unit
+) {
+    IconButton(
+        onClick = onShareClick,
+        enabled = !isRefreshing
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Share,
+            contentDescription = stringResource(R.string.park_share)
+        )
+    }
+}
+
+@Composable
+private fun ParkAuthorActionsButton(
+    isRefreshing: Boolean,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
+    var showMenu by remember { mutableStateOf(false) }
+
+    androidx.compose.foundation.layout.Box {
+        IconButton(
+            onClick = { showMenu = true },
+            enabled = !isRefreshing
+        ) {
+            Icon(
+                imageVector = Icons.Filled.MoreVert,
+                contentDescription = stringResource(R.string.park_actions)
+            )
+        }
+        DropdownMenu(
+            expanded = showMenu,
+            onDismissRequest = { showMenu = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text(text = stringResource(R.string.edit)) },
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = null
+                    )
+                },
+                onClick = {
+                    showMenu = false
+                    onEditClick()
+                }
+            )
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        text = stringResource(R.string.delete),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                },
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                },
+                onClick = {
+                    showMenu = false
+                    onDeleteClick()
+                }
+            )
+        }
     }
 }

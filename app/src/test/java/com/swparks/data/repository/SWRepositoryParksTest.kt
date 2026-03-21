@@ -709,4 +709,58 @@ class SWRepositoryParksTest {
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is NetworkException)
     }
+
+    @Test
+    fun deleteParkPhoto_whenApiSuccess_thenReturnsSuccess() = runTest {
+        // Given
+        val mockApi = mockk<SWApi>()
+        coEvery { mockApi.deleteParkPhoto(1L, 100L) } returns Response.success(Unit)
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao,
+            mockEventDao
+        )
+
+        // When
+        val result = repository.deleteParkPhoto(1L, 100L)
+
+        // Then
+        assertTrue(result.isSuccess)
+        coVerify { mockApi.deleteParkPhoto(1L, 100L) }
+    }
+
+    @Test
+    fun deleteParkPhoto_whenApiError_thenReturnsFailure() = runTest {
+        // Given
+        val mockApi = mockk<SWApi>()
+        coEvery { mockApi.deleteParkPhoto(any(), any()) } throws IOException("Network error")
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao,
+            mockEventDao
+        )
+
+        // When
+        val result = repository.deleteParkPhoto(1L, 100L)
+
+        // Then
+        assertTrue(result.isFailure)
+        assertTrue(result.exceptionOrNull() is NetworkException)
+    }
 }

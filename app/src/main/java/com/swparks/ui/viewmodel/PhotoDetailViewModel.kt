@@ -11,8 +11,10 @@ import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Photo
 import com.swparks.data.repository.SWRepository
 import com.swparks.ui.state.PhotoDetailAction
+import com.swparks.ui.state.PhotoDetailConfig
 import com.swparks.ui.state.PhotoDetailEvent
 import com.swparks.ui.state.PhotoDetailUIState
+import com.swparks.ui.state.PhotoOwner
 import com.swparks.util.AppError
 import com.swparks.util.Complaint
 import com.swparks.util.Logger
@@ -34,11 +36,13 @@ class PhotoDetailViewModel(
     companion object {
         private const val TAG = "PhotoDetailViewModel"
         private const val PHOTO_ID_KEY = "photoId"
-        private const val EVENT_ID_KEY = "eventId"
-        private const val EVENT_TITLE_KEY = "eventTitle"
-        private const val IS_EVENT_AUTHOR_KEY = "isEventAuthor"
+        private const val PARENT_ID_KEY = "parentId"
+        private const val PARENT_TITLE_KEY = "parentTitle"
+        private const val IS_AUTHOR_KEY = "isAuthor"
         private const val PHOTO_URL_KEY = "photoUrl"
+        private const val OWNER_TYPE_KEY = "ownerType"
 
+        @Deprecated("Use factoryWithConfig instead", ReplaceWith("factoryWithConfig"))
         fun factory(
             swRepository: SWRepository,
             userPreferencesRepository: UserPreferencesRepository,
@@ -58,11 +62,7 @@ class PhotoDetailViewModel(
         }
 
         fun factoryWithConfig(
-            photoId: Long,
-            eventId: Long,
-            eventTitle: String,
-            isEventAuthor: Boolean,
-            photoUrl: String,
+            config: PhotoDetailConfig,
             swRepository: SWRepository,
             userPreferencesRepository: UserPreferencesRepository,
             logger: Logger,
@@ -70,11 +70,12 @@ class PhotoDetailViewModel(
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val savedStateHandle = createSavedStateHandle()
-                savedStateHandle[PHOTO_ID_KEY] = photoId
-                savedStateHandle[EVENT_ID_KEY] = eventId
-                savedStateHandle[EVENT_TITLE_KEY] = eventTitle
-                savedStateHandle[IS_EVENT_AUTHOR_KEY] = isEventAuthor
-                savedStateHandle[PHOTO_URL_KEY] = photoUrl
+                savedStateHandle[PHOTO_ID_KEY] = config.photoId
+                savedStateHandle[PARENT_ID_KEY] = config.parentId
+                savedStateHandle[PARENT_TITLE_KEY] = config.parentTitle
+                savedStateHandle[IS_AUTHOR_KEY] = config.isAuthor
+                savedStateHandle[PHOTO_URL_KEY] = config.photoUrl
+                savedStateHandle[OWNER_TYPE_KEY] = config.ownerType.name
                 PhotoDetailViewModel(
                     savedStateHandle = savedStateHandle,
                     swRepository = swRepository,
@@ -105,18 +106,18 @@ class PhotoDetailViewModel(
 
     private fun loadPhotoData() {
         val photoId = getPhotoId()
-        val eventId = getEventId()
-        val eventTitle = getEventTitle()
-        val isEventAuthor = getIsEventAuthor()
+        val parentId = getParentId()
+        val parentTitle = getParentTitle()
+        val isAuthor = getIsAuthor()
         val photoUrl = getPhotoUrl()
 
         logger.d(
             TAG,
-            "Загрузка данных фото: photoId=$photoId, eventId=$eventId, " +
-                "eventTitle=$eventTitle, isEventAuthor=$isEventAuthor, photoUrl=$photoUrl"
+            "Загрузка данных фото: photoId=$photoId, parentId=$parentId, " +
+                "parentTitle=$parentTitle, isAuthor=$isAuthor, photoUrl=$photoUrl"
         )
 
-        if (!validatePhotoParams(photoId, eventId, eventTitle, photoUrl)) {
+        if (!validatePhotoParams(photoId, parentId, parentTitle, photoUrl)) {
             logger.e(TAG, "Отсутствуют обязательные параметры для отображения фото")
             _uiState.value = PhotoDetailUIState.Error("Не удалось загрузить фотографию")
             return
@@ -125,8 +126,8 @@ class PhotoDetailViewModel(
         val photo = Photo(id = photoId!!, photo = photoUrl!!)
         _uiState.value = PhotoDetailUIState.Content(
             photo = photo,
-            eventTitle = eventTitle!!,
-            isEventAuthor = isEventAuthor ?: false,
+            parentTitle = parentTitle!!,
+            isAuthor = isAuthor ?: false,
             isLoading = false
         )
         logger.i(TAG, "Фото загружено: id=$photoId")
@@ -134,11 +135,11 @@ class PhotoDetailViewModel(
 
     private fun validatePhotoParams(
         photoId: Long?,
-        eventId: Long?,
-        eventTitle: String?,
+        parentId: Long?,
+        parentTitle: String?,
         photoUrl: String?
     ): Boolean {
-        return photoId != null && eventId != null && eventTitle != null && photoUrl != null
+        return photoId != null && parentId != null && parentTitle != null && photoUrl != null
     }
 
     private fun observeAuthorization() {
@@ -156,22 +157,30 @@ class PhotoDetailViewModel(
             ?: savedStateHandle.get<String>(PHOTO_ID_KEY)?.toLongOrNull()
     }
 
-    private fun getEventId(): Long? {
-        return savedStateHandle.get<Long>(EVENT_ID_KEY)
-            ?: savedStateHandle.get<Int>(EVENT_ID_KEY)?.toLong()
-            ?: savedStateHandle.get<String>(EVENT_ID_KEY)?.toLongOrNull()
+    private fun getParentId(): Long? {
+        return savedStateHandle.get<Long>(PARENT_ID_KEY)
+            ?: savedStateHandle.get<Int>(PARENT_ID_KEY)?.toLong()
+            ?: savedStateHandle.get<String>(PARENT_ID_KEY)?.toLongOrNull()
     }
 
-    private fun getEventTitle(): String? {
-        return savedStateHandle.get<String>(EVENT_TITLE_KEY)
+    private fun getParentTitle(): String? {
+        return savedStateHandle.get<String>(PARENT_TITLE_KEY)
     }
 
-    private fun getIsEventAuthor(): Boolean? {
-        return savedStateHandle.get<Boolean>(IS_EVENT_AUTHOR_KEY)
+    private fun getIsAuthor(): Boolean? {
+        return savedStateHandle.get<Boolean>(IS_AUTHOR_KEY)
     }
 
     private fun getPhotoUrl(): String? {
         return savedStateHandle.get<String>(PHOTO_URL_KEY)
+    }
+
+    private fun getOwnerType(): PhotoOwner {
+        val ownerTypeName = savedStateHandle.get<String>(OWNER_TYPE_KEY)
+        return when (ownerTypeName) {
+            PhotoOwner.Park.name -> PhotoOwner.Park
+            else -> PhotoOwner.Event
+        }
     }
 
     override fun onAction(action: PhotoDetailAction) {
@@ -198,8 +207,8 @@ class PhotoDetailViewModel(
             return
         }
 
-        if (!currentState.isEventAuthor) {
-            logger.w(TAG, "Отклонено удаление фото: пользователь не автор мероприятия")
+        if (!currentState.isAuthor) {
+            logger.w(TAG, "Отклонено удаление фото: пользователь не автор")
             return
         }
 
@@ -216,30 +225,35 @@ class PhotoDetailViewModel(
             return
         }
 
-        val eventId = getEventId()
-        val canDelete = currentState.isEventAuthor && eventId != null
+        val parentId = getParentId()
+        val canDelete = currentState.isAuthor && parentId != null
         if (!canDelete) {
-            val reason = if (!currentState.isEventAuthor) {
-                "пользователь не автор мероприятия"
+            val reason = if (!currentState.isAuthor) {
+                "пользователь не автор"
             } else {
-                "eventId отсутствует"
+                "parentId отсутствует"
             }
             logger.w(TAG, "Отклонено удаление фото: $reason")
             return
         }
 
-        performDeletePhoto(currentState, eventId)
+        performDeletePhoto(currentState, parentId)
     }
 
     @Suppress("TooGenericExceptionCaught")
-    private fun performDeletePhoto(currentState: PhotoDetailUIState.Content, eventId: Long) {
+    private fun performDeletePhoto(currentState: PhotoDetailUIState.Content, parentId: Long) {
         val photoId = currentState.photo.id
-        logger.d(TAG, "Подтверждение удаления фото id=$photoId мероприятия id=$eventId")
+        val ownerType = getOwnerType()
+        val entityName = if (ownerType == PhotoOwner.Park) "площадки" else "мероприятия"
+        logger.d(TAG, "Подтверждение удаления фото id=$photoId $entityName id=$parentId")
         _uiState.value = currentState.copy(isLoading = true)
 
         viewModelScope.launch {
             try {
-                val result = swRepository.deleteEventPhoto(eventId, photoId)
+                val result = when (ownerType) {
+                    PhotoOwner.Park -> swRepository.deleteParkPhoto(parentId, photoId)
+                    PhotoOwner.Event -> swRepository.deleteEventPhoto(parentId, photoId)
+                }
                 result.fold(
                     onSuccess = {
                         logger.i(TAG, "Фото id=$photoId успешно удалено")
@@ -292,7 +306,7 @@ class PhotoDetailViewModel(
             return
         }
 
-        if (!_isAuthorized.value || currentState.isEventAuthor) {
+        if (!_isAuthorized.value || currentState.isAuthor) {
             val reason = if (!_isAuthorized.value) {
                 "пользователь не авторизован"
             } else {
@@ -302,13 +316,18 @@ class PhotoDetailViewModel(
             return
         }
 
-        val eventTitle = currentState.eventTitle
+        val parentTitle = currentState.parentTitle
+        val ownerType = getOwnerType()
+        val entityName = if (ownerType == PhotoOwner.Park) "площадки" else "мероприятия"
         logger.d(
             TAG,
-            "Отправка жалобы на фото id=${currentState.photo.id} мероприятия: $eventTitle"
+            "Отправка жалобы на фото id=${currentState.photo.id} $entityName: $parentTitle"
         )
 
-        val complaint = Complaint.EventPhoto(eventTitle = eventTitle)
+        val complaint: Complaint = when (ownerType) {
+            PhotoOwner.Park -> Complaint.ParkPhoto(parkTitle = parentTitle)
+            PhotoOwner.Event -> Complaint.EventPhoto(eventTitle = parentTitle)
+        }
         viewModelScope.launch {
             _events.send(PhotoDetailEvent.SendPhotoComplaint(complaint))
         }

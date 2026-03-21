@@ -56,7 +56,7 @@ fun PhotoDetailScreen(
                     },
                     actions = {
                         PhotoDetailTopAppBarActions(
-                            isEventAuthor = state.isEventAuthor,
+                            isAuthor = state.isAuthor,
                             isAuthorized = isAuthorized,
                             onAction = onAction
                         )
@@ -91,12 +91,12 @@ fun PhotoDetailScreen(
 
 @Composable
 private fun PhotoDetailTopAppBarActions(
-    isEventAuthor: Boolean,
+    isAuthor: Boolean,
     isAuthorized: Boolean,
     onAction: (PhotoDetailAction) -> Unit
 ) {
     when {
-        isEventAuthor -> {
+        isAuthor -> {
             IconButton(onClick = { onAction(PhotoDetailAction.DeleteClick) }) {
                 Icon(
                     imageVector = Icons.Default.Delete,
@@ -158,8 +158,8 @@ internal fun PhotoDetailScreenAuthorPreview() {
             PhotoDetailScreen(
                 state = PhotoDetailUIState.Content(
                     photo = previewPhoto,
-                    eventTitle = "Тренировка",
-                    isEventAuthor = true
+                    parentTitle = "Тренировка",
+                    isAuthor = true
                 ),
                 isAuthorized = true,
                 showDeleteDialog = false,
@@ -181,8 +181,8 @@ internal fun PhotoDetailScreenAuthorizedPreview() {
             PhotoDetailScreen(
                 state = PhotoDetailUIState.Content(
                     photo = previewPhoto,
-                    eventTitle = "Тренировка",
-                    isEventAuthor = false
+                    parentTitle = "Тренировка",
+                    isAuthor = false
                 ),
                 isAuthorized = true,
                 showDeleteDialog = false,
@@ -204,8 +204,8 @@ internal fun PhotoDetailScreenUnauthorizedPreview() {
             PhotoDetailScreen(
                 state = PhotoDetailUIState.Content(
                     photo = previewPhoto,
-                    eventTitle = "Тренировка",
-                    isEventAuthor = false
+                    parentTitle = "Тренировка",
+                    isAuthor = false
                 ),
                 isAuthorized = false,
                 showDeleteDialog = false,
@@ -223,8 +223,8 @@ internal fun PhotoDetailScreenWithDialogPreview() {
             PhotoDetailScreen(
                 state = PhotoDetailUIState.Content(
                     photo = previewPhoto,
-                    eventTitle = "Тренировка",
-                    isEventAuthor = true
+                    parentTitle = "Тренировка",
+                    isAuthor = true
                 ),
                 isAuthorized = true,
                 showDeleteDialog = true,

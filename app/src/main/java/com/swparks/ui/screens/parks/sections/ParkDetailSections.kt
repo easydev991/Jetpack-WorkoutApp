@@ -1,30 +1,14 @@
-@file:Suppress("TooManyFunctions")
-
-package com.swparks.ui.screens.events
+package com.swparks.ui.screens.parks.sections
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
@@ -33,7 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
 import com.swparks.data.model.Comment
-import com.swparks.data.model.Event
+import com.swparks.data.model.Park
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.ui.ds.ButtonConfig
@@ -42,7 +26,6 @@ import com.swparks.ui.ds.CommentRowView
 import com.swparks.ui.ds.FormCardContainer
 import com.swparks.ui.ds.FormCardContainerParams
 import com.swparks.ui.ds.FormRowView
-import com.swparks.ui.ds.LabeledValueRow
 import com.swparks.ui.ds.LocationInfoConfig
 import com.swparks.ui.ds.LocationInfoView
 import com.swparks.ui.ds.PhotoSectionConfig
@@ -56,291 +39,20 @@ import com.swparks.ui.ds.UserRowData
 import com.swparks.ui.ds.UserRowView
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.util.DateFormatter
-import com.swparks.util.parseHtmlOrNull
 
-internal sealed class EventHeaderAction {
-    object OpenMap : EventHeaderAction()
-    object Route : EventHeaderAction()
-    object AddToCalendar : EventHeaderAction()
+internal sealed class ParkHeaderAction {
+    data object OpenMap : ParkHeaderAction()
+    data object Route : ParkHeaderAction()
+    data object CreateEvent : ParkHeaderAction()
 }
 
-@Composable
-internal fun EventShareButton(
-    isRefreshing: Boolean,
-    onShareClick: () -> Unit
-) {
-    IconButton(
-        onClick = onShareClick,
-        enabled = !isRefreshing
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Share,
-            contentDescription = stringResource(R.string.event_share)
-        )
-    }
-}
-
-@Composable
-internal fun EventAuthorActionsButton(
-    isRefreshing: Boolean,
-    onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit
-) {
-    var showMenu by remember { mutableStateOf(false) }
-
-    Box {
-        IconButton(
-            onClick = { showMenu = true },
-            enabled = !isRefreshing
-        ) {
-            Icon(
-                imageVector = Icons.Filled.MoreVert,
-                contentDescription = stringResource(R.string.event_actions)
-            )
-        }
-        DropdownMenu(
-            expanded = showMenu,
-            onDismissRequest = { showMenu = false }
-        ) {
-            DropdownMenuItem(
-                text = { Text(text = stringResource(R.string.event_edit)) },
-                trailingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Edit,
-                        contentDescription = null
-                    )
-                },
-                onClick = {
-                    showMenu = false
-                    onEditClick()
-                }
-            )
-            DropdownMenuItem(
-                text = {
-                    Text(
-                        text = stringResource(R.string.delete),
-                        color = MaterialTheme.colorScheme.error
-                    )
-                },
-                trailingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                },
-                onClick = {
-                    showMenu = false
-                    onDeleteClick()
-                }
-            )
-        }
-    }
-}
-
-@Composable
-internal fun EventHeaderMapCalendarSection(
-    event: Event,
-    address: String,
-    isRefreshing: Boolean,
-    onAction: (EventHeaderAction) -> Unit
-) {
-    FormCardContainer(
-        params = FormCardContainerParams(
-            Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
-        )
-    ) {
-        EventHeaderContent(
-            event = event,
-            address = address,
-            isRefreshing = isRefreshing,
-            onAction = onAction
-        )
-    }
-}
-
-@Composable
-private fun EventHeaderContent(
-    event: Event,
-    address: String,
-    isRefreshing: Boolean,
-    onAction: (EventHeaderAction) -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(dimensionResource(R.dimen.spacing_regular)),
-        verticalArrangement = Arrangement.spacedBy(
-            dimensionResource(R.dimen.spacing_small)
-        )
-    ) {
-        Text(
-            text = event.title,
-            style = MaterialTheme.typography.titleLarge
-        )
-
-        LabeledValueRow(
-            label = stringResource(R.string.`when`),
-            value = DateFormatter.formatDate(
-                context = LocalContext.current,
-                dateString = event.beginDate
-            )
-        )
-
-        LabeledValueRow(
-            label = stringResource(R.string.where),
-            value = address
-        )
-
-        val eventAddress = event.address
-        if (!eventAddress.isNullOrBlank()) {
-            LabeledValueRow(
-                label = stringResource(R.string.address),
-                value = eventAddress
-            )
-        }
-
-        LocationInfoView(
-            config = LocationInfoConfig(
-                latitude = event.latitude,
-                longitude = event.longitude,
-                address = address,
-                enabled = !isRefreshing,
-                onOpenMapClick = { onAction(EventHeaderAction.OpenMap) },
-                onRouteClick = { onAction(EventHeaderAction.Route) }
-            )
-        )
-
-        if (event.isCurrent) {
-            SWButton(
-                config = ButtonConfig(
-                    modifier = Modifier.fillMaxWidth(),
-                    size = SWButtonSize.LARGE,
-                    mode = SWButtonMode.FILLED,
-                    text = stringResource(R.string.event_add_to_calendar),
-                    enabled = !isRefreshing,
-                    onClick = { onAction(EventHeaderAction.AddToCalendar) }
-                )
-            )
-        }
-    }
-}
-
-@Composable
-internal fun EventParticipantsSection(
-    event: Event,
-    isAuthorized: Boolean,
-    isRefreshing: Boolean,
-    onParticipantToggle: () -> Unit,
-    onClickParticipants: () -> Unit
-) {
-    if (!isAuthorized) return
-
-    Column(
-        modifier = Modifier.padding(
-            horizontal = dimensionResource(R.dimen.spacing_regular)
-        ),
-        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
-    ) {
-        val participantsCount = event.trainingUsersCount ?: 0
-        if (participantsCount > 0) {
-            FormRowView(
-                modifier = Modifier.fillMaxWidth(),
-                leadingText = stringResource(R.string.participants),
-                trailingText = pluralStringResource(
-                    id = R.plurals.peopleCount,
-                    count = participantsCount,
-                    participantsCount
-                ),
-                enabled = !isRefreshing,
-                onClick = onClickParticipants
-            )
-        }
-        if (event.isCurrent) {
-            SwitchFormRowView(
-                modifier = Modifier.fillMaxWidth(),
-                leadingText = stringResource(R.string.participate_too),
-                isOn = event.trainHere ?: false,
-                isEnabled = !isRefreshing,
-                onCheckedChange = { onParticipantToggle() }
-            )
-        }
-    }
-}
-
-@Composable
-internal fun EventDescriptionSection(
-    description: String
-) {
-    val parsedDescription = description.parseHtmlOrNull(compactMode = false)
-    if (parsedDescription.isNullOrBlank()) return
-
-    SectionView(
-        titleID = R.string.event_description,
-        addPaddingToTitle = true,
-        modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
-    ) {
-        FormCardContainer(
-            params = FormCardContainerParams()
-        ) {
-            Text(
-                text = parsedDescription,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(dimensionResource(R.dimen.spacing_small)),
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-    }
-}
-
-data class EventAuthorConfig(
+internal data class ParkAuthorConfig(
     val isAuthorized: Boolean,
     val isRefreshing: Boolean,
-    val isEventAuthor: Boolean
+    val isParkAuthor: Boolean
 ) {
     val isEnabled: Boolean
-        get() = isAuthorized && !isRefreshing && !isEventAuthor
-}
-
-@Composable
-internal fun EventAuthorSection(
-    event: Event,
-    address: String,
-    config: EventAuthorConfig,
-    onAuthorClick: (Long) -> Unit
-) {
-    SectionView(
-        titleID = R.string.event_author,
-        addPaddingToTitle = true,
-        modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
-    ) {
-        UserRowView(
-            data = UserRowData(
-                enabled = config.isEnabled,
-                imageStringURL = event.author.image,
-                name = event.author.name,
-                address = address,
-                onClick = { onAuthorClick(event.author.id) }
-            )
-        )
-    }
-}
-
-@Composable
-internal fun EventPhotosSection(
-    photos: List<Photo>,
-    isRefreshing: Boolean,
-    onPhotoClick: (Photo) -> Unit
-) {
-    PhotoSectionView(
-        config = PhotoSectionConfig(
-            photos = photos,
-            enabled = !isRefreshing,
-            onPhotoClick = onPhotoClick
-        ),
-        modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
-    )
+        get() = isAuthorized && !isRefreshing && !isParkAuthor
 }
 
 internal data class CommentItemConfig(
@@ -356,7 +68,167 @@ internal sealed class CommentItemAction {
 }
 
 @Composable
-internal fun EventCommentItem(
+internal fun ParkHeaderMapSection(
+    park: Park,
+    address: String,
+    isAuthorized: Boolean,
+    isRefreshing: Boolean,
+    onAction: (ParkHeaderAction) -> Unit
+) {
+    FormCardContainer(
+        params = FormCardContainerParams(
+            Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
+        )
+    ) {
+        ParkHeaderContent(
+            park = park,
+            address = address,
+            isAuthorized = isAuthorized,
+            isRefreshing = isRefreshing,
+            onAction = onAction
+        )
+    }
+}
+
+@Composable
+private fun ParkHeaderContent(
+    park: Park,
+    address: String,
+    isAuthorized: Boolean,
+    isRefreshing: Boolean,
+    onAction: (ParkHeaderAction) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(dimensionResource(R.dimen.spacing_regular)),
+        verticalArrangement = Arrangement.spacedBy(
+            dimensionResource(R.dimen.spacing_small)
+        )
+    ) {
+        Text(
+            text = park.name,
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        val parkAddress = park.address
+        if (!parkAddress.isBlank()) {
+            Text(
+                text = parkAddress,
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+
+        LocationInfoView(
+            config = LocationInfoConfig(
+                latitude = park.latitude,
+                longitude = park.longitude,
+                address = address,
+                enabled = !isRefreshing,
+                onOpenMapClick = { onAction(ParkHeaderAction.OpenMap) },
+                onRouteClick = { onAction(ParkHeaderAction.Route) }
+            )
+        )
+
+        if (isAuthorized) {
+            SWButton(
+                config = ButtonConfig(
+                    modifier = Modifier.fillMaxWidth(),
+                    size = SWButtonSize.LARGE,
+                    mode = SWButtonMode.FILLED,
+                    text = stringResource(R.string.create_event),
+                    enabled = !isRefreshing,
+                    onClick = { onAction(ParkHeaderAction.CreateEvent) }
+                )
+            )
+        }
+    }
+}
+
+@Composable
+internal fun ParkParticipantsSection(
+    park: Park,
+    isAuthorized: Boolean,
+    isRefreshing: Boolean,
+    onParticipantToggle: () -> Unit,
+    onClickParticipants: () -> Unit
+) {
+    if (!isAuthorized) return
+
+    Column(
+        modifier = Modifier.padding(
+            horizontal = dimensionResource(R.dimen.spacing_regular)
+        ),
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
+    ) {
+        val participantsCount = park.trainingUsersCount ?: 0
+        if (participantsCount > 0) {
+            FormRowView(
+                modifier = Modifier.fillMaxWidth(),
+                leadingText = stringResource(R.string.park_trainees_title),
+                trailingText = pluralStringResource(
+                    id = R.plurals.peopleCount,
+                    count = participantsCount,
+                    participantsCount
+                ),
+                enabled = !isRefreshing,
+                onClick = onClickParticipants
+            )
+        }
+        SwitchFormRowView(
+            modifier = Modifier.fillMaxWidth(),
+            leadingText = stringResource(R.string.train_here),
+            isOn = park.trainHere ?: false,
+            isEnabled = !isRefreshing,
+            onCheckedChange = { onParticipantToggle() }
+        )
+    }
+}
+
+@Composable
+internal fun ParkAuthorSection(
+    park: Park,
+    address: String,
+    config: ParkAuthorConfig,
+    onAuthorClick: (Long) -> Unit
+) {
+    val author = park.author ?: return
+
+    SectionView(
+        titleID = R.string.added_by,
+        addPaddingToTitle = true,
+        modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
+    ) {
+        UserRowView(
+            data = UserRowData(
+                enabled = config.isEnabled,
+                imageStringURL = author.image,
+                name = author.name,
+                address = address,
+                onClick = { onAuthorClick(author.id) }
+            )
+        )
+    }
+}
+
+@Composable
+internal fun ParkPhotosSection(
+    photos: List<Photo>,
+    isRefreshing: Boolean,
+    onPhotoClick: (Photo) -> Unit
+) {
+    PhotoSectionView(
+        config = PhotoSectionConfig(
+            photos = photos,
+            enabled = !isRefreshing,
+            onPhotoClick = onPhotoClick
+        ),
+        modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
+    )
+}
+
+@Composable
+internal fun ParkCommentItem(
     modifier: Modifier = Modifier,
     comment: Comment,
     config: CommentItemConfig,
@@ -413,7 +285,7 @@ internal fun EventCommentItem(
 }
 
 @Composable
-internal fun EventAddCommentButton(
+internal fun ParkAddCommentButton(
     isAuthorized: Boolean,
     isRefreshing: Boolean,
     onAddCommentClick: () -> Unit
@@ -440,12 +312,13 @@ internal fun EventAddCommentButton(
     locale = "ru"
 )
 @Composable
-internal fun EventHeaderMapCalendarSectionPreview() {
+internal fun ParkHeaderMapSectionPreview() {
     JetpackWorkoutAppTheme {
         Surface {
-            EventHeaderMapCalendarSection(
-                event = previewEvent,
+            ParkHeaderMapSection(
+                park = previewPark,
                 address = "Москва, Парк Горького",
+                isAuthorized = true,
                 isRefreshing = false,
                 onAction = {}
             )
@@ -460,12 +333,12 @@ internal fun EventHeaderMapCalendarSectionPreview() {
     locale = "ru"
 )
 @Composable
-internal fun EventParticipantsSectionPreview() {
+internal fun ParkParticipantsSectionPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             Column {
-                EventParticipantsSection(
-                    event = previewEvent.copy(
+                ParkParticipantsSection(
+                    park = previewPark.copy(
                         trainingUsersCount = 15,
                         trainHere = false
                     ),
@@ -479,10 +352,6 @@ internal fun EventParticipantsSectionPreview() {
     }
 }
 
-private const val PREVIEW_DESCRIPTION_HTML =
-    "<p>Приглашаем всех на открытую тренировку! Начинаем в 10:00.</p>" +
-        "<p>Что будет:</p><ul><li>Разминка</li><li>Подтягивания</li><li>Отжимания</li></ul>"
-
 @Preview(showBackground = true, locale = "ru")
 @Preview(
     uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES,
@@ -490,31 +359,16 @@ private const val PREVIEW_DESCRIPTION_HTML =
     locale = "ru"
 )
 @Composable
-internal fun EventDescriptionSectionPreview() {
+internal fun ParkAuthorSectionPreview() {
     JetpackWorkoutAppTheme {
         Surface {
-            EventDescriptionSection(description = PREVIEW_DESCRIPTION_HTML)
-        }
-    }
-}
-
-@Preview(showBackground = true, locale = "ru")
-@Preview(
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true,
-    locale = "ru"
-)
-@Composable
-internal fun EventAuthorSectionPreview() {
-    JetpackWorkoutAppTheme {
-        Surface {
-            EventAuthorSection(
-                event = previewEvent,
+            ParkAuthorSection(
+                park = previewPark,
                 address = "Москва",
-                config = EventAuthorConfig(
+                config = ParkAuthorConfig(
                     isAuthorized = true,
                     isRefreshing = false,
-                    isEventAuthor = false
+                    isParkAuthor = false
                 ),
                 onAuthorClick = {}
             )
@@ -529,13 +383,13 @@ internal fun EventAuthorSectionPreview() {
     locale = "ru"
 )
 @Composable
-internal fun EventCommentItemPreview() {
+internal fun ParkCommentItemPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             Column(
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
             ) {
-                EventCommentItem(
+                ParkCommentItem(
                     comment = previewComment,
                     config = CommentItemConfig(
                         enabled = true,
@@ -544,7 +398,7 @@ internal fun EventCommentItemPreview() {
                     modifier = Modifier.fillMaxWidth(),
                     onAction = {}
                 )
-                EventCommentItem(
+                ParkCommentItem(
                     comment = previewComment.copy(
                         user = previewComment.user?.copy(id = 999L)
                     ),
@@ -562,32 +416,14 @@ internal fun EventCommentItemPreview() {
 
 @Preview(showBackground = true, locale = "ru")
 @Composable
-internal fun EventShareButtonPreview() {
+internal fun ParkAddCommentButtonPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             Row {
-                EventShareButton(isRefreshing = false, onShareClick = {})
-                EventShareButton(isRefreshing = true, onShareClick = {})
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true, locale = "ru")
-@Composable
-internal fun EventAuthorActionsButtonPreview() {
-    JetpackWorkoutAppTheme {
-        Surface {
-            Row {
-                EventAuthorActionsButton(
+                ParkAddCommentButton(
+                    isAuthorized = true,
                     isRefreshing = false,
-                    onEditClick = {},
-                    onDeleteClick = {}
-                )
-                EventAuthorActionsButton(
-                    isRefreshing = true,
-                    onEditClick = {},
-                    onDeleteClick = {}
+                    onAddCommentClick = {}
                 )
             }
         }
@@ -603,30 +439,28 @@ private val previewUser = User(
     fullName = "Иван Петров"
 )
 
-private val previewEvent = Event(
+private val previewPark = Park(
     id = 1L,
-    title = "Открытая тренировка в парке",
-    description = "<p>Приглашаем всех желающих!</p>",
-    beginDate = "2024-06-15 10:00:00",
-    countryID = 1,
-    cityID = 1,
-    preview = "",
-    latitude = "55.7558",
+    name = "Воркаут площадка в Парке Горького",
+    sizeID = 2,
+    typeID = 1,
     longitude = "37.6173",
-    isCurrent = true,
-    address = "Москва, Парк Горького",
+    latitude = "55.7558",
+    address = "Москва, Парк Горького, недалеко от главного входа",
+    cityID = 1,
+    countryID = 1,
+    preview = "",
     photos = listOf(
-        Photo(id = 1L, photo = "https://workout.su/files/trainings/photo1.jpg")
+        Photo(id = 1L, photo = "https://workout.su/files/areas/photo1.jpg")
     ),
     author = previewUser,
-    name = "Открытая тренировка",
     trainingUsersCount = 10,
     trainHere = true
 )
 
 private val previewComment = Comment(
     id = 1L,
-    body = "Отличное мероприятие! Всем советую прийти.",
+    body = "Отличная площадка! Хорошее оборудование.",
     date = "2024-06-10 14:30:00",
     user = previewUser
 )

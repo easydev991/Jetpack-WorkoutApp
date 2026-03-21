@@ -6,10 +6,13 @@ import com.swparks.data.repository.SWRepository
 import com.swparks.ui.state.PhotoDetailAction
 import com.swparks.ui.state.PhotoDetailEvent
 import com.swparks.ui.state.PhotoDetailUIState
+import com.swparks.ui.state.PhotoOwner
 import com.swparks.util.AppError
+import com.swparks.util.Complaint
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -45,7 +48,9 @@ class PhotoDetailViewModelTest {
 
     private val testPhotoId = 123L
     private val testEventId = 456L
+    private val testParkId = 789L
     private val testEventTitle = "Test Event"
+    private val testParkTitle = "Test Park"
     private val testPhotoUrl = "https://example.com/photo.jpg"
 
     @Before
@@ -73,22 +78,26 @@ class PhotoDetailViewModelTest {
 
     private fun createViewModel(
         photoId: Long = testPhotoId,
-        eventId: Long = testEventId,
-        eventTitle: String = testEventTitle,
-        isEventAuthor: Boolean = false,
+        parentId: Long = testEventId,
+        parentTitle: String = testEventTitle,
+        isAuthor: Boolean = false,
         photoUrl: String = testPhotoUrl,
         isAuthorized: Boolean = true,
-        deleteResult: Result<Unit> = Result.success(Unit)
+        ownerType: PhotoOwner = PhotoOwner.Event,
+        deleteEventResult: Result<Unit> = Result.success(Unit),
+        deleteParkResult: Result<Unit> = Result.success(Unit)
     ) {
         savedStateHandle = SavedStateHandle().apply {
             this["photoId"] = photoId
-            this["eventId"] = eventId
-            this["eventTitle"] = eventTitle
-            this["isEventAuthor"] = isEventAuthor
+            this["parentId"] = parentId
+            this["parentTitle"] = parentTitle
+            this["isAuthor"] = isAuthor
             this["photoUrl"] = photoUrl
+            this["ownerType"] = ownerType.name
         }
         every { userPreferencesRepository.isAuthorized } returns flowOf(isAuthorized)
-        coEvery { swRepository.deleteEventPhoto(any(), any()) } returns deleteResult
+        coEvery { swRepository.deleteEventPhoto(any(), any()) } returns deleteEventResult
+        coEvery { swRepository.deleteParkPhoto(any(), any()) } returns deleteParkResult
 
         viewModel = PhotoDetailViewModel(
             savedStateHandle = savedStateHandle,
@@ -101,15 +110,15 @@ class PhotoDetailViewModelTest {
 
     @Test
     fun init_whenCreated_thenLoadsPhotoData() {
-        createViewModel(isEventAuthor = true)
+        createViewModel(isAuthor = true)
 
         val state = viewModel.uiState.value
         assertTrue(state is PhotoDetailUIState.Content)
         val content = state as PhotoDetailUIState.Content
         assertEquals(testPhotoId, content.photo.id)
         assertEquals(testPhotoUrl, content.photo.photo)
-        assertEquals(testEventTitle, content.eventTitle)
-        assertTrue(content.isEventAuthor)
+        assertEquals(testEventTitle, content.parentTitle)
+        assertTrue(content.isAuthor)
         assertFalse(content.isLoading)
     }
 
@@ -142,7 +151,7 @@ class PhotoDetailViewModelTest {
 
     @Test
     fun onAction_DeleteClick_whenAuthor_thenEmitsShowDeleteConfirmDialog() = runTest {
-        createViewModel(isEventAuthor = true)
+        createViewModel(isAuthor = true)
 
         viewModel.onAction(PhotoDetailAction.DeleteClick)
         advanceUntilIdle()
@@ -153,17 +162,17 @@ class PhotoDetailViewModelTest {
 
     @Test
     fun onAction_DeleteClick_whenNotAuthor_thenDoesNothing() = runTest {
-        createViewModel(isEventAuthor = false)
+        createViewModel(isAuthor = false)
 
         viewModel.onAction(PhotoDetailAction.DeleteClick)
         advanceUntilIdle()
 
-        verify { logger.w(any(), "Отклонено удаление фото: пользователь не автор мероприятия") }
+        verify { logger.w(any(), "Отклонено удаление фото: пользователь не автор") }
     }
 
     @Test
     fun onAction_DeleteConfirm_whenAuthor_andSuccess_thenEmitsPhotoDeletedWithPhotoId() = runTest {
-        createViewModel(isEventAuthor = true, deleteResult = Result.success(Unit))
+        createViewModel(isAuthor = true, deleteEventResult = Result.success(Unit))
 
         viewModel.onAction(PhotoDetailAction.DeleteConfirm)
         advanceUntilIdle()
@@ -176,7 +185,7 @@ class PhotoDetailViewModelTest {
 
     @Test
     fun onAction_DeleteConfirm_whenAuthor_andSuccess_thenSetsLoadingTrue() = runTest {
-        createViewModel(isEventAuthor = true, deleteResult = Result.success(Unit))
+        createViewModel(isAuthor = true, deleteEventResult = Result.success(Unit))
 
         viewModel.onAction(PhotoDetailAction.DeleteConfirm)
 
@@ -192,8 +201,8 @@ class PhotoDetailViewModelTest {
     fun onAction_DeleteConfirm_whenAuthor_andError_thenCallsUserNotifierHandleError() = runTest {
         val errorMessage = "Network error"
         createViewModel(
-            isEventAuthor = true,
-            deleteResult = Result.failure(Exception(errorMessage))
+            isAuthor = true,
+            deleteEventResult = Result.failure(Exception(errorMessage))
         )
 
         viewModel.onAction(PhotoDetailAction.DeleteConfirm)
@@ -207,17 +216,17 @@ class PhotoDetailViewModelTest {
 
     @Test
     fun onAction_DeleteConfirm_whenNotAuthor_thenDoesNothing() = runTest {
-        createViewModel(isEventAuthor = false)
+        createViewModel(isAuthor = false)
 
         viewModel.onAction(PhotoDetailAction.DeleteConfirm)
         advanceUntilIdle()
 
-        verify { logger.w(any(), "Отклонено удаление фото: пользователь не автор мероприятия") }
+        verify { logger.w(any(), "Отклонено удаление фото: пользователь не автор") }
     }
 
     @Test
     fun onAction_DeleteDismiss_thenLogs() {
-        createViewModel(isEventAuthor = true)
+        createViewModel(isAuthor = true)
 
         viewModel.onAction(PhotoDetailAction.DeleteDismiss)
 
@@ -226,7 +235,7 @@ class PhotoDetailViewModelTest {
 
     @Test
     fun onAction_Report_whenNotAuthor_thenEmitsSendPhotoComplaint() = runTest {
-        createViewModel(isEventAuthor = false, isAuthorized = true)
+        createViewModel(isAuthor = false, isAuthorized = true)
 
         viewModel.onAction(PhotoDetailAction.Report)
         advanceUntilIdle()
@@ -234,12 +243,13 @@ class PhotoDetailViewModelTest {
         val event = viewModel.events.receiveAsFlow().first()
         assertTrue(event is PhotoDetailEvent.SendPhotoComplaint)
         val complaint = (event as PhotoDetailEvent.SendPhotoComplaint).complaint
-        assertEquals(testEventTitle, complaint.eventTitle)
+        assertTrue(complaint is Complaint.EventPhoto)
+        assertEquals(testEventTitle, (complaint as Complaint.EventPhoto).eventTitle)
     }
 
     @Test
     fun onAction_Report_whenNotAuthorized_thenDoesNothing() = runTest {
-        createViewModel(isEventAuthor = false, isAuthorized = false)
+        createViewModel(isAuthor = false, isAuthorized = false)
 
         viewModel.onAction(PhotoDetailAction.Report)
         advanceUntilIdle()
@@ -249,7 +259,7 @@ class PhotoDetailViewModelTest {
 
     @Test
     fun onAction_Report_whenAuthor_thenDoesNothing() = runTest {
-        createViewModel(isEventAuthor = true, isAuthorized = true)
+        createViewModel(isAuthor = true, isAuthorized = true)
 
         viewModel.onAction(PhotoDetailAction.Report)
         advanceUntilIdle()
@@ -294,8 +304,8 @@ class PhotoDetailViewModelTest {
     fun onAction_DeleteConfirm_whenError_thenResetsLoadingOnRetry() = runTest {
         val errorMessage = "Network error"
         createViewModel(
-            isEventAuthor = true,
-            deleteResult = Result.failure(Exception(errorMessage))
+            isAuthor = true,
+            deleteEventResult = Result.failure(Exception(errorMessage))
         )
 
         viewModel.onAction(PhotoDetailAction.DeleteConfirm)
@@ -312,5 +322,116 @@ class PhotoDetailViewModelTest {
 
         val event = viewModel.events.receiveAsFlow().first()
         assertTrue(event is PhotoDetailEvent.PhotoDeleted)
+    }
+
+    @Test
+    fun onAction_DeleteConfirm_whenParkOwner_andSuccess_thenCallsDeleteParkPhoto() = runTest {
+        createViewModel(
+            isAuthor = true,
+            parentId = testParkId,
+            parentTitle = testParkTitle,
+            ownerType = PhotoOwner.Park,
+            deleteParkResult = Result.success(Unit)
+        )
+
+        viewModel.onAction(PhotoDetailAction.DeleteConfirm)
+        advanceUntilIdle()
+
+        coVerify { swRepository.deleteParkPhoto(testParkId, testPhotoId) }
+        val event = viewModel.events.receiveAsFlow().first()
+        assertTrue(event is PhotoDetailEvent.PhotoDeleted)
+        assertEquals(testPhotoId, (event as PhotoDetailEvent.PhotoDeleted).photoId)
+    }
+
+    @Test
+    fun onAction_DeleteConfirm_whenEventOwner_andSuccess_thenCallsDeleteEventPhoto() = runTest {
+        createViewModel(
+            isAuthor = true,
+            parentId = testEventId,
+            parentTitle = testEventTitle,
+            ownerType = PhotoOwner.Event,
+            deleteEventResult = Result.success(Unit)
+        )
+
+        viewModel.onAction(PhotoDetailAction.DeleteConfirm)
+        advanceUntilIdle()
+
+        coVerify { swRepository.deleteEventPhoto(testEventId, testPhotoId) }
+        val event = viewModel.events.receiveAsFlow().first()
+        assertTrue(event is PhotoDetailEvent.PhotoDeleted)
+    }
+
+    @Test
+    fun onAction_DeleteConfirm_whenParkOwner_andError_thenCallsUserNotifierHandleError() = runTest {
+        createViewModel(
+            isAuthor = true,
+            parentId = testParkId,
+            parentTitle = testParkTitle,
+            ownerType = PhotoOwner.Park,
+            deleteParkResult = Result.failure(Exception("Park delete error"))
+        )
+
+        viewModel.onAction(PhotoDetailAction.DeleteConfirm)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value as? PhotoDetailUIState.Content
+        assertNotNull(state)
+        assertFalse(state!!.isLoading)
+        verify { userNotifier.handleError(any<AppError.Generic>()) }
+    }
+
+    @Test
+    fun onAction_Report_whenParkOwner_thenEmitsParkPhotoComplaint() = runTest {
+        createViewModel(
+            isAuthor = false,
+            isAuthorized = true,
+            parentId = testParkId,
+            parentTitle = testParkTitle,
+            ownerType = PhotoOwner.Park
+        )
+
+        viewModel.onAction(PhotoDetailAction.Report)
+        advanceUntilIdle()
+
+        val event = viewModel.events.receiveAsFlow().first()
+        assertTrue(event is PhotoDetailEvent.SendPhotoComplaint)
+        val complaint = (event as PhotoDetailEvent.SendPhotoComplaint).complaint
+        assertTrue(complaint is Complaint.ParkPhoto)
+        assertEquals(testParkTitle, (complaint as Complaint.ParkPhoto).parkTitle)
+    }
+
+    @Test
+    fun onAction_Report_whenEventOwner_thenEmitsEventPhotoComplaint() = runTest {
+        createViewModel(
+            isAuthor = false,
+            isAuthorized = true,
+            parentId = testEventId,
+            parentTitle = testEventTitle,
+            ownerType = PhotoOwner.Event
+        )
+
+        viewModel.onAction(PhotoDetailAction.Report)
+        advanceUntilIdle()
+
+        val event = viewModel.events.receiveAsFlow().first()
+        assertTrue(event is PhotoDetailEvent.SendPhotoComplaint)
+        val complaint = (event as PhotoDetailEvent.SendPhotoComplaint).complaint
+        assertTrue(complaint is Complaint.EventPhoto)
+        assertEquals(testEventTitle, (complaint as Complaint.EventPhoto).eventTitle)
+    }
+
+    @Test
+    fun init_whenParkOwner_thenLoadsPhotoDataWithParkTitle() {
+        createViewModel(
+            isAuthor = true,
+            parentId = testParkId,
+            parentTitle = testParkTitle,
+            ownerType = PhotoOwner.Park
+        )
+
+        val state = viewModel.uiState.value
+        assertTrue(state is PhotoDetailUIState.Content)
+        val content = state as PhotoDetailUIState.Content
+        assertEquals(testParkTitle, content.parentTitle)
     }
 }

@@ -45,3 +45,24 @@ internal class EventParticipantsNavArgsViewModel(
             }
     }
 }
+
+internal class ParkTraineesNavArgsViewModel(
+    val args: ParkTraineesNavArgs?
+) : ViewModel() {
+    companion object {
+        fun factory(navBackStackEntry: NavBackStackEntry): ViewModelProvider.Factory =
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    require(modelClass.isAssignableFrom(ParkTraineesNavArgsViewModel::class.java)) {
+                        "Неизвестный класс ViewModel: ${modelClass.name}, " +
+                            "ожидается: ${ParkTraineesNavArgsViewModel::class.java.name}"
+                    }
+                    val viewModel =
+                        ParkTraineesNavArgsViewModel(navBackStackEntry.consumeParkTraineesArgs())
+                    return checkNotNull(modelClass.cast(viewModel)) {
+                        "Не удалось привести ${ParkTraineesNavArgsViewModel::class.java.name} к ${modelClass.name}"
+                    }
+                }
+            }
+    }
+}
