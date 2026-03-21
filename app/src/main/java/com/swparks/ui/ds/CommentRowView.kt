@@ -3,7 +3,6 @@ package com.swparks.ui.ds
 import android.content.res.Configuration
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,6 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
+import com.swparks.ui.utils.disabledIf
 
 /**
  * Действие для комментария к площадке/мероприятию
@@ -70,7 +70,6 @@ enum class CommentAction(
  * Конфигурация для меню действий комментария
  *
  * @property showMenu Показано ли меню
- * @property enabled Доступность кнопки-меню
  * @property menuActions Список действий
  * @property onMenuDismiss Обработчик закрытия меню
  * @property onMenuShow Обработчик открытия меню
@@ -78,7 +77,6 @@ enum class CommentAction(
  */
 data class CommentActionsMenuConfig(
     val showMenu: Boolean,
-    val enabled: Boolean = true,
     val menuActions: List<CommentAction>,
     val onMenuDismiss: () -> Unit,
     val onMenuShow: () -> Unit,
@@ -118,7 +116,9 @@ data class CommentRowData(
 @Composable
 fun CommentRowView(data: CommentRowData) {
     var showMenu by remember { mutableStateOf(false) }
-    val menuActions = if (data.byMainUser) {
+    val menuActions = if (!data.enabled) {
+        emptyList()
+    } else if (data.byMainUser) {
         listOf(
             CommentAction.EDIT,
             CommentAction.DELETE
@@ -141,16 +141,17 @@ fun CommentRowView(data: CommentRowData) {
                 enabled = data.enabled && !data.byMainUser,
                 onAuthorClick = if (data.byMainUser) null else data.onAuthorClick
             )
-            CommentActionsMenu(
-                config = CommentActionsMenuConfig(
-                    showMenu = showMenu,
-                    enabled = data.enabled,
-                    menuActions = menuActions,
-                    onMenuDismiss = { showMenu = false },
-                    onMenuShow = { showMenu = true },
-                    onClickAction = data.onClickAction
+            if (menuActions.isNotEmpty()) {
+                CommentActionsMenu(
+                    config = CommentActionsMenuConfig(
+                        showMenu = showMenu,
+                        menuActions = menuActions,
+                        onMenuDismiss = { showMenu = false },
+                        onMenuShow = { showMenu = true },
+                        onClickAction = data.onClickAction
+                    )
                 )
-            )
+            }
         }
         Text(
             text = data.bodyText,
@@ -168,13 +169,8 @@ private fun CommentHeader(
     enabled: Boolean,
     onAuthorClick: (() -> Unit)?
 ) {
-    val clickableModifier = if (onAuthorClick != null) {
-        Modifier.clickable(enabled = enabled, onClick = onAuthorClick)
-    } else {
-        Modifier
-    }
     Row(
-        modifier = clickableModifier,
+        modifier = Modifier.disabledIf(disabled = !enabled, onClick = { onAuthorClick?.invoke() }),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
     ) {
@@ -210,7 +206,6 @@ private fun CommentActionsMenu(config: CommentActionsMenuConfig) {
     Box {
         IconButton(
             modifier = Modifier.size(dimensionResource(R.dimen.size_xsmall)),
-            enabled = config.enabled,
             onClick = config.onMenuShow
         ) {
             Image(
@@ -304,6 +299,17 @@ fun CommentRowViewPreview() {
                             dateString = "21 мая 2023",
                             bodyText = "Классная площадка, часто тренируюсь здесь с друзьями",
                             byMainUser = true,
+                            onClickAction = {}
+                        )
+                    )
+                    HorizontalDivider()
+                    CommentRowView(
+                        data = CommentRowData(
+                            imageStringURL = "https://workout.su/img/avatar_default.jpg",
+                            authorName = "DisabledUser",
+                            dateString = "21 мая 2023",
+                            bodyText = "Комментарий с отключенными действиями",
+                            enabled = false,
                             onClickAction = {}
                         )
                     )
