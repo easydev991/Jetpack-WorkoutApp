@@ -45,6 +45,13 @@ sealed class ParkDetailEvent {
     data class ParkUpdated(val parkId: Long) : ParkDetailEvent()
 
     /**
+     * Навигация к экрану редактирования площадки.
+     *
+     * @param park Площадка для редактирования
+     */
+    data class NavigateToEditPark(val park: com.swparks.data.model.Park) : ParkDetailEvent()
+
+    /**
      * Фото успешно удалено.
      */
     data class PhotoDeleted(val photoId: Long) : ParkDetailEvent()

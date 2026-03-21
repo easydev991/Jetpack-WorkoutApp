@@ -261,10 +261,7 @@ fun DialogsContent(
             }
         )
 
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
+        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
 
         if (params.uiState is DialogsUiState.Success && params.uiState.dialogs.isNotEmpty()) {
             val hasFriends = params.currentUser?.hasFriends ?: false
@@ -276,9 +273,7 @@ fun DialogsContent(
             )
         }
 
-        if (params.isUpdating) {
-            LoadingOverlayView()
-        }
+        if (params.isUpdating) LoadingOverlayView()
     }
 
     DialogContextMenu(

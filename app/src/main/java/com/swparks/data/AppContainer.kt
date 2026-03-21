@@ -28,6 +28,7 @@ import com.swparks.data.repository.JournalsRepositoryImpl
 import com.swparks.data.repository.MessagesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.data.repository.SWRepositoryImp
+import com.swparks.ui.viewmodel.ParkFormViewModel
 import com.swparks.data.serializer.EncryptedStringSerializer
 import com.swparks.domain.event.MessageSentNotifier
 import com.swparks.domain.provider.AvatarHelper
@@ -228,6 +229,9 @@ interface AppContainer {
 
     /** Фабрика для EventFormViewModel */
     fun eventFormViewModelFactory(mode: EventFormMode): EventFormViewModel
+
+    /** Фабрика для ParkFormViewModel */
+    fun parkFormViewModelFactory(mode: com.swparks.ui.model.ParkFormMode): ParkFormViewModel
 
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
@@ -714,6 +718,16 @@ class DefaultAppContainer(context: Context) : AppContainer {
             mode = mode,
             createEventUseCase = createEventUseCase,
             editEventUseCase = editEventUseCase,
+            avatarHelper = avatarHelper,
+            logger = logger,
+            userNotifier = userNotifier
+        )
+
+    /** Factory метод для создания ParkFormViewModel */
+    override fun parkFormViewModelFactory(mode: com.swparks.ui.model.ParkFormMode) =
+        ParkFormViewModel(
+            mode = mode,
+            swRepository = swRepository,
             avatarHelper = avatarHelper,
             logger = logger,
             userNotifier = userNotifier

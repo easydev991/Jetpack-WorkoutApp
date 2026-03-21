@@ -203,13 +203,16 @@
 
 ## Созданные/изменённые файлы — ЗАВЕРШЕНО ✅
 
-### Созданы:
+### Созданы
+
 - `app/src/main/java/com/swparks/ui/screens/parks/ParkDetailScreen.kt`
 
-### Изменены:
+### Изменены
+
 - `app/src/main/java/com/swparks/ui/screens/RootScreen.kt` — интеграция ParkDetail и ParkTrainees
 
-### Тесты созданы:
+### Тесты созданы
+
 - `app/src/androidTest/java/com/swparks/ui/screens/parks/ParkDetailScreenTest.kt` — 32 теста
 
 ---

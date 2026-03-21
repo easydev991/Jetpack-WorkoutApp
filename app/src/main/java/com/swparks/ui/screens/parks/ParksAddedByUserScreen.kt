@@ -1,6 +1,5 @@
 package com.swparks.ui.screens.parks
 
-import android.util.Log
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -46,9 +45,7 @@ fun ParksAddedByUserScreen(
     modifier: Modifier = Modifier,
     viewModel: IUserAddedParksViewModel,
     onBackClick: () -> Unit,
-    onParkClick: (Park) -> Unit = { park ->
-        Log.d("ParksAddedByUserScreen", "Нажата площадка: ${park.name}")
-    },
+    onParkClick: (Park) -> Unit = {},
     parentPaddingValues: PaddingValues
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -94,21 +91,16 @@ fun ParksAddedByUserScreen(
         ) {
             when (val state = uiState) {
                 UserAddedParksUiState.Loading -> LoadingOverlayView()
-                is UserAddedParksUiState.Success -> {
-                    ParksListView(
-                        parks = state.parks,
-                        onParkClick = onParkClick,
-                        enabled = !isRefreshing
-                    )
-                }
-
-                is UserAddedParksUiState.Error -> {
-                    ErrorContentView(
-                        retryAction = { viewModel.refresh() },
-                        modifier = Modifier.fillMaxSize(),
-                        message = state.message
-                    )
-                }
+                is UserAddedParksUiState.Success -> ParksListView(
+                    parks = state.parks,
+                    onParkClick = onParkClick,
+                    enabled = !isRefreshing
+                )
+                is UserAddedParksUiState.Error -> ErrorContentView(
+                    retryAction = { viewModel.refresh() },
+                    modifier = Modifier.fillMaxSize(),
+                    message = state.message
+                )
             }
         }
     }

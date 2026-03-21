@@ -226,15 +226,18 @@ class ParkDetailViewModelTest {
     }
 
     @Test
-    fun onEditClick_thenOnlyLogsAndDoesNotNavigate() = runTest {
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+    fun onEditClick_thenEmitsNavigateToEditPark() = runTest {
+        val park = createPark()
+        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(park)
         val viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.events.test {
             viewModel.onEditClick()
 
-            expectNoEvents()
+            val event = awaitItem()
+            assert(event is ParkDetailEvent.NavigateToEditPark)
+            assert((event as ParkDetailEvent.NavigateToEditPark).park == park)
             cancelAndIgnoreRemainingEvents()
         }
     }

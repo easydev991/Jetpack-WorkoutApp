@@ -66,3 +66,45 @@ internal class ParkTraineesNavArgsViewModel(
             }
     }
 }
+
+internal class EditParkNavArgsViewModel(
+    val args: EditParkNavArgs?
+) : ViewModel() {
+    companion object {
+        fun factory(navBackStackEntry: NavBackStackEntry): ViewModelProvider.Factory =
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    require(modelClass.isAssignableFrom(EditParkNavArgsViewModel::class.java)) {
+                        "Неизвестный класс ViewModel: ${modelClass.name}, " +
+                            "ожидается: ${EditParkNavArgsViewModel::class.java.name}"
+                    }
+                    val viewModel =
+                        EditParkNavArgsViewModel(navBackStackEntry.consumeEditParkArgs())
+                    return checkNotNull(modelClass.cast(viewModel)) {
+                        "Не удалось привести ${EditParkNavArgsViewModel::class.java.name} к ${modelClass.name}"
+                    }
+                }
+            }
+    }
+}
+
+internal class CreateParkNavArgsViewModel(
+    val args: CreateParkNavArgs
+) : ViewModel() {
+    companion object {
+        fun factory(navBackStackEntry: NavBackStackEntry): ViewModelProvider.Factory =
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    require(modelClass.isAssignableFrom(CreateParkNavArgsViewModel::class.java)) {
+                        "Неизвестный класс ViewModel: ${modelClass.name}, " +
+                            "ожидается: ${CreateParkNavArgsViewModel::class.java.name}"
+                    }
+                    val viewModel =
+                        CreateParkNavArgsViewModel(navBackStackEntry.consumeCreateParkArgs())
+                    return checkNotNull(modelClass.cast(viewModel)) {
+                        "Не удалось привести ${CreateParkNavArgsViewModel::class.java.name} к ${modelClass.name}"
+                    }
+                }
+            }
+    }
+}

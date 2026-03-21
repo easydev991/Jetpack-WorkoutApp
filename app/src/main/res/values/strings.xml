@@ -170,6 +170,7 @@
     <string name="parks_list">List</string>
 
     <string name="park_title">Park</string>
+    <string name="new_park_title">New Park</string>
     <string name="park_actions">Park actions</string>
     <string name="park_share">Share</string>
     <string name="build_route">Build a route</string>

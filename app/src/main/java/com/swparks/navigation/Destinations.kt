@@ -27,7 +27,14 @@ sealed class Screen(
         }
     }
 
-    object CreatePark : Screen("create_park", parentTab = Parks)
+    object CreatePark : Screen("create_park?source={source}", parentTab = Parks) {
+        fun createRoute(source: String = "parks") = "create_park?source=$source"
+
+        fun findParentTab(arguments: Bundle?): Screen {
+            val source = arguments?.getString("source") ?: "parks"
+            return getScreenBySource(source, default = Parks)
+        }
+    }
     object EditPark : Screen("edit_park/{parkId}?source={source}", parentTab = Parks) {
         fun createRoute(parkId: Long, source: String = "parks") = "edit_park/$parkId?source=$source"
 

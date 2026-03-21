@@ -18,6 +18,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -26,6 +27,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -459,6 +461,190 @@ class SWRepositoryParksTest {
         val contentType = capturedList?.first()?.body?.contentType()
         assertNotNull(contentType)
         assertEquals("image/jpeg", contentType.toString())
+    }
+
+    @Test
+    fun savePark_createMode_sendsCorrectFormParameters() = runTest {
+        // Given
+        val mockPark = createMockPark(123L)
+        val mockApi = mockk<SWApi>()
+
+        val addressList = mutableListOf<RequestBody>()
+        val latitudeList = mutableListOf<RequestBody>()
+        val longitudeList = mutableListOf<RequestBody>()
+        val typeIdList = mutableListOf<RequestBody>()
+        val sizeIdList = mutableListOf<RequestBody>()
+
+        coEvery {
+            mockApi.createPark(
+                address = capture(addressList),
+                latitude = capture(latitudeList),
+                longitude = capture(longitudeList),
+                cityId = any(),
+                typeId = capture(typeIdList),
+                sizeId = capture(sizeIdList),
+                photos = any()
+            )
+        } returns mockPark
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao,
+            mockEventDao
+        )
+        val form = ParkForm(
+            address = "123 Main Street",
+            latitude = "55.7558",
+            longitude = "37.6173",
+            cityId = 42,
+            typeId = 2,
+            sizeId = 3
+        )
+
+        // When
+        val result = repository.savePark(null, form, null)
+
+        // Then
+        assertTrue(result.isSuccess)
+        assertEquals("123 Main Street", addressList.first().readToString())
+        assertEquals("55.7558", latitudeList.first().readToString())
+        assertEquals("37.6173", longitudeList.first().readToString())
+        assertEquals("2", typeIdList.first().readToString())
+        assertEquals("3", sizeIdList.first().readToString())
+    }
+
+    private fun RequestBody.readToString(): String {
+        val buffer = okio.Buffer()
+        this.writeTo(buffer)
+        return buffer.readUtf8()
+    }
+
+    @Test
+    fun savePark_editMode_sendsCorrectFormParameters() = runTest {
+        // Given
+        val mockPark = createMockPark(123L)
+        val mockApi = mockk<SWApi>()
+
+        val parkIdSlot = slot<Long>()
+        val addressList = mutableListOf<RequestBody>()
+        val latitudeList = mutableListOf<RequestBody>()
+        val longitudeList = mutableListOf<RequestBody>()
+        val typeIdList = mutableListOf<RequestBody>()
+        val sizeIdList = mutableListOf<RequestBody>()
+
+        coEvery {
+            mockApi.editPark(
+                parkId = capture(parkIdSlot),
+                address = capture(addressList),
+                latitude = capture(latitudeList),
+                longitude = capture(longitudeList),
+                cityId = any(),
+                typeId = capture(typeIdList),
+                sizeId = capture(sizeIdList),
+                photos = any()
+            )
+        } returns mockPark
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao,
+            mockEventDao
+        )
+        val form = ParkForm(
+            address = "456 Park Avenue",
+            latitude = "40.7128",
+            longitude = "-74.0060",
+            cityId = 99,
+            typeId = 6,
+            sizeId = 2
+        )
+
+        // When
+        val result = repository.savePark(123L, form, null)
+
+        // Then
+        assertTrue(result.isSuccess)
+        assertEquals(123L, parkIdSlot.captured)
+        assertEquals("456 Park Avenue", addressList.first().readToString())
+        assertEquals("40.7128", latitudeList.first().readToString())
+        assertEquals("-74.0060", longitudeList.first().readToString())
+        assertEquals("6", typeIdList.first().readToString())
+        assertEquals("2", sizeIdList.first().readToString())
+    }
+
+    @Test
+    fun savePark_withPhotosAndFormData_sendsAllParametersCorrectly() = runTest {
+        // Given
+        val mockPark = createMockPark(123L)
+        val mockApi = mockk<SWApi>()
+
+        val addressList = mutableListOf<RequestBody>()
+        val latitudeList = mutableListOf<RequestBody>()
+        val longitudeList = mutableListOf<RequestBody>()
+        val typeIdList = mutableListOf<RequestBody>()
+        val sizeIdList = mutableListOf<RequestBody>()
+
+        coEvery {
+            mockApi.createPark(
+                address = capture(addressList),
+                latitude = capture(latitudeList),
+                longitude = capture(longitudeList),
+                cityId = any(),
+                typeId = capture(typeIdList),
+                sizeId = capture(sizeIdList),
+                photos = any()
+            )
+        } returns mockPark
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao,
+            mockEventDao
+        )
+        val form = ParkForm(
+            address = "789 Sports Street",
+            latitude = "48.8566",
+            longitude = "2.3522",
+            cityId = 15,
+            typeId = 3,
+            sizeId = 1
+        )
+        val photos = listOf(
+            ByteArray(5) { 0x11.toByte() },
+            ByteArray(5) { 0x22.toByte() }
+        )
+
+        // When
+        val result = repository.savePark(null, form, photos)
+
+        // Then
+        assertTrue(result.isSuccess)
+        assertEquals("789 Sports Street", addressList.first().readToString())
+        assertEquals("48.8566", latitudeList.first().readToString())
+        assertEquals("2.3522", longitudeList.first().readToString())
+        assertEquals("3", typeIdList.first().readToString())
+        assertEquals("1", sizeIdList.first().readToString())
     }
 
     @Test

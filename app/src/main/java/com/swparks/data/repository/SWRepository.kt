@@ -780,21 +780,7 @@ class SWRepositoryImp(
             if (response.isSuccessful) {
                 Result.success(Unit)
             } else {
-                val errorBody = response.errorBody()?.string()
-                val errorMessage = if (errorBody != null) {
-                    try {
-                        val errorResponse = json.decodeFromString<ErrorResponse>(errorBody)
-                        errorResponse.realMessage ?: "Ошибка сервера: ${response.code()}"
-                    } catch (e: Exception) {
-                        Log.w(
-                            TAG,
-                            "Не удалось распарсить ошибку удаления фото площадки: ${e.message}"
-                        )
-                        "Ошибка сервера: ${response.code()}"
-                    }
-                } else {
-                    "Ошибка сервера: ${response.code()}"
-                }
+                val errorMessage = parseErrorResponse(response, "удалении фото площадки")
                 Result.failure(ServerException(message = errorMessage))
             }
         } catch (e: IOException) {
@@ -904,21 +890,7 @@ class SWRepositoryImp(
             if (response.isSuccessful) {
                 Result.success(Unit)
             } else {
-                val errorBody = response.errorBody()?.string()
-                val errorMessage = if (errorBody != null) {
-                    try {
-                        val errorResponse = json.decodeFromString<ErrorResponse>(errorBody)
-                        errorResponse.realMessage ?: "Ошибка сервера: ${response.code()}"
-                    } catch (e: Exception) {
-                        Log.w(
-                            TAG,
-                            "Не удалось распарсить ошибку удаления фото события: ${e.message}"
-                        )
-                        "Ошибка сервера: ${response.code()}"
-                    }
-                } else {
-                    "Ошибка сервера: ${response.code()}"
-                }
+                val errorMessage = parseErrorResponse(response, "удалении фото события")
                 Result.failure(ServerException(message = errorMessage))
             }
         } catch (e: IOException) {
@@ -1428,6 +1400,21 @@ class SWRepositoryImp(
         } catch (e: Exception) {
             Log.e(TAG, "Ошибка сохранения дневника в кэш: ${e.message}")
             throw e
+        }
+    }
+
+    private fun parseErrorResponse(response: Response<*>, context: String): String {
+        val errorBody = response.errorBody()?.string()
+        return if (errorBody != null) {
+            try {
+                val errorResponse = json.decodeFromString<ErrorResponse>(errorBody)
+                errorResponse.realMessage ?: "Ошибка сервера: ${response.code()}"
+            } catch (e: Exception) {
+                Log.w(TAG, "Не удалось распарсить ошибку $context: ${e.message}")
+                "Ошибка сервера: ${response.code()}"
+            }
+        } else {
+            "Ошибка сервера: ${response.code()}"
         }
     }
 }

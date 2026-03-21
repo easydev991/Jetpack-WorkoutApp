@@ -647,7 +647,7 @@ class AppStateTest {
     // ==================== Цепочные сценарии ====================
 
     @Test
-    fun onDestinationChanged_whenProfileFlowThroughTrainingParksParkDetailTraineesOtherUser_thenProfileTabIsPreserved() {
+    fun onDestinationChanged_whenProfileChain_thenProfileTabIsPreserved() {
         val profileArguments = mockk<android.os.Bundle>(relaxed = true) {
             every { getString("source") } returns "profile"
         }
@@ -666,7 +666,7 @@ class AppStateTest {
     }
 
     @Test
-    fun onDestinationChanged_whenParksFlowThroughParkDetailTraineesOtherUser_thenParksTabIsPreserved() {
+    fun onDestinationChanged_whenParksChain_thenParksTabIsPreserved() {
         val parksArguments = mockk<android.os.Bundle>(relaxed = true) {
             every { getString("source") } returns "parks"
         }

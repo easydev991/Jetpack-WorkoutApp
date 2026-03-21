@@ -75,6 +75,7 @@ fun ParkDetailScreen(
     onNavigateToUserProfile: (Long) -> Unit,
     onNavigateToTrainees: (Long, String, List<User>) -> Unit,
     onNavigateToCreateEvent: (Long, String) -> Unit,
+    onNavigateToEditPark: (com.swparks.data.model.Park) -> Unit,
     parentPaddingValues: PaddingValues
 ) {
     val context = LocalContext.current
@@ -157,6 +158,9 @@ fun ParkDetailScreen(
                 }
 
                 is ParkDetailEvent.ParkUpdated -> Unit
+                is ParkDetailEvent.NavigateToEditPark -> {
+                    onNavigateToEditPark(event.park)
+                }
             }
         }
     }

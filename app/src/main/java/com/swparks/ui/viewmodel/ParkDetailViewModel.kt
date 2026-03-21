@@ -302,6 +302,9 @@ class ParkDetailViewModel(
         val currentState = _uiState.value
         if (currentState is ParkDetailUIState.Content) {
             logger.d(TAG, "Нажата кнопка редактирования площадки id=${currentState.park.id}")
+            viewModelScope.launch {
+                _events.emit(ParkDetailEvent.NavigateToEditPark(currentState.park))
+            }
         }
     }
 

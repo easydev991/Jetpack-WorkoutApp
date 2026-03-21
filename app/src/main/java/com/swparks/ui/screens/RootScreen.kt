@@ -29,7 +29,9 @@ import com.swparks.data.model.Park
 import com.swparks.data.preferences.AppSettingsDataStore
 import com.swparks.navigation.AppState
 import com.swparks.navigation.BottomNavigationBar
+import com.swparks.navigation.CreateParkNavArgsViewModel
 import com.swparks.navigation.EditEventNavArgsViewModel
+import com.swparks.navigation.EditParkNavArgsViewModel
 import com.swparks.navigation.EventParticipantsNavArgsViewModel
 import com.swparks.navigation.ParkTraineesNavArgsViewModel
 import com.swparks.navigation.Screen
@@ -37,12 +39,15 @@ import com.swparks.navigation.consumeJournalEntriesArgs
 import com.swparks.navigation.consumeSelectedParkResult
 import com.swparks.navigation.consumeUserAddedParksArgs
 import com.swparks.navigation.consumeUserIdSourceArgs
+import com.swparks.navigation.navigateToCreatePark
 import com.swparks.navigation.navigateToEditEvent
+import com.swparks.navigation.navigateToEditPark
 import com.swparks.navigation.navigateToEventParticipants
 import com.swparks.navigation.navigateToParkTrainees
 import com.swparks.navigation.setSelectedParkResult
 import com.swparks.ui.common.appViewModel
 import com.swparks.ui.model.EventFormMode
+import com.swparks.ui.model.ParkFormMode
 import com.swparks.ui.model.ParticipantsMode
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.screens.auth.LoginSheetHost
@@ -73,6 +78,8 @@ import com.swparks.ui.screens.messages.MessagesTopAppBar
 import com.swparks.ui.screens.more.MoreScreen
 import com.swparks.ui.screens.more.MoreTopAppBar
 import com.swparks.ui.screens.parks.ParkDetailScreen
+import com.swparks.ui.screens.parks.ParkFormNavigationAction
+import com.swparks.ui.screens.parks.ParkFormScreen
 import com.swparks.ui.screens.parks.ParksAddedByUserScreen
 import com.swparks.ui.screens.parks.ParksRootScreen
 import com.swparks.ui.screens.parks.ParksTopAppBar
@@ -109,6 +116,7 @@ import com.swparks.ui.viewmodel.JournalEntriesViewModel
 import com.swparks.ui.viewmodel.JournalsViewModel
 import com.swparks.ui.viewmodel.OtherUserProfileViewModel
 import com.swparks.ui.viewmodel.ParkDetailViewModel
+import com.swparks.ui.viewmodel.ParkFormViewModel
 import com.swparks.ui.viewmodel.SearchUserViewModel
 import com.swparks.ui.viewmodel.ThemeIconViewModel
 import com.swparks.ui.viewmodel.UserAddedParksViewModel
@@ -125,7 +133,9 @@ private val BOTTOM_BAR_HIDDEN_BASE_ROUTES = setOf(
     Screen.SelectParkForEvent,
     Screen.EditProfile,
     Screen.ChangePassword,
-    Screen.FriendsForDialog
+    Screen.FriendsForDialog,
+    Screen.CreatePark,
+    Screen.EditPark
 ).map { it.route.substringBefore("/").substringBefore("?") }.toSet()
 
 internal fun shouldShowBottomBar(route: String?): Boolean {
@@ -292,7 +302,14 @@ fun RootScreen(appState: AppState) {
                     parks = parks,
                     onParkClick = { park ->
                         appState.navController.navigate(Screen.ParkDetail.createRoute(park.id))
-                    }
+                    },
+                    onCreateParkClick = { draft ->
+                        appState.navController.navigateToCreatePark(
+                            source = "parks",
+                            draft = draft
+                        )
+                    },
+                    appState = appState
                 )
             }
 
@@ -407,6 +424,21 @@ fun RootScreen(appState: AppState) {
                     )
                 )
 
+                val updatedParkJson = navBackStackEntry.savedStateHandle
+                    .getStateFlow<String?>("updatedPark", null)
+                    .collectAsState()
+                    .value
+
+                LaunchedEffect(updatedParkJson) {
+                    if (updatedParkJson != null) {
+                        val updatedPark = WorkoutAppJson.decodeFromString<com.swparks.data.model.Park>(
+                            updatedParkJson
+                        )
+                        parkDetailViewModel.onParkUpdated(updatedPark.id)
+                        navBackStackEntry.savedStateHandle.remove<String>("updatedPark")
+                    }
+                }
+
                 ParkDetailScreen(
                     viewModel = parkDetailViewModel,
                     source = parkDetailSource,
@@ -436,16 +468,107 @@ fun RootScreen(appState: AppState) {
                             )
                         )
                     },
+                    onNavigateToEditPark = { park ->
+                        appState.navController.navigateToEditPark(
+                            parkId = park.id,
+                            source = parkDetailSource,
+                            park = park
+                        )
+                    },
                     parentPaddingValues = paddingValues
                 )
             }
 
-            composable(route = Screen.CreatePark.route) {
-                // TODO: Реализовать CreateParkScreen
+            composable(
+                route = Screen.CreatePark.route,
+                arguments = listOf(
+                    androidx.navigation.navArgument("source") {
+                        type = androidx.navigation.NavType.StringType
+                        defaultValue = "parks"
+                    }
+                )
+            ) { navBackStackEntry ->
+                val createParkArgsViewModel: CreateParkNavArgsViewModel = viewModel(
+                    factory = CreateParkNavArgsViewModel.factory(navBackStackEntry)
+                )
+                val createParkArgs = createParkArgsViewModel.args
+                val draft = createParkArgs.draft
+
+                val viewModel: ParkFormViewModel = viewModel(
+                    factory = ParkFormViewModel.factory(
+                        ParkFormMode.Create(
+                            initialAddress = draft?.address ?: "",
+                            initialLatitude = draft?.latitude?.toString() ?: "",
+                            initialLongitude = draft?.longitude?.toString() ?: "",
+                            initialCityId = draft?.cityId
+                        ),
+                        appContainer
+                    )
+                )
+
+                ParkFormScreen(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    viewModel = viewModel,
+                    onAction = { action ->
+                        when (action) {
+                            is ParkFormNavigationAction.Back -> appState.navController.popBackStack()
+                            is ParkFormNavigationAction.BackWithSavedPark -> {
+                                appState.navController.popBackStack()
+                            }
+                        }
+                    }
+                )
             }
 
-            composable(route = Screen.EditPark.route) {
-                // TODO: Реализовать EditParkScreen
+            composable(
+                route = Screen.EditPark.route,
+                arguments = listOf(
+                    androidx.navigation.navArgument("parkId") {
+                        type = androidx.navigation.NavType.LongType
+                    },
+                    androidx.navigation.navArgument("source") {
+                        type = androidx.navigation.NavType.StringType
+                        defaultValue = "parks"
+                    }
+                )
+            ) { navBackStackEntry ->
+                val editParkArgsViewModel: EditParkNavArgsViewModel = viewModel(
+                    factory = EditParkNavArgsViewModel.factory(navBackStackEntry)
+                )
+                val editParkArgs = editParkArgsViewModel.args
+                val park = editParkArgs?.park
+
+                if (park != null) {
+                    val viewModel: ParkFormViewModel = viewModel(
+                        factory = ParkFormViewModel.factory(
+                            ParkFormMode.Edit(parkId = editParkArgs.parkId, park = park),
+                            appContainer
+                        )
+                    )
+
+                    ParkFormScreen(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        viewModel = viewModel,
+                        onAction = { action ->
+                            when (action) {
+                                is ParkFormNavigationAction.Back -> appState.navController.popBackStack()
+                                is ParkFormNavigationAction.BackWithSavedPark -> {
+                                    val updatedParkJson = WorkoutAppJson.encodeToString(action.park)
+                                    appState.navController.previousBackStackEntry
+                                        ?.savedStateHandle
+                                        ?.set("updatedPark", updatedParkJson)
+                                    appState.navController.popBackStack()
+                                }
+                            }
+                        }
+                    )
+                } else {
+                    appState.navController.popBackStack()
+                }
             }
 
             composable(
