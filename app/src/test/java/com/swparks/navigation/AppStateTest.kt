@@ -578,4 +578,106 @@ class AppStateTest {
         appState.onDestinationChanged("other_user_profile/20", profileArguments)
         assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
     }
+
+    // ==================== Этап 1: Тесты сохранения source для дочерних экранов ====================
+
+    @Test
+    fun onDestinationChanged_whenUserParksFromProfile_thenProfileTabIsSelected() {
+        val arguments = mockk<android.os.Bundle>(relaxed = true) {
+            every { getString("source") } returns "profile"
+        }
+        appState.onDestinationChanged("user_parks/123", arguments)
+        assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
+    }
+
+    @Test
+    fun onDestinationChanged_whenUserParksFromParks_thenParksTabIsSelected() {
+        val arguments = mockk<android.os.Bundle>(relaxed = true) {
+            every { getString("source") } returns "parks"
+        }
+        appState.onDestinationChanged("user_parks/456", arguments)
+        assertEquals(TopLevelDestinations.PARKS, appState.currentTopLevelDestination)
+    }
+
+    @Test
+    fun onDestinationChanged_whenUserTrainingParksFromProfile_thenProfileTabIsSelected() {
+        val arguments = mockk<android.os.Bundle>(relaxed = true) {
+            every { getString("source") } returns "profile"
+        }
+        appState.onDestinationChanged("user_training_parks/123", arguments)
+        assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
+    }
+
+    @Test
+    fun onDestinationChanged_whenJournalsListFromProfile_thenProfileTabIsSelected() {
+        val arguments = mockk<android.os.Bundle>(relaxed = true) {
+            every { getString("source") } returns "profile"
+        }
+        appState.onDestinationChanged("journals_list/123", arguments)
+        assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
+    }
+
+    @Test
+    fun onDestinationChanged_whenJournalsListFromEvents_thenEventsTabIsSelected() {
+        val arguments = mockk<android.os.Bundle>(relaxed = true) {
+            every { getString("source") } returns "events"
+        }
+        appState.onDestinationChanged("journals_list/456", arguments)
+        assertEquals(TopLevelDestinations.EVENTS, appState.currentTopLevelDestination)
+    }
+
+    @Test
+    fun onDestinationChanged_whenJournalEntriesFromProfile_thenProfileTabIsSelected() {
+        val arguments = mockk<android.os.Bundle>(relaxed = true) {
+            every { getString("source") } returns "profile"
+        }
+        appState.onDestinationChanged("journal_entries/123", arguments)
+        assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
+    }
+
+    @Test
+    fun onDestinationChanged_whenJournalEntriesFromMessages_thenMessagesTabIsSelected() {
+        val arguments = mockk<android.os.Bundle>(relaxed = true) {
+            every { getString("source") } returns "messages"
+        }
+        appState.onDestinationChanged("journal_entries/456", arguments)
+        assertEquals(TopLevelDestinations.MESSAGES, appState.currentTopLevelDestination)
+    }
+
+    // ==================== Цепочные сценарии ====================
+
+    @Test
+    fun onDestinationChanged_whenProfileFlowThroughTrainingParksParkDetailTraineesOtherUser_thenProfileTabIsPreserved() {
+        val profileArguments = mockk<android.os.Bundle>(relaxed = true) {
+            every { getString("source") } returns "profile"
+        }
+
+        appState.onDestinationChanged("user_training_parks/1", profileArguments)
+        assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
+
+        appState.onDestinationChanged("park_detail/10", profileArguments)
+        assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
+
+        appState.onDestinationChanged("park_trainees/10", profileArguments)
+        assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
+
+        appState.onDestinationChanged("other_user_profile/20", profileArguments)
+        assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
+    }
+
+    @Test
+    fun onDestinationChanged_whenParksFlowThroughParkDetailTraineesOtherUser_thenParksTabIsPreserved() {
+        val parksArguments = mockk<android.os.Bundle>(relaxed = true) {
+            every { getString("source") } returns "parks"
+        }
+
+        appState.onDestinationChanged("park_detail/10", parksArguments)
+        assertEquals(TopLevelDestinations.PARKS, appState.currentTopLevelDestination)
+
+        appState.onDestinationChanged("park_trainees/10", parksArguments)
+        assertEquals(TopLevelDestinations.PARKS, appState.currentTopLevelDestination)
+
+        appState.onDestinationChanged("other_user_profile/20", parksArguments)
+        assertEquals(TopLevelDestinations.PARKS, appState.currentTopLevelDestination)
+    }
 }

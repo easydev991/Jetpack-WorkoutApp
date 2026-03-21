@@ -220,6 +220,34 @@ class DestinationsTest {
         assertEquals(Screen.Profile, result)
     }
 
+    @Test
+    fun findParentTab_whenUserParksWithoutSource_thenReturnProfileDefault() {
+        val result = Screen.findParentTab("user_parks/789", null)
+        assertEquals(Screen.Profile, result)
+    }
+
+    // ==================== Тесты UserTrainingParks с source ====================
+
+    @Test
+    fun findParentTab_whenUserTrainingParksFromProfile_thenReturnProfile() {
+        val arguments = Bundle().apply { putString("source", "profile") }
+        val result = Screen.findParentTab("user_training_parks/123", arguments)
+        assertEquals(Screen.Profile, result)
+    }
+
+    @Test
+    fun findParentTab_whenUserTrainingParksFromParks_thenReturnParks() {
+        val arguments = Bundle().apply { putString("source", "parks") }
+        val result = Screen.findParentTab("user_training_parks/456", arguments)
+        assertEquals(Screen.Parks, result)
+    }
+
+    @Test
+    fun findParentTab_whenUserTrainingParksWithoutSource_thenReturnProfileDefault() {
+        val result = Screen.findParentTab("user_training_parks/789", null)
+        assertEquals(Screen.Profile, result)
+    }
+
     // ==================== Тесты JournalsList с source ====================
 
     @Test

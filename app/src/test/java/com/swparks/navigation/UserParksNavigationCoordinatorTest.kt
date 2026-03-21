@@ -39,6 +39,44 @@ class UserParksNavigationCoordinatorTest {
         assertNull(data.seedPayload.parksJson)
     }
 
+    @Test
+    fun buildUserAddedParksNavigationData_whenSourceIsParks_thenRouteContainsParksNotPark() {
+        val data = buildUserAddedParksNavigationData(
+            userId = 1L,
+            source = "parks",
+            addedParks = emptyList()
+        )
+
+        assertEquals("user_parks/1?source=parks", data.route)
+        assertTrue("Route должен содержать 'source=parks'", data.route.contains("source=parks"))
+        assertFalse(
+            "Route не должен содержать legacy 'source=park&'",
+            data.route.contains("source=park&")
+        )
+        assertFalse(
+            "Route не должен содержать legacy 'source=park\$'",
+            data.route.endsWith("source=park")
+        )
+    }
+
+    @Test
+    fun buildUserAddedParksNavigationData_whenAllSources_thenRoutePreservesSourceExactly() {
+        val sources = listOf("parks", "events", "messages", "profile", "more")
+
+        sources.forEach { source ->
+            val data = buildUserAddedParksNavigationData(
+                userId = 1L,
+                source = source,
+                addedParks = emptyList()
+            )
+            assertEquals(
+                "Route должен содержать source=$source без изменений",
+                "user_parks/1?source=$source",
+                data.route
+            )
+        }
+    }
+
     private fun createPark(id: Long, longText: String = "short"): Park = Park(
         id = id,
         name = "Park $id",

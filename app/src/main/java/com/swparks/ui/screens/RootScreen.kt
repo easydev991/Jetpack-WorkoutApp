@@ -922,7 +922,12 @@ fun RootScreen(appState: AppState) {
                         viewModel = viewModel,
                         onBackClick = { appState.navController.popBackStack() },
                         onParkClick = { park ->
-                            appState.navController.navigate(Screen.ParkDetail.createRoute(park.id, "profile"))
+                            appState.navController.navigate(
+                                Screen.ParkDetail.createRoute(
+                                    park.id,
+                                    "profile"
+                                )
+                            )
                         },
                         parentPaddingValues = paddingValues
                     )
