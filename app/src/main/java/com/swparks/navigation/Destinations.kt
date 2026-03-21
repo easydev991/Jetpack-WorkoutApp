@@ -365,7 +365,7 @@ sealed class Screen(
  */
 fun getScreenBySource(source: String, default: Screen): Screen {
     return when (source) {
-        "parks" -> Screen.Parks
+        "parks", "park" -> Screen.Parks
         "events" -> Screen.Events
         "messages" -> Screen.Messages
         "profile" -> Screen.Profile

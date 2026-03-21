@@ -396,6 +396,7 @@ fun RootScreen(appState: AppState) {
                     }
                 )
             ) { navBackStackEntry ->
+                val parkDetailSource = navBackStackEntry.arguments?.getString("source") ?: "parks"
                 val parkDetailViewModel = viewModel<ParkDetailViewModel>(
                     factory = ParkDetailViewModel.factory(
                         swRepository = appContainer.swRepository,
@@ -408,27 +409,31 @@ fun RootScreen(appState: AppState) {
 
                 ParkDetailScreen(
                     viewModel = parkDetailViewModel,
+                    source = parkDetailSource,
                     onBack = { appState.navController.popBackStack() },
                     onParkDeleted = { parkId ->
                         Log.d("RootScreen", "Площадка удалена: $parkId")
                         appState.navController.popBackStack()
                     },
                     onNavigateToUserProfile = { userId ->
-                        val source = navBackStackEntry.arguments?.getString("source") ?: "parks"
                         appState.navController.navigate(
-                            Screen.OtherUserProfile.createRoute(userId, source)
+                            Screen.OtherUserProfile.createRoute(userId, parkDetailSource)
                         )
                     },
-                    onNavigateToTrainees = { parkId, source, users ->
+                    onNavigateToTrainees = { parkId, _, users ->
                         appState.navController.navigateToParkTrainees(
                             parkId = parkId,
-                            source = source,
+                            source = parkDetailSource,
                             users = users
                         )
                     },
                     onNavigateToCreateEvent = { parkId, parkName ->
                         appState.navController.navigate(
-                            Screen.CreateEventForPark.createRoute(parkId, parkName, "parks")
+                            Screen.CreateEventForPark.createRoute(
+                                parkId = parkId,
+                                parkName = parkName,
+                                source = parkDetailSource
+                            )
                         )
                     },
                     parentPaddingValues = paddingValues

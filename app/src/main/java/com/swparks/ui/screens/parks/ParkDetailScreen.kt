@@ -69,6 +69,7 @@ import com.swparks.ui.viewmodel.ParkDetailEvent
 @Composable
 fun ParkDetailScreen(
     viewModel: IParkDetailViewModel,
+    source: String = "parks",
     onBack: () -> Unit,
     onParkDeleted: (Long) -> Unit,
     onNavigateToUserProfile: (Long) -> Unit,
@@ -124,7 +125,7 @@ fun ParkDetailScreen(
                 }
 
                 is ParkDetailEvent.NavigateToTrainees -> {
-                    onNavigateToTrainees(event.parkId, "park", event.users)
+                    onNavigateToTrainees(event.parkId, source, event.users)
                 }
 
                 is ParkDetailEvent.NavigateToCreateEvent -> {

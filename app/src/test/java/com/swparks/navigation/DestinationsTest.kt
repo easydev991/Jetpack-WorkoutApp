@@ -48,6 +48,12 @@ class DestinationsTest {
     }
 
     @Test
+    fun getScreenBySource_whenLegacyPark_thenReturnParksScreen() {
+        val result = getScreenBySource("park", Screen.Profile)
+        assertEquals(Screen.Parks, result)
+    }
+
+    @Test
     fun getScreenBySource_whenUnknown_thenReturnDefault() {
         val result = getScreenBySource("unknown_source", Screen.Profile)
         assertEquals("При неизвестном source должен возвращаться default", Screen.Profile, result)
@@ -116,6 +122,13 @@ class DestinationsTest {
     fun findParentTab_whenOtherUserProfileFromParks_thenReturnParks() {
         val arguments = Bundle().apply { putString("source", "parks") }
         val result = Screen.findParentTab("other_user_profile/789", arguments)
+        assertEquals(Screen.Parks, result)
+    }
+
+    @Test
+    fun findParentTab_whenOtherUserProfileFromLegacyPark_thenReturnParks() {
+        val arguments = Bundle().apply { putString("source", "park") }
+        val result = Screen.findParentTab("other_user_profile/790", arguments)
         assertEquals(Screen.Parks, result)
     }
 

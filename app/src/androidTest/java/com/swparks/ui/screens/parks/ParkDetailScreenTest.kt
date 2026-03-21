@@ -33,6 +33,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -774,6 +776,47 @@ class ParkDetailScreenTest {
     }
 
     @Test
+    fun parkDetailScreen_whenNavigateToTraineesEvent_thenUsesProvidedSource() {
+        val park = createTestPark()
+        val users = listOf(testUser)
+        val viewModel = FakeParkDetailViewModel(
+            initialState = ParkDetailUIState.Content(
+                park = park,
+                address = "Москва, Россия",
+                authorAddress = "Москва, Россия"
+            )
+        )
+        var capturedSource: String? = null
+
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                ParkDetailScreen(
+                    viewModel = viewModel,
+                    source = "profile",
+                    onBack = {},
+                    onParkDeleted = {},
+                    onNavigateToUserProfile = {},
+                    onNavigateToTrainees = { _, source, _ -> capturedSource = source },
+                    onNavigateToCreateEvent = { _, _ -> },
+                    parentPaddingValues = PaddingValues()
+                )
+            }
+        }
+
+        runBlocking {
+            viewModel.emitEvent(
+                ParkDetailEvent.NavigateToTrainees(
+                    parkId = park.id,
+                    users = users
+                )
+            )
+        }
+        composeTestRule.waitForIdle()
+
+        assertEquals("profile", capturedSource)
+    }
+
+    @Test
     fun parkDetailScreen_backButton_callsOnBack() {
         var backClicked = false
         val park = createTestPark()
@@ -812,7 +855,8 @@ private class FakeParkDetailViewModel(
     initialState: ParkDetailUIState
 ) : IParkDetailViewModel {
     override val uiState: StateFlow<ParkDetailUIState> = MutableStateFlow(initialState)
-    override val events: SharedFlow<ParkDetailEvent> = MutableSharedFlow()
+    private val mutableEvents = MutableSharedFlow<ParkDetailEvent>()
+    override val events: SharedFlow<ParkDetailEvent> = mutableEvents
     override val isRefreshing: StateFlow<Boolean> = MutableStateFlow(false)
     override val isAuthorized: StateFlow<Boolean> = MutableStateFlow(true)
     override val isParkAuthor: StateFlow<Boolean> = MutableStateFlow(false)
@@ -840,4 +884,8 @@ private class FakeParkDetailViewModel(
     override fun onPhotoDeleted(photoId: Long) {}
     override fun onParkUpdated(parkId: Long) {}
     override fun refresh() {}
+
+    suspend fun emitEvent(event: ParkDetailEvent) {
+        mutableEvents.emit(event)
+    }
 }

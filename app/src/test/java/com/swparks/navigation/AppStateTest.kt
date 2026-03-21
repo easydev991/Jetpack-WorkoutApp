@@ -516,6 +516,22 @@ class AppStateTest {
     }
 
     @Test
+    fun onDestinationChanged_whenOtherUserProfileFromLegacyPark_thenParksTabIsSelected() {
+        // When - OtherUserProfile открыт из legacy source=park
+        val arguments = mockk<android.os.Bundle>(relaxed = true) {
+            every { getString("source") } returns "park"
+        }
+        appState.onDestinationChanged("other_user_profile/123", arguments)
+
+        // Then
+        assertEquals(
+            "При переходе на OtherUserProfile из legacy source=park currentTopLevelDestination должен быть PARKS",
+            TopLevelDestinations.PARKS,
+            appState.currentTopLevelDestination
+        )
+    }
+
+    @Test
     fun onDestinationChanged_whenOtherUserProfileFromEvents_thenEventsTabIsSelected() {
         // When - OtherUserProfile открыт из Events
         val arguments = mockk<android.os.Bundle>(relaxed = true) {
@@ -545,5 +561,21 @@ class AppStateTest {
             TopLevelDestinations.MORE,
             appState.currentTopLevelDestination
         )
+    }
+
+    @Test
+    fun onDestinationChanged_whenParkFlowFromProfile_thenProfileTabIsPreservedForChildScreens() {
+        val profileArguments = mockk<android.os.Bundle>(relaxed = true) {
+            every { getString("source") } returns "profile"
+        }
+
+        appState.onDestinationChanged("park_detail/10", profileArguments)
+        assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
+
+        appState.onDestinationChanged("park_trainees/10", profileArguments)
+        assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
+
+        appState.onDestinationChanged("other_user_profile/20", profileArguments)
+        assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
     }
 }
