@@ -445,6 +445,8 @@
     <string name="location_permission_denied">Запрещен доступ к геолокации</string>
     <string name="location_permission_need_in_settings">Для отображения твоего местоположения необходимо разрешить доступ к геолокации в настройках</string>
     <string name="allow_location_access">Разрешить</string>
+    <string name="location_fetch_failed">Не удалось определить местоположение</string>
+    <string name="geocoding_failed">Не удалось определить адрес</string>
     <string name="event_form_error_create">Ошибка создания мероприятия</string>
     <string name="event_form_error_edit">Ошибка редактирования мероприятия</string>
 </resources>

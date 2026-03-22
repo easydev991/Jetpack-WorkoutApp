@@ -435,6 +435,8 @@
     <string name="location_permission_denied">You have not granted access to geolocation</string>
     <string name="location_permission_need_in_settings">To display your location, please give access to geolocation in settings</string>
     <string name="allow_location_access">Allow</string>
+    <string name="location_fetch_failed">Unable to determine location</string>
+    <string name="geocoding_failed">Unable to determine address</string>
     <string name="event_form_error_create">Failed to create event</string>
     <string name="event_form_error_edit">Failed to edit event</string>
 </resources>
