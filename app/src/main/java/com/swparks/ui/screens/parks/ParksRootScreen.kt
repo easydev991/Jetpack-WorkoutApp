@@ -2,11 +2,13 @@ package com.swparks.ui.screens.parks
 
 import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -30,6 +32,7 @@ fun ParksRootScreen(
 ) {
     Scaffold(
         modifier = modifier,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
             CreateParkFab(
                 appState = appState,
@@ -46,10 +49,8 @@ fun ParksRootScreen(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Suppress("UnusedParameter")
 @Composable
 fun ParksTopAppBar(
-    appState: AppState,
     parksCount: Int,
     onFilterClick: () -> Unit = {}
 ) {
@@ -82,7 +83,7 @@ fun CreateParkFab(
     onClick: () -> Unit = {}
 ) {
     if (appState.isAuthorized) {
-        androidx.compose.material3.FloatingActionButton(
+        FloatingActionButton(
             onClick = {
                 Log.i("ParksScreen", "Нажата кнопка создания площадки")
                 onClick()
