@@ -1,7 +1,7 @@
 # SW Площадки
 
 <!-- BEGIN_VERSIONS -->
-[<img alt="Kotlin Version" src="https://img.shields.io/badge/Kotlin_Version-2.3.10-purple">](https://kotlinlang.org/)
+[<img alt="Kotlin Version" src="https://img.shields.io/badge/Kotlin_Version-2.3.20-purple">](https://kotlinlang.org/)
 [<img alt="Android SDK" src="https://img.shields.io/badge/Android_SDK-36-green">](https://developer.android.com/)
 [<img alt="Min SDK" src="https://img.shields.io/badge/Min_SDK-26-informational">](https://developer.android.com/)
 [<img alt="Gradle" src="https://img.shields.io/badge/Gradle-9.3.1-blue">](https://gradle.org/)
