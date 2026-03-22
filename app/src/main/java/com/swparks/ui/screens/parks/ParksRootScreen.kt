@@ -45,23 +45,25 @@ private enum class PermissionDialogCause {
     FOREVER_DENIED
 }
 
+@Suppress("LongParameterList")
 @Composable
 fun ParksRootScreen(
     modifier: Modifier = Modifier,
     parks: List<Park>,
     onParkClick: (Park) -> Unit = {},
     onCreateParkClick: (NewParkDraft) -> Unit = {},
-    appState: AppState
+    appState: AppState,
+    createParkLocationHandler: ICreateParkLocationHandler? = null
 ) {
     val context = LocalContext.current
     val appContainer = remember {
         (context.applicationContext as JetpackWorkoutApplication).container
     }
-    val createParkLocationHandler = appContainer.createParkLocationHandler
+    val handler = createParkLocationHandler ?: appContainer.createParkLocationHandler
     val coroutineScope = rememberCoroutineScope()
 
     val permissionState = rememberLocationPermissionState(
-        createParkLocationHandler = createParkLocationHandler,
+        createParkLocationHandler = handler,
         coroutineScope = coroutineScope
     )
 
@@ -195,13 +197,19 @@ private class LocationPermissionState(
     private fun handlePermissionGranted() {
         coroutineScope.launch {
             val result = createParkLocationHandler()
-            result.onSuccess { draft ->
-                Log.i(
-                    "ParksRootScreen",
-                    "Draft создан: lat=${draft.latitude}, lon=${draft.longitude}"
-                )
-                _permissionGrantedEvents.tryEmit(draft)
-            }
+            result.fold(
+                onSuccess = { draft ->
+                    Log.i(
+                        "ParksRootScreen",
+                        "Draft создан: lat=${draft.latitude}, lon=${draft.longitude}"
+                    )
+                    _permissionGrantedEvents.tryEmit(draft)
+                },
+                onFailure = {
+                    Log.w("ParksRootScreen", "Location failed, navigating with empty draft")
+                    _permissionGrantedEvents.tryEmit(NewParkDraft.EMPTY)
+                }
+            )
         }
     }
 }
