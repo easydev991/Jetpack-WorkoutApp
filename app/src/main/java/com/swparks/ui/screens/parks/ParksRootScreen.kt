@@ -22,28 +22,22 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.swparks.JetpackWorkoutApplication
 import com.swparks.R
 import com.swparks.data.model.NewParkDraft
 import com.swparks.data.model.Park
-import com.swparks.domain.usecase.ICreateParkLocationHandler
 import com.swparks.navigation.AppState
 import com.swparks.ui.ds.ParksListView
-import kotlinx.coroutines.launch
-
-private enum class PermissionDialogCause {
-    DENIED,
-    FOREVER_DENIED
-}
+import com.swparks.ui.viewmodel.IParksRootViewModel
+import com.swparks.ui.viewmodel.ParksRootEvent
+import com.swparks.ui.viewmodel.PermissionDialogCause
+import kotlinx.coroutines.flow.collectLatest
 
 @Suppress("LongParameterList")
 @Composable
@@ -53,32 +47,28 @@ fun ParksRootScreen(
     onParkClick: (Park) -> Unit = {},
     onCreateParkClick: (NewParkDraft) -> Unit = {},
     appState: AppState,
-    createParkLocationHandler: ICreateParkLocationHandler? = null
+    viewModel: IParksRootViewModel
 ) {
     val context = LocalContext.current
-    val appContainer = remember {
-        (context.applicationContext as JetpackWorkoutApplication).container
-    }
-    val handler = createParkLocationHandler ?: appContainer.createParkLocationHandler
-    val coroutineScope = rememberCoroutineScope()
+    val uiState by viewModel.uiState.collectAsState()
 
-    val permissionState = rememberLocationPermissionState(
-        createParkLocationHandler = handler,
-        coroutineScope = coroutineScope
-    )
+    SetupPermissionLaunchers(viewModel)
 
-    LaunchedEffect(permissionState) {
-        permissionState.permissionGrantedEvents.collect { draft ->
-            onCreateParkClick(draft)
+    LaunchedEffect(Unit) {
+        viewModel.events.collectLatest { event ->
+            when (event) {
+                is ParksRootEvent.NavigateToCreatePark -> onCreateParkClick(event.draft)
+                is ParksRootEvent.OpenSettings -> {}
+            }
         }
     }
 
     LocationPermissionDialog(
-        visible = permissionState.showDialog,
-        permissionDialogCause = permissionState.dialogCause,
-        onDismiss = permissionState::dismissDialog,
-        onConfirm = permissionState::requestPermission,
-        onOpenSettings = { intent -> permissionState.openSettings(intent) }
+        visible = uiState.showPermissionDialog,
+        permissionDialogCause = uiState.permissionDialogCause,
+        onDismiss = viewModel::onDismissDialog,
+        onConfirm = viewModel::onConfirmDialog,
+        onOpenSettings = { intent -> viewModel.onOpenSettings(intent) }
     )
 
     Scaffold(
@@ -89,7 +79,25 @@ fun ParksRootScreen(
                 appState = appState,
                 onClick = {
                     Log.i("ParksRootScreen", "Нажата кнопка создания площадки")
-                    permissionState.onFabClicked()
+                    val hasFineLocation = ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+                    val hasCoarseLocation = ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+
+                    if (hasFineLocation || hasCoarseLocation) {
+                        viewModel.onPermissionGranted()
+                    } else {
+                        val activity = context as? android.app.Activity
+                        val shouldShowRationale = activity != null && ActivityCompat.shouldShowRequestPermissionRationale(
+                            activity,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        )
+                        viewModel.onPermissionDenied(shouldShowRationale)
+                    }
                 }
             )
         }
@@ -102,132 +110,12 @@ fun ParksRootScreen(
     }
 }
 
-private class LocationPermissionState(
-    private val context: android.content.Context,
-    private val createParkLocationHandler: ICreateParkLocationHandler,
-    private val coroutineScope: kotlinx.coroutines.CoroutineScope
-) {
-    var showDialog by mutableStateOf(false)
-        private set
-    var dialogCause by mutableStateOf<PermissionDialogCause?>(null)
-        private set
-
-    var permissionLauncher: ((Map<String, Boolean>) -> Unit)? = null
-    var openSettingsLauncher: ((Intent) -> Unit)? = null
-
-    private val _permissionGrantedEvents = kotlinx.coroutines.flow.MutableSharedFlow<NewParkDraft>(
-        extraBufferCapacity = 1
-    )
-    val permissionGrantedEvents: kotlinx.coroutines.flow.SharedFlow<NewParkDraft> =
-        _permissionGrantedEvents
-
-    fun onFabClicked() {
-        val hasFineLocation = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        val hasCoarseLocation = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        if (hasFineLocation || hasCoarseLocation) {
-            Log.i("ParksRootScreen", "Разрешение на геолокацию уже предоставлено")
-            handlePermissionGranted()
-        } else {
-            Log.i("ParksRootScreen", "Запрос разрешения на геолокацию")
-            val activity = context as android.app.Activity
-            val shouldShowRationale =
-                androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale(
-                    activity,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            if (shouldShowRationale) {
-                dialogCause = PermissionDialogCause.DENIED
-                showDialog = true
-            } else {
-                requestPermission()
-            }
-        }
-    }
-
-    fun dismissDialog() {
-        showDialog = false
-    }
-
-    fun requestPermission() {
-        permissionLauncher?.invoke(
-            mapOf(
-                Manifest.permission.ACCESS_FINE_LOCATION to true,
-                Manifest.permission.ACCESS_COARSE_LOCATION to true
-            )
-        )
-    }
-
-    fun openSettings(intent: Intent) {
-        showDialog = false
-        openSettingsLauncher?.invoke(intent)
-    }
-
-    fun handlePermissionResult(permissions: Map<String, Boolean>) {
-        val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
-        val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        val isGranted = fineLocationGranted || coarseLocationGranted
-
-        if (isGranted) {
-            Log.i("ParksRootScreen", "Разрешение на геолокацию получено")
-            handlePermissionGranted()
-        } else {
-            Log.i("ParksRootScreen", "Разрешение на геолокацию отклонено")
-            val activity = context as android.app.Activity
-            val shouldShowRationale =
-                androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale(
-                    activity,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            dialogCause = if (shouldShowRationale) {
-                PermissionDialogCause.DENIED
-            } else {
-                PermissionDialogCause.FOREVER_DENIED
-            }
-            showDialog = true
-        }
-    }
-
-    private fun handlePermissionGranted() {
-        coroutineScope.launch {
-            val result = createParkLocationHandler()
-            result.fold(
-                onSuccess = { draft ->
-                    Log.i(
-                        "ParksRootScreen",
-                        "Draft создан: lat=${draft.latitude}, lon=${draft.longitude}"
-                    )
-                    _permissionGrantedEvents.tryEmit(draft)
-                },
-                onFailure = {
-                    Log.w("ParksRootScreen", "Location failed, navigating with empty draft")
-                    _permissionGrantedEvents.tryEmit(NewParkDraft.EMPTY)
-                }
-            )
-        }
-    }
-}
-
 @Composable
-private fun rememberLocationPermissionState(
-    createParkLocationHandler: ICreateParkLocationHandler,
-    coroutineScope: kotlinx.coroutines.CoroutineScope
-): LocationPermissionState {
-    val context = LocalContext.current
-    val state = remember(createParkLocationHandler, coroutineScope) {
-        LocationPermissionState(context, createParkLocationHandler, coroutineScope)
-    }
-
+private fun SetupPermissionLaunchers(viewModel: IParksRootViewModel) {
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        state.handlePermissionResult(permissions)
+        viewModel.onPermissionResult(permissions)
     }
 
     val openSettingsLauncher = rememberLauncherForActivityResult(
@@ -236,19 +124,19 @@ private fun rememberLocationPermissionState(
         Log.i("ParksRootScreen", "Возврат из настроек приложения")
     }
 
-    state.permissionLauncher = { permissions ->
-        permissionLauncher.launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
+    LaunchedEffect(Unit) {
+        viewModel.permissionLauncher = { permissions ->
+            permissionLauncher.launch(
+                arrayOf(
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                )
             )
-        )
+        }
+        viewModel.openSettingsLauncher = { intent ->
+            openSettingsLauncher.launch(intent)
+        }
     }
-    state.openSettingsLauncher = { intent ->
-        openSettingsLauncher.launch(intent)
-    }
-
-    return state
 }
 
 @Composable

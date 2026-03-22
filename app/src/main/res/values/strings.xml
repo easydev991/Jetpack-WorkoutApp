@@ -433,7 +433,7 @@
     <string name="location_permission_alert_message">To create a park, allow geolocation access to determine the coordinates of a new park.</string>
     <string name="open_settings">Open settings</string>
     <string name="location_permission_denied">You have not granted access to geolocation</string>
-    <string name="location_permission_need_in_settings">To display your location, please give access to geolocation in settings</string>
+    <string name="location_permission_need_in_settings">To display your location and to create new parks, please give access to geolocation in settings</string>
     <string name="allow_location_access">Allow</string>
     <string name="location_fetch_failed">Unable to determine location</string>
     <string name="geocoding_failed">Unable to determine address</string>

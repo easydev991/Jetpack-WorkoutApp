@@ -117,6 +117,7 @@ import com.swparks.ui.viewmodel.JournalsViewModel
 import com.swparks.ui.viewmodel.OtherUserProfileViewModel
 import com.swparks.ui.viewmodel.ParkDetailViewModel
 import com.swparks.ui.viewmodel.ParkFormViewModel
+import com.swparks.ui.viewmodel.ParksRootViewModel
 import com.swparks.ui.viewmodel.SearchUserViewModel
 import com.swparks.ui.viewmodel.ThemeIconViewModel
 import com.swparks.ui.viewmodel.UserAddedParksViewModel
@@ -221,6 +222,8 @@ fun RootScreen(appState: AppState) {
     // списка мероприятий при возврате с EventFormScreen после создания
     val eventsViewModel = viewModel<EventsViewModel>(factory = EventsViewModel.Factory)
 
+    val parksRootViewModel = viewModel<ParksRootViewModel>(factory = ParksRootViewModel.Factory)
+
     // Подписываемся на Flow из ProfileViewModel для реактивного обновления
     val currentUser by profileViewModel.currentUser.collectAsState()
 
@@ -308,7 +311,8 @@ fun RootScreen(appState: AppState) {
                             draft = draft
                         )
                     },
-                    appState = appState
+                    appState = appState,
+                    viewModel = parksRootViewModel
                 )
             }
 

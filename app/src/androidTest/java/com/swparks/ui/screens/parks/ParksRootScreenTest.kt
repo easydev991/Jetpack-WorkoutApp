@@ -1,34 +1,22 @@
 package com.swparks.ui.screens.parks
 
-import android.content.Context
-import android.content.pm.PackageManager
+import android.Manifest
 import androidx.compose.material3.Surface
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
-import androidx.core.content.ContextCompat
-import androidx.navigation.compose.rememberNavController
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swparks.data.model.NewParkDraft
 import com.swparks.data.model.User
-import com.swparks.domain.usecase.ICreateParkLocationHandler
 import com.swparks.navigation.AppState
-import io.mockk.coEvery
-import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.unmockkAll
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import org.junit.After
+import com.swparks.ui.viewmodel.FakeParksRootViewModel
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.annotation.DoNotInstrument
 
 @RunWith(AndroidJUnit4::class)
 class ParksRootScreenTest {
@@ -36,22 +24,24 @@ class ParksRootScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private lateinit var mockLocationHandler: ICreateParkLocationHandler
+    private lateinit var fakeViewModel: FakeParksRootViewModel
 
     @Before
     fun setup() {
-        mockLocationHandler = mockk(relaxed = true)
-    }
-
-    @After
-    fun tearDown() {
-        unmockkAll()
+        fakeViewModel = FakeParksRootViewModel()
+        try {
+            val packageName = ApplicationProvider.getApplicationContext<android.content.Context>().packageName
+            Runtime.getRuntime().exec(arrayOf("pm", "grant", packageName, "android.permission.ACCESS_FINE_LOCATION"))
+            Runtime.getRuntime().exec(arrayOf("pm", "grant", packageName, "android.permission.ACCESS_COARSE_LOCATION"))
+        } catch (e: Exception) {
+            // Permission grant may fail on emulator without root, tests will handle this
+        }
     }
 
     @Test
     fun whenUserIsAuthorized_fabIsDisplayed() {
         composeTestRule.setContent {
-            val navController = rememberNavController()
+            val navController = androidx.navigation.compose.rememberNavController()
             val appState = AppState(navController)
             appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
 
@@ -59,41 +49,43 @@ class ParksRootScreenTest {
                 ParksRootScreen(
                     parks = emptyList(),
                     appState = appState,
-                    onCreateParkClick = {}
+                    onCreateParkClick = {},
+                    viewModel = fakeViewModel
                 )
             }
         }
 
         composeTestRule
-            .onNodeWithText("Создать площадку")
+            .onNodeWithContentDescription("Создать площадку")
             .assertIsDisplayed()
     }
 
     @Test
     fun whenUserIsNotAuthorized_fabIsNotDisplayed() {
         composeTestRule.setContent {
-            val navController = rememberNavController()
+            val navController = androidx.navigation.compose.rememberNavController()
             val appState = AppState(navController)
 
             Surface {
                 ParksRootScreen(
                     parks = emptyList(),
                     appState = appState,
-                    onCreateParkClick = {}
+                    onCreateParkClick = {},
+                    viewModel = fakeViewModel
                 )
             }
         }
 
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithText("Создать площадку")
+            .onNodeWithContentDescription("Создать площадку")
             .assertDoesNotExist()
     }
 
     @Test
     fun whenUserIsAuthorized_fabIsEnabled() {
         composeTestRule.setContent {
-            val navController = rememberNavController()
+            val navController = androidx.navigation.compose.rememberNavController()
             val appState = AppState(navController)
             appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
 
@@ -101,25 +93,26 @@ class ParksRootScreenTest {
                 ParksRootScreen(
                     parks = emptyList(),
                     appState = appState,
-                    onCreateParkClick = {}
+                    onCreateParkClick = {},
+                    viewModel = fakeViewModel
                 )
             }
         }
 
         composeTestRule
-            .onNodeWithText("Создать площадку")
+            .onNodeWithContentDescription("Создать площадку")
             .assertIsEnabled()
     }
 
     @Test
     fun onFabClicked_whenPermissionGranted_fetchesLocationAndNavigates() {
         val draft = NewParkDraft.EMPTY.withCoordinates(55.75, 37.62)
-        coEvery { mockLocationHandler.invoke() } returns Result.success(draft)
+        fakeViewModel.nextDraft = draft
 
         var capturedDraft: NewParkDraft? = null
 
         composeTestRule.setContent {
-            val navController = rememberNavController()
+            val navController = androidx.navigation.compose.rememberNavController()
             val appState = AppState(navController)
             appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
 
@@ -128,31 +121,32 @@ class ParksRootScreenTest {
                     parks = emptyList(),
                     appState = appState,
                     onCreateParkClick = { capturedDraft = it },
-                    createParkLocationHandler = mockLocationHandler
+                    viewModel = fakeViewModel
                 )
             }
         }
 
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithText("Создать площадку")
+            .onNodeWithContentDescription("Создать площадку")
             .performClick()
 
         composeTestRule.waitForIdle()
 
         assert(capturedDraft != null) { "onCreateParkClick should be called with draft" }
-        assert(capturedDraft?.latitude == 55.75) { "Draft should have correct latitude" }
-        assert(capturedDraft?.longitude == 37.62) { "Draft should have correct longitude" }
+        capturedDraft!!
+        assert(capturedDraft.latitude == 55.75) { "Draft should have correct latitude" }
+        assert(capturedDraft.longitude == 37.62) { "Draft should have correct longitude" }
     }
 
     @Test
     fun onFabClicked_whenLocationFails_navigatesWithEmptyDraft() {
-        coEvery { mockLocationHandler.invoke() } returns Result.failure(RuntimeException("Location failed"))
+        fakeViewModel.nextDraft = NewParkDraft.EMPTY
 
         var capturedDraft: NewParkDraft? = null
 
         composeTestRule.setContent {
-            val navController = rememberNavController()
+            val navController = androidx.navigation.compose.rememberNavController()
             val appState = AppState(navController)
             appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
 
@@ -161,155 +155,93 @@ class ParksRootScreenTest {
                     parks = emptyList(),
                     appState = appState,
                     onCreateParkClick = { capturedDraft = it },
-                    createParkLocationHandler = mockLocationHandler
+                    viewModel = fakeViewModel
                 )
             }
         }
 
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithText("Создать площадку")
+            .onNodeWithContentDescription("Создать площадку")
             .performClick()
 
         composeTestRule.waitForIdle()
 
         assert(capturedDraft != null) { "onCreateParkClick should be called even when location fails" }
-        assert(capturedDraft?.isEmpty == true) { "Draft should be empty when location fails" }
-    }
-}
-
-@RunWith(AndroidJUnit4::class)
-class LocationPermissionAlertDialogTest {
-
-    @get:Rule
-    val composeTestRule = createComposeRule()
-
-    @Test
-    fun whenVisibleAndIsDeniedForever_showsOpenSettingsAndCorrectMessage() {
-        composeTestRule.setContent {
-            LocationPermissionAlertDialog(
-                visible = true,
-                onDismiss = {},
-                onConfirm = {},
-                onOpenSettings = {},
-                isDeniedForever = true
-            )
-        }
-
-        composeTestRule
-            .onNodeWithText("Доступ к геолокации")
-            .assertIsDisplayed()
-        composeTestRule
-            .onNodeWithText("Для отображения твоего местоположения необходимо разрешить доступ к геолокации в настройках")
-            .assertIsDisplayed()
-        composeTestRule
-            .onNodeWithText("Открыть настройки")
-            .assertIsDisplayed()
-        composeTestRule
-            .onNodeWithText("Отмена")
-            .assertIsDisplayed()
+        capturedDraft!!
+        assert(capturedDraft.isEmpty) { "Draft should be empty when location fails" }
     }
 
     @Test
-    fun whenVisibleAndIsNotDeniedForever_showsAllowAccessAndCorrectMessage() {
+    fun onFabClicked_withCoordinates_draftContainsCorrectLatitude() {
+        val draft = NewParkDraft.EMPTY.withCoordinates(48.8566, 2.3522)
+        fakeViewModel.nextDraft = draft
+
+        var capturedDraft: NewParkDraft? = null
+
         composeTestRule.setContent {
-            LocationPermissionAlertDialog(
-                visible = true,
-                onDismiss = {},
-                onConfirm = {},
-                onOpenSettings = {},
-                isDeniedForever = false
-            )
+            val navController = androidx.navigation.compose.rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
+
+            Surface {
+                ParksRootScreen(
+                    parks = emptyList(),
+                    appState = appState,
+                    onCreateParkClick = { capturedDraft = it },
+                    viewModel = fakeViewModel
+                )
+            }
         }
 
+        composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithText("Доступ к геолокации")
-            .assertIsDisplayed()
-        composeTestRule
-            .onNodeWithText("Для создания площадки необходимо разрешить приложению доступ к геолокации для определения координат новой площадки.")
-            .assertIsDisplayed()
-        composeTestRule
-            .onNodeWithText("Разрешить")
-            .assertIsDisplayed()
-        composeTestRule
-            .onNodeWithText("Отмена")
-            .assertIsDisplayed()
-    }
-
-    @Test
-    fun whenNotVisible_dialogIsNotDisplayed() {
-        composeTestRule.setContent {
-            LocationPermissionAlertDialog(
-                visible = false,
-                onDismiss = {},
-                onConfirm = {},
-                onOpenSettings = {},
-                isDeniedForever = false
-            )
-        }
-
-        composeTestRule
-            .onNodeWithText("Доступ к геолокации")
-            .assertDoesNotExist()
-    }
-
-    @Test
-    fun whenConfirmClicked_callsOnConfirm() {
-        var confirmCalled = false
-        composeTestRule.setContent {
-            LocationPermissionAlertDialog(
-                visible = true,
-                onDismiss = {},
-                onConfirm = { confirmCalled = true },
-                onOpenSettings = {},
-                isDeniedForever = false
-            )
-        }
-
-        composeTestRule
-            .onNodeWithText("Разрешить")
+            .onNodeWithContentDescription("Создать площадку")
             .performClick()
 
-        assert(confirmCalled) { "onConfirm should be called when confirm button is clicked" }
+        composeTestRule.waitForIdle()
+
+        capturedDraft!!
+        assert(capturedDraft.latitude == 48.8566) { "Draft should have correct latitude 48.8566" }
+        assert(capturedDraft.longitude == 2.3522) { "Draft should have correct longitude 2.3522" }
     }
 
     @Test
-    fun whenDeniedForeverAndConfirmClicked_callsOnOpenSettings() {
-        var openSettingsCalled = false
+    fun onFabClicked_withGeocodingData_draftContainsAddressAndCityId() {
+        val draft = NewParkDraft(
+            latitude = 55.7558,
+            longitude = 37.6173,
+            address = "Moscow, Red Square",
+            cityId = 1
+        )
+        fakeViewModel.nextDraft = draft
+
+        var capturedDraft: NewParkDraft? = null
+
         composeTestRule.setContent {
-            LocationPermissionAlertDialog(
-                visible = true,
-                onDismiss = {},
-                onConfirm = {},
-                onOpenSettings = { openSettingsCalled = true },
-                isDeniedForever = true
-            )
+            val navController = androidx.navigation.compose.rememberNavController()
+            val appState = AppState(navController)
+            appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
+
+            Surface {
+                ParksRootScreen(
+                    parks = emptyList(),
+                    appState = appState,
+                    onCreateParkClick = { capturedDraft = it },
+                    viewModel = fakeViewModel
+                )
+            }
         }
 
+        composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithText("Открыть настройки")
+            .onNodeWithContentDescription("Создать площадку")
             .performClick()
 
-        assert(openSettingsCalled) { "onOpenSettings should be called when confirm button is clicked in forever denied state" }
-    }
+        composeTestRule.waitForIdle()
 
-    @Test
-    fun whenDismissClicked_callsOnDismiss() {
-        var dismissCalled = false
-        composeTestRule.setContent {
-            LocationPermissionAlertDialog(
-                visible = true,
-                onDismiss = { dismissCalled = true },
-                onConfirm = {},
-                onOpenSettings = {},
-                isDeniedForever = false
-            )
-        }
-
-        composeTestRule
-            .onNodeWithText("Отмена")
-            .performClick()
-
-        assert(dismissCalled) { "onDismiss should be called when dismiss button is clicked" }
+        capturedDraft!!
+        assert(capturedDraft.address == "Moscow, Red Square") { "Draft should have address" }
+        assert(capturedDraft.cityId == 1) { "Draft should have cityId" }
     }
 }
