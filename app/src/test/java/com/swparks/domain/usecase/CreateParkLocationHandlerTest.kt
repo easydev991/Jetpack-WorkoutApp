@@ -71,12 +71,12 @@ class CreateParkLocationHandlerTest {
     }
 
     @Test
-    fun invoke_whenLocationFails_callsHandleErrorWithGenericAppError() = runTest {
+    fun invoke_whenLocationFails_callsHandleErrorWithLocationFailed() = runTest {
         coEvery { locationService.getCurrentLocation() } returns Result.failure(Exception("Location unavailable"))
 
         handler()
 
-        verify { userNotifier.handleError(match<AppError> { it.message.isNotEmpty() }) }
+        verify { userNotifier.handleError(match<AppError.LocationFailed> { true }) }
     }
 
     @Test

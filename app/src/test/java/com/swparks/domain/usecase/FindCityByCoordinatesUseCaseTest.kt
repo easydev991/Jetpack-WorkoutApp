@@ -91,7 +91,8 @@ class FindCityByCoordinatesUseCaseTest {
             City(id = "7", name = "Madrid", lat = "40.4168", lon = "-3.7038")
         )
 
-        val result = useCase.invoke(locality = "  Madrid  ", latitude = 40.4168, longitude = -3.7038)
+        val result =
+            useCase.invoke(locality = "  Madrid  ", latitude = 40.4168, longitude = -3.7038)
 
         assertEquals(7, result)
     }

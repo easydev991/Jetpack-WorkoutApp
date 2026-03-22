@@ -18,6 +18,8 @@ fun AppError.toUiText(context: Context): String {
         is AppError.Validation -> toValidationUiText(context)
         is AppError.Server -> toServerUiText(context)
         is AppError.Generic -> message
+        is AppError.LocationFailed -> toLocationFailedUiText(context)
+        is AppError.GeocodingFailed -> toGeocodingUiText(context)
     }
 }
 
@@ -59,6 +61,27 @@ private fun AppError.Server.toServerUiText(context: Context): String {
         HTTP_INTERNAL_SERVER_ERROR -> context.getString(R.string.error_server_internal)
         HTTP_SERVICE_UNAVAILABLE -> context.getString(R.string.error_server_unavailable)
         else -> context.getString(R.string.error_server_general)
+    }
+}
+
+/**
+ * Преобразует ошибку геокодирования в локализованное сообщение.
+ */
+private fun AppError.GeocodingFailed.toGeocodingUiText(context: Context): String {
+    return when (kind) {
+        AppError.GeocodingFailureKind.ADDRESS_BUILD_FAIL -> context.getString(R.string.geocoding_address_build_fail)
+        AppError.GeocodingFailureKind.IO_ERROR -> context.getString(R.string.error_network_io)
+    }
+}
+
+/**
+ * Преобразует ошибку геолокации в локализованное сообщение.
+ */
+private fun AppError.LocationFailed.toLocationFailedUiText(context: Context): String {
+    return if (cause is SecurityException) {
+        context.getString(R.string.location_permission_need_in_settings)
+    } else {
+        context.getString(R.string.location_fetch_failed)
     }
 }
 

@@ -14,14 +14,14 @@ import com.google.android.gms.tasks.CancellationTokenSource
 import com.swparks.domain.model.LocationCoordinates
 import com.swparks.domain.provider.LocationService
 import kotlinx.coroutines.CancellableContinuation
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
 
 class LocationServiceImpl(
     private val context: Context,
-    private val fusedLocationClientProvider: (Context) -> FusedLocationProviderClient = {
-        ctx -> LocationServices.getFusedLocationProviderClient(ctx)
+    private val fusedLocationClientProvider: (Context) -> FusedLocationProviderClient = { ctx ->
+        LocationServices.getFusedLocationProviderClient(ctx)
     },
     private val locationTimeoutMillis: Long = LOCATION_TIMEOUT_MILLIS
 ) : LocationService {
@@ -107,7 +107,12 @@ class LocationServiceImpl(
             locationManager == null -> Result.failure(IllegalStateException("LocationManager not available"))
             provider == null -> Result.failure(IllegalStateException("No location provider available"))
             location == null -> Result.failure(IllegalStateException("Last known location is null"))
-            else -> Result.success(LocationCoordinates(latitude = location.latitude, longitude = location.longitude))
+            else -> Result.success(
+                LocationCoordinates(
+                    latitude = location.latitude,
+                    longitude = location.longitude
+                )
+            )
         }
     }
 

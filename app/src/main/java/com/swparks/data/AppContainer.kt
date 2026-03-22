@@ -43,8 +43,8 @@ import com.swparks.domain.repository.MessagesRepository
 import com.swparks.domain.usecase.CanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.ChangePasswordUseCase
 import com.swparks.domain.usecase.CreateEventUseCase
-import com.swparks.domain.usecase.DefaultCreateParkLocationHandler
 import com.swparks.domain.usecase.CreateJournalUseCase
+import com.swparks.domain.usecase.DefaultCreateParkLocationHandler
 import com.swparks.domain.usecase.DeleteJournalEntryUseCase
 import com.swparks.domain.usecase.DeleteJournalUseCase
 import com.swparks.domain.usecase.DeleteUserUseCase
@@ -58,8 +58,8 @@ import com.swparks.domain.usecase.GetPastEventsFlowUseCase
 import com.swparks.domain.usecase.ICanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IChangePasswordUseCase
 import com.swparks.domain.usecase.ICreateEventUseCase
-import com.swparks.domain.usecase.ICreateParkLocationHandler
 import com.swparks.domain.usecase.ICreateJournalUseCase
+import com.swparks.domain.usecase.ICreateParkLocationHandler
 import com.swparks.domain.usecase.IDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IDeleteJournalUseCase
 import com.swparks.domain.usecase.IDeleteUserUseCase

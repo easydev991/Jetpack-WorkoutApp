@@ -75,7 +75,7 @@ fun CheckmarkRowView(
 )
 @Composable
 fun CheckmarkRowViewPreview() {
-    val numbers = (1..300).toList()
+    val numbers: List<Int> = (1..300).toList()
     JetpackWorkoutAppTheme {
         Surface {
             FormCardContainer(

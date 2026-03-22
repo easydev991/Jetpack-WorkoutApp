@@ -447,6 +447,7 @@
     <string name="allow_location_access">Разрешить</string>
     <string name="location_fetch_failed">Не удалось определить местоположение</string>
     <string name="geocoding_failed">Не удалось определить адрес</string>
+    <string name="geocoding_address_build_fail">Не удалось определить адрес, введите его вручную</string>
     <string name="event_form_error_create">Ошибка создания мероприятия</string>
     <string name="event_form_error_edit">Ошибка редактирования мероприятия</string>
 </resources>

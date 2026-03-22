@@ -3,10 +3,10 @@ package com.swparks.data.provider
 import android.content.Context
 import android.location.Address
 import android.location.Geocoder
+import com.swparks.util.AppError
+import com.swparks.util.AppErrorException
 import io.mockk.every
 import io.mockk.mockk
-import java.io.IOException
-import java.util.Locale
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -14,6 +14,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.io.IOException
+import java.util.Locale
 
 @RunWith(RobolectricTestRunner::class)
 class GeocodingServiceImplTest {
@@ -62,8 +64,13 @@ class GeocodingServiceImplTest {
 
         assertTrue(result.isFailure)
         val exception = result.exceptionOrNull()
-        assertTrue(exception is GeocodingException)
-        assertEquals("noPlacemarkFound", exception?.message)
+        assertTrue(exception is AppErrorException)
+        val appError = (exception as AppErrorException).appError
+        assertTrue(appError is AppError.GeocodingFailed)
+        assertEquals(
+            AppError.GeocodingFailureKind.ADDRESS_BUILD_FAIL,
+            (appError as AppError.GeocodingFailed).kind
+        )
     }
 
     @Test
@@ -77,9 +84,13 @@ class GeocodingServiceImplTest {
 
         assertTrue(result.isFailure)
         val exception = result.exceptionOrNull()
-        assertTrue(exception is GeocodingException)
-        assertEquals("geocodingFailed", exception?.message)
-        assertTrue(exception?.cause is IOException)
+        assertTrue(exception is AppErrorException)
+        val appError = (exception as AppErrorException).appError
+        assertTrue(appError is AppError.GeocodingFailed)
+        assertEquals(
+            AppError.GeocodingFailureKind.IO_ERROR,
+            (appError as AppError.GeocodingFailed).kind
+        )
     }
 
     @Test
@@ -95,8 +106,13 @@ class GeocodingServiceImplTest {
 
         assertTrue(result.isFailure)
         val exception = result.exceptionOrNull()
-        assertTrue(exception is GeocodingException)
-        assertEquals("failedToCreateAddress", exception?.message)
+        assertTrue(exception is AppErrorException)
+        val appError = (exception as AppErrorException).appError
+        assertTrue(appError is AppError.GeocodingFailed)
+        assertEquals(
+            AppError.GeocodingFailureKind.ADDRESS_BUILD_FAIL,
+            (appError as AppError.GeocodingFailed).kind
+        )
     }
 
     private fun createService(): GeocodingServiceImpl {

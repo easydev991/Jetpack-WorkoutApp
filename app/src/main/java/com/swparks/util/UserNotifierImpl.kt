@@ -83,6 +83,14 @@ class UserNotifierImpl(
             is AppError.Generic -> {
                 logger.e(TAG, "Общая ошибка: ${error.message}", error.throwable)
             }
+
+            is AppError.LocationFailed -> {
+                logger.e(TAG, "Ошибка геолокации: ${error.message}")
+            }
+
+            is AppError.GeocodingFailed -> {
+                logger.e(TAG, "Ошибка геокодирования: ${error.message}")
+            }
         }
 
         // Отправляем в поток (неблокирующая операция)

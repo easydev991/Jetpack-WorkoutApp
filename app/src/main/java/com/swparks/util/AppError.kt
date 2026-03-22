@@ -70,4 +70,45 @@ sealed class AppError {
         override val message: String,
         val throwable: Throwable? = null
     ) : AppError()
+
+    /**
+     * Ошибка получения геолокации.
+     *
+     * Используется, когда не удалось получить текущие координаты пользователя.
+     * Отображается через `R.string.location_fetch_failed` или `R.string.location_permission_need_in_settings`.
+     *
+     * @property message Сообщение для логирования
+     * @property cause Оригинальное исключение для маршрутизации
+     */
+    data class LocationFailed(
+        override val message: String,
+        val cause: Throwable? = null
+    ) : AppError()
+
+    /**
+     * Ошибка геокодирования.
+     *
+     * Используется, когда не удалось определить адрес по координатам.
+     * Отображается через `R.string.geocoding_address_build_fail` или `R.string.error_network_io`.
+     *
+     * @property message Сообщение для логирования
+     * @property kind Тип ошибки геокодирования
+     * @property cause Оригинальное исключение для логирования (опционально)
+     */
+    data class GeocodingFailed(
+        override val message: String,
+        val kind: GeocodingFailureKind,
+        val cause: Throwable? = null
+    ) : AppError()
+
+    /**
+     * Типы ошибок геокодирования.
+     *
+     * @property ADDRESS_BUILD_FAIL Не удалось построить адрес (объединяет noPlacemark и addressBuildFail)
+     * @property IO_ERROR Ошибка ввода-вывода при геокодировании
+     */
+    enum class GeocodingFailureKind {
+        ADDRESS_BUILD_FAIL,
+        IO_ERROR
+    }
 }

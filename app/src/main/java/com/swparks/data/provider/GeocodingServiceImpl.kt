@@ -6,6 +6,8 @@ import android.location.Geocoder
 import android.os.Build
 import com.swparks.domain.model.GeocodingResult
 import com.swparks.domain.provider.GeocodingService
+import com.swparks.util.AppError
+import com.swparks.util.AppErrorException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -21,14 +23,22 @@ class GeocodingServiceImpl(
         geocoderProvider(context)
     }
 
-    override suspend fun reverseGeocode(latitude: Double, longitude: Double): Result<GeocodingResult> {
+    override suspend fun reverseGeocode(
+        latitude: Double,
+        longitude: Double
+    ): Result<GeocodingResult> {
         return withContext(Dispatchers.IO) {
             try {
                 val addresses = reverseGeocodeInternal(latitude, longitude)
 
                 if (addresses.isNullOrEmpty()) {
                     return@withContext Result.failure(
-                        GeocodingException("noPlacemarkFound")
+                        AppErrorException(
+                            AppError.GeocodingFailed(
+                                message = "No placemark found",
+                                kind = AppError.GeocodingFailureKind.ADDRESS_BUILD_FAIL
+                            )
+                        )
                     )
                 }
 
@@ -37,7 +47,12 @@ class GeocodingServiceImpl(
 
                 if (formattedAddress.isBlank()) {
                     return@withContext Result.failure(
-                        GeocodingException("failedToCreateAddress")
+                        AppErrorException(
+                            AppError.GeocodingFailed(
+                                message = "Failed to build address",
+                                kind = AppError.GeocodingFailureKind.ADDRESS_BUILD_FAIL
+                            )
+                        )
                     )
                 }
 
@@ -49,12 +64,23 @@ class GeocodingServiceImpl(
                     )
                 )
             } catch (e: IOException) {
-                Result.failure(GeocodingException("geocodingFailed", e))
+                Result.failure(
+                    AppErrorException(
+                        AppError.GeocodingFailed(
+                            message = "IO error during geocoding",
+                            kind = AppError.GeocodingFailureKind.IO_ERROR,
+                            cause = e
+                        )
+                    )
+                )
             }
         }
     }
 
-    private suspend fun reverseGeocodeInternal(latitude: Double, longitude: Double): List<Address>? {
+    private suspend fun reverseGeocodeInternal(
+        latitude: Double,
+        longitude: Double
+    ): List<Address>? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             return suspendCancellableCoroutine { continuation ->
                 geocoder.getFromLocation(
@@ -103,8 +129,3 @@ class GeocodingServiceImpl(
         }
     }
 }
-
-class GeocodingException(
-    message: String,
-    cause: Throwable? = null
-) : Exception(message, cause)

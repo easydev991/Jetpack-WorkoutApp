@@ -3,11 +3,11 @@ package com.swparks.ui.viewmodel
 import android.net.Uri
 import android.util.Log
 import app.cash.turbine.test
+import com.swparks.data.database.dao.UserDao
+import com.swparks.data.database.entity.UserEntity
 import com.swparks.data.model.Park
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
-import com.swparks.data.database.dao.UserDao
-import com.swparks.data.database.entity.UserEntity
 import com.swparks.data.model.Photo
 import com.swparks.domain.model.GeocodingResult
 import com.swparks.domain.provider.AvatarHelper
@@ -922,7 +922,9 @@ class ParkFormViewModelTest {
             locality = "Moscow",
             countryName = "Russia"
         )
-        coEvery { geocodingService.reverseGeocode(55.75, 37.62) } returns Result.success(geocodingResult)
+        coEvery { geocodingService.reverseGeocode(55.75, 37.62) } returns Result.success(
+            geocodingResult
+        )
         coEvery { findCityByCoordinatesUseCase.invoke("Moscow", 55.75, 37.62) } returns 1
 
         val viewModel = createViewModelWithMocks(
@@ -953,7 +955,12 @@ class ParkFormViewModelTest {
         )
         val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
 
-        coEvery { geocodingService.reverseGeocode(55.75, 37.62) } returns Result.failure(Exception("Geocoder failed"))
+        coEvery {
+            geocodingService.reverseGeocode(
+                55.75,
+                37.62
+            )
+        } returns Result.failure(Exception("Geocoder failed"))
         every { userDao.getCurrentUserFlow() } returns kotlinx.coroutines.flow.flowOf(
             UserEntity(id = 1, name = "test", cityId = 5, isCurrentUser = true)
         )
@@ -985,7 +992,12 @@ class ParkFormViewModelTest {
         )
         val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
 
-        coEvery { geocodingService.reverseGeocode(55.75, 37.62) } returns Result.failure(Exception("Geocoder failed"))
+        coEvery {
+            geocodingService.reverseGeocode(
+                55.75,
+                37.62
+            )
+        } returns Result.failure(Exception("Geocoder failed"))
         every { userDao.getCurrentUserFlow() } returns kotlinx.coroutines.flow.flowOf(
             UserEntity(id = 1, name = "test", cityId = null, isCurrentUser = true)
         )
@@ -1015,7 +1027,7 @@ class ParkFormViewModelTest {
         )
         val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
 
-        val viewModel = createViewModelWithMocks(
+        createViewModelWithMocks(
             mode, swRepository, geocodingService, findCityByCoordinatesUseCase, userDao
         )
         advanceUntilIdle()
@@ -1045,7 +1057,9 @@ class ParkFormViewModelTest {
             locality = null,
             countryName = "Russia"
         )
-        coEvery { geocodingService.reverseGeocode(55.75, 37.62) } returns Result.success(geocodingResult)
+        coEvery { geocodingService.reverseGeocode(55.75, 37.62) } returns Result.success(
+            geocodingResult
+        )
         coEvery { findCityByCoordinatesUseCase.invoke(null, 55.75, 37.62) } returns null
 
         val viewModel = createViewModelWithMocks(
@@ -1072,7 +1086,7 @@ class ParkFormViewModelTest {
         val mode = ParkFormMode.Edit(parkId = 1L, park = park)
         val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
 
-        val viewModel = createViewModelWithMocks(
+        createViewModelWithMocks(
             mode, swRepository, geocodingService, findCityByCoordinatesUseCase, userDao
         )
         advanceUntilIdle()

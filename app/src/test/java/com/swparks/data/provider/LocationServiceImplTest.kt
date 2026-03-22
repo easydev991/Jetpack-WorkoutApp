@@ -16,8 +16,8 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import io.mockk.verify
-import kotlinx.coroutines.async
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After

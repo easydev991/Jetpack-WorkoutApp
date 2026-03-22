@@ -116,7 +116,8 @@ private class LocationPermissionState(
     private val _permissionGrantedEvents = kotlinx.coroutines.flow.MutableSharedFlow<NewParkDraft>(
         extraBufferCapacity = 1
     )
-    val permissionGrantedEvents: kotlinx.coroutines.flow.SharedFlow<NewParkDraft> = _permissionGrantedEvents
+    val permissionGrantedEvents: kotlinx.coroutines.flow.SharedFlow<NewParkDraft> =
+        _permissionGrantedEvents
 
     fun onFabClicked() {
         val hasFineLocation = ContextCompat.checkSelfPermission(
@@ -134,10 +135,11 @@ private class LocationPermissionState(
         } else {
             Log.i("ParksRootScreen", "Запрос разрешения на геолокацию")
             val activity = context as android.app.Activity
-            val shouldShowRationale = androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale(
-                activity,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            )
+            val shouldShowRationale =
+                androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale(
+                    activity,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
             if (shouldShowRationale) {
                 dialogCause = PermissionDialogCause.DENIED
                 showDialog = true
@@ -176,10 +178,11 @@ private class LocationPermissionState(
         } else {
             Log.i("ParksRootScreen", "Разрешение на геолокацию отклонено")
             val activity = context as android.app.Activity
-            val shouldShowRationale = androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale(
-                activity,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            )
+            val shouldShowRationale =
+                androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale(
+                    activity,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
             dialogCause = if (shouldShowRationale) {
                 PermissionDialogCause.DENIED
             } else {
@@ -193,7 +196,10 @@ private class LocationPermissionState(
         coroutineScope.launch {
             val result = createParkLocationHandler()
             result.onSuccess { draft ->
-                Log.i("ParksRootScreen", "Draft создан: lat=${draft.latitude}, lon=${draft.longitude}")
+                Log.i(
+                    "ParksRootScreen",
+                    "Draft создан: lat=${draft.latitude}, lon=${draft.longitude}"
+                )
                 _permissionGrantedEvents.tryEmit(draft)
             }
         }

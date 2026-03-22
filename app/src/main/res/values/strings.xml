@@ -437,6 +437,7 @@
     <string name="allow_location_access">Allow</string>
     <string name="location_fetch_failed">Unable to determine location</string>
     <string name="geocoding_failed">Unable to determine address</string>
+    <string name="geocoding_address_build_fail">Unable to determine address, please enter it manually</string>
     <string name="event_form_error_create">Failed to create event</string>
     <string name="event_form_error_edit">Failed to edit event</string>
 </resources>

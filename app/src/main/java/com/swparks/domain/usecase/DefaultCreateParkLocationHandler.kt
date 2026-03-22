@@ -16,11 +16,19 @@ class DefaultCreateParkLocationHandler(
     override suspend fun invoke(): Result<NewParkDraft> {
         return locationService.getCurrentLocation().fold(
             onSuccess = { coordinates ->
-                Result.success(NewParkDraft.EMPTY.withCoordinates(coordinates.latitude, coordinates.longitude))
+                Result.success(
+                    NewParkDraft.EMPTY.withCoordinates(
+                        coordinates.latitude,
+                        coordinates.longitude
+                    )
+                )
             },
             onFailure = { error ->
                 userNotifier.handleError(
-                    AppError.Generic("Не удалось определить местоположение. Проверьте разрешения и попробуйте снова.")
+                    AppError.LocationFailed(
+                        message = error.message ?: "Location request failed",
+                        cause = error
+                    )
                 )
                 Result.failure(error)
             }
