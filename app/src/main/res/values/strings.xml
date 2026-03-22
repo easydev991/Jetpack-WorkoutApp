@@ -427,6 +427,14 @@
     <string name="event_form_save">Save</string>
     <string name="event_form_confirm_close_title">Close?</string>
     <string name="event_form_confirm_close_message">Unsaved changes will be lost</string>
+
+    <!-- Location permission -->
+    <string name="location_permission_alert_title">Location access</string>
+    <string name="location_permission_alert_message">To create a park, allow geolocation access to determine the coordinates of a new park.</string>
+    <string name="open_settings">Open settings</string>
+    <string name="location_permission_denied">You have not granted access to geolocation</string>
+    <string name="location_permission_need_in_settings">To display your location, please give access to geolocation in settings</string>
+    <string name="allow_location_access">Allow</string>
     <string name="event_form_error_create">Failed to create event</string>
     <string name="event_form_error_edit">Failed to edit event</string>
 </resources>

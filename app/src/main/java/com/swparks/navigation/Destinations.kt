@@ -35,6 +35,7 @@ sealed class Screen(
             return getScreenBySource(source, default = Parks)
         }
     }
+
     object EditPark : Screen("edit_park/{parkId}?source={source}", parentTab = Parks) {
         fun createRoute(parkId: Long, source: String = "parks") = "edit_park/$parkId?source=$source"
 

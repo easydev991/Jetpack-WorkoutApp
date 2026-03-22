@@ -4,8 +4,11 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.swparks.data.database.dao.UserDao
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.provider.AvatarHelper
+import com.swparks.domain.provider.GeocodingService
+import com.swparks.domain.usecase.IFindCityByCoordinatesUseCase
 import com.swparks.ui.model.ParkForm
 import com.swparks.ui.model.ParkFormMode
 import com.swparks.ui.state.ParkFormEvent
@@ -20,6 +23,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -29,7 +33,10 @@ class ParkFormViewModel(
     private val swRepository: SWRepository,
     private val avatarHelper: AvatarHelper,
     private val logger: Logger,
-    private val userNotifier: UserNotifier
+    private val userNotifier: UserNotifier,
+    private val geocodingService: GeocodingService,
+    private val findCityByCoordinatesUseCase: IFindCityByCoordinatesUseCase,
+    private val userDao: UserDao
 ) : ViewModel(), IParkFormViewModel {
 
     companion object {
@@ -57,6 +64,63 @@ class ParkFormViewModel(
 
     private val _events = MutableSharedFlow<ParkFormEvent>()
     override val events: SharedFlow<ParkFormEvent> = _events.asSharedFlow()
+
+    init {
+        if (mode is ParkFormMode.Create) {
+            val shouldGeocode = mode.initialAddress.isEmpty() ||
+                mode.initialCityId == null ||
+                mode.initialCityId == 0
+            if (shouldGeocode) {
+                val latitude = mode.initialLatitude.toDoubleOrNull() ?: 0.0
+                val longitude = mode.initialLongitude.toDoubleOrNull() ?: 0.0
+                if (latitude != 0.0 && longitude != 0.0) {
+                    viewModelScope.launch {
+                        performGeocoding(latitude, longitude)
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun performGeocoding(latitude: Double, longitude: Double) {
+        geocodingService.reverseGeocode(latitude, longitude).fold(
+            onSuccess = { result ->
+                val cityId = findCityByCoordinatesUseCase(
+                    result.locality,
+                    latitude,
+                    longitude
+                )
+                _uiState.update { state ->
+                    state.copy(
+                        form = state.form.copy(
+                            address = result.address,
+                            cityId = cityId ?: state.form.cityId
+                        )
+                    )
+                }
+                logger.d(TAG, "Geocoding success: ${result.address}, cityId: $cityId")
+            },
+            onFailure = { error ->
+                logger.w(TAG, "Geocoding failed: ${error.message}")
+                val fallbackCityId = getCurrentUserCityId()
+                if (fallbackCityId != null) {
+                    _uiState.update { state ->
+                        state.copy(form = state.form.copy(cityId = fallbackCityId))
+                    }
+                    logger.d(TAG, "Using fallback cityId: $fallbackCityId")
+                }
+            }
+        )
+    }
+
+    private suspend fun getCurrentUserCityId(): Int? {
+        return try {
+            userDao.getCurrentUserFlow().first()?.cityId
+        } catch (e: Exception) {
+            logger.e(TAG, "Failed to get current user cityId: ${e.message}", e)
+            null
+        }
+    }
 
     private fun createInitialState(): ParkFormUiState {
         return when (val m = mode) {

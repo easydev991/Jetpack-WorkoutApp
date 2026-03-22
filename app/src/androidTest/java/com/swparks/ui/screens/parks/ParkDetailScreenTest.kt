@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -546,6 +547,7 @@ class ParkDetailScreenTest {
                     onNavigateToUserProfile = {},
                     onNavigateToTrainees = { _, _, _ -> },
                     onNavigateToCreateEvent = { _, _ -> },
+                    onNavigateToEditPark = {},
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -570,6 +572,7 @@ class ParkDetailScreenTest {
                     onNavigateToUserProfile = {},
                     onNavigateToTrainees = { _, _, _ -> },
                     onNavigateToCreateEvent = { _, _ -> },
+                    onNavigateToEditPark = {},
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -600,6 +603,7 @@ class ParkDetailScreenTest {
                     onNavigateToUserProfile = {},
                     onNavigateToTrainees = { _, _, _ -> },
                     onNavigateToCreateEvent = { _, _ -> },
+                    onNavigateToEditPark = {},
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -630,6 +634,7 @@ class ParkDetailScreenTest {
                     onNavigateToUserProfile = {},
                     onNavigateToTrainees = { _, _, _ -> },
                     onNavigateToCreateEvent = { _, _ -> },
+                    onNavigateToEditPark = {},
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -662,6 +667,7 @@ class ParkDetailScreenTest {
                     onNavigateToUserProfile = {},
                     onNavigateToTrainees = { _, _, _ -> },
                     onNavigateToCreateEvent = { _, _ -> },
+                    onNavigateToEditPark = {},
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -693,6 +699,7 @@ class ParkDetailScreenTest {
                     onNavigateToUserProfile = {},
                     onNavigateToTrainees = { _, _, _ -> },
                     onNavigateToCreateEvent = { _, _ -> },
+                    onNavigateToEditPark = {},
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -731,6 +738,7 @@ class ParkDetailScreenTest {
                     onNavigateToUserProfile = {},
                     onNavigateToTrainees = { _, _, _ -> },
                     onNavigateToCreateEvent = { _, _ -> },
+                    onNavigateToEditPark = {},
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -765,6 +773,7 @@ class ParkDetailScreenTest {
                     onNavigateToUserProfile = {},
                     onNavigateToTrainees = { _, _, _ -> },
                     onNavigateToCreateEvent = { _, _ -> },
+                    onNavigateToEditPark = {},
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -798,6 +807,7 @@ class ParkDetailScreenTest {
                     onNavigateToUserProfile = {},
                     onNavigateToTrainees = { _, source, _ -> capturedSource = source },
                     onNavigateToCreateEvent = { _, _ -> },
+                    onNavigateToEditPark = {},
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -837,6 +847,7 @@ class ParkDetailScreenTest {
                     onNavigateToUserProfile = {},
                     onNavigateToTrainees = { _, _, _ -> },
                     onNavigateToCreateEvent = { _, _ -> },
+                    onNavigateToEditPark = {},
                     parentPaddingValues = PaddingValues()
                 )
             }
@@ -844,7 +855,7 @@ class ParkDetailScreenTest {
 
         val backLabel = context.getString(R.string.back)
         composeTestRule
-            .onNodeWithText(backLabel)
+            .onNodeWithContentDescription(backLabel)
             .performClick()
 
         assertTrue("Back button should call onBack", backClicked)

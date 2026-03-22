@@ -6,8 +6,13 @@ import app.cash.turbine.test
 import com.swparks.data.model.Park
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
+import com.swparks.data.database.dao.UserDao
+import com.swparks.data.database.entity.UserEntity
 import com.swparks.data.model.Photo
+import com.swparks.domain.model.GeocodingResult
 import com.swparks.domain.provider.AvatarHelper
+import com.swparks.domain.provider.GeocodingService
+import com.swparks.domain.usecase.IFindCityByCoordinatesUseCase
 import com.swparks.ui.model.ParkForm
 import com.swparks.ui.model.ParkFormMode
 import com.swparks.ui.state.ParkFormEvent
@@ -43,6 +48,9 @@ class ParkFormViewModelTest {
     private lateinit var avatarHelper: AvatarHelper
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
+    private lateinit var geocodingService: GeocodingService
+    private lateinit var findCityByCoordinatesUseCase: IFindCityByCoordinatesUseCase
+    private lateinit var userDao: UserDao
 
     @Before
     fun setup() {
@@ -57,6 +65,9 @@ class ParkFormViewModelTest {
         avatarHelper = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
+        geocodingService = mockk(relaxed = true)
+        findCityByCoordinatesUseCase = mockk(relaxed = true)
+        userDao = mockk(relaxed = true)
     }
 
     @After
@@ -73,7 +84,29 @@ class ParkFormViewModelTest {
             swRepository = swRepository,
             avatarHelper = avatarHelper,
             logger = logger,
-            userNotifier = userNotifier
+            userNotifier = userNotifier,
+            geocodingService = geocodingService,
+            findCityByCoordinatesUseCase = findCityByCoordinatesUseCase,
+            userDao = userDao
+        )
+    }
+
+    private fun createViewModelWithMocks(
+        mode: ParkFormMode,
+        swRepository: com.swparks.data.repository.SWRepository,
+        geocodingService: GeocodingService,
+        findCityByCoordinatesUseCase: IFindCityByCoordinatesUseCase,
+        userDao: UserDao
+    ): ParkFormViewModel {
+        return ParkFormViewModel(
+            mode = mode,
+            swRepository = swRepository,
+            avatarHelper = avatarHelper,
+            logger = logger,
+            userNotifier = userNotifier,
+            geocodingService = geocodingService,
+            findCityByCoordinatesUseCase = findCityByCoordinatesUseCase,
+            userDao = userDao
         )
     }
 
@@ -865,5 +898,187 @@ class ParkFormViewModelTest {
             val event = awaitItem()
             assertTrue("Should emit ShowPhotoPicker", event is ParkFormEvent.ShowPhotoPicker)
         }
+    }
+
+    // ==================== Geocoding (Create Mode) ====================
+
+    @Test
+    fun init_withCreateMode_geocodingSuccess_updatesAddressAndCityId() = runTest {
+        // Given
+        val geocodingService = mockk<GeocodingService>()
+        val findCityByCoordinatesUseCase = mockk<IFindCityByCoordinatesUseCase>()
+        val userDao = mockk<UserDao>()
+
+        val mode = ParkFormMode.Create(
+            initialAddress = "",
+            initialLatitude = "55.75",
+            initialLongitude = "37.62",
+            initialCityId = null
+        )
+        val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
+
+        val geocodingResult = GeocodingResult(
+            address = "Moscow, Tverskaya ulitsa, 1",
+            locality = "Moscow",
+            countryName = "Russia"
+        )
+        coEvery { geocodingService.reverseGeocode(55.75, 37.62) } returns Result.success(geocodingResult)
+        coEvery { findCityByCoordinatesUseCase.invoke("Moscow", 55.75, 37.62) } returns 1
+
+        val viewModel = createViewModelWithMocks(
+            mode, swRepository, geocodingService, findCityByCoordinatesUseCase, userDao
+        )
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals("Moscow, Tverskaya ulitsa, 1", state.form.address)
+        assertEquals(1, state.form.cityId)
+        coVerify { geocodingService.reverseGeocode(55.75, 37.62) }
+        coVerify { findCityByCoordinatesUseCase.invoke("Moscow", 55.75, 37.62) }
+    }
+
+    @Test
+    fun init_withCreateMode_geocodingFailsAndUserHasCityId_fallsBackToUserCityId() = runTest {
+        // Given
+        val geocodingService = mockk<GeocodingService>()
+        val findCityByCoordinatesUseCase = mockk<IFindCityByCoordinatesUseCase>()
+        val userDao = mockk<UserDao>()
+
+        val mode = ParkFormMode.Create(
+            initialAddress = "",
+            initialLatitude = "55.75",
+            initialLongitude = "37.62",
+            initialCityId = null
+        )
+        val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
+
+        coEvery { geocodingService.reverseGeocode(55.75, 37.62) } returns Result.failure(Exception("Geocoder failed"))
+        every { userDao.getCurrentUserFlow() } returns kotlinx.coroutines.flow.flowOf(
+            UserEntity(id = 1, name = "test", cityId = 5, isCurrentUser = true)
+        )
+
+        val viewModel = createViewModelWithMocks(
+            mode, swRepository, geocodingService, findCityByCoordinatesUseCase, userDao
+        )
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals(5, state.form.cityId)
+        coVerify { geocodingService.reverseGeocode(55.75, 37.62) }
+        coVerify(exactly = 0) { findCityByCoordinatesUseCase.invoke(any(), any(), any()) }
+    }
+
+    @Test
+    fun init_withCreateMode_geocodingFailsAndNoUserCityId_leavesCityIdNull() = runTest {
+        // Given
+        val geocodingService = mockk<GeocodingService>()
+        val findCityByCoordinatesUseCase = mockk<IFindCityByCoordinatesUseCase>()
+        val userDao = mockk<UserDao>()
+
+        val mode = ParkFormMode.Create(
+            initialAddress = "",
+            initialLatitude = "55.75",
+            initialLongitude = "37.62",
+            initialCityId = null
+        )
+        val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
+
+        coEvery { geocodingService.reverseGeocode(55.75, 37.62) } returns Result.failure(Exception("Geocoder failed"))
+        every { userDao.getCurrentUserFlow() } returns kotlinx.coroutines.flow.flowOf(
+            UserEntity(id = 1, name = "test", cityId = null, isCurrentUser = true)
+        )
+
+        val viewModel = createViewModelWithMocks(
+            mode, swRepository, geocodingService, findCityByCoordinatesUseCase, userDao
+        )
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals(null, state.form.cityId)
+    }
+
+    @Test
+    fun init_withCreateMode_shouldPerformGeocodeFalse_doesNotCallGeocoding() = runTest {
+        // Given
+        val geocodingService = mockk<GeocodingService>()
+        val findCityByCoordinatesUseCase = mockk<IFindCityByCoordinatesUseCase>()
+        val userDao = mockk<UserDao>()
+
+        val mode = ParkFormMode.Create(
+            initialAddress = "Pre-filled Address",
+            initialLatitude = "55.75",
+            initialLongitude = "37.62",
+            initialCityId = 3
+        )
+        val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
+
+        val viewModel = createViewModelWithMocks(
+            mode, swRepository, geocodingService, findCityByCoordinatesUseCase, userDao
+        )
+        advanceUntilIdle()
+
+        // Then
+        coVerify(exactly = 0) { geocodingService.reverseGeocode(any(), any()) }
+        coVerify(exactly = 0) { findCityByCoordinatesUseCase.invoke(any(), any(), any()) }
+    }
+
+    @Test
+    fun init_withCreateMode_geocodingSuccessWithNullLocality_stillUpdatesAddress() = runTest {
+        // Given
+        val geocodingService = mockk<GeocodingService>()
+        val findCityByCoordinatesUseCase = mockk<IFindCityByCoordinatesUseCase>()
+        val userDao = mockk<UserDao>()
+
+        val mode = ParkFormMode.Create(
+            initialAddress = "",
+            initialLatitude = "55.75",
+            initialLongitude = "37.62",
+            initialCityId = null
+        )
+        val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
+
+        val geocodingResult = GeocodingResult(
+            address = "Some remote location",
+            locality = null,
+            countryName = "Russia"
+        )
+        coEvery { geocodingService.reverseGeocode(55.75, 37.62) } returns Result.success(geocodingResult)
+        coEvery { findCityByCoordinatesUseCase.invoke(null, 55.75, 37.62) } returns null
+
+        val viewModel = createViewModelWithMocks(
+            mode, swRepository, geocodingService, findCityByCoordinatesUseCase, userDao
+        )
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals("Some remote location", state.form.address)
+        assertEquals(null, state.form.cityId)
+        coVerify { geocodingService.reverseGeocode(55.75, 37.62) }
+        coVerify { findCityByCoordinatesUseCase.invoke(null, 55.75, 37.62) }
+    }
+
+    @Test
+    fun init_withEditMode_doesNotPerformGeocoding() = runTest {
+        // Given
+        val geocodingService = mockk<GeocodingService>()
+        val findCityByCoordinatesUseCase = mockk<IFindCityByCoordinatesUseCase>()
+        val userDao = mockk<UserDao>()
+
+        val park = createTestPark()
+        val mode = ParkFormMode.Edit(parkId = 1L, park = park)
+        val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
+
+        val viewModel = createViewModelWithMocks(
+            mode, swRepository, geocodingService, findCityByCoordinatesUseCase, userDao
+        )
+        advanceUntilIdle()
+
+        // Then
+        coVerify(exactly = 0) { geocodingService.reverseGeocode(any(), any()) }
+        coVerify(exactly = 0) { findCityByCoordinatesUseCase.invoke(any(), any(), any()) }
     }
 }

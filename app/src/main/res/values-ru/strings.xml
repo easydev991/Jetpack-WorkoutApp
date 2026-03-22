@@ -437,6 +437,14 @@
     <string name="event_form_save">Сохранить</string>
     <string name="event_form_confirm_close_title">Закрыть?</string>
     <string name="event_form_confirm_close_message">Несохраненные изменения будут потеряны</string>
+
+    <!-- Location permission -->
+    <string name="location_permission_alert_title">Доступ к геолокации</string>
+    <string name="location_permission_alert_message">Для создания площадки необходимо разрешить приложению доступ к геолокации для определения координат новой площадки.</string>
+    <string name="open_settings">Открыть настройки</string>
+    <string name="location_permission_denied">Запрещен доступ к геолокации</string>
+    <string name="location_permission_need_in_settings">Для отображения твоего местоположения необходимо разрешить доступ к геолокации в настройках</string>
+    <string name="allow_location_access">Разрешить</string>
     <string name="event_form_error_create">Ошибка создания мероприятия</string>
     <string name="event_form_error_edit">Ошибка редактирования мероприятия</string>
 </resources>

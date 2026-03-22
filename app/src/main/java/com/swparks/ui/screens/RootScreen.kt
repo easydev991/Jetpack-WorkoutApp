@@ -247,7 +247,6 @@ fun RootScreen(appState: AppState) {
                 when (appState.currentTopLevelDestination?.route) {
                     Screen.Parks.route -> {
                         ParksTopAppBar(
-                            appState = appState,
                             parksCount = parks.size
                         )
                     }
@@ -431,9 +430,10 @@ fun RootScreen(appState: AppState) {
 
                 LaunchedEffect(updatedParkJson) {
                     if (updatedParkJson != null) {
-                        val updatedPark = WorkoutAppJson.decodeFromString<com.swparks.data.model.Park>(
-                            updatedParkJson
-                        )
+                        val updatedPark =
+                            WorkoutAppJson.decodeFromString<Park>(
+                                updatedParkJson
+                            )
                         parkDetailViewModel.onParkUpdated(updatedPark.id)
                         navBackStackEntry.savedStateHandle.remove<String>("updatedPark")
                     }

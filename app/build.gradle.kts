@@ -98,6 +98,9 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler) // используем ksp вместо kapt
 
+    // Play Services Location
+    implementation(libs.google.play.services.location)
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

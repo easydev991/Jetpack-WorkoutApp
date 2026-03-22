@@ -21,6 +21,8 @@ import com.swparks.data.interceptor.RetryInterceptor
 import com.swparks.data.interceptor.TokenInterceptor
 import com.swparks.data.model.Park
 import com.swparks.data.provider.AvatarHelperImpl
+import com.swparks.data.provider.GeocodingServiceImpl
+import com.swparks.data.provider.LocationServiceImpl
 import com.swparks.data.provider.ResourcesProviderImpl
 import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.JournalEntriesRepositoryImpl
@@ -28,10 +30,11 @@ import com.swparks.data.repository.JournalsRepositoryImpl
 import com.swparks.data.repository.MessagesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.data.repository.SWRepositoryImp
-import com.swparks.ui.viewmodel.ParkFormViewModel
 import com.swparks.data.serializer.EncryptedStringSerializer
 import com.swparks.domain.event.MessageSentNotifier
 import com.swparks.domain.provider.AvatarHelper
+import com.swparks.domain.provider.GeocodingService
+import com.swparks.domain.provider.LocationService
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.repository.JournalEntriesRepository
@@ -40,12 +43,14 @@ import com.swparks.domain.repository.MessagesRepository
 import com.swparks.domain.usecase.CanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.ChangePasswordUseCase
 import com.swparks.domain.usecase.CreateEventUseCase
+import com.swparks.domain.usecase.DefaultCreateParkLocationHandler
 import com.swparks.domain.usecase.CreateJournalUseCase
 import com.swparks.domain.usecase.DeleteJournalEntryUseCase
 import com.swparks.domain.usecase.DeleteJournalUseCase
 import com.swparks.domain.usecase.DeleteUserUseCase
 import com.swparks.domain.usecase.EditEventUseCase
 import com.swparks.domain.usecase.EditJournalSettingsUseCase
+import com.swparks.domain.usecase.FindCityByCoordinatesUseCase
 import com.swparks.domain.usecase.GetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.GetJournalEntriesUseCase
 import com.swparks.domain.usecase.GetJournalsUseCase
@@ -53,12 +58,14 @@ import com.swparks.domain.usecase.GetPastEventsFlowUseCase
 import com.swparks.domain.usecase.ICanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IChangePasswordUseCase
 import com.swparks.domain.usecase.ICreateEventUseCase
+import com.swparks.domain.usecase.ICreateParkLocationHandler
 import com.swparks.domain.usecase.ICreateJournalUseCase
 import com.swparks.domain.usecase.IDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IDeleteJournalUseCase
 import com.swparks.domain.usecase.IDeleteUserUseCase
 import com.swparks.domain.usecase.IEditEventUseCase
 import com.swparks.domain.usecase.IEditJournalSettingsUseCase
+import com.swparks.domain.usecase.IFindCityByCoordinatesUseCase
 import com.swparks.domain.usecase.IGetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.IGetJournalEntriesUseCase
 import com.swparks.domain.usecase.IGetJournalsUseCase
@@ -95,6 +102,7 @@ import com.swparks.ui.viewmodel.JournalEntriesDeps
 import com.swparks.ui.viewmodel.JournalEntriesViewModel
 import com.swparks.ui.viewmodel.JournalsViewModel
 import com.swparks.ui.viewmodel.OtherUserProfileViewModel
+import com.swparks.ui.viewmodel.ParkFormViewModel
 import com.swparks.ui.viewmodel.ProfileViewModel
 import com.swparks.ui.viewmodel.RegisterViewModel
 import com.swparks.ui.viewmodel.SearchUserViewModel
@@ -138,6 +146,12 @@ interface AppContainer {
 
     // Event notifiers
     val messageSentNotifier: MessageSentNotifier
+
+    // Location & Geocoding services
+    val locationService: LocationService
+    val geocodingService: GeocodingService
+    val findCityByCoordinatesUseCase: IFindCityByCoordinatesUseCase
+    val createParkLocationHandler: ICreateParkLocationHandler
 
     // Use cases для авторизации
     val loginUseCase: ILoginUseCase
@@ -259,6 +273,24 @@ class DefaultAppContainer(context: Context) : AppContainer {
     override val logger: Logger = AndroidLogger()
     override val userNotifier: UserNotifier = UserNotifierImpl(logger)
     override val messageSentNotifier: MessageSentNotifier = MessageSentNotifier()
+
+    // ==================== Location & Geocoding Services ====================
+
+    override val locationService: LocationService by lazy {
+        LocationServiceImpl(appContext)
+    }
+
+    override val geocodingService: GeocodingService by lazy {
+        GeocodingServiceImpl(appContext)
+    }
+
+    override val findCityByCoordinatesUseCase: IFindCityByCoordinatesUseCase by lazy {
+        FindCityByCoordinatesUseCase(countriesRepository)
+    }
+
+    override val createParkLocationHandler: ICreateParkLocationHandler by lazy {
+        DefaultCreateParkLocationHandler(locationService, userNotifier)
+    }
 
     // ==================== Resources Provider ====================
 
@@ -730,7 +762,10 @@ class DefaultAppContainer(context: Context) : AppContainer {
             swRepository = swRepository,
             avatarHelper = avatarHelper,
             logger = logger,
-            userNotifier = userNotifier
+            userNotifier = userNotifier,
+            geocodingService = geocodingService,
+            findCityByCoordinatesUseCase = findCityByCoordinatesUseCase,
+            userDao = userDao
         )
 
     // ==================== API клиенты для разных функциональных областей ====================

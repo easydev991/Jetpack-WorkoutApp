@@ -75,14 +75,14 @@ class ParkFormScreenTest {
     fun whenEditMode_showsParkTitle() {
         val park = Park(
             id = 1L,
-            address = "Test Address",
-            latitude = "55.7558",
-            longitude = "37.6173",
-            cityID = 1,
-            cityName = "Test City",
-            typeID = ParkType.SOVIET.rawValue,
-            sizeID = ParkSize.SMALL.rawValue,
             name = "Test Park",
+            sizeID = ParkSize.SMALL.rawValue,
+            typeID = ParkType.SOVIET.rawValue,
+            longitude = "37.6173",
+            latitude = "55.7558",
+            address = "Test Address",
+            cityID = 1,
+            countryID = 1,
             preview = "",
             photos = emptyList()
         )
@@ -498,14 +498,14 @@ class ParkFormScreenTest {
     fun whenEditMode_existingDataDisplayed() {
         val park = Park(
             id = 1L,
-            address = "Existing Address",
-            latitude = "55.7558",
-            longitude = "37.6173",
-            cityID = 1,
-            cityName = "Test City",
-            typeID = ParkType.MODERN.rawValue,
-            sizeID = ParkSize.LARGE.rawValue,
             name = "Test Park",
+            sizeID = ParkSize.LARGE.rawValue,
+            typeID = ParkType.MODERN.rawValue,
+            longitude = "37.6173",
+            latitude = "55.7558",
+            address = "Existing Address",
+            cityID = 1,
+            countryID = 1,
             preview = "",
             photos = emptyList()
         )
@@ -530,14 +530,14 @@ class ParkFormScreenTest {
     fun whenEditModeNoChanges_saveButtonDisabled() {
         val park = Park(
             id = 1L,
-            address = "Test Address",
-            latitude = "55.7558",
-            longitude = "37.6173",
-            cityID = 1,
-            cityName = "Test City",
-            typeID = ParkType.SOVIET.rawValue,
-            sizeID = ParkSize.SMALL.rawValue,
             name = "Test Park",
+            sizeID = ParkSize.SMALL.rawValue,
+            typeID = ParkType.SOVIET.rawValue,
+            longitude = "37.6173",
+            latitude = "55.7558",
+            address = "Test Address",
+            cityID = 1,
+            countryID = 1,
             preview = "",
             photos = emptyList()
         )

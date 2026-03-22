@@ -96,6 +96,7 @@ fun ParksAddedByUserScreen(
                     onParkClick = onParkClick,
                     enabled = !isRefreshing
                 )
+
                 is UserAddedParksUiState.Error -> ErrorContentView(
                     retryAction = { viewModel.refresh() },
                     modifier = Modifier.fillMaxSize(),
