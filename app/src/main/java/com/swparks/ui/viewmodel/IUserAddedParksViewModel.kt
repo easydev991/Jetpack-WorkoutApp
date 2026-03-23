@@ -22,4 +22,9 @@ interface IUserAddedParksViewModel {
      * Принудительное обновление списка добавленных площадок.
      */
     fun refresh()
+
+    /**
+     * Удалить площадку из локального списка без серверного запроса.
+     */
+    fun removePark(parkId: Long)
 }

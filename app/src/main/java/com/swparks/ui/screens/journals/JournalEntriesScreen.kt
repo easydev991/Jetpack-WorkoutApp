@@ -157,6 +157,15 @@ sealed class ScaffoldAction {
     object AddEntry : ScaffoldAction()
 }
 
+private data class ScaffoldParams(
+    val uiState: JournalEntriesUiState,
+    val params: JournalParams,
+    val appState: AppState,
+    val isRefreshing: Boolean,
+    val isDeleting: Boolean,
+    val viewModel: IJournalEntriesViewModel
+)
+
 private data class ScaffoldState(
     val title: String,
     val isOwner: Boolean,
@@ -379,12 +388,14 @@ fun JournalEntriesScreen(
         onShowEditSheet = { mode -> textEntryMode = mode; showTextEntrySheet = true }
     )
     val scaffoldState = buildScaffoldState(
-        uiState = uiState,
-        params = params,
-        appState = appState,
-        isRefreshing = isRefreshing,
-        isDeleting = isDeleting,
-        viewModel = viewModel
+        params = ScaffoldParams(
+            uiState = uiState,
+            params = params,
+            appState = appState,
+            isRefreshing = isRefreshing,
+            isDeleting = isDeleting,
+            viewModel = viewModel
+        )
     )
     JournalEntriesScaffold(
         modifier = modifier,
@@ -423,24 +434,17 @@ fun JournalEntriesScreen(
     )
 }
 
-private fun buildScaffoldState(
-    uiState: JournalEntriesUiState,
-    params: JournalParams,
-    appState: AppState,
-    isRefreshing: Boolean,
-    isDeleting: Boolean,
-    viewModel: IJournalEntriesViewModel
-): ScaffoldState {
-    val isOwner = appState.currentUser?.id == params.journalOwnerId
-    val currentJournal = (uiState as? JournalEntriesUiState.Content)?.journal
+private fun buildScaffoldState(params: ScaffoldParams): ScaffoldState {
+    val isOwner = params.appState.currentUser?.id == params.params.journalOwnerId
+    val currentJournal = (params.uiState as? JournalEntriesUiState.Content)?.journal
     return ScaffoldState(
-        title = currentJournal?.title ?: params.journalTitle,
+        title = currentJournal?.title ?: params.params.journalTitle,
         isOwner = isOwner,
-        isRefreshing = isRefreshing,
-        isDeleting = isDeleting,
-        uiState = uiState,
-        canEditEntry = { viewModel.canEditEntry(it) },
-        canDeleteEntry = { viewModel.canDeleteEntry(it) }
+        isRefreshing = params.isRefreshing,
+        isDeleting = params.isDeleting,
+        uiState = params.uiState,
+        canEditEntry = { params.viewModel.canEditEntry(it) },
+        canDeleteEntry = { params.viewModel.canDeleteEntry(it) }
     )
 }
 

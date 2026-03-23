@@ -776,7 +776,7 @@ class EventFormViewModelTest {
 
         // Then
         assertFalse("isSaving should be false after error", viewModel.uiState.value.isSaving)
-        verify { userNotifier.handleError(any<AppError>()) }
+        coVerify { userNotifier.handleError(any<AppError>()) }
     }
 
     @Test

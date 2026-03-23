@@ -65,18 +65,27 @@ import com.swparks.ui.state.PhotoOwner
 import com.swparks.ui.viewmodel.IParkDetailViewModel
 import com.swparks.ui.viewmodel.ParkDetailEvent
 
+sealed class ParkDetailAction {
+    object OnBack : ParkDetailAction()
+    data class OnParkDeleted(val parkId: Long) : ParkDetailAction()
+    data class OnNavigateToUserProfile(val userId: Long) : ParkDetailAction()
+    data class OnNavigateToTrainees(
+        val parkId: Long,
+        val parkName: String,
+        val users: List<User>
+    ) : ParkDetailAction()
+
+    data class OnNavigateToCreateEvent(val parkId: Long, val parkName: String) : ParkDetailAction()
+    data class OnNavigateToEditPark(val park: com.swparks.data.model.Park) : ParkDetailAction()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ParkDetailScreen(
     viewModel: IParkDetailViewModel,
     source: String = "parks",
-    onBack: () -> Unit,
-    onParkDeleted: (Long) -> Unit,
-    onNavigateToUserProfile: (Long) -> Unit,
-    onNavigateToTrainees: (Long, String, List<User>) -> Unit,
-    onNavigateToCreateEvent: (Long, String) -> Unit,
-    onNavigateToEditPark: (com.swparks.data.model.Park) -> Unit,
-    parentPaddingValues: PaddingValues
+    parentPaddingValues: PaddingValues,
+    onAction: (ParkDetailAction) -> Unit
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -99,7 +108,7 @@ fun ParkDetailScreen(
                 ParkDetailEvent.ShowDeleteConfirmDialog -> showDeleteParkDialog = true
                 is ParkDetailEvent.ShowDeletePhotoConfirmDialog -> showDeletePhotoDialog = true
                 ParkDetailEvent.ShowDeleteCommentConfirmDialog -> showDeleteCommentDialog = true
-                is ParkDetailEvent.ParkDeleted -> onParkDeleted(event.parkId)
+                is ParkDetailEvent.ParkDeleted -> onAction(ParkDetailAction.OnParkDeleted(event.parkId))
                 is ParkDetailEvent.PhotoDeleted -> Unit
                 is ParkDetailEvent.OpenMap -> {
                     viewModel.mapUriSet?.let { mapUriSet ->
@@ -126,11 +135,18 @@ fun ParkDetailScreen(
                 }
 
                 is ParkDetailEvent.NavigateToTrainees -> {
-                    onNavigateToTrainees(event.parkId, source, event.users)
+                    val currentState = uiState as? ParkDetailUIState.Content
+                    onAction(
+                        ParkDetailAction.OnNavigateToTrainees(
+                            event.parkId,
+                            currentState?.park?.name ?: "",
+                            event.users
+                        )
+                    )
                 }
 
                 is ParkDetailEvent.NavigateToCreateEvent -> {
-                    onNavigateToCreateEvent(event.parkId, event.parkName)
+                    onAction(ParkDetailAction.OnNavigateToCreateEvent(event.parkId, event.parkName))
                 }
 
                 is ParkDetailEvent.SendCommentComplaint -> {
@@ -159,7 +175,7 @@ fun ParkDetailScreen(
 
                 is ParkDetailEvent.ParkUpdated -> Unit
                 is ParkDetailEvent.NavigateToEditPark -> {
-                    onNavigateToEditPark(event.park)
+                    onAction(ParkDetailAction.OnNavigateToEditPark(event.park))
                 }
             }
         }
@@ -172,7 +188,7 @@ fun ParkDetailScreen(
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.park_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { onAction(ParkDetailAction.OnBack) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back)
@@ -281,7 +297,13 @@ fun ParkDetailScreen(
                                     isRefreshing = isRefreshing,
                                     isParkAuthor = isParkAuthor
                                 ),
-                                onAuthorClick = onNavigateToUserProfile
+                                onAuthorClick = { userId ->
+                                    onAction(
+                                        ParkDetailAction.OnNavigateToUserProfile(
+                                            userId
+                                        )
+                                    )
+                                }
                             )
                         }
 
@@ -301,8 +323,8 @@ fun ParkDetailScreen(
                                 ),
                                 onAction = { action ->
                                     when (action) {
-                                        is CommentItemAction.AuthorClick -> onNavigateToUserProfile(
-                                            action.userId
+                                        is CommentItemAction.AuthorClick -> onAction(
+                                            ParkDetailAction.OnNavigateToUserProfile(action.userId)
                                         )
 
                                         is CommentItemAction.CommentAction -> viewModel.onCommentActionClick(

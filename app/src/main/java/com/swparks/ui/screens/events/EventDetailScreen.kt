@@ -52,16 +52,24 @@ import com.swparks.ui.viewmodel.EventDetailEvent
 import com.swparks.ui.viewmodel.IEventDetailViewModel
 import com.swparks.util.DateFormatter
 
+sealed class EventDetailAction {
+    object OnBack : EventDetailAction()
+    data class OnEventDeleted(val eventId: Long) : EventDetailAction()
+    data class OnNavigateToUserProfile(val userId: Long) : EventDetailAction()
+    data class OnNavigateToParticipants(
+        val eventId: Long,
+        val users: List<User>
+    ) : EventDetailAction()
+
+    data class OnNavigateToEditEvent(val event: Event) : EventDetailAction()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventDetailScreen(
     viewModel: IEventDetailViewModel,
-    onBack: () -> Unit,
-    onEventDeleted: (Long) -> Unit,
-    onNavigateToUserProfile: (Long) -> Unit,
-    onNavigateToParticipants: (Long, List<User>) -> Unit,
-    onNavigateToEditEvent: (Event) -> Unit,
-    parentPaddingValues: PaddingValues
+    parentPaddingValues: PaddingValues,
+    onAction: (EventDetailAction) -> Unit
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -84,8 +92,14 @@ fun EventDetailScreen(
                 EventDetailEvent.ShowDeleteConfirmDialog -> showDeleteEventDialog = true
                 is EventDetailEvent.ShowDeletePhotoConfirmDialog -> showDeletePhotoDialog = true
                 EventDetailEvent.ShowDeleteCommentConfirmDialog -> showDeleteCommentDialog = true
-                is EventDetailEvent.EventDeleted -> onEventDeleted(event.eventId)
-                is EventDetailEvent.NavigateToEditEvent -> onNavigateToEditEvent(event.event)
+                is EventDetailEvent.EventDeleted -> onAction(
+                    EventDetailAction.OnEventDeleted(event.eventId)
+                )
+
+                is EventDetailEvent.NavigateToEditEvent -> onAction(
+                    EventDetailAction.OnNavigateToEditEvent(event.event)
+                )
+
                 is EventDetailEvent.PhotoDeleted -> Unit
                 is EventDetailEvent.OpenCalendar -> {
                     val beginTime = DateFormatter.parseIsoDateToMillis(event.beginDate)
@@ -129,7 +143,7 @@ fun EventDetailScreen(
                 }
 
                 is EventDetailEvent.NavigateToParticipants -> {
-                    onNavigateToParticipants(event.eventId, event.users)
+                    onAction(EventDetailAction.OnNavigateToParticipants(event.eventId, event.users))
                 }
 
                 is EventDetailEvent.SendCommentComplaint -> {
@@ -166,7 +180,7 @@ fun EventDetailScreen(
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.event_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { onAction(EventDetailAction.OnBack) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back)
@@ -279,7 +293,9 @@ fun EventDetailScreen(
                                     isRefreshing = isRefreshing,
                                     isEventAuthor = isEventAuthor
                                 ),
-                                onAuthorClick = onNavigateToUserProfile
+                                onAuthorClick = { userId ->
+                                    onAction(EventDetailAction.OnNavigateToUserProfile(userId))
+                                }
                             )
                         }
 
@@ -299,8 +315,8 @@ fun EventDetailScreen(
                                 ),
                                 onAction = { action ->
                                     when (action) {
-                                        is CommentItemAction.AuthorClick -> onNavigateToUserProfile(
-                                            action.userId
+                                        is CommentItemAction.AuthorClick -> onAction(
+                                            EventDetailAction.OnNavigateToUserProfile(action.userId)
                                         )
 
                                         is CommentItemAction.CommentAction -> viewModel.onCommentActionClick(

@@ -5,6 +5,7 @@ import com.swparks.domain.provider.LocationService
 import com.swparks.util.AppError
 import com.swparks.util.UserNotifier
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
@@ -76,7 +77,7 @@ class CreateParkLocationHandlerTest {
 
         handler()
 
-        verify { userNotifier.handleError(match<AppError.LocationFailed> { true }) }
+        coVerify { userNotifier.handleError(match<AppError.LocationFailed> { true }) }
     }
 
     @Test

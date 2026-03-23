@@ -715,6 +715,10 @@ class SWRepositoryImp(
                     photos = photoParts
                 )
             }
+            val currentUserId = preferencesRepository.getCurrentUserIdSync()
+            if (currentUserId != null) {
+                updateUserAddedParksCache(currentUserId, id, park)
+            }
             Result.success(park)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "сохранении площадки"))
@@ -726,6 +730,10 @@ class SWRepositoryImp(
         try {
             val response = swApi.deletePark(parkId)
             if (response.isSuccessful) {
+                val currentUserId = preferencesRepository.getCurrentUserIdSync()
+                if (currentUserId != null) {
+                    removeParkFromUser(currentUserId, parkId)
+                }
                 Result.success(Unit)
             } else {
                 Result.failure(handleResponseError(response, "удалении площадки"))
@@ -788,6 +796,37 @@ class SWRepositoryImp(
         } catch (e: HttpException) {
             Result.failure(handleHttpException(e, "удалении фото площадки"))
         }
+
+    private suspend fun removeParkFromUser(userId: Long, parkId: Long) {
+        val user = userDao.getUserByIdFlow(userId).first() ?: return
+        val currentParks = user.addedParks.orEmpty().toMutableList()
+        currentParks.removeAll { it.id == parkId }
+        userDao.insert(user.copy(addedParks = currentParks))
+        Log.d(TAG, "Парк $parkId удалён из addedParks пользователя $userId")
+    }
+
+    private suspend fun updateUserAddedParksCache(
+        currentUserId: Long,
+        editedParkId: Long?,
+        savedPark: Park
+    ) {
+        val user = userDao.getUserByIdFlow(currentUserId).first() ?: return
+        val currentParks = user.addedParks.orEmpty().toMutableList()
+        if (editedParkId == null) {
+            if (currentParks.none { it.id == savedPark.id }) {
+                currentParks.add(savedPark)
+                userDao.insert(user.copy(addedParks = currentParks))
+                Log.d(TAG, "Парк ${savedPark.id} добавлен в addedParks пользователя $currentUserId")
+            }
+        } else {
+            currentParks.removeAll { it.id == editedParkId }
+            if (currentParks.none { it.id == savedPark.id }) {
+                currentParks.add(savedPark)
+            }
+            userDao.insert(user.copy(addedParks = currentParks))
+            Log.d(TAG, "Парк ${savedPark.id} обновлён в addedParks пользователя $currentUserId")
+        }
+    }
 
     // 3.5. Мероприятия
 

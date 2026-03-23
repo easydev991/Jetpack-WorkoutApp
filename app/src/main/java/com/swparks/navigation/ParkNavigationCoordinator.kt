@@ -1,10 +1,13 @@
 package com.swparks.navigation
 
+import android.util.Log
 import androidx.navigation.NavController
 import com.swparks.data.model.NewParkDraft
 import com.swparks.data.model.Park
 import com.swparks.data.model.User
 import com.swparks.util.WorkoutAppJson
+
+private const val TAG = "ParkNavCoordinator"
 
 internal const val PARK_TRAINEES_USERS_JSON_KEY = "park_trainees_users_json"
 
@@ -78,8 +81,11 @@ fun NavController.navigateToCreatePark(
     source: String = "parks",
     draft: NewParkDraft
 ) {
+    Log.d(TAG, ">>> navigateToCreatePark() draft: $draft")
     val data = buildCreateParkNavigationData(source, draft)
+    Log.d(TAG, "navigateToCreatePark: navigating to route: ${data.route}")
     navigate(data.route)
     val backStackEntry = getBackStackEntry(data.route)
     backStackEntry.savedStateHandle[CREATE_PARK_DRAFT_JSON_KEY] = data.draftJson
+    Log.d(TAG, "<<< navigateToCreatePark() done, draftJson saved")
 }

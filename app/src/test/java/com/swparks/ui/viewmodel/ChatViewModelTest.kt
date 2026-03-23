@@ -163,7 +163,7 @@ class ChatViewModelTest {
         // Then
         val state = viewModel.uiState.value
         assertTrue("Expected Error state but got $state", state is ChatUiState.Error)
-        verify { userNotifier.handleError(any<AppError>()) }
+        coVerify { userNotifier.handleError(any<AppError>()) }
     }
 
     // ==================== refreshMessages ====================
@@ -202,7 +202,7 @@ class ChatViewModelTest {
         advanceUntilIdle()
 
         // Then
-        verify { userNotifier.handleError(any<AppError>()) }
+        coVerify { userNotifier.handleError(any<AppError>()) }
     }
 
     @Test
@@ -293,7 +293,7 @@ class ChatViewModelTest {
         advanceUntilIdle()
 
         // Then
-        verify { userNotifier.handleError(any<AppError>()) }
+        coVerify { userNotifier.handleError(any<AppError>()) }
     }
 
     @Test
@@ -429,7 +429,7 @@ class ChatViewModelTest {
         // Then
         val state = viewModel.uiState.value
         assertTrue("Expected Error state but got $state", state is ChatUiState.Error)
-        verify { userNotifier.handleError(any<AppError>()) }
+        coVerify { userNotifier.handleError(any<AppError>()) }
     }
 
     @Test
@@ -450,7 +450,7 @@ class ChatViewModelTest {
         advanceUntilIdle()
 
         // Then
-        verify { userNotifier.handleError(any<AppError>()) }
+        coVerify { userNotifier.handleError(any<AppError>()) }
     }
 
     @Test
@@ -474,6 +474,6 @@ class ChatViewModelTest {
         advanceUntilIdle()
 
         // Then
-        verify { userNotifier.handleError(any<AppError>()) }
+        coVerify { userNotifier.handleError(any<AppError>()) }
     }
 }

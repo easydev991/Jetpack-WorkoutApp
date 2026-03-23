@@ -12,15 +12,21 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.io.IOException
+import java.util.Locale
 import kotlin.coroutines.resume
 
 class GeocodingServiceImpl(
     private val context: Context,
-    private val geocoderProvider: (Context) -> Geocoder = { ctx -> Geocoder(ctx) }
+    private val geocoderProvider: (Context, Locale) -> Geocoder = { ctx, locale ->
+        Geocoder(
+            ctx,
+            locale
+        )
+    }
 ) : GeocodingService {
 
     private val geocoder: Geocoder by lazy {
-        geocoderProvider(context)
+        geocoderProvider(context, Locale("ru", "RU"))
     }
 
     override suspend fun reverseGeocode(

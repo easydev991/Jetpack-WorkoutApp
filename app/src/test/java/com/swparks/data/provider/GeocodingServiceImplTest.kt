@@ -25,6 +25,34 @@ class GeocodingServiceImplTest {
 
     @Test
     @Config(sdk = [33])
+    fun reverseGeocode_whenSuccess_returnsResultWithRussianLocale() = runTest {
+        val capturedLocales = mutableListOf<Locale>()
+        val address = Address(Locale("ru", "RU")).apply {
+            locality = "Москва"
+            subLocality = "Москва"
+            thoroughfare = "Тверская"
+            subThoroughfare = "10"
+            adminArea = "Москва"
+            countryName = "Россия"
+        }
+        every {
+            geocoder.getFromLocation(any(), any(), 1, any<Geocoder.GeocodeListener>())
+        } answers {
+            arg<Geocoder.GeocodeListener>(3).onGeocode(mutableListOf(address))
+        }
+        val service = createService { _, locale ->
+            capturedLocales.add(locale)
+            geocoder
+        }
+
+        service.reverseGeocode(55.751244, 37.618423)
+
+        assertEquals(1, capturedLocales.size)
+        assertEquals(Locale("ru", "RU"), capturedLocales[0])
+    }
+
+    @Test
+    @Config(sdk = [33])
     fun reverseGeocode_whenApi33AndPlacemarkFound_thenReturnsFormattedResult() = runTest {
         val address = Address(Locale("ru", "RU")).apply {
             locality = "Москва"
@@ -115,10 +143,12 @@ class GeocodingServiceImplTest {
         )
     }
 
-    private fun createService(): GeocodingServiceImpl {
+    private fun createService(
+        geocoderProvider: (Context, Locale) -> Geocoder = { _, _ -> geocoder }
+    ): GeocodingServiceImpl {
         return GeocodingServiceImpl(
             context = context,
-            geocoderProvider = { geocoder }
+            geocoderProvider = geocoderProvider
         )
     }
 }

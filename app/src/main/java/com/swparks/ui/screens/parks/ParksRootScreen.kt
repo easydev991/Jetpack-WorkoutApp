@@ -5,9 +5,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
@@ -18,6 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +34,7 @@ import com.swparks.R
 import com.swparks.data.model.NewParkDraft
 import com.swparks.data.model.Park
 import com.swparks.navigation.AppState
+import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.ParksListView
 import com.swparks.ui.viewmodel.IParksRootViewModel
 import com.swparks.ui.viewmodel.ParksRootEvent
@@ -46,11 +48,16 @@ fun ParksRootScreen(
     parks: List<Park>,
     onParkClick: (Park) -> Unit = {},
     onCreateParkClick: (NewParkDraft) -> Unit = {},
+    onGettingLocationStateChange: (Boolean) -> Unit = {},
     appState: AppState,
     viewModel: IParksRootViewModel
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.isGettingLocation) {
+        onGettingLocationStateChange(uiState.isGettingLocation)
+    }
 
     SetupPermissionLaunchers(viewModel)
 
@@ -77,8 +84,8 @@ fun ParksRootScreen(
         floatingActionButton = {
             CreateParkFab(
                 appState = appState,
+                enabled = !uiState.isGettingLocation,
                 onClick = {
-                    Log.i("ParksRootScreen", "Нажата кнопка создания площадки")
                     val hasFineLocation = ContextCompat.checkSelfPermission(
                         context,
                         Manifest.permission.ACCESS_FINE_LOCATION
@@ -92,21 +99,28 @@ fun ParksRootScreen(
                         viewModel.onPermissionGranted()
                     } else {
                         val activity = context as? android.app.Activity
-                        val shouldShowRationale = activity != null && ActivityCompat.shouldShowRequestPermissionRationale(
-                            activity,
-                            Manifest.permission.ACCESS_FINE_LOCATION
-                        )
+                        val shouldShowRationale = activity != null &&
+                            ActivityCompat.shouldShowRequestPermissionRationale(
+                                activity,
+                                Manifest.permission.ACCESS_FINE_LOCATION
+                            )
                         viewModel.onPermissionDenied(shouldShowRationale)
                     }
                 }
             )
         }
     ) { innerPadding ->
-        ParksListView(
-            modifier = Modifier.fillMaxSize(),
-            parks = parks,
-            onParkClick = onParkClick
-        )
+        Box(modifier = Modifier.fillMaxSize()) {
+            ParksListView(
+                modifier = Modifier.fillMaxSize(),
+                parks = parks,
+                onParkClick = onParkClick
+            )
+
+            if (uiState.isGettingLocation) {
+                LoadingOverlayView()
+            }
+        }
     }
 }
 
@@ -120,16 +134,14 @@ private fun SetupPermissionLaunchers(viewModel: IParksRootViewModel) {
 
     val openSettingsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
-    ) {
-        Log.i("ParksRootScreen", "Возврат из настроек приложения")
-    }
+    ) { }
 
     LaunchedEffect(Unit) {
         viewModel.permissionLauncher = { permissions ->
             permissionLauncher.launch(
                 arrayOf(
-                    android.Manifest.permission.ACCESS_FINE_LOCATION,
-                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
                 )
             )
         }
@@ -177,10 +189,7 @@ fun ParksTopAppBar(
         },
         actions = {
             IconButton(
-                onClick = {
-                    Log.d("ParksRootScreen", "Кнопка фильтрации нажата")
-                    onFilterClick()
-                }
+                onClick = onFilterClick
             ) {
                 Icon(
                     imageVector = Icons.Default.FilterAlt,
@@ -194,13 +203,19 @@ fun ParksTopAppBar(
 @Composable
 fun CreateParkFab(
     appState: AppState,
+    enabled: Boolean = true,
     onClick: () -> Unit = {}
 ) {
     if (appState.isAuthorized) {
         FloatingActionButton(
             onClick = {
-                Log.i("ParksScreen", "Нажата кнопка создания площадки")
+                if (!enabled) return@FloatingActionButton
                 onClick()
+            },
+            containerColor = if (enabled) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant
             }
         ) {
             Icon(

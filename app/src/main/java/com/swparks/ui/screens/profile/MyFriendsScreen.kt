@@ -31,6 +31,7 @@ import com.swparks.ui.ds.FriendRequestRowView
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.SectionView
 import com.swparks.ui.screens.common.EmptyFriendsContent
+import com.swparks.ui.screens.common.FriendsListConfig
 import com.swparks.ui.screens.common.FriendsListSection
 import com.swparks.ui.state.FriendsListUiState
 import com.swparks.ui.viewmodel.IFriendsListViewModel
@@ -207,11 +208,13 @@ private fun SuccessContent(
         if (hasFriends) {
             item {
                 FriendsListSection(
-                    friends = state.friends,
-                    currentUserId = state.currentUserId,
-                    enabled = state.enabled,
-                    showTitle = !singleSection,
-                    onFriendClick = onFriendClick
+                    config = FriendsListConfig(
+                        friends = state.friends,
+                        currentUserId = state.currentUserId,
+                        enabled = state.enabled,
+                        showTitle = !singleSection,
+                        onFriendClick = onFriendClick
+                    )
                 )
             }
         }

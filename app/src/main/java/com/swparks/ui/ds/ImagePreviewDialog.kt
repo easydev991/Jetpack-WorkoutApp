@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.swparks.R
+import com.swparks.ui.screens.photos.ZoomConfig
 import com.swparks.ui.screens.photos.ZoomablePhotoView
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,10 +65,12 @@ fun ImagePreviewDialog(
                 }
             ) { paddingValues ->
                 ZoomablePhotoView(
-                    imageUrl = uri.toString(),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
+                    config = ZoomConfig(
+                        imageUrl = uri.toString(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues)
+                    )
                 )
             }
         }

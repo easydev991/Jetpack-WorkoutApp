@@ -4,11 +4,14 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.preferencesOf
 import com.swparks.data.database.dao.DialogDao
 import com.swparks.data.database.dao.EventDao
 import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.UserDao
+import com.swparks.data.database.entity.UserEntity
 import com.swparks.data.model.Park
 import com.swparks.domain.exception.NetworkException
 import com.swparks.network.SWApi
@@ -54,6 +57,7 @@ class SWRepositoryParksTest {
         Dispatchers.setMain(testDispatcher)
         mockkStatic(Log::class)
         every { Log.e(any(), any()) } returns 0
+        every { Log.d(any(), any()) } returns 0
     }
 
     @After
@@ -948,5 +952,166 @@ class SWRepositoryParksTest {
         // Then
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is NetworkException)
+    }
+
+    @Test
+    fun savePark_createMode_withCurrentUser_updatesAddedParksCache() = runTest {
+        // Given
+        val currentUserId = 1L
+        val mockPark = createMockPark(123L)
+        val mockUser = UserEntity(id = currentUserId, name = "test", addedParks = emptyList())
+
+        val mockApi = mockk<SWApi>()
+        coEvery {
+            mockApi.createPark(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns mockPark
+
+        val currentUserIdKey = longPreferencesKey("currentUserId")
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(preferencesOf(currentUserIdKey to currentUserId))
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao,
+            mockEventDao
+        )
+
+        // Mock getUserByIdFlow to return the user
+        coEvery { mockUserDao.getUserByIdFlow(currentUserId) } returns flowOf(mockUser)
+        coEvery { mockUserDao.insert(any()) } returns Unit
+
+        val form = ParkForm(
+            address = "Test Address",
+            latitude = "0.0",
+            longitude = "0.0",
+            cityId = 1,
+            typeId = 1,
+            sizeId = 1
+        )
+
+        // When - savePark with null id (create mode)
+        repository.savePark(null, form, null)
+
+        // Then - verify userDao.insert was called with updated addedParks
+        coVerify {
+            mockUserDao.insert(withArg { user ->
+                assertTrue(user.addedParks?.any { it.id == 123L } == true)
+            })
+        }
+    }
+
+    @Test
+    fun deletePark_withCurrentUser_updatesAddedParksCache() = runTest {
+        // Given
+        val currentUserId = 1L
+        val parkIdToDelete = 123L
+        val mockPark = createMockPark(parkIdToDelete)
+        val mockUser = UserEntity(id = currentUserId, name = "test", addedParks = listOf(mockPark))
+
+        val mockApi = mockk<SWApi>()
+        coEvery { mockApi.deletePark(parkIdToDelete) } returns Response.success(Unit)
+
+        val currentUserIdKey = longPreferencesKey("currentUserId")
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(preferencesOf(currentUserIdKey to currentUserId))
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao,
+            mockEventDao
+        )
+
+        coEvery { mockUserDao.getUserByIdFlow(currentUserId) } returns flowOf(mockUser)
+        coEvery { mockUserDao.insert(any()) } returns Unit
+
+        // When
+        val result = repository.deletePark(parkIdToDelete)
+
+        // Then
+        assertTrue(result.isSuccess)
+        coVerify {
+            mockUserDao.insert(withArg { user ->
+                assertTrue(user.addedParks?.none { it.id == parkIdToDelete } == true)
+            })
+        }
+    }
+
+    @Test
+    fun savePark_editMode_withCurrentUser_removesOldAndAddsNewPark() = runTest {
+        // Given - editing same park (same id), new content
+        val currentUserId = 1L
+        val parkId = 100L
+        val updatedPark = createMockPark(parkId).copy(address = "Updated Address")
+        val existingPark = createMockPark(parkId)
+        val mockUser =
+            UserEntity(id = currentUserId, name = "test", addedParks = listOf(existingPark))
+
+        val mockApi = mockk<SWApi>()
+        coEvery {
+            mockApi.editPark(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns updatedPark
+
+        val currentUserIdKey = longPreferencesKey("currentUserId")
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(preferencesOf(currentUserIdKey to currentUserId))
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao,
+            mockEventDao
+        )
+
+        coEvery { mockUserDao.getUserByIdFlow(currentUserId) } returns flowOf(mockUser)
+        coEvery { mockUserDao.insert(any()) } returns Unit
+
+        val form = ParkForm(
+            address = "Updated Address",
+            latitude = "1.0",
+            longitude = "1.0",
+            cityId = 1,
+            typeId = 1,
+            sizeId = 1
+        )
+
+        // When - edit mode with same park id
+        repository.savePark(parkId, form, null)
+
+        // Then - verify the park was replaced (only one park with same id, updated content)
+        coVerify {
+            mockUserDao.insert(withArg { user ->
+                assertTrue(user.addedParks?.size == 1)
+                assertTrue(user.addedParks?.first()?.id == parkId)
+                assertTrue(user.addedParks?.first()?.address == "Updated Address")
+            })
+        }
     }
 }

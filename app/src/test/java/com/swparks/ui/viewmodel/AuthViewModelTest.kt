@@ -11,7 +11,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
-import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -108,7 +107,7 @@ class AuthViewModelTest {
         advanceUntilIdle()
 
         // Then - проверяем, что userNotifier.handleError был вызван
-        verify {
+        coVerify {
             userNotifier.handleError(
                 match<AppError> { error ->
                     error is AppError.Network &&

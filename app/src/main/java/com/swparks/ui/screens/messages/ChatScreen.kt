@@ -179,30 +179,35 @@ fun ChatContent(
         }
     ) { paddingValues ->
         ChatScreenContent(
-            uiState = params.uiState,
-            currentUserId = params.currentUserId,
-            isLoading = params.isLoading,
-            scrollState = scrollState,
-            onMarkAsRead = { },
-            modifier = Modifier.padding(paddingValues)
+            state = ChatScreenState(
+                uiState = params.uiState,
+                currentUserId = params.currentUserId,
+                isLoading = params.isLoading,
+                scrollState = scrollState,
+                modifier = Modifier.padding(paddingValues)
+            ),
+            onMarkAsRead = { }
         )
     }
 }
 
+data class ChatScreenState(
+    val uiState: ChatUiState,
+    val currentUserId: Int?,
+    val isLoading: Boolean,
+    val scrollState: LazyListState,
+    val modifier: Modifier = Modifier
+)
 
 @Composable
 private fun ChatScreenContent(
-    uiState: ChatUiState,
-    currentUserId: Int?,
-    isLoading: Boolean,
-    scrollState: LazyListState,
-    onMarkAsRead: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    state: ChatScreenState,
+    onMarkAsRead: (Int) -> Unit
 ) {
     Box(
-        modifier = modifier.fillMaxSize()
+        modifier = state.modifier.fillMaxSize()
     ) {
-        when (uiState) {
+        when (val uiState = state.uiState) {
             is ChatUiState.Loading -> {
                 LoadingOverlayView()
             }
@@ -222,13 +227,13 @@ private fun ChatScreenContent(
                 } else {
                     MessagesList(
                         messages = uiState.messages,
-                        currentUserId = currentUserId,
-                        scrollState = scrollState,
+                        currentUserId = state.currentUserId,
+                        scrollState = state.scrollState,
                         onMarkAsRead = onMarkAsRead
                     )
                 }
 
-                if (isLoading) {
+                if (state.isLoading) {
                     LoadingOverlayView()
                 }
             }

@@ -264,16 +264,21 @@ sealed class Screen(
                 "&viewAccess={viewAccess}&commentAccess={commentAccess}&source={source}",
             parentTab = Profile
         ) {
-        fun createRoute(
-            journalId: Long,
-            userId: Long,
-            journalTitle: String,
-            viewAccess: String,
-            commentAccess: String,
-            source: String = "profile"
-        ) =
-            "journal_entries/$journalId?userId=$userId&title=${android.net.Uri.encode(journalTitle)}" +
-                "&viewAccess=$viewAccess&commentAccess=$commentAccess&source=$source"
+        data class JournalEntriesRoute(
+            val journalId: Long,
+            val userId: Long,
+            val journalTitle: String,
+            val viewAccess: String,
+            val commentAccess: String,
+            val source: String = "profile"
+        )
+
+        fun createRoute(route: JournalEntriesRoute): String =
+            "journal_entries/${route.journalId}?userId=${route.userId}" +
+                "&title=${android.net.Uri.encode(route.journalTitle)}" +
+                "&viewAccess=${route.viewAccess}" +
+                "&commentAccess=${route.commentAccess}" +
+                "&source=${route.source}"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "profile"

@@ -196,7 +196,7 @@ class ChangePasswordViewModelTest {
         advanceUntilIdle()
 
         // Then
-        verify {
+        coVerify {
             userNotifier.handleError(match { error ->
                 error is AppError.Generic && error.message == "Неверный пароль"
             })

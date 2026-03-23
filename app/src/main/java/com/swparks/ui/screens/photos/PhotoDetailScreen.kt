@@ -68,10 +68,12 @@ fun PhotoDetailScreen(
             }
         ) { paddingValues ->
             ZoomablePhotoView(
-                imageUrl = state.photo.photo,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
+                config = ZoomConfig(
+                    imageUrl = state.photo.photo,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                )
             )
         }
 

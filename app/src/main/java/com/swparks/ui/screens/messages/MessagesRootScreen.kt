@@ -93,6 +93,27 @@ data class DialogsContentParams(
     val onNavigateToSearchUsers: () -> Unit
 )
 
+data class DialogsStateParams(
+    val uiState: DialogsUiState,
+    val isRefreshing: Boolean,
+    val isUpdating: Boolean,
+    val currentUser: com.swparks.data.model.User?,
+    val onRefresh: () -> Unit,
+    val onDialogClick: (DialogEntity) -> Unit,
+    val onLongClick: (DialogEntity, Offset, Offset) -> Unit
+)
+
+sealed class DialogsAction {
+    object NavigateToFriends : DialogsAction()
+    object NavigateToSearchUsers : DialogsAction()
+    data class NavigateToChat(
+        val dialogId: Long,
+        val userId: Int,
+        val userName: String,
+        val userImage: String?
+    ) : DialogsAction()
+}
+
 @Composable
 fun MessagesRootScreen(
     modifier: Modifier = Modifier,
@@ -242,23 +263,25 @@ fun DialogsContent(
 
     Box(modifier = modifier.fillMaxSize()) {
         DialogsStateContent(
-            uiState = params.uiState,
-            isRefreshing = params.isRefreshing,
-            isUpdating = params.isUpdating,
-            currentUser = params.currentUser,
-            onRefresh = params.onRefresh,
-            onDialogClick = params.onDialogClick,
-            onNavigateToFriends = params.onNavigateToFriends,
-            onNavigateToSearchUsers = params.onNavigateToSearchUsers,
-            onLongClick = { dialog, localOffset, itemPosition ->
-                contextMenuItem = dialog
-                menuOffset = with(density) {
-                    DpOffset(
-                        (itemPosition.x + localOffset.x).toDp(),
-                        (itemPosition.y + localOffset.y).toDp()
-                    )
+            params = DialogsStateParams(
+                uiState = params.uiState,
+                isRefreshing = params.isRefreshing,
+                isUpdating = params.isUpdating,
+                currentUser = params.currentUser,
+                onRefresh = params.onRefresh,
+                onDialogClick = params.onDialogClick,
+                onLongClick = { dialog, localOffset, itemPosition ->
+                    contextMenuItem = dialog
+                    menuOffset = with(density) {
+                        DpOffset(
+                            (itemPosition.x + localOffset.x).toDp(),
+                            (itemPosition.y + localOffset.y).toDp()
+                        )
+                    }
                 }
-            }
+            ),
+            onNavigateToFriends = params.onNavigateToFriends,
+            onNavigateToSearchUsers = params.onNavigateToSearchUsers
         )
 
         SnackbarHost(
@@ -306,16 +329,14 @@ fun DialogsContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DialogsStateContent(
-    uiState: DialogsUiState,
-    isRefreshing: Boolean,
-    isUpdating: Boolean,
-    currentUser: com.swparks.data.model.User?,
-    onRefresh: () -> Unit,
-    onDialogClick: (DialogEntity) -> Unit,
+    params: DialogsStateParams,
     onNavigateToFriends: () -> Unit,
-    onNavigateToSearchUsers: () -> Unit,
-    onLongClick: (DialogEntity, Offset, Offset) -> Unit
+    onNavigateToSearchUsers: () -> Unit
 ) {
+    val uiState = params.uiState
+    val isRefreshing = params.isRefreshing
+    val isUpdating = params.isUpdating
+    val currentUser = params.currentUser
     when (uiState) {
         is DialogsUiState.Loading -> {
             LoadingOverlayView()
@@ -325,7 +346,7 @@ private fun DialogsStateContent(
             val pullRefreshState = rememberPullToRefreshState()
             PullToRefreshBox(
                 isRefreshing = isRefreshing,
-                onRefresh = onRefresh,
+                onRefresh = params.onRefresh,
                 state = pullRefreshState,
                 modifier = Modifier.fillMaxSize(),
                 indicator = {
@@ -355,8 +376,8 @@ private fun DialogsStateContent(
                     DialogsList(
                         dialogs = uiState.dialogs,
                         isRefreshing = isRefreshing || isUpdating,
-                        onDialogClick = onDialogClick,
-                        onLongClick = onLongClick
+                        onDialogClick = params.onDialogClick,
+                        onLongClick = params.onLongClick
                     )
                 }
             }
@@ -370,7 +391,7 @@ private fun DialogsStateContent(
                 EmptyStateView(
                     text = uiState.message,
                     buttonTitle = stringResource(R.string.try_again_button),
-                    onButtonClick = onRefresh
+                    onButtonClick = params.onRefresh
                 )
             }
         }

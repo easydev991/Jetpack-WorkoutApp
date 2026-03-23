@@ -3,6 +3,7 @@ package com.swparks.ui.viewmodel
 import app.cash.turbine.test
 import com.swparks.data.model.NewParkDraft
 import com.swparks.domain.usecase.ICreateParkLocationHandler
+import com.swparks.util.Logger
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,12 +23,14 @@ import org.robolectric.RobolectricTestRunner
 class ParksRootViewModelTest {
 
     private lateinit var createParkLocationHandler: ICreateParkLocationHandler
+    private lateinit var logger: Logger
     private lateinit var viewModel: ParksRootViewModel
 
     @Before
     fun setup() {
         createParkLocationHandler = mockk(relaxed = true)
-        viewModel = ParksRootViewModel(createParkLocationHandler)
+        logger = mockk(relaxed = true)
+        viewModel = ParksRootViewModel(createParkLocationHandler, logger)
     }
 
     @Test

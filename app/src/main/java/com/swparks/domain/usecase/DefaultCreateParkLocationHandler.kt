@@ -14,7 +14,7 @@ class DefaultCreateParkLocationHandler(
 ) : ICreateParkLocationHandler {
 
     override suspend fun invoke(): Result<NewParkDraft> {
-        return locationService.getCurrentLocation().fold(
+        val result = locationService.getCurrentLocation().fold(
             onSuccess = { coordinates ->
                 Result.success(
                     NewParkDraft.EMPTY.withCoordinates(
@@ -33,5 +33,6 @@ class DefaultCreateParkLocationHandler(
                 Result.failure(error)
             }
         )
+        return result
     }
 }

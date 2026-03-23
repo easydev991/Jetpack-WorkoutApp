@@ -66,51 +66,80 @@ class ParkFormViewModel(
     override val events: SharedFlow<ParkFormEvent> = _events.asSharedFlow()
 
     init {
+        logger.d(TAG, ">>> ParkFormViewModel.init() mode: $mode")
         if (mode is ParkFormMode.Create) {
             val shouldGeocode = mode.initialAddress.isEmpty() ||
                 mode.initialCityId == null ||
                 mode.initialCityId == 0
+            logger.d(
+                TAG, "init: shouldGeocode=$shouldGeocode, " +
+                    "address='${mode.initialAddress}', cityId=${mode.initialCityId}"
+            )
             if (shouldGeocode) {
                 val latitude = mode.initialLatitude.toDoubleOrNull() ?: 0.0
                 val longitude = mode.initialLongitude.toDoubleOrNull() ?: 0.0
+                logger.d(TAG, "init: latitude=$latitude, longitude=$longitude")
                 if (latitude != 0.0 && longitude != 0.0) {
+                    logger.d(TAG, "init: launching geocoding coroutine")
                     viewModelScope.launch {
                         performGeocoding(latitude, longitude)
                     }
+                } else {
+                    logger.d(TAG, "init: skipping geocoding - no valid coordinates")
                 }
+            } else {
+                logger.d(TAG, "init: skipping geocoding - address or cityId already present")
             }
         }
+        logger.d(TAG, "<<< ParkFormViewModel.init() done")
     }
 
     private suspend fun performGeocoding(latitude: Double, longitude: Double) {
-        geocodingService.reverseGeocode(latitude, longitude).fold(
-            onSuccess = { result ->
-                val cityId = findCityByCoordinatesUseCase(
-                    result.locality,
-                    latitude,
-                    longitude
-                )
-                _uiState.update { state ->
-                    state.copy(
-                        form = state.form.copy(
-                            address = result.address,
-                            cityId = cityId ?: state.form.cityId
-                        )
+        logger.d(TAG, ">>> performGeocoding($latitude, $longitude)")
+        _uiState.update { it.copy(isGeocoding = true) }
+        try {
+            geocodingService.reverseGeocode(latitude, longitude).fold(
+                onSuccess = { result ->
+                    logger.d(TAG, "performGeocoding: reverseGeocode success, result=$result")
+                    val cityId = findCityByCoordinatesUseCase(
+                        result.locality,
+                        latitude,
+                        longitude
                     )
-                }
-                logger.d(TAG, "Geocoding success: ${result.address}, cityId: $cityId")
-            },
-            onFailure = { error ->
-                logger.w(TAG, "Geocoding failed: ${error.message}")
-                val fallbackCityId = getCurrentUserCityId()
-                if (fallbackCityId != null) {
-                    _uiState.update { state ->
-                        state.copy(form = state.form.copy(cityId = fallbackCityId))
+                    logger.d(TAG, "performGeocoding: cityId from lookup: $cityId")
+                    val finalCityId = cityId ?: getCurrentUserCityId()
+                    if (finalCityId != cityId && finalCityId != null) {
+                        logger.d(TAG, "performGeocoding: Using fallback cityId: $finalCityId")
                     }
-                    logger.d(TAG, "Using fallback cityId: $fallbackCityId")
+                    _uiState.update { state ->
+                        state.copy(
+                            form = state.form.copy(
+                                address = result.address,
+                                cityId = finalCityId ?: state.form.cityId
+                            )
+                        )
+                    }
+                    logger.d(
+                        TAG, "performGeocoding: UI state updated, " +
+                            "address='${result.address}', cityId=$finalCityId"
+                    )
+                    logger.d(TAG, "<<< performGeocoding() done - SUCCESS")
+                },
+                onFailure = { error ->
+                    logger.w(TAG, "performGeocoding: reverseGeocode FAILED: ${error.message}")
+                    val fallbackCityId = getCurrentUserCityId()
+                    if (fallbackCityId != null) {
+                        _uiState.update { state ->
+                            state.copy(form = state.form.copy(cityId = fallbackCityId))
+                        }
+                        logger.d(TAG, "performGeocoding: Using fallback cityId: $fallbackCityId")
+                    }
+                    logger.d(TAG, "<<< performGeocoding() done - FAILED with fallback")
                 }
-            }
-        )
+            )
+        } finally {
+            _uiState.update { it.copy(isGeocoding = false) }
+        }
     }
 
     private suspend fun getCurrentUserCityId(): Int? {

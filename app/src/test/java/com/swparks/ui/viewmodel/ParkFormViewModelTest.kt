@@ -27,7 +27,6 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -794,7 +793,7 @@ class ParkFormViewModelTest {
 
         // Then
         assertFalse("isSaving should be false after error", viewModel.uiState.value.isSaving)
-        verify { userNotifier.handleError(any<AppError>()) }
+        coVerify { userNotifier.handleError(any<AppError>()) }
     }
 
     @Test

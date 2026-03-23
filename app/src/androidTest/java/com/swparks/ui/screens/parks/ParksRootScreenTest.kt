@@ -1,6 +1,5 @@
 package com.swparks.ui.screens.parks
 
-import android.Manifest
 import androidx.compose.material3.Surface
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -30,9 +29,24 @@ class ParksRootScreenTest {
     fun setup() {
         fakeViewModel = FakeParksRootViewModel()
         try {
-            val packageName = ApplicationProvider.getApplicationContext<android.content.Context>().packageName
-            Runtime.getRuntime().exec(arrayOf("pm", "grant", packageName, "android.permission.ACCESS_FINE_LOCATION"))
-            Runtime.getRuntime().exec(arrayOf("pm", "grant", packageName, "android.permission.ACCESS_COARSE_LOCATION"))
+            val packageName =
+                ApplicationProvider.getApplicationContext<android.content.Context>().packageName
+            Runtime.getRuntime().exec(
+                arrayOf(
+                    "pm",
+                    "grant",
+                    packageName,
+                    "android.permission.ACCESS_FINE_LOCATION"
+                )
+            )
+            Runtime.getRuntime().exec(
+                arrayOf(
+                    "pm",
+                    "grant",
+                    packageName,
+                    "android.permission.ACCESS_COARSE_LOCATION"
+                )
+            )
         } catch (e: Exception) {
             // Permission grant may fail on emulator without root, tests will handle this
         }

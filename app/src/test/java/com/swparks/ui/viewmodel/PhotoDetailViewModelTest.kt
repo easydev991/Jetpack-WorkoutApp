@@ -211,7 +211,7 @@ class PhotoDetailViewModelTest {
         val state = viewModel.uiState.value as? PhotoDetailUIState.Content
         assertNotNull(state)
         assertFalse(state!!.isLoading)
-        verify { userNotifier.handleError(any<AppError.Generic>()) }
+        coVerify { userNotifier.handleError(any<AppError.Generic>()) }
     }
 
     @Test
@@ -377,7 +377,7 @@ class PhotoDetailViewModelTest {
         val state = viewModel.uiState.value as? PhotoDetailUIState.Content
         assertNotNull(state)
         assertFalse(state!!.isLoading)
-        verify { userNotifier.handleError(any<AppError.Generic>()) }
+        coVerify { userNotifier.handleError(any<AppError.Generic>()) }
     }
 
     @Test

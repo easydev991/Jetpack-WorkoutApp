@@ -61,6 +61,13 @@ sealed class ParkFormNavigationAction {
     data class BackWithSavedPark(val park: Park) : ParkFormNavigationAction()
 }
 
+private sealed class ParkFormDialogAction {
+    data object OnDismissConfirmDialog : ParkFormDialogAction()
+    data object OnConfirmClose : ParkFormDialogAction()
+    data object OnDismissPreview : ParkFormDialogAction()
+    data class OnDeletePhoto(val uri: Uri) : ParkFormDialogAction()
+}
+
 private data class ParkFormContentParams(
     val form: com.swparks.ui.model.ParkForm,
     val isEnabled: Boolean,
@@ -135,7 +142,7 @@ fun ParkFormScreen(
                 )
             )
 
-            if (uiState.isSaving) {
+            if (uiState.isSaving || uiState.isGeocoding) {
                 LoadingOverlayView()
             }
         }
@@ -144,15 +151,20 @@ fun ParkFormScreen(
     ParkFormDialogs(
         showConfirmDialog = showConfirmDialog,
         previewUri = previewUri,
-        onDismissConfirmDialog = { showConfirmDialog = false },
-        onConfirmClose = {
-            showConfirmDialog = false
-            onAction(ParkFormNavigationAction.Back)
-        },
-        onDismissPreview = { previewUri = null },
-        onDeletePhoto = { uri ->
-            viewModel.onPhotoRemove(uri)
-            previewUri = null
+        onAction = { action ->
+            when (action) {
+                is ParkFormDialogAction.OnDismissConfirmDialog -> showConfirmDialog = false
+                is ParkFormDialogAction.OnConfirmClose -> {
+                    showConfirmDialog = false
+                    onAction(ParkFormNavigationAction.Back)
+                }
+
+                is ParkFormDialogAction.OnDismissPreview -> previewUri = null
+                is ParkFormDialogAction.OnDeletePhoto -> {
+                    viewModel.onPhotoRemove(action.uri)
+                    previewUri = null
+                }
+            }
         }
     )
 }
@@ -375,23 +387,20 @@ private fun SaveButton(
 private fun ParkFormDialogs(
     showConfirmDialog: Boolean,
     previewUri: Uri?,
-    onDismissConfirmDialog: () -> Unit,
-    onConfirmClose: () -> Unit,
-    onDismissPreview: () -> Unit,
-    onDeletePhoto: (Uri) -> Unit
+    onAction: (ParkFormDialogAction) -> Unit
 ) {
     if (showConfirmDialog) {
         ConfirmCloseDialog(
-            onDismiss = onDismissConfirmDialog,
-            onConfirm = onConfirmClose
+            onDismiss = { onAction(ParkFormDialogAction.OnDismissConfirmDialog) },
+            onConfirm = { onAction(ParkFormDialogAction.OnConfirmClose) }
         )
     }
 
     previewUri?.let { uri ->
         ImagePreviewDialog(
             uri = uri,
-            onDismiss = onDismissPreview,
-            onDelete = { onDeletePhoto(uri) }
+            onDismiss = { onAction(ParkFormDialogAction.OnDismissPreview) },
+            onDelete = { onAction(ParkFormDialogAction.OnDeletePhoto(uri)) }
         )
     }
 }

@@ -17,23 +17,25 @@ import com.swparks.ui.ds.SectionView
 import com.swparks.ui.ds.UserRowData
 import com.swparks.ui.ds.UserRowView
 
+data class FriendsListConfig(
+    val friends: List<User>,
+    val currentUserId: Long?,
+    val enabled: Boolean,
+    val showTitle: Boolean,
+    val onFriendClick: (Long) -> Unit,
+    val modifier: Modifier = Modifier
+)
+
 @Composable
-fun FriendsListSection(
-    friends: List<User>,
-    currentUserId: Long?,
-    enabled: Boolean,
-    showTitle: Boolean,
-    onFriendClick: (Long) -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun FriendsListSection(config: FriendsListConfig) {
     SectionView(
-        titleID = if (showTitle) R.string.friends else null,
+        titleID = if (config.showTitle) R.string.friends else null,
         titleBottomPadding = dimensionResource(R.dimen.spacing_xsmall),
-        modifier = modifier
+        modifier = config.modifier
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))) {
-            friends.forEach { user ->
-                val isDisabled = user.id == currentUserId || !enabled
+            config.friends.forEach { user ->
+                val isDisabled = user.id == config.currentUserId || !config.enabled
                 UserRowView(
                     data = UserRowData(
                         modifier = Modifier,
@@ -41,7 +43,7 @@ fun FriendsListSection(
                         imageStringURL = user.image,
                         name = user.name,
                         address = null,
-                        onClick = { onFriendClick(user.id) }
+                        onClick = { config.onFriendClick(user.id) }
                     )
                 )
             }

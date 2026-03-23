@@ -32,6 +32,15 @@ private const val MIN_SCALE = 1f
 private const val MAX_SCALE = 5f
 private const val DOUBLE_TAP_SCALE = 2.5f
 
+data class ZoomConfig(
+    val imageUrl: String,
+    val modifier: Modifier = Modifier,
+    val minScale: Float = MIN_SCALE,
+    val maxScale: Float = MAX_SCALE,
+    val doubleTapScale: Float = DOUBLE_TAP_SCALE,
+    val imageSize: Dp = Dp.Unspecified
+)
+
 private data class ImageTransformParams(
     val imageUrl: String,
     val imageSize: Dp,
@@ -89,33 +98,36 @@ private fun CoroutineScope.animateZoomToTarget(
 }
 
 @Composable
-fun ZoomablePhotoView(
-    imageUrl: String,
-    modifier: Modifier = Modifier,
-    minScale: Float = MIN_SCALE,
-    maxScale: Float = MAX_SCALE,
-    doubleTapScale: Float = DOUBLE_TAP_SCALE,
-    imageSize: Dp = Dp.Unspecified
-) {
+fun ZoomablePhotoView(config: ZoomConfig) {
     val scope = rememberCoroutineScope()
-    val scale = remember { Animatable(minScale) }
+    val scale = remember { Animatable(config.minScale) }
     val offsetX = remember { Animatable(0f) }
     val offsetY = remember { Animatable(0f) }
     var containerSize by remember { mutableStateOf(IntSize.Zero) }
 
-    val zoomState = remember { ZoomState(scale, offsetX, offsetY, minScale, maxScale) }
+    val zoomState = remember {
+        ZoomState(scale, offsetX, offsetY, config.minScale, config.maxScale)
+    }
 
     val transformableState = rememberTransformableState { zoomChange, panChange, _ ->
         scope.launch {
             val currentScale = scale.value
-            val newScale = (currentScale * zoomChange).coerceIn(minScale, maxScale)
+            val newScale = (currentScale * zoomChange).coerceIn(
+                config.minScale,
+                config.maxScale
+            )
             val scaleRatio = if (currentScale == 0f) 1f else newScale / currentScale
-            val rawOffset = if (newScale > minScale) {
+            val rawOffset = if (newScale > config.minScale) {
                 Offset(offsetX.value, offsetY.value) * scaleRatio + panChange
             } else {
                 Offset.Zero
             }
-            val clamped = clampOffset(rawOffset, newScale, minScale, containerSize)
+            val clamped = clampOffset(
+                rawOffset,
+                newScale,
+                config.minScale,
+                containerSize
+            )
             scale.snapTo(newScale)
             offsetX.snapTo(clamped.x)
             offsetY.snapTo(clamped.y)
@@ -123,16 +135,21 @@ fun ZoomablePhotoView(
     }
 
     Box(
-        modifier = modifier
+        modifier = config.modifier
             .fillMaxSize()
             .onSizeChanged { containerSize = it }
-            .pointerInput(minScale, maxScale, doubleTapScale, containerSize) {
+            .pointerInput(
+                config.minScale,
+                config.maxScale,
+                config.doubleTapScale,
+                containerSize
+            ) {
                 detectTapGestures(
                     onDoubleTap = { tapOffset ->
                         handleDoubleTap(
                             scope = scope,
                             zoomState = zoomState,
-                            doubleTapScale = doubleTapScale,
+                            doubleTapScale = config.doubleTapScale,
                             containerSize = containerSize,
                             tapOffset = tapOffset
                         )
@@ -144,8 +161,8 @@ fun ZoomablePhotoView(
     ) {
         TransformableImage(
             params = ImageTransformParams(
-                imageUrl = imageUrl,
-                imageSize = imageSize,
+                imageUrl = config.imageUrl,
+                imageSize = config.imageSize,
                 scale = scale.value,
                 offsetX = offsetX.value,
                 offsetY = offsetY.value

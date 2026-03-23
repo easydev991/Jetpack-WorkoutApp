@@ -23,7 +23,6 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -411,7 +410,7 @@ class EditProfileViewModelTest {
         )
         assertFalse("isLoading должен быть false", state.isLoading)
 
-        verify {
+        coVerify {
             userNotifier.handleError(any<AppError>())
         }
     }
@@ -430,7 +429,7 @@ class EditProfileViewModelTest {
         advanceUntilIdle()
 
         // Then
-        verify {
+        coVerify {
             userNotifier.handleError(match<AppError> {
                 it is AppError.Generic && it.message.contains("не авторизован")
             })

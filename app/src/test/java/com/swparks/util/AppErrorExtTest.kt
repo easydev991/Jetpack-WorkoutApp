@@ -19,7 +19,9 @@ class AppErrorExtTest {
     fun setup() {
         context = mockk(relaxed = true)
         every { context.getString(R.string.location_fetch_failed) } returns "Unable to determine location"
-        every { context.getString(R.string.geocoding_address_build_fail) } returns "Unable to determine address, please enter it manually"
+        every {
+            context.getString(R.string.geocoding_address_build_fail)
+        } returns "Unable to determine address, please enter it manually"
         every { context.getString(R.string.error_network_io) } returns "Network error. Check your internet connection."
     }
 

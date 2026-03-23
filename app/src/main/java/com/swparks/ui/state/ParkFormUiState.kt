@@ -10,7 +10,8 @@ data class ParkFormUiState(
     val initialForm: ParkForm = ParkForm(),
     val selectedPhotos: List<Uri> = emptyList(),
     val isLoading: Boolean = true,
-    val isSaving: Boolean = false
+    val isSaving: Boolean = false,
+    val isGeocoding: Boolean = false
 ) {
     val hasChanges: Boolean
         get() = form != initialForm || selectedPhotos.isNotEmpty()

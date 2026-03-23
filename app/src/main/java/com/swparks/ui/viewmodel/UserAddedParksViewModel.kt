@@ -53,6 +53,15 @@ class UserAddedParksViewModel(
         loadAddedParks(isRefresh = true)
     }
 
+    override fun removePark(parkId: Long) {
+        _uiState.update { state ->
+            if (state is UserAddedParksUiState.Success) {
+                state.copy(parks = state.parks.filter { it.id != parkId })
+            } else state
+        }
+        logger.i(TAG, "Площадка $parkId удалена из локального списка")
+    }
+
     private fun loadAddedParks(isRefresh: Boolean = false) {
         viewModelScope.launch {
             if (isRefresh) {

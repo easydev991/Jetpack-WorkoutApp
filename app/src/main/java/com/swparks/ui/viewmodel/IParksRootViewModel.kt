@@ -22,7 +22,8 @@ interface IParksRootViewModel {
 
 data class ParksRootUiState(
     val showPermissionDialog: Boolean = false,
-    val permissionDialogCause: PermissionDialogCause? = null
+    val permissionDialogCause: PermissionDialogCause? = null,
+    val isGettingLocation: Boolean = false
 )
 
 sealed class ParksRootEvent {

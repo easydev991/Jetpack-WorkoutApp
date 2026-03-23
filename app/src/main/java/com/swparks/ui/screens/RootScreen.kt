@@ -56,6 +56,7 @@ import com.swparks.ui.screens.common.ParticipantsAction
 import com.swparks.ui.screens.common.ParticipantsConfig
 import com.swparks.ui.screens.common.ParticipantsScreen
 import com.swparks.ui.screens.common.TextEntrySheetHost
+import com.swparks.ui.screens.events.EventDetailAction
 import com.swparks.ui.screens.events.EventDetailScreen
 import com.swparks.ui.screens.events.EventFormNavigationAction
 import com.swparks.ui.screens.events.EventFormScreen
@@ -77,9 +78,11 @@ import com.swparks.ui.screens.messages.MessagesRootScreen
 import com.swparks.ui.screens.messages.MessagesTopAppBar
 import com.swparks.ui.screens.more.MoreScreen
 import com.swparks.ui.screens.more.MoreTopAppBar
+import com.swparks.ui.screens.parks.ParkDetailAction
 import com.swparks.ui.screens.parks.ParkDetailScreen
 import com.swparks.ui.screens.parks.ParkFormNavigationAction
 import com.swparks.ui.screens.parks.ParkFormScreen
+import com.swparks.ui.screens.parks.ParksAddedByUserConfig
 import com.swparks.ui.screens.parks.ParksAddedByUserScreen
 import com.swparks.ui.screens.parks.ParksRootScreen
 import com.swparks.ui.screens.parks.ParksTopAppBar
@@ -242,6 +245,8 @@ fun RootScreen(appState: AppState) {
         WorkoutAppJson.decodeFromString<List<Park>>(oldParks)
     }
 
+    var isGettingLocationForCreatePark by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             // Показываем TopAppBar только для корневых экранов вкладок
@@ -283,7 +288,7 @@ fun RootScreen(appState: AppState) {
         bottomBar = {
             val navBackStackEntry by appState.navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route ?: ""
-            if (shouldShowBottomBar(currentRoute)) {
+            if (shouldShowBottomBar(currentRoute) && !isGettingLocationForCreatePark) {
                 BottomNavigationBar(appState = appState)
             }
         },
@@ -306,11 +311,14 @@ fun RootScreen(appState: AppState) {
                         appState.navController.navigate(Screen.ParkDetail.createRoute(park.id))
                     },
                     onCreateParkClick = { draft ->
+                        Log.d("RootScreen", ">>> onCreateParkClick called with draft: $draft")
                         appState.navController.navigateToCreatePark(
                             source = "parks",
                             draft = draft
                         )
+                        Log.d("RootScreen", "<<< navigateToCreatePark returned")
                     },
+                    onGettingLocationStateChange = { isGettingLocationForCreatePark = it },
                     appState = appState,
                     viewModel = parksRootViewModel
                 )
@@ -446,40 +454,53 @@ fun RootScreen(appState: AppState) {
                 ParkDetailScreen(
                     viewModel = parkDetailViewModel,
                     source = parkDetailSource,
-                    onBack = { appState.navController.popBackStack() },
-                    onParkDeleted = { parkId ->
-                        Log.d("RootScreen", "Площадка удалена: $parkId")
-                        appState.navController.popBackStack()
-                    },
-                    onNavigateToUserProfile = { userId ->
-                        appState.navController.navigate(
-                            Screen.OtherUserProfile.createRoute(userId, parkDetailSource)
-                        )
-                    },
-                    onNavigateToTrainees = { parkId, _, users ->
-                        appState.navController.navigateToParkTrainees(
-                            parkId = parkId,
-                            source = parkDetailSource,
-                            users = users
-                        )
-                    },
-                    onNavigateToCreateEvent = { parkId, parkName ->
-                        appState.navController.navigate(
-                            Screen.CreateEventForPark.createRoute(
-                                parkId = parkId,
-                                parkName = parkName,
-                                source = parkDetailSource
-                            )
-                        )
-                    },
-                    onNavigateToEditPark = { park ->
-                        appState.navController.navigateToEditPark(
-                            parkId = park.id,
-                            source = parkDetailSource,
-                            park = park
-                        )
-                    },
-                    parentPaddingValues = paddingValues
+                    parentPaddingValues = paddingValues,
+                    onAction = { action ->
+                        when (action) {
+                            is ParkDetailAction.OnBack -> appState.navController.popBackStack()
+                            is ParkDetailAction.OnParkDeleted -> {
+                                Log.d("RootScreen", "Площадка удалена: ${action.parkId}")
+                                appState.navController.getBackStackEntry(Screen.UserParks.route)
+                                    .savedStateHandle["deletedParkId"] = action.parkId
+                                appState.navController.popBackStack()
+                            }
+
+                            is ParkDetailAction.OnNavigateToUserProfile -> {
+                                appState.navController.navigate(
+                                    Screen.OtherUserProfile.createRoute(
+                                        action.userId,
+                                        parkDetailSource
+                                    )
+                                )
+                            }
+
+                            is ParkDetailAction.OnNavigateToTrainees -> {
+                                appState.navController.navigateToParkTrainees(
+                                    parkId = action.parkId,
+                                    source = parkDetailSource,
+                                    users = action.users
+                                )
+                            }
+
+                            is ParkDetailAction.OnNavigateToCreateEvent -> {
+                                appState.navController.navigate(
+                                    Screen.CreateEventForPark.createRoute(
+                                        parkId = action.parkId,
+                                        parkName = action.parkName,
+                                        source = parkDetailSource
+                                    )
+                                )
+                            }
+
+                            is ParkDetailAction.OnNavigateToEditPark -> {
+                                appState.navController.navigateToEditPark(
+                                    parkId = action.park.id,
+                                    source = parkDetailSource,
+                                    park = action.park
+                                )
+                            }
+                        }
+                    }
                 )
             }
 
@@ -656,31 +677,38 @@ fun RootScreen(appState: AppState) {
 
                 EventDetailScreen(
                     viewModel = eventDetailViewModel,
-                    onBack = { appState.navController.popBackStack() },
-                    onEventDeleted = { eventId ->
-                        eventsViewModel.removeDeletedEvent(eventId)
-                        appState.navController.popBackStack()
-                    },
-                    onNavigateToUserProfile = { userId ->
-                        appState.navController.navigate(
-                            Screen.OtherUserProfile.createRoute(userId, "events")
-                        )
-                    },
-                    onNavigateToParticipants = { eventId, users ->
-                        appState.navController.navigateToEventParticipants(
-                            eventId = eventId,
-                            source = "events",
-                            users = users
-                        )
-                    },
-                    onNavigateToEditEvent = { event ->
-                        appState.navController.navigateToEditEvent(
-                            eventId = event.id,
-                            source = "events",
-                            event = event
-                        )
-                    },
-                    parentPaddingValues = paddingValues
+                    parentPaddingValues = paddingValues,
+                    onAction = { action ->
+                        when (action) {
+                            is EventDetailAction.OnBack -> appState.navController.popBackStack()
+                            is EventDetailAction.OnEventDeleted -> {
+                                eventsViewModel.removeDeletedEvent(action.eventId)
+                                appState.navController.popBackStack()
+                            }
+
+                            is EventDetailAction.OnNavigateToUserProfile -> {
+                                appState.navController.navigate(
+                                    Screen.OtherUserProfile.createRoute(action.userId, "events")
+                                )
+                            }
+
+                            is EventDetailAction.OnNavigateToParticipants -> {
+                                appState.navController.navigateToEventParticipants(
+                                    eventId = action.eventId,
+                                    source = "events",
+                                    users = action.users
+                                )
+                            }
+
+                            is EventDetailAction.OnNavigateToEditEvent -> {
+                                appState.navController.navigateToEditEvent(
+                                    eventId = action.event.id,
+                                    source = "events",
+                                    event = action.event
+                                )
+                            }
+                        }
+                    }
                 )
             }
 
@@ -1045,18 +1073,21 @@ fun RootScreen(appState: AppState) {
                     }
 
                     ParksAddedByUserScreen(
-                        modifier = Modifier.fillMaxSize(),
-                        viewModel = viewModel,
-                        onBackClick = { appState.navController.popBackStack() },
-                        onParkClick = { park ->
-                            appState.navController.navigate(
-                                Screen.ParkDetail.createRoute(
-                                    park.id,
-                                    "profile"
+                        config = ParksAddedByUserConfig(
+                            modifier = Modifier.fillMaxSize(),
+                            viewModel = viewModel,
+                            onBackClick = { appState.navController.popBackStack() },
+                            onParkClick = { park: Park ->
+                                appState.navController.navigate(
+                                    Screen.ParkDetail.createRoute(
+                                        park.id,
+                                        "profile"
+                                    )
                                 )
-                            )
-                        },
-                        parentPaddingValues = paddingValues
+                            },
+                            parentPaddingValues = paddingValues,
+                            navBackStackEntry = navBackStackEntry
+                        )
                     )
                 }
             }
@@ -1256,12 +1287,14 @@ fun RootScreen(appState: AppState) {
                                 is JournalsListAction.JournalClick -> {
                                     appState.navController.navigate(
                                         Screen.JournalEntries.createRoute(
-                                            action.params.journalId,
-                                            action.params.journalOwnerId,
-                                            action.params.journalTitle,
-                                            action.params.viewAccess,
-                                            action.params.commentAccess,
-                                            args.source
+                                            Screen.JournalEntries.JournalEntriesRoute(
+                                                journalId = action.params.journalId,
+                                                userId = action.params.journalOwnerId,
+                                                journalTitle = action.params.journalTitle,
+                                                viewAccess = action.params.viewAccess,
+                                                commentAccess = action.params.commentAccess,
+                                                source = args.source
+                                            )
                                         )
                                     )
                                 }
