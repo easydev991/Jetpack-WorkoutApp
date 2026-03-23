@@ -35,7 +35,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -542,13 +541,9 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    onBack = {},
-                    onParkDeleted = {},
-                    onNavigateToUserProfile = {},
-                    onNavigateToTrainees = { _, _, _ -> },
-                    onNavigateToCreateEvent = { _, _ -> },
-                    onNavigateToEditPark = {},
-                    parentPaddingValues = PaddingValues()
+                    source = "test",
+                    parentPaddingValues = PaddingValues(),
+                    onAction = {}
                 )
             }
         }
@@ -567,13 +562,9 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    onBack = {},
-                    onParkDeleted = {},
-                    onNavigateToUserProfile = {},
-                    onNavigateToTrainees = { _, _, _ -> },
-                    onNavigateToCreateEvent = { _, _ -> },
-                    onNavigateToEditPark = {},
-                    parentPaddingValues = PaddingValues()
+                    source = "test",
+                    parentPaddingValues = PaddingValues(),
+                    onAction = {}
                 )
             }
         }
@@ -598,13 +589,9 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    onBack = {},
-                    onParkDeleted = {},
-                    onNavigateToUserProfile = {},
-                    onNavigateToTrainees = { _, _, _ -> },
-                    onNavigateToCreateEvent = { _, _ -> },
-                    onNavigateToEditPark = {},
-                    parentPaddingValues = PaddingValues()
+                    source = "test",
+                    parentPaddingValues = PaddingValues(),
+                    onAction = {}
                 )
             }
         }
@@ -629,13 +616,9 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    onBack = {},
-                    onParkDeleted = {},
-                    onNavigateToUserProfile = {},
-                    onNavigateToTrainees = { _, _, _ -> },
-                    onNavigateToCreateEvent = { _, _ -> },
-                    onNavigateToEditPark = {},
-                    parentPaddingValues = PaddingValues()
+                    source = "test",
+                    parentPaddingValues = PaddingValues(),
+                    onAction = {}
                 )
             }
         }
@@ -662,13 +645,9 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    onBack = {},
-                    onParkDeleted = {},
-                    onNavigateToUserProfile = {},
-                    onNavigateToTrainees = { _, _, _ -> },
-                    onNavigateToCreateEvent = { _, _ -> },
-                    onNavigateToEditPark = {},
-                    parentPaddingValues = PaddingValues()
+                    source = "test",
+                    parentPaddingValues = PaddingValues(),
+                    onAction = {}
                 )
             }
         }
@@ -694,13 +673,9 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    onBack = {},
-                    onParkDeleted = {},
-                    onNavigateToUserProfile = {},
-                    onNavigateToTrainees = { _, _, _ -> },
-                    onNavigateToCreateEvent = { _, _ -> },
-                    onNavigateToEditPark = {},
-                    parentPaddingValues = PaddingValues()
+                    source = "test",
+                    parentPaddingValues = PaddingValues(),
+                    onAction = {}
                 )
             }
         }
@@ -733,13 +708,9 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    onBack = {},
-                    onParkDeleted = {},
-                    onNavigateToUserProfile = {},
-                    onNavigateToTrainees = { _, _, _ -> },
-                    onNavigateToCreateEvent = { _, _ -> },
-                    onNavigateToEditPark = {},
-                    parentPaddingValues = PaddingValues()
+                    source = "test",
+                    parentPaddingValues = PaddingValues(),
+                    onAction = {}
                 )
             }
         }
@@ -768,13 +739,9 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    onBack = {},
-                    onParkDeleted = {},
-                    onNavigateToUserProfile = {},
-                    onNavigateToTrainees = { _, _, _ -> },
-                    onNavigateToCreateEvent = { _, _ -> },
-                    onNavigateToEditPark = {},
-                    parentPaddingValues = PaddingValues()
+                    source = "test",
+                    parentPaddingValues = PaddingValues(),
+                    onAction = {}
                 )
             }
         }
@@ -785,7 +752,7 @@ class ParkDetailScreenTest {
     }
 
     @Test
-    fun parkDetailScreen_whenNavigateToTraineesEvent_thenUsesProvidedSource() {
+    fun parkDetailScreen_whenNavigateToTraineesEvent_thenEmitsAction() {
         val park = createTestPark()
         val users = listOf(testUser)
         val viewModel = FakeParkDetailViewModel(
@@ -795,20 +762,15 @@ class ParkDetailScreenTest {
                 authorAddress = "Москва, Россия"
             )
         )
-        var capturedSource: String? = null
+        var capturedAction: ParkDetailAction? = null
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
                     source = "profile",
-                    onBack = {},
-                    onParkDeleted = {},
-                    onNavigateToUserProfile = {},
-                    onNavigateToTrainees = { _, source, _ -> capturedSource = source },
-                    onNavigateToCreateEvent = { _, _ -> },
-                    onNavigateToEditPark = {},
-                    parentPaddingValues = PaddingValues()
+                    parentPaddingValues = PaddingValues(),
+                    onAction = { action -> capturedAction = action }
                 )
             }
         }
@@ -823,7 +785,10 @@ class ParkDetailScreenTest {
         }
         composeTestRule.waitForIdle()
 
-        assertEquals("profile", capturedSource)
+        assertTrue(
+            "Should emit NavigateToTrainees action",
+            capturedAction is ParkDetailAction.OnNavigateToTrainees
+        )
     }
 
     @Test
@@ -842,13 +807,11 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    onBack = { backClicked = true },
-                    onParkDeleted = {},
-                    onNavigateToUserProfile = {},
-                    onNavigateToTrainees = { _, _, _ -> },
-                    onNavigateToCreateEvent = { _, _ -> },
-                    onNavigateToEditPark = {},
-                    parentPaddingValues = PaddingValues()
+                    source = "test",
+                    parentPaddingValues = PaddingValues(),
+                    onAction = { action ->
+                        if (action is ParkDetailAction.OnBack) backClicked = true
+                    }
                 )
             }
         }

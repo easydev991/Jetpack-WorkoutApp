@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.HorizontalDivider
@@ -21,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
@@ -31,11 +33,19 @@ import java.util.Random
 fun CheckmarkRowView(
     modifier: Modifier = Modifier,
     text: String,
-    isChecked: Boolean
+    isChecked: Boolean,
+    onCheckedChange: ((Boolean) -> Unit)? = null
 ) {
+    val isInteractive = onCheckedChange != null
     FormRowContainer(
         config = FormRowConfig(
-            modifier = modifier,
+            modifier = if (isInteractive) {
+                modifier.selectable(
+                    selected = isChecked,
+                    role = Role.Checkbox,
+                    onClick = { onCheckedChange.invoke(!isChecked) }
+                )
+            } else modifier,
             horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall_plus)),
             verticalPadding = dimensionResource(R.dimen.spacing_small),
             content = {

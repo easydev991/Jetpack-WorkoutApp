@@ -3,6 +3,9 @@ package com.swparks.ui.viewmodel
 import android.Manifest
 import android.content.Intent
 import com.swparks.data.model.NewParkDraft
+import com.swparks.data.model.ParkFilter
+import com.swparks.data.model.ParkSize
+import com.swparks.data.model.ParkType
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -16,6 +19,9 @@ class FakeParksRootViewModel : IParksRootViewModel {
 
     private val _events = MutableSharedFlow<ParksRootEvent>()
     override val events: SharedFlow<ParksRootEvent> = _events.asSharedFlow()
+
+    private val _parksFilter = MutableStateFlow(ParkFilter())
+    override val parksFilter: StateFlow<ParkFilter> = _parksFilter
 
     override var permissionLauncher: ((Map<String, Boolean>) -> Unit)? = null
     override var openSettingsLauncher: ((Intent) -> Unit)? = null
@@ -107,5 +113,52 @@ class FakeParksRootViewModel : IParksRootViewModel {
             showPermissionDialog = false,
             permissionDialogCause = null
         )
+    }
+
+    override fun onLocalFilterChange(filter: ParkFilter) {
+        _uiState.value = _uiState.value.copy(localFilter = filter)
+    }
+
+    override fun onFilterToggleSize(size: ParkSize) {
+        val current = _uiState.value.localFilter
+        val newFilter = if (current.sizes.contains(size)) {
+            if (current.sizes.size > 1) {
+                current.copy(sizes = current.sizes - size)
+            } else current
+        } else {
+            current.copy(sizes = current.sizes + size)
+        }
+        _uiState.value = _uiState.value.copy(localFilter = newFilter)
+    }
+
+    override fun onFilterToggleType(type: ParkType) {
+        val current = _uiState.value.localFilter
+        val newFilter = if (current.types.contains(type)) {
+            if (current.types.size > 1) {
+                current.copy(types = current.types - type)
+            } else current
+        } else {
+            current.copy(types = current.types + type)
+        }
+        _uiState.value = _uiState.value.copy(localFilter = newFilter)
+    }
+
+    override fun onFilterReset() {
+        _uiState.value = _uiState.value.copy(localFilter = ParkFilter())
+    }
+
+    override fun onFilterApply() {
+        _parksFilter.value = _uiState.value.localFilter
+    }
+
+    override fun onShowFilterDialog() {
+        _uiState.value = _uiState.value.copy(
+            showFilterDialog = true,
+            localFilter = _parksFilter.value
+        )
+    }
+
+    override fun onDismissFilterDialog() {
+        _uiState.value = _uiState.value.copy(showFilterDialog = false)
     }
 }

@@ -165,6 +165,7 @@
     <string name="size">Size</string>
     <string name="type">Type</string>
     <string name="reset_filter">Reset filters</string>
+    <string name="apply_button">Apply</string>
 
     <string name="parks_map">Map</string>
     <string name="parks_list">List</string>

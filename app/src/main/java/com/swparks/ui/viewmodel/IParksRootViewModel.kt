@@ -2,6 +2,9 @@ package com.swparks.ui.viewmodel
 
 import android.content.Intent
 import com.swparks.data.model.NewParkDraft
+import com.swparks.data.model.ParkFilter
+import com.swparks.data.model.ParkSize
+import com.swparks.data.model.ParkType
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -18,12 +21,24 @@ interface IParksRootViewModel {
     fun onDismissDialog()
     fun onConfirmDialog()
     fun onOpenSettings(intent: Intent)
+
+    val parksFilter: StateFlow<ParkFilter>
+    fun onLocalFilterChange(filter: ParkFilter)
+    fun onFilterToggleSize(size: ParkSize)
+    fun onFilterToggleType(type: ParkType)
+    fun onFilterReset()
+    fun onFilterApply()
+    fun onShowFilterDialog()
+    fun onDismissFilterDialog()
 }
 
 data class ParksRootUiState(
     val showPermissionDialog: Boolean = false,
     val permissionDialogCause: PermissionDialogCause? = null,
-    val isGettingLocation: Boolean = false
+    val isGettingLocation: Boolean = false,
+    val showFilterDialog: Boolean = false,
+    val localFilter: ParkFilter = ParkFilter(),
+    val isLoadingFilter: Boolean = true
 )
 
 sealed class ParksRootEvent {

@@ -164,6 +164,7 @@
     <string name="size">Размер</string>
     <string name="type">Тип</string>
     <string name="reset_filter">Сбросить фильтры</string>
+    <string name="apply_button">Применить</string>
 
     <string name="parks_map">Карта</string>
     <string name="parks_list">Список</string>

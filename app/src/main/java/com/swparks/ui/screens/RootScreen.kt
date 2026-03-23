@@ -14,6 +14,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -84,6 +85,7 @@ import com.swparks.ui.screens.parks.ParkFormNavigationAction
 import com.swparks.ui.screens.parks.ParkFormScreen
 import com.swparks.ui.screens.parks.ParksAddedByUserConfig
 import com.swparks.ui.screens.parks.ParksAddedByUserScreen
+import com.swparks.ui.screens.parks.ParksFilterDialog
 import com.swparks.ui.screens.parks.ParksRootScreen
 import com.swparks.ui.screens.parks.ParksTopAppBar
 import com.swparks.ui.screens.profile.ChangePasswordScreen
@@ -245,6 +247,11 @@ fun RootScreen(appState: AppState) {
         WorkoutAppJson.decodeFromString<List<Park>>(oldParks)
     }
 
+    val parksRootUiState by parksRootViewModel.uiState.collectAsState()
+    val filteredParks by remember(parks, parksRootUiState.localFilter) {
+        derivedStateOf { appContainer.filterParksUseCase(parks, parksRootUiState.localFilter) }
+    }
+
     var isGettingLocationForCreatePark by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -255,7 +262,9 @@ fun RootScreen(appState: AppState) {
                 when (appState.currentTopLevelDestination?.route) {
                     Screen.Parks.route -> {
                         ParksTopAppBar(
-                            parksCount = parks.size
+                            parksCount = filteredParks.size,
+                            onFilterClick = { parksRootViewModel.onShowFilterDialog() },
+                            isFilterLoading = parksRootUiState.isLoadingFilter
                         )
                     }
 
@@ -306,7 +315,7 @@ fun RootScreen(appState: AppState) {
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues),
-                    parks = parks,
+                    parks = filteredParks,
                     onParkClick = { park ->
                         appState.navController.navigate(Screen.ParkDetail.createRoute(park.id))
                     },
@@ -1422,5 +1431,15 @@ fun RootScreen(appState: AppState) {
                 dialogsViewModel.loadDialogsAfterAuth()
             }
         )
+
+        // ParksFilterDialog поверх NavHost
+        if (parksRootUiState.showFilterDialog) {
+            ParksFilterDialog(
+                filter = parksRootUiState.localFilter,
+                onFilterChange = { parksRootViewModel.onLocalFilterChange(it) },
+                onApply = { parksRootViewModel.onFilterApply() },
+                onDismiss = { parksRootViewModel.onDismissFilterDialog() }
+            )
+        }
     }
 }

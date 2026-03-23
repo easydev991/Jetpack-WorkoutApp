@@ -20,6 +20,7 @@ import com.swparks.data.interceptor.LoggingInterceptor
 import com.swparks.data.interceptor.RetryInterceptor
 import com.swparks.data.interceptor.TokenInterceptor
 import com.swparks.data.model.Park
+import com.swparks.data.preferences.ParksFilterDataStore
 import com.swparks.data.provider.AvatarHelperImpl
 import com.swparks.data.provider.GeocodingServiceImpl
 import com.swparks.data.provider.LocationServiceImpl
@@ -50,6 +51,7 @@ import com.swparks.domain.usecase.DeleteJournalUseCase
 import com.swparks.domain.usecase.DeleteUserUseCase
 import com.swparks.domain.usecase.EditEventUseCase
 import com.swparks.domain.usecase.EditJournalSettingsUseCase
+import com.swparks.domain.usecase.FilterParksUseCase
 import com.swparks.domain.usecase.FindCityByCoordinatesUseCase
 import com.swparks.domain.usecase.GetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.GetJournalEntriesUseCase
@@ -65,6 +67,7 @@ import com.swparks.domain.usecase.IDeleteJournalUseCase
 import com.swparks.domain.usecase.IDeleteUserUseCase
 import com.swparks.domain.usecase.IEditEventUseCase
 import com.swparks.domain.usecase.IEditJournalSettingsUseCase
+import com.swparks.domain.usecase.IFilterParksUseCase
 import com.swparks.domain.usecase.IFindCityByCoordinatesUseCase
 import com.swparks.domain.usecase.IGetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.IGetJournalEntriesUseCase
@@ -152,6 +155,10 @@ interface AppContainer {
     val geocodingService: GeocodingService
     val findCityByCoordinatesUseCase: IFindCityByCoordinatesUseCase
     val createParkLocationHandler: ICreateParkLocationHandler
+
+    // Parks filter
+    val filterParksUseCase: IFilterParksUseCase
+    val parksFilterDataStore: ParksFilterDataStore
 
     // Use cases для авторизации
     val loginUseCase: ILoginUseCase
@@ -290,6 +297,16 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
     override val createParkLocationHandler: ICreateParkLocationHandler by lazy {
         DefaultCreateParkLocationHandler(locationService, userNotifier)
+    }
+
+    // ==================== Parks Filter ====================
+
+    override val parksFilterDataStore: ParksFilterDataStore by lazy {
+        ParksFilterDataStore(appContext)
+    }
+
+    override val filterParksUseCase: IFilterParksUseCase by lazy {
+        FilterParksUseCase()
     }
 
     // ==================== Resources Provider ====================

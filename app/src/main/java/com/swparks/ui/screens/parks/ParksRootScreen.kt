@@ -181,7 +181,8 @@ private fun LocationPermissionDialog(
 @Composable
 fun ParksTopAppBar(
     parksCount: Int,
-    onFilterClick: () -> Unit = {}
+    onFilterClick: () -> Unit = {},
+    isFilterLoading: Boolean = false
 ) {
     CenterAlignedTopAppBar(
         title = {
@@ -189,7 +190,8 @@ fun ParksTopAppBar(
         },
         actions = {
             IconButton(
-                onClick = onFilterClick
+                onClick = onFilterClick,
+                enabled = !isFilterLoading
             ) {
                 Icon(
                     imageVector = Icons.Default.FilterAlt,

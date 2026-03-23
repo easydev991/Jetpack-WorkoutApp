@@ -9,20 +9,41 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.JetpackWorkoutApplication
 import com.swparks.data.model.NewParkDraft
+import com.swparks.data.model.ParkFilter
+import com.swparks.data.model.ParkSize
+import com.swparks.data.model.ParkType
+import com.swparks.data.preferences.ParksFilterDataStore
 import com.swparks.domain.usecase.ICreateParkLocationHandler
+import com.swparks.domain.usecase.IFilterParksUseCase
 import com.swparks.util.Logger
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class ParksRootViewModel(
     private val createParkLocationHandler: ICreateParkLocationHandler,
-    private val logger: Logger
+    private val logger: Logger,
+    private val filterParksUseCase: IFilterParksUseCase,
+    private val parksFilterDataStore: ParksFilterDataStore
 ) : ViewModel(), IParksRootViewModel {
+
+    init {
+        viewModelScope.launch {
+            parksFilterDataStore.filter.collect { filter ->
+                logger.d(TAG, "parksFilterDataStore.filter emitted: $filter")
+                _uiState.value = _uiState.value.copy(
+                    localFilter = filter,
+                    isLoadingFilter = false
+                )
+            }
+        }
+    }
 
     companion object {
         private const val TAG = "ParksRootViewModel"
@@ -34,13 +55,18 @@ class ParksRootViewModel(
                 val container = application.container
                 ParksRootViewModel(
                     createParkLocationHandler = container.createParkLocationHandler,
-                    logger = container.logger
+                    logger = container.logger,
+                    filterParksUseCase = container.filterParksUseCase,
+                    parksFilterDataStore = container.parksFilterDataStore
                 )
             }
         }
     }
 
-    private val _uiState = MutableStateFlow(ParksRootUiState())
+    override val parksFilter: StateFlow<ParkFilter> = parksFilterDataStore.filter
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ParkFilter())
+
+    private val _uiState = MutableStateFlow(ParksRootUiState(localFilter = parksFilter.value))
     override val uiState: StateFlow<ParksRootUiState> = _uiState.asStateFlow()
 
     private val _events = MutableSharedFlow<ParksRootEvent>()
@@ -112,6 +138,65 @@ class ParksRootViewModel(
         viewModelScope.launch {
             _events.emit(ParksRootEvent.OpenSettings)
         }
+    }
+
+    override fun onLocalFilterChange(filter: ParkFilter) {
+        logger.d(TAG, "onLocalFilterChange: $filter")
+        _uiState.value = _uiState.value.copy(localFilter = filter)
+    }
+
+    override fun onFilterToggleSize(size: ParkSize) {
+        logger.d(TAG, "onFilterToggleSize: $size")
+        val current = _uiState.value.localFilter
+        val newFilter = if (current.sizes.contains(size)) {
+            if (current.sizes.size > 1) {
+                current.copy(sizes = current.sizes - size)
+            } else current
+        } else {
+            current.copy(sizes = current.sizes + size)
+        }
+        logger.d(TAG, "onFilterToggleSize: newFilter = $newFilter")
+        _uiState.value = _uiState.value.copy(localFilter = newFilter)
+    }
+
+    override fun onFilterToggleType(type: ParkType) {
+        logger.d(TAG, "onFilterToggleType: $type")
+        val current = _uiState.value.localFilter
+        val newFilter = if (current.types.contains(type)) {
+            if (current.types.size > 1) {
+                current.copy(types = current.types - type)
+            } else current
+        } else {
+            current.copy(types = current.types + type)
+        }
+        logger.d(TAG, "onFilterToggleType: newFilter = $newFilter")
+        _uiState.value = _uiState.value.copy(localFilter = newFilter)
+    }
+
+    override fun onFilterReset() {
+        logger.d(TAG, "onFilterReset")
+        _uiState.value = _uiState.value.copy(localFilter = ParkFilter())
+    }
+
+    override fun onFilterApply() {
+        logger.d(TAG, "onFilterApply: saving ${_uiState.value.localFilter}")
+        viewModelScope.launch {
+            parksFilterDataStore.saveFilter(_uiState.value.localFilter)
+        }
+        _uiState.value = _uiState.value.copy(showFilterDialog = false)
+    }
+
+    override fun onShowFilterDialog() {
+        logger.d(TAG, "onShowFilterDialog: parksFilter=${parksFilter.value}")
+        _uiState.value = _uiState.value.copy(
+            showFilterDialog = true,
+            localFilter = parksFilter.value
+        )
+    }
+
+    override fun onDismissFilterDialog() {
+        logger.d(TAG, "onDismissFilterDialog")
+        _uiState.value = _uiState.value.copy(showFilterDialog = false)
     }
 
     private fun requestPermission() {
