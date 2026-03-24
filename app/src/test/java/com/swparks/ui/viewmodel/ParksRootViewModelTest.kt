@@ -1,14 +1,23 @@
 package com.swparks.ui.viewmodel
 
 import app.cash.turbine.test
+import com.swparks.data.model.City
 import com.swparks.data.model.NewParkDraft
+import com.swparks.data.model.Park
+import com.swparks.data.model.ParkFilter
+import com.swparks.data.model.ParkSize
+import com.swparks.data.model.ParkType
 import com.swparks.data.preferences.ParksFilterDataStore
 import com.swparks.domain.repository.CountriesRepository
+import com.swparks.domain.usecase.FilterParksUseCase
 import com.swparks.domain.usecase.ICreateParkLocationHandler
 import com.swparks.domain.usecase.IFilterParksUseCase
 import com.swparks.util.Logger
 import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -32,6 +41,24 @@ class ParksRootViewModelTest {
     private lateinit var parksFilterDataStore: ParksFilterDataStore
     private lateinit var countriesRepository: CountriesRepository
     private lateinit var viewModel: ParksRootViewModel
+
+    private fun createPark(
+        id: Long,
+        cityID: Int,
+        sizeID: Int,
+        typeID: Int
+    ) = Park(
+        id = id,
+        name = "Park$id",
+        cityID = cityID,
+        sizeID = sizeID,
+        typeID = typeID,
+        longitude = "0.0",
+        latitude = "0.0",
+        address = "Address$id",
+        countryID = 1,
+        preview = "preview$id"
+    )
 
     @Before
     fun setup() {
@@ -229,11 +256,11 @@ class ParksRootViewModelTest {
 
     @Test
     fun onFilterToggleSize_whenOnlyOneSize_doesNotRemove() {
-        val onlySize = com.swparks.data.model.ParkSize.SMALL
+        val onlySize = ParkSize.SMALL
         viewModel.onLocalFilterChange(
-            com.swparks.data.model.ParkFilter(
+            ParkFilter(
                 sizes = setOf(onlySize),
-                types = com.swparks.data.model.ParkType.entries.toSet()
+                types = ParkType.entries.toSet()
             )
         )
 
@@ -256,10 +283,10 @@ class ParksRootViewModelTest {
 
     @Test
     fun onFilterToggleType_whenOnlyOneType_doesNotRemove() {
-        val onlyType = com.swparks.data.model.ParkType.SOVIET
+        val onlyType = ParkType.SOVIET
         viewModel.onLocalFilterChange(
-            com.swparks.data.model.ParkFilter(
-                sizes = com.swparks.data.model.ParkSize.entries.toSet(),
+            ParkFilter(
+                sizes = ParkSize.entries.toSet(),
                 types = setOf(onlyType)
             )
         )
@@ -271,9 +298,9 @@ class ParksRootViewModelTest {
 
     @Test
     fun onFilterReset_resetsToDefaultFilter() {
-        val nonDefaultFilter = com.swparks.data.model.ParkFilter(
-            sizes = setOf(com.swparks.data.model.ParkSize.SMALL),
-            types = setOf(com.swparks.data.model.ParkType.SOVIET)
+        val nonDefaultFilter = ParkFilter(
+            sizes = setOf(ParkSize.SMALL),
+            types = setOf(ParkType.SOVIET)
         )
         viewModel.onLocalFilterChange(nonDefaultFilter)
         assertFalse(viewModel.uiState.value.localFilter.isDefault)
@@ -292,5 +319,215 @@ class ParksRootViewModelTest {
         viewModel.onFilterApply()
 
         assertFalse(viewModel.uiState.value.showFilterDialog)
+    }
+
+    @Test
+    fun onFilterApply_whenCitySelected_savesFilterWithSelectedCityId() = runTest {
+        val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
+        coEvery { countriesRepository.getAllCities() } returns listOf(city)
+        coEvery { countriesRepository.getCityById(any()) } returns city
+
+        every { filterParksUseCase.invoke(any(), any()) } returns emptyList()
+        val savedFilterSlot = slot<ParkFilter>()
+        coEvery { parksFilterDataStore.saveFilter(capture(savedFilterSlot)) } returns Unit
+
+        val viewModel = ParksRootViewModel(
+            createParkLocationHandler = createParkLocationHandler,
+            logger = logger,
+            filterParksUseCase = filterParksUseCase,
+            parksFilterDataStore = parksFilterDataStore,
+            countriesRepository = countriesRepository
+        )
+        advanceUntilIdle()
+
+        viewModel.onShowFilterDialog()
+        viewModel.onLocalFilterChange(
+            ParkFilter(
+                sizes = setOf(ParkSize.SMALL, ParkSize.LARGE),
+                types = ParkType.entries.toSet()
+            )
+        )
+        viewModel.onCitySelected("Moscow")
+        viewModel.onLocalFilterChange(
+            ParkFilter(
+                sizes = setOf(ParkSize.SMALL, ParkSize.LARGE),
+                types = ParkType.entries.toSet()
+            )
+        )
+        viewModel.onFilterApply()
+        advanceUntilIdle()
+
+        assertEquals(1, savedFilterSlot.captured.selectedCityId)
+        assertEquals(
+            setOf(ParkSize.SMALL, ParkSize.LARGE),
+            savedFilterSlot.captured.sizes
+        )
+    }
+
+    @Test
+    fun onFilterApply_whenCitySelectedAndSizeFilterApplied_filtersParksByBoth() = runTest {
+        val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
+        val park1 = createPark(id = 1L, cityID = 1, sizeID = 1, typeID = 1)
+        val park2 = createPark(id = 2L, cityID = 1, sizeID = 3, typeID = 1)
+        val park3 = createPark(id = 3L, cityID = 2, sizeID = 1, typeID = 1)
+        val allParks = listOf(park1, park2, park3)
+
+        coEvery { countriesRepository.getAllCities() } returns listOf(city)
+        coEvery { countriesRepository.getCityById(any()) } returns city
+        coEvery { parksFilterDataStore.saveFilter(any()) } returns Unit
+
+        val realFilterParksUseCase = FilterParksUseCase()
+
+        val viewModel = ParksRootViewModel(
+            createParkLocationHandler = createParkLocationHandler,
+            logger = logger,
+            filterParksUseCase = realFilterParksUseCase,
+            parksFilterDataStore = parksFilterDataStore,
+            countriesRepository = countriesRepository
+        )
+        advanceUntilIdle()
+
+        viewModel.onCitySelected("Moscow")
+        advanceUntilIdle()
+
+        viewModel.onShowFilterDialog()
+        viewModel.onLocalFilterChange(
+            ParkFilter(
+                sizes = setOf(ParkSize.LARGE),
+                types = ParkType.entries.toSet()
+            )
+        )
+        viewModel.onFilterApply()
+        advanceUntilIdle()
+
+        coVerify { parksFilterDataStore.saveFilter(any()) }
+
+        viewModel.updateParks(allParks)
+        advanceUntilIdle()
+
+        val combinedFilter = ParkFilter(
+            sizes = setOf(ParkSize.LARGE),
+            types = ParkType.entries.toSet(),
+            selectedCityId = 1
+        )
+        val expectedFiltered = realFilterParksUseCase(allParks, combinedFilter)
+
+        val state = viewModel.uiState.value
+        assertEquals(expectedFiltered.size, state.filteredParks.size)
+        assertEquals(expectedFiltered.first().id, state.filteredParks.first().id)
+    }
+
+    @Test
+    fun showNoParksFound_whenFilteredParksEmptyAndCitySelectedAndParksLoadedAndNotLoading_showsNoParksFound() {
+        val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
+
+        val state = ParksRootUiState(
+            selectedCity = city,
+            filteredParks = emptyList(),
+            hasParks = true,
+            isLoadingFilter = false,
+            isLoadingCities = false
+        )
+
+        assertTrue(state.showNoParksFound)
+    }
+
+    @Test
+    fun showNoParksFound_whenNoCitySelected_doesNotShowNoParksFound() {
+        val state = ParksRootUiState(
+            selectedCity = null,
+            filteredParks = emptyList(),
+            hasParks = true,
+            isLoadingFilter = false,
+            isLoadingCities = false
+        )
+
+        assertFalse(state.showNoParksFound)
+    }
+
+    @Test
+    fun showNoParksFound_whenParksNotYetLoaded_doesNotShowNoParksFound() {
+        val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
+
+        val state = ParksRootUiState(
+            selectedCity = city,
+            filteredParks = emptyList(),
+            hasParks = false,
+            isLoadingFilter = false,
+            isLoadingCities = false
+        )
+
+        assertFalse(state.showNoParksFound)
+    }
+
+    @Test
+    fun showNoParksFound_whenLoadingCities_doesNotShowNoParksFound() {
+        val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
+
+        val state = ParksRootUiState(
+            selectedCity = city,
+            filteredParks = emptyList(),
+            hasParks = true,
+            isLoadingFilter = false,
+            isLoadingCities = true
+        )
+
+        assertFalse(state.showNoParksFound)
+    }
+
+    @Test
+    fun isSizeTypeFilterEdited_whenSizeFilterChanged_returnsTrue() {
+        val state = ParksRootUiState(
+            localFilter = ParkFilter(
+                sizes = setOf(ParkSize.SMALL),
+                types = ParkType.entries.toSet()
+            )
+        )
+
+        assertTrue(state.isSizeTypeFilterEdited)
+    }
+
+    @Test
+    fun isSizeTypeFilterEdited_whenOnlyCitySelected_returnsFalse() {
+        val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
+
+        val state = ParksRootUiState(
+            selectedCity = city,
+            localFilter = ParkFilter()
+        )
+
+        assertFalse(state.isSizeTypeFilterEdited)
+    }
+
+    @Test
+    fun toItemListUiState_whenCitySelected_setsSelectedItemToCityName() {
+        val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
+        val cities = listOf(city)
+
+        val state = ParksRootUiState(
+            selectedCity = city,
+            cities = cities
+        )
+
+        val result = state.toItemListUiState()
+
+        assertEquals("Moscow", result.selectedItem)
+    }
+
+    @Test
+    fun toItemListUiState_whenNoCitySelected_setsSelectedItemToNull() {
+        val cities = listOf(
+            City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61"),
+            City(id = "2", name = "Saint Petersburg", lat = "59.93", lon = "30.33")
+        )
+
+        val state = ParksRootUiState(
+            selectedCity = null,
+            cities = cities
+        )
+
+        val result = state.toItemListUiState()
+
+        assertNull(result.selectedItem)
     }
 }

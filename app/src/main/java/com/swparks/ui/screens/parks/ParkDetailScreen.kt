@@ -83,7 +83,6 @@ sealed class ParkDetailAction {
 @Composable
 fun ParkDetailScreen(
     viewModel: IParkDetailViewModel,
-    source: String = "parks",
     parentPaddingValues: PaddingValues,
     onAction: (ParkDetailAction) -> Unit
 ) {

@@ -24,53 +24,17 @@
 3. Сохраняет выбранный город в `ParkFilter.selectedCityId`
 4. Фильтрует парки по выбранному городу через `IFilterParksUseCase`
 
----
-
-## Типы данных (подтверждено)
-
-- `City.id`: `String` ( numeric: "1", "2", "3"... )
-- `Park.cityID`: `Int`
-- `countriesRepository.getCityById(cityId: String)` — принимает String
-- `getAllCities()` возвращает `List<City>` с `id: String`
-- При фильтрации парков: `city.id.toIntOrNull()` → Int (безопасно, т.к. ID числовые)
-- При поиске города по ID: `cityId.toString()` (Int → String)
+**Типы данных:** `City.id: String` ("1", "2"...), `Park.cityID: Int`, `countriesRepository.getCityById(cityId: String)`, `getAllCities(): List<City>`.
 
 ---
 
 ## Этап 1: Модели данных (Domain Layer) ✅
 
-### 1.1. Обновить `ParkFilter`
+- [x] `ParkFilter` — добавлено поле `selectedCityId: Int?`, обновлён `isDefault`, написаны тесты
+- [x] `ParksFilterDataStore` — добавлен ключ `selectedCityId`, обновлены `save()`/`load()`, написаны тесты
+- [x] `FilterParksUseCase` — добавлена фильтрация по `filter.selectedCityId`, написаны тесты
 
-- [x] Добавить поле `selectedCityId: Int?` в `data class ParkFilter`
-- [x] Обновить `isDefault` с учётом `selectedCityId`
-- [x] Написать unit-тесты для `ParkFilter`
-
-**Файл:** `app/src/main/java/com/swparks/data/model/ParkFilter.kt`
-
-### 1.2. Обновить `ParksFilterDataStore`
-
-- [x] Добавить ключ `selectedCityId` для сохранения в DataStore
-- [x] Обновить методы `save()` / `load()` для работы с `selectedCityId`
-- [x] Написать unit-тесты для `ParksFilterDataStore`
-
-**Файл:** `app/src/main/java/com/swparks/data/preferences/ParksFilterDataStore.kt`
-
-### 1.3. Обновить `FilterParksUseCase`
-
-- [x] Добавить фильтрацию по `filter.selectedCityId` в `invoke()`:
-
-  ```kotlin
-  return allParks.filter { park ->
-      allowedSizes.contains(park.sizeID) &&
-      allowedTypes.contains(park.typeID) &&
-      (filter.selectedCityId == null || park.cityID == filter.selectedCityId)
-  }
-  ```
-
-- [x] **Важно:** НЕ менять сигнатуру `invoke()` — `selectedCityId` уже в `ParkFilter`
-- [x] Написать unit-тесты для `FilterParksUseCase` с фильтрацией по городу
-
-**Файл:** `app/src/main/java/com/swparks/domain/usecase/FilterParksUseCase.kt`
+**Файлы:** `ParkFilter.kt`, `ParksFilterDataStore.kt`, `FilterParksUseCase.kt`
 
 ---
 
@@ -78,196 +42,63 @@
 
 ### 2.1. Обновить `IParksRootViewModel`
 
-- [x] Добавить `selectedCity: City?` в `ParksRootUiState` (для отображения названия в `SearchCityButton`)
-- [x] Добавить `cities: List<City>` в state (полный список для поиска, загружается асинхронно)
-- [x] Добавить `isLoadingCities: Boolean` в state (для индикации загрузки)
-- [x] Добавить `citySearchQuery: String` в state (для фильтрации списка городов в `ItemListScreen`)
-- [x] Добавить `filteredParks: List<Park>` в state (результат `filterParksUseCase`, вычисляется ViewModel)
-- [x] Добавить computed property `cityNames: List<String>` — производное от `cities` + `citySearchQuery` (НЕ в state!)
-- [x] Добавить методы `onSelectCityClick`, `onCitySearchQueryChange(query: String)`, `onCitySelected(cityName: String)`, `onClearCityFilter` в интерфейс
-- [x] Объявить extension function `toItemListUiState()` **рядом с интерфейсом** (НЕ в самом интерфейсе — extension functions нельзя объявлять в интерфейсе):
-
-  ```kotlin
-  // В файле IParksRootViewModel.kt или рядом
-  fun ParksRootUiState.toItemListUiState() = ItemListUiState(
-      mode = CITY,
-      items = cityNames,           // computed property, фильтруется по citySearchQuery
-      searchQuery = citySearchQuery,
-      isLoading = isLoadingCities
-  )
-  ```
-
-- [x] **Реализация** `toItemListUiState()` — в `ParksRootViewModel.kt` или в отдельном файле-экстеншн
+- [x] Добавлены в `ParksRootUiState`: `selectedCity: City?`, `cities: List<City>`, `isLoadingCities: Boolean`, `citySearchQuery: String`, `filteredParks: List<Park>`
+- [x] Добавлено computed property `cityNames: List<String>` (derived от `cities` + `citySearchQuery`)
+- [x] Добавлены методы: `onSelectCityClick`, `onCitySearchQueryChange`, `onCitySelected`, `onClearCityFilter`
+- [x] Добавлена extension function `toItemListUiState()` для конвертации в `ItemListUiState`
 - [ ] Написать unit-тесты
-
-**Примечание:** `cityNames` — derived state (вычисляется из `cities` + `citySearchQuery`), НЕ хранится в state напрямую.
-
-**Файл:** `app/src/main/java/com/swparks/ui/viewmodel/IParksRootViewModel.kt`
 
 ### 2.2. Обновить `ParksRootViewModel`
 
-- [x] Реализовать методы интерфейса
-- [x] При инициализации ViewModel: загрузить список городов через `countriesRepository.getAllCities()` в state `cities`, установить `isLoadingCities = true`, затем `isLoadingCities = false`
-- [x] `cityNames` вычисляется как `cities.filter { it.name.contains(citySearchQuery, ignoreCase = true) }.map { it.name }`
-- [x] В `onCitySelected(cityName: String)` — найти город по имени в `cities`:
-
-  ```kotlin
-  fun onCitySelected(cityName: String) {
-      val city = cities.find { it.name == cityName }
-      val cityId = city?.id?.toIntOrNull()  // city.id это "1", "2"... -> Int 1, 2...
-      // ... сохранить cityId в фильтр и city в state для отображения
-  }
-  ```
-
-- [x] Сохранять выбранный `City` в state (не только `cityId`) — для отображения названия в `SearchCityButton`
-- [x] При изменении `selectedCityId`: обновить `localFilter` в `_uiState`, вызвать `parksFilterDataStore.saveFilter(localFilter)` для персистентности, пересчитать `filteredParks` через `filterParksUseCase`
-- [x] **Примечание об архитектуре (Вариант A):** `filterParksUseCase` вызывается В ViewModel (как во всех остальных ViewModel приложения), а НЕ в UI-слое через `derivedStateOf`. ViewModel хранит `filteredParks` в state. Это стандартный паттерн MVVM, принятый в проекте.
-- [x] При восстановлении состояния: `parksFilterDataStore.filter` автоматически эмитит сохранённый `ParkFilter` при загрузке DataStore. Collector в `init {}` синхронизирует его с `localFilter` и пересчитывает `filteredParks`. `selectedCity` восстанавливается через `countriesRepository.getCityById(cityId.toString())` после загрузки `cities`.
-- [x] `onCitySearchQueryChange` — обновляет `citySearchQuery`, что триггерит пересчёт `cityNames`
-- [x] `onClearCityFilter` — сбрасывает `selectedCityId` и `selectedCity` в null, обновляет `localFilter`, сохраняет в DataStore, пересчитывает `filteredParks`
+- [x] Реализованы все методы интерфейса; `cityNames` вычисляется через `cities.filter { ... }.map { it.name }`
+- [x] При инициализации: загрузка городов через `countriesRepository.getAllCities()`
+- [x] `onCitySelected`: поиск города по имени → `city?.id?.toIntOrNull()` → сохранение в `localFilter` + `selectedCity`, пересчёт `filteredParks`
+- [x] `onClearCityFilter`: сброс `selectedCityId`/`selectedCity` в null, сохранение, пересчёт
+- [x] При восстановлении: collector в `init {}` синхронизирует `localFilter` из DataStore, `selectedCity` восстанавливается через `getCityById`
+- [x] `onCitySearchQueryChange`: обновляет `citySearchQuery` → пересчёт `cityNames`
 - [x] Написать unit-тесты с моком `CountriesRepository`
 
-**Порядок действий при выборе города:**
-1. `onCitySelected(cityName)` → найти `City` в `cities` по имени
-2. Найти `cityId = city?.id?.toIntOrNull()`
-3. Создать новый `filter = localFilter.copy(selectedCityId = cityId)`
-4. `_uiState.value = _uiState.value.copy(localFilter = filter, selectedCity = city)` (UI обновится мгновенно)
-5. `parksFilterDataStore.saveFilter(filter)` (сохранить персистентно)
-6. `filteredParks = filterParksUseCase(parks, localFilter)` (пересчитать отфильтрованные парки)
+**Примечание:** Архитектура — `filterParksUseCase` вызывается в ViewModel (MVVM-паттерн проекта), `CountriesRepository` уже существует.
 
-**Примечание о двойной фильтрации:** При сохранении в DataStore (step 5), collector в `init {}` также получит обновлённый `ParkFilter` из flow и пересчитает `filteredParks` ещё раз. Результат одинаковый — это ожидаемое поведение (не баг), так как DataStore работает асинхронно. Избежать двойного пересчёта можно добавив проверку `if (localFilter != emittedFilter)`, но это усложняет код без практической пользы.
-
-**Файл:** `app/src/main/java/com/swparks/ui/viewmodel/ParksRootViewModel.kt`
-
-**Примечание:** `CountriesRepository` уже существует, содержит `getAllCities()` и `getCityById(cityId: String)`. Отдельный `CitiesRepository` НЕ нужен.
-
-**Примечание по ItemListScreen:** `ItemListScreen` работает со `items: List<String>` (имена), поэтому возврат выбранного города происходит по имени (`cityName: String`). Это workaround, но оправданный — `ItemListScreen` stateless и переиспользуемый. Поиск `City` по имени в `cities` работает корректно, если список загружен заранее.
+**Файлы:** `IParksRootViewModel.kt`, `ParksRootViewModel.kt`
 
 ---
 
-## Этап 3: UI Layer — Компоненты
+## Этап 3: UI Layer — Компоненты ✅
 
-### 3.1. Создать `SearchCityButton` (аналог `SWTextFieldSearchButton`)
-
-- [ ] Создать stateless composable `SearchCityButton`
-- [ ] Параметры: `cityName: String?`, `onClick: () -> Unit`, `onClearClick: (() -> Unit)?`
-- [ ] UI: TextField-styled button с иконкой поиска, текстом города, опциональной кнопкой очистки
-- [ ] Написать unit-тесты (Robolectric + MockK + Turbine, как в проекте)
-
-**Файл:** `app/src/main/java/com/swparks/ui/components/SearchCityButton.kt`
-
-### 3.2. Обновить `ParksRootScreen`
-
-- [ ] Добавить `SearchCityButton` под `TopAppBar`, над списком парков
-- [ ] При `onSelectCityClick` → `navController.navigate(Screen.SelectCityForFilter.route)`
-- [ ] Передавать в `ItemListScreen` (route: `Screen.SelectCityForFilter.route`):
-  - `state` = `ItemListUiState(mode = CITY, items = viewModel.cityNames, ...)`
-  - `onItemSelected` → `viewModel.onCitySelected(cityName)` (String, не id!)
-  - `onBackClick` → `navController.popBackStack()`
-- [ ] Получать `filteredParks` из `viewModel.uiState.value.filteredParks` (а не через `derivedStateOf`)
-
-**Файл:** `app/src/main/java/com/swparks/ui/screens/parks/ParksRootScreen.kt`
+- [x] `SearchCityButton` — stateless composable (cityName, onClick, onClearClick), unit-тесты написаны
+- [x] `ParksRootScreen` — добавлен `SearchCityButton` под TopAppBar, `filteredParks` из ViewModel
+- [x] `ItemListScreen` переиспользуется (Вариант B — `ParksRootViewModel` управляет состоянием)
 
 **Важно:** `SearchCityButton.onClearClick` → `viewModel.onClearCityFilter()`, НЕ навигация
 
-### 3.3. Переиспользовать `ItemListScreen`
-
-- [ ] `ItemListScreen` уже stateless — используем напрямую
-- [ ] НЕ использовать `SelectCityScreen` (он привязан к `IEditProfileViewModel`)
-
-**Выбран Вариант B:** `ParksRootViewModel` управляет состоянием `ItemListScreen` напрямую
-
-**Обоснование:** Вариант B проще — меньше кода, `ParksRootViewModel` уже имеет доступ к `countriesRepository` для получения списка городов. `ItemListScreen` полностью stateless и принимает всё нужное через `ItemListUiState`.
+**Файлы:** `SearchCityButton.kt`, `ParksRootScreen.kt`
 
 ---
 
-## Этап 4: Навигация
+## Этап 4: Навигация ✅
 
-### 4.1. Добавить route для экрана выбора города
+- [x] `SelectCityForFilter` добавлен в `Screen` sealed class, `BOTTOM_BAR_HIDDEN_BASE_ROUTES`, `Screen.allScreens`
+- [x] Composable в `RootScreen.kt`: `ItemListScreen` с `toItemListUiState()`, `onContactUs` (уже существующий `LocationFeedback`)
+- [x] `parentTab = Parks`, `BOTTOM_BAR_HIDDEN_BASE_ROUTES` скрывает bottom nav
 
-- [ ] Добавить `SelectCityForFilter` в `Screen` sealed class:
-
-  ```kotlin
-  object SelectCityForFilter : Screen("select_city_for_filter", parentTab = Parks)
-  ```
-
-- [ ] Добавить `"select_city_for_filter"` в `BOTTOM_BAR_HIDDEN_BASE_ROUTES` в `RootScreen.kt`
-- [ ] Добавить composable для `SelectCityForFilter` в `RootScreen.kt`:
-
-  ```kotlin
-  composable(Screen.SelectCityForFilter.route) {
-      val context = LocalContext.current
-      val viewModel: ParksRootViewModel = viewModel(...)
-      val state by viewModel.uiState.collectAsState()
-      ItemListScreen(
-          state = state.toItemListUiState(), // конвертировать в ItemListUiState
-          onSearchQueryChange = viewModel::onCitySearchQueryChange,
-          onItemSelected = viewModel::onCitySelected,
-          onContactUs = {
-              val feedback = LocationFeedback.createCity(context)
-              sendLocationFeedback(context, feedback)
-          },
-          onBackClick = { navController.popBackStack() }
-      )
-  }
-  ```
-
-  **Примечание:** `LocationFeedback.createCity(context)` и `sendLocationFeedback(context, feedback)` уже существуют в проекте. Используются для отправки email с предзаполненными данными (те же что в `SelectCityScreen`).
-- [ ] Обновить `Screen.findParentTab()` для нового route (если нужно)
-- [ ] Добавить `SelectCityForFilter` в `Screen.allScreens` (companion object в `Screen` sealed class)
-
-**Примечание:** `onContactUs` нужен для отправки email с предзаполненными данными города, если пользователь не нашёл нужный город в списке. `LocationFeedback.createCity()` и `sendLocationFeedback()` уже существуют в проекте.
-
-**Импорты:**
-
-```kotlin
-import com.swparks.util.LocationFeedback
-import com.swparks.ui.screens.more.sendLocationFeedback
-```
-
-**Файл:**
-- `app/src/main/java/com/swparks/navigation/Destinations.kt`
-- `app/src/main/java/com/swparks/ui/screens/RootScreen.kt`
-
-**Важно:** `parentTab = Parks` — экран принадлежит вкладке Parks, чтобы подсвечивалась правильная вкладка. `BOTTOM_BAR_HIDDEN_BASE_ROUTES` скрывает bottom navigation.
+**Файлы:** `Destinations.kt`, `RootScreen.kt`
 
 ---
 
-## Этап 5: Локализация
+## Этап 5: Локализация ✅
 
-### 5.1. Добавить строки
-
-- [ ] `"Выбери город"` — placeholder для кнопки (если ещё нет)
-- [ ] Проверить существующие строки в `strings.xml`
-
-**Файл:** `app/src/main/res/values/strings.xml`
-
----
-
-## Зависимости между этапами
-
-```
-Этап 1 (Model + UseCase) ──→ Этап 2 (ViewModel)
-                                       │
-                                       ↓
-                              Этап 3 (UI Components)
-                                       │
-                                       ↓
-                              Этап 4 (Navigation)
-                                       │
-                                       ↓
-                              Этап 5 (Localization)
-```
+- [x] Строка `select_city` уже существует с переводами: `"Select a city"` / `"Выбери город"`
 
 ---
 
 ## Критерии завершения
 
 - [x] `SearchCityButton` отображается под TopAppBar на `ParksRootScreen` (Этап 3)
-- [ ] Нажатие открывает `ItemListScreen` (режим CITY) (Этап 3, 4)
+- [x] Нажатие открывает `ItemListScreen` (режим CITY) (Этап 4)
 - [x] Выбор города сохраняется в `ParksFilterDataStore` (Этап 1, 2)
 - [x] `IFilterParksUseCase` фильтрует парки по `cityId` (Этап 1)
-- [ ] Кнопка очистки сбрасывает фильтр города (Этап 3)
+- [x] Кнопка очистки сбрасывает фильтр города (Этап 3)
 - [x] Unit-тесты проходят (`./gradlew :app:testDebugUnitTest`)
 - [x] Линт проходит (`make lint`)
 
@@ -275,12 +106,189 @@ import com.swparks.ui.screens.more.sendLocationFeedback
 
 ## Примечание по существующим тестам
 
-При добавлении новых полей в state (`selectedCity`, `cities`, `isLoadingCities`, `citySearchQuery`, `filteredParks`) потребуется обновить существующие тесты:
+- [x] `ParksRootViewModelTest.kt` — добавлены моки `countriesRepository`, обновлены initial state и assertions
+- [x] `FilterParksUseCaseTest.kt` — добавлены тест-кейсы для фильтрации по городу (Этап 1)
+- [x] `ParkFilter` и `ParksFilterDataStore` тесты обновлены для нового поля (Этап 1)
+- [x] `FakeParksRootViewModel` — обновлён для новых методов интерфейса
 
-- [x] `ParksRootViewModelTest.kt` — добавить моки для `countriesRepository`, обновить initial state и assertions
-- [x] `FilterParksUseCaseTest.kt` — добавить тест-кейсы для фильтрации по городу (выполнено в Этапе 1)
-- [x] Если существуют тесты для `ParkFilter` — обновить `isDefault` assertions (выполнено в Этапе 1)
-- [x] Проверить `ParksFilterDataStoreTest.kt` (если есть) на совместимость с новым полем (выполнено в Этапе 1)
-- [x] `FakeParksRootViewModel` — обновлён для реализации новых методов интерфейса
+---
 
-**Важно:** Новые поля в data class требуют либо явной инициализации в тестах, либо использования `copy()` с явным указанием всех полей.
+## Этап 6: Исправление бага — фильтры Size/Type теряют selectedCityId ✅
+
+### Баг
+`onFilterApply()` сохранял `localFilter` (size+type от диалога) **без** `selectedCityId` — город из `uiState.selectedCity` терялся.
+
+### Архитектура
+`localFilter` в `ParksFilterDialog` — только size/type. `onFilterApply()` должен **снаружи** объединить с `selectedCityId` из `uiState.selectedCity`.
+
+### 6.1: Тесты (Red) ✅
+**Файлы:** `app/src/test/java/com/swparks/ui/viewmodel/ParksRootViewModelTest.kt`
+
+- [x] Тест 6.1.1 (`onFilterApply_whenCitySelected_savesFilterWithSelectedCityId`) — проверяет что `saveFilter` получает `selectedCityId = 1`
+- [x] Тест 6.1.2 (`onFilterApply_whenCitySelectedAndSizeFilterApplied_filtersParksByBoth`) — end-to-end: город + size фильтр вместе, `filteredParks` содержит только park2
+
+### 6.2: Исправление (Green) ✅
+**Файл:** `app/src/main/java/com/swparks/ui/viewmodel/ParksRootViewModel.kt`
+
+```kotlin
+override fun onFilterApply() {
+    val sizeTypeFilter = _uiState.value.localFilter
+    val cityId = _uiState.value.selectedCity?.id?.toIntOrNull()
+    val finalFilter = sizeTypeFilter.copy(selectedCityId = cityId)
+    viewModelScope.launch { parksFilterDataStore.saveFilter(finalFilter) }
+    _uiState.value = _uiState.value.copy(showFilterDialog = false)
+}
+```
+
+### 6.3: Верификация (Refactor) ✅
+
+- [x] Все тесты проходят (20 tests passed)
+- [x] `make lint` ✅ / `make test` ✅
+
+---
+
+## Этап 7: Экран "Парки не найдены" (NoParksFoundView)
+
+### iOS-аналог
+`ParksMapScreen.NoParksFoundView` — overlay-карточка поверх контента с парками:
+- Показывается когда `showNoParksFound = isFilteredParksEmpty && didParksManagerLoad && !isLoading`
+- Две кнопки: "Выбрать другой город" (всегда) + "Изменить фильтры" (только если `isFilterEdited`)
+
+### Архитектура Android
+- `showNoParksFound` (computed): `filteredParks.isEmpty() && selectedCity != null && !isLoadingFilter && !isLoadingCities && hasParks`
+- `hasParks = allParks.isNotEmpty()` — флаг что парки загружены (добавить в ViewModel)
+- `isSizeTypeFilterEdited = ParkFilter(sizes=localFilter.sizes, types=localFilter.types) != ParkFilter()` — **НЕ** `localFilter.isDefault` (иначе кнопка "Изменить фильтры" покажется и при выбранном городе)
+- `NoParksFoundView` — overlay на `ParksListView` в `ParksRootScreen`
+- Действия: `onNavigateToSelectCity` (параметр composable, навигация) + `onShowFilterDialog()` (ViewModel)
+
+### 7.1: Unit-тесты ViewModel (TDD — Red) ✅
+**Файл:** `app/src/test/java/com/swparks/ui/viewmodel/ParksRootViewModelTest.kt`
+
+**Примечание:** `showNoParksFound` и `isSizeTypeFilterEdited` — computed extension properties на `ParksRootUiState`. Тесты проверяют `viewModel.uiState.value.showNoParksFound`.
+
+- [x] Тест: `showNoParksFound = true` когда `filteredParks.isEmpty() && selectedCity != null && hasParks && !isLoadingFilter && !isLoadingCities`
+- [x] Тест: `showNoParksFound = false` когда `selectedCity == null`
+- [x] Тест: `showNoParksFound = false` когда `hasParks = false` (парки ещё не загружены)
+- [x] Тест: `showNoParksFound = false` когда `isLoadingCities = true`
+- [x] Тест: `isSizeTypeFilterEdited = true` когда изменены size/type (city дефолтный)
+- [x] Тест: `isSizeTypeFilterEdited = false` когда только город выбран (size/type дефолтные)
+
+### 7.2: Instrumented UI-тесты (TDD — Red) ✅
+**Файл:** `app/src/androidTest/java/com/swparks/ui/screens/parks/ParksRootScreenTest.kt`
+
+- [x] Тест: `NoParksFoundView` отображается когда `showNoParksFound = true`
+- [x] Тест: `NoParksFoundView` НЕ отображается когда `showNoParksFound = false`
+- [x] Тест: кнопка "Выбрать другой город" видна всегда когда показана NoParksFoundView
+- [x] Тест: кнопка "Изменить фильтры" видна только при `isSizeTypeFilterEdited = true`
+
+### 7.3: Реализация (Green) ✅
+**Файл:** `app/src/main/java/com/swparks/ui/screens/parks/NoParksFoundView.kt`
+
+- [x] Создать `NoParksFoundView` composable: карточка с заголовком из `no_parks_found` ("Площадки не найдены")
+- [x] Кнопка "Выбрать другой город" (`select_another_city`) — вызывает `onSelectCity`
+- [x] Кнопка "Изменить фильтры" (`change_filters`) — вызывает `onOpenFilters` (только при `isSizeTypeFilterEdited`)
+- [x] Добавить `showNoParksFound` (computed property) в `ParksRootUiState`
+- [x] Добавить `hasParks: Boolean` в `ParksRootUiState` (обновляется в `updateParks()`)
+```kotlin
+override fun updateParks(parks: List<Park>) {
+    allParks = parks
+    _uiState.value = _uiState.value.copy(hasParks = parks.isNotEmpty())
+    recalculateFilteredParks()
+}
+```
+- [x] Добавить `isSizeTypeFilterEdited` computed в `ParksRootUiState`
+- [x] Добавить `NoParksFoundView` overlay в `ParksRootScreen` над `ParksListView`
+- [x] Создать string resources: `select_another_city` ("Выбрать другой город" / "Select another city"), `change_filters` ("Изменить фильтры" / "Change filters")
+
+### 7.4: Верификация (Refactor) ✅
+
+- [x] `make lint` ✅ (pre-existing issues only — LongMethod/TooManyFunctions, not introduced by this work)
+- [x] `make test` ✅ (`./gradlew :app:testDebugUnitTest` — all tests pass)
+- [x] `make build` ✅ (`./gradlew :app:assembleDebug` — BUILD SUCCESSFUL)
+
+---
+
+## Этап 8: Исправление бага — NoParksFoundView не отображается
+
+### Баг
+`NoParksFoundView` не показывается когда фильтр возвращает 0 парков.
+
+**Причина:** `RootScreen.kt:324` передаёт `filteredParks` (уже отфильтрованные) в `ParksRootScreen`. Когда фильтр строгий → `filteredParks` пустой → `viewModel.updateParks(emptyList())` → `hasParks = false` → `showNoParksFound = false`.
+
+**Архитектура:** `ParksRootViewModel` должна получать **все** парки для корректного вычисления `hasParks`. Фильтрация происходит внутри ViewModel через `filterParksUseCase`.
+
+### 8.1: Unit-тесты (TDD — Red)
+
+**Файл:** `app/src/test/java/com/swparks/ui/viewmodel/ParksRootViewModelTest.kt`
+
+- [ ] Тест: `updateParks_whenCalledWithAllParks_setsHasParksTrue` — проверяет что `hasParks = true` после `updateParks(allParks)`
+- [ ] Тест: `updateParks_whenCalledWithEmptyList_setsHasParksFalse` — проверяет что `hasParks = false` после `updateParks(emptyList())`
+- [ ] Тест: `showNoParksFound_whenAllParksLoadedButFilterReturnsEmpty_showsNoParksFound` — все парки загружены, фильтр возвращает пустой список → `showNoParksFound = true`
+
+### 8.2: Исправление (Green)
+
+**Файл:** `app/src/main/java/com/swparks/ui/screens/RootScreen.kt`
+
+- [ ] Строка 324: изменить `parks = filteredParks` на `parks = parks` (передавать все парки)
+- [ ] Строка 271: изменить `parksCount = filteredParks.size` на `parksCount = parksRootUiState.filteredParks.size` (использовать отфильтрованные из ViewModel)
+
+### 8.3: Верификация (Refactor)
+
+- [ ] `make lint` ✅
+- [ ] `make test` ✅
+- [ ] Ручное тестирование: выбрать город + строгий фильтр → NoParksFoundView отображается
+
+---
+
+## Этап 9: Исправление бага — выбранный город не отмечен на экране выбора города ✅
+
+### Баг
+
+Когда отображается `NoParksFoundView` и пользователь нажимает кнопку "Выбрать другой город", открывается `ItemListScreen` (режим CITY), но выбранный город **не отмечен**. Пользователь может выбрать тот же город повторно.
+
+### Причина
+
+В `ParksRootViewModel.toItemListUiState()`:
+
+```kotlin
+fun ParksRootUiState.toItemListUiState(): ItemListUiState = ItemListUiState(
+    ...
+    selectedItem = null,  // <-- должен передавать выбранный город
+    ...
+)
+```
+
+### Архитектура
+
+- `selectedItem: String?` в `ItemListUiState` — имя выбранного элемента
+- Внутри `ItemsList` уже реализована логика блокировки нажатий на выбранном элементе (isSelected)
+- Нужно передать `selectedCity?.name` вместо `null`
+
+### 9.1: Unit-тесты (TDD — Red) ✅
+
+**Файл:** `app/src/test/java/com/swparks/ui/viewmodel/ParksRootViewModelTest.kt`
+
+- [x] Тест: `toItemListUiState_whenCitySelected_setsSelectedItemToCityName` — проверяет что `selectedItem = selectedCity?.name`
+- [x] Тест: `toItemListUiState_whenNoCitySelected_setsSelectedItemToNull` — проверяет что `selectedItem = null` когда город не выбран
+
+### 9.2: Исправление (Green) ✅
+
+**Файл:** `app/src/main/java/com/swparks/ui/viewmodel/IParksRootViewModel.kt`
+
+```kotlin
+fun ParksRootUiState.toItemListUiState(): ItemListUiState = ItemListUiState(
+    mode = ItemListMode.CITY,
+    items = cities
+        .filter { it.name.contains(citySearchQuery, ignoreCase = true) }
+        .map { it.name },
+    selectedItem = selectedCity?.name,  // <-- исправлено
+    searchQuery = citySearchQuery,
+    isEmpty = false
+)
+```
+
+### 9.3: Верификация (Refactor) ✅
+
+- [x] `make lint` ✅ (только pre-existing markdown warnings)
+- [x] `make test` ✅
+- [ ] Ручное тестирование: NoParksFoundView → "Выбрать другой город" → виден выбранный город с галочкой

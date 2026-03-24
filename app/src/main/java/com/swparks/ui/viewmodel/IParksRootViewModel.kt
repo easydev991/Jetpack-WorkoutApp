@@ -40,6 +40,8 @@ interface IParksRootViewModel {
     fun onCitySelected(cityName: String)
     fun onClearCityFilter()
 
+    fun updateParks(parks: List<Park>)
+
     val cityNames: List<String>
 }
 
@@ -54,8 +56,15 @@ data class ParksRootUiState(
     val cities: List<City> = emptyList(),
     val isLoadingCities: Boolean = false,
     val citySearchQuery: String = "",
-    val filteredParks: List<Park> = emptyList()
+    val filteredParks: List<Park> = emptyList(),
+    val hasParks: Boolean = false
 )
+
+val ParksRootUiState.showNoParksFound: Boolean
+    get() = filteredParks.isEmpty() && selectedCity != null && hasParks && !isLoadingFilter && !isLoadingCities
+
+val ParksRootUiState.isSizeTypeFilterEdited: Boolean
+    get() = ParkFilter(sizes = localFilter.sizes, types = localFilter.types) != ParkFilter()
 
 sealed class ParksRootEvent {
     data class NavigateToCreatePark(val draft: NewParkDraft) : ParksRootEvent()
@@ -72,7 +81,7 @@ fun ParksRootUiState.toItemListUiState(): ItemListUiState = ItemListUiState(
     items = cities
         .filter { it.name.contains(citySearchQuery, ignoreCase = true) }
         .map { it.name },
-    selectedItem = null,
+    selectedItem = selectedCity?.name,
     searchQuery = citySearchQuery,
     isEmpty = false
 )

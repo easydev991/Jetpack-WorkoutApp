@@ -17,13 +17,6 @@ import org.junit.Test
 class ParkDetailContractsTest {
 
     @Test
-    fun parkDetailUIState_initialLoading_isDataObject() {
-        val state = ParkDetailUIState.InitialLoading
-
-        assertTrue(state is ParkDetailUIState.InitialLoading)
-    }
-
-    @Test
     fun parkDetailUIState_content_hasRequiredFields() {
         val park = createPark()
         val state = ParkDetailUIState.Content(
@@ -47,25 +40,11 @@ class ParkDetailContractsTest {
     }
 
     @Test
-    fun parkDetailEvent_showDeleteConfirmDialog_isDataObject() {
-        val event = ParkDetailEvent.ShowDeleteConfirmDialog
-
-        assertTrue(event is ParkDetailEvent.ShowDeleteConfirmDialog)
-    }
-
-    @Test
     fun parkDetailEvent_showDeletePhotoConfirmDialog_hasPhoto() {
         val photo = Photo(id = 1L, photo = "url")
         val event = ParkDetailEvent.ShowDeletePhotoConfirmDialog(photo)
 
         assertEquals(photo, event.photo)
-    }
-
-    @Test
-    fun parkDetailEvent_showDeleteCommentConfirmDialog_isDataObject() {
-        val event = ParkDetailEvent.ShowDeleteCommentConfirmDialog
-
-        assertTrue(event is ParkDetailEvent.ShowDeleteCommentConfirmDialog)
     }
 
     @Test
@@ -87,20 +66,6 @@ class ParkDetailContractsTest {
         val event = ParkDetailEvent.PhotoDeleted(photoId = 456L)
 
         assertEquals(456L, event.photoId)
-    }
-
-    @Test
-    fun parkDetailEvent_openMap_isDataObject() {
-        val event = ParkDetailEvent.OpenMap
-
-        assertTrue(event is ParkDetailEvent.OpenMap)
-    }
-
-    @Test
-    fun parkDetailEvent_buildRoute_isDataObject() {
-        val event = ParkDetailEvent.BuildRoute
-
-        assertTrue(event is ParkDetailEvent.BuildRoute)
     }
 
     @Test
@@ -188,13 +153,6 @@ class ParkDetailContractsTest {
         assertNotNull(viewModel.isAuthorized)
         assertNotNull(viewModel.isParkAuthor)
         assertNotNull(viewModel.currentUserId)
-    }
-
-    @Test
-    fun iParkDetailViewModel_hasRequiredMapUriSet() {
-        val viewModel = FakeParkDetailViewModel()
-
-        assertTrue(viewModel.mapUriSet is MapUriSet?)
     }
 
     @Test

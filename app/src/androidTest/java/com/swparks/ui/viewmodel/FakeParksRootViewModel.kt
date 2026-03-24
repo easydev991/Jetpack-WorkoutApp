@@ -2,7 +2,9 @@ package com.swparks.ui.viewmodel
 
 import android.Manifest
 import android.content.Intent
+import com.swparks.data.model.City
 import com.swparks.data.model.NewParkDraft
+import com.swparks.data.model.Park
 import com.swparks.data.model.ParkFilter
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
@@ -185,6 +187,24 @@ class FakeParksRootViewModel : IParksRootViewModel {
             localFilter = _uiState.value.localFilter.copy(selectedCityId = null),
             selectedCity = null
         )
+    }
+
+    override fun updateParks(parks: List<Park>) {
+        _uiState.value = _uiState.value.copy(
+            filteredParks = parks,
+            hasParks = parks.isNotEmpty()
+        )
+    }
+
+    fun setParksState(hasParks: Boolean, filteredParks: List<Park>) {
+        _uiState.value = _uiState.value.copy(
+            hasParks = hasParks,
+            filteredParks = filteredParks
+        )
+    }
+
+    fun setSelectedCity(city: City?) {
+        _uiState.value = _uiState.value.copy(selectedCity = city)
     }
 
     override val cityNames: List<String>

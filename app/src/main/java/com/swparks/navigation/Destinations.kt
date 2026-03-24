@@ -289,6 +289,7 @@ sealed class Screen(
     object ChangePassword : Screen("change_password", parentTab = Profile)
     object SelectCountry : Screen("select_country", parentTab = Profile)
     object SelectCity : Screen("select_city", parentTab = Profile)
+    object SelectCityForFilter : Screen("select_city_for_filter", parentTab = Parks)
 
     // Экраны настроек
     object ThemeIcon : Screen("theme_icon", parentTab = More)
@@ -302,7 +303,7 @@ sealed class Screen(
                 // Детальные экраны площадок
                 ParkDetail, CreatePark, EditPark, ParkFilter,
                 CreateEventForPark, ParkRoute, AddParkComment,
-                ParkTrainees, ParkGallery,
+                ParkTrainees, ParkGallery, SelectCityForFilter,
 
                 // Детальные экраны мероприятий
                 EventDetail, CreateEvent, EditEvent, EventParticipants,

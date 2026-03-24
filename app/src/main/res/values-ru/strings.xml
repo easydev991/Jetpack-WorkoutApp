@@ -97,6 +97,8 @@
     <string name="black_list">Чёрный список</string>
     <string name="blacklist_empty">Нет пользователей в чёрном списке</string>
     <string name="no_parks_found">Площадки не найдены</string>
+    <string name="select_another_city">Выбрать другой город</string>
+    <string name="change_filters">Изменить фильтры</string>
 
     <string name="journals_title">Дневники тренировок</string>
     <string name="journals_list_title">Дневники</string>
@@ -229,6 +231,7 @@
     <string name="description">Описание</string>
     <string name="organized_by">Организатор</string>
     <string name="close">Закрыть</string>
+    <string name="clear">Очистить</string>
     <string name="logout">Выйти</string>
 
     <string name="logout_confirmation_title">Выйти из учетной записи?</string>

@@ -7,9 +7,12 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterAlt
@@ -27,6 +30,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -34,11 +38,14 @@ import com.swparks.R
 import com.swparks.data.model.NewParkDraft
 import com.swparks.data.model.Park
 import com.swparks.navigation.AppState
+import com.swparks.ui.components.SearchCityButton
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.ParksListView
 import com.swparks.ui.viewmodel.IParksRootViewModel
 import com.swparks.ui.viewmodel.ParksRootEvent
 import com.swparks.ui.viewmodel.PermissionDialogCause
+import com.swparks.ui.viewmodel.isSizeTypeFilterEdited
+import com.swparks.ui.viewmodel.showNoParksFound
 import kotlinx.coroutines.flow.collectLatest
 
 @Suppress("LongParameterList")
@@ -49,6 +56,7 @@ fun ParksRootScreen(
     onParkClick: (Park) -> Unit = {},
     onCreateParkClick: (NewParkDraft) -> Unit = {},
     onGettingLocationStateChange: (Boolean) -> Unit = {},
+    onNavigateToSelectCity: () -> Unit = {},
     appState: AppState,
     viewModel: IParksRootViewModel
 ) {
@@ -68,6 +76,10 @@ fun ParksRootScreen(
                 is ParksRootEvent.OpenSettings -> {}
             }
         }
+    }
+
+    LaunchedEffect(parks) {
+        viewModel.updateParks(parks)
     }
 
     LocationPermissionDialog(
@@ -111,11 +123,37 @@ fun ParksRootScreen(
         }
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
-            ParksListView(
-                modifier = Modifier.fillMaxSize(),
-                parks = parks,
-                onParkClick = onParkClick
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
+            ) {
+                SearchCityButton(
+                    cityName = uiState.selectedCity?.name,
+                    onClick = onNavigateToSelectCity,
+                    onClearClick = if (uiState.selectedCity != null) {
+                        viewModel::onClearCityFilter
+                    } else {
+                        null
+                    },
+                    modifier = Modifier.padding(top = dimensionResource(R.dimen.spacing_small))
+                )
+
+                if (uiState.showNoParksFound) {
+                    NoParksFoundView(
+                        onSelectCity = onNavigateToSelectCity,
+                        onOpenFilters = viewModel::onShowFilterDialog,
+                        isSizeTypeFilterEdited = uiState.isSizeTypeFilterEdited
+                    )
+                } else {
+                    ParksListView(
+                        modifier = Modifier.fillMaxSize(),
+                        parks = uiState.filteredParks,
+                        onParkClick = onParkClick
+                    )
+                }
+            }
 
             if (uiState.isGettingLocation) {
                 LoadingOverlayView()

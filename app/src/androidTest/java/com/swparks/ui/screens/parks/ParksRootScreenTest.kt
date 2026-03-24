@@ -3,12 +3,18 @@ package com.swparks.ui.screens.parks
 import androidx.compose.material3.Surface
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.swparks.data.model.City
 import com.swparks.data.model.NewParkDraft
+import com.swparks.data.model.Park
+import com.swparks.data.model.ParkFilter
+import com.swparks.data.model.ParkSize
+import com.swparks.data.model.ParkType
 import com.swparks.data.model.User
 import com.swparks.navigation.AppState
 import com.swparks.ui.viewmodel.FakeParksRootViewModel
@@ -51,6 +57,24 @@ class ParksRootScreenTest {
             // Permission grant may fail on emulator without root, tests will handle this
         }
     }
+
+    private fun createPark(
+        id: Long,
+        cityID: Int,
+        sizeID: Int,
+        typeID: Int
+    ) = Park(
+        id = id,
+        name = "Park$id",
+        cityID = cityID,
+        sizeID = sizeID,
+        typeID = typeID,
+        longitude = "0.0",
+        latitude = "0.0",
+        address = "Address$id",
+        countryID = 1,
+        preview = "preview$id"
+    )
 
     @Test
     fun whenUserIsAuthorized_fabIsDisplayed() {
@@ -257,5 +281,147 @@ class ParksRootScreenTest {
         capturedDraft!!
         assert(capturedDraft.address == "Moscow, Red Square") { "Draft should have address" }
         assert(capturedDraft.cityId == 1) { "Draft should have cityId" }
+    }
+
+    @Test
+    fun whenShowNoParksFoundTrue_noParksFoundViewIsDisplayed() {
+        val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
+
+        fakeViewModel.setSelectedCity(city)
+        fakeViewModel.setParksState(hasParks = true, filteredParks = emptyList())
+
+        composeTestRule.setContent {
+            val navController = androidx.navigation.compose.rememberNavController()
+            val appState = AppState(navController)
+
+            Surface {
+                ParksRootScreen(
+                    parks = emptyList(),
+                    appState = appState,
+                    onCreateParkClick = {},
+                    viewModel = fakeViewModel
+                )
+            }
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule
+            .onNodeWithContentDescription("No parks found")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun whenShowNoParksFoundFalse_noParksFoundViewIsNotDisplayed() {
+        fakeViewModel.setParksState(
+            hasParks = true,
+            filteredParks = listOf(createPark(1L, 1, 1, 1))
+        )
+
+        composeTestRule.setContent {
+            val navController = androidx.navigation.compose.rememberNavController()
+            val appState = AppState(navController)
+
+            Surface {
+                ParksRootScreen(
+                    parks = listOf(createPark(1L, 1, 1, 1)),
+                    appState = appState,
+                    onCreateParkClick = {},
+                    viewModel = fakeViewModel
+                )
+            }
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule
+            .onNodeWithContentDescription("No parks found")
+            .assertIsNotDisplayed()
+    }
+
+    @Test
+    fun whenShowNoParksFoundTrue_selectAnotherCityButtonIsVisible() {
+        val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
+
+        fakeViewModel.setSelectedCity(city)
+        fakeViewModel.setParksState(hasParks = true, filteredParks = emptyList())
+
+        composeTestRule.setContent {
+            val navController = androidx.navigation.compose.rememberNavController()
+            val appState = AppState(navController)
+
+            Surface {
+                ParksRootScreen(
+                    parks = emptyList(),
+                    appState = appState,
+                    onCreateParkClick = {},
+                    viewModel = fakeViewModel
+                )
+            }
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule
+            .onNodeWithContentDescription("Select another city")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun whenIsSizeTypeFilterEditedTrue_changeFiltersButtonIsVisible() {
+        val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
+
+        fakeViewModel.setSelectedCity(city)
+        fakeViewModel.onLocalFilterChange(
+            ParkFilter(
+                sizes = setOf(ParkSize.SMALL),
+                types = ParkType.entries.toSet()
+            )
+        )
+        fakeViewModel.setParksState(hasParks = true, filteredParks = emptyList())
+
+        composeTestRule.setContent {
+            val navController = androidx.navigation.compose.rememberNavController()
+            val appState = AppState(navController)
+
+            Surface {
+                ParksRootScreen(
+                    parks = emptyList(),
+                    appState = appState,
+                    onCreateParkClick = {},
+                    viewModel = fakeViewModel
+                )
+            }
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule
+            .onNodeWithContentDescription("Change filters")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun whenIsSizeTypeFilterEditedFalse_changeFiltersButtonIsNotVisible() {
+        val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
+
+        fakeViewModel.setSelectedCity(city)
+        fakeViewModel.onLocalFilterChange(ParkFilter())
+        fakeViewModel.setParksState(hasParks = true, filteredParks = emptyList())
+
+        composeTestRule.setContent {
+            val navController = androidx.navigation.compose.rememberNavController()
+            val appState = AppState(navController)
+
+            Surface {
+                ParksRootScreen(
+                    parks = emptyList(),
+                    appState = appState,
+                    onCreateParkClick = {},
+                    viewModel = fakeViewModel
+                )
+            }
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule
+            .onNodeWithContentDescription("Change filters")
+            .assertIsNotDisplayed()
     }
 }

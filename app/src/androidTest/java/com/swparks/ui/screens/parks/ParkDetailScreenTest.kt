@@ -541,7 +541,6 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    source = "test",
                     parentPaddingValues = PaddingValues(),
                     onAction = {}
                 )
@@ -562,7 +561,6 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    source = "test",
                     parentPaddingValues = PaddingValues(),
                     onAction = {}
                 )
@@ -589,7 +587,6 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    source = "test",
                     parentPaddingValues = PaddingValues(),
                     onAction = {}
                 )
@@ -616,7 +613,6 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    source = "test",
                     parentPaddingValues = PaddingValues(),
                     onAction = {}
                 )
@@ -645,7 +641,6 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    source = "test",
                     parentPaddingValues = PaddingValues(),
                     onAction = {}
                 )
@@ -673,7 +668,6 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    source = "test",
                     parentPaddingValues = PaddingValues(),
                     onAction = {}
                 )
@@ -708,7 +702,6 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    source = "test",
                     parentPaddingValues = PaddingValues(),
                     onAction = {}
                 )
@@ -739,7 +732,6 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    source = "test",
                     parentPaddingValues = PaddingValues(),
                     onAction = {}
                 )
@@ -768,7 +760,6 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    source = "profile",
                     parentPaddingValues = PaddingValues(),
                     onAction = { action -> capturedAction = action }
                 )
@@ -807,7 +798,6 @@ class ParkDetailScreenTest {
             JetpackWorkoutAppTheme {
                 ParkDetailScreen(
                     viewModel = viewModel,
-                    source = "test",
                     parentPaddingValues = PaddingValues(),
                     onAction = { action ->
                         if (action is ParkDetailAction.OnBack) backClicked = true

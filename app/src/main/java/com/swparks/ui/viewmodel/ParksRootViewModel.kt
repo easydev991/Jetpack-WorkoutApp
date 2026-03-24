@@ -118,8 +118,9 @@ class ParksRootViewModel(
         }
     }
 
-    fun updateParks(parks: List<Park>) {
+    override fun updateParks(parks: List<Park>) {
         allParks = parks
+        _uiState.value = _uiState.value.copy(hasParks = parks.isNotEmpty())
         recalculateFilteredParks()
     }
 
@@ -232,9 +233,12 @@ class ParksRootViewModel(
     }
 
     override fun onFilterApply() {
-        logger.d(TAG, "onFilterApply: saving ${_uiState.value.localFilter}")
+        val sizeTypeFilter = _uiState.value.localFilter
+        val cityId = _uiState.value.selectedCity?.id?.toIntOrNull()
+        val finalFilter = sizeTypeFilter.copy(selectedCityId = cityId)
+        logger.d(TAG, "onFilterApply: saving $finalFilter")
         viewModelScope.launch {
-            parksFilterDataStore.saveFilter(_uiState.value.localFilter)
+            parksFilterDataStore.saveFilter(finalFilter)
         }
         _uiState.value = _uiState.value.copy(showFilterDialog = false)
     }

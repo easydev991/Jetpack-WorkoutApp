@@ -14,7 +14,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -79,6 +78,7 @@ import com.swparks.ui.screens.messages.MessagesRootScreen
 import com.swparks.ui.screens.messages.MessagesTopAppBar
 import com.swparks.ui.screens.more.MoreScreen
 import com.swparks.ui.screens.more.MoreTopAppBar
+import com.swparks.ui.screens.more.sendLocationFeedback
 import com.swparks.ui.screens.parks.ParkDetailAction
 import com.swparks.ui.screens.parks.ParkDetailScreen
 import com.swparks.ui.screens.parks.ParkFormNavigationAction
@@ -109,6 +109,7 @@ import com.swparks.ui.screens.profile.SelectCountryScreen
 import com.swparks.ui.screens.profile.UserFriendsAction
 import com.swparks.ui.screens.profile.UserFriendsScreen
 import com.swparks.ui.screens.profile.UserTrainingParksScreen
+import com.swparks.ui.screens.settings.ItemListScreen
 import com.swparks.ui.screens.themeicon.ThemeIconScreen
 import com.swparks.ui.viewmodel.BlacklistViewModel
 import com.swparks.ui.viewmodel.ChangePasswordViewModel
@@ -128,6 +129,8 @@ import com.swparks.ui.viewmodel.ThemeIconViewModel
 import com.swparks.ui.viewmodel.UserAddedParksViewModel
 import com.swparks.ui.viewmodel.UserFriendsViewModel
 import com.swparks.ui.viewmodel.UserTrainingParksViewModel
+import com.swparks.ui.viewmodel.toItemListUiState
+import com.swparks.util.LocationFeedback
 import com.swparks.util.WorkoutAppJson
 import com.swparks.util.readJSONFromAssets
 import com.swparks.util.toUiText
@@ -142,7 +145,8 @@ private val BOTTOM_BAR_HIDDEN_BASE_ROUTES = setOf(
     Screen.FriendsForDialog,
     Screen.CreatePark,
     Screen.EditPark,
-    Screen.Chat
+    Screen.Chat,
+    Screen.SelectCityForFilter
 ).map { it.route.substringBefore("/").substringBefore("?") }.toSet()
 
 internal fun shouldShowBottomBar(route: String?): Boolean {
@@ -249,9 +253,6 @@ fun RootScreen(appState: AppState) {
     }
 
     val parksRootUiState by parksRootViewModel.uiState.collectAsState()
-    val filteredParks by remember(parks, parksRootUiState.localFilter) {
-        derivedStateOf { appContainer.filterParksUseCase(parks, parksRootUiState.localFilter) }
-    }
 
     var isGettingLocationForCreatePark by remember { mutableStateOf(false) }
 
@@ -263,7 +264,7 @@ fun RootScreen(appState: AppState) {
                 when (appState.currentTopLevelDestination?.route) {
                     Screen.Parks.route -> {
                         ParksTopAppBar(
-                            parksCount = filteredParks.size,
+                            parksCount = parksRootUiState.filteredParks.size,
                             onFilterClick = { parksRootViewModel.onShowFilterDialog() },
                             isFilterLoading = parksRootUiState.isLoadingFilter
                         )
@@ -316,7 +317,7 @@ fun RootScreen(appState: AppState) {
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues),
-                    parks = filteredParks,
+                    parks = parks,
                     onParkClick = { park ->
                         appState.navController.navigate(Screen.ParkDetail.createRoute(park.id))
                     },
@@ -329,6 +330,9 @@ fun RootScreen(appState: AppState) {
                         Log.d("RootScreen", "<<< navigateToCreatePark returned")
                     },
                     onGettingLocationStateChange = { isGettingLocationForCreatePark = it },
+                    onNavigateToSelectCity = {
+                        appState.navController.navigate(Screen.SelectCityForFilter.route)
+                    },
                     appState = appState,
                     viewModel = parksRootViewModel
                 )
@@ -463,7 +467,6 @@ fun RootScreen(appState: AppState) {
 
                 ParkDetailScreen(
                     viewModel = parkDetailViewModel,
-                    source = parkDetailSource,
                     parentPaddingValues = paddingValues,
                     onAction = { action ->
                         when (action) {
@@ -1372,6 +1375,23 @@ fun RootScreen(appState: AppState) {
             composable(route = Screen.SelectCity.route) {
                 SelectCityScreen(
                     viewModel = editProfileViewModel,
+                    onBackClick = { appState.navController.popBackStack() }
+                )
+            }
+
+            composable(route = Screen.SelectCityForFilter.route) {
+                val context = LocalContext.current
+                ItemListScreen(
+                    state = parksRootUiState.toItemListUiState(),
+                    onSearchQueryChange = parksRootViewModel::onCitySearchQueryChange,
+                    onItemSelected = { cityName ->
+                        parksRootViewModel.onCitySelected(cityName)
+                        appState.navController.popBackStack()
+                    },
+                    onContactUs = {
+                        val feedback = LocationFeedback.createCity(context)
+                        sendLocationFeedback(context, feedback)
+                    },
                     onBackClick = { appState.navController.popBackStack() }
                 )
             }

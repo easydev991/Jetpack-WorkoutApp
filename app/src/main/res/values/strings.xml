@@ -90,6 +90,8 @@
     <string name="black_list">Black list</string>
     <string name="blacklist_empty">No users in blacklist</string>
     <string name="no_parks_found">No parks found</string>
+    <string name="select_another_city">Select another city</string>
+    <string name="change_filters">Change filters</string>
 
     <string name="journals_title">Workout journals</string>
     <string name="journals_list_title">Journals</string>
@@ -232,6 +234,7 @@
     <string name="description">Description</string>
     <string name="organized_by">Organized by</string>
     <string name="close">Close</string>
+    <string name="clear">Clear</string>
     <string name="logout">Logout</string>
 
     <string name="logout_confirmation_title">Log out of your profile?</string>
