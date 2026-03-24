@@ -39,4 +39,30 @@ class ParkFilterTest {
         assertEquals(filter1, filter2)
         assertTrue(filter1.isDefault == filter2.isDefault)
     }
+
+    @Test
+    fun parkFilter_withCitySelected_isNotDefault() {
+        val filter = ParkFilter(selectedCityId = 1)
+
+        assertFalse(filter.isDefault)
+    }
+
+    @Test
+    fun parkFilter_withCityAndOtherFilters_isNotDefault() {
+        val filter = ParkFilter(
+            sizes = setOf(ParkSize.SMALL),
+            types = setOf(ParkType.SOVIET),
+            selectedCityId = 5
+        )
+
+        assertFalse(filter.isDefault)
+    }
+
+    @Test
+    fun parkFilter_equals_withSameCity() {
+        val filter1 = ParkFilter(selectedCityId = 1)
+        val filter2 = ParkFilter(selectedCityId = 1)
+
+        assertEquals(filter1, filter2)
+    }
 }

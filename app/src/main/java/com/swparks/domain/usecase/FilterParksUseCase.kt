@@ -8,7 +8,9 @@ class FilterParksUseCase : IFilterParksUseCase {
         val allowedSizes = filter.sizes.map { it.rawValue }.toSet()
         val allowedTypes = filter.types.map { it.rawValue }.toSet()
         return allParks.filter { park ->
-            allowedSizes.contains(park.sizeID) && allowedTypes.contains(park.typeID)
+            allowedSizes.contains(park.sizeID) &&
+                allowedTypes.contains(park.typeID) &&
+                (filter.selectedCityId == null || park.cityID == filter.selectedCityId)
         }
     }
 }

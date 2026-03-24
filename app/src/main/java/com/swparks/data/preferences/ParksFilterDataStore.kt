@@ -17,6 +17,7 @@ private val Context.parksFilterDataStore: DataStore<Preferences> by preferencesD
 internal object ParksFilterPreferencesKeys {
     val SIZES_KEY = stringPreferencesKey("sizes")
     val TYPES_KEY = stringPreferencesKey("types")
+    val SELECTED_CITY_ID_KEY = stringPreferencesKey("selected_city_id")
 }
 
 class ParksFilterDataStore(
@@ -30,6 +31,8 @@ class ParksFilterDataStore(
                 filter.sizes.joinToString(",") { it.rawValue.toString() }
             preferences[ParksFilterPreferencesKeys.TYPES_KEY] =
                 filter.types.joinToString(",") { it.rawValue.toString() }
+            preferences[ParksFilterPreferencesKeys.SELECTED_CITY_ID_KEY] =
+                filter.selectedCityId?.toString() ?: ""
         }
     }
 
@@ -38,11 +41,13 @@ class ParksFilterDataStore(
             .map { preferences ->
                 val sizesStr = preferences[ParksFilterPreferencesKeys.SIZES_KEY]
                 val typesStr = preferences[ParksFilterPreferencesKeys.TYPES_KEY]
+                val cityIdStr = preferences[ParksFilterPreferencesKeys.SELECTED_CITY_ID_KEY]
 
                 val sizes = sizesStr?.parseSizeSet() ?: ParkSize.entries.toSet()
                 val types = typesStr?.parseTypeSet() ?: ParkType.entries.toSet()
+                val cityId = cityIdStr?.parseCityId()
 
-                ParkFilter(sizes = sizes, types = types)
+                ParkFilter(sizes = sizes, types = types, selectedCityId = cityId)
             }
 
     private fun String.parseSizeSet(): Set<ParkSize> {
@@ -69,6 +74,11 @@ class ParksFilterDataStore(
             .toSet()
             .takeIf { it.isNotEmpty() }
             ?: ParkType.entries.toSet()
+    }
+
+    private fun String.parseCityId(): Int? {
+        if (isEmpty()) return null
+        return toIntOrNull()
     }
 }
 

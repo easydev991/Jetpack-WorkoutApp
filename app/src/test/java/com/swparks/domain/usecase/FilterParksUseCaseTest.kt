@@ -12,7 +12,7 @@ class FilterParksUseCaseTest {
 
     private val filterParksUseCase: IFilterParksUseCase = FilterParksUseCase()
 
-    private fun createPark(sizeID: Int, typeID: Int) = Park(
+    private fun createPark(sizeID: Int, typeID: Int, cityID: Int = 1) = Park(
         id = 1L,
         name = "Test Park",
         sizeID = sizeID,
@@ -20,7 +20,7 @@ class FilterParksUseCaseTest {
         longitude = "0.0",
         latitude = "0.0",
         address = "Test Address",
-        cityID = 1,
+        cityID = cityID,
         countryID = 1,
         preview = ""
     )
@@ -128,5 +128,52 @@ class FilterParksUseCaseTest {
 
         assertTrue("Filter took ${duration}ms, should be under 100ms", duration < 100)
         assertTrue(result.size < 9000)
+    }
+
+    @Test
+    fun filterParks_whenCityFilter_filtersByCity() {
+        val parks = listOf(
+            createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue, cityID = 1),
+            createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue, cityID = 2),
+            createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue, cityID = 3)
+        )
+        val filter = ParkFilter(selectedCityId = 2)
+
+        val result = filterParksUseCase(parks, filter)
+
+        assertEquals(1, result.size)
+        assertEquals(2, result[0].cityID)
+    }
+
+    @Test
+    fun filterParks_whenCityAndSizeFilters_usesAndLogic() {
+        val parks = listOf(
+            createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue, cityID = 1),
+            createPark(ParkSize.MEDIUM.rawValue, ParkType.SOVIET.rawValue, cityID = 1),
+            createPark(ParkSize.SMALL.rawValue, ParkType.MODERN.rawValue, cityID = 2)
+        )
+        val filter = ParkFilter(
+            sizes = setOf(ParkSize.SMALL),
+            selectedCityId = 1
+        )
+
+        val result = filterParksUseCase(parks, filter)
+
+        assertEquals(1, result.size)
+        assertEquals(ParkSize.SMALL.rawValue, result[0].sizeID)
+        assertEquals(1, result[0].cityID)
+    }
+
+    @Test
+    fun filterParks_whenNoCityFilter_ignoresCity() {
+        val parks = listOf(
+            createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue, cityID = 1),
+            createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue, cityID = 2)
+        )
+        val filter = ParkFilter()
+
+        val result = filterParksUseCase(parks, filter)
+
+        assertEquals(2, result.size)
     }
 }

@@ -3,6 +3,7 @@ package com.swparks.ui.viewmodel
 import app.cash.turbine.test
 import com.swparks.data.model.NewParkDraft
 import com.swparks.data.preferences.ParksFilterDataStore
+import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.ICreateParkLocationHandler
 import com.swparks.domain.usecase.IFilterParksUseCase
 import com.swparks.util.Logger
@@ -29,6 +30,7 @@ class ParksRootViewModelTest {
     private lateinit var logger: Logger
     private lateinit var filterParksUseCase: IFilterParksUseCase
     private lateinit var parksFilterDataStore: ParksFilterDataStore
+    private lateinit var countriesRepository: CountriesRepository
     private lateinit var viewModel: ParksRootViewModel
 
     @Before
@@ -39,11 +41,14 @@ class ParksRootViewModelTest {
         parksFilterDataStore = mockk(relaxed = true) {
             coEvery { filter } returns emptyFlow()
         }
+        countriesRepository = mockk(relaxed = true)
+        coEvery { countriesRepository.getAllCities() } returns emptyList()
         viewModel = ParksRootViewModel(
             createParkLocationHandler = createParkLocationHandler,
             logger = logger,
             filterParksUseCase = filterParksUseCase,
-            parksFilterDataStore = parksFilterDataStore
+            parksFilterDataStore = parksFilterDataStore,
+            countriesRepository = countriesRepository
         )
     }
 

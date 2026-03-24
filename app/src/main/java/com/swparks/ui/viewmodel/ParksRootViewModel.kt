@@ -9,10 +9,12 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.JetpackWorkoutApplication
 import com.swparks.data.model.NewParkDraft
+import com.swparks.data.model.Park
 import com.swparks.data.model.ParkFilter
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
 import com.swparks.data.preferences.ParksFilterDataStore
+import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.ICreateParkLocationHandler
 import com.swparks.domain.usecase.IFilterParksUseCase
 import com.swparks.util.Logger
@@ -30,8 +32,23 @@ class ParksRootViewModel(
     private val createParkLocationHandler: ICreateParkLocationHandler,
     private val logger: Logger,
     private val filterParksUseCase: IFilterParksUseCase,
-    private val parksFilterDataStore: ParksFilterDataStore
+    private val parksFilterDataStore: ParksFilterDataStore,
+    private val countriesRepository: CountriesRepository
 ) : ViewModel(), IParksRootViewModel {
+
+    override val parksFilter: StateFlow<ParkFilter> = parksFilterDataStore.filter
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ParkFilter())
+
+    private val _uiState = MutableStateFlow(ParksRootUiState(localFilter = parksFilter.value))
+    override val uiState: StateFlow<ParksRootUiState> = _uiState.asStateFlow()
+
+    private val _events = MutableSharedFlow<ParksRootEvent>()
+    override val events: SharedFlow<ParksRootEvent> = _events.asSharedFlow()
+
+    override var permissionLauncher: ((Map<String, Boolean>) -> Unit)? = null
+    override var openSettingsLauncher: ((Intent) -> Unit)? = null
+
+    private var allParks: List<Park> = emptyList()
 
     init {
         viewModelScope.launch {
@@ -41,8 +58,45 @@ class ParksRootViewModel(
                     localFilter = filter,
                     isLoadingFilter = false
                 )
+                recalculateFilteredParks()
+                restoreSelectedCity(filter.selectedCityId)
             }
         }
+        loadCities()
+    }
+
+    private fun loadCities() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoadingCities = true)
+            try {
+                val citiesList = countriesRepository.getAllCities()
+                _uiState.value = _uiState.value.copy(
+                    cities = citiesList,
+                    isLoadingCities = false
+                )
+                logger.d(TAG, "Загружено городов: ${citiesList.size}")
+            } catch (e: Exception) {
+                logger.e(TAG, "Ошибка загрузки городов", e)
+                _uiState.value = _uiState.value.copy(isLoadingCities = false)
+            }
+        }
+    }
+
+    private fun restoreSelectedCity(cityId: Int?) {
+        if (cityId == null) return
+        viewModelScope.launch {
+            val city = countriesRepository.getCityById(cityId.toString())
+            if (city != null) {
+                _uiState.value = _uiState.value.copy(selectedCity = city)
+                logger.d(TAG, "Восстановлен выбранный город: ${city.name}")
+            }
+        }
+    }
+
+    private fun recalculateFilteredParks() {
+        if (allParks.isEmpty()) return
+        val filtered = filterParksUseCase(allParks, _uiState.value.localFilter)
+        _uiState.value = _uiState.value.copy(filteredParks = filtered)
     }
 
     companion object {
@@ -57,23 +111,22 @@ class ParksRootViewModel(
                     createParkLocationHandler = container.createParkLocationHandler,
                     logger = container.logger,
                     filterParksUseCase = container.filterParksUseCase,
-                    parksFilterDataStore = container.parksFilterDataStore
+                    parksFilterDataStore = container.parksFilterDataStore,
+                    countriesRepository = container.countriesRepository
                 )
             }
         }
     }
 
-    override val parksFilter: StateFlow<ParkFilter> = parksFilterDataStore.filter
-        .stateIn(viewModelScope, SharingStarted.Eagerly, ParkFilter())
+    fun updateParks(parks: List<Park>) {
+        allParks = parks
+        recalculateFilteredParks()
+    }
 
-    private val _uiState = MutableStateFlow(ParksRootUiState(localFilter = parksFilter.value))
-    override val uiState: StateFlow<ParksRootUiState> = _uiState.asStateFlow()
-
-    private val _events = MutableSharedFlow<ParksRootEvent>()
-    override val events: SharedFlow<ParksRootEvent> = _events.asSharedFlow()
-
-    override var permissionLauncher: ((Map<String, Boolean>) -> Unit)? = null
-    override var openSettingsLauncher: ((Intent) -> Unit)? = null
+    override val cityNames: List<String>
+        get() = _uiState.value.cities
+            .filter { it.name.contains(_uiState.value.citySearchQuery, ignoreCase = true) }
+            .map { it.name }
 
     override fun onPermissionGranted() {
         logger.d(TAG, "Разрешение получено")
@@ -197,6 +250,45 @@ class ParksRootViewModel(
     override fun onDismissFilterDialog() {
         logger.d(TAG, "onDismissFilterDialog")
         _uiState.value = _uiState.value.copy(showFilterDialog = false)
+    }
+
+    override fun onSelectCityClick() {
+        logger.d(TAG, "onSelectCityClick")
+    }
+
+    override fun onCitySearchQueryChange(query: String) {
+        logger.d(TAG, "onCitySearchQueryChange: $query")
+        _uiState.value = _uiState.value.copy(citySearchQuery = query)
+    }
+
+    override fun onCitySelected(cityName: String) {
+        logger.d(TAG, "onCitySelected: $cityName")
+        val city = _uiState.value.cities.find { it.name == cityName }
+        val cityId = city?.id?.toIntOrNull()
+        if (city != null && cityId != null) {
+            val newFilter = _uiState.value.localFilter.copy(selectedCityId = cityId)
+            _uiState.value = _uiState.value.copy(
+                localFilter = newFilter,
+                selectedCity = city
+            )
+            viewModelScope.launch {
+                parksFilterDataStore.saveFilter(newFilter)
+            }
+            recalculateFilteredParks()
+        }
+    }
+
+    override fun onClearCityFilter() {
+        logger.d(TAG, "onClearCityFilter")
+        val newFilter = _uiState.value.localFilter.copy(selectedCityId = null)
+        _uiState.value = _uiState.value.copy(
+            localFilter = newFilter,
+            selectedCity = null
+        )
+        viewModelScope.launch {
+            parksFilterDataStore.saveFilter(newFilter)
+        }
+        recalculateFilteredParks()
     }
 
     private fun requestPermission() {

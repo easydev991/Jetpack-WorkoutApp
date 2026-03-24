@@ -161,4 +161,34 @@ class FakeParksRootViewModel : IParksRootViewModel {
     override fun onDismissFilterDialog() {
         _uiState.value = _uiState.value.copy(showFilterDialog = false)
     }
+
+    override fun onSelectCityClick() {
+    }
+
+    override fun onCitySearchQueryChange(query: String) {
+        _uiState.value = _uiState.value.copy(citySearchQuery = query)
+    }
+
+    override fun onCitySelected(cityName: String) {
+        val city = _uiState.value.cities.find { it.name == cityName }
+        val cityId = city?.id?.toIntOrNull()
+        if (city != null && cityId != null) {
+            _uiState.value = _uiState.value.copy(
+                localFilter = _uiState.value.localFilter.copy(selectedCityId = cityId),
+                selectedCity = city
+            )
+        }
+    }
+
+    override fun onClearCityFilter() {
+        _uiState.value = _uiState.value.copy(
+            localFilter = _uiState.value.localFilter.copy(selectedCityId = null),
+            selectedCity = null
+        )
+    }
+
+    override val cityNames: List<String>
+        get() = _uiState.value.cities
+            .filter { it.name.contains(_uiState.value.citySearchQuery, ignoreCase = true) }
+            .map { it.name }
 }
