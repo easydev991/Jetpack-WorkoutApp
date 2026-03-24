@@ -9,7 +9,7 @@ Android application "SW Parks" (Street Workout Parks), built with Kotlin and Jet
 - Package: `com.swparks`
 - Min SDK: 26
 - Target SDK: 35
-- Kotlin: 2.3.10
+- Kotlin: 2.3.20
 
 ## AI Workflow
 

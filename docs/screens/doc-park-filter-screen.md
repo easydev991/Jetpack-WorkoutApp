@@ -17,16 +17,16 @@ ParksFilterDialog → ParksRootViewModel → ParksFilterDataStore → FilterPark
 
 ### Слои
 
-| Слой | Компонент | Описание |
-|------|-----------|----------|
-| UI | `ParksFilterDialog` | Диалог с секциями Size/Type, кнопки Reset/Apply |
-| UI | `ParksRootScreen` | `filteredParks` через `derivedStateOf` |
-| UI | `CheckmarkRowView` | Галка с опциональным `onCheckedChange` |
-| Domain | `ParkFilter` | `sizes: Set<ParkSize>`, `types: Set<ParkType>` |
-| Domain | `IFilterParksUseCase` | `invoke(allParks, filter)` → `List<Park>`, Set lookup O(1) |
-| Domain | `FilterParksUseCase` | Реализация с Set lookup по `rawValue` |
-| Data | `ParksFilterDataStore` | DataStore persistence, `saveFilter()` / `filter: Flow<ParkFilter>` |
-| Data | `AppContainer` | DI: `filterParksUseCase`, `parksFilterDataStore` |
+| Слой   | Компонент              | Описание                                                           |
+|--------|------------------------|--------------------------------------------------------------------|
+| UI     | `ParksFilterDialog`    | Диалог с секциями Size/Type, кнопки Reset/Apply                    |
+| UI     | `ParksRootScreen`      | `filteredParks` через `derivedStateOf`                             |
+| UI     | `CheckmarkRowView`     | Галка с опциональным `onCheckedChange`                             |
+| Domain | `ParkFilter`           | `sizes: Set<ParkSize>`, `types: Set<ParkType>`                     |
+| Domain | `IFilterParksUseCase`  | `invoke(allParks, filter)` → `List<Park>`, Set lookup O(1)         |
+| Domain | `FilterParksUseCase`   | Реализация с Set lookup по `rawValue`                              |
+| Data   | `ParksFilterDataStore` | DataStore persistence, `saveFilter()` / `filter: Flow<ParkFilter>` |
+| Data   | `AppContainer`         | DI: `filterParksUseCase`, `parksFilterDataStore`                   |
 
 ---
 
@@ -90,41 +90,41 @@ data class ParkFilter(
 
 ## Previews
 
-| Preview | Описание |
-|---------|----------|
-| `ParksFilterDialogPreviewDefault` | Light theme, default filter |
-| `ParksFilterDialogPreviewDark` | Dark theme, default filter |
+| Preview                                | Описание                                                   |
+|----------------------------------------|------------------------------------------------------------|
+| `ParksFilterDialogPreviewDefault`      | Light theme, default filter                                |
+| `ParksFilterDialogPreviewDark`         | Dark theme, default filter                                 |
 | `ParksFilterDialogPreviewCustomFilter` | Custom filter (sizes: SMALL, LARGE; types: SOVIET, MODERN) |
 
 ---
 
 ## Файлы
 
-| Файл | Назначение |
-|------|------------|
-| `data/model/ParkFilter.kt` | Модель фильтра |
-| `domain/usecase/IFilterParksUseCase.kt` | Интерфейс use case |
-| `domain/usecase/FilterParksUseCase.kt` | Реализация use case |
-| `data/preferences/ParksFilterDataStore.kt` | Persistence |
-| `ui/ds/CheckmarkRowView.kt` | Компонент галки |
-| `ui/screens/parks/ParksFilterDialog.kt` | Диалог фильтра |
-| `ui/screens/parks/ParksFilterDialogTest.kt` | Instrumented тесты |
-| `ui/viewmodel/IParksRootViewModel.kt` | Интерфейс ViewModel |
-| `ui/viewmodel/ParksRootViewModel.kt` | Реализация ViewModel |
-| `ui/screens/RootScreen.kt` | Интеграция в RootScreen |
-| `data/AppContainer.kt` | DI container |
-| `res/values/strings.xml` | Строки |
-| `res/values-ru/strings.xml` | Строки (ru) |
+| Файл                                        | Назначение              |
+|---------------------------------------------|-------------------------|
+| `data/model/ParkFilter.kt`                  | Модель фильтра          |
+| `domain/usecase/IFilterParksUseCase.kt`     | Интерфейс use case      |
+| `domain/usecase/FilterParksUseCase.kt`      | Реализация use case     |
+| `data/preferences/ParksFilterDataStore.kt`  | Persistence             |
+| `ui/ds/CheckmarkRowView.kt`                 | Компонент галки         |
+| `ui/screens/parks/ParksFilterDialog.kt`     | Диалог фильтра          |
+| `ui/screens/parks/ParksFilterDialogTest.kt` | Instrumented тесты      |
+| `ui/viewmodel/IParksRootViewModel.kt`       | Интерфейс ViewModel     |
+| `ui/viewmodel/ParksRootViewModel.kt`        | Реализация ViewModel    |
+| `ui/screens/RootScreen.kt`                  | Интеграция в RootScreen |
+| `data/AppContainer.kt`                      | DI container            |
+| `res/values/strings.xml`                    | Строки                  |
+| `res/values-ru/strings.xml`                 | Строки (ru)             |
 
 ### Тесты
 
-| Тест | Покрытие |
-|------|----------|
-| `ParkFilterTest.kt` | default filter, equals, performance (9000 парков) |
-| `FilterParksUseCaseTest.kt` | Set lookup |
-| `ParksFilterDataStoreTest.kt` | save/load default и custom filter |
-| `ParksRootViewModelTest.kt` | toggle size/type, apply |
-| `ParksFilterDialogTest.kt` | render, toggle, reset, apply (androidTest) |
+| Тест                          | Покрытие                                          |
+|-------------------------------|---------------------------------------------------|
+| `ParkFilterTest.kt`           | default filter, equals, performance (9000 парков) |
+| `FilterParksUseCaseTest.kt`   | Set lookup                                        |
+| `ParksFilterDataStoreTest.kt` | save/load default и custom filter                 |
+| `ParksRootViewModelTest.kt`   | toggle size/type, apply                           |
+| `ParksFilterDialogTest.kt`    | render, toggle, reset, apply (androidTest)        |
 
 ---
 

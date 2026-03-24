@@ -10,15 +10,15 @@
 
 ## Выполненные этапы
 
-| Этап | Описание |
-|------|----------|
+| Этап         | Описание                                                                                                                            |
+|--------------|-------------------------------------------------------------------------------------------------------------------------------------|
 | Domain Layer | `PhotoDetailUIState`, `PhotoDetailConfig`, `PhotoDetailAction`, `PhotoDetailEvent`, `IPhotoDetailViewModel`, `PhotoDetailViewModel` |
-| UI Layer | `PhotoDetailScreen`, `ZoomablePhotoView` (pinch-to-zoom, double-tap), `DeleteConfirmDialog`, `PhotoDetailSheetHost` |
-| Интеграция | Связь с `EventDetailScreen` через `NavigateToPhotoDetail`, callback `onPhotoDeleted` |
-| Локализация | Строки en/ru для диалога удаления |
-| Тестирование | 18 unit-тестов `PhotoDetailViewModelTest`, 4 Preview |
-| API | Удаление фото через `swRepository.deleteEventPhoto()`, LoadingOverlay, `UserNotifier.handleError()` |
-| Bugfix | `key = "photo_${config.photoId}"` для корректного открытия выбранного фото |
+| UI Layer     | `PhotoDetailScreen`, `ZoomablePhotoView` (pinch-to-zoom, double-tap), `DeleteConfirmDialog`, `PhotoDetailSheetHost`                 |
+| Интеграция   | Связь с `EventDetailScreen` через `NavigateToPhotoDetail`, callback `onPhotoDeleted`                                                |
+| Локализация  | Строки en/ru для диалога удаления                                                                                                   |
+| Тестирование | 18 unit-тестов `PhotoDetailViewModelTest`, 4 Preview                                                                                |
+| API          | Удаление фото через `swRepository.deleteEventPhoto()`, LoadingOverlay, `UserNotifier.handleError()`                                 |
+| Bugfix       | `key = "photo_${config.photoId}"` для корректного открытия выбранного фото                                                          |
 
 ---
 
