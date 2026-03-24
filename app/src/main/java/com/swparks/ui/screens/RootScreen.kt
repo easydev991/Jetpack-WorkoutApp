@@ -141,7 +141,8 @@ private val BOTTOM_BAR_HIDDEN_BASE_ROUTES = setOf(
     Screen.ChangePassword,
     Screen.FriendsForDialog,
     Screen.CreatePark,
-    Screen.EditPark
+    Screen.EditPark,
+    Screen.Chat
 ).map { it.route.substringBefore("/").substringBefore("?") }.toSet()
 
 internal fun shouldShowBottomBar(route: String?): Boolean {
