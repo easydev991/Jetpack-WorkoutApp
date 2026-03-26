@@ -2,6 +2,7 @@ package com.swparks.ui.viewmodel
 
 import android.Manifest
 import android.content.Intent
+import android.content.IntentSender
 import com.swparks.data.model.City
 import com.swparks.data.model.NewParkDraft
 import com.swparks.data.model.Park
@@ -9,6 +10,7 @@ import com.swparks.data.model.ParkFilter
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
 import com.swparks.ui.model.ParksTab
+import com.swparks.ui.state.MapEvent
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -28,6 +30,7 @@ class FakeParksRootViewModel : IParksRootViewModel {
 
     override var permissionLauncher: ((Map<String, Boolean>) -> Unit)? = null
     override var openSettingsLauncher: ((Intent) -> Unit)? = null
+    override var resolveLocationSettingsLauncher: ((IntentSender) -> Unit)? = null
 
     override val selectedTab: MutableStateFlow<ParksTab> = MutableStateFlow(ParksTab.LIST)
 
@@ -119,6 +122,14 @@ class FakeParksRootViewModel : IParksRootViewModel {
             permissionDialogCause = null
         )
     }
+
+    override fun onLocationSettingsResolutionResult(succeeded: Boolean) {
+        if (succeeded) {
+            _capturedEvents.add(ParksRootEvent.NavigateToCreatePark(nextDraft))
+        }
+    }
+
+    override fun onMapEvent(event: MapEvent) {}
 
     override fun onLocalFilterChange(filter: ParkFilter) {
         _uiState.value = _uiState.value.copy(localFilter = filter)

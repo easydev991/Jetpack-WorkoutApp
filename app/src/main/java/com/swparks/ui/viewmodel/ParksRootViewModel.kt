@@ -8,17 +8,26 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.JetpackWorkoutApplication
+import com.swparks.data.model.City
 import com.swparks.data.model.NewParkDraft
 import com.swparks.data.model.Park
 import com.swparks.data.model.ParkFilter
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
 import com.swparks.data.preferences.ParksFilterDataStore
+import com.swparks.domain.provider.LocationService
+import com.swparks.domain.provider.LocationSettingsCheckResult
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.ICreateParkLocationHandler
 import com.swparks.domain.usecase.IFilterParksUseCase
 import com.swparks.ui.model.ParksTab
+import com.swparks.ui.state.MapCameraPosition
+import com.swparks.ui.state.MapEvent
+import com.swparks.ui.state.MapUiState
+import com.swparks.ui.state.UiCoordinates
+import com.swparks.util.AppError
 import com.swparks.util.Logger
+import com.swparks.util.UserNotifier
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -28,13 +37,17 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.math.pow
 
+@Suppress("LongParameterList")
 class ParksRootViewModel(
     private val createParkLocationHandler: ICreateParkLocationHandler,
     private val logger: Logger,
     private val filterParksUseCase: IFilterParksUseCase,
     private val parksFilterDataStore: ParksFilterDataStore,
-    private val countriesRepository: CountriesRepository
+    private val countriesRepository: CountriesRepository,
+    private val userNotifier: UserNotifier,
+    private val locationService: LocationService
 ) : ViewModel(), IParksRootViewModel {
 
     override val parksFilter: StateFlow<ParkFilter> = parksFilterDataStore.filter
@@ -48,6 +61,7 @@ class ParksRootViewModel(
 
     override var permissionLauncher: ((Map<String, Boolean>) -> Unit)? = null
     override var openSettingsLauncher: ((Intent) -> Unit)? = null
+    override var resolveLocationSettingsLauncher: ((android.content.IntentSender) -> Unit)? = null
 
     override val selectedTab: MutableStateFlow<ParksTab> = MutableStateFlow(ParksTab.LIST)
 
@@ -78,7 +92,7 @@ class ParksRootViewModel(
                     isLoadingCities = false
                 )
                 logger.d(TAG, "Загружено городов: ${citiesList.size}")
-            } catch (e: Exception) {
+            } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
                 logger.e(TAG, "Ошибка загрузки городов", e)
                 _uiState.value = _uiState.value.copy(isLoadingCities = false)
             }
@@ -86,24 +100,59 @@ class ParksRootViewModel(
     }
 
     private fun restoreSelectedCity(cityId: Int?) {
-        if (cityId == null) return
+        if (cityId == null) {
+            _uiState.value = _uiState.value.copy(selectedCity = null)
+            recalculateFilteredParks()
+            return
+        }
         viewModelScope.launch {
             val city = countriesRepository.getCityById(cityId.toString())
+            _uiState.value = _uiState.value.copy(selectedCity = city)
             if (city != null) {
-                _uiState.value = _uiState.value.copy(selectedCity = city)
                 logger.d(TAG, "Восстановлен выбранный город: ${city.name}")
+            } else {
+                logger.d(TAG, "Не удалось восстановить город по id=$cityId")
             }
+            recalculateFilteredParks()
         }
     }
 
     private fun recalculateFilteredParks() {
         if (allParks.isEmpty()) return
-        val filtered = filterParksUseCase(allParks, _uiState.value.localFilter)
-        _uiState.value = _uiState.value.copy(filteredParks = filtered)
+        val baseFiltered = filterParksUseCase(allParks, _uiState.value.localFilter)
+        val filtered = normalizeSelectedCityParks(
+            parks = baseFiltered,
+            selectedCity = _uiState.value.selectedCity
+        )
+        val currentMapState = _uiState.value.mapState
+        val selectedParkId = currentMapState.selectedParkId
+        val updatedMapState =
+            if (selectedParkId != null && filtered.none { it.id == selectedParkId }) {
+                logger.d(
+                    TAG,
+                    "Выбранный парк $selectedParkId больше не в filteredParks, сбрасываем выбор"
+                )
+                currentMapState.copy(selectedParkId = null)
+            } else {
+                currentMapState
+            }
+        _uiState.value = _uiState.value.copy(
+            filteredParks = filtered,
+            mapState = updatedMapState
+        )
     }
 
     companion object {
         private const val TAG = "ParksRootViewModel"
+        private const val CITY_CAMERA_ZOOM = 11.0
+        private const val USER_LOCATION_CAMERA_ZOOM = 15.0
+        private const val SUSPICIOUS_CITY_RADIUS_KM = 250.0
+        private const val NORMALIZED_CITY_RADIUS_KM = 75.0
+        private const val EARTH_RADIUS_KM = 6371.0
+        private const val MIN_LATITUDE = -90.0
+        private const val MAX_LATITUDE = 90.0
+        private const val MIN_LONGITUDE = -180.0
+        private const val MAX_LONGITUDE = 180.0
 
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
@@ -115,10 +164,141 @@ class ParksRootViewModel(
                     logger = container.logger,
                     filterParksUseCase = container.filterParksUseCase,
                     parksFilterDataStore = container.parksFilterDataStore,
-                    countriesRepository = container.countriesRepository
+                    countriesRepository = container.countriesRepository,
+                    userNotifier = container.userNotifier,
+                    locationService = container.locationService
                 )
             }
         }
+    }
+
+    private fun cameraPositionForCity(city: City): MapCameraPosition? {
+        val parsedCoordinates = parseCityCoordinates(city)
+        return if (parsedCoordinates != null) {
+            MapCameraPosition(
+                target = parsedCoordinates,
+                zoom = CITY_CAMERA_ZOOM
+            )
+        } else {
+            logger.d(
+                TAG,
+                "Не удалось построить камеру для города ${city.name}: координаты не парсятся"
+            )
+            null
+        }
+    }
+
+    private fun normalizeSelectedCityParks(
+        parks: List<Park>,
+        selectedCity: City?
+    ): List<Park> {
+        val cityCoordinates = selectedCity?.let(::parseCityCoordinates)
+        val parksWithDistance = if (cityCoordinates != null && parks.isNotEmpty()) {
+            parks.mapNotNull { park ->
+                val latitude = park.latitude.toDoubleOrNull() ?: return@mapNotNull null
+                val longitude = park.longitude.toDoubleOrNull() ?: return@mapNotNull null
+                if (!isValidCoordinates(latitude, longitude)) {
+                    return@mapNotNull null
+                }
+
+                park to haversineDistanceKm(
+                    startLatitude = cityCoordinates.latitude,
+                    startLongitude = cityCoordinates.longitude,
+                    endLatitude = latitude,
+                    endLongitude = longitude
+                )
+            }
+        } else {
+            emptyList()
+        }
+
+        return when {
+            selectedCity == null || parks.isEmpty() -> parks
+            cityCoordinates == null -> {
+                logger.d(
+                    TAG,
+                    "Нормализация города ${selectedCity.name} пропущена: координаты не парсятся"
+                )
+                parks
+            }
+
+            parksWithDistance.isEmpty() -> parks
+            parksWithDistance.maxOf { it.second } <= SUSPICIOUS_CITY_RADIUS_KM -> {
+                logger.d(
+                    TAG,
+                    "Фильтр города ${selectedCity.name} выглядит консистентно: " +
+                        "${parksWithDistance.size} parks, " +
+                        "farthestDistanceKm=${parksWithDistance.maxOf { it.second }}"
+                )
+                parks
+            }
+
+            else -> normalizeWideCityFilter(
+                parks = parks,
+                selectedCity = selectedCity,
+                parksWithDistance = parksWithDistance
+            )
+        }
+    }
+
+    private fun normalizeWideCityFilter(
+        parks: List<Park>,
+        selectedCity: City,
+        parksWithDistance: List<Pair<Park, Double>>
+    ): List<Park> {
+        val farthestDistance = parksWithDistance.maxOf { it.second }
+        val normalized = parksWithDistance
+            .filter { (_, distanceKm) -> distanceKm <= NORMALIZED_CITY_RADIUS_KM }
+            .map { it.first }
+
+        logger.d(
+            TAG,
+            "Нормализуем parks для города ${selectedCity.name}: base=${parks.size}, " +
+                "valid=${parksWithDistance.size}, normalized=${normalized.size}, " +
+                "farthestDistanceKm=$farthestDistance, radiusKm=$NORMALIZED_CITY_RADIUS_KM"
+        )
+
+        return normalized.ifEmpty { parks }
+    }
+
+    private fun haversineDistanceKm(
+        startLatitude: Double,
+        startLongitude: Double,
+        endLatitude: Double,
+        endLongitude: Double
+    ): Double {
+        val latitudeDelta = Math.toRadians(endLatitude - startLatitude)
+        val longitudeDelta = Math.toRadians(endLongitude - startLongitude)
+        val startLatitudeRad = Math.toRadians(startLatitude)
+        val endLatitudeRad = Math.toRadians(endLatitude)
+
+        val haversine = kotlin.math.sin(latitudeDelta / 2).pow(2.0) +
+            kotlin.math.cos(startLatitudeRad) * kotlin.math.cos(endLatitudeRad) *
+            kotlin.math.sin(longitudeDelta / 2).pow(2.0)
+        val angularDistance = 2 * kotlin.math.atan2(
+            kotlin.math.sqrt(haversine),
+            kotlin.math.sqrt(1 - haversine)
+        )
+        return EARTH_RADIUS_KM * angularDistance
+    }
+
+    private fun parseCityCoordinates(city: City): UiCoordinates? {
+        val latitude = city.lat.toDoubleOrNull()
+        val longitude = city.lon.toDoubleOrNull()
+        return if (
+            latitude != null &&
+            longitude != null &&
+            isValidCoordinates(latitude, longitude)
+        ) {
+            UiCoordinates(latitude = latitude, longitude = longitude)
+        } else {
+            null
+        }
+    }
+
+    private fun isValidCoordinates(latitude: Double, longitude: Double): Boolean {
+        return latitude in MIN_LATITUDE..MAX_LATITUDE &&
+            longitude in MIN_LONGITUDE..MAX_LONGITUDE
     }
 
     override fun updateParks(parks: List<Park>) {
@@ -166,6 +346,35 @@ class ParksRootViewModel(
                 permissionDialogCause = PermissionDialogCause.FOREVER_DENIED
             )
         }
+    }
+
+    override fun onLocationSettingsResolutionResult(succeeded: Boolean) {
+        logger.d(TAG, "Результат resolution dialog геолокации: $succeeded")
+        if (!succeeded) {
+            _uiState.value = _uiState.value.copy(
+                mapState = _uiState.value.mapState.copy(isLoadingLocation = false)
+            )
+            userNotifier.showInfo("Включение геолокации отменено")
+            return
+        }
+
+        if (!_uiState.value.mapState.locationPermissionGranted) {
+            _uiState.value = _uiState.value.copy(
+                mapState = _uiState.value.mapState.copy(isLoadingLocation = false)
+            )
+            userNotifier.handleError(
+                AppError.LocationFailed(
+                    message = "Нет разрешения на геолокацию",
+                    cause = SecurityException("Location permission is not granted")
+                )
+            )
+            return
+        }
+
+        _uiState.value = _uiState.value.copy(
+            mapState = _uiState.value.mapState.copy(isLoadingLocation = true)
+        )
+        getCurrentLocationAndUpdate()
     }
 
     override fun onDismissDialog() {
@@ -274,9 +483,14 @@ class ParksRootViewModel(
         val cityId = city?.id?.toIntOrNull()
         if (city != null && cityId != null) {
             val newFilter = _uiState.value.localFilter.copy(selectedCityId = cityId)
+            val cityCameraPosition = cameraPositionForCity(city)
             _uiState.value = _uiState.value.copy(
                 localFilter = newFilter,
-                selectedCity = city
+                selectedCity = city,
+                mapState = _uiState.value.mapState.copy(
+                    selectedParkId = null,
+                    cameraPosition = cityCameraPosition
+                )
             )
             viewModelScope.launch {
                 parksFilterDataStore.saveFilter(newFilter)
@@ -290,7 +504,10 @@ class ParksRootViewModel(
         val newFilter = _uiState.value.localFilter.copy(selectedCityId = null)
         _uiState.value = _uiState.value.copy(
             localFilter = newFilter,
-            selectedCity = null
+            selectedCity = null,
+            mapState = _uiState.value.mapState.copy(
+                selectedParkId = null
+            )
         )
         viewModelScope.launch {
             parksFilterDataStore.saveFilter(newFilter)
@@ -301,6 +518,163 @@ class ParksRootViewModel(
     override fun onTabSelected(tab: ParksTab) {
         logger.d(TAG, "onTabSelected: $tab")
         selectedTab.value = tab
+    }
+
+    override fun onMapEvent(event: MapEvent) {
+        if (shouldIgnoreMapEvent(event)) return
+
+        logger.d(TAG, "onMapEvent: $event")
+        when (event) {
+            is MapEvent.SelectPark -> updateMapState { it.copy(selectedParkId = event.parkId) }
+            is MapEvent.ClearSelection -> updateMapState { it.copy(selectedParkId = null) }
+            is MapEvent.ClusterClick -> handleClusterClick(event)
+            is MapEvent.CenterOnUser -> handleCenterOnUser()
+            is MapEvent.OnLocationPermissionResult -> handleLocationPermissionResult(event)
+            is MapEvent.OnCameraIdle -> handleCameraIdle(event)
+            is MapEvent.OnMapLoadFailed -> handleMapLoadFailed(event)
+            is MapEvent.OnMapReady -> handleMapReady()
+        }
+    }
+
+    private fun shouldIgnoreMapEvent(event: MapEvent): Boolean {
+        return event is MapEvent.OnLocationPermissionResult &&
+            _uiState.value.mapState.locationPermissionGranted == event.granted
+    }
+
+    private fun updateMapState(transform: (MapUiState) -> MapUiState) {
+        _uiState.value = _uiState.value.copy(mapState = transform(_uiState.value.mapState))
+    }
+
+    private fun handleClusterClick(event: MapEvent.ClusterClick) {
+        updateMapState {
+            it.copy(
+                cameraPosition = MapCameraPosition(
+                    target = event.target,
+                    zoom = event.expansionZoom.toDouble()
+                )
+            )
+        }
+    }
+
+    private fun handleCenterOnUser() {
+        when {
+            _uiState.value.mapState.isLoadingLocation -> {
+                logger.d(TAG, "Повторный запрос геолокации игнорируется: уже идёт загрузка")
+            }
+
+            !_uiState.value.mapState.locationPermissionGranted -> {
+                userNotifier.handleError(
+                    AppError.LocationFailed(
+                        message = "Нет разрешения на геолокацию",
+                        cause = SecurityException("Location permission is not granted")
+                    )
+                )
+            }
+
+            else -> startCenterOnUserFlow()
+        }
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private fun startCenterOnUserFlow() {
+        updateMapState { it.copy(isLoadingLocation = true) }
+        viewModelScope.launch {
+            try {
+                val settingsResult = locationService.checkLocationSettings()
+                settingsResult.fold(
+                    onSuccess = ::handleLocationSettingsResult,
+                    onFailure = { error ->
+                        logger.e(TAG, "Ошибка проверки location settings", error)
+                        getCurrentLocationAndUpdate()
+                    }
+                )
+            } catch (error: Exception) {
+                logger.e(TAG, "Неожиданная ошибка в flow геолокации", error)
+                userNotifier.handleError(
+                    AppError.LocationFailed(
+                        message = error.message ?: "Не удалось получить геолокацию",
+                        cause = error
+                    )
+                )
+                updateMapState { it.copy(isLoadingLocation = false) }
+            }
+        }
+    }
+
+    private fun handleLocationSettingsResult(checkResult: LocationSettingsCheckResult) {
+        when (checkResult) {
+            is LocationSettingsCheckResult.SettingsOk -> getCurrentLocationAndUpdate()
+            is LocationSettingsCheckResult.NeedsResolution -> {
+                logger.d(TAG, "Location settings need resolution")
+                updateMapState { it.copy(isLoadingLocation = false) }
+                viewModelScope.launch {
+                    _events.emit(ParksRootEvent.ResolveLocationSettings(checkResult.intentSender))
+                }
+            }
+
+            is LocationSettingsCheckResult.SettingsDisabled -> {
+                logger.d(TAG, "Location settings disabled")
+                userNotifier.handleError(
+                    AppError.LocationDisabled(message = "Геолокация устройства отключена")
+                )
+                updateMapState { it.copy(isLoadingLocation = false) }
+            }
+        }
+    }
+
+    private fun handleLocationPermissionResult(event: MapEvent.OnLocationPermissionResult) {
+        updateMapState { it.copy(locationPermissionGranted = event.granted) }
+    }
+
+    private fun handleCameraIdle(event: MapEvent.OnCameraIdle) {
+        updateMapState { it.copy(cameraPosition = event.position) }
+    }
+
+    private fun handleMapLoadFailed(event: MapEvent.OnMapLoadFailed) {
+        logger.e(TAG, "Ошибка загрузки карты: ${event.message}")
+        userNotifier.handleError(AppError.Generic(message = event.message))
+    }
+
+    private fun handleMapReady() {
+        updateMapState { it.copy(isMapReady = true) }
+    }
+
+    private fun getCurrentLocationAndUpdate() {
+        viewModelScope.launch {
+            locationService.getCurrentLocation().fold(
+                onSuccess = { coordinates ->
+                    _uiState.value = _uiState.value.copy(
+                        mapState = _uiState.value.mapState.copy(
+                            userLocation = UiCoordinates(
+                                latitude = coordinates.latitude,
+                                longitude = coordinates.longitude
+                            ),
+                            cameraPosition = MapCameraPosition(
+                                target = UiCoordinates(
+                                    latitude = coordinates.latitude,
+                                    longitude = coordinates.longitude
+                                ),
+                                zoom = USER_LOCATION_CAMERA_ZOOM
+                            ),
+                            isLoadingLocation = false,
+                            isFollowingUser = false
+                        )
+                    )
+                },
+                onFailure = { error ->
+                    logger.e(TAG, "Ошибка получения геолокации", error)
+                    userNotifier.handleError(
+                        AppError.LocationFailed(
+                            message = error.message ?: "Не удалось получить геолокацию",
+                            cause = error
+                        )
+                    )
+                    _uiState.value = _uiState.value.copy(
+                        mapState = _uiState.value.mapState.copy(isLoadingLocation = false)
+                    )
+                }
+            )
+        }
     }
 
     private fun requestPermission() {

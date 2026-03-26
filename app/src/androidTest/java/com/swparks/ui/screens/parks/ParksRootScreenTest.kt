@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
@@ -469,7 +470,7 @@ class ParksRootScreenTest {
 
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithContentDescription("map_placeholder")
+            .onNodeWithTag("park_map")
             .assertIsDisplayed()
     }
 
@@ -496,7 +497,7 @@ class ParksRootScreenTest {
 
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithContentDescription("map_placeholder")
+            .onNodeWithTag("park_map")
             .assertIsNotDisplayed()
     }
 
@@ -523,7 +524,7 @@ class ParksRootScreenTest {
 
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithContentDescription("map_placeholder")
+            .onNodeWithTag("park_map")
             .assertIsDisplayed()
     }
 
@@ -556,7 +557,7 @@ class ParksRootScreenTest {
 
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithContentDescription("map_placeholder")
+            .onNodeWithTag("park_map")
             .assertIsNotDisplayed()
     }
 }

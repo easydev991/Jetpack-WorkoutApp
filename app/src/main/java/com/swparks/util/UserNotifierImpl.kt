@@ -88,6 +88,10 @@ class UserNotifierImpl(
                 logger.e(TAG, "Ошибка геолокации: ${error.message}")
             }
 
+            is AppError.LocationDisabled -> {
+                logger.e(TAG, "Геолокация устройства отключена: ${error.message}")
+            }
+
             is AppError.GeocodingFailed -> {
                 logger.e(TAG, "Ошибка геокодирования: ${error.message}")
             }

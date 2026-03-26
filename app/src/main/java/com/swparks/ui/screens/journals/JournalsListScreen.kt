@@ -420,8 +420,8 @@ private fun JournalsDialogs(
 
         if (showTextEntrySheet && textEntryMode != null) {
             TextEntrySheetHost(
-                show = showTextEntrySheet,
-                mode = textEntryMode!!,
+                show = true,
+                mode = textEntryMode,
                 onDismissed = actions.onTextEntryDismiss,
                 onSendSuccess = actions.onTextEntrySuccess
             )

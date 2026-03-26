@@ -85,6 +85,11 @@ sealed class AppError {
         val cause: Throwable? = null
     ) : AppError()
 
+    data class LocationDisabled(
+        override val message: String,
+        val cause: Throwable? = null
+    ) : AppError()
+
     /**
      * Ошибка геокодирования.
      *

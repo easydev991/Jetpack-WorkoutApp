@@ -8,12 +8,15 @@ import com.swparks.data.model.ParkFilter
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
 import com.swparks.data.preferences.ParksFilterDataStore
+import com.swparks.domain.model.LocationCoordinates
+import com.swparks.domain.provider.LocationService
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.FilterParksUseCase
 import com.swparks.domain.usecase.ICreateParkLocationHandler
 import com.swparks.domain.usecase.IFilterParksUseCase
 import com.swparks.ui.model.ParksTab
 import com.swparks.util.Logger
+import com.swparks.util.UserNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -21,6 +24,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -41,21 +45,25 @@ class ParksRootViewModelTest {
     private lateinit var filterParksUseCase: IFilterParksUseCase
     private lateinit var parksFilterDataStore: ParksFilterDataStore
     private lateinit var countriesRepository: CountriesRepository
+    private lateinit var userNotifier: UserNotifier
+    private lateinit var locationService: LocationService
     private lateinit var viewModel: ParksRootViewModel
 
     private fun createPark(
         id: Long,
         cityID: Int,
         sizeID: Int,
-        typeID: Int
+        typeID: Int,
+        latitude: String = "0.0",
+        longitude: String = "0.0"
     ) = Park(
         id = id,
         name = "Park$id",
         cityID = cityID,
         sizeID = sizeID,
         typeID = typeID,
-        longitude = "0.0",
-        latitude = "0.0",
+        longitude = longitude,
+        latitude = latitude,
         address = "Address$id",
         countryID = 1,
         preview = "preview$id"
@@ -71,12 +79,16 @@ class ParksRootViewModelTest {
         }
         countriesRepository = mockk(relaxed = true)
         coEvery { countriesRepository.getAllCities() } returns emptyList()
+        userNotifier = mockk(relaxed = true)
+        locationService = mockk(relaxed = true)
         viewModel = ParksRootViewModel(
             createParkLocationHandler = createParkLocationHandler,
             logger = logger,
             filterParksUseCase = filterParksUseCase,
             parksFilterDataStore = parksFilterDataStore,
-            countriesRepository = countriesRepository
+            countriesRepository = countriesRepository,
+            userNotifier = userNotifier,
+            locationService = locationService
         )
     }
 
@@ -226,6 +238,115 @@ class ParksRootViewModelTest {
     }
 
     @Test
+    fun onMapEvent_clusterClick_updatesCameraPosition() {
+        val target = com.swparks.ui.state.UiCoordinates(latitude = 55.75, longitude = 37.61)
+
+        viewModel.onMapEvent(com.swparks.ui.state.MapEvent.ClusterClick(target, 12))
+
+        val cameraPosition = viewModel.uiState.value.mapState.cameraPosition
+        assertEquals(target, cameraPosition?.target)
+        assertEquals(12.0, cameraPosition?.zoom ?: 0.0, 0.0)
+    }
+
+    @Test
+    fun onCitySelected_updatesCameraPositionToSelectedCity() = runTest {
+        val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
+        coEvery { countriesRepository.getAllCities() } returns listOf(city)
+        coEvery { countriesRepository.getCityById(any()) } returns city
+        every { filterParksUseCase.invoke(any(), any()) } returns emptyList()
+
+        val viewModel = ParksRootViewModel(
+            createParkLocationHandler = createParkLocationHandler,
+            logger = logger,
+            filterParksUseCase = filterParksUseCase,
+            parksFilterDataStore = parksFilterDataStore,
+            countriesRepository = countriesRepository,
+            userNotifier = userNotifier,
+            locationService = locationService
+        )
+        advanceUntilIdle()
+
+        viewModel.onMapEvent(
+            com.swparks.ui.state.MapEvent.OnCameraIdle(
+                com.swparks.ui.state.MapCameraPosition(
+                    target = com.swparks.ui.state.UiCoordinates(64.0, 94.0),
+                    zoom = 3.5
+                )
+            )
+        )
+        viewModel.onCitySelected("Moscow")
+
+        val cameraPosition = viewModel.uiState.value.mapState.cameraPosition
+        assertEquals(55.75, cameraPosition?.target?.latitude ?: 0.0, 0.0)
+        assertEquals(37.61, cameraPosition?.target?.longitude ?: 0.0, 0.0)
+        assertEquals(11.0, cameraPosition?.zoom ?: 0.0, 0.0)
+    }
+
+    @Test
+    fun onClearCityFilter_preservesCurrentCameraPosition() = runTest {
+        val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
+        coEvery { countriesRepository.getAllCities() } returns listOf(city)
+        coEvery { countriesRepository.getCityById(any()) } returns city
+        every { filterParksUseCase.invoke(any(), any()) } returns emptyList()
+
+        val viewModel = ParksRootViewModel(
+            createParkLocationHandler = createParkLocationHandler,
+            logger = logger,
+            filterParksUseCase = filterParksUseCase,
+            parksFilterDataStore = parksFilterDataStore,
+            countriesRepository = countriesRepository,
+            userNotifier = userNotifier,
+            locationService = locationService
+        )
+        advanceUntilIdle()
+
+        viewModel.onCitySelected("Moscow")
+        val cityCamera = viewModel.uiState.value.mapState.cameraPosition
+        viewModel.onClearCityFilter()
+
+        assertEquals(cityCamera, viewModel.uiState.value.mapState.cameraPosition)
+        assertNull(viewModel.uiState.value.selectedCity)
+    }
+
+    @Test
+    fun onLocationSettingsResolutionResult_success_fetchesCurrentLocation() = runTest {
+        val coordinates = LocationCoordinates(latitude = 55.75, longitude = 37.61)
+        coEvery { locationService.getCurrentLocation() } returns Result.success(coordinates)
+        viewModel.onMapEvent(com.swparks.ui.state.MapEvent.OnLocationPermissionResult(true))
+
+        viewModel.onLocationSettingsResolutionResult(true)
+        advanceUntilIdle()
+
+        val userLocation = viewModel.uiState.value.mapState.userLocation
+        assertEquals(55.75, userLocation?.latitude ?: 0.0, 0.0)
+        assertEquals(37.61, userLocation?.longitude ?: 0.0, 0.0)
+        val cameraPosition = viewModel.uiState.value.mapState.cameraPosition
+        assertEquals(55.75, cameraPosition?.target?.latitude ?: 0.0, 0.0)
+        assertEquals(37.61, cameraPosition?.target?.longitude ?: 0.0, 0.0)
+        assertEquals(15.0, cameraPosition?.zoom ?: 0.0, 0.0)
+        assertFalse(viewModel.uiState.value.mapState.isFollowingUser)
+        assertFalse(viewModel.uiState.value.mapState.isLoadingLocation)
+    }
+
+    @Test
+    fun onLocationSettingsResolutionResult_cancel_stopsLoading() {
+        viewModel.onMapEvent(com.swparks.ui.state.MapEvent.OnLocationPermissionResult(true))
+
+        viewModel.onLocationSettingsResolutionResult(false)
+
+        assertFalse(viewModel.uiState.value.mapState.isLoadingLocation)
+    }
+
+    @Test
+    fun onMapEvent_centerOnUser_withoutPermission_doesNotStartLoading() {
+        viewModel.onMapEvent(com.swparks.ui.state.MapEvent.OnLocationPermissionResult(false))
+
+        viewModel.onMapEvent(com.swparks.ui.state.MapEvent.CenterOnUser)
+
+        assertFalse(viewModel.uiState.value.mapState.isLoadingLocation)
+    }
+
+    @Test
     fun onShowFilterDialog_showsDialogWithCurrentFilter() {
         viewModel.onShowFilterDialog()
 
@@ -337,7 +458,9 @@ class ParksRootViewModelTest {
             logger = logger,
             filterParksUseCase = filterParksUseCase,
             parksFilterDataStore = parksFilterDataStore,
-            countriesRepository = countriesRepository
+            countriesRepository = countriesRepository,
+            userNotifier = userNotifier,
+            locationService = locationService
         )
         advanceUntilIdle()
 
@@ -384,7 +507,9 @@ class ParksRootViewModelTest {
             logger = logger,
             filterParksUseCase = realFilterParksUseCase,
             parksFilterDataStore = parksFilterDataStore,
-            countriesRepository = countriesRepository
+            countriesRepository = countriesRepository,
+            userNotifier = userNotifier,
+            locationService = locationService
         )
         advanceUntilIdle()
 
@@ -416,6 +541,104 @@ class ParksRootViewModelTest {
         val state = viewModel.uiState.value
         assertEquals(expectedFiltered.size, state.filteredParks.size)
         assertEquals(expectedFiltered.first().id, state.filteredParks.first().id)
+    }
+
+    @Test
+    fun onCitySelected_whenCityIdMatchesRemoteParks_normalizesByDistanceToSelectedCity() = runTest {
+        val city = City(id = "1", name = "Moscow", lat = "55.753215", lon = "37.622504")
+        val nearCenterPark = createPark(
+            id = 1L,
+            cityID = 1,
+            sizeID = 1,
+            typeID = 1,
+            latitude = "55.751244",
+            longitude = "37.618423"
+        )
+        val secondNearPark = createPark(
+            id = 2L,
+            cityID = 1,
+            sizeID = 1,
+            typeID = 1,
+            latitude = "55.765000",
+            longitude = "37.605000"
+        )
+        val farAwayPark = createPark(
+            id = 3L,
+            cityID = 1,
+            sizeID = 1,
+            typeID = 1,
+            latitude = "48.856613",
+            longitude = "2.352222"
+        )
+        val allParks = listOf(nearCenterPark, secondNearPark, farAwayPark)
+        val realFilterParksUseCase = FilterParksUseCase()
+
+        coEvery { countriesRepository.getAllCities() } returns listOf(city)
+        coEvery { countriesRepository.getCityById("1") } returns city
+
+        val viewModel = ParksRootViewModel(
+            createParkLocationHandler = createParkLocationHandler,
+            logger = logger,
+            filterParksUseCase = realFilterParksUseCase,
+            parksFilterDataStore = parksFilterDataStore,
+            countriesRepository = countriesRepository,
+            userNotifier = userNotifier,
+            locationService = locationService
+        )
+        advanceUntilIdle()
+
+        viewModel.updateParks(allParks)
+        viewModel.onCitySelected("Moscow")
+        advanceUntilIdle()
+
+        val filteredIds = viewModel.uiState.value.filteredParks.map { it.id }
+        assertEquals(listOf(1L, 2L), filteredIds)
+    }
+
+    @Test
+    fun init_whenFilterRestored_restoresSelectedCityAndNormalizesFilteredParks() = runTest {
+        val city = City(id = "1", name = "Moscow", lat = "55.753215", lon = "37.622504")
+        val nearCenterPark = createPark(
+            id = 1L,
+            cityID = 1,
+            sizeID = 1,
+            typeID = 1,
+            latitude = "55.751244",
+            longitude = "37.618423"
+        )
+        val farAwayPark = createPark(
+            id = 2L,
+            cityID = 1,
+            sizeID = 1,
+            typeID = 1,
+            latitude = "64.540100",
+            longitude = "40.543300"
+        )
+        val allParks = listOf(nearCenterPark, farAwayPark)
+        val realFilterParksUseCase = FilterParksUseCase()
+        val restoredFilter = ParkFilter(selectedCityId = 1)
+        val restoringDataStore = mockk<ParksFilterDataStore>(relaxed = true) {
+            coEvery { filter } returns flowOf(restoredFilter)
+        }
+
+        coEvery { countriesRepository.getAllCities() } returns listOf(city)
+        coEvery { countriesRepository.getCityById("1") } returns city
+
+        val viewModel = ParksRootViewModel(
+            createParkLocationHandler = createParkLocationHandler,
+            logger = logger,
+            filterParksUseCase = realFilterParksUseCase,
+            parksFilterDataStore = restoringDataStore,
+            countriesRepository = countriesRepository,
+            userNotifier = userNotifier,
+            locationService = locationService
+        )
+
+        viewModel.updateParks(allParks)
+        advanceUntilIdle()
+
+        assertEquals("Moscow", viewModel.uiState.value.selectedCity?.name)
+        assertEquals(listOf(1L), viewModel.uiState.value.filteredParks.map { it.id })
     }
 
     @Test

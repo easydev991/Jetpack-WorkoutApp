@@ -19,6 +19,7 @@ fun AppError.toUiText(context: Context): String {
         is AppError.Server -> toServerUiText(context)
         is AppError.Generic -> message
         is AppError.LocationFailed -> toLocationFailedUiText(context)
+        is AppError.LocationDisabled -> toLocationDisabledUiText(context)
         is AppError.GeocodingFailed -> toGeocodingUiText(context)
     }
 }
@@ -83,6 +84,10 @@ private fun AppError.LocationFailed.toLocationFailedUiText(context: Context): St
     } else {
         context.getString(R.string.location_fetch_failed)
     }
+}
+
+private fun AppError.LocationDisabled.toLocationDisabledUiText(context: Context): String {
+    return context.getString(R.string.location_settings_disabled)
 }
 
 /**

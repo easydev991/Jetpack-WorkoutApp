@@ -25,6 +25,7 @@ material = "1.7.8"
 turbine = "1.2.1"
 tink = "1.20.0"
 playServicesLocation = "21.3.0"
+maplibre = "13.0.1"
 
 [libraries]
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
@@ -62,6 +63,7 @@ robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectr
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 google-crypto-tink = { group = "com.google.crypto.tink", name = "tink-android", version.ref = "tink" }
 google-play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
+maplibre-android = { module = "org.maplibre.gl:android-sdk", version.ref = "maplibre" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

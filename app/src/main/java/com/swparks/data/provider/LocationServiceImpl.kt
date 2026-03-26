@@ -7,15 +7,26 @@ import android.location.Location
 import android.location.LocationManager
 import androidx.annotation.RequiresPermission
 import androidx.core.content.ContextCompat
+import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.Priority
+import com.google.android.gms.location.SettingsClient
 import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.android.gms.tasks.Tasks
 import com.swparks.domain.model.LocationCoordinates
 import com.swparks.domain.provider.LocationService
+import com.swparks.domain.provider.LocationSettingsCheckResult
 import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 
 class LocationServiceImpl(
@@ -23,11 +34,18 @@ class LocationServiceImpl(
     private val fusedLocationClientProvider: (Context) -> FusedLocationProviderClient = { ctx ->
         LocationServices.getFusedLocationProviderClient(ctx)
     },
+    private val settingsClientProvider: (Context) -> SettingsClient = { ctx ->
+        LocationServices.getSettingsClient(ctx)
+    },
     private val locationTimeoutMillis: Long = LOCATION_TIMEOUT_MILLIS
 ) : LocationService {
 
     private val fusedLocationClient: FusedLocationProviderClient by lazy {
         fusedLocationClientProvider(context)
+    }
+
+    private val settingsClient: SettingsClient by lazy {
+        settingsClientProvider(context)
     }
 
     @RequiresPermission(
@@ -124,6 +142,57 @@ class LocationServiceImpl(
         }
     }
 
+    override suspend fun checkLocationSettings(): Result<LocationSettingsCheckResult> {
+        return withContext(Dispatchers.IO) {
+            try {
+                if (!hasLocationPermission()) {
+                    return@withContext Result.success(LocationSettingsCheckResult.SettingsDisabled)
+                }
+
+                val locationRequest = LocationRequest.Builder(
+                    Priority.PRIORITY_HIGH_ACCURACY,
+                    LOCATION_REQUEST_INTERVAL_MILLIS
+                ).build()
+
+                val locationSettingsRequest = LocationSettingsRequest.Builder()
+                    .addLocationRequest(locationRequest)
+                    .setAlwaysShow(true)
+                    .build()
+
+                val task = settingsClient.checkLocationSettings(locationSettingsRequest)
+                val result = Tasks.await(task, SETTINGS_CHECK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+
+                val states = result.locationSettingsStates
+                if (states?.isGpsUsable == true || states?.isNetworkLocationUsable == true) {
+                    Result.success(LocationSettingsCheckResult.SettingsOk)
+                } else {
+                    Result.success(LocationSettingsCheckResult.SettingsDisabled)
+                }
+            } catch (e: ResolvableApiException) {
+                Result.success(LocationSettingsCheckResult.NeedsResolution(e.resolution.intentSender))
+            } catch (@Suppress("SwallowedException") e: SecurityException) {
+                Result.success(LocationSettingsCheckResult.SettingsDisabled)
+            } catch (e: ExecutionException) {
+                when (val cause = e.cause) {
+                    is ResolvableApiException -> {
+                        Result.success(
+                            LocationSettingsCheckResult.NeedsResolution(cause.resolution.intentSender)
+                        )
+                    }
+
+                    is SecurityException -> Result.success(LocationSettingsCheckResult.SettingsDisabled)
+                    null -> Result.failure(e)
+                    else -> Result.failure(cause)
+                }
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                Result.failure(e)
+            } catch (e: CancellationException) {
+                Result.failure(e)
+            }
+        }
+    }
+
     private fun hasLocationPermission(): Boolean {
         val finePermissionGranted = ContextCompat.checkSelfPermission(
             context,
@@ -145,5 +214,7 @@ class LocationServiceImpl(
 
     private companion object {
         const val LOCATION_TIMEOUT_MILLIS = 10_000L
+        const val LOCATION_REQUEST_INTERVAL_MILLIS = 10_000L
+        const val SETTINGS_CHECK_TIMEOUT_SECONDS = 30L
     }
 }

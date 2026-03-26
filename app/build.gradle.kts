@@ -101,6 +101,9 @@ dependencies {
     // Play Services Location
     implementation(libs.google.play.services.location)
 
+    // MapLibre
+    implementation(libs.maplibre.android)
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
