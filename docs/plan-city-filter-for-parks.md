@@ -116,18 +116,22 @@
 ## Этап 6: Исправление бага — фильтры Size/Type теряют selectedCityId ✅
 
 ### Баг
+
 `onFilterApply()` сохранял `localFilter` (size+type от диалога) **без** `selectedCityId` — город из `uiState.selectedCity` терялся.
 
 ### Архитектура
+
 `localFilter` в `ParksFilterDialog` — только size/type. `onFilterApply()` должен **снаружи** объединить с `selectedCityId` из `uiState.selectedCity`.
 
 ### 6.1: Тесты (Red) ✅
+
 **Файлы:** `app/src/test/java/com/swparks/ui/viewmodel/ParksRootViewModelTest.kt`
 
 - [x] Тест 6.1.1 (`onFilterApply_whenCitySelected_savesFilterWithSelectedCityId`) — проверяет что `saveFilter` получает `selectedCityId = 1`
 - [x] Тест 6.1.2 (`onFilterApply_whenCitySelectedAndSizeFilterApplied_filtersParksByBoth`) — end-to-end: город + size фильтр вместе, `filteredParks` содержит только park2
 
 ### 6.2: Исправление (Green) ✅
+
 **Файл:** `app/src/main/java/com/swparks/ui/viewmodel/ParksRootViewModel.kt`
 
 ```kotlin
@@ -150,11 +154,13 @@ override fun onFilterApply() {
 ## Этап 7: Экран "Парки не найдены" (NoParksFoundView)
 
 ### iOS-аналог
+
 `ParksMapScreen.NoParksFoundView` — overlay-карточка поверх контента с парками:
 - Показывается когда `showNoParksFound = isFilteredParksEmpty && didParksManagerLoad && !isLoading`
 - Две кнопки: "Выбрать другой город" (всегда) + "Изменить фильтры" (только если `isFilterEdited`)
 
 ### Архитектура Android
+
 - `showNoParksFound` (computed): `filteredParks.isEmpty() && selectedCity != null && !isLoadingFilter && !isLoadingCities && hasParks`
 - `hasParks = allParks.isNotEmpty()` — флаг что парки загружены (добавить в ViewModel)
 - `isSizeTypeFilterEdited = ParkFilter(sizes=localFilter.sizes, types=localFilter.types) != ParkFilter()` — **НЕ** `localFilter.isDefault` (иначе кнопка "Изменить фильтры" покажется и при выбранном городе)
@@ -162,6 +168,7 @@ override fun onFilterApply() {
 - Действия: `onNavigateToSelectCity` (параметр composable, навигация) + `onShowFilterDialog()` (ViewModel)
 
 ### 7.1: Unit-тесты ViewModel (TDD — Red) ✅
+
 **Файл:** `app/src/test/java/com/swparks/ui/viewmodel/ParksRootViewModelTest.kt`
 
 **Примечание:** `showNoParksFound` и `isSizeTypeFilterEdited` — computed extension properties на `ParksRootUiState`. Тесты проверяют `viewModel.uiState.value.showNoParksFound`.
@@ -174,6 +181,7 @@ override fun onFilterApply() {
 - [x] Тест: `isSizeTypeFilterEdited = false` когда только город выбран (size/type дефолтные)
 
 ### 7.2: Instrumented UI-тесты (TDD — Red) ✅
+
 **Файл:** `app/src/androidTest/java/com/swparks/ui/screens/parks/ParksRootScreenTest.kt`
 
 - [x] Тест: `NoParksFoundView` отображается когда `showNoParksFound = true`
@@ -182,6 +190,7 @@ override fun onFilterApply() {
 - [x] Тест: кнопка "Изменить фильтры" видна только при `isSizeTypeFilterEdited = true`
 
 ### 7.3: Реализация (Green) ✅
+
 **Файл:** `app/src/main/java/com/swparks/ui/screens/parks/NoParksFoundView.kt`
 
 - [x] Создать `NoParksFoundView` composable: карточка с заголовком из `no_parks_found` ("Площадки не найдены")
@@ -189,6 +198,7 @@ override fun onFilterApply() {
 - [x] Кнопка "Изменить фильтры" (`change_filters`) — вызывает `onOpenFilters` (только при `isSizeTypeFilterEdited`)
 - [x] Добавить `showNoParksFound` (computed property) в `ParksRootUiState`
 - [x] Добавить `hasParks: Boolean` в `ParksRootUiState` (обновляется в `updateParks()`)
+
 ```kotlin
 override fun updateParks(parks: List<Park>) {
     allParks = parks
@@ -196,6 +206,7 @@ override fun updateParks(parks: List<Park>) {
     recalculateFilteredParks()
 }
 ```
+
 - [x] Добавить `isSizeTypeFilterEdited` computed в `ParksRootUiState`
 - [x] Добавить `NoParksFoundView` overlay в `ParksRootScreen` над `ParksListView`
 - [x] Создать string resources: `select_another_city` ("Выбрать другой город" / "Select another city"), `change_filters` ("Изменить фильтры" / "Change filters")
@@ -211,6 +222,7 @@ override fun updateParks(parks: List<Park>) {
 ## Этап 8: Исправление бага — NoParksFoundView не отображается
 
 ### Баг
+
 `NoParksFoundView` не показывается когда фильтр возвращает 0 парков.
 
 **Причина:** `RootScreen.kt:324` передаёт `filteredParks` (уже отфильтрованные) в `ParksRootScreen`. Когда фильтр строгий → `filteredParks` пустой → `viewModel.updateParks(emptyList())` → `hasParks = false` → `showNoParksFound = false`.

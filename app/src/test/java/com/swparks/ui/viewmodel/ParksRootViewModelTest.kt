@@ -12,6 +12,7 @@ import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.FilterParksUseCase
 import com.swparks.domain.usecase.ICreateParkLocationHandler
 import com.swparks.domain.usecase.IFilterParksUseCase
+import com.swparks.ui.model.ParksTab
 import com.swparks.util.Logger
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -529,5 +530,24 @@ class ParksRootViewModelTest {
         val result = state.toItemListUiState()
 
         assertNull(result.selectedItem)
+    }
+
+    @Test
+    fun selectedTab_initial_shouldBeList() {
+        val state = viewModel.selectedTab.value
+        assertEquals(ParksTab.LIST, state)
+    }
+
+    @Test
+    fun onTabSelected_whenMap_thenSelectedTabIsMap() {
+        viewModel.onTabSelected(ParksTab.MAP)
+        assertEquals(ParksTab.MAP, viewModel.selectedTab.value)
+    }
+
+    @Test
+    fun onTabSelected_whenList_thenSelectedTabIsList() {
+        viewModel.onTabSelected(ParksTab.MAP)
+        viewModel.onTabSelected(ParksTab.LIST)
+        assertEquals(ParksTab.LIST, viewModel.selectedTab.value)
     }
 }

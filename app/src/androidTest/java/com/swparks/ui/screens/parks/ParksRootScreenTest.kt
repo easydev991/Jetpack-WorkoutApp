@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -17,6 +18,7 @@ import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
 import com.swparks.data.model.User
 import com.swparks.navigation.AppState
+import com.swparks.ui.model.ParksTab
 import com.swparks.ui.viewmodel.FakeParksRootViewModel
 import org.junit.Before
 import org.junit.Rule
@@ -422,6 +424,139 @@ class ParksRootScreenTest {
         composeTestRule.waitForIdle()
         composeTestRule
             .onNodeWithContentDescription("Change filters")
+            .assertIsNotDisplayed()
+    }
+
+    @Test
+    fun whenTabSelectedIsList_listTabIsSelected() {
+        composeTestRule.setContent {
+            val navController = androidx.navigation.compose.rememberNavController()
+            val appState = AppState(navController)
+
+            Surface {
+                ParksRootScreen(
+                    parks = emptyList(),
+                    appState = appState,
+                    onCreateParkClick = {},
+                    viewModel = fakeViewModel
+                )
+            }
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule
+            .onNodeWithText("List")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun whenTabSelectedIsMap_mapPlaceholderIsDisplayed() {
+        fakeViewModel.onTabSelected(ParksTab.MAP)
+
+        composeTestRule.setContent {
+            val navController = androidx.navigation.compose.rememberNavController()
+            val appState = AppState(navController)
+
+            Surface {
+                ParksRootScreen(
+                    parks = emptyList(),
+                    appState = appState,
+                    onCreateParkClick = {},
+                    viewModel = fakeViewModel
+                )
+            }
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule
+            .onNodeWithContentDescription("map_placeholder")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun whenTabSelectedIsList_listContentIsDisplayed() {
+        fakeViewModel.setParksState(
+            hasParks = true,
+            filteredParks = listOf(createPark(1L, 1, 1, 1))
+        )
+
+        composeTestRule.setContent {
+            val navController = androidx.navigation.compose.rememberNavController()
+            val appState = AppState(navController)
+
+            Surface {
+                ParksRootScreen(
+                    parks = listOf(createPark(1L, 1, 1, 1)),
+                    appState = appState,
+                    onCreateParkClick = {},
+                    viewModel = fakeViewModel
+                )
+            }
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule
+            .onNodeWithContentDescription("map_placeholder")
+            .assertIsNotDisplayed()
+    }
+
+    @Test
+    fun whenTabChangedToMap_mapPlaceholderIsDisplayed() {
+        composeTestRule.setContent {
+            val navController = androidx.navigation.compose.rememberNavController()
+            val appState = AppState(navController)
+
+            Surface {
+                ParksRootScreen(
+                    parks = emptyList(),
+                    appState = appState,
+                    onCreateParkClick = {},
+                    viewModel = fakeViewModel
+                )
+            }
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule
+            .onNodeWithText("Map")
+            .performClick()
+
+        composeTestRule.waitForIdle()
+        composeTestRule
+            .onNodeWithContentDescription("map_placeholder")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun whenTabChangedToList_listContentIsDisplayed() {
+        fakeViewModel.onTabSelected(ParksTab.MAP)
+        fakeViewModel.setParksState(
+            hasParks = true,
+            filteredParks = listOf(createPark(1L, 1, 1, 1))
+        )
+
+        composeTestRule.setContent {
+            val navController = androidx.navigation.compose.rememberNavController()
+            val appState = AppState(navController)
+
+            Surface {
+                ParksRootScreen(
+                    parks = listOf(createPark(1L, 1, 1, 1)),
+                    appState = appState,
+                    onCreateParkClick = {},
+                    viewModel = fakeViewModel
+                )
+            }
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule
+            .onNodeWithText("List")
+            .performClick()
+
+        composeTestRule.waitForIdle()
+        composeTestRule
+            .onNodeWithContentDescription("map_placeholder")
             .assertIsNotDisplayed()
     }
 }

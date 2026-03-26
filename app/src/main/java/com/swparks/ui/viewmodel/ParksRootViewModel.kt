@@ -17,6 +17,7 @@ import com.swparks.data.preferences.ParksFilterDataStore
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.ICreateParkLocationHandler
 import com.swparks.domain.usecase.IFilterParksUseCase
+import com.swparks.ui.model.ParksTab
 import com.swparks.util.Logger
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,6 +48,8 @@ class ParksRootViewModel(
 
     override var permissionLauncher: ((Map<String, Boolean>) -> Unit)? = null
     override var openSettingsLauncher: ((Intent) -> Unit)? = null
+
+    override val selectedTab: MutableStateFlow<ParksTab> = MutableStateFlow(ParksTab.LIST)
 
     private var allParks: List<Park> = emptyList()
 
@@ -293,6 +296,11 @@ class ParksRootViewModel(
             parksFilterDataStore.saveFilter(newFilter)
         }
         recalculateFilteredParks()
+    }
+
+    override fun onTabSelected(tab: ParksTab) {
+        logger.d(TAG, "onTabSelected: $tab")
+        selectedTab.value = tab
     }
 
     private fun requestPermission() {

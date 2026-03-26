@@ -8,6 +8,7 @@ import com.swparks.data.model.Park
 import com.swparks.data.model.ParkFilter
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
+import com.swparks.ui.model.ParksTab
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -27,6 +28,8 @@ class FakeParksRootViewModel : IParksRootViewModel {
 
     override var permissionLauncher: ((Map<String, Boolean>) -> Unit)? = null
     override var openSettingsLauncher: ((Intent) -> Unit)? = null
+
+    override val selectedTab: MutableStateFlow<ParksTab> = MutableStateFlow(ParksTab.LIST)
 
     var nextDraft: NewParkDraft = NewParkDraft.EMPTY
     private val _capturedEvents = mutableListOf<ParksRootEvent>()
@@ -187,6 +190,10 @@ class FakeParksRootViewModel : IParksRootViewModel {
             localFilter = _uiState.value.localFilter.copy(selectedCityId = null),
             selectedCity = null
         )
+    }
+
+    override fun onTabSelected(tab: ParksTab) {
+        selectedTab.value = tab
     }
 
     override fun updateParks(parks: List<Park>) {

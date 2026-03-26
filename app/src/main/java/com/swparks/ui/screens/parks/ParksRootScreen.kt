@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -22,7 +23,9 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,6 +33,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.core.app.ActivityCompat
@@ -41,6 +45,7 @@ import com.swparks.navigation.AppState
 import com.swparks.ui.components.SearchCityButton
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.ParksListView
+import com.swparks.ui.model.ParksTab
 import com.swparks.ui.viewmodel.IParksRootViewModel
 import com.swparks.ui.viewmodel.ParksRootEvent
 import com.swparks.ui.viewmodel.PermissionDialogCause
@@ -62,6 +67,7 @@ fun ParksRootScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+    val selectedTab by viewModel.selectedTab.collectAsState()
 
     LaunchedEffect(uiState.isGettingLocation) {
         onGettingLocationStateChange(uiState.isGettingLocation)
@@ -89,6 +95,8 @@ fun ParksRootScreen(
         onConfirm = viewModel::onConfirmDialog,
         onOpenSettings = { intent -> viewModel.onOpenSettings(intent) }
     )
+
+    val selectedTabIndex = selectedTab.ordinal
 
     Scaffold(
         modifier = modifier,
@@ -129,6 +137,11 @@ fun ParksRootScreen(
                     .padding(innerPadding),
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
             ) {
+                ParksTabRow(
+                    selectedTabIndex = selectedTabIndex,
+                    isGettingLocation = uiState.isGettingLocation,
+                    onTabSelected = viewModel::onTabSelected
+                )
                 SearchCityButton(
                     cityName = uiState.selectedCity?.name,
                     onClick = onNavigateToSelectCity,
@@ -139,19 +152,35 @@ fun ParksRootScreen(
                     },
                     modifier = Modifier.padding(top = dimensionResource(R.dimen.spacing_small))
                 )
+                when (selectedTab) {
+                    ParksTab.MAP -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .testTag("map_placeholder")
+                        ) {
+                            Text(
+                                text = stringResource(R.string.map_coming_soon),
+                                modifier = Modifier.padding(dimensionResource(R.dimen.spacing_regular))
+                            )
+                        }
+                    }
 
-                if (uiState.showNoParksFound) {
-                    NoParksFoundView(
-                        onSelectCity = onNavigateToSelectCity,
-                        onOpenFilters = viewModel::onShowFilterDialog,
-                        isSizeTypeFilterEdited = uiState.isSizeTypeFilterEdited
-                    )
-                } else {
-                    ParksListView(
-                        modifier = Modifier.fillMaxSize(),
-                        parks = uiState.filteredParks,
-                        onParkClick = onParkClick
-                    )
+                    ParksTab.LIST -> {
+                        if (uiState.showNoParksFound) {
+                            NoParksFoundView(
+                                onSelectCity = onNavigateToSelectCity,
+                                onOpenFilters = viewModel::onShowFilterDialog,
+                                isSizeTypeFilterEdited = uiState.isSizeTypeFilterEdited
+                            )
+                        } else {
+                            ParksListView(
+                                modifier = Modifier.fillMaxSize(),
+                                parks = uiState.filteredParks,
+                                onParkClick = onParkClick
+                            )
+                        }
+                    }
                 }
             }
 
@@ -261,6 +290,39 @@ fun CreateParkFab(
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "Создать площадку"
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ParksTabRow(
+    selectedTabIndex: Int,
+    isGettingLocation: Boolean,
+    onTabSelected: (ParksTab) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    PrimaryTabRow(
+        selectedTabIndex = selectedTabIndex,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                start = dimensionResource(id = R.dimen.spacing_regular),
+                end = dimensionResource(id = R.dimen.spacing_regular),
+                top = dimensionResource(id = R.dimen.spacing_small)
+            )
+    ) {
+        ParksTab.entries.forEachIndexed { index, parksTab ->
+            Tab(
+                selected = selectedTabIndex == index,
+                enabled = !isGettingLocation,
+                onClick = { onTabSelected(parksTab) },
+                text = {
+                    Text(
+                        text = stringResource(id = parksTab.description)
+                    )
+                }
             )
         }
     }

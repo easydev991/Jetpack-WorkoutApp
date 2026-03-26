@@ -7,6 +7,7 @@ import com.swparks.data.model.Park
 import com.swparks.data.model.ParkFilter
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
+import com.swparks.ui.model.ParksTab
 import com.swparks.ui.screens.settings.ItemListMode
 import com.swparks.ui.state.ItemListUiState
 import kotlinx.coroutines.flow.SharedFlow
@@ -43,6 +44,9 @@ interface IParksRootViewModel {
     fun updateParks(parks: List<Park>)
 
     val cityNames: List<String>
+
+    val selectedTab: StateFlow<ParksTab>
+    fun onTabSelected(tab: ParksTab)
 }
 
 data class ParksRootUiState(
