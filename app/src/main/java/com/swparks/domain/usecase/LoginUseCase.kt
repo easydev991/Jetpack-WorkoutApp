@@ -6,6 +6,7 @@ import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.LoginSuccess
 import com.swparks.data.repository.SWRepository
 import com.swparks.ui.model.LoginCredentials
+import com.swparks.util.CrashReporter
 
 /**
  * Интерфейс для use case авторизации.
@@ -31,7 +32,8 @@ class LoginUseCase(
     private val tokenEncoder: TokenEncoder,
     private val secureTokenRepository: SecureTokenRepository,
     private val swRepository: SWRepository,
-    private val preferencesRepository: UserPreferencesRepository
+    private val preferencesRepository: UserPreferencesRepository,
+    private val crashReporter: CrashReporter
 ) : ILoginUseCase {
 
     /**
@@ -53,6 +55,7 @@ class LoginUseCase(
         // Сохраняем userId после успешной авторизации
         result.onSuccess { loginSuccess ->
             preferencesRepository.saveCurrentUserId(loginSuccess.userId)
+            crashReporter.setUserId(loginSuccess.userId.toString())
         }
 
         return result

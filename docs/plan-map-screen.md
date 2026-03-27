@@ -642,6 +642,7 @@ DisposableEffect(Unit) {
 ### 8.1 OpenFreeMap style
 
 Текущая реализация:
+
 ```kotlin
 val styleUri = "https://tiles.openfreemap.org/styles/liberty"
 ```

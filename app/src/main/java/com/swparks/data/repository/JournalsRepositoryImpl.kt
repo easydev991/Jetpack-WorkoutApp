@@ -1,6 +1,5 @@
 package com.swparks.data.repository
 
-import android.util.Log
 import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.entity.toDomain
 import com.swparks.data.database.entity.toEntity
@@ -8,6 +7,8 @@ import com.swparks.data.model.toDomain
 import com.swparks.domain.model.Journal
 import com.swparks.domain.repository.JournalsRepository
 import com.swparks.network.SWApi
+import com.swparks.util.CrashReporter
+import com.swparks.util.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import retrofit2.HttpException
@@ -24,7 +25,9 @@ import java.io.IOException
  */
 class JournalsRepositoryImpl(
     private val swApi: SWApi,
-    private val journalDao: JournalDao
+    private val journalDao: JournalDao,
+    private val crashReporter: CrashReporter,
+    private val logger: Logger
 ) : JournalsRepository {
 
     companion object {
@@ -39,11 +42,11 @@ class JournalsRepositoryImpl(
     }
 
     override suspend fun refreshJournals(userId: Long): Result<Unit> = try {
-        Log.i(TAG, "Загружаем дневники пользователя с id: $userId")
+        logger.i(TAG, "Загружаем дневники пользователя с id: $userId")
 
         // Загружаем дневники с сервера
         val responses = swApi.getJournals(userId)
-        Log.i(TAG, "Получено ${responses.size} дневников с сервера")
+        logger.i(TAG, "Получено ${responses.size} дневников с сервера")
 
         // Мапим JournalResponse -> Journal -> JournalEntity
         val entities = responses.map { response ->
@@ -55,13 +58,15 @@ class JournalsRepositoryImpl(
         journalDao.deleteByUserId(userId)
         journalDao.insertAll(entities)
 
-        Log.i(TAG, "Успешно сохранено ${entities.size} дневников в БД")
+        logger.i(TAG, "Успешно сохранено ${entities.size} дневников в БД")
         Result.success(Unit)
     } catch (e: IOException) {
-        Log.e(TAG, "Ошибка при загрузке дневников: ${e.message}", e)
+        logger.e(TAG, "Ошибка при загрузке дневников: ${e.message}", e)
+        crashReporter.logException(e, "Ошибка загрузки дневников")
         Result.failure(e)
     } catch (e: HttpException) {
-        Log.e(TAG, "HTTP ошибка при загрузке дневников: ${e.code()} ${e.message()}", e)
+        logger.e(TAG, "HTTP ошибка при загрузке дневников: ${e.code()} ${e.message()}", e)
+        crashReporter.logException(e, "HTTP ошибка загрузки дневников: ${e.code()}")
         Result.failure(e)
     }
 }

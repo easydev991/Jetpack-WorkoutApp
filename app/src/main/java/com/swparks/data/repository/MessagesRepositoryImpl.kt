@@ -6,6 +6,7 @@ import com.swparks.data.database.entity.DialogEntity
 import com.swparks.data.model.toEntity
 import com.swparks.domain.repository.MessagesRepository
 import com.swparks.network.SWApi
+import com.swparks.util.CrashReporter
 import com.swparks.util.Logger
 import kotlinx.coroutines.flow.Flow
 import retrofit2.HttpException
@@ -24,7 +25,8 @@ import java.io.IOException
 class MessagesRepositoryImpl(
     private val dialogsDao: DialogDao,
     private val swApi: SWApi,
-    private val logger: Logger
+    private val logger: Logger,
+    private val crashReporter: CrashReporter
 ) : MessagesRepository {
 
     companion object {
@@ -50,9 +52,11 @@ class MessagesRepositoryImpl(
         Result.success(Unit)
     } catch (e: IOException) {
         logger.e(TAG, "Ошибка загрузки диалогов: ${e.message}")
+        crashReporter.logException(e, "Ошибка загрузки диалогов")
         Result.failure(e)
     } catch (e: HttpException) {
         logger.e(TAG, "HTTP ошибка при загрузке диалогов: ${e.code()} ${e.message()}")
+        crashReporter.logException(e, "HTTP ошибка загрузки диалогов: ${e.code()}")
         Result.failure(e)
     }
 }

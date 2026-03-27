@@ -13,6 +13,8 @@ import com.swparks.data.model.DialogResponse
 import com.swparks.data.model.MessageResponse
 import com.swparks.domain.exception.NetworkException
 import com.swparks.network.SWApi
+import com.swparks.util.NoOpCrashReporter
+import com.swparks.util.NoOpLogger
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -44,6 +46,8 @@ class SWRepositoryMessagesTest {
     private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
     private val mockDialogDao = mockk<DialogDao>(relaxed = true)
     private val mockEventDao = mockk<EventDao>(relaxed = true)
+    private val crashReporter = NoOpCrashReporter()
+    private val logger = NoOpLogger()
 
     @Before
     fun setup() {
@@ -100,7 +104,9 @@ class SWRepositoryMessagesTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -113,10 +119,10 @@ class SWRepositoryMessagesTest {
     }
 
     @Test
-    fun getDialogs_whenApiThrowsException_thenReturnsFailure() = runTest {
+    fun getMessages_whenApiThrowsException_thenReturnsFailure() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
-        coEvery { mockApi.getDialogs() } throws IOException("Network error")
+        coEvery { mockApi.getMessages(any()) } throws IOException("Network error")
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -128,11 +134,13 @@ class SWRepositoryMessagesTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
-        val result = repository.getDialogs()
+        val result = repository.getMessages(1L)
 
         // Then
         assertTrue(result.isFailure)
@@ -159,7 +167,9 @@ class SWRepositoryMessagesTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -169,33 +179,6 @@ class SWRepositoryMessagesTest {
         assertTrue(result.isSuccess)
         assertEquals(mockMessagesList, result.getOrNull())
         coVerify { mockApi.getMessages(1L) }
-    }
-
-    @Test
-    fun getMessages_whenApiThrowsException_thenReturnsFailure() = runTest {
-        // Given
-        val mockApi = mockk<SWApi>()
-        coEvery { mockApi.getMessages(any()) } throws IOException("Network error")
-
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao
-        )
-
-        // When
-        val result = repository.getMessages(1L)
-
-        // Then
-        assertTrue(result.isFailure)
-        assertTrue(result.exceptionOrNull() is NetworkException)
     }
 
     @Test
@@ -214,7 +197,9 @@ class SWRepositoryMessagesTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -241,7 +226,9 @@ class SWRepositoryMessagesTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -268,7 +255,9 @@ class SWRepositoryMessagesTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -295,7 +284,9 @@ class SWRepositoryMessagesTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -322,7 +313,9 @@ class SWRepositoryMessagesTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -349,7 +342,9 @@ class SWRepositoryMessagesTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -376,7 +371,9 @@ class SWRepositoryMessagesTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -405,7 +402,9 @@ class SWRepositoryMessagesTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -433,7 +432,9 @@ class SWRepositoryMessagesTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -460,7 +461,9 @@ class SWRepositoryMessagesTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When

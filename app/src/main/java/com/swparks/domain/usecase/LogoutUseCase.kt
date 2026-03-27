@@ -3,6 +3,7 @@ package com.swparks.domain.usecase
 import android.util.Log
 import com.swparks.data.SecureTokenRepository
 import com.swparks.data.repository.SWRepository
+import com.swparks.util.CrashReporter
 
 /**
  * Use case для выхода из учётной записи.
@@ -16,7 +17,8 @@ import com.swparks.data.repository.SWRepository
  */
 class LogoutUseCase(
     private val secureTokenRepository: SecureTokenRepository,
-    private val swRepository: SWRepository
+    private val swRepository: SWRepository,
+    private val crashReporter: CrashReporter
 ) : ILogoutUseCase {
     private companion object {
         const val TAG = "LogoutUseCase"
@@ -37,6 +39,9 @@ class LogoutUseCase(
 
         // Сбрасываем флаг isAuthorized
         swRepository.forceLogout()
+
+        // Сбрасываем userId в Crashlytics
+        crashReporter.setUserId(null)
 
         Log.i(TAG, "Текущий пользователь очищен")
     }

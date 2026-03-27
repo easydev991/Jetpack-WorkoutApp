@@ -1,6 +1,5 @@
 package com.swparks.data.repository
 
-import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.swparks.data.APIError
@@ -36,6 +35,8 @@ import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.model.MainUserForm
 import com.swparks.ui.model.ParkForm
 import com.swparks.ui.model.TextEntryOption
+import com.swparks.util.CrashReporter
+import com.swparks.util.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -203,7 +204,9 @@ class SWRepositoryImp(
     private val journalDao: JournalDao,
     private val journalEntryDao: com.swparks.data.database.dao.JournalEntryDao,
     private val dialogDao: DialogDao,
-    private val eventDao: EventDao
+    private val eventDao: EventDao,
+    private val crashReporter: CrashReporter,
+    private val logger: Logger
 ) : SWRepository {
     private companion object {
         const val TAG = "SWRepositoryImp"
@@ -230,7 +233,8 @@ class SWRepositoryImp(
      * Обрабатывает IOException и возвращает NetworkException с сообщением для пользователя
      */
     private fun handleIOException(e: IOException, operation: String): NetworkException {
-        Log.e(TAG, "Ошибка сети при $operation: ${e.message}")
+        logger.e(TAG, "Ошибка сети при $operation: ${e.message}")
+        crashReporter.logException(e, "Ошибка сети при $operation")
         return NetworkException(
             message = "Не удалось выполнить операцию. Проверьте интернет-соединение",
             cause = e
@@ -242,28 +246,29 @@ class SWRepositoryImp(
      */
     private fun handleHttpException(e: HttpException, operation: String): Exception {
         val statusCode = e.code()
-        Log.e(TAG, "Ошибка сервера $statusCode при $operation")
+        logger.e(TAG, "Ошибка сервера $statusCode при $operation")
+        crashReporter.logException(e, "Ошибка сервера $statusCode при $operation")
 
         return try {
             val responseBody = e.response()?.errorBody()?.string()
             if (responseBody != null) {
-                Log.e(TAG, "Тело ответа сервера: $responseBody")
+                logger.e(TAG, "Тело ответа сервера: $responseBody")
                 val errorResponse = json.decodeFromString<ErrorResponse>(responseBody)
-                Log.e(
+                logger.e(
                     TAG,
                     "Десериализованный ErrorResponse: message=${errorResponse.message}, errors=${errorResponse.errors}"
                 )
                 val errorMessage = errorResponse.realMessage ?: "Ошибка сервера: $statusCode"
-                Log.e(TAG, "realMessage: ${errorResponse.realMessage}")
-                Log.e(TAG, "errorMessage для ServerException: $errorMessage")
+                logger.e(TAG, "realMessage: ${errorResponse.realMessage}")
+                logger.e(TAG, "errorMessage для ServerException: $errorMessage")
                 ServerException(message = errorMessage, cause = e)
             } else {
                 val errorMessage = APIError.fromStatusCode(statusCode).errorMessage
                 ServerException(message = errorMessage, cause = e)
             }
         } catch (se: SerializationException) {
-            // Если не удалось десериализовать ответ сервера
-            Log.e(TAG, "Не удалось десериализовать ответ об ошибке: ${se.message}")
+            logger.e(TAG, "Не удалось десериализовать ответ об ошибке: ${se.message}")
+            crashReporter.logException(se, "Ошибка десериализации ответа сервера")
             ServerException(message = "Ошибка обработки ответа сервера", cause = se)
         }
     }
@@ -273,12 +278,12 @@ class SWRepositoryImp(
      */
     private fun handleResponseError(response: Response<*>, operation: String): ServerException {
         val statusCode = response.code()
-        Log.e(TAG, "Ошибка сервера $statusCode при $operation")
+        logger.e(TAG, "Ошибка сервера $statusCode при $operation")
 
         return try {
             val errorBody = response.errorBody()?.string()
             if (errorBody != null) {
-                Log.e(TAG, "Тело ответа сервера: $errorBody")
+                logger.e(TAG, "Тело ответа сервера: $errorBody")
                 val errorResponse = json.decodeFromString<ErrorResponse>(errorBody)
                 val errorMessage = errorResponse.realMessage ?: "Ошибка сервера: $statusCode"
                 ServerException(message = errorMessage)
@@ -287,7 +292,8 @@ class SWRepositoryImp(
                 ServerException(message = errorMessage)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Не удалось десериализовать ответ об ошибке: ${e.message}")
+            logger.e(TAG, "Не удалось десериализовать ответ об ошибке: ${e.message}")
+            crashReporter.logException(e, "Ошибка десериализации ответа об ошибке сервера")
             ServerException(message = "Ошибка сервера: $statusCode")
         }
     }
@@ -362,6 +368,7 @@ class SWRepositoryImp(
         } catch (e: HttpException) {
             Result.failure(handleHttpException(e, "авторизации"))
         } catch (e: Exception) {
+            crashReporter.logException(e, "Ошибка при авторизации")
             Result.failure(e)
         }
 
@@ -374,6 +381,7 @@ class SWRepositoryImp(
         } catch (e: HttpException) {
             Result.failure(handleHttpException(e, "восстановлении пароля"))
         } catch (e: Exception) {
+            crashReporter.logException(e, "Ошибка при восстановлении пароля")
             Result.failure(e)
         }
 
@@ -395,7 +403,7 @@ class SWRepositoryImp(
     // Принудительный логаут (при ошибке 401)
     override suspend fun forceLogout() {
         preferencesRepository.clearCurrentUserId()
-        Log.i(TAG, "Принудительный логаут выполнен")
+        logger.i(TAG, "Принудительный логаут выполнен")
     }
 
     // 3.2. Профиль
@@ -422,7 +430,7 @@ class SWRepositoryImp(
             // 3. Ошибка сети - берем из кэша
             val cachedUser = userDao.getUserByIdFlow(userId).first()
             if (cachedUser != null) {
-                Log.i(TAG, "Профиль загружен из кэша")
+                logger.i(TAG, "Профиль загружен из кэша")
                 Result.success(cachedUser.toDomain())
             } else {
                 Result.failure(handleIOException(e, "загрузке пользователя"))
@@ -524,7 +532,7 @@ class SWRepositoryImp(
                 val cachedBlacklist = userDao.getBlacklistFlow().first().map { it.toDomain() }
 
                 if (cachedUser != null) {
-                    Log.i(TAG, "Социальные обновления загружены из кэша")
+                    logger.i(TAG, "Социальные обновления загружены из кэша")
                     Result.success(
                         SocialUpdates(
                             user = cachedUser,
@@ -802,7 +810,7 @@ class SWRepositoryImp(
         val currentParks = user.addedParks.orEmpty().toMutableList()
         currentParks.removeAll { it.id == parkId }
         userDao.insert(user.copy(addedParks = currentParks))
-        Log.d(TAG, "Парк $parkId удалён из addedParks пользователя $userId")
+        logger.d(TAG, "Парк $parkId удалён из addedParks пользователя $userId")
     }
 
     private suspend fun updateUserAddedParksCache(
@@ -816,7 +824,10 @@ class SWRepositoryImp(
             if (currentParks.none { it.id == savedPark.id }) {
                 currentParks.add(savedPark)
                 userDao.insert(user.copy(addedParks = currentParks))
-                Log.d(TAG, "Парк ${savedPark.id} добавлен в addedParks пользователя $currentUserId")
+                logger.d(
+                    TAG,
+                    "Парк ${savedPark.id} добавлен в addedParks пользователя $currentUserId"
+                )
             }
         } else {
             currentParks.removeAll { it.id == editedParkId }
@@ -824,7 +835,7 @@ class SWRepositoryImp(
                 currentParks.add(savedPark)
             }
             userDao.insert(user.copy(addedParks = currentParks))
-            Log.d(TAG, "Парк ${savedPark.id} обновлён в addedParks пользователя $currentUserId")
+            logger.d(TAG, "Парк ${savedPark.id} обновлён в addedParks пользователя $currentUserId")
         }
     }
 
@@ -1058,7 +1069,7 @@ class SWRepositoryImp(
                 commentAccess = commentAccess
             )
 
-            Log.i(
+            logger.i(
                 TAG,
                 "Запрос редактирования настроек дневника: journalId=$journalId, userId=$userId, " +
                     "title=$title, viewAccess=${request.viewAccess}, commentAccess=${request.commentAccess}"
@@ -1073,11 +1084,14 @@ class SWRepositoryImp(
             )
 
             if (response.isSuccessful) {
-                Log.i(TAG, "Настройки дневника успешно обновлены на сервере: journalId=$journalId")
+                logger.i(
+                    TAG,
+                    "Настройки дневника успешно обновлены на сервере: journalId=$journalId"
+                )
                 Result.success(Unit)
             } else {
                 val errorBody = response.errorBody()?.string()
-                Log.e(
+                logger.e(
                     TAG,
                     "Ошибка сервера при редактировании настроек дневника: code=${response.code()}, body=$errorBody"
                 )
@@ -1110,12 +1124,12 @@ class SWRepositoryImp(
     override suspend fun createJournal(title: String, userId: Long?): Result<Unit> =
         try {
             val finalUserId = userId ?: 1L
-            Log.i(TAG, "Создание дневника: userId=$finalUserId, title=$title")
+            logger.i(TAG, "Создание дневника: userId=$finalUserId, title=$title")
             val response = swApi.createJournal(
                 userId = finalUserId,
                 title = title
             )
-            Log.i(
+            logger.i(
                 TAG,
                 "Ответ сервера при создании дневника: код=${response.code()}, успешно=${response.isSuccessful}"
             )
@@ -1140,7 +1154,7 @@ class SWRepositoryImp(
 
             when {
                 response.isSuccessful -> {
-                    Log.i(TAG, "Дневник успешно удален на сервере")
+                    logger.i(TAG, "Дневник успешно удален на сервере")
                     journalDao.deleteById(journalId)
                     // Обновляем счётчик дневников текущего пользователя
                     userDao.decrementJournalCount()
@@ -1149,7 +1163,7 @@ class SWRepositoryImp(
 
                 response.code() == 404 -> {
                     // Дневник уже удален на сервере — синхронизируем локальный кэш
-                    Log.i(TAG, "Дневник уже удален на сервере (404), удаляем из локального кэша")
+                    logger.i(TAG, "Дневник уже удален на сервере (404), удаляем из локального кэша")
                     journalDao.deleteById(journalId)
                     // Обновляем счётчик дневников текущего пользователя
                     userDao.decrementJournalCount()
@@ -1159,7 +1173,7 @@ class SWRepositoryImp(
                 else -> {
                     val statusCode = response.code()
                     val errorBody = response.errorBody()?.string()
-                    Log.e(TAG, "Ошибка при удалении дневника: код=$statusCode, тело=$errorBody")
+                    logger.e(TAG, "Ошибка при удалении дневника: код=$statusCode, тело=$errorBody")
                     Result.failure(
                         handleHttpException(
                             HttpException(response),
@@ -1396,10 +1410,10 @@ class SWRepositoryImp(
         preferencesRepository.currentUserId
             .flatMapLatest { userId ->
                 if (userId != null) {
-                    Log.d(TAG, "Текущий пользователь изменился: $userId")
+                    logger.d(TAG, "Текущий пользователь изменился: $userId")
                     userDao.getUserByIdFlow(userId).map { entity -> entity?.toDomain() }
                 } else {
-                    Log.d(TAG, "Текущий пользователь отсутствует")
+                    logger.d(TAG, "Текущий пользователь отсутствует")
                     flowOf(null)
                 }
             }
@@ -1421,7 +1435,7 @@ class SWRepositoryImp(
         userDao.clearAll()
         // Удаляем все диалоги пользователя
         dialogDao.deleteAll()
-        Log.i(TAG, "Все данные пользователя удалены")
+        logger.i(TAG, "Все данные пользователя удалены")
         // Очищаем ID текущего пользователя
         preferencesRepository.clearCurrentUserId()
     }
@@ -1435,9 +1449,10 @@ class SWRepositoryImp(
     override suspend fun saveJournalToCache(journal: com.swparks.domain.model.Journal) {
         try {
             journalDao.insert(journal.toEntity())
-            Log.i(TAG, "Дневник сохранен в кэш: journalId=${journal.id}")
+            logger.i(TAG, "Дневник сохранен в кэш: journalId=${journal.id}")
         } catch (e: Exception) {
-            Log.e(TAG, "Ошибка сохранения дневника в кэш: ${e.message}")
+            logger.e(TAG, "Ошибка сохранения дневника в кэш: ${e.message}")
+            crashReporter.logException(e, "Ошибка сохранения дневника в кэш")
             throw e
         }
     }
@@ -1449,7 +1464,7 @@ class SWRepositoryImp(
                 val errorResponse = json.decodeFromString<ErrorResponse>(errorBody)
                 errorResponse.realMessage ?: "Ошибка сервера: ${response.code()}"
             } catch (e: Exception) {
-                Log.w(TAG, "Не удалось распарсить ошибку $context: ${e.message}")
+                logger.w(TAG, "Не удалось распарсить ошибку $context: ${e.message}")
                 "Ошибка сервера: ${response.code()}"
             }
         } else {

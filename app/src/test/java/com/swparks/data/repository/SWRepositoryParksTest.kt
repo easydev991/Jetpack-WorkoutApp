@@ -16,6 +16,8 @@ import com.swparks.data.model.Park
 import com.swparks.domain.exception.NetworkException
 import com.swparks.network.SWApi
 import com.swparks.ui.model.ParkForm
+import com.swparks.util.NoOpCrashReporter
+import com.swparks.util.NoOpLogger
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -51,6 +53,8 @@ class SWRepositoryParksTest {
     private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
     private val mockDialogDao = mockk<DialogDao>(relaxed = true)
     private val mockEventDao = mockk<EventDao>(relaxed = true)
+    private val crashReporter = NoOpCrashReporter()
+    private val logger = NoOpLogger()
 
     @Before
     fun setup() {
@@ -97,7 +101,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -125,7 +131,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -153,7 +161,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -181,7 +191,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -220,7 +232,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
         val form = ParkForm(
             address = "Test Address",
@@ -277,7 +291,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
         val form = ParkForm(
             address = "Test Address",
@@ -332,7 +348,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
         val form = ParkForm(
             address = "Test Address",
@@ -379,7 +397,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
         val form = ParkForm(
             address = "Test Address",
@@ -441,7 +461,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
         val form = ParkForm(
             address = "Test Address",
@@ -501,7 +523,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
         val form = ParkForm(
             address = "123 Main Street",
@@ -566,7 +590,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
         val form = ParkForm(
             address = "456 Park Avenue",
@@ -624,7 +650,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
         val form = ParkForm(
             address = "789 Sports Street",
@@ -667,7 +695,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -694,7 +724,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -722,7 +754,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -750,7 +784,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -777,7 +813,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -805,7 +843,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -833,7 +873,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -861,7 +903,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -889,7 +933,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -916,7 +962,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -943,7 +991,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -985,7 +1035,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // Mock getUserByIdFlow to return the user
@@ -1034,7 +1086,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         coEvery { mockUserDao.getUserByIdFlow(currentUserId) } returns flowOf(mockUser)
@@ -1087,7 +1141,9 @@ class SWRepositoryParksTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         coEvery { mockUserDao.getUserByIdFlow(currentUserId) } returns flowOf(mockUser)

@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.plugin.serialization)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
 }
@@ -25,6 +27,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            isDebuggable = true
+            manifestPlaceholders["crashlyticsCollectionEnabled"] = "false"
+        }
         release {
             isShrinkResources = true
             isMinifyEnabled = true
@@ -32,8 +38,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            manifestPlaceholders["crashlyticsCollectionEnabled"] = "true"
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
@@ -103,6 +111,10 @@ dependencies {
 
     // MapLibre
     implementation(libs.maplibre.android)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics)
 
     // Testing
     testImplementation(libs.junit)

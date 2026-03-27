@@ -5,6 +5,8 @@ import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.entity.JournalEntity
 import com.swparks.data.model.JournalResponse
 import com.swparks.network.SWApi
+import com.swparks.util.NoOpCrashReporter
+import com.swparks.util.NoOpLogger
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -34,6 +36,8 @@ class JournalsRepositoryImplTest {
     private lateinit var mockApi: SWApi
     private lateinit var mockJournalDao: JournalDao
     private lateinit var repository: JournalsRepositoryImpl
+    private val crashReporter = NoOpCrashReporter()
+    private val logger = NoOpLogger()
 
     private val testUserId = 123L
 
@@ -41,7 +45,7 @@ class JournalsRepositoryImplTest {
     fun setup() {
         mockApi = mockk()
         mockJournalDao = mockk(relaxed = true)
-        repository = JournalsRepositoryImpl(mockApi, mockJournalDao)
+        repository = JournalsRepositoryImpl(mockApi, mockJournalDao, crashReporter, logger)
 
         // Мокаем статический класс Log для тестов
         mockkStatic(Log::class)

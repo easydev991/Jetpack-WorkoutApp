@@ -5,6 +5,8 @@ import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.entity.JournalEntryEntity
 import com.swparks.data.model.JournalEntryResponse
 import com.swparks.network.SWApi
+import com.swparks.util.NoOpCrashReporter
+import com.swparks.util.NoOpLogger
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -27,6 +29,8 @@ import java.io.IOException
 class JournalEntriesRepositoryTest {
     private val mockApi = mockk<SWApi>()
     private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
+    private val crashReporter = NoOpCrashReporter()
+    private val logger = NoOpLogger()
 
     @Before
     fun setup() {
@@ -77,7 +81,8 @@ class JournalEntriesRepositoryTest {
         )
         every { mockJournalEntryDao.getJournalEntriesByJournalId(1L) } returns flowOf(mockEntities)
 
-        val repository = JournalEntriesRepositoryImpl(mockApi, mockJournalEntryDao)
+        val repository =
+            JournalEntriesRepositoryImpl(mockApi, mockJournalEntryDao, crashReporter, logger)
 
         // When
         val result = repository.observeJournalEntries(1L, 1L).toList()
@@ -100,7 +105,8 @@ class JournalEntriesRepositoryTest {
         )
         coEvery { mockApi.getJournalEntries(1L, 1L) } returns mockResponses
 
-        val repository = JournalEntriesRepositoryImpl(mockApi, mockJournalEntryDao)
+        val repository =
+            JournalEntriesRepositoryImpl(mockApi, mockJournalEntryDao, crashReporter, logger)
 
         // When
         val result = repository.refreshJournalEntries(1L, 1L)
@@ -118,7 +124,8 @@ class JournalEntriesRepositoryTest {
         val exception = IOException("Network error")
         coEvery { mockApi.getJournalEntries(any(), any()) } throws exception
 
-        val repository = JournalEntriesRepositoryImpl(mockApi, mockJournalEntryDao)
+        val repository =
+            JournalEntriesRepositoryImpl(mockApi, mockJournalEntryDao, crashReporter, logger)
 
         // When
         val result = repository.refreshJournalEntries(1L, 1L)
@@ -135,7 +142,8 @@ class JournalEntriesRepositoryTest {
         val emptyResponses = emptyList<JournalEntryResponse>()
         coEvery { mockApi.getJournalEntries(1L, 1L) } returns emptyResponses
 
-        val repository = JournalEntriesRepositoryImpl(mockApi, mockJournalEntryDao)
+        val repository =
+            JournalEntriesRepositoryImpl(mockApi, mockJournalEntryDao, crashReporter, logger)
 
         // When
         val result = repository.refreshJournalEntries(1L, 1L)

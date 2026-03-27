@@ -12,6 +12,8 @@ import com.swparks.data.database.dao.UserDao
 import com.swparks.domain.exception.NetworkException
 import com.swparks.network.SWApi
 import com.swparks.ui.model.TextEntryOption
+import com.swparks.util.NoOpCrashReporter
+import com.swparks.util.NoOpLogger
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -44,6 +46,8 @@ class SWRepositoryCommentsTest {
     private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
     private val mockDialogDao = mockk<DialogDao>(relaxed = true)
     private val mockEventDao = mockk<EventDao>(relaxed = true)
+    private val crashReporter = NoOpCrashReporter()
+    private val logger = NoOpLogger()
 
     @Before
     fun setup() {
@@ -78,7 +82,9 @@ class SWRepositoryCommentsTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
         val option = TextEntryOption.Park(id = 123L)
 
@@ -111,7 +117,9 @@ class SWRepositoryCommentsTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
         val option = TextEntryOption.Event(id = 456L)
 
@@ -145,7 +153,9 @@ class SWRepositoryCommentsTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
         val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L)
 
@@ -184,7 +194,9 @@ class SWRepositoryCommentsTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
         val option = TextEntryOption.Park(id = 123L)
 
@@ -220,7 +232,9 @@ class SWRepositoryCommentsTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
         val option = TextEntryOption.Event(id = 456L)
 
@@ -253,7 +267,9 @@ class SWRepositoryCommentsTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
         val option = TextEntryOption.Park(id = 123L)
 
@@ -293,7 +309,9 @@ class SWRepositoryCommentsTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
         val option = TextEntryOption.Event(id = 456L)
 
@@ -347,7 +365,9 @@ class SWRepositoryCommentsTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
         val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L)
 
@@ -396,7 +416,9 @@ class SWRepositoryCommentsTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter = crashReporter,
+            logger = logger
         )
         val option = TextEntryOption.Park(id = 123L)
 
@@ -433,7 +455,9 @@ class SWRepositoryCommentsTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter = crashReporter,
+            logger = logger
         )
         val option = TextEntryOption.Event(id = 456L)
 
@@ -465,7 +489,9 @@ class SWRepositoryCommentsTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter = crashReporter,
+            logger = logger
         )
         val option = TextEntryOption.Park(id = 123L)
 
@@ -498,7 +524,9 @@ class SWRepositoryCommentsTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter = crashReporter,
+            logger = logger
         )
         val option = TextEntryOption.Event(id = 456L)
 
@@ -532,7 +560,9 @@ class SWRepositoryCommentsTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter = crashReporter,
+            logger = logger
         )
         val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L)
 
@@ -568,7 +598,9 @@ class SWRepositoryCommentsTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter = crashReporter,
+            logger = logger
         )
         val option = TextEntryOption.Park(id = 123L)
 

@@ -6,6 +6,8 @@ import com.swparks.data.database.entity.DialogEntity
 import com.swparks.data.model.DialogResponse
 import com.swparks.network.SWApi
 import com.swparks.util.Logger
+import com.swparks.util.NoOpCrashReporter
+import com.swparks.util.NoOpLogger
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -36,6 +38,8 @@ class MessagesRepositoryTest {
     private lateinit var mockApi: SWApi
     private lateinit var mockLogger: Logger
     private lateinit var repository: MessagesRepositoryImpl
+    private val crashReporter = NoOpCrashReporter()
+    private val logger = NoOpLogger()
 
     @Before
     fun setup() {
@@ -46,7 +50,8 @@ class MessagesRepositoryTest {
         repository = MessagesRepositoryImpl(
             dialogsDao = mockDialogDao,
             swApi = mockApi,
-            logger = mockLogger
+            crashReporter = crashReporter,
+            logger = logger
         )
 
         // Мокаем статический класс Log для тестов
@@ -114,7 +119,8 @@ class MessagesRepositoryTest {
         val testRepository = MessagesRepositoryImpl(
             dialogsDao = mockDialogDao,
             swApi = mockApi,
-            logger = mockLogger
+            crashReporter = crashReporter,
+            logger = logger
         )
         val result = testRepository.dialogs.first()
 

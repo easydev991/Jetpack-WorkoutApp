@@ -1,6 +1,5 @@
 package com.swparks.data.repository
 
-import android.util.Log
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.entity.toDomain
 import com.swparks.data.database.entity.toEntity
@@ -9,6 +8,8 @@ import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.model.JournalEntry
 import com.swparks.domain.repository.JournalEntriesRepository
 import com.swparks.network.SWApi
+import com.swparks.util.CrashReporter
+import com.swparks.util.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import retrofit2.HttpException
@@ -26,7 +27,9 @@ import com.swparks.domain.model.toDomain as journalEntryToDomain
  */
 class JournalEntriesRepositoryImpl(
     private val swApi: SWApi,
-    private val journalEntryDao: JournalEntryDao
+    private val journalEntryDao: JournalEntryDao,
+    private val crashReporter: CrashReporter,
+    private val logger: Logger
 ) : JournalEntriesRepository {
     private companion object {
         const val TAG = "JournalEntriesRepository"
@@ -42,11 +45,11 @@ class JournalEntriesRepositoryImpl(
     }
 
     override suspend fun refreshJournalEntries(userId: Long, journalId: Long): Result<Unit> = try {
-        Log.i(TAG, "Загружаем записи дневника: userId=$userId, journalId=$journalId")
+        logger.i(TAG, "Загружаем записи дневника: userId=$userId, journalId=$journalId")
 
         // Загружаем записи с сервера
         val responses = swApi.getJournalEntries(userId, journalId)
-        Log.i(TAG, "Получено ${responses.size} записей с сервера")
+        logger.i(TAG, "Получено ${responses.size} записей с сервера")
 
         // Мапим JournalEntryResponse -> JournalEntry -> JournalEntryEntity
         val entities = responses.map { response: JournalEntryResponse ->
@@ -58,13 +61,15 @@ class JournalEntriesRepositoryImpl(
         journalEntryDao.deleteByJournalId(journalId)
         journalEntryDao.insertAll(entities)
 
-        Log.i(TAG, "Успешно сохранено ${entities.size} записей в БД")
+        logger.i(TAG, "Успешно сохранено ${entities.size} записей в БД")
         Result.success(Unit)
     } catch (e: IOException) {
-        Log.e(TAG, "Ошибка при загрузке записей: ${e.message}", e)
+        logger.e(TAG, "Ошибка при загрузке записей: ${e.message}", e)
+        crashReporter.logException(e, "Ошибка загрузки записей дневника")
         Result.failure(e)
     } catch (e: HttpException) {
-        Log.e(TAG, "HTTP ошибка при загрузке записей: ${e.code()} ${e.message()}", e)
+        logger.e(TAG, "HTTP ошибка при загрузке записей: ${e.code()} ${e.message()}", e)
+        crashReporter.logException(e, "HTTP ошибка загрузки записей дневника: ${e.code()}")
         Result.failure(e)
     }
 
@@ -73,37 +78,39 @@ class JournalEntriesRepositoryImpl(
         journalId: Long,
         entryId: Long
     ): Result<Unit> = try {
-        Log.i(TAG, "Удаление записи: userId=$userId, journalId=$journalId, entryId=$entryId")
+        logger.i(TAG, "Удаление записи: userId=$userId, journalId=$journalId, entryId=$entryId")
 
         val response = swApi.deleteJournalEntry(userId, journalId, entryId)
 
         when {
             response.isSuccessful -> {
-                Log.i(TAG, "Запись успешно удалена на сервере")
+                logger.i(TAG, "Запись успешно удалена на сервере")
                 journalEntryDao.deleteById(entryId)
                 Result.success(Unit)
             }
 
             response.code() == HTTP_NOT_FOUND -> {
                 // Запись уже удалена на сервере — синхронизируем локальный кэш
-                Log.i(TAG, "Запись уже удалена на сервере (404), удаляем из локального кэша")
+                logger.i(TAG, "Запись уже удалена на сервере (404), удаляем из локального кэша")
                 journalEntryDao.deleteById(entryId)
                 Result.success(Unit)
             }
 
             else -> {
                 val errorMessage = "Ошибка удаления записи: код ${response.code()}"
-                Log.e(TAG, errorMessage)
+                logger.e(TAG, errorMessage)
                 Result.failure(NetworkException(errorMessage))
             }
         }
     } catch (e: IOException) {
         val errorMessage = "Ошибка сети при удалении записи"
-        Log.e(TAG, "$errorMessage: ${e.message}")
+        logger.e(TAG, "$errorMessage: ${e.message}")
+        crashReporter.logException(e, "Ошибка сети при удалении записи дневника")
         Result.failure(NetworkException(errorMessage, e))
     } catch (e: HttpException) {
         val errorMessage = "HTTP ошибка при удалении записи: ${e.code()}"
-        Log.e(TAG, "$errorMessage: ${e.message()}")
+        logger.e(TAG, "$errorMessage: ${e.message()}")
+        crashReporter.logException(e, "HTTP ошибка при удалении записи дневника: ${e.code()}")
         Result.failure(NetworkException(errorMessage, e))
     }
 

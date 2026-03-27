@@ -7,6 +7,8 @@ import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.LoginSuccess
 import com.swparks.data.repository.SWRepository
 import com.swparks.ui.model.LoginCredentials
+import com.swparks.util.CrashReporter
+import com.swparks.util.NoOpCrashReporter
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -27,6 +29,7 @@ class LoginUseCaseTest {
     private lateinit var secureTokenRepository: SecureTokenRepository
     private lateinit var swRepository: SWRepository
     private lateinit var preferencesRepository: UserPreferencesRepository
+    private lateinit var crashReporter: CrashReporter
     private lateinit var loginUseCase: LoginUseCase
 
     private val testCredentials =
@@ -43,8 +46,15 @@ class LoginUseCaseTest {
         secureTokenRepository = mockk(relaxed = true)
         swRepository = mockk()
         preferencesRepository = mockk(relaxed = true)
+        crashReporter = NoOpCrashReporter()
         loginUseCase =
-            LoginUseCase(tokenEncoder, secureTokenRepository, swRepository, preferencesRepository)
+            LoginUseCase(
+                tokenEncoder,
+                secureTokenRepository,
+                swRepository,
+                preferencesRepository,
+                crashReporter
+            )
     }
 
     @After

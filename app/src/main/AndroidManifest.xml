@@ -25,6 +25,11 @@
         android:theme="@style/Theme.JetpackWorkoutApp"
         tools:ignore="LockedOrientationActivity"
         tools:targetApi="s">
+
+        <meta-data
+            android:name="firebase_crashlytics_collection_enabled"
+            android:value="${crashlyticsCollectionEnabled}" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -1,23 +1,22 @@
 package com.swparks.data.repository
 
-import android.util.Log
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.entity.JournalEntryEntity
 import com.swparks.data.model.JournalEntryResponse
 import com.swparks.network.SWApi
+import com.swparks.util.CrashReporter
+import com.swparks.util.Logger
+import com.swparks.util.NoOpCrashReporter
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody.Companion.toResponseBody
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -41,6 +40,8 @@ class JournalEntriesRepositoryImplTest {
     private lateinit var mockApi: SWApi
     private lateinit var mockJournalEntryDao: JournalEntryDao
     private lateinit var repository: JournalEntriesRepositoryImpl
+    private val crashReporter: CrashReporter = NoOpCrashReporter()
+    private val logger: Logger = mockk(relaxed = true)
 
     private val testUserId = 123L
     private val testJournalId = 456L
@@ -49,18 +50,8 @@ class JournalEntriesRepositoryImplTest {
     fun setup() {
         mockApi = mockk()
         mockJournalEntryDao = mockk(relaxed = true)
-        repository = JournalEntriesRepositoryImpl(mockApi, mockJournalEntryDao)
-
-        // Мокаем статический класс Log для тестов
-        mockkStatic(Log::class)
-        every { Log.i(any(), any()) } returns 0
-        every { Log.e(any(), any(), any()) } returns 0
-        every { Log.e(any(), any()) } returns 0
-    }
-
-    @After
-    fun tearDown() {
-        unmockkAll()
+        repository =
+            JournalEntriesRepositoryImpl(mockApi, mockJournalEntryDao, crashReporter, logger)
     }
 
     private fun createMockJournalEntryResponse(
@@ -152,19 +143,19 @@ class JournalEntriesRepositoryImplTest {
         coVerify(exactly = 1) { mockJournalEntryDao.deleteByJournalId(testJournalId) }
         coVerify(exactly = 1) { mockJournalEntryDao.insertAll(any<List<JournalEntryEntity>>()) }
         verify {
-            Log.i(
+            logger.i(
                 TAG,
                 "Загружаем записи дневника: userId=$testUserId, journalId=$testJournalId"
             )
         }
         verify {
-            Log.i(
+            logger.i(
                 TAG,
                 "Получено ${mockResponses.size} записей с сервера"
             )
         }
         verify {
-            Log.i(
+            logger.i(
                 TAG,
                 "Успешно сохранено ${mockResponses.size} записей в БД"
             )
@@ -208,7 +199,7 @@ class JournalEntriesRepositoryImplTest {
         assertEquals(exception, result.exceptionOrNull())
         coVerify(exactly = 1) { mockApi.getJournalEntries(testUserId, testJournalId) }
         verify {
-            Log.e(
+            logger.e(
                 TAG,
                 "Ошибка при загрузке записей: ${exception.message}",
                 exception
@@ -233,8 +224,8 @@ class JournalEntriesRepositoryImplTest {
         coVerify(exactly = 1) { mockApi.getJournalEntries(testUserId, testJournalId) }
         coVerify(exactly = 1) { mockJournalEntryDao.deleteByJournalId(testJournalId) }
         coVerify(exactly = 1) { mockJournalEntryDao.insertAll(emptyList()) }
-        verify { Log.i(TAG, "Получено 0 записей с сервера") }
-        verify { Log.i(TAG, "Успешно сохранено 0 записей в БД") }
+        verify { logger.i(TAG, "Получено 0 записей с сервера") }
+        verify { logger.i(TAG, "Успешно сохранено 0 записей в БД") }
     }
 
     /**
@@ -254,19 +245,19 @@ class JournalEntriesRepositoryImplTest {
 
         // Then - проверяем все три лог-сообщения
         verify(exactly = 1) {
-            Log.i(
+            logger.i(
                 TAG,
                 "Загружаем записи дневника: userId=$testUserId, journalId=$testJournalId"
             )
         }
         verify(exactly = 1) {
-            Log.i(
+            logger.i(
                 TAG,
                 "Получено ${mockResponses.size} записей с сервера"
             )
         }
         verify(exactly = 1) {
-            Log.i(
+            logger.i(
                 TAG,
                 "Успешно сохранено ${mockResponses.size} записей в БД"
             )
@@ -287,13 +278,13 @@ class JournalEntriesRepositoryImplTest {
 
         // Then
         verify {
-            Log.i(
+            logger.i(
                 TAG,
                 "Загружаем записи дневника: userId=$testUserId, journalId=$testJournalId"
             )
         }
         verify(exactly = 1) {
-            Log.e(
+            logger.e(
                 TAG,
                 "Ошибка при загрузке записей: ${exception.message}",
                 exception
@@ -446,12 +437,12 @@ class JournalEntriesRepositoryImplTest {
         }
         coVerify(exactly = 1) { mockJournalEntryDao.deleteById(testEntryId) }
         verify {
-            Log.i(
+            logger.i(
                 TAG,
                 "Удаление записи: userId=$testUserId, journalId=$testJournalId, entryId=$testEntryId"
             )
         }
-        verify { Log.i(TAG, "Запись успешно удалена на сервере") }
+        verify { logger.i(TAG, "Запись успешно удалена на сервере") }
     }
 
     /**
@@ -474,7 +465,7 @@ class JournalEntriesRepositoryImplTest {
             mockApi.deleteJournalEntry(testUserId, testJournalId, testEntryId)
         }
         coVerify(exactly = 1) { mockJournalEntryDao.deleteById(testEntryId) }
-        verify { Log.i(TAG, "Запись успешно удалена на сервере") }
+        verify { logger.i(TAG, "Запись успешно удалена на сервере") }
     }
 
     /**
@@ -499,7 +490,7 @@ class JournalEntriesRepositoryImplTest {
         }
         coVerify(exactly = 1) { mockJournalEntryDao.deleteById(testEntryId) }
         verify {
-            Log.i(
+            logger.i(
                 TAG,
                 "Запись уже удалена на сервере (404), удаляем из локального кэша"
             )
@@ -528,7 +519,7 @@ class JournalEntriesRepositoryImplTest {
         }
         coVerify(exactly = 0) { mockJournalEntryDao.deleteById(any()) } // DAO не должен вызываться
         verify {
-            Log.e(TAG, "Ошибка удаления записи: код 401")
+            logger.e(TAG, "Ошибка удаления записи: код 401")
         }
     }
 
@@ -554,7 +545,7 @@ class JournalEntriesRepositoryImplTest {
         }
         coVerify(exactly = 0) { mockJournalEntryDao.deleteById(any()) }
         verify {
-            Log.e(TAG, "Ошибка удаления записи: код 403")
+            logger.e(TAG, "Ошибка удаления записи: код 403")
         }
     }
 
@@ -584,7 +575,7 @@ class JournalEntriesRepositoryImplTest {
         }
         coVerify(exactly = 0) { mockJournalEntryDao.deleteById(any()) }
         verify {
-            Log.e(
+            logger.e(
                 TAG,
                 "Ошибка сети при удалении записи: ${exception.message}"
             )
@@ -607,13 +598,13 @@ class JournalEntriesRepositoryImplTest {
 
         // Then - проверяем логи
         verify(exactly = 1) {
-            Log.i(
+            logger.i(
                 TAG,
                 "Удаление записи: userId=$testUserId, journalId=$testJournalId, entryId=$testEntryId"
             )
         }
         verify(exactly = 1) {
-            Log.i(TAG, "Запись успешно удалена на сервере")
+            logger.i(TAG, "Запись успешно удалена на сервере")
         }
     }
 

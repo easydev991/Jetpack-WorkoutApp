@@ -18,6 +18,8 @@ import com.swparks.data.model.Park
 import com.swparks.data.model.User
 import com.swparks.network.SWApi
 import com.swparks.ui.model.EventType
+import com.swparks.util.NoOpCrashReporter
+import com.swparks.util.NoOpLogger
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -48,6 +50,8 @@ class SWRepositoryTest {
     private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
     private val mockDialogDao = mockk<DialogDao>(relaxed = true)
     private val mockEventDao = mockk<EventDao>(relaxed = true)
+    private val crashReporter = NoOpCrashReporter()
+    private val logger = NoOpLogger()
 
     @Before
     fun setup() {
@@ -119,7 +123,9 @@ class SWRepositoryTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -146,7 +152,9 @@ class SWRepositoryTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When & Then
@@ -177,7 +185,9 @@ class SWRepositoryTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When & Then
@@ -204,7 +214,9 @@ class SWRepositoryTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When & Then
@@ -229,7 +241,9 @@ class SWRepositoryTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When & Then
@@ -256,7 +270,9 @@ class SWRepositoryTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -288,7 +304,9 @@ class SWRepositoryTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -317,7 +335,9 @@ class SWRepositoryTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -346,7 +366,9 @@ class SWRepositoryTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -375,7 +397,9 @@ class SWRepositoryTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When

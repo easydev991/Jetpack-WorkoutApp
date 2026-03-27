@@ -114,6 +114,7 @@ import com.swparks.ui.viewmodel.UserAddedParksViewModel
 import com.swparks.ui.viewmodel.UserFriendsViewModel
 import com.swparks.ui.viewmodel.UserTrainingParksViewModel
 import com.swparks.util.AndroidLogger
+import com.swparks.util.CrashReporter
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import com.swparks.util.UserNotifierImpl
@@ -146,6 +147,7 @@ interface AppContainer {
     // Сервисы для обработки ошибок
     val logger: Logger
     val userNotifier: UserNotifier
+    val crashReporter: CrashReporter
 
     // Event notifiers
     val messageSentNotifier: MessageSentNotifier
@@ -279,6 +281,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
     override val logger: Logger = AndroidLogger()
     override val userNotifier: UserNotifier = UserNotifierImpl(logger)
+    override val crashReporter: CrashReporter = com.swparks.util.crash.FirebaseCrashReporter
     override val messageSentNotifier: MessageSentNotifier = MessageSentNotifier()
 
     // ==================== Location & Geocoding Services ====================
@@ -444,7 +447,9 @@ class DefaultAppContainer(context: Context) : AppContainer {
             journalDao = journalDao,
             journalEntryDao = journalEntryDao,
             dialogDao = dialogDao,
-            eventDao = eventDao
+            eventDao = eventDao,
+            crashReporter = crashReporter,
+            logger = logger
         )
     }
 
@@ -455,7 +460,12 @@ class DefaultAppContainer(context: Context) : AppContainer {
     }
 
     override val journalsRepository: JournalsRepository by lazy {
-        JournalsRepositoryImpl(swApi = retrofitService, journalDao = journalDao)
+        JournalsRepositoryImpl(
+            swApi = retrofitService,
+            journalDao = journalDao,
+            crashReporter = crashReporter,
+            logger = logger
+        )
     }
 
     /**
@@ -469,7 +479,12 @@ class DefaultAppContainer(context: Context) : AppContainer {
      * эти параметры передаются в методах репозитория
      */
     override val journalEntriesRepository: JournalEntriesRepository by lazy {
-        JournalEntriesRepositoryImpl(swApi = retrofitService, journalEntryDao = journalEntryDao)
+        JournalEntriesRepositoryImpl(
+            swApi = retrofitService,
+            journalEntryDao = journalEntryDao,
+            crashReporter = crashReporter,
+            logger = logger
+        )
     }
 
     /**
@@ -479,7 +494,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
         MessagesRepositoryImpl(
             dialogsDao = dialogDao,
             swApi = retrofitService,
-            logger = logger
+            logger = logger,
+            crashReporter = crashReporter
         )
     }
 
@@ -495,14 +511,16 @@ class DefaultAppContainer(context: Context) : AppContainer {
             tokenEncoder,
             secureTokenRepository,
             swRepository,
-            userPreferencesRepository
+            userPreferencesRepository,
+            crashReporter
         )
     }
 
     override val logoutUseCase: ILogoutUseCase by lazy {
         LogoutUseCase(
             secureTokenRepository,
-            swRepository
+            swRepository,
+            crashReporter
         )
     }
 

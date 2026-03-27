@@ -15,6 +15,8 @@ import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.exception.ServerException
 import com.swparks.domain.model.RegistrationParams
 import com.swparks.network.SWApi
+import com.swparks.util.NoOpCrashReporter
+import com.swparks.util.NoOpLogger
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -50,6 +52,8 @@ class SWRepositoryAuthTest {
     private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
     private val mockDialogDao = mockk<DialogDao>(relaxed = true)
     private val mockEventDao = mockk<EventDao>(relaxed = true)
+    private val crashReporter = NoOpCrashReporter()
+    private val logger = NoOpLogger()
 
     @Before
     fun setup() {
@@ -84,7 +88,9 @@ class SWRepositoryAuthTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -112,7 +118,9 @@ class SWRepositoryAuthTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -140,7 +148,9 @@ class SWRepositoryAuthTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -168,7 +178,9 @@ class SWRepositoryAuthTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -195,7 +207,9 @@ class SWRepositoryAuthTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -227,7 +241,9 @@ class SWRepositoryAuthTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -256,7 +272,9 @@ class SWRepositoryAuthTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -293,7 +311,9 @@ class SWRepositoryAuthTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -332,7 +352,9 @@ class SWRepositoryAuthTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter = crashReporter,
+            logger = logger
         )
 
         // When
@@ -395,7 +417,9 @@ class SWRepositoryAuthTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -441,7 +465,9 @@ class SWRepositoryAuthTest {
                 mockJournalDao,
                 mockJournalEntryDao,
                 mockDialogDao,
-                mockEventDao
+                mockEventDao,
+                crashReporter = crashReporter,
+                logger = logger
             )
 
             // When
@@ -476,7 +502,9 @@ class SWRepositoryAuthTest {
                 mockJournalDao,
                 mockJournalEntryDao,
                 mockDialogDao,
-                mockEventDao
+                mockEventDao,
+                crashReporter = crashReporter,
+                logger = logger
             )
 
             // When
@@ -510,7 +538,9 @@ class SWRepositoryAuthTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter = crashReporter,
+            logger = logger
         )
 
         // When
@@ -544,7 +574,9 @@ class SWRepositoryAuthTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter = crashReporter,
+            logger = logger
         )
 
         // When
@@ -577,7 +609,9 @@ class SWRepositoryAuthTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter = crashReporter,
+            logger = logger
         )
 
         // When
@@ -612,7 +646,9 @@ class SWRepositoryAuthTest {
                 mockJournalDao,
                 mockJournalEntryDao,
                 mockDialogDao,
-                mockEventDao
+                mockEventDao,
+                crashReporter = crashReporter,
+                logger = logger
             )
 
             // When
@@ -658,7 +694,9 @@ class SWRepositoryAuthTest {
                 mockJournalDao,
                 mockJournalEntryDao,
                 mockDialogDao,
-                mockEventDao
+                mockEventDao,
+                crashReporter,
+                logger
             )
 
             // When
@@ -703,7 +741,9 @@ class SWRepositoryAuthTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter = crashReporter,
+            logger = logger
         )
 
         // When

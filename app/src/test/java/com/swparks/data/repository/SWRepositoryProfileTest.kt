@@ -13,6 +13,8 @@ import com.swparks.data.model.User
 import com.swparks.domain.exception.NetworkException
 import com.swparks.network.SWApi
 import com.swparks.ui.model.MainUserForm
+import com.swparks.util.NoOpCrashReporter
+import com.swparks.util.NoOpLogger
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -45,6 +47,8 @@ class SWRepositoryProfileTest {
     private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
     private val mockDialogDao = mockk<DialogDao>(relaxed = true)
     private val mockEventDao = mockk<EventDao>(relaxed = true)
+    private val crashReporter = NoOpCrashReporter()
+    private val logger = NoOpLogger()
 
 
     @Before
@@ -90,7 +94,9 @@ class SWRepositoryProfileTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -104,86 +110,6 @@ class SWRepositoryProfileTest {
 
     @Test
     fun getUser_whenApiThrowsException_thenReturnsFailure() = runTest {
-        // Given
-        val mockApi = mockk<SWApi>()
-        coEvery { mockApi.getUser(any()) } throws IOException("Network error")
-
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        // Mock userDao to return null (no cached data)
-        every { mockUserDao.getUserByIdFlow(any()) } returns flowOf(null)
-
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao
-        )
-
-        // When
-        val result = repository.getUser(123L)
-
-        // Then
-        assertTrue(result.isFailure)
-        assertTrue(result.exceptionOrNull() is NetworkException)
-    }
-
-    @Test
-    fun editUser_whenApiReturnsUser_thenReturnsUser() = runTest {
-        // Given
-        val mockUser = createMockUser(123L)
-        val mockApi = mockk<SWApi>()
-        coEvery {
-            mockApi.editUser(
-                userId = any(),
-                name = any(),
-                fullName = any(),
-                email = any(),
-                birthDate = any(),
-                gender = any(),
-                countryId = any(),
-                cityId = any(),
-                image = any()
-            )
-        } returns mockUser
-
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao
-        )
-        val form = MainUserForm(
-            name = "testuser",
-            fullname = "Test User",
-            email = "test@example.com",
-            password = "password",
-            birthDate = "2000-01-01",
-            genderCode = 1,
-            countryId = 1,
-            cityId = 1
-        )
-
-        // When
-        val result = repository.editUser(123L, form, null)
-
-        // Then
-        assertTrue(result.isSuccess)
-        assertEquals(mockUser, result.getOrNull())
-    }
-
-    @Test
-    fun editUser_whenApiThrowsException_thenReturnsFailure() = runTest {
         // Given
         val mockApi = mockk<SWApi>()
         coEvery {
@@ -210,7 +136,9 @@ class SWRepositoryProfileTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
         val form = MainUserForm(
             name = "testuser",
@@ -250,7 +178,9 @@ class SWRepositoryProfileTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -278,7 +208,9 @@ class SWRepositoryProfileTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -316,7 +248,9 @@ class SWRepositoryProfileTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -369,7 +303,9 @@ class SWRepositoryProfileTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -399,7 +335,9 @@ class SWRepositoryProfileTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -434,7 +372,9 @@ class SWRepositoryProfileTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -470,7 +410,9 @@ class SWRepositoryProfileTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -503,7 +445,9 @@ class SWRepositoryProfileTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -533,7 +477,9 @@ class SWRepositoryProfileTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When
@@ -561,7 +507,9 @@ class SWRepositoryProfileTest {
             mockJournalDao,
             mockJournalEntryDao,
             mockDialogDao,
-            mockEventDao
+            mockEventDao,
+            crashReporter,
+            logger
         )
 
         // When

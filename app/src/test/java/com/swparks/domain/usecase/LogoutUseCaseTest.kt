@@ -3,6 +3,8 @@ package com.swparks.domain.usecase
 import android.util.Log
 import com.swparks.data.SecureTokenRepository
 import com.swparks.data.repository.SWRepository
+import com.swparks.util.CrashReporter
+import com.swparks.util.NoOpCrashReporter
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -19,6 +21,7 @@ class LogoutUseCaseTest {
 
     private lateinit var secureTokenRepository: SecureTokenRepository
     private lateinit var swRepository: SWRepository
+    private lateinit var crashReporter: CrashReporter
     private lateinit var logoutUseCase: LogoutUseCase
 
     @Before
@@ -27,7 +30,8 @@ class LogoutUseCaseTest {
         every { Log.i(any(), any()) } returns 0
         secureTokenRepository = mockk(relaxed = true)
         swRepository = mockk(relaxed = true)
-        logoutUseCase = LogoutUseCase(secureTokenRepository, swRepository)
+        crashReporter = NoOpCrashReporter()
+        logoutUseCase = LogoutUseCase(secureTokenRepository, swRepository, crashReporter)
     }
 
     @After
