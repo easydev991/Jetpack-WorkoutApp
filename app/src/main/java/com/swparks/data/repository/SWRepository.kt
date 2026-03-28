@@ -252,15 +252,8 @@ class SWRepositoryImp(
         return try {
             val responseBody = e.response()?.errorBody()?.string()
             if (responseBody != null) {
-                logger.e(TAG, "Тело ответа сервера: $responseBody")
                 val errorResponse = json.decodeFromString<ErrorResponse>(responseBody)
-                logger.e(
-                    TAG,
-                    "Десериализованный ErrorResponse: message=${errorResponse.message}, errors=${errorResponse.errors}"
-                )
                 val errorMessage = errorResponse.realMessage ?: "Ошибка сервера: $statusCode"
-                logger.e(TAG, "realMessage: ${errorResponse.realMessage}")
-                logger.e(TAG, "errorMessage для ServerException: $errorMessage")
                 ServerException(message = errorMessage, cause = e)
             } else {
                 val errorMessage = APIError.fromStatusCode(statusCode).errorMessage
@@ -283,7 +276,6 @@ class SWRepositoryImp(
         return try {
             val errorBody = response.errorBody()?.string()
             if (errorBody != null) {
-                logger.e(TAG, "Тело ответа сервера: $errorBody")
                 val errorResponse = json.decodeFromString<ErrorResponse>(errorBody)
                 val errorMessage = errorResponse.realMessage ?: "Ошибка сервера: $statusCode"
                 ServerException(message = errorMessage)

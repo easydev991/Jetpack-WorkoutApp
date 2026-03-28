@@ -7,6 +7,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.SavedStateHandle
 import androidx.room.Room
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.swparks.BuildConfig
 import com.swparks.data.crypto.CryptoManager
 import com.swparks.data.crypto.CryptoManagerImpl
 import com.swparks.data.database.SWDatabase
@@ -116,6 +117,7 @@ import com.swparks.ui.viewmodel.UserTrainingParksViewModel
 import com.swparks.util.AndroidLogger
 import com.swparks.util.CrashReporter
 import com.swparks.util.Logger
+import com.swparks.util.NoOpLogger
 import com.swparks.util.UserNotifier
 import com.swparks.util.UserNotifierImpl
 import kotlinx.serialization.json.Json
@@ -279,7 +281,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
         ignoreUnknownKeys = true
     }
 
-    override val logger: Logger = AndroidLogger()
+    override val logger: Logger = if (BuildConfig.DEBUG) AndroidLogger() else NoOpLogger()
     override val userNotifier: UserNotifier = UserNotifierImpl(logger)
     override val crashReporter: CrashReporter = com.swparks.util.crash.FirebaseCrashReporter
     override val messageSentNotifier: MessageSentNotifier = MessageSentNotifier()
@@ -406,11 +408,6 @@ class DefaultAppContainer(context: Context) : AppContainer {
         AuthInterceptor(userPreferencesRepository)
     }
 
-    // LoggingInterceptor для отладки HTTP запросов
-    private val loggingInterceptor: LoggingInterceptor by lazy {
-        LoggingInterceptor()
-    }
-
     // Создаем OkHttpClient с interceptor chain
     // Порядок важен: logging → retry → token → auth
     private val okHttpClient: OkHttpClient by lazy {
@@ -421,7 +418,11 @@ class DefaultAppContainer(context: Context) : AppContainer {
             .writeTimeout(NetworkTimeouts.WRITE_SECONDS, TimeUnit.SECONDS)
             .callTimeout(NetworkTimeouts.CALL_SECONDS, TimeUnit.SECONDS)
             // Interceptors
-            .addInterceptor(loggingInterceptor) // Логирование запросов/ответов
+            .apply {
+                if (BuildConfig.DEBUG) {
+                    addInterceptor(LoggingInterceptor())
+                }
+            }
             .addInterceptor(retryInterceptor)   // ← ОБЯЗАТЕЛЬНО ПЕРВЫМ после logging!
             .addInterceptor(tokenInterceptor)
             .addInterceptor(authInterceptor)

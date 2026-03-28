@@ -190,7 +190,7 @@ class LoginViewModel(
                     this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as
                         JetpackWorkoutApplication
                 LoginViewModel(
-                    logger = application.logger,
+                    logger = application.container.logger,
                     loginUseCase = application.container.loginUseCase,
                     resetPasswordUseCase = application.container.resetPasswordUseCase
                 )
