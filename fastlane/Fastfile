@@ -1,0 +1,68 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:android)
+
+platform :android do
+  desc "Runs all the tests"
+  lane :test do
+    gradle(task: "test")
+  end
+
+  desc "Submit a new Beta Build to Crashlytics Beta"
+  lane :beta do
+    gradle(task: "clean assembleRelease")
+    crashlytics
+
+    # sh "your_script.sh"
+    # You can also use other beta testing services here
+  end
+
+  desc "Deploy a new version to the Google Play"
+  lane :deploy do
+    gradle(task: "clean assembleRelease")
+    upload_to_play_store
+  end
+
+  desc "Создание скриншотов для всех локалей"
+  lane :screenshots do
+    capture_android_screenshots(
+      locales: ['ru-RU', 'en-US'],
+      clear_previous_screenshots: true,
+      app_apk_path: File.expand_path('../app/build/outputs/apk/debug/app-debug.apk', __dir__),
+      tests_apk_path: File.expand_path('../app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk', __dir__)
+    )
+  end
+
+  desc "Создание скриншотов только для русского"
+  lane :screenshots_ru do
+    capture_android_screenshots(
+      locales: ['ru-RU'],
+      clear_previous_screenshots: true,
+      app_apk_path: File.expand_path('../app/build/outputs/apk/debug/app-debug.apk', __dir__),
+      tests_apk_path: File.expand_path('../app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk', __dir__)
+    )
+  end
+
+  desc "Создание скриншотов только для английского"
+  lane :screenshots_en do
+    capture_android_screenshots(
+      locales: ['en-US'],
+      clear_previous_screenshots: true,
+      app_apk_path: File.expand_path('../app/build/outputs/apk/debug/app-debug.apk', __dir__),
+      tests_apk_path: File.expand_path('../app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk', __dir__)
+    )
+  end
+end

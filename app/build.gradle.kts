@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -9,9 +11,29 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
 }
 
+val secretsProperties = Properties()
+val secretsPropertiesFile = rootProject.file(".secrets/secrets.properties")
+if (secretsPropertiesFile.exists()) {
+    secretsPropertiesFile.inputStream().use { secretsProperties.load(it) }
+}
+
 android {
     namespace = "com.swparks"
     compileSdk = 36
+
+    signingConfigs {
+        create("release") {
+            val keystoreFile = secretsProperties["KEYSTORE_FILE"] as? String ?: ".secrets/keystore/swparks-release.keystore"
+            val keystorePassword = secretsProperties["KEYSTORE_PASSWORD"] as? String ?: ""
+            val keyAlias = secretsProperties["KEY_ALIAS"] as? String ?: "upload"
+            val keyPassword = secretsProperties["KEY_PASSWORD"] as? String ?: ""
+
+            storeFile = rootProject.file(keystoreFile)
+            storePassword = keystorePassword
+            this.keyAlias = keyAlias
+            this.keyPassword = keyPassword
+        }
+    }
 
     defaultConfig {
         applicationId = "com.swparks"
@@ -32,8 +54,12 @@ android {
             manifestPlaceholders["crashlyticsCollectionEnabled"] = "false"
         }
         release {
+            signingConfig = signingConfigs.getByName("release")
             isShrinkResources = true
             isMinifyEnabled = true
+            ndk {
+                abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
@@ -50,6 +76,7 @@ android {
         compose = true
         buildConfig = true
     }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"

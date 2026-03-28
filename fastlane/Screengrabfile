@@ -1,0 +1,23 @@
+# Имя пакета приложения
+app_package_name 'com.swparks'
+
+# Имя пакета тестов
+tests_package_name 'com.swparks.test'
+
+# Запускать только тесты скриншотов из пакета
+use_tests_in_packages ['com.swparks.screenshots']
+
+# Локали для скриншотов
+locales ['ru-RU', 'en-US']
+
+# Вернуться к базовой локали после завершения тестов
+ending_locale 'ru-RU'
+
+# Очистить предыдущие скриншоты перед генерацией
+clear_previous_screenshots true
+
+# Использовать adb root для доступа к файлам на Android 11+ (снимает проблемы с правами доступа)
+use_adb_root true
+
+# Путь к сгенерированным скриншотам (абсолютный путь)
+output_directory '/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/fastlane/metadata/android'

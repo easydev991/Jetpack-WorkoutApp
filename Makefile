@@ -15,6 +15,10 @@ SHELL := /bin/bash
 .ONESHELL:
 BUNDLE_EXEC := RBENV_VERSION=$(RUBY_VERSION) bundle exec
 
+# Репозиторий с секретами для подписи (SSH)
+SECRETS_REPO = git@github.com:easydev991/android-secrets.git
+SECRETS_DIR = swparks
+
 ## help: Показать это справочное сообщение
 help:
 	@echo "Доступные команды Makefile:"
@@ -105,29 +109,34 @@ check: build test
 install:
 	./gradlew installDebug
 
-## apk: Создать подписанный APK для релизной конфигурации (без повышения версии). Файл: swparks{VERSION_CODE}.apk
+## _load_secrets: Загрузить секреты из SSH-репозитория во временную директорию
+_load_secrets:
+	@printf "$(YELLOW)Загрузка секретов из репозитория по SSH...$(RESET)\n"
+	@TEMP_DIR=$$(mktemp -d); \
+	trap "rm -rf $$TEMP_DIR" EXIT; \
+	printf "$(YELLOW)Клонирую репозиторий $(SECRETS_REPO)...$(RESET)\n"; \
+	if ! git clone --depth 1 $(SECRETS_REPO) "$$TEMP_DIR" 2>/dev/null; then \
+		printf "$(RED)Ошибка: не удалось клонировать репозиторий$(RESET)\n"; \
+		printf "$(YELLOW)Проверьте SSH-доступ к GitHub: ssh -T git@github.com$(RESET)\n"; \
+		exit 1; \
+	fi; \
+	mkdir -p .secrets; \
+	cp -r "$$TEMP_DIR/$(SECRETS_DIR)/*" .secrets/ 2>/dev/null || cp -r "$$TEMP_DIR/$(SECRETS_DIR)"/* .secrets/; \
+	sed -i.tmp 's|^KEYSTORE_FILE=.*|KEYSTORE_FILE=.secrets/keystore/swparks-release.keystore|' .secrets/secrets.properties && rm -f .secrets/secrets.properties.tmp; \
+	printf "$(GREEN)Секреты загружены успешно$(RESET)\n"
+
+## apk: Создать подписанный APK для GitHub Releases (arm64-v8a + armeabi-v7a, без повышения версии)
 apk:
 	@printf "$(YELLOW)Проверка секретов для подписи...$(RESET)\n"
 	@if [ ! -d ".secrets" ]; then \
-		printf "$(YELLOW)Загрузка секретов из репозитория android-secrets...$(RESET)\n"; \
-		if [ -d "../android-secrets/jetpack-workoutapp" ]; then \
-			mkdir -p ".secrets"; \
-			cp -r ../android-secrets/jetpack-workoutapp/* .secrets/; \
-			sed -i.tmp 's|^KEYSTORE_FILE=.*|KEYSTORE_FILE=.secrets/keystore/workoutapp-release.keystore|' .secrets/secrets.properties && rm -f .secrets/secrets.properties.tmp; \
-			printf "$(GREEN)Секреты загружены успешно$(RESET)\n"; \
-		else \
-			printf "$(RED)Ошибка: репозиторий android-secrets не найден в ../android-secrets/jetpack-workoutapp$(RESET)\n"; \
-			printf "$(YELLOW)Проверьте, что репозиторий android-secrets склонирован в нужное место$(RESET)\n"; \
-			exit 1; \
-		fi \
+		$(MAKE) _load_secrets; \
 	fi
-	@printf "$(YELLOW)Создаю релизный APK...$(RESET)\n"
+	@printf "$(YELLOW)Создаю релизный APK (arm64-v8a + armeabi-v7a)...$(RESET)\n"
 	@./gradlew assembleRelease
-	@VERSION_CODE=$$(grep "^VERSION_CODE=" gradle.properties | cut -d'=' -f2); \
-	VERSION_NAME=$$(grep "^VERSION_NAME=" gradle.properties | cut -d'=' -f2); \
-	OUTPUT_FILE="workoutapp$$VERSION_CODE.apk"; \
-	cp app/build/outputs/apk/release/app-release.apk "$$OUTPUT_FILE"; \
-	printf "$(GREEN)APK создан: $$OUTPUT_FILE$(RESET)\n"; \
+	@VERSION_NAME=$$(grep "^VERSION_NAME=" gradle.properties | cut -d'=' -f2); \
+	VERSION_CODE=$$(grep "^VERSION_CODE=" gradle.properties | cut -d'=' -f2); \
+	cp app/build/outputs/apk/release/app-release.apk "swparks$$VERSION_CODE.apk"; \
+	printf "$(GREEN)APK создан: swparks$$VERSION_CODE.apk (arm64-v8a + armeabi-v7a)$(RESET)\n"; \
 	printf "$(YELLOW)Версия: $$VERSION_NAME (build $$VERSION_CODE)$(RESET)\n"
 
 # Настройка окружения
@@ -141,7 +150,7 @@ setup:
 	@$(MAKE) _install_gemfile_deps
 	@$(MAKE) setup_fastlane
 	@$(MAKE) _check_markdownlint
-	@$(MAKE) _setup_git_hooks
+	@$(MAKE) setup_ssh
 
 ## _setup_git_hooks: Настроить Git hooks для автоматического обновления версий
 _setup_git_hooks:
@@ -242,6 +251,78 @@ _check_markdownlint:
 	else \
 		printf "$(GREEN)markdownlint-cli уже установлен$(RESET)\n"; \
 	fi
+
+## setup_ssh: Настраивает SSH-доступ к GitHub (проверка, создание ключа при необходимости)
+setup_ssh:
+	@printf "$(YELLOW)Проверка SSH-доступа к GitHub...$(RESET)\n"
+	@if ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then \
+		printf "$(GREEN)SSH-доступ к GitHub уже настроен$(RESET)\n"; \
+		exit 0; \
+	fi
+	@# Проверка наличия jq
+	@if ! command -v jq >/dev/null 2>&1; then \
+		printf "$(YELLOW)Утилита jq не найдена. Устанавливаю через Homebrew...$(RESET)\n"; \
+		if command -v brew >/dev/null 2>&1; then brew install jq; else printf "$(RED)Homebrew не найден. Установите jq вручную и повторите.$(RESET)\n"; exit 1; fi; \
+	fi
+	@# Создание каталога ~/.ssh при необходимости
+	@if [ ! -d $$HOME/.ssh ]; then \
+		mkdir -p $$HOME/.ssh; \
+		printf "$(GREEN)Создана папка ~/.ssh$(RESET)\n"; \
+	fi
+	@# Создание ключа, если отсутствует
+	@if [ ! -f $$HOME/.ssh/id_ed25519 ]; then \
+		read -p "Введите email для комментария ключа: " KEY_EMAIL; \
+		while [ -z "$$KEY_EMAIL" ]; do read -p "Email не может быть пустым. Введите email: " KEY_EMAIL; done; \
+		printf "$(YELLOW)Создаю новый SSH-ключ id_ed25519...$(RESET)\n"; \
+		ssh-keygen -t ed25519 -N "" -C "$$KEY_EMAIL" -f $$HOME/.ssh/id_ed25519; \
+	else \
+		printf "$(GREEN)SSH-ключ $$HOME/.ssh/id_ed25519 уже существует$(RESET)\n"; \
+	fi
+	@# Запуск ssh-agent и добавление ключа
+	@eval "$$((ssh-agent -s) 2>/dev/null)" >/dev/null || true
+	@ssh-add -K $$HOME/.ssh/id_ed25519 >/dev/null 2>&1 || ssh-add $$HOME/.ssh/id_ed25519 >/dev/null 2>&1 || true
+	@# Настройка ~/.ssh/config для github.com
+	@CONFIG_FILE="$$HOME/.ssh/config"; \
+	HOST_ENTRY="Host github.com\n  HostName github.com\n  User git\n  AddKeysToAgent yes\n  UseKeychain yes\n  IdentityFile $$HOME/.ssh/id_ed25519\n"; \
+	if [ -f "$$CONFIG_FILE" ]; then \
+		if ! grep -q "Host github.com" "$$CONFIG_FILE"; then \
+			echo "$$HOST_ENTRY" >> "$$CONFIG_FILE"; \
+			printf "$(GREEN)Добавлена секция для github.com в ~/.ssh/config$(RESET)\n"; \
+		else \
+			printf "$(GREEN)Секция для github.com уже есть в ~/.ssh/config$(RESET)\n"; \
+		fi; \
+	else \
+		echo "$$HOST_ENTRY" > "$$CONFIG_FILE"; \
+		chmod 600 "$$CONFIG_FILE"; \
+		printf "$(GREEN)Создан ~/.ssh/config с секцией для github.com$(RESET)\n"; \
+	fi
+	@# Предложение добавить публичный ключ в аккаунт GitHub через API
+	@printf "$(YELLOW)Добавление публичного ключа в ваш аккаунт GitHub через API...$(RESET)\n"; \
+	printf "Требуется персональный токен GitHub с правом 'admin:public_key'.\n"; \
+	read -p "Добавить ключ в GitHub через API? [y/N]: " ADD_GH; \
+	if [[ "$$ADD_GH" =~ ^[Yy]$$ ]]; then \
+		read -p "Введите ваш GitHub Personal Access Token: " TOKEN; \
+		read -p "Введите название для SSH-ключа (например, 'work-macbook'): " TITLE; \
+		if [ -z "$$TITLE" ]; then TITLE="JetpackDays key"; fi; \
+		PUB_KEY=$$(cat $$HOME/.ssh/id_ed25519.pub); \
+		DATA=$$(jq -n --arg title "$$TITLE" --arg key "$$PUB_KEY" '{title:$$title, key:$$key}'); \
+		RESPONSE=$$(curl -s -w "\n%{http_code}" -X POST "https://api.github.com/user/keys" -H "Accept: application/vnd.github+json" -H "Authorization: token $$TOKEN" -d "$$DATA"); \
+		BODY=$$(echo "$$RESPONSE" | sed '$$d'); \
+		STATUS=$$(echo "$$RESPONSE" | tail -n 1); \
+		if [ "$$STATUS" = "201" ]; then \
+			printf "$(GREEN)SSH-ключ успешно добавлен в GitHub$(RESET)\n"; \
+		elif [ "$$STATUS" = "422" ]; then \
+			printf "$(YELLOW)Ключ уже добавлен или недопустим. Сообщение GitHub:$(RESET)\n"; \
+			echo "$$BODY"; \
+		else \
+			printf "$(RED)Ошибка при добавлении ключа в GitHub (HTTP $$STATUS)$(RESET)\n"; \
+			echo "$$BODY"; \
+		fi; \
+	else \
+		printf "$(YELLOW)Пропускаю авто-добавление ключа. Добавьте его вручную: $(RESET)https://github.com/settings/keys\n"; \
+	fi
+	@printf "$(YELLOW)Проверка соединения с github.com...$(RESET)\n"; \
+	ssh -T git@github.com || true
 
 ## setup_fastlane: Инициализировать fastlane (создать папку fastlane и Fastfile)
 setup_fastlane:
@@ -357,17 +438,7 @@ android-test-report:
 release:
 	@printf "$(YELLOW)Проверка секретов для подписи...$(RESET)\n"
 	@if [ ! -d ".secrets" ]; then \
-		printf "$(YELLOW)Загрузка секретов из репозитория android-secrets...$(RESET)\n"; \
-		if [ -d "../android-secrets/swparks" ]; then \
-			mkdir -p ".secrets"; \
-			cp -r ../android-secrets/swparks/* .secrets/; \
-			sed -i.tmp 's|^KEYSTORE_FILE=.*|KEYSTORE_FILE=.secrets/keystore/swparks-release.keystore|' .secrets/secrets.properties && rm -f .secrets/secrets.properties.tmp; \
-			printf "$(GREEN)Секреты загружены успешно$(RESET)\n"; \
-		else \
-			printf "$(RED)Ошибка: репозиторий android-secrets не найден в ../android-secrets/swparks$(RESET)\n"; \
-			printf "$(YELLOW)Проверьте, что репозиторий android-secrets склонирован в нужное место$(RESET)\n"; \
-			exit 1; \
-		fi \
+		$(MAKE) _load_secrets; \
 	fi
 	@printf "$(YELLOW)Увеличиваю VERSION_CODE...$(RESET)\n"
 	@CURRENT_VERSION_CODE=$$(grep "^VERSION_CODE=" gradle.properties | cut -d'=' -f2); \
@@ -387,4 +458,4 @@ release:
 ## all: Полная проверка (сборка + тесты + линтер) и установка APK на устройство
 all: check install
 
-.PHONY: build clean test lint format check install all android-test test-all android-test-report screenshots screenshots-ru screenshots-en update_readme update_readme_versions _build_screenshots_apk _cleanup_screenshots_apk _ensure_fastlane setup setup_fastlane update_fastlane fastlane help release apk _check_rbenv _check_ruby _check_ruby_version_file _check_bundler _check_gemfile _install_gemfile_deps _check_markdownlint _setup_git_hooks
+.PHONY: build clean test lint format check install all android-test test-all android-test-report screenshots screenshots-ru screenshots-en update_readme update_readme_versions _build_screenshots_apk _cleanup_screenshots_apk _ensure_fastlane setup setup_fastlane update_fastlane fastlane help release apk _check_rbenv _check_ruby _check_ruby_version_file _check_bundler _check_gemfile _install_gemfile_deps _check_markdownlint _load_secrets setup_ssh
