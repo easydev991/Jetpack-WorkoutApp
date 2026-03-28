@@ -236,7 +236,7 @@ fun ParksRootScreen(
                         onMapEvent = viewModel::onMapEvent,
                         modifier = Modifier
                             .fillMaxSize()
-                            .alpha(if (selectedTab == ParksTab.MAP) 1f else 0f)
+                            .alpha(if (selectedTab == ParksTab.MAP && !uiState.showNoParksFound) 1f else 0f)
                     )
 
                     if (selectedTab == ParksTab.MAP) {
