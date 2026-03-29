@@ -47,6 +47,7 @@ import com.swparks.domain.usecase.ChangePasswordUseCase
 import com.swparks.domain.usecase.CreateEventUseCase
 import com.swparks.domain.usecase.CreateJournalUseCase
 import com.swparks.domain.usecase.DefaultCreateParkLocationHandler
+import com.swparks.domain.usecase.DeleteEventUseCase
 import com.swparks.domain.usecase.DeleteJournalEntryUseCase
 import com.swparks.domain.usecase.DeleteJournalUseCase
 import com.swparks.domain.usecase.DeleteUserUseCase
@@ -777,7 +778,9 @@ class DefaultAppContainer(context: Context) : AppContainer {
             userPreferencesRepository = userPreferencesRepository,
             savedStateHandle = savedStateHandle,
             userNotifier = userNotifier,
-            logger = logger
+            logger = logger,
+            deleteEventUseCase = DeleteEventUseCase(swRepository),
+            resourcesProvider = resourcesProvider
         )
 
     /** Factory метод для создания EventFormViewModel */

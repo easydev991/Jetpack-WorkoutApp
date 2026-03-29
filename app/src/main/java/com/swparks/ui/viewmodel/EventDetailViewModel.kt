@@ -7,6 +7,7 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.swparks.R
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Comment
 import com.swparks.data.model.Event
@@ -14,7 +15,10 @@ import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.data.model.removePhotoById
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.exception.NotFoundException
+import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
+import com.swparks.domain.usecase.DeleteEventUseCase
 import com.swparks.ui.ds.CommentAction
 import com.swparks.ui.model.EditInfo
 import com.swparks.ui.model.MapUriSet
@@ -133,6 +137,11 @@ sealed class EventDetailEvent {
     data object ShowDeleteCommentConfirmDialog : EventDetailEvent()
 
     /**
+     * Навигация назад при ошибке 404 (ресурс не найден).
+     */
+    data object NavigateBack : EventDetailEvent()
+
+    /**
      * Навигация к экрану детального просмотра фотографии.
      *
      * @param photo Фотография для просмотра
@@ -169,6 +178,8 @@ class EventDetailViewModel(
     private val savedStateHandle: SavedStateHandle,
     private val userNotifier: UserNotifier,
     private val logger: Logger,
+    private val deleteEventUseCase: DeleteEventUseCase,
+    private val resourcesProvider: ResourcesProvider,
 ) : ViewModel(), IEventDetailViewModel {
 
     companion object {
@@ -183,6 +194,8 @@ class EventDetailViewModel(
             userPreferencesRepository: UserPreferencesRepository,
             userNotifier: UserNotifier,
             logger: Logger,
+            deleteEventUseCase: DeleteEventUseCase,
+            resourcesProvider: ResourcesProvider,
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val savedStateHandle = createSavedStateHandle()
@@ -192,7 +205,9 @@ class EventDetailViewModel(
                     userPreferencesRepository = userPreferencesRepository,
                     savedStateHandle = savedStateHandle,
                     userNotifier = userNotifier,
-                    logger = logger
+                    logger = logger,
+                    deleteEventUseCase = deleteEventUseCase,
+                    resourcesProvider = resourcesProvider
                 )
             }
         }
@@ -863,6 +878,21 @@ class EventDetailViewModel(
 
     private fun handleError(exception: Throwable, operation: String) {
         when (exception) {
+            is NotFoundException.EventNotFound -> {
+                viewModelScope.launch {
+                    val eventId = exception.resourceId
+                    logger.w(TAG, "Мероприятие id=$eventId не найдено на сервере (404)")
+                    deleteEventUseCase(eventId)
+                    userNotifier.handleError(
+                        AppError.ResourceNotFound(
+                            message = resourcesProvider.getString(R.string.error_server_not_found),
+                            resourceType = AppError.ResourceType.EVENT
+                        )
+                    )
+                    _events.emit(EventDetailEvent.NavigateBack)
+                }
+            }
+
             is IOException -> {
                 userNotifier.handleError(
                     AppError.Network(

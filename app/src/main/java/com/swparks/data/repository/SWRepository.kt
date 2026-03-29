@@ -25,6 +25,7 @@ import com.swparks.data.model.Park
 import com.swparks.data.model.SocialUpdates
 import com.swparks.data.model.User
 import com.swparks.domain.exception.NetworkException
+import com.swparks.domain.exception.NotFoundException
 import com.swparks.domain.exception.ServerException
 import com.swparks.domain.model.RegistrationParams
 import com.swparks.network.SWApi
@@ -117,6 +118,7 @@ interface SWRepository {
     suspend fun changeTrainHereStatus(trainHere: Boolean, parkId: Long): Result<Unit>
     suspend fun getUpdatedParks(date: String): Result<List<Park>>
     suspend fun deleteParkPhoto(parkId: Long, photoId: Long): Result<Unit>
+    suspend fun removeParkLocally(parkId: Long): Result<Unit>
 
     // 3.5. Мероприятия
     suspend fun getEvents(type: EventType): Result<List<Event>>
@@ -125,6 +127,7 @@ interface SWRepository {
     suspend fun changeIsGoingToEvent(go: Boolean, eventId: Long): Result<Unit>
     suspend fun deleteEvent(eventId: Long): Result<Unit>
     suspend fun deleteEventPhoto(eventId: Long, photoId: Long): Result<Unit>
+    suspend fun removeEventLocally(eventId: Long): Result<Unit>
 
     // 3.6. Сообщения
     suspend fun getDialogs(): Result<List<DialogResponse>>
@@ -673,7 +676,11 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "загрузке площадки"))
         } catch (e: HttpException) {
-            Result.failure(handleHttpException(e, "загрузке площадки"))
+            if (e.code() == 404) {
+                Result.failure(NotFoundException.ParkNotFound(resourceId = id))
+            } else {
+                Result.failure(handleHttpException(e, "загрузке площадки"))
+            }
         }
 
     override suspend fun savePark(
@@ -742,6 +749,18 @@ class SWRepositoryImp(
             Result.failure(handleIOException(e, "удалении площадки"))
         } catch (e: HttpException) {
             Result.failure(handleHttpException(e, "удалении площадки"))
+        }
+
+    override suspend fun removeParkLocally(parkId: Long): Result<Unit> =
+        try {
+            val currentUserId = preferencesRepository.getCurrentUserIdSync()
+            if (currentUserId != null) {
+                removeParkFromUser(currentUserId, parkId)
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            logger.e(TAG, "Ошибка локального удаления парка $parkId", e)
+            Result.failure(e)
         }
 
     override suspend fun getParksForUser(userId: Long): Result<List<Park>> =
@@ -853,7 +872,11 @@ class SWRepositoryImp(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "загрузке мероприятия"))
         } catch (e: HttpException) {
-            Result.failure(handleHttpException(e, "загрузке мероприятия"))
+            if (e.code() == 404) {
+                Result.failure(NotFoundException.EventNotFound(resourceId = id))
+            } else {
+                Result.failure(handleHttpException(e, "загрузке мероприятия"))
+            }
         }
 
     override suspend fun saveEvent(
@@ -939,6 +962,16 @@ class SWRepositoryImp(
             Result.failure(handleIOException(e, "удалении фото мероприятия"))
         } catch (e: HttpException) {
             Result.failure(handleHttpException(e, "удалении фото мероприятия"))
+        }
+
+    override suspend fun removeEventLocally(eventId: Long): Result<Unit> =
+        try {
+            _futureEvents.value = _futureEvents.value.filter { it.id != eventId }
+            eventDao.deleteById(eventId)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            logger.e(TAG, "Ошибка локального удаления мероприятия $eventId", e)
+            Result.failure(e)
         }
 
     // 3.6. Сообщения

@@ -2,17 +2,22 @@ package com.swparks.ui.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.swparks.R
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Comment
 import com.swparks.data.model.Event
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.exception.NotFoundException
+import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
+import com.swparks.domain.usecase.DeleteEventUseCase
 import com.swparks.ui.ds.CommentAction
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.model.TextEntryOption
 import com.swparks.ui.state.EventDetailUIState
+import com.swparks.util.AppError
 import com.swparks.util.Logger
 import com.swparks.util.NoOpLogger
 import com.swparks.util.UserNotifier
@@ -20,10 +25,15 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -41,6 +51,8 @@ class EventDetailViewModelTest {
     private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var userNotifier: UserNotifier
     private lateinit var savedStateHandle: SavedStateHandle
+    private lateinit var deleteEventUseCase: DeleteEventUseCase
+    private lateinit var resourcesProvider: ResourcesProvider
     private val logger: Logger = NoOpLogger()
 
     @Before
@@ -50,12 +62,16 @@ class EventDetailViewModelTest {
         userPreferencesRepository = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
         savedStateHandle = SavedStateHandle(mapOf("eventId" to TEST_EVENT_ID))
+        deleteEventUseCase = mockk(relaxed = true)
+        resourcesProvider = mockk(relaxed = true)
 
         every { userPreferencesRepository.isAuthorized } returns flowOf(true)
         every { userPreferencesRepository.currentUserId } returns flowOf(1L)
 
         coEvery { countriesRepository.getCountryById(any()) } returns null
         coEvery { countriesRepository.getCityById(any()) } returns null
+
+        every { resourcesProvider.getString(R.string.error_server_not_found) } returns "Ресурс не найден на сервере"
     }
 
     @Test
@@ -243,7 +259,9 @@ class EventDetailViewModelTest {
             userPreferencesRepository = userPreferencesRepository,
             savedStateHandle = savedStateHandle,
             userNotifier = userNotifier,
-            logger = logger
+            logger = logger,
+            deleteEventUseCase = deleteEventUseCase,
+            resourcesProvider = resourcesProvider
         )
     }
 
@@ -643,6 +661,52 @@ class EventDetailViewModelTest {
         val state = viewModel.uiState.value
         assertTrue(state is EventDetailUIState.Content)
         assertEquals(TEST_EVENT_ID, (state as EventDetailUIState.Content).event.id)
+    }
+
+    // === 404 NotFound handling tests ===
+
+    @Test
+    fun loadEvent_whenEventNotFound_thenDeletesLocallyNotifiesAndNavigatesBack() = runTest {
+        val testDispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.failure(
+            NotFoundException.EventNotFound(TEST_EVENT_ID)
+        )
+        coEvery { deleteEventUseCase.invoke(TEST_EVENT_ID) } returns Result.success(Unit)
+
+        val viewModel = createViewModel()
+
+        viewModel.events.test {
+            runCurrent()
+            val event = awaitItem()
+            assertTrue(event is EventDetailEvent.NavigateBack)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        coVerify { deleteEventUseCase.invoke(TEST_EVENT_ID) }
+        verify {
+            userNotifier.handleError(
+                AppError.ResourceNotFound(
+                    message = "Ресурс не найден на сервере",
+                    resourceType = AppError.ResourceType.EVENT
+                )
+            )
+        }
+    }
+
+    @Test
+    fun loadEvent_whenEventNotFound_thenUiStateShowsError() = runTest {
+        coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.failure(
+            NotFoundException.EventNotFound(TEST_EVENT_ID)
+        )
+        coEvery { deleteEventUseCase.invoke(TEST_EVENT_ID) } returns Result.success(Unit)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue(state is EventDetailUIState.Error)
     }
 
     private companion object {

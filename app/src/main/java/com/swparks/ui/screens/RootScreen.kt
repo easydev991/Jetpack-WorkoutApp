@@ -27,6 +27,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.swparks.JetpackWorkoutApplication
 import com.swparks.data.model.Park
 import com.swparks.data.preferences.AppSettingsDataStore
+import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.domain.usecase.DeleteEventUseCase
+import com.swparks.domain.usecase.DeleteParkUseCase
 import com.swparks.navigation.AppState
 import com.swparks.navigation.BottomNavigationBar
 import com.swparks.navigation.CreateParkNavArgsViewModel
@@ -445,7 +448,9 @@ fun RootScreen(appState: AppState) {
                         countriesRepository = appContainer.countriesRepository,
                         userPreferencesRepository = appContainer.userPreferencesRepository,
                         userNotifier = appContainer.userNotifier,
-                        logger = appContainer.logger
+                        logger = appContainer.logger,
+                        deleteParkUseCase = DeleteParkUseCase(appContainer.swRepository),
+                        resourcesProvider = ResourcesProviderImpl(context.applicationContext)
                     )
                 )
 
@@ -667,7 +672,9 @@ fun RootScreen(appState: AppState) {
                         countriesRepository = appContainer.countriesRepository,
                         userPreferencesRepository = appContainer.userPreferencesRepository,
                         userNotifier = appContainer.userNotifier,
-                        logger = appContainer.logger
+                        logger = appContainer.logger,
+                        deleteEventUseCase = DeleteEventUseCase(appContainer.swRepository),
+                        resourcesProvider = ResourcesProviderImpl(context.applicationContext)
                     )
                 )
 

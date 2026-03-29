@@ -2,17 +2,22 @@ package com.swparks.ui.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.swparks.R
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Comment
 import com.swparks.data.model.Park
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.exception.NotFoundException
+import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
+import com.swparks.domain.usecase.DeleteParkUseCase
 import com.swparks.ui.ds.CommentAction
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.model.TextEntryOption
 import com.swparks.ui.state.ParkDetailUIState
+import com.swparks.util.AppError
 import com.swparks.util.Logger
 import com.swparks.util.NoOpLogger
 import com.swparks.util.UserNotifier
@@ -20,10 +25,15 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -41,6 +51,8 @@ class ParkDetailViewModelTest {
     private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var userNotifier: UserNotifier
     private lateinit var savedStateHandle: SavedStateHandle
+    private lateinit var deleteParkUseCase: DeleteParkUseCase
+    private lateinit var resourcesProvider: ResourcesProvider
     private val logger: Logger = NoOpLogger()
 
     @Before
@@ -50,12 +62,16 @@ class ParkDetailViewModelTest {
         userPreferencesRepository = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
         savedStateHandle = SavedStateHandle(mapOf("parkId" to TEST_PARK_ID))
+        deleteParkUseCase = mockk(relaxed = true)
+        resourcesProvider = mockk(relaxed = true)
 
         every { userPreferencesRepository.isAuthorized } returns flowOf(true)
         every { userPreferencesRepository.currentUserId } returns flowOf(1L)
 
         coEvery { countriesRepository.getCountryById(any()) } returns null
         coEvery { countriesRepository.getCityById(any()) } returns null
+
+        every { resourcesProvider.getString(R.string.error_server_not_found) } returns "Ресурс не найден на сервере"
     }
 
     @Test
@@ -479,6 +495,52 @@ class ParkDetailViewModelTest {
             }
         }
 
+    // === 404 NotFound handling tests ===
+
+    @Test
+    fun loadPark_whenParkNotFound_thenDeletesLocallyNotifiesAndNavigatesBack() = runTest {
+        val testDispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.failure(
+            NotFoundException.ParkNotFound(TEST_PARK_ID)
+        )
+        coEvery { deleteParkUseCase.invoke(TEST_PARK_ID) } returns Result.success(Unit)
+
+        val viewModel = createViewModel()
+
+        viewModel.events.test {
+            runCurrent()
+            val event = awaitItem()
+            assertTrue(event is ParkDetailEvent.NavigateBack)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        coVerify { deleteParkUseCase.invoke(TEST_PARK_ID) }
+        verify {
+            userNotifier.handleError(
+                AppError.ResourceNotFound(
+                    message = "Ресурс не найден на сервере",
+                    resourceType = AppError.ResourceType.PARK
+                )
+            )
+        }
+    }
+
+    @Test
+    fun loadPark_whenParkNotFound_thenUiStateShowsError() = runTest {
+        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.failure(
+            NotFoundException.ParkNotFound(TEST_PARK_ID)
+        )
+        coEvery { deleteParkUseCase.invoke(TEST_PARK_ID) } returns Result.success(Unit)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue(state is ParkDetailUIState.Error)
+    }
+
     private fun createViewModel(): ParkDetailViewModel {
         return ParkDetailViewModel(
             swRepository = swRepository,
@@ -486,7 +548,9 @@ class ParkDetailViewModelTest {
             userPreferencesRepository = userPreferencesRepository,
             savedStateHandle = savedStateHandle,
             userNotifier = userNotifier,
-            logger = logger
+            logger = logger,
+            deleteParkUseCase = deleteParkUseCase,
+            resourcesProvider = resourcesProvider
         )
     }
 

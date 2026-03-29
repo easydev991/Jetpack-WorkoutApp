@@ -116,4 +116,24 @@ sealed class AppError {
         ADDRESS_BUILD_FAIL,
         IO_ERROR
     }
+
+    /**
+     * Типы ресурсов для ошибки ResourceNotFound.
+     */
+    enum class ResourceType {
+        PARK,
+        EVENT
+    }
+
+    /**
+     * Ресурс не найден (HTTP 404).
+     *
+     * Используется, когда запрашиваемый park или event не найден на сервере.
+     *
+     * @property resourceType Тип ресурса (PARK или EVENT)
+     */
+    data class ResourceNotFound(
+        override val message: String,
+        val resourceType: ResourceType
+    ) : AppError()
 }

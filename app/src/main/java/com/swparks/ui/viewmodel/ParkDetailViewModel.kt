@@ -7,13 +7,17 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.swparks.R
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Comment
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.data.model.removePhotoById
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.exception.NotFoundException
+import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
+import com.swparks.domain.usecase.DeleteParkUseCase
 import com.swparks.ui.ds.CommentAction
 import com.swparks.ui.model.EditInfo
 import com.swparks.ui.model.MapUriSet
@@ -43,6 +47,8 @@ class ParkDetailViewModel(
     private val savedStateHandle: SavedStateHandle,
     private val userNotifier: UserNotifier,
     private val logger: Logger,
+    private val deleteParkUseCase: DeleteParkUseCase,
+    private val resourcesProvider: ResourcesProvider,
 ) : ViewModel(), IParkDetailViewModel {
 
     companion object {
@@ -56,6 +62,8 @@ class ParkDetailViewModel(
             userPreferencesRepository: UserPreferencesRepository,
             userNotifier: UserNotifier,
             logger: Logger,
+            deleteParkUseCase: DeleteParkUseCase,
+            resourcesProvider: ResourcesProvider,
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val savedStateHandle = createSavedStateHandle()
@@ -65,7 +73,9 @@ class ParkDetailViewModel(
                     userPreferencesRepository = userPreferencesRepository,
                     savedStateHandle = savedStateHandle,
                     userNotifier = userNotifier,
-                    logger = logger
+                    logger = logger,
+                    deleteParkUseCase = deleteParkUseCase,
+                    resourcesProvider = resourcesProvider
                 )
             }
         }
@@ -712,6 +722,21 @@ class ParkDetailViewModel(
 
     private fun handleError(exception: Throwable, operation: String) {
         when (exception) {
+            is NotFoundException.ParkNotFound -> {
+                viewModelScope.launch {
+                    val parkId = exception.resourceId
+                    logger.w(TAG, "Площадка id=$parkId не найдена на сервере (404)")
+                    deleteParkUseCase(parkId)
+                    userNotifier.handleError(
+                        AppError.ResourceNotFound(
+                            message = resourcesProvider.getString(R.string.error_server_not_found),
+                            resourceType = AppError.ResourceType.PARK
+                        )
+                    )
+                    _events.emit(ParkDetailEvent.NavigateBack)
+                }
+            }
+
             is IOException -> {
                 userNotifier.handleError(
                     AppError.Network(

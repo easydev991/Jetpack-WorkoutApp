@@ -101,6 +101,7 @@ fun EventDetailScreen(
                 )
 
                 is EventDetailEvent.PhotoDeleted -> Unit
+                EventDetailEvent.NavigateBack -> onAction(EventDetailAction.OnBack)
                 is EventDetailEvent.OpenCalendar -> {
                     val beginTime = DateFormatter.parseIsoDateToMillis(event.beginDate)
                     val intent = Intent(Intent.ACTION_INSERT).apply {

@@ -108,6 +108,7 @@ fun ParkDetailScreen(
                 is ParkDetailEvent.ShowDeletePhotoConfirmDialog -> showDeletePhotoDialog = true
                 ParkDetailEvent.ShowDeleteCommentConfirmDialog -> showDeleteCommentDialog = true
                 is ParkDetailEvent.ParkDeleted -> onAction(ParkDetailAction.OnParkDeleted(event.parkId))
+                ParkDetailEvent.NavigateBack -> onAction(ParkDetailAction.OnBack)
                 is ParkDetailEvent.PhotoDeleted -> Unit
                 is ParkDetailEvent.OpenMap -> {
                     viewModel.mapUriSet?.let { mapUriSet ->

@@ -95,6 +95,10 @@ class UserNotifierImpl(
             is AppError.GeocodingFailed -> {
                 logger.e(TAG, "Ошибка геокодирования: ${error.message}")
             }
+
+            is AppError.ResourceNotFound -> {
+                logger.w(TAG, "Ресурс не найден: ${error.message}")
+            }
         }
 
         // Отправляем в поток (неблокирующая операция)

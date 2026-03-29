@@ -21,6 +21,7 @@ fun AppError.toUiText(context: Context): String {
         is AppError.LocationFailed -> toLocationFailedUiText(context)
         is AppError.LocationDisabled -> toLocationDisabledUiText(context)
         is AppError.GeocodingFailed -> toGeocodingUiText(context)
+        is AppError.ResourceNotFound -> message
     }
 }
 

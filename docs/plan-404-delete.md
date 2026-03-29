@@ -13,10 +13,10 @@
 
 ---
 
-## Этап 1: Добавить domain-исключение NotFoundException
+## Этап 1: Добавить domain-исключение NotFoundException ✓
 
-- [ ] Создать `app/src/main/java/com/swparks/domain/exception/NotFoundException.kt`
-- [ ] sealed class с конкретными типами (НЕ resourceType):
+- [x] Создать `app/src/main/java/com/swparks/domain/exception/NotFoundException.kt`
+- [x] sealed class с конкретными типами (НЕ resourceType):
 
 ```kotlin
 sealed class NotFoundException : Exception() {
@@ -27,68 +27,72 @@ sealed class NotFoundException : Exception() {
 }
 ```
 
-- [ ] Использовать `NotFoundException.ParkNotFound(resourceId = parkId)` и `NotFoundException.EventNotFound(resourceId = eventId)` везде в плане
+- [x] Использовать `NotFoundException.ParkNotFound(resourceId = parkId)` и `NotFoundException.EventNotFound(resourceId = eventId)` везде в плане
 
 ---
 
-## Этап 2: Добавить идемпотентные UseCase для удаления
+## Этап 2: Добавить идемпотентные UseCase для удаления ✓
 
-### 2.1 DeleteParkUseCase
+### 2.1 DeleteParkUseCase ✓
 
-- [ ] Создать `app/src/main/java/com/swparks/domain/usecase/DeleteParkUseCase.kt`
-- [ ] Принимает `parkId: Long`
-- [ ] Очищает park из локального хранилища через repository
-- [ ] Конкретная реализация удаления (например, обновление `UserEntity.addedParks` через `SWRepository.removeParkFromUser()`) скрыта внутри repository
-- [ ] **НЕ трогает кэши ViewModel** — только repository-level хранилище
-- [ ] **Идемпотентность**: если park уже удалён — `Result.success(Unit)`
-- [ ] Возвращает `Result<Unit>`
+- [x] Создать `app/src/main/java/com/swparks/domain/usecase/DeleteParkUseCase.kt`
+- [x] Принимает `parkId: Long`
+- [x] Очищает park из локального хранилища через repository
+- [x] Конкретная реализация удаления (например, обновление `UserEntity.addedParks` через `SWRepository.removeParkFromUser()`) скрыта внутри repository
+- [x] **НЕ трогает кэши ViewModel** — только repository-level хранилище
+- [x] **Идемпотентность**: если park уже удалён — `Result.success(Unit)`
+- [x] Возвращает `Result<Unit>`
 
-### 2.2 DeleteEventUseCase
+### 2.2 DeleteEventUseCase ✓
 
-- [ ] Создать `app/src/main/java/com/swparks/domain/usecase/DeleteEventUseCase.kt`
-- [ ] Принимает `eventId: Long`
-- [ ] Очищает event из локального хранилища через repository
-- [ ] Конкретная реализация удаления (например, `eventDao.deleteById(eventId)`) скрыта внутри repository
-- [ ] **НЕ трогает кэши ViewModel** — только repository-level хранилище
-- [ ] **Идемпотентность**: если event уже удалён — `Result.success(Unit)`
-- [ ] Возвращает `Result<Unit>`
+- [x] Создать `app/src/main/java/com/swparks/domain/usecase/DeleteEventUseCase.kt`
+- [x] Принимает `eventId: Long`
+- [x] Очищает event из локального хранилища через repository
+- [x] Конкретная реализация удаления (например, `eventDao.deleteById(eventId)`) скрыта внутри repository
+- [x] **НЕ трогает кэши ViewModel** — только repository-level хранилище
+- [x] **Идемпотентность**: если event уже удалён — `Result.success(Unit)`
+- [x] Возвращает `Result<Unit>`
 
-### 2.3 Перед реализацией (важно!)
+### 2.3 Перед реализацией (важно!) ✓
 
-- [ ] Проверить фактические локальные источники park в repository/DAO
-- [ ] Если park присутствует в других repository-level кэшах — удалить и оттуда
-- [ ] Не добавлять удаление "других кэшей" без подтверждения конкретным кодом
+- [x] Проверить фактические локальные источники park в repository/DAO
+  - park: `UserEntity.addedParks` через `userDao` + `removeParkFromUser()`
+  - event: `EventDao.deleteById(eventId)` + `_futureEvents` in-memory cache
+- [x] Если park присутствует в других repository-level кэшах — удалить и оттуда
+  - `_futureEvents` обновляется при `removeEventLocally()`
+- [x] Не добавлять удаление "других кэшей" без подтверждения конкретным кодом
 
 ---
 
-## Этап 3: Единое место маппинга HTTP 404 → NotFoundException
+## Этап 3: Единое место маппинга HTTP 404 → NotFoundException ✓
 
-### 3.1 Проверить APIError
+### 3.1 Проверить APIError ✓
 
-- [ ] Изучить `app/src/main/java/com/swparks/data/APIError.kt`
-- [ ] Определить, как текущий код работает с HTTP 404
+- [x] Изучить `app/src/main/java/com/swparks/data/APIError.kt`
+- [x] Определить, как текущий код работает с HTTP 404
 
-### 3.2 Обновить SWRepository
+### 3.2 Обновить SWRepository ✓
 
-- [ ] В методах `getPark(id: Long)` и `getEvent(id: Long)`:
+- [x] В методах `getPark(id: Long)` и `getEvent(id: Long)`:
   - В том месте, где сейчас интерпретируется HTTP/API ошибка, добавить маппинг 404 → `NotFoundException`
   - **Только здесь** происходит маппинг 404 → domain exception
   - ViewModel не знает про HTTP/APIError
 
 ---
 
-## Этап 4: Добавить локализуемую ошибку AppError.ResourceNotFound
+## Этап 4: Добавить локализуемую ошибку AppError.ResourceNotFound ✓
 
-### 4.1 Проверить AppError
+### 4.1 Проверить AppError ✓
 
-- [ ] Изучить `app/src/main/java/com/swparks/util/AppError.kt`
-- [ ] Проверить, есть ли `AppError.NotFound` или нужно добавить
+- [x] Изучить `app/src/main/java/com/swparks/util/AppError.kt`
+- [x] Проверить, есть ли `AppError.NotFound` или нужно добавить
 
-### 4.2 Добавить AppError.ResourceNotFound
+### 4.2 Добавить AppError.ResourceNotFound ✓
 
-- [ ] Добавить `AppError.ResourceNotFound(resourceType: AppError.ResourceType)` с локализованной строкой
-- [ ] Добавить enum `AppError.ResourceType` со значениями `PARK`, `EVENT`
-- [ ] Использовать **только** `AppError.ResourceNotFound` в этапах 5 и 6 (НЕ `AppError.ParkNotFound`)
+- [x] Добавить `AppError.ResourceNotFound(message: String, resourceType: AppError.ResourceType)` с локализованной строкой
+- [x] Добавить enum `AppError.ResourceType` со значениями `PARK`, `EVENT`
+- [x] Использовать **только** `AppError.ResourceNotFound` в этапах 5 и 6 (НЕ `AppError.ParkNotFound`)
+- [x] Исправлено: `message` — параметр конструктора, **не** hardcoded строка
 
 ---
 
@@ -96,30 +100,21 @@ sealed class NotFoundException : Exception() {
 
 ### 5.1 DI
 
-- [ ] Добавить `DeleteParkUseCase` в конструктор
+- [ ] Добавить `DeleteParkUseCase` в конструктор `ParkDetailViewModel`
+- [ ] Обновить factory в companion object
 
 ### 5.2 Обработка результата loadPark()
 
-- [ ] Если result содержит exception типа `NotFoundException.ParkNotFound`:
-  - Получить `parkId` из `exception.resourceId`
-  - Вызвать `DeleteParkUseCase(parkId)`
-  - Вызвать `userNotifier.handleError(AppError.ResourceNotFound(AppError.ResourceType.PARK))`
+- [ ] В `loadPark()` добавить проверку на `NotFoundException.ParkNotFound`:
+  - Вызвать `deleteParkUseCase(parkId)`
+  - Вызвать `userNotifier.handleError(AppError.ResourceNotFound(message, AppError.ResourceType.PARK))`
   - Эмитировать `ParkDetailEvent.NavigateBack`
 - [ ] При других ошибках — обычная обработка через `handleError()`
 - [ ] **НЕ дергать списковые ViewModel напрямую**
 
-### 5.3 Навигация назад — использовать sealed interface Event
+### 5.3 Навигация назад
 
-- [ ] Использовать паттерн как в LoginScreen:
-
-```kotlin
-sealed interface ParkDetailEvent {
-    data object NavigateBack : ParkDetailEvent
-}
-
-private val _events = Channel<ParkDetailEvent>()
-val events: Flow<ParkDetailEvent> = _events.receiveAsFlow()
-```
+- [ ] Добавить `data object NavigateBack : ParkDetailEvent()` в sealed class `ParkDetailEvent`
 
 ---
 
@@ -127,20 +122,20 @@ val events: Flow<ParkDetailEvent> = _events.receiveAsFlow()
 
 ### 6.1 DI
 
-- [ ] Добавить `DeleteEventUseCase` в конструктор
+- [ ] Добавить `DeleteEventUseCase` в конструктор `EventDetailViewModel`
+- [ ] Обновить factory в companion object
 
 ### 6.2 Обработка результата loadEvent()
 
-- [ ] Если result содержит exception типа `NotFoundException.EventNotFound`:
-  - Получить `eventId` из `exception.resourceId`
-  - Вызвать `DeleteEventUseCase(eventId)`
-  - Вызвать `userNotifier.handleError(AppError.ResourceNotFound(AppError.ResourceType.EVENT))`
+- [ ] В `loadEvent()` добавить проверку на `NotFoundException.EventNotFound`:
+  - Вызвать `deleteEventUseCase(eventId)`
+  - Вызвать `userNotifier.handleError(AppError.ResourceNotFound(message, AppError.ResourceType.EVENT))`
   - Эмитировать `EventDetailEvent.NavigateBack`
 - [ ] При других ошибках — обычная обработка через `handleError()`
 
 ### 6.3 Навигация назад
 
-- [ ] Аналогично ParkDetailViewModel: `sealed interface EventDetailEvent { data object NavigateBack }`
+- [ ] Добавить `data object NavigateBack : EventDetailEvent()` в sealed class `EventDetailEvent`
 
 ---
 
@@ -201,7 +196,7 @@ val events: Flow<ParkDetailEvent> = _events.receiveAsFlow()
 - UseCase — инициирует локальную очистку через repository. **Не трогает presentation-layer кэши**
 - ViewModel — только инициирует сценарий и обновляет свой UI state/события
 - Списки — обновляются реактивно через Flow
-- `AppError.ResourceNotFound` — единый тип ошибки для userNotifier
+- `AppError.ResourceNotFound(message: String, resourceType: ResourceType)` — единый тип ошибки для userNotifier; `message` передаётся извне (локализованная строка)
 
 ### Границы удаления
 

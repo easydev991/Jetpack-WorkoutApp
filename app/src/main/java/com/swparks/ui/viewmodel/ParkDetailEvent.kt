@@ -37,6 +37,11 @@ sealed class ParkDetailEvent {
     data class ParkDeleted(val parkId: Long) : ParkDetailEvent()
 
     /**
+     * Навигация назад при ошибке 404 (ресурс не найден).
+     */
+    data object NavigateBack : ParkDetailEvent()
+
+    /**
      * Площадка обновлена после редактирования.
      * Вызывается при возврате с ParkFormScreen.
      *
