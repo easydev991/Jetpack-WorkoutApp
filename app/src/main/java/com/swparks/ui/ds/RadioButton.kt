@@ -1,12 +1,15 @@
 package com.swparks.ui.ds
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
 import com.swparks.ui.utils.disabledAlpha
 
@@ -62,5 +66,97 @@ fun RadioButton(
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Start,
         )
+    }
+}
+
+@Preview(showBackground = true, locale = "ru", name = "Selected - Clickable")
+@Preview(
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true,
+    locale = "ru",
+    name = "Selected - Clickable - Dark"
+)
+@Composable
+private fun RadioButtonPreviewSelectedClickable() {
+    com.swparks.ui.theme.JetpackWorkoutAppTheme {
+        Surface {
+            Column(modifier = Modifier.padding(dimensionResource(R.dimen.spacing_regular))) {
+                RadioButton(
+                    text = "Option 1",
+                    selected = true,
+                    onClick = {},
+                    onClickable = true,
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, locale = "ru", name = "Unselected - Clickable")
+@Preview(
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true,
+    locale = "ru",
+    name = "Unselected - Clickable - Dark"
+)
+@Composable
+private fun RadioButtonPreviewUnselectedClickable() {
+    com.swparks.ui.theme.JetpackWorkoutAppTheme {
+        Surface {
+            Column(modifier = Modifier.padding(dimensionResource(R.dimen.spacing_regular))) {
+                RadioButton(
+                    text = "Option 1",
+                    selected = false,
+                    onClick = {},
+                    onClickable = true,
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, locale = "ru", name = "Selected - Disabled")
+@Preview(
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true,
+    locale = "ru",
+    name = "Selected - Disabled - Dark"
+)
+@Composable
+private fun RadioButtonPreviewSelectedDisabled() {
+    com.swparks.ui.theme.JetpackWorkoutAppTheme {
+        Surface {
+            Column(modifier = Modifier.padding(dimensionResource(R.dimen.spacing_regular))) {
+                RadioButton(
+                    text = "Option 1",
+                    selected = true,
+                    onClick = {},
+                    onClickable = false,
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, locale = "ru", name = "Unselected - Disabled")
+@Preview(
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true,
+    locale = "ru",
+    name = "Unselected - Disabled - Dark"
+)
+@Composable
+private fun RadioButtonPreviewUnselectedDisabled() {
+    com.swparks.ui.theme.JetpackWorkoutAppTheme {
+        Surface {
+            Column(modifier = Modifier.padding(dimensionResource(R.dimen.spacing_regular))) {
+                RadioButton(
+                    text = "Option 1",
+                    selected = false,
+                    onClick = {},
+                    onClickable = false,
+                )
+            }
+        }
     }
 }
