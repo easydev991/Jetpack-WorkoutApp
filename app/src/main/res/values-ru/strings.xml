@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">WorkOut</string>
+    <string name="app_name">SW Площадки</string>
     <string name="parks">Площадки</string>
     <string name="parks_title">Площадки (%1$s)</string>
     <string name="filter_parks">Фильтр площадок</string>

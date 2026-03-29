@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">WorkOut</string>
+    <string name="app_name">SW Parks</string>
     <string name="parks">Parks</string>
     <string name="parks_title">Parks (%1$s)</string>
     <string name="filter_parks">Filter Parks</string>
