@@ -55,7 +55,7 @@ fun ParkInfoCard(
             verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall))
         ) {
             ParkInfoCardHeader(
-                parkName = park.name,
+                parkId = park.id,
                 onDismiss = onDismiss
             )
 
@@ -75,7 +75,7 @@ fun ParkInfoCard(
 
 @Composable
 private fun ParkInfoCardHeader(
-    parkName: String,
+    parkId: Long,
     onDismiss: () -> Unit
 ) {
     Row(
@@ -83,7 +83,7 @@ private fun ParkInfoCardHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = parkName,
+            text = stringResource(R.string.park_number_title, parkId),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)

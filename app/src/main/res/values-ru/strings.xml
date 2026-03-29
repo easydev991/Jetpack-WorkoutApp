@@ -173,6 +173,7 @@
     <string name="map_coming_soon">Карта скоро появится</string>
 
     <string name="park_title">Площадка</string>
+    <string name="park_number_title">Площадка № %1$d</string>
     <string name="new_park_title">Новая площадка</string>
     <string name="build_route">Построить маршрут</string>
     <string name="create_event">Создать мероприятие</string>
