@@ -36,6 +36,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
 
@@ -242,6 +243,47 @@ class SWRepositoryEventsTest {
         // Then
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is NetworkException)
+    }
+
+    @Test
+    fun getEvent_whenApiReturns404_thenReturnsEventNotFound() = runTest {
+        // Given
+        val eventId = 123L
+        val mockApi = mockk<SWApi>()
+        val mockResponse = mockk<Response<*>>(relaxed = true)
+        every { mockResponse.code() } returns 404
+        every { mockResponse.message() } returns "HTTP 404"
+        coEvery { mockApi.getEvent(eventId) } throws HttpException(mockResponse)
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao,
+            mockEventDao,
+            crashReporter,
+            logger
+        )
+
+        // When
+        val result = repository.getEvent(eventId)
+
+        // Then
+        assertTrue(result.isFailure)
+        val exception = result.exceptionOrNull()
+        assertTrue(
+            "Expected NotFoundException.EventNotFound but got $exception",
+            exception is com.swparks.domain.exception.NotFoundException.EventNotFound
+        )
+        assertEquals(
+            eventId,
+            (exception as com.swparks.domain.exception.NotFoundException.EventNotFound).resourceId
+        )
     }
 
     @Test

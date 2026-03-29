@@ -39,6 +39,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
 
@@ -202,6 +203,47 @@ class SWRepositoryParksTest {
         // Then
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is NetworkException)
+    }
+
+    @Test
+    fun getPark_whenApiReturns404_thenReturnsParkNotFound() = runTest {
+        // Given
+        val parkId = 123L
+        val mockApi = mockk<SWApi>()
+        val mockResponse = mockk<Response<*>>(relaxed = true)
+        every { mockResponse.code() } returns 404
+        every { mockResponse.message() } returns "HTTP 404"
+        coEvery { mockApi.getPark(parkId) } throws HttpException(mockResponse)
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao,
+            mockEventDao,
+            crashReporter,
+            logger
+        )
+
+        // When
+        val result = repository.getPark(parkId)
+
+        // Then
+        assertTrue(result.isFailure)
+        val exception = result.exceptionOrNull()
+        assertTrue(
+            "Expected NotFoundException.ParkNotFound but got $exception",
+            exception is com.swparks.domain.exception.NotFoundException.ParkNotFound
+        )
+        assertEquals(
+            parkId,
+            (exception as com.swparks.domain.exception.NotFoundException.ParkNotFound).resourceId
+        )
     }
 
     @Test

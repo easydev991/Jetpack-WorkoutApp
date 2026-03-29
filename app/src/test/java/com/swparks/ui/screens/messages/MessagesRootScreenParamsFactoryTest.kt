@@ -21,25 +21,34 @@ class MessagesRootScreenParamsFactoryTest {
         val vm1 = TrackingDialogsViewModel()
         val vm2 = TrackingDialogsViewModel()
 
-        val paramsV1 = createDialogsContentParams(
-            uiState = DialogsUiState.Success(emptyList()),
+        val loadingState = DialogsLoadingState(
             isRefreshing = false,
             isUpdating = false,
-            syncError = null,
-            currentUser = null,
-            viewModel = vm1,
+            syncError = null
+        )
+
+        val callbacksV1 = DialogsCallbacks(
             onAction = { actionV1Calls++ },
             onDeleteClick = {}
         )
-        val paramsV2 = createDialogsContentParams(
-            uiState = DialogsUiState.Success(emptyList()),
-            isRefreshing = false,
-            isUpdating = false,
-            syncError = null,
-            currentUser = null,
-            viewModel = vm2,
+        val callbacksV2 = DialogsCallbacks(
             onAction = { actionV2Calls++ },
             onDeleteClick = {}
+        )
+
+        val paramsV1 = createDialogsContentParams(
+            uiState = DialogsUiState.Success(emptyList()),
+            loadingState = loadingState,
+            currentUser = null,
+            viewModel = vm1,
+            callbacks = callbacksV1
+        )
+        val paramsV2 = createDialogsContentParams(
+            uiState = DialogsUiState.Success(emptyList()),
+            loadingState = loadingState,
+            currentUser = null,
+            viewModel = vm2,
+            callbacks = callbacksV2
         )
 
         paramsV1.onRefresh()
