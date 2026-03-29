@@ -31,7 +31,7 @@ import org.junit.runner.RunWith
  *
  * Тестирует UI компонент в изоляции без ViewModel.
  * Проверяет отображение диалога, валидацию полей, поведение кнопок
- * и взаимодействие с RadioButton.
+ * и взаимодействие с SWRadioButton.
  */
 @RunWith(AndroidJUnit4::class)
 class JournalSettingsDialogTest {
@@ -195,7 +195,7 @@ class JournalSettingsDialogTest {
     }
 
     /**
-     * Тест 6: RadioButton меняет выбранное значение при клике
+     * Тест 6: SWRadioButton меняет выбранное значение при клике
      */
     @Test
     fun journalSettingsDialog_radioButtonChangesSelection_whenClicked() {
@@ -213,7 +213,7 @@ class JournalSettingsDialogTest {
             .onAllNodes(hasText(context.getString(R.string.friends_access)))[0]
             .performClick()
 
-        // Then - RadioButton "Друзья" должен быть выбран
+        // Then - SWRadioButton "Друзья" должен быть выбран
         // (в Compose тестах мы проверяем только наличие кликабельных элементов)
         composeTestRule
             .onAllNodes(hasText(context.getString(R.string.friends_access)))[0]
@@ -221,7 +221,7 @@ class JournalSettingsDialogTest {
     }
 
     /**
-     * Тест 7: Семантика RadioButton работает корректно
+     * Тест 7: Семантика SWRadioButton работает корректно
      */
     @Test
     fun journalSettingsDialog_radioButtonsAreClickable() {
@@ -231,7 +231,7 @@ class JournalSettingsDialogTest {
         // When
         setContent(journal)
 
-        // Then - Все RadioButton строки должны быть кликабельны
+        // Then - Все SWRadioButton строки должны быть кликабельны
         // Проверяем хотя бы один элемент для каждого варианта (в первой секции)
         composeTestRule
             .onAllNodes(hasText(context.getString(R.string.everybody_access)))[0]

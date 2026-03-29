@@ -32,27 +32,27 @@ import com.swparks.ui.utils.disabledAlpha
  * @param onClickable Флаг, указывающий, можно ли кликнуть по радио-кнопке
  */
 @Composable
-fun RadioButton(
+fun SWRadioButton(
+    modifier: Modifier = Modifier,
     text: String,
     selected: Boolean,
     onClick: () -> Unit,
     onClickable: Boolean = true,
 ) {
     val rowModifier =
-        if (onClickable) {
-            Modifier.selectable(
-                selected = selected,
+        if (onClickable && !selected) {
+            modifier.selectable(
+                selected = false,
                 onClick = onClick,
                 role = Role.RadioButton,
             )
         } else {
-            Modifier
+            modifier
         }
 
     Row(
         modifier = rowModifier
             .fillMaxWidth()
-            .padding(vertical = dimensionResource(R.dimen.spacing_regular))
             .disabledAlpha(!onClickable),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
@@ -77,11 +77,11 @@ fun RadioButton(
     name = "Selected - Clickable - Dark"
 )
 @Composable
-private fun RadioButtonPreviewSelectedClickable() {
+private fun SWRadioButtonPreviewSelectedClickable() {
     com.swparks.ui.theme.JetpackWorkoutAppTheme {
         Surface {
             Column(modifier = Modifier.padding(dimensionResource(R.dimen.spacing_regular))) {
-                RadioButton(
+                SWRadioButton(
                     text = "Option 1",
                     selected = true,
                     onClick = {},
@@ -100,11 +100,11 @@ private fun RadioButtonPreviewSelectedClickable() {
     name = "Unselected - Clickable - Dark"
 )
 @Composable
-private fun RadioButtonPreviewUnselectedClickable() {
+private fun SWRadioButtonPreviewUnselectedClickable() {
     com.swparks.ui.theme.JetpackWorkoutAppTheme {
         Surface {
             Column(modifier = Modifier.padding(dimensionResource(R.dimen.spacing_regular))) {
-                RadioButton(
+                SWRadioButton(
                     text = "Option 1",
                     selected = false,
                     onClick = {},
@@ -123,11 +123,11 @@ private fun RadioButtonPreviewUnselectedClickable() {
     name = "Selected - Disabled - Dark"
 )
 @Composable
-private fun RadioButtonPreviewSelectedDisabled() {
+private fun SWRadioButtonPreviewSelectedDisabled() {
     com.swparks.ui.theme.JetpackWorkoutAppTheme {
         Surface {
             Column(modifier = Modifier.padding(dimensionResource(R.dimen.spacing_regular))) {
-                RadioButton(
+                SWRadioButton(
                     text = "Option 1",
                     selected = true,
                     onClick = {},
@@ -146,11 +146,11 @@ private fun RadioButtonPreviewSelectedDisabled() {
     name = "Unselected - Disabled - Dark"
 )
 @Composable
-private fun RadioButtonPreviewUnselectedDisabled() {
+private fun SWRadioButtonPreviewUnselectedDisabled() {
     com.swparks.ui.theme.JetpackWorkoutAppTheme {
         Surface {
             Column(modifier = Modifier.padding(dimensionResource(R.dimen.spacing_regular))) {
-                RadioButton(
+                SWRadioButton(
                     text = "Option 1",
                     selected = false,
                     onClick = {},

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -23,7 +22,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,13 +34,13 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.swparks.R
 import com.swparks.domain.model.Journal
+import com.swparks.ui.ds.SWRadioButton
 import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.IJournalSettingsViewModel
@@ -248,15 +246,12 @@ private fun SettingsDialogSectionTitle(
     Text(
         text = text,
         style = MaterialTheme.typography.titleMedium,
-        modifier = modifier.padding(
-            top = dimensionResource(R.dimen.spacing_regular),
-            bottom = dimensionResource(R.dimen.spacing_xsmall)
-        )
+        modifier = modifier.padding(vertical = dimensionResource(R.dimen.spacing_regular))
     )
 }
 
 /**
- * Группа RadioButton для выбора доступа
+ * Группа SWRadioButton для выбора доступа
  */
 @Composable
 private fun JournalAccessGroup(
@@ -265,46 +260,16 @@ private fun JournalAccessGroup(
     onSelected: (JournalAccess) -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .selectableGroup()
-            .padding(vertical = dimensionResource(R.dimen.spacing_xsmall)),
+        modifier = Modifier.selectableGroup(),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
     ) {
         options.forEach { option ->
-            JournalAccessRow(
+            SWRadioButton(
                 text = stringResource(option.textRes),
                 selected = selected == option.access,
                 onClick = { onSelected(option.access) }
             )
         }
-    }
-}
-
-/**
- * Строка с RadioButton
- */
-@Composable
-private fun JournalAccessRow(
-    text: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .selectable(
-                selected = selected,
-                role = Role.RadioButton,
-                onClick = onClick
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall))
-    ) {
-        RadioButton(
-            selected = selected,
-            onClick = null
-        )
-        Text(text)
     }
 }
 

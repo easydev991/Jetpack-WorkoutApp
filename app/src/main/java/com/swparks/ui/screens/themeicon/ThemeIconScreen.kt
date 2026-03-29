@@ -26,12 +26,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.swparks.R
 import com.swparks.domain.model.AppIcon
 import com.swparks.domain.model.AppTheme
-import com.swparks.ui.ds.RadioButton
+import com.swparks.ui.ds.SWRadioButton
 import com.swparks.ui.theme.DynamicColors
 import com.swparks.ui.viewmodel.IThemeIconViewModel
 
@@ -143,29 +144,29 @@ private fun ThemeSection(
         modifier = Modifier.fillMaxWidth(),
     )
 
-    Column(modifier = Modifier.selectableGroup()) {
+    Column(
+        modifier = Modifier.selectableGroup(),
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
+    ) {
         // Светлая тема
-        RadioButton(
+        SWRadioButton(
             text = stringResource(R.string.light),
             selected = theme == AppTheme.LIGHT,
             onClick = { onThemeChange(AppTheme.LIGHT) },
-            onClickable = theme != AppTheme.LIGHT,
         )
 
         // Тёмная тема
-        RadioButton(
+        SWRadioButton(
             text = stringResource(R.string.dark),
             selected = theme == AppTheme.DARK,
             onClick = { onThemeChange(AppTheme.DARK) },
-            onClickable = theme != AppTheme.DARK,
         )
 
         // Системная тема
-        RadioButton(
+        SWRadioButton(
             text = stringResource(R.string.system),
             selected = theme == AppTheme.SYSTEM,
             onClick = { onThemeChange(AppTheme.SYSTEM) },
-            onClickable = theme != AppTheme.SYSTEM,
         )
     }
 }

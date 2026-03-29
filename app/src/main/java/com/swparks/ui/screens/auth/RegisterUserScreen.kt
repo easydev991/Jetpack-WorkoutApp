@@ -53,7 +53,7 @@ import com.swparks.ui.ds.FormCardContainerParams
 import com.swparks.ui.ds.ListRowData
 import com.swparks.ui.ds.ListRowView
 import com.swparks.ui.ds.LoadingOverlayView
-import com.swparks.ui.ds.RadioButton
+import com.swparks.ui.ds.SWRadioButton
 import com.swparks.ui.ds.SWButton
 import com.swparks.ui.ds.SWButtonMode
 import com.swparks.ui.ds.SWButtonSize
@@ -475,7 +475,10 @@ private fun GenderRadioButtons(
     enabled: Boolean,
     onGenderChange: (Int) -> Unit
 ) {
-    Column(Modifier.padding(dimensionResource(R.dimen.spacing_small))) {
+    Column(
+        modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
+    ) {
         Text(
             text = stringResource(R.string.gender),
             style = MaterialTheme.typography.bodyMedium,
@@ -483,9 +486,12 @@ private fun GenderRadioButtons(
             else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
             modifier = Modifier.padding(bottom = dimensionResource(R.dimen.spacing_xsmall))
         )
-        Column(modifier = Modifier.selectableGroup()) {
+        Column(
+            modifier = Modifier.selectableGroup(),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
+        ) {
             Gender.entries.forEach { gender ->
-                RadioButton(
+                SWRadioButton(
                     text = stringResource(gender.sex),
                     selected = selectedGenderCode == gender.rawValue,
                     onClick = { onGenderChange(gender.rawValue) },

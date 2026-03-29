@@ -84,7 +84,7 @@
 
 **ViewModels:** `ThemeIconViewModel.kt`
 
-**UI Components:** `ThemeIconScreen.kt`, `RadioButton.kt`, `IconPreviewItem.kt`
+**UI Components:** `ThemeIconScreen.kt`, `SWRadioButton.kt`, `IconPreviewItem.kt`
 
 **Тема:** `DynamicColors.kt`
 

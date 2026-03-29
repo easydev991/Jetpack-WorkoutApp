@@ -42,7 +42,7 @@ import com.swparks.ui.ds.ImagePreviewDialog
 import com.swparks.ui.ds.KeyboardAwareBottomBar
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.PickedImagesGrid
-import com.swparks.ui.ds.RadioButton
+import com.swparks.ui.ds.SWRadioButton
 import com.swparks.ui.ds.SWButton
 import com.swparks.ui.ds.SWButtonMode
 import com.swparks.ui.ds.SWButtonSize
@@ -312,7 +312,7 @@ private fun ParkTypeRadioButtons(
         )
         Column(modifier = Modifier.selectableGroup()) {
             ParkType.entries.forEach { parkType ->
-                RadioButton(
+                SWRadioButton(
                     text = stringResource(parkType.description),
                     selected = selectedTypeId == parkType.rawValue,
                     onClick = { onTypeChange(parkType.rawValue) },
@@ -356,7 +356,7 @@ private fun ParkSizeRadioButtons(
         )
         Column(modifier = Modifier.selectableGroup()) {
             ParkSize.entries.forEach { parkSize ->
-                RadioButton(
+                SWRadioButton(
                     text = stringResource(parkSize.description),
                     selected = selectedSizeId == parkSize.rawValue,
                     onClick = { onSizeChange(parkSize.rawValue) },
