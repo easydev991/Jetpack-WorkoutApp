@@ -15,11 +15,14 @@ import com.swparks.data.model.ParkFilter
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
 import com.swparks.data.preferences.ParksFilterDataStore
+import com.swparks.data.repository.SWRepository
 import com.swparks.domain.provider.LocationService
 import com.swparks.domain.provider.LocationSettingsCheckResult
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.ICreateParkLocationHandler
 import com.swparks.domain.usecase.IFilterParksUseCase
+import com.swparks.domain.usecase.IInitializeParksUseCase
+import com.swparks.domain.usecase.SyncParksUseCase
 import com.swparks.ui.model.ParksTab
 import com.swparks.ui.state.MapCameraPosition
 import com.swparks.ui.state.MapEvent
@@ -46,8 +49,11 @@ class ParksRootViewModel(
     private val filterParksUseCase: IFilterParksUseCase,
     private val parksFilterDataStore: ParksFilterDataStore,
     private val countriesRepository: CountriesRepository,
+    private val swRepository: SWRepository,
+    private val initializeParksUseCase: IInitializeParksUseCase,
     private val userNotifier: UserNotifier,
-    private val locationService: LocationService
+    private val locationService: LocationService,
+    private val syncParksUseCase: SyncParksUseCase
 ) : ViewModel(), IParksRootViewModel {
 
     override val parksFilter: StateFlow<ParkFilter> = parksFilterDataStore.filter
@@ -79,7 +85,20 @@ class ParksRootViewModel(
                 restoreSelectedCity(filter.selectedCityId)
             }
         }
+        observeParks()
         loadCities()
+        viewModelScope.launch {
+            initializeParks()
+            syncParks()
+        }
+    }
+
+    private fun observeParks() {
+        viewModelScope.launch {
+            swRepository.getParksFlow().collect { parks ->
+                updateParks(parks)
+            }
+        }
     }
 
     private fun loadCities() {
@@ -95,6 +114,39 @@ class ParksRootViewModel(
             } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
                 logger.e(TAG, "Ошибка загрузки городов", e)
                 _uiState.value = _uiState.value.copy(isLoadingCities = false)
+            }
+        }
+    }
+
+    private suspend fun syncParks(force: Boolean = false) {
+        if (force) {
+            logger.d(TAG, "Принудительное обновление парков")
+        } else {
+            logger.d(TAG, "Проверка необходимости обновления парков")
+        }
+        val result = syncParksUseCase(force = force)
+        result.onFailure { error ->
+            val message = if (force) {
+                "Ошибка принудительного обновления парков"
+            } else {
+                "Ошибка обновления парков"
+            }
+            logger.e(TAG, message, error)
+        }
+    }
+
+    private suspend fun initializeParks() {
+        logger.d(TAG, "Инициализация seed парков")
+        initializeParksUseCase()
+    }
+
+    override fun refresh() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isRefreshing = true)
+            try {
+                syncParks(force = true)
+            } finally {
+                _uiState.value = _uiState.value.copy(isRefreshing = false)
             }
         }
     }
@@ -165,8 +217,11 @@ class ParksRootViewModel(
                     filterParksUseCase = container.filterParksUseCase,
                     parksFilterDataStore = container.parksFilterDataStore,
                     countriesRepository = container.countriesRepository,
+                    swRepository = container.swRepository,
+                    initializeParksUseCase = container.initializeParksUseCase,
                     userNotifier = container.userNotifier,
-                    locationService = container.locationService
+                    locationService = container.locationService,
+                    syncParksUseCase = container.syncParksUseCase
                 )
             }
         }

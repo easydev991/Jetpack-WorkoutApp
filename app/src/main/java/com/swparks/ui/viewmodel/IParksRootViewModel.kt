@@ -54,6 +54,8 @@ interface IParksRootViewModel {
     fun onTabSelected(tab: ParksTab)
 
     fun onMapEvent(event: MapEvent)
+
+    fun refresh()
 }
 
 data class ParksRootUiState(
@@ -69,7 +71,8 @@ data class ParksRootUiState(
     val citySearchQuery: String = "",
     val filteredParks: List<Park> = emptyList(),
     val hasParks: Boolean = false,
-    val mapState: MapUiState = MapUiState()
+    val mapState: MapUiState = MapUiState(),
+    val isRefreshing: Boolean = false
 )
 
 val ParksRootUiState.showNoParksFound: Boolean

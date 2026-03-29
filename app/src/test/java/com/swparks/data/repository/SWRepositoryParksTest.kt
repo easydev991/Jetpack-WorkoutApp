@@ -10,6 +10,7 @@ import com.swparks.data.database.dao.DialogDao
 import com.swparks.data.database.dao.EventDao
 import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.JournalEntryDao
+import com.swparks.data.database.dao.ParkDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.UserEntity
 import com.swparks.data.model.Park
@@ -54,6 +55,7 @@ class SWRepositoryParksTest {
     private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
     private val mockDialogDao = mockk<DialogDao>(relaxed = true)
     private val mockEventDao = mockk<EventDao>(relaxed = true)
+    private val mockParkDao = mockk<ParkDao>(relaxed = true)
     private val crashReporter = NoOpCrashReporter()
     private val logger = NoOpLogger()
 
@@ -103,6 +105,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -133,6 +136,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -163,6 +167,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -193,6 +198,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -226,6 +232,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -275,6 +282,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -334,6 +342,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -391,6 +400,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -440,6 +450,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -504,6 +515,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -566,6 +578,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -633,6 +646,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -693,6 +707,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -738,6 +753,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -767,6 +783,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -797,6 +814,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -827,6 +845,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -856,6 +875,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -886,6 +906,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -916,6 +937,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -946,6 +968,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -976,6 +999,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -1005,6 +1029,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -1034,6 +1059,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -1078,6 +1104,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -1129,6 +1156,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -1184,6 +1212,7 @@ class SWRepositoryParksTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )

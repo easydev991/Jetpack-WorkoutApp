@@ -6,11 +6,13 @@ import com.swparks.data.database.dao.DialogDao
 import com.swparks.data.database.dao.EventDao
 import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.JournalEntryDao
+import com.swparks.data.database.dao.ParkDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.DialogEntity
 import com.swparks.data.database.entity.EventEntity
 import com.swparks.data.database.entity.JournalEntity
 import com.swparks.data.database.entity.JournalEntryEntity
+import com.swparks.data.database.entity.ParkEntity
 import com.swparks.data.database.entity.UserEntity
 
 /**
@@ -28,9 +30,10 @@ import com.swparks.data.database.entity.UserEntity
         JournalEntity::class,
         JournalEntryEntity::class,
         DialogEntity::class,
-        EventEntity::class
+        EventEntity::class,
+        ParkEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class SWDatabase : RoomDatabase() {
@@ -63,4 +66,10 @@ abstract class SWDatabase : RoomDatabase() {
      * @return EventDao
      */
     abstract fun eventDao(): EventDao
+
+    /**
+     * Получить DAO для работы с площадками
+     * @return ParkDao
+     */
+    abstract fun parkDao(): ParkDao
 }

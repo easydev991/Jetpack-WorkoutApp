@@ -15,15 +15,17 @@ import kotlinx.coroutines.flow.map
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import retrofit2.HttpException
+import java.io.File
 import java.io.IOException
 
 /**
  * Реализация репозитория для работы со справочником стран и городов
  *
- * Загружает данные из локального JSON-файла при первом обращении и кэширует их в памяти.
- * Поддерживает обновление справочника с сервера для будущих версий.
+ * Загружает данные из локального JSON-файла в app-private storage при первом обращении.
+ * При отсутствии локального файла копирует seed из assets.
+ * Поддерживает обновление справочника с сервера с атомарной записью в файл.
  *
- * @param context Контекст приложения для доступа к assets
+ * @param context Контекст приложения для доступа к assets и файловой системе
  * @param swApi API клиент для запросов к серверу
  * @param logger Логгер для записи сообщений
  */
@@ -35,12 +37,14 @@ class CountriesRepositoryImpl(
 
     companion object {
         private const val TAG = "CountriesRepository"
+        private const val LOCAL_FILENAME = "countries.json"
     }
 
-    /** JSON-десериализатор */
+    /** JSON-сериализатор */
     private val json = Json {
         isLenient = true
         ignoreUnknownKeys = true
+        prettyPrint = false
     }
 
     /** Кэшированные данные стран в памяти */
@@ -62,51 +66,121 @@ class CountriesRepositoryImpl(
     @Volatile
     private var countryByCityIdMap: Map<String, Country> = emptyMap()
 
-    /** Загружает справочник стран из локального JSON-файла в assets */
-    private fun loadCountriesFromAssets() {
-        if (isLoaded) {
+    /**
+     * Путь к локальному файлу с справочником стран
+     */
+    private val localFile: File
+        get() = File(context.filesDir, LOCAL_FILENAME)
+
+    /**
+     * Проверяет, существует ли локальный файл с справочником
+     */
+    private fun localFileExists(): Boolean = localFile.exists()
+
+    /**
+     * Копирует seed файл из assets в app-private storage
+     */
+    private fun copySeedFromAssets() {
+        if (localFileExists()) {
+            logger.i(
+                TAG,
+                "Локальный файл countries.json уже существует, пропускаем копирование seed"
+            )
             return
         }
 
+        logger.i(TAG, "Копирование seed countries.json из assets в app-private storage")
         try {
-            // Используем существующую функцию для чтения JSON из assets
-            val jsonString = readJSONFromAssets(context, "countries.json")
-
-            if (jsonString.isEmpty()) {
-                logger.e(TAG, "Не удалось прочитать countries.json: пустая строка")
+            val seedJson = readJSONFromAssets(context, "countries.json")
+            if (seedJson.isEmpty()) {
+                logger.e(TAG, "Не удалось прочитать seed countries.json из assets")
                 return
             }
-
-            // Десериализуем JSON в список стран
-            val countries: List<Country> = json.decodeFromString(jsonString)
-
-            // Обновляем кэшированные данные
-            cachedCountries.value = countries
-            isLoaded = true
-
-            // Создаем индексы для быстрого поиска
-            countriesByIdMap = countries.associateBy { it.id }
-            citiesByIdMap = countries.flatMap { it.cities }.associateBy { it.id }
-            countryByCityIdMap = countries.flatMap { country ->
-                country.cities.map { city -> city.id to country }
-            }.toMap()
-
-            logger.i(TAG, "Загружен справочник стран: ${countries.size} стран")
-        } catch (e: SerializationException) {
-            logger.e(TAG, "Ошибка десериализации JSON: ${e.message}", e)
+            localFile.writeText(seedJson)
+            logger.i(TAG, "Seed countries.json успешно скопирован")
         } catch (e: IOException) {
-            logger.e(TAG, "Ошибка при загрузке справочника стран: ${e.message}", e)
+            logger.e(TAG, "Ошибка при копировании seed countries.json: ${e.message}", e)
+        } catch (e: SecurityException) {
+            logger.e(TAG, "Ошибка безопасности при копировании seed: ${e.message}", e)
         }
     }
 
     /**
-     * Гарантирует, что данные стран загружены из assets.
+     * Читает справочник стран из локального JSON файла
+     */
+    private fun loadCountriesFromLocalFile() {
+        if (isLoaded) {
+            return
+        }
+
+        // Сначала копируем seed если локального файла нет
+        if (!localFileExists()) {
+            copySeedFromAssets()
+        }
+
+        val file = localFile
+        if (!file.exists()) {
+            logger.e(TAG, "Локальный файл countries.json не существует после копирования seed")
+            return
+        }
+
+        try {
+            val jsonString = file.readText()
+            if (jsonString.isEmpty()) {
+                logger.e(TAG, "Прочитан пустой файл countries.json")
+                return
+            }
+
+            val countries: List<Country> = json.decodeFromString(jsonString)
+            updateCache(countries)
+            logger.i(TAG, "Загружен справочник стран из локального файла: ${countries.size} стран")
+        } catch (e: SerializationException) {
+            logger.e(TAG, "Ошибка десериализации countries.json: ${e.message}", e)
+        } catch (e: IOException) {
+            logger.e(TAG, "Ошибка чтения countries.json: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Обновляет кэшированные данные и индексы
+     */
+    private fun updateCache(countries: List<Country>) {
+        cachedCountries.value = countries
+        isLoaded = true
+        countriesByIdMap = countries.associateBy { it.id }
+        citiesByIdMap = countries.flatMap { it.cities }.associateBy { it.id }
+        countryByCityIdMap = countries.flatMap { country ->
+            country.cities.map { city -> city.id to country }
+        }.toMap()
+    }
+
+    /**
+     * Атомарно сохраняет справочник стран в локальный файл
+     */
+    private fun saveCountriesToLocalFile(countries: List<Country>) {
+        try {
+            val jsonString = json.encodeToString(countries)
+            // Атомарная запись: сначала во временный файл, потом rename
+            val tempFile = File(context.filesDir, "countries.json.tmp")
+            tempFile.writeText(jsonString)
+            tempFile.renameTo(localFile)
+            logger.d(TAG, "Справочник стран сохранен в локальный файл")
+        } catch (e: IOException) {
+            logger.e(TAG, "Ошибка записи countries.json: ${e.message}", e)
+            throw e
+        }
+    }
+
+    /**
+     * Гарантирует, что данные стран загружены из локального файла.
      *
      * Метод должен вызываться перед использованием getCountriesFlow(),
      * чтобы убедиться что данные загружены в кэш.
      */
     override fun ensureCountriesLoaded() {
-        loadCountriesFromAssets()
+        if (!isLoaded) {
+            loadCountriesFromLocalFile()
+        }
     }
 
     /**
@@ -125,8 +199,9 @@ class CountriesRepositoryImpl(
      * @return страна или null, если не найдена
      */
     override suspend fun getCountryById(countryId: String): Country? {
-        // Загружаем данные, если они еще не загружены
-        loadCountriesFromAssets()
+        if (!isLoaded) {
+            loadCountriesFromLocalFile()
+        }
         return countriesByIdMap[countryId]
     }
 
@@ -137,8 +212,9 @@ class CountriesRepositoryImpl(
      * @return город или null, если не найден
      */
     override suspend fun getCityById(cityId: String): City? {
-        // Загружаем данные, если они еще не загружены
-        loadCountriesFromAssets()
+        if (!isLoaded) {
+            loadCountriesFromLocalFile()
+        }
         return citiesByIdMap[cityId]
     }
 
@@ -149,8 +225,9 @@ class CountriesRepositoryImpl(
      * @return список городов страны
      */
     override suspend fun getCitiesByCountry(countryId: String): List<City> {
-        // Загружаем данные, если они еще не загружены
-        loadCountriesFromAssets()
+        if (!isLoaded) {
+            loadCountriesFromLocalFile()
+        }
         return getCountryById(countryId)?.cities ?: emptyList()
     }
 
@@ -160,8 +237,9 @@ class CountriesRepositoryImpl(
      * @return список всех городов
      */
     override suspend fun getAllCities(): List<City> {
-        // Загружаем данные, если они еще не загружены
-        loadCountriesFromAssets()
+        if (!isLoaded) {
+            loadCountriesFromLocalFile()
+        }
         return citiesByIdMap.values.toList()
     }
 
@@ -172,15 +250,17 @@ class CountriesRepositoryImpl(
      * @return страна или null, если город не найден
      */
     override suspend fun getCountryForCity(cityId: String): Country? {
-        // Загружаем данные, если они еще не загружены
-        loadCountriesFromAssets()
+        if (!isLoaded) {
+            loadCountriesFromLocalFile()
+        }
         return countryByCityIdMap[cityId]
     }
 
     /**
      * Обновить справочник стран и городов с сервера
      *
-     * Метод для будущего использования. Позволяет обновить справочник данных с сервера workout.su.
+     * Загружает полный справочник с сервера и атомарно сохраняет в локальный файл.
+     * После успешного сохранения обновляет кэш в памяти.
      *
      * @return Result<Unit> с результатом операции
      */
@@ -189,16 +269,11 @@ class CountriesRepositoryImpl(
             logger.i(TAG, "Загрузка справочника стран с сервера")
             val countries = swApi.getCountries()
 
-            // Обновляем кэшированные данные
-            cachedCountries.value = countries
-            isLoaded = true
+            // Атомарно сохраняем в локальный файл
+            saveCountriesToLocalFile(countries)
 
-            // Обновляем индексы для быстрого поиска
-            countriesByIdMap = countries.associateBy { it.id }
-            citiesByIdMap = countries.flatMap { it.cities }.associateBy { it.id }
-            countryByCityIdMap = countries.flatMap { country ->
-                country.cities.map { city -> city.id to country }
-            }.toMap()
+            // Обновляем кэш в памяти после успешной записи
+            updateCache(countries)
 
             logger.i(TAG, "Справочник стран успешно обновлен с сервера: ${countries.size} стран")
             Result.success(Unit)
@@ -215,8 +290,7 @@ class CountriesRepositoryImpl(
             logger.e(TAG, "Ошибка сети при обновлении справочника стран: ${e.message}", e)
             Result.failure(
                 NetworkException(
-                    message =
-                        "Не удалось обновить справочник. Проверьте интернет-соединение",
+                    message = "Не удалось обновить справочник. Проверьте интернет-соединение",
                     cause = e
                 )
             )

@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.mutablePreferencesOf
+import androidx.datastore.preferences.core.stringPreferencesKey
 import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
@@ -31,6 +32,9 @@ import java.io.IOException
 class UserPreferencesRepositoryTest {
     private val testDispatcher = StandardTestDispatcher()
     private val currentUserIdKey = longPreferencesKey("currentUserId")
+    private val lastParksUpdateDateKey = stringPreferencesKey("lastParksUpdateDate")
+    private val lastCountriesUpdateDateKey = stringPreferencesKey("lastCountriesUpdateDate")
+    private val defaultParksDate = "2025-10-25T00:00:00"
 
     @Before
     fun setup() {
@@ -110,5 +114,85 @@ class UserPreferencesRepositoryTest {
             assertEquals("Test error", e.message)
         }
         assertTrue("Expected RuntimeException was not thrown", exceptionThrown)
+    }
+
+    @Test
+    fun lastParksUpdateDate_whenNoDateStored_thenReturnsDefaultDate() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+        val repository = UserPreferencesRepository(mockDataStore)
+
+        val result = repository.lastParksUpdateDate.first()
+        assertEquals(defaultParksDate, result)
+    }
+
+    @Test
+    fun lastParksUpdateDate_whenDateStored_thenReturnsStoredDate() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val preferences = mutablePreferencesOf(lastParksUpdateDateKey to "2025-01-15T10:30:00")
+        every { mockDataStore.data } returns flowOf(preferences)
+        val repository = UserPreferencesRepository(mockDataStore)
+
+        val result = repository.lastParksUpdateDate.first()
+        assertEquals("2025-01-15T10:30:00", result)
+    }
+
+    @Test
+    fun lastParksUpdateDate_whenIOExceptionOccurs_thenReturnsDefaultDate() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flow { throw IOException("Test error") }
+        val repository = UserPreferencesRepository(mockDataStore)
+
+        val result = repository.lastParksUpdateDate.first()
+        assertEquals(defaultParksDate, result)
+    }
+
+    @Test
+    fun lastCountriesUpdateDate_whenNoDateStored_thenReturnsNull() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+        val repository = UserPreferencesRepository(mockDataStore)
+
+        val result = repository.lastCountriesUpdateDate.first()
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun lastCountriesUpdateDate_whenDateStored_thenReturnsStoredDate() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        val preferences = mutablePreferencesOf(lastCountriesUpdateDateKey to "2025-02-20T15:45:00")
+        every { mockDataStore.data } returns flowOf(preferences)
+        val repository = UserPreferencesRepository(mockDataStore)
+
+        val result = repository.lastCountriesUpdateDate.first()
+        assertEquals("2025-02-20T15:45:00", result)
+    }
+
+    @Test
+    fun lastCountriesUpdateDate_whenIOExceptionOccurs_thenReturnsNull() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flow { throw IOException("Test error") }
+        val repository = UserPreferencesRepository(mockDataStore)
+
+        val result = repository.lastCountriesUpdateDate.first()
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun setLastParksUpdateDate_callsEditOnDataStore() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+        val repository = UserPreferencesRepository(mockDataStore)
+
+        repository.setLastParksUpdateDate("2025-03-10T12:00:00")
+    }
+
+    @Test
+    fun setLastCountriesUpdateDate_callsEditOnDataStore() = runTest {
+        val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+        val repository = UserPreferencesRepository(mockDataStore)
+
+        repository.setLastCountriesUpdateDate("2025-04-05T08:30:00")
     }
 }

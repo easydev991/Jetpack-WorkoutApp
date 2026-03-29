@@ -26,7 +26,9 @@ import org.junit.Test
 import retrofit2.HttpException
 import retrofit2.Response
 import java.io.ByteArrayInputStream
+import java.io.File
 import java.io.IOException
+import java.nio.file.Files
 
 /** Unit тесты для CountriesRepositoryImpl */
 class CountriesRepositoryTest {
@@ -36,6 +38,7 @@ class CountriesRepositoryTest {
     private lateinit var mockApi: SWApi
     private lateinit var logger: Logger
     private lateinit var repository: CountriesRepositoryImpl
+    private lateinit var tempDir: File
 
     // Тестовые данные
     private val testCity1 = City(id = "city1", name = "Тестград", lat = "55.7558", lon = "37.6173")
@@ -89,14 +92,17 @@ class CountriesRepositoryTest {
 
     @Before
     fun setup() {
+        tempDir = Files.createTempDirectory("countries_test_").toFile()
+        tempDir.deleteOnExit()
+
         mockContext = mockk(relaxed = true)
-        mockAssetManager = mockk(relaxed = true)
+        mockAssetManager = mockk()
         mockApi = mockk(relaxed = true)
         logger = NoOpLogger()
 
         every { mockContext.assets } returns mockAssetManager
+        every { mockContext.filesDir } returns tempDir
 
-        // Мокаем статический класс Log
         mockkStatic(Log::class)
         every { Log.i(any(), any()) } returns 0
         every { Log.e(any(), any()) } returns 0
@@ -109,6 +115,7 @@ class CountriesRepositoryTest {
     @After
     fun tearDown() {
         unmockkAll()
+        tempDir.deleteRecursively()
     }
 
     @Test

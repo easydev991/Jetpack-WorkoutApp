@@ -1,5 +1,6 @@
 package com.swparks.data.repository
 
+import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.swparks.data.APIError
@@ -9,10 +10,12 @@ import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.database.dao.DialogDao
 import com.swparks.data.database.dao.EventDao
 import com.swparks.data.database.dao.JournalDao
+import com.swparks.data.database.dao.ParkDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.toDomain
 import com.swparks.data.database.entity.toEntity
 import com.swparks.data.database.entity.toEvent
+import com.swparks.data.database.entity.toPark
 import com.swparks.data.model.ApiBlacklistOption
 import com.swparks.data.model.ApiFriendAction
 import com.swparks.data.model.DialogResponse
@@ -38,6 +41,7 @@ import com.swparks.ui.model.ParkForm
 import com.swparks.ui.model.TextEntryOption
 import com.swparks.util.CrashReporter
 import com.swparks.util.Logger
+import com.swparks.util.readJSONFromAssets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -49,6 +53,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import retrofit2.HttpException
@@ -119,6 +124,11 @@ interface SWRepository {
     suspend fun getUpdatedParks(date: String): Result<List<Park>>
     suspend fun deleteParkPhoto(parkId: Long, photoId: Long): Result<Unit>
     suspend fun removeParkLocally(parkId: Long): Result<Unit>
+
+    // Локальное хранение площадок (Room)
+    fun getParksFlow(): Flow<List<Park>>
+    suspend fun importSeedParks(context: Context)
+    suspend fun upsertParks(parks: List<Park>)
 
     // 3.5. Мероприятия
     suspend fun getEvents(type: EventType): Result<List<Event>>
@@ -208,6 +218,7 @@ class SWRepositoryImp(
     private val journalEntryDao: com.swparks.data.database.dao.JournalEntryDao,
     private val dialogDao: DialogDao,
     private val eventDao: EventDao,
+    private val parkDao: ParkDao,
     private val crashReporter: CrashReporter,
     private val logger: Logger
 ) : SWRepository {
@@ -847,6 +858,37 @@ class SWRepositoryImp(
             }
             userDao.insert(user.copy(addedParks = currentParks))
             logger.d(TAG, "Парк ${savedPark.id} обновлён в addedParks пользователя $currentUserId")
+        }
+    }
+
+    // Локальное хранение площадок (Room)
+
+    override fun getParksFlow(): Flow<List<Park>> {
+        return parkDao.getAllParks().map { entities ->
+            entities.map { it.toPark() }
+        }
+    }
+
+    override suspend fun importSeedParks(context: Context) {
+        withContext(Dispatchers.IO) {
+            if (parkDao.isEmpty()) {
+                logger.i(TAG, "Импорт seed parks из assets в Room")
+                val jsonString = readJSONFromAssets(context, "parks.json")
+                val parks: List<Park> = json.decodeFromString(jsonString)
+                val entities = parks.map { it.toEntity() }
+                parkDao.insertAll(entities)
+                logger.i(TAG, "Импортировано ${entities.size} parks в Room")
+            } else {
+                logger.i(TAG, "Parks уже импортированы, пропускаем seed")
+            }
+        }
+    }
+
+    override suspend fun upsertParks(parks: List<Park>) {
+        withContext(Dispatchers.IO) {
+            val entities = parks.map { it.toEntity() }
+            parkDao.insertAll(entities)
+            logger.d(TAG, "Upsert ${entities.size} parks в Room")
         }
     }
 

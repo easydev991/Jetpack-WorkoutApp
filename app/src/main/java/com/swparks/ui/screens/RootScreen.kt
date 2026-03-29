@@ -137,7 +137,6 @@ import com.swparks.ui.viewmodel.UserTrainingParksViewModel
 import com.swparks.ui.viewmodel.toItemListUiState
 import com.swparks.util.LocationFeedback
 import com.swparks.util.WorkoutAppJson
-import com.swparks.util.readJSONFromAssets
 import com.swparks.util.toUiText
 
 private val BOTTOM_BAR_HIDDEN_BASE_ROUTES = setOf(
@@ -172,6 +171,8 @@ fun RootScreen(appState: AppState) {
     val appContainer = remember {
         (context.applicationContext as JetpackWorkoutApplication).container
     }
+
+    AppForegroundSyncHandler(syncCountriesUseCase = appContainer.syncCountriesUseCase)
 
     // Состояние для Snackbar
     val snackbarHostState = remember { SnackbarHostState() }
@@ -251,12 +252,6 @@ fun RootScreen(appState: AppState) {
         appState.updateCurrentUser(currentUser)
     }
 
-    // Загружаем parks для использования в TopBar и в ParksRootScreen
-    val parks = remember {
-        val oldParks = readJSONFromAssets(context, "parks.json")
-        WorkoutAppJson.decodeFromString<List<Park>>(oldParks)
-    }
-
     val parksRootUiState by parksRootViewModel.uiState.collectAsState()
 
     var isGettingLocationForCreatePark by remember { mutableStateOf(false) }
@@ -322,7 +317,6 @@ fun RootScreen(appState: AppState) {
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues),
-                    parks = parks,
                     onParkClick = { park ->
                         appState.navController.navigate(Screen.ParkDetail.createRoute(park.id))
                     },

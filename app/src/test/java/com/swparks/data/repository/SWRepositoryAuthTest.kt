@@ -8,6 +8,7 @@ import com.swparks.data.database.dao.DialogDao
 import com.swparks.data.database.dao.EventDao
 import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.JournalEntryDao
+import com.swparks.data.database.dao.ParkDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.model.LoginSuccess
 import com.swparks.data.model.User
@@ -52,6 +53,7 @@ class SWRepositoryAuthTest {
     private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
     private val mockDialogDao = mockk<DialogDao>(relaxed = true)
     private val mockEventDao = mockk<EventDao>(relaxed = true)
+    private val mockParkDao = mockk<ParkDao>(relaxed = true)
     private val crashReporter = NoOpCrashReporter()
     private val logger = NoOpLogger()
 
@@ -89,6 +91,7 @@ class SWRepositoryAuthTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -119,6 +122,7 @@ class SWRepositoryAuthTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -149,6 +153,7 @@ class SWRepositoryAuthTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -179,6 +184,7 @@ class SWRepositoryAuthTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -208,6 +214,7 @@ class SWRepositoryAuthTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -242,6 +249,7 @@ class SWRepositoryAuthTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -273,6 +281,7 @@ class SWRepositoryAuthTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -312,6 +321,7 @@ class SWRepositoryAuthTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -353,6 +363,7 @@ class SWRepositoryAuthTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter = crashReporter,
             logger = logger
         )
@@ -386,7 +397,6 @@ class SWRepositoryAuthTest {
                 cityId = any()
             )
         }
-        // Проверяем, что пользователь сохранён в локальный кэш
         coVerify { mockUserDao.insert(any()) }
     }
 
@@ -418,6 +428,7 @@ class SWRepositoryAuthTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
@@ -441,12 +452,9 @@ class SWRepositoryAuthTest {
         assertTrue(result.exceptionOrNull() is NetworkException)
     }
 
-    // === Дополнительные тесты для handleHttpException ===
-
     @Test
     fun resetPassword_whenServerErrorWithErrorsField_thenReturnsServerExceptionWithErrorsMessage() =
         runTest {
-            // Given - сервер возвращает ошибку с полем errors
             val mockApi = mockk<SWApi>()
             val errorJson = """{"errors":["Не найден пользователь с таким логином или e-mail"]}"""
             val errorResponse = Response.error<Any>(
@@ -466,6 +474,7 @@ class SWRepositoryAuthTest {
                 mockJournalEntryDao,
                 mockDialogDao,
                 mockEventDao,
+                mockParkDao,
                 crashReporter = crashReporter,
                 logger = logger
             )
@@ -483,7 +492,6 @@ class SWRepositoryAuthTest {
     @Test
     fun resetPassword_whenServerErrorWithMessageField_thenReturnsServerExceptionWithMessage() =
         runTest {
-            // Given - сервер возвращает ошибку с полем message
             val mockApi = mockk<SWApi>()
             val errorJson = """{"message":"Неверный пароль","code":401}"""
             val errorResponse = Response.error<Any>(
@@ -503,6 +511,7 @@ class SWRepositoryAuthTest {
                 mockJournalEntryDao,
                 mockDialogDao,
                 mockEventDao,
+                mockParkDao,
                 crashReporter = crashReporter,
                 logger = logger
             )
@@ -519,7 +528,6 @@ class SWRepositoryAuthTest {
 
     @Test
     fun resetPassword_whenServerErrorWithBothFields_thenReturnsMessageFieldPriority() = runTest {
-        // Given - сервер возвращает ошибку с полями message и errors (message имеет приоритет)
         val mockApi = mockk<SWApi>()
         val errorJson = """{"message":"Приоритетное сообщение","errors":["Ошибка 1","Ошибка 2"]}"""
         val errorResponse = Response.error<Any>(
@@ -539,6 +547,7 @@ class SWRepositoryAuthTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter = crashReporter,
             logger = logger
         )
@@ -555,7 +564,6 @@ class SWRepositoryAuthTest {
 
     @Test
     fun resetPassword_whenServerErrorWithMultipleErrors_thenReturnsJoinedErrors() = runTest {
-        // Given - сервер возвращает ошибку с несколькими ошибками в массиве errors
         val mockApi = mockk<SWApi>()
         val errorJson = """{"errors":["Ошибка 1","Ошибка 2","Ошибка 3"]}"""
         val errorResponse = Response.error<Any>(
@@ -575,6 +583,7 @@ class SWRepositoryAuthTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter = crashReporter,
             logger = logger
         )
@@ -591,7 +600,6 @@ class SWRepositoryAuthTest {
 
     @Test
     fun resetPassword_whenServerErrorWithoutBody_thenReturnsStandardErrorMessage() = runTest {
-        // Given - сервер возвращает ошибку без тела ответа
         val mockApi = mockk<SWApi>()
         val errorResponse = Response.error<Any>(
             500,
@@ -610,6 +618,7 @@ class SWRepositoryAuthTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter = crashReporter,
             logger = logger
         )
@@ -627,7 +636,6 @@ class SWRepositoryAuthTest {
     @Test
     fun login_whenServerErrorWithErrorsField_thenReturnsServerExceptionWithErrorsMessage() =
         runTest {
-            // Given - сервер возвращает ошибку авторизации с полем errors
             val mockApi = mockk<SWApi>()
             val errorJson = """{"errors":["Неверные учетные данные"]}"""
             val errorResponse = Response.error<Any>(
@@ -647,6 +655,7 @@ class SWRepositoryAuthTest {
                 mockJournalEntryDao,
                 mockDialogDao,
                 mockEventDao,
+                mockParkDao,
                 crashReporter = crashReporter,
                 logger = logger
             )
@@ -664,7 +673,6 @@ class SWRepositoryAuthTest {
     @Test
     fun register_whenServerErrorWithErrorsField_thenReturnsServerExceptionWithErrorsMessage() =
         runTest {
-            // Given - сервер возвращает ошибку регистрации с полем errors
             val mockApi = mockk<SWApi>()
             val errorJson = """{"errors":["Email уже занят"]}"""
             val errorResponse = Response.error<Any>(
@@ -695,6 +703,7 @@ class SWRepositoryAuthTest {
                 mockJournalEntryDao,
                 mockDialogDao,
                 mockEventDao,
+                mockParkDao,
                 crashReporter,
                 logger
             )
@@ -722,7 +731,6 @@ class SWRepositoryAuthTest {
 
     @Test
     fun resetPassword_whenEmptyErrorsArray_thenUsesDefaultMessage() = runTest {
-        // Given - сервер возвращает ошибку с пустым массивом errors
         val mockApi = mockk<SWApi>()
         val errorJson = """{"errors":[],"code":400}"""
         val errorResponse = Response.error<Any>(
@@ -742,6 +750,7 @@ class SWRepositoryAuthTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter = crashReporter,
             logger = logger
         )

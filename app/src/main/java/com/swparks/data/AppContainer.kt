@@ -15,6 +15,7 @@ import com.swparks.data.database.dao.DialogDao
 import com.swparks.data.database.dao.EventDao
 import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.JournalEntryDao
+import com.swparks.data.database.dao.ParkDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.interceptor.AuthInterceptor
 import com.swparks.data.interceptor.LoggingInterceptor
@@ -33,6 +34,7 @@ import com.swparks.data.repository.MessagesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.data.repository.SWRepositoryImp
 import com.swparks.data.serializer.EncryptedStringSerializer
+import com.swparks.data.util.SystemClock
 import com.swparks.domain.event.MessageSentNotifier
 import com.swparks.domain.provider.AvatarHelper
 import com.swparks.domain.provider.GeocodingService
@@ -75,6 +77,7 @@ import com.swparks.domain.usecase.IGetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.IGetJournalEntriesUseCase
 import com.swparks.domain.usecase.IGetJournalsUseCase
 import com.swparks.domain.usecase.IGetPastEventsFlowUseCase
+import com.swparks.domain.usecase.IInitializeParksUseCase
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.ILogoutUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
@@ -83,12 +86,15 @@ import com.swparks.domain.usecase.ISyncJournalEntriesUseCase
 import com.swparks.domain.usecase.ISyncJournalsUseCase
 import com.swparks.domain.usecase.ISyncPastEventsUseCase
 import com.swparks.domain.usecase.ITextEntryUseCase
+import com.swparks.domain.usecase.InitializeParksUseCase
 import com.swparks.domain.usecase.LoginUseCase
 import com.swparks.domain.usecase.LogoutUseCase
 import com.swparks.domain.usecase.ResetPasswordUseCase
+import com.swparks.domain.usecase.SyncCountriesUseCase
 import com.swparks.domain.usecase.SyncFutureEventsUseCase
 import com.swparks.domain.usecase.SyncJournalEntriesUseCase
 import com.swparks.domain.usecase.SyncJournalsUseCase
+import com.swparks.domain.usecase.SyncParksUseCase
 import com.swparks.domain.usecase.SyncPastEventsUseCase
 import com.swparks.domain.usecase.TextEntryUseCase
 import com.swparks.network.SWApi
@@ -155,6 +161,9 @@ interface AppContainer {
     // Event notifiers
     val messageSentNotifier: MessageSentNotifier
 
+    // Clock for time operations (testing)
+    val clock: com.swparks.domain.util.Clock
+
     // Location & Geocoding services
     val locationService: LocationService
     val geocodingService: GeocodingService
@@ -164,6 +173,13 @@ interface AppContainer {
     // Parks filter
     val filterParksUseCase: IFilterParksUseCase
     val parksFilterDataStore: ParksFilterDataStore
+
+    // Use cases для синхронизации данных
+    val syncParksUseCase: SyncParksUseCase
+    val syncCountriesUseCase: SyncCountriesUseCase
+
+    // Use cases для инициализации парков
+    val initializeParksUseCase: IInitializeParksUseCase
 
     // Use cases для авторизации
     val loginUseCase: ILoginUseCase
@@ -286,6 +302,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
     override val userNotifier: UserNotifier = UserNotifierImpl(logger)
     override val crashReporter: CrashReporter = com.swparks.util.crash.FirebaseCrashReporter
     override val messageSentNotifier: MessageSentNotifier = MessageSentNotifier()
+    override val clock: com.swparks.domain.util.Clock by lazy { SystemClock() }
 
     // ==================== Location & Geocoding Services ====================
 
@@ -313,6 +330,20 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
     override val filterParksUseCase: IFilterParksUseCase by lazy {
         FilterParksUseCase()
+    }
+
+    // ==================== Sync Use Cases ====================
+
+    override val syncParksUseCase: SyncParksUseCase by lazy {
+        SyncParksUseCase(clock, userPreferencesRepository, swRepository, logger)
+    }
+
+    override val syncCountriesUseCase: SyncCountriesUseCase by lazy {
+        SyncCountriesUseCase(clock, userPreferencesRepository, countriesRepository, logger)
+    }
+
+    override val initializeParksUseCase: IInitializeParksUseCase by lazy {
+        InitializeParksUseCase(appContext, swRepository, logger)
     }
 
     // ==================== Resources Provider ====================
@@ -369,6 +400,11 @@ class DefaultAppContainer(context: Context) : AppContainer {
      * DAO для работы с мероприятиями
      */
     private val eventDao: EventDao by lazy { database.eventDao() }
+
+    /**
+     * DAO для работы с площадками
+     */
+    val parkDao: ParkDao by lazy { database.parkDao() }
 
     // ==================== Криптография и хранение токена ====================
 
@@ -450,6 +486,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
             journalEntryDao = journalEntryDao,
             dialogDao = dialogDao,
             eventDao = eventDao,
+            parkDao = parkDao,
             crashReporter = crashReporter,
             logger = logger
         )

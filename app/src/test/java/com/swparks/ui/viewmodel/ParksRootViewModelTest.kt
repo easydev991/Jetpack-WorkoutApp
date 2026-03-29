@@ -8,12 +8,15 @@ import com.swparks.data.model.ParkFilter
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
 import com.swparks.data.preferences.ParksFilterDataStore
+import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.LocationCoordinates
 import com.swparks.domain.provider.LocationService
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.FilterParksUseCase
 import com.swparks.domain.usecase.ICreateParkLocationHandler
 import com.swparks.domain.usecase.IFilterParksUseCase
+import com.swparks.domain.usecase.IInitializeParksUseCase
+import com.swparks.domain.usecase.SyncParksUseCase
 import com.swparks.ui.model.ParksTab
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
@@ -22,7 +25,9 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -45,9 +50,13 @@ class ParksRootViewModelTest {
     private lateinit var filterParksUseCase: IFilterParksUseCase
     private lateinit var parksFilterDataStore: ParksFilterDataStore
     private lateinit var countriesRepository: CountriesRepository
+    private lateinit var swRepository: SWRepository
+    private lateinit var initializeParksUseCase: IInitializeParksUseCase
     private lateinit var userNotifier: UserNotifier
     private lateinit var locationService: LocationService
+    private lateinit var syncParksUseCase: SyncParksUseCase
     private lateinit var viewModel: ParksRootViewModel
+    private lateinit var parksFlow: MutableStateFlow<List<Park>>
 
     private fun createPark(
         id: Long,
@@ -79,16 +88,30 @@ class ParksRootViewModelTest {
         }
         countriesRepository = mockk(relaxed = true)
         coEvery { countriesRepository.getAllCities() } returns emptyList()
+        parksFlow = MutableStateFlow(emptyList())
+        swRepository = mockk(relaxed = true) {
+            every { getParksFlow() } returns parksFlow
+        }
+        initializeParksUseCase = mockk(relaxed = true) {
+            coEvery { this@mockk.invoke() } returns Result.success(Unit)
+        }
         userNotifier = mockk(relaxed = true)
         locationService = mockk(relaxed = true)
+        syncParksUseCase = mockk(relaxed = true) {
+            coEvery { this@mockk.invoke() } returns Result.success(Unit)
+            coEvery { this@mockk.invoke(force = true) } returns Result.success(Unit)
+        }
         viewModel = ParksRootViewModel(
             createParkLocationHandler = createParkLocationHandler,
             logger = logger,
             filterParksUseCase = filterParksUseCase,
             parksFilterDataStore = parksFilterDataStore,
             countriesRepository = countriesRepository,
+            swRepository = swRepository,
+            initializeParksUseCase = initializeParksUseCase,
             userNotifier = userNotifier,
-            locationService = locationService
+            locationService = locationService,
+            syncParksUseCase = syncParksUseCase
         )
     }
 
@@ -261,8 +284,11 @@ class ParksRootViewModelTest {
             filterParksUseCase = filterParksUseCase,
             parksFilterDataStore = parksFilterDataStore,
             countriesRepository = countriesRepository,
+            swRepository = swRepository,
+            initializeParksUseCase = initializeParksUseCase,
             userNotifier = userNotifier,
-            locationService = locationService
+            locationService = locationService,
+            syncParksUseCase = syncParksUseCase
         )
         advanceUntilIdle()
 
@@ -295,8 +321,11 @@ class ParksRootViewModelTest {
             filterParksUseCase = filterParksUseCase,
             parksFilterDataStore = parksFilterDataStore,
             countriesRepository = countriesRepository,
+            swRepository = swRepository,
+            initializeParksUseCase = initializeParksUseCase,
             userNotifier = userNotifier,
-            locationService = locationService
+            locationService = locationService,
+            syncParksUseCase = syncParksUseCase
         )
         advanceUntilIdle()
 
@@ -459,8 +488,11 @@ class ParksRootViewModelTest {
             filterParksUseCase = filterParksUseCase,
             parksFilterDataStore = parksFilterDataStore,
             countriesRepository = countriesRepository,
+            swRepository = swRepository,
+            initializeParksUseCase = initializeParksUseCase,
             userNotifier = userNotifier,
-            locationService = locationService
+            locationService = locationService,
+            syncParksUseCase = syncParksUseCase
         )
         advanceUntilIdle()
 
@@ -508,8 +540,11 @@ class ParksRootViewModelTest {
             filterParksUseCase = realFilterParksUseCase,
             parksFilterDataStore = parksFilterDataStore,
             countriesRepository = countriesRepository,
+            swRepository = swRepository,
+            initializeParksUseCase = initializeParksUseCase,
             userNotifier = userNotifier,
-            locationService = locationService
+            locationService = locationService,
+            syncParksUseCase = syncParksUseCase
         )
         advanceUntilIdle()
 
@@ -582,8 +617,11 @@ class ParksRootViewModelTest {
             filterParksUseCase = realFilterParksUseCase,
             parksFilterDataStore = parksFilterDataStore,
             countriesRepository = countriesRepository,
+            swRepository = swRepository,
+            initializeParksUseCase = initializeParksUseCase,
             userNotifier = userNotifier,
-            locationService = locationService
+            locationService = locationService,
+            syncParksUseCase = syncParksUseCase
         )
         advanceUntilIdle()
 
@@ -630,8 +668,11 @@ class ParksRootViewModelTest {
             filterParksUseCase = realFilterParksUseCase,
             parksFilterDataStore = restoringDataStore,
             countriesRepository = countriesRepository,
+            swRepository = swRepository,
+            initializeParksUseCase = initializeParksUseCase,
             userNotifier = userNotifier,
-            locationService = locationService
+            locationService = locationService,
+            syncParksUseCase = syncParksUseCase
         )
 
         viewModel.updateParks(allParks)
@@ -639,6 +680,55 @@ class ParksRootViewModelTest {
 
         assertEquals("Moscow", viewModel.uiState.value.selectedCity?.name)
         assertEquals(listOf(1L), viewModel.uiState.value.filteredParks.map { it.id })
+    }
+
+    @Test
+    fun init_importsSeedAndCallsSyncParksUseCaseWithoutForce() = runTest {
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { initializeParksUseCase.invoke() }
+        coVerify(exactly = 1) { syncParksUseCase.invoke() }
+        coVerify(exactly = 0) { syncParksUseCase.invoke(force = true) }
+    }
+
+    @Test
+    fun init_whenParksFlowEmits_updatesUiStateFromLocalStorage() = runTest {
+        val parks = listOf(
+            createPark(id = 1L, cityID = 1, sizeID = 1, typeID = 1),
+            createPark(id = 2L, cityID = 2, sizeID = 2, typeID = 2)
+        )
+        every { filterParksUseCase.invoke(parks, any()) } returns parks
+
+        parksFlow.value = parks
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.hasParks)
+        assertEquals(listOf(1L, 2L), viewModel.uiState.value.filteredParks.map { it.id })
+    }
+
+    @Test
+    fun refresh_callsSyncParksUseCaseWithForceTrue() = runTest {
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { syncParksUseCase.invoke(force = true) }
+    }
+
+    @Test
+    fun refresh_updatesRefreshingStateWhileSyncInProgress() = runTest {
+        val refreshGate = CompletableDeferred<Unit>()
+        coEvery { syncParksUseCase.invoke(force = true) } coAnswers {
+            refreshGate.await()
+            Result.success(Unit)
+        }
+
+        viewModel.refresh()
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.isRefreshing)
+
+        refreshGate.complete(Unit)
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.isRefreshing)
     }
 
     @Test

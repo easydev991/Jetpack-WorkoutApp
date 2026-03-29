@@ -8,6 +8,7 @@ import com.swparks.data.database.dao.DialogDao
 import com.swparks.data.database.dao.EventDao
 import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.JournalEntryDao
+import com.swparks.data.database.dao.ParkDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.domain.exception.NetworkException
 import com.swparks.network.SWApi
@@ -46,6 +47,7 @@ class SWRepositoryCommentsTest {
     private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
     private val mockDialogDao = mockk<DialogDao>(relaxed = true)
     private val mockEventDao = mockk<EventDao>(relaxed = true)
+    private val mockParkDao = mockk<ParkDao>(relaxed = true)
     private val crashReporter = NoOpCrashReporter()
     private val logger = NoOpLogger()
 
@@ -63,7 +65,6 @@ class SWRepositoryCommentsTest {
 
     @Test
     fun addComment_whenOptionIsPark_thenCallsAddCommentToPark() = runTest {
-        // Given
         val mockApi = mockk<SWApi>()
         coEvery {
             mockApi.addCommentToPark(
@@ -83,22 +84,20 @@ class SWRepositoryCommentsTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
         val option = TextEntryOption.Park(id = 123L)
 
-        // When
         val result = repository.addComment(option, "Test comment")
 
-        // Then
         assertTrue(result.isSuccess)
         coVerify { mockApi.addCommentToPark(parkId = 123L, comment = "Test comment") }
     }
 
     @Test
     fun addComment_whenOptionIsEvent_thenCallsAddCommentToEvent() = runTest {
-        // Given
         val mockApi = mockk<SWApi>()
         coEvery {
             mockApi.addCommentToEvent(
@@ -118,22 +117,20 @@ class SWRepositoryCommentsTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
         val option = TextEntryOption.Event(id = 456L)
 
-        // When
         val result = repository.addComment(option, "Test comment")
 
-        // Then
         assertTrue(result.isSuccess)
         coVerify { mockApi.addCommentToEvent(eventId = 456L, comment = "Test comment") }
     }
 
     @Test
     fun addComment_whenOptionIsJournal_thenCallsSaveJournalEntry() = runTest {
-        // Given
         val mockApi = mockk<SWApi>()
         coEvery {
             mockApi.saveJournalEntry(
@@ -154,15 +151,14 @@ class SWRepositoryCommentsTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
         val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L)
 
-        // When
         val result = repository.addComment(option, "Test comment")
 
-        // Then
         assertTrue(result.isSuccess)
         coVerify {
             mockApi.saveJournalEntry(
@@ -175,7 +171,6 @@ class SWRepositoryCommentsTest {
 
     @Test
     fun addComment_whenApiThrowsException_thenReturnsFailure() = runTest {
-        // Given
         val mockApi = mockk<SWApi>()
         coEvery {
             mockApi.addCommentToPark(
@@ -195,22 +190,20 @@ class SWRepositoryCommentsTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
         val option = TextEntryOption.Park(id = 123L)
 
-        // When
         val result = repository.addComment(option, "Test comment")
 
-        // Then
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is NetworkException)
     }
 
     @Test
     fun addComment_whenEventApiReturnsBadRequest_thenReturnsFailure() = runTest {
-        // Given
         val mockApi = mockk<SWApi>()
         coEvery {
             mockApi.addCommentToEvent(
@@ -233,21 +226,19 @@ class SWRepositoryCommentsTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
         val option = TextEntryOption.Event(id = 456L)
 
-        // When
         val result = repository.addComment(option, "Test comment")
 
-        // Then
         assertTrue(result.isFailure)
     }
 
     @Test
     fun editComment_whenOptionIsPark_thenCallsEditParkComment() = runTest {
-        // Given
         val mockApi = mockk<SWApi>()
         coEvery {
             mockApi.editParkComment(
@@ -268,15 +259,14 @@ class SWRepositoryCommentsTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
         val option = TextEntryOption.Park(id = 123L)
 
-        // When
         val result = repository.editComment(option, 999L, "Updated comment")
 
-        // Then
         assertTrue(result.isSuccess)
         coVerify {
             mockApi.editParkComment(
@@ -289,7 +279,6 @@ class SWRepositoryCommentsTest {
 
     @Test
     fun editComment_whenOptionIsEvent_thenCallsEditEventComment() = runTest {
-        // Given
         val mockApi = mockk<SWApi>()
         coEvery {
             mockApi.editEventComment(
@@ -310,15 +299,14 @@ class SWRepositoryCommentsTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
         val option = TextEntryOption.Event(id = 456L)
 
-        // When
         val result = repository.editComment(option, 999L, "Updated comment")
 
-        // Then
         assertTrue(result.isSuccess)
         coVerify {
             mockApi.editEventComment(
@@ -331,7 +319,6 @@ class SWRepositoryCommentsTest {
 
     @Test
     fun editComment_whenOptionIsJournal_thenCallsEditJournalEntry() = runTest {
-        // Given
         val mockApi = mockk<SWApi>()
         coEvery {
             mockApi.editJournalEntry(
@@ -345,7 +332,6 @@ class SWRepositoryCommentsTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        // Мок для существующей записи
         val existingEntry = com.swparks.data.database.entity.JournalEntryEntity(
             id = 999L,
             journalId = 789L,
@@ -366,15 +352,14 @@ class SWRepositoryCommentsTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter,
             logger
         )
         val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L)
 
-        // When
         val result = repository.editComment(option, 999L, "Updated comment")
 
-        // Then
         assertTrue(result.isSuccess)
         coVerify {
             mockApi.editJournalEntry(
@@ -388,7 +373,7 @@ class SWRepositoryCommentsTest {
                 match<com.swparks.data.database.entity.JournalEntryEntity> {
                     it.id == 999L &&
                         it.message == "Updated comment" &&
-                        it.modifyDate != 1000000L // modifyDate должен измениться
+                        it.modifyDate != 1000000L
                 }
             )
         }
@@ -396,7 +381,6 @@ class SWRepositoryCommentsTest {
 
     @Test
     fun editComment_whenApiThrowsException_thenReturnsFailure() = runTest {
-        // Given
         val mockApi = mockk<SWApi>()
         coEvery {
             mockApi.editParkComment(
@@ -417,22 +401,20 @@ class SWRepositoryCommentsTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter = crashReporter,
             logger = logger
         )
         val option = TextEntryOption.Park(id = 123L)
 
-        // When
         val result = repository.editComment(option, 999L, "Updated comment")
 
-        // Then
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is NetworkException)
     }
 
     @Test
     fun editComment_whenEventApiReturnsBadRequest_thenReturnsFailure() = runTest {
-        // Given
         val mockApi = mockk<SWApi>()
         coEvery {
             mockApi.editEventComment(
@@ -456,21 +438,19 @@ class SWRepositoryCommentsTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter = crashReporter,
             logger = logger
         )
         val option = TextEntryOption.Event(id = 456L)
 
-        // When
         val result = repository.editComment(option, 999L, "Updated comment")
 
-        // Then
         assertTrue(result.isFailure)
     }
 
     @Test
     fun deleteComment_whenOptionIsPark_thenCallsDeleteParkComment() = runTest {
-        // Given
         val mockApi = mockk<SWApi>()
         coEvery {
             mockApi.deleteParkComment(
@@ -490,22 +470,20 @@ class SWRepositoryCommentsTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter = crashReporter,
             logger = logger
         )
         val option = TextEntryOption.Park(id = 123L)
 
-        // When
         val result = repository.deleteComment(option, 999L)
 
-        // Then
         assertTrue(result.isSuccess)
         coVerify { mockApi.deleteParkComment(parkId = 123L, commentId = 999L) }
     }
 
     @Test
     fun deleteComment_whenOptionIsEvent_thenCallsDeleteEventComment() = runTest {
-        // Given
         val mockApi = mockk<SWApi>()
         coEvery {
             mockApi.deleteEventComment(
@@ -525,22 +503,20 @@ class SWRepositoryCommentsTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter = crashReporter,
             logger = logger
         )
         val option = TextEntryOption.Event(id = 456L)
 
-        // When
         val result = repository.deleteComment(option, 999L)
 
-        // Then
         assertTrue(result.isSuccess)
         coVerify { mockApi.deleteEventComment(eventId = 456L, commentId = 999L) }
     }
 
     @Test
     fun deleteComment_whenOptionIsJournal_thenCallsDeleteJournalEntry() = runTest {
-        // Given
         val mockApi = mockk<SWApi>()
         coEvery {
             mockApi.deleteJournalEntry(
@@ -561,15 +537,14 @@ class SWRepositoryCommentsTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter = crashReporter,
             logger = logger
         )
         val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L)
 
-        // When
         val result = repository.deleteComment(option, 999L)
 
-        // Then
         assertTrue(result.isSuccess)
         coVerify {
             mockApi.deleteJournalEntry(
@@ -582,7 +557,6 @@ class SWRepositoryCommentsTest {
 
     @Test
     fun deleteComment_whenApiThrowsException_thenReturnsFailure() = runTest {
-        // Given
         val mockApi = mockk<SWApi>()
         coEvery { mockApi.deleteParkComment(parkId = any(), commentId = any()) } throws IOException(
             "Network error"
@@ -599,15 +573,14 @@ class SWRepositoryCommentsTest {
             mockJournalEntryDao,
             mockDialogDao,
             mockEventDao,
+            mockParkDao,
             crashReporter = crashReporter,
             logger = logger
         )
         val option = TextEntryOption.Park(id = 123L)
 
-        // When
         val result = repository.deleteComment(option, 999L)
 
-        // Then
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is NetworkException)
     }
