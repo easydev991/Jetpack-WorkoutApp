@@ -51,6 +51,38 @@ data class ParkRowData(
  * @param data Данные для отображения - [ParkRowData]
  */
 @Composable
+private fun ParkRowViewContent(data: ParkRowData) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall))
+    ) {
+        Text(
+            text = data.name,
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall_plus))) {
+            data.address?.takeIf { it.isNotBlank() }?.let {
+                AdditionalInfoRow(imageID = R.drawable.outline_assistant_navigation_16, text = it)
+            }
+            AdditionalInfoRow(
+                imageID = R.drawable.outline_account_circle_16,
+                text = if (data.peopleTrainCount > 0) {
+                    pluralStringResource(
+                        id = R.plurals.peopleTrainHere,
+                        count = data.peopleTrainCount,
+                        data.peopleTrainCount
+                    )
+                } else {
+                    stringResource(id = R.string.nobody_trains_here)
+                }
+            )
+        }
+    }
+}
+
+@Composable
 fun ParkRowView(data: ParkRowData) {
     FormCardContainer(
         params = FormCardContainerParams(
@@ -73,39 +105,7 @@ fun ParkRowView(data: ParkRowData) {
                             showBorder = false
                         )
                     )
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall))
-                    ) {
-                        Text(
-                            text = data.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall_plus))
-                        ) {
-                            if (!data.address.isNullOrBlank()) {
-                                AdditionalInfoRow(
-                                    imageID = R.drawable.outline_assistant_navigation_16,
-                                    text = data.address
-                                )
-                            }
-                            AdditionalInfoRow(
-                                imageID = R.drawable.outline_account_circle_16,
-                                text = if (data.peopleTrainCount > 0) {
-                                    pluralStringResource(
-                                        id = R.plurals.peopleTrainHere,
-                                        count = data.peopleTrainCount,
-                                        data.peopleTrainCount
-                                    )
-                                } else {
-                                    stringResource(id = R.string.nobody_trains_here)
-                                }
-                            )
-                        }
-                    }
+                    ParkRowViewContent(data)
                 }
             )
         )

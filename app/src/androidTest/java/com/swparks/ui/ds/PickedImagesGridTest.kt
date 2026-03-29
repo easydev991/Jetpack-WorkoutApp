@@ -29,19 +29,15 @@ class PickedImagesGridTest {
         images: List<Uri> = emptyList(),
         selectionLimit: Int = 15,
         enabled: Boolean = true,
-        onAddClick: () -> Unit = {},
-        onRemoveClick: (Int) -> Unit = {},
-        onImageClick: (Uri, Int) -> Unit = { _, _ -> }
+        onAction: (PickedImagesGridAction) -> Unit = {}
     ) {
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
                 PickedImagesGrid(
                     images = images,
                     selectionLimit = selectionLimit,
-                    onAddClick = onAddClick,
-                    onRemoveClick = onRemoveClick,
-                    onImageClick = onImageClick,
-                    enabled = enabled
+                    onAction = onAction,
+                    config = PickedImagesGridConfig(enabled = enabled)
                 )
             }
         }
@@ -115,11 +111,13 @@ class PickedImagesGridTest {
     }
 
     @Test
-    fun whenAddClicked_callsOnAddClick() {
+    fun whenAddClicked_callsOnAction() {
         var addClicked = false
         setContent(
             images = emptyList(),
-            onAddClick = { addClicked = true }
+            onAction = { action ->
+                if (action is PickedImagesGridAction.AddImage) addClicked = true
+            }
         )
 
         composeTestRule

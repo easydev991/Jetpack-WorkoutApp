@@ -41,6 +41,7 @@
 Это **отдельный приватный GitHub-репозиторий** (`git@github.com:easydev991/android-secrets.git`), управляемый через Makefile.
 
 Структура репозитория:
+
 ```
 android-secrets/
 ├── Makefile                        # Команды: init, gen-keystore, export-zip, export-pem
@@ -59,7 +60,7 @@ android-secrets/
 ```
 
 Интеграция в JetpackDays (аналогично нужно сделать в Jetpack-WorkoutApp):
-- `Makefile` клонирует `android-secrets` по SSH в `.secrets/` 
+- `Makefile` клонирует `android-secrets` по SSH в `.secrets/`
 - `sed` корректирует `KEYSTORE_FILE` → `.secrets/keystore/...`
 - `app/build.gradle.kts` читает `.secrets/secrets.properties` и применяет к `signingConfigs`
 
@@ -82,6 +83,7 @@ android-secrets/
 Для клонирования `android-secrets` по SSH требуется настроить SSH-доступ к GitHub.
 
 **Добавить переменные в начало Makefile:**
+
 ```makefile
 # Репозиторий с секретами для подписи (SSH)
 SECRETS_REPO = git@github.com:easydev991/android-secrets.git
@@ -93,89 +95,90 @@ SECRETS_DIR = swparks
 ```makefile
 ## setup_ssh: Настраивает SSH-доступ к GitHub (проверка, создание ключа при необходимости)
 setup_ssh:
-	@printf "$(YELLOW)Проверка SSH-доступа к GitHub...$(RESET)\n"
-	@if ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then \
-		printf "$(GREEN)SSH-доступ к GitHub уже настроен$(RESET)\n"; \
-		exit 0; \
-	fi
-	@# Проверка наличия jq
-	@if ! command -v jq >/dev/null 2>&1; then \
-		printf "$(YELLOW)Утилита jq не найдена. Устанавливаю через Homebrew...$(RESET)\n"; \
-		if command -v brew >/dev/null 2>&1; then brew install jq; else printf "$(RED)Homebrew не найден. Установите jq вручную и повторите.$(RESET)\n"; exit 1; fi; \
-	fi
-	@# Создание каталога ~/.ssh при необходимости
-	@if [ ! -d $$HOME/.ssh ]; then \
-		mkdir -p $$HOME/.ssh; \
-		printf "$(GREEN)Создана папка ~/.ssh$(RESET)\n"; \
-	fi
-	@# Создание ключа, если отсутствует
-	@if [ ! -f $$HOME/.ssh/id_ed25519 ]; then \
-		read -p "Введите email для комментария ключа: " KEY_EMAIL; \
-		while [ -z "$$KEY_EMAIL" ]; do read -p "Email не может быть пустым. Введите email: " KEY_EMAIL; done; \
-		printf "$(YELLOW)Создаю новый SSH-ключ id_ed25519...$(RESET)\n"; \
-		ssh-keygen -t ed25519 -N "" -C "$$KEY_EMAIL" -f $$HOME/.ssh/id_ed25519; \
-	else \
-		printf "$(GREEN)SSH-ключ $$HOME/.ssh/id_ed25519 уже существует$(RESET)\n"; \
-	fi
-	@# Запуск ssh-agent и добавление ключа
-	@eval "$$((ssh-agent -s) 2>/dev/null)" >/dev/null || true
-	@ssh-add -K $$HOME/.ssh/id_ed25519 >/dev/null 2>&1 || ssh-add $$HOME/.ssh/id_ed25519 >/dev/null 2>&1 || true
-	@# Настройка ~/.ssh/config для github.com
-	@CONFIG_FILE="$$HOME/.ssh/config"; \
-	HOST_ENTRY="Host github.com\n  HostName github.com\n  User git\n  AddKeysToAgent yes\n  UseKeychain yes\n  IdentityFile $$HOME/.ssh/id_ed25519\n"; \
-	if [ -f "$$CONFIG_FILE" ]; then \
-		if ! grep -q "Host github.com" "$$CONFIG_FILE"; then \
-			echo "$$HOST_ENTRY" >> "$$CONFIG_FILE"; \
-			printf "$(GREEN)Добавлена секция для github.com в ~/.ssh/config$(RESET)\n"; \
-		else \
-			printf "$(GREEN)Секция для github.com уже есть в ~/.ssh/config$(RESET)\n"; \
-		fi; \
-	else \
-		echo "$$HOST_ENTRY" > "$$CONFIG_FILE"; \
-		chmod 600 "$$CONFIG_FILE"; \
-		printf "$(GREEN)Создан ~/.ssh/config с секцией для github.com$(RESET)\n"; \
-	fi
-	@# Предложение добавить публичный ключ в аккаунт GitHub через API
-	@printf "$(YELLOW)Добавление публичного ключа в ваш аккаунт GitHub через API...$(RESET)\n"; \
-	printf "Требуется персональный токен GitHub с правом 'admin:public_key'.\n"; \
-	read -p "Добавить ключ в GitHub через API? [y/N]: " ADD_GH; \
-	if [[ "$$ADD_GH" =~ ^[Yy]$$ ]]; then \
-		read -p "Введите ваш GitHub Personal Access Token: " TOKEN; \
-		read -p "Введите название для SSH-ключа (например, 'work-macbook'): " TITLE; \
-		if [ -z "$$TITLE" ]; then TITLE="JetpackDays key"; fi; \
-		PUB_KEY=$$(cat $$HOME/.ssh/id_ed25519.pub); \
-		DATA=$$(jq -n --arg title "$$TITLE" --arg key "$$PUB_KEY" '{title:$$title, key:$$key}'); \
-		RESPONSE=$$(curl -s -w "\n%{http_code}" -X POST "https://api.github.com/user/keys" -H "Accept: application/vnd.github+json" -H "Authorization: token $$TOKEN" -d "$$DATA"); \
-		BODY=$$(echo "$$RESPONSE" | sed '$$d'); \
-		STATUS=$$(echo "$$RESPONSE" | tail -n 1); \
-		if [ "$$STATUS" = "201" ]; then \
-			printf "$(GREEN)SSH-ключ успешно добавлен в GitHub$(RESET)\n"; \
-		elif [ "$$STATUS" = "422" ]; then \
-			printf "$(YELLOW)Ключ уже добавлен или недопустим. Сообщение GitHub:$(RESET)\n"; \
-			echo "$$BODY"; \
-		else \
-			printf "$(RED)Ошибка при добавлении ключа в GitHub (HTTP $$STATUS)$(RESET)\n"; \
-			echo "$$BODY"; \
-		fi; \
-	else \
-		printf "$(YELLOW)Пропускаю авто-добавление ключа. Добавьте его вручную: $(RESET)https://github.com/settings/keys\n"; \
-	fi
-	@printf "$(YELLOW)Проверка соединения с github.com...$(RESET)\n"; \
-	ssh -T git@github.com || true
+ @printf "$(YELLOW)Проверка SSH-доступа к GitHub...$(RESET)\n"
+ @if ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then \
+  printf "$(GREEN)SSH-доступ к GitHub уже настроен$(RESET)\n"; \
+  exit 0; \
+ fi
+ @# Проверка наличия jq
+ @if ! command -v jq >/dev/null 2>&1; then \
+  printf "$(YELLOW)Утилита jq не найдена. Устанавливаю через Homebrew...$(RESET)\n"; \
+  if command -v brew >/dev/null 2>&1; then brew install jq; else printf "$(RED)Homebrew не найден. Установите jq вручную и повторите.$(RESET)\n"; exit 1; fi; \
+ fi
+ @# Создание каталога ~/.ssh при необходимости
+ @if [ ! -d $$HOME/.ssh ]; then \
+  mkdir -p $$HOME/.ssh; \
+  printf "$(GREEN)Создана папка ~/.ssh$(RESET)\n"; \
+ fi
+ @# Создание ключа, если отсутствует
+ @if [ ! -f $$HOME/.ssh/id_ed25519 ]; then \
+  read -p "Введите email для комментария ключа: " KEY_EMAIL; \
+  while [ -z "$$KEY_EMAIL" ]; do read -p "Email не может быть пустым. Введите email: " KEY_EMAIL; done; \
+  printf "$(YELLOW)Создаю новый SSH-ключ id_ed25519...$(RESET)\n"; \
+  ssh-keygen -t ed25519 -N "" -C "$$KEY_EMAIL" -f $$HOME/.ssh/id_ed25519; \
+ else \
+  printf "$(GREEN)SSH-ключ $$HOME/.ssh/id_ed25519 уже существует$(RESET)\n"; \
+ fi
+ @# Запуск ssh-agent и добавление ключа
+ @eval "$$((ssh-agent -s) 2>/dev/null)" >/dev/null || true
+ @ssh-add -K $$HOME/.ssh/id_ed25519 >/dev/null 2>&1 || ssh-add $$HOME/.ssh/id_ed25519 >/dev/null 2>&1 || true
+ @# Настройка ~/.ssh/config для github.com
+ @CONFIG_FILE="$$HOME/.ssh/config"; \
+ HOST_ENTRY="Host github.com\n  HostName github.com\n  User git\n  AddKeysToAgent yes\n  UseKeychain yes\n  IdentityFile $$HOME/.ssh/id_ed25519\n"; \
+ if [ -f "$$CONFIG_FILE" ]; then \
+  if ! grep -q "Host github.com" "$$CONFIG_FILE"; then \
+   echo "$$HOST_ENTRY" >> "$$CONFIG_FILE"; \
+   printf "$(GREEN)Добавлена секция для github.com в ~/.ssh/config$(RESET)\n"; \
+  else \
+   printf "$(GREEN)Секция для github.com уже есть в ~/.ssh/config$(RESET)\n"; \
+  fi; \
+ else \
+  echo "$$HOST_ENTRY" > "$$CONFIG_FILE"; \
+  chmod 600 "$$CONFIG_FILE"; \
+  printf "$(GREEN)Создан ~/.ssh/config с секцией для github.com$(RESET)\n"; \
+ fi
+ @# Предложение добавить публичный ключ в аккаунт GitHub через API
+ @printf "$(YELLOW)Добавление публичного ключа в ваш аккаунт GitHub через API...$(RESET)\n"; \
+ printf "Требуется персональный токен GitHub с правом 'admin:public_key'.\n"; \
+ read -p "Добавить ключ в GitHub через API? [y/N]: " ADD_GH; \
+ if [[ "$$ADD_GH" =~ ^[Yy]$$ ]]; then \
+  read -p "Введите ваш GitHub Personal Access Token: " TOKEN; \
+  read -p "Введите название для SSH-ключа (например, 'work-macbook'): " TITLE; \
+  if [ -z "$$TITLE" ]; then TITLE="JetpackDays key"; fi; \
+  PUB_KEY=$$(cat $$HOME/.ssh/id_ed25519.pub); \
+  DATA=$$(jq -n --arg title "$$TITLE" --arg key "$$PUB_KEY" '{title:$$title, key:$$key}'); \
+  RESPONSE=$$(curl -s -w "\n%{http_code}" -X POST "https://api.github.com/user/keys" -H "Accept: application/vnd.github+json" -H "Authorization: token $$TOKEN" -d "$$DATA"); \
+  BODY=$$(echo "$$RESPONSE" | sed '$$d'); \
+  STATUS=$$(echo "$$RESPONSE" | tail -n 1); \
+  if [ "$$STATUS" = "201" ]; then \
+   printf "$(GREEN)SSH-ключ успешно добавлен в GitHub$(RESET)\n"; \
+  elif [ "$$STATUS" = "422" ]; then \
+   printf "$(YELLOW)Ключ уже добавлен или недопустим. Сообщение GitHub:$(RESET)\n"; \
+   echo "$$BODY"; \
+  else \
+   printf "$(RED)Ошибка при добавлении ключа в GitHub (HTTP $$STATUS)$(RESET)\n"; \
+   echo "$$BODY"; \
+  fi; \
+ else \
+  printf "$(YELLOW)Пропускаю авто-добавление ключа. Добавьте его вручную: $(RESET)https://github.com/settings/keys\n"; \
+ fi
+ @printf "$(YELLOW)Проверка соединения с github.com...$(RESET)\n"; \
+ ssh -T git@github.com || true
 ```
 
 **Добавить вызов в `setup` target:**
+
 ```makefile
 setup:
-	@$(MAKE) _check_rbenv
-	@$(MAKE) _check_ruby
-	@$(MAKE) _check_ruby_version_file
-	@$(MAKE) _check_bundler
-	@$(MAKE) _check_gemfile
-	@$(MAKE) _install_gemfile_deps
-	@$(MAKE) setup_fastlane
-	@$(MAKE) _check_markdownlint
-	@$(MAKE) setup_ssh   # ← заменить _setup_git_hooks на setup_ssh
+ @$(MAKE) _check_rbenv
+ @$(MAKE) _check_ruby
+ @$(MAKE) _check_ruby_version_file
+ @$(MAKE) _check_bundler
+ @$(MAKE) _check_gemfile
+ @$(MAKE) _install_gemfile_deps
+ @$(MAKE) setup_fastlane
+ @$(MAKE) _check_markdownlint
+ @$(MAKE) setup_ssh   # ← заменить _setup_git_hooks на setup_ssh
 ```
 
 ### 3.1 Создание папки `swparks/` в `android-secrets`
@@ -183,6 +186,7 @@ setup:
 В репозитории `android-secrets` **отсутствует** папка `swparks/`. Создание полностью автоматизировано через `make init`.
 
 **Выполнить:**
+
 ```bash
 cd /Users/Oleg991/Documents/GitHub/android-secrets
 make init APP=swparks
@@ -191,6 +195,7 @@ make init APP=swparks
 **Что делает `make init APP=swparks`:**
 1. Проверяет — если папка `swparks/` уже существует с keystore, выдаёт ошибку
 2. Создаёт структуру:
+
    ```
    swparks/
    ├── keystore/
@@ -200,11 +205,13 @@ make init APP=swparks
    │   └── uploadcert.pem
    └── secrets.properties
    ```
+
 3. Генерирует keystore (RSA-ключ с паролем)
 4. Экспортирует ZIP для RuStore через pepk.jar
 5. Экспортирует PEM-сертификат для RuStore
 
 **Отдельные команды (если нужно по шагам):**
+
 ```bash
 make gen-keystore APP=swparks   # Только keystore + secrets.properties
 make export-zip APP=swparks      # Только ZIP для RuStore
@@ -221,33 +228,33 @@ make reset-secrets APP=swparks  # Удалить все секреты (если
 ```makefile
 ## _load_secrets: Загрузить секреты из SSH-репозитория во временную директорию
 _load_secrets:
-	@printf "$(YELLOW)Загрузка секретов из репозитория по SSH...$(RESET)\\n"
-	@TEMP_DIR=$$(mktemp -d); \
-	trap "rm -rf $$TEMP_DIR" EXIT; \
-	printf "$(YELLOW)Клонирую репозиторий $(SECRETS_REPO)...$(RESET)\\n"; \
-	if ! git clone --depth 1 $(SECRETS_REPO) "$$TEMP_DIR" 2>/dev/null; then \
-		printf "$(RED)Ошибка: не удалось клонировать репозиторий$(RESET)\\n"; \
-		printf "$(YELLOW)Проверьте SSH-доступ к GitHub: ssh -T git@github.com$(RESET)\\n"; \
-		exit 1; \
-	fi; \
-	mkdir -p .secrets; \
-	cp -r "$$TEMP_DIR/$(SECRETS_DIR)/*" .secrets/ 2>/dev/null || cp -r "$$TEMP_DIR/$(SECRETS_DIR)"/* .secrets/; \
-	sed -i.tmp 's|^KEYSTORE_FILE=.*|KEYSTORE_FILE=.secrets/keystore/swparks-release.keystore|' .secrets/secrets.properties && rm -f .secrets/secrets.properties.tmp; \
-	printf "$(GREEN)Секреты загружены успешно$(RESET)\\n"
+ @printf "$(YELLOW)Загрузка секретов из репозитория по SSH...$(RESET)\\n"
+ @TEMP_DIR=$$(mktemp -d); \
+ trap "rm -rf $$TEMP_DIR" EXIT; \
+ printf "$(YELLOW)Клонирую репозиторий $(SECRETS_REPO)...$(RESET)\\n"; \
+ if ! git clone --depth 1 $(SECRETS_REPO) "$$TEMP_DIR" 2>/dev/null; then \
+  printf "$(RED)Ошибка: не удалось клонировать репозиторий$(RESET)\\n"; \
+  printf "$(YELLOW)Проверьте SSH-доступ к GitHub: ssh -T git@github.com$(RESET)\\n"; \
+  exit 1; \
+ fi; \
+ mkdir -p .secrets; \
+ cp -r "$$TEMP_DIR/$(SECRETS_DIR)/*" .secrets/ 2>/dev/null || cp -r "$$TEMP_DIR/$(SECRETS_DIR)"/* .secrets/; \
+ sed -i.tmp 's|^KEYSTORE_FILE=.*|KEYSTORE_FILE=.secrets/keystore/swparks-release.keystore|' .secrets/secrets.properties && rm -f .secrets/secrets.properties.tmp; \
+ printf "$(GREEN)Секреты загружены успешно$(RESET)\\n"
 
 ## apk: Создать подписанный APK для GitHub Releases (arm64-v8a + armeabi-v7a, без повышения версии)
 apk:
-	@printf "$(YELLOW)Проверка секретов для подписи...$(RESET)\n"
-	@if [ ! -d ".secrets" ]; then \
-		$(MAKE) _load_secrets; \
-	fi
-	@printf "$(YELLOW)Создаю релизный APK (arm64-v8a + armeabi-v7a)...$(RESET)\n"
-	@./gradlew assembleRelease
-	@VERSION_NAME=$$(grep "^VERSION_NAME=" gradle.properties | cut -d'=' -f2); \
-	VERSION_CODE=$$(grep "^VERSION_CODE=" gradle.properties | cut -d'=' -f2); \
-	cp app/build/outputs/apk/release/app-release.apk "swparks$$VERSION_CODE.apk"; \
-	printf "$(GREEN)APK создан: swparks$$VERSION_CODE.apk (arm64-v8a + armeabi-v7a)$(RESET)\n"; \
-	printf "$(YELLOW)Версия: $$VERSION_NAME (build $$VERSION_CODE)$(RESET)\n"
+ @printf "$(YELLOW)Проверка секретов для подписи...$(RESET)\n"
+ @if [ ! -d ".secrets" ]; then \
+  $(MAKE) _load_secrets; \
+ fi
+ @printf "$(YELLOW)Создаю релизный APK (arm64-v8a + armeabi-v7a)...$(RESET)\n"
+ @./gradlew assembleRelease
+ @VERSION_NAME=$$(grep "^VERSION_NAME=" gradle.properties | cut -d'=' -f2); \
+ VERSION_CODE=$$(grep "^VERSION_CODE=" gradle.properties | cut -d'=' -f2); \
+ cp app/build/outputs/apk/release/app-release.apk "swparks$$VERSION_CODE.apk"; \
+ printf "$(GREEN)APK создан: swparks$$VERSION_CODE.apk (arm64-v8a + armeabi-v7a)$(RESET)\n"; \
+ printf "$(YELLOW)Версия: $$VERSION_NAME (build $$VERSION_CODE)$(RESET)\n"
 ```
 
 **Ключевые моменты:**
@@ -265,6 +272,7 @@ apk:
 В `app/build.gradle.kts` **отсутствует** блок `signingConfigs`. Необходимо добавить:
 
 1. **Чтение секретов** (после `android {`):
+
 ```kotlin
 val secretsProperties = Properties()
 val secretsPropertiesFile = rootProject.file(".secrets/secrets.properties")
@@ -274,6 +282,7 @@ if (secretsPropertiesFile.exists()) {
 ```
 
 2. **Блок `signingConfigs`**:
+
 ```kotlin
 signingConfigs {
     create("release") {
@@ -291,6 +300,7 @@ signingConfigs {
 ```
 
 3. **Применение к release buildType**:
+
 ```kotlin
 release {
     signingConfig = signingConfigs.getByName("release")
@@ -321,10 +331,12 @@ Fastlane **не настроен** — папка `fastlane/` отсутству
 ### Задачи
 
 - [x] Создать `fastlane/Appfile`:
+
   ```ruby
   package_name("com.swparks")
   json_key_file(".secrets/google-services.json") # если используется Firebase
   ```
+
 - [x] Создать `fastlane/Fastfile` с lane-ами:
   - `test` — запуск unit-тестов (`gradle task: "test"`)
   - `beta` — сборка release и загрузка в Crashlytics Beta
@@ -333,7 +345,8 @@ Fastlane **не настроен** — папка `fastlane/` отсутству
   - `screenshots_en` — скриншоты только для en-US
 - [x] Создать `fastlane/Screengrabfile` для локализованных скриншотов (ru-RU, en-US)
 
-### Lane `beta` (аналогично JetpackDays):
+### Lane `beta` (аналогично JetpackDays)
+
 ```ruby
 desc "Submit a new Beta Build to Crashlytics Beta"
 lane :beta do
@@ -347,26 +360,26 @@ end
 ```makefile
 ## release: Создать подписанную AAB-сборку для публикации (аналог testflight в iOS). Файл: swparks{VERSION_CODE}.aab
 release:
-	@printf "$(YELLOW)Проверка секретов для подписи...$(RESET)\n"
-	@if [ ! -d ".secrets" ]; then \
-		$(MAKE) _load_secrets; \
-	fi
-	@printf "$(YELLOW)Увеличиваю VERSION_CODE...$(RESET)\n"
-	@CURRENT_VERSION_CODE=$$(grep "^VERSION_CODE=" gradle.properties | cut -d'=' -f2); \
-	NEW_VERSION_CODE=$$((CURRENT_VERSION_CODE + 1)); \
-	sed -i.tmp "s/^VERSION_CODE=.*/VERSION_CODE=$$NEW_VERSION_CODE/" gradle.properties && rm -f gradle.properties.tmp; \
-	printf "$(GREEN)VERSION_CODE обновлен с $$CURRENT_VERSION_CODE на $$NEW_VERSION_CODE$(RESET)\n"
-	@printf "$(YELLOW)Создаю релиз-сборку (AAB)...$(RESET)\n"
-	@./gradlew bundleRelease uploadCrashlyticsMappingFileRelease
-	@VERSION_CODE=$$(grep "^VERSION_CODE=" gradle.properties | cut -d'=' -f2); \
-	OUTPUT_FILE="swparks$$VERSION_CODE.aab"; \
-	cp app/build/outputs/bundle/release/app-release.aab "$$OUTPUT_FILE"; \
-	printf "$(GREEN)AAB создан и mapping files загружены в Firebase: $$OUTPUT_FILE$(RESET)\n"
-	OUTPUT_FILE="swparks$$VERSION_CODE.aab"; \
-	cp app/build/outputs/bundle/release/app-release.aab "$$OUTPUT_FILE"; \
-	printf "$(GREEN)AAB создан: $$OUTPUT_FILE$(RESET)\n"
-	@printf "$(YELLOW)Версия для публикации: $$(grep "^VERSION_NAME=" gradle.properties | cut -d'=' -f2) (build $$NEW_VERSION_CODE)$(RESET)\n"
-	@printf "$(YELLOW)Для публикации используйте этот файл в RuStore или Google Play Store$(RESET)\\n"
+ @printf "$(YELLOW)Проверка секретов для подписи...$(RESET)\n"
+ @if [ ! -d ".secrets" ]; then \
+  $(MAKE) _load_secrets; \
+ fi
+ @printf "$(YELLOW)Увеличиваю VERSION_CODE...$(RESET)\n"
+ @CURRENT_VERSION_CODE=$$(grep "^VERSION_CODE=" gradle.properties | cut -d'=' -f2); \
+ NEW_VERSION_CODE=$$((CURRENT_VERSION_CODE + 1)); \
+ sed -i.tmp "s/^VERSION_CODE=.*/VERSION_CODE=$$NEW_VERSION_CODE/" gradle.properties && rm -f gradle.properties.tmp; \
+ printf "$(GREEN)VERSION_CODE обновлен с $$CURRENT_VERSION_CODE на $$NEW_VERSION_CODE$(RESET)\n"
+ @printf "$(YELLOW)Создаю релиз-сборку (AAB)...$(RESET)\n"
+ @./gradlew bundleRelease uploadCrashlyticsMappingFileRelease
+ @VERSION_CODE=$$(grep "^VERSION_CODE=" gradle.properties | cut -d'=' -f2); \
+ OUTPUT_FILE="swparks$$VERSION_CODE.aab"; \
+ cp app/build/outputs/bundle/release/app-release.aab "$$OUTPUT_FILE"; \
+ printf "$(GREEN)AAB создан и mapping files загружены в Firebase: $$OUTPUT_FILE$(RESET)\n"
+ OUTPUT_FILE="swparks$$VERSION_CODE.aab"; \
+ cp app/build/outputs/bundle/release/app-release.aab "$$OUTPUT_FILE"; \
+ printf "$(GREEN)AAB создан: $$OUTPUT_FILE$(RESET)\n"
+ @printf "$(YELLOW)Версия для публикации: $$(grep "^VERSION_NAME=" gradle.properties | cut -d'=' -f2) (build $$NEW_VERSION_CODE)$(RESET)\n"
+ @printf "$(YELLOW)Для публикации используйте этот файл в RuStore или Google Play Store$(RESET)\\n"
 ```
 
 **Примечание:** Деплой в RuStore — `make release` создаёт AAB. Деплой в GitHub Releases — `make apk` создаёт два APK (arm64-v8a + armeabi-v7a). Оба процесса — ручные.

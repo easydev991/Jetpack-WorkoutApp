@@ -146,16 +146,20 @@ fun MessagesRootScreen(
     } else {
         val params = createDialogsContentParams(
             uiState = uiState,
-            isRefreshing = isRefreshing,
-            isUpdating = isUpdating,
-            syncError = syncError,
+            loadingState = DialogsLoadingState(
+                isRefreshing = isRefreshing,
+                isUpdating = isUpdating,
+                syncError = syncError
+            ),
             currentUser = appState.currentUser,
             viewModel = viewModel,
-            onAction = onAction,
-            onDeleteClick = { dialog ->
-                dialogToDelete = dialog
-                showDeleteDialog = true
-            }
+            callbacks = DialogsCallbacks(
+                onAction = onAction,
+                onDeleteClick = { dialog ->
+                    dialogToDelete = dialog
+                    showDeleteDialog = true
+                }
+            )
         )
         DialogsContent(modifier = modifier, params = params)
     }
@@ -177,27 +181,35 @@ fun MessagesRootScreen(
 }
 
 
+internal data class DialogsLoadingState(
+    val isRefreshing: Boolean,
+    val isUpdating: Boolean,
+    val syncError: String?
+)
+
+internal data class DialogsCallbacks(
+    val onAction: (MessagesNavigationAction) -> Unit,
+    val onDeleteClick: (DialogEntity) -> Unit
+)
+
 internal fun createDialogsContentParams(
     uiState: DialogsUiState,
-    isRefreshing: Boolean,
-    isUpdating: Boolean,
-    syncError: String?,
+    loadingState: DialogsLoadingState,
     currentUser: com.swparks.data.model.User?,
     viewModel: IDialogsViewModel,
-    onAction: (MessagesNavigationAction) -> Unit,
-    onDeleteClick: (DialogEntity) -> Unit
+    callbacks: DialogsCallbacks
 ): DialogsContentParams {
     return DialogsContentParams(
         uiState = uiState,
-        isRefreshing = isRefreshing,
-        isUpdating = isUpdating,
-        syncError = syncError,
+        isRefreshing = loadingState.isRefreshing,
+        isUpdating = loadingState.isUpdating,
+        syncError = loadingState.syncError,
         currentUser = currentUser,
         onRefresh = { viewModel.refresh() },
         onDismissSyncError = { viewModel.dismissSyncError() },
         onDialogClick = { dialog ->
             viewModel.onDialogClick(dialog.id, dialog.anotherUserId)
-            onAction(
+            callbacks.onAction(
                 MessagesNavigationAction.NavigateToChat(
                     dialogId = dialog.id,
                     userId = dialog.anotherUserId ?: 0,
@@ -209,9 +221,9 @@ internal fun createDialogsContentParams(
         onMarkAsRead = { dialogId, userId ->
             viewModel.markDialogAsRead(dialogId, userId)
         },
-        onDeleteClick = onDeleteClick,
-        onNavigateToFriends = { onAction(MessagesNavigationAction.NavigateToFriends) },
-        onNavigateToSearchUsers = { onAction(MessagesNavigationAction.NavigateToSearchUsers) }
+        onDeleteClick = callbacks.onDeleteClick,
+        onNavigateToFriends = { callbacks.onAction(MessagesNavigationAction.NavigateToFriends) },
+        onNavigateToSearchUsers = { callbacks.onAction(MessagesNavigationAction.NavigateToSearchUsers) }
     )
 }
 
@@ -257,7 +269,6 @@ fun DialogsContent(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val density = LocalDensity.current
-
     var contextMenuItem by remember { mutableStateOf<DialogEntity?>(null) }
     var menuOffset by remember { mutableStateOf(DpOffset.Zero) }
 
@@ -289,11 +300,12 @@ fun DialogsContent(
             modifier = Modifier.align(Alignment.BottomCenter)
         )
 
-        if (params.uiState is DialogsUiState.Success && params.uiState.dialogs.isNotEmpty()) {
-            val hasFriends = params.currentUser?.hasFriends ?: false
+        val hasFriends = (params.uiState as? DialogsUiState.Success)
+            ?.dialogs?.isNotEmpty() == true && params.currentUser?.hasFriends == true
+        if (hasFriends) {
             NewDialogFab(
                 enabled = !params.isRefreshing,
-                hasFriends = hasFriends,
+                hasFriends = true,
                 onNavigateToFriends = params.onNavigateToFriends,
                 onNavigateToSearchUsers = params.onNavigateToSearchUsers
             )
@@ -308,9 +320,7 @@ fun DialogsContent(
         onDismiss = { contextMenuItem = null },
         onMarkAsRead = { dialog ->
             contextMenuItem = null
-            dialog.anotherUserId?.let { userId ->
-                params.onMarkAsRead(dialog.id, userId)
-            }
+            dialog.anotherUserId?.let { userId -> params.onMarkAsRead(dialog.id, userId) }
         },
         onDeleteClick = { dialog ->
             contextMenuItem = null

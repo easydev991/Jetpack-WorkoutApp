@@ -31,17 +31,25 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
 private const val GRID_COLUMNS_COUNT = 3
 private const val PREVIEW_SELECTION_LIMIT = 15
 
+data class PickedImagesGridConfig(
+    val enabled: Boolean = true,
+    val showTitle: Boolean = true
+)
+
+sealed class PickedImagesGridAction {
+    data object AddImage : PickedImagesGridAction()
+    data class RemoveImage(val index: Int) : PickedImagesGridAction()
+    data class ViewImage(val uri: Uri, val index: Int) : PickedImagesGridAction()
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PickedImagesGrid(
     images: List<Uri>,
     selectionLimit: Int,
-    onAddClick: () -> Unit,
-    onRemoveClick: (index: Int) -> Unit,
-    onImageClick: (uri: Uri, index: Int) -> Unit,
+    onAction: (PickedImagesGridAction) -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    showTitle: Boolean = true
+    config: PickedImagesGridConfig = PickedImagesGridConfig()
 ) {
     val state = PickedImagesState(images = images, selectionLimit = selectionLimit)
     val items = buildItemsList(state)
@@ -51,7 +59,7 @@ fun PickedImagesGrid(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
     ) {
-        if (showTitle) {
+        if (config.showTitle) {
             Text(
                 text = if (images.isEmpty()) {
                     stringResource(R.string.photos_title)
@@ -82,15 +90,22 @@ fun PickedImagesGrid(
                         PickedImageCell(
                             item = item,
                             index = if (item is PickedImageItem.Image) index else -1,
-                            enabled = enabled,
+                            enabled = config.enabled,
                             onAction = { action ->
                                 when (action) {
-                                    is PickedImageCellAction.AddImage -> onAddClick()
-                                    is PickedImageCellAction.DeleteImage -> onRemoveClick(action.index)
-                                    is PickedImageCellAction.ViewFullscreen -> onImageClick(
-                                        action.uri,
-                                        action.index
-                                    )
+                                    is PickedImageCellAction.AddImage ->
+                                        onAction(PickedImagesGridAction.AddImage)
+
+                                    is PickedImageCellAction.DeleteImage ->
+                                        onAction(PickedImagesGridAction.RemoveImage(action.index))
+
+                                    is PickedImageCellAction.ViewFullscreen ->
+                                        onAction(
+                                            PickedImagesGridAction.ViewImage(
+                                                action.uri,
+                                                action.index
+                                            )
+                                        )
                                 }
                             },
                             modifier = Modifier
@@ -139,9 +154,7 @@ private fun PickedImagesGridEmptyPreview() {
         PickedImagesGrid(
             images = emptyList(),
             selectionLimit = PREVIEW_SELECTION_LIMIT,
-            onAddClick = {},
-            onRemoveClick = {},
-            onImageClick = { _, _ -> }
+            onAction = {}
         )
     }
 }
@@ -158,9 +171,7 @@ private fun PickedImagesGridWithImagesPreview() {
                     "content://media/3".toUri()
                 ),
                 selectionLimit = PREVIEW_SELECTION_LIMIT,
-                onAddClick = {},
-                onRemoveClick = {},
-                onImageClick = { _, _ -> }
+                onAction = {}
             )
         }
     }
@@ -174,9 +185,7 @@ private fun PickedImagesGridFullPreview() {
             PickedImagesGrid(
                 images = List(PREVIEW_SELECTION_LIMIT) { index -> "content://media/$index".toUri() },
                 selectionLimit = PREVIEW_SELECTION_LIMIT,
-                onAddClick = {},
-                onRemoveClick = {},
-                onImageClick = { _, _ -> }
+                onAction = {}
             )
         }
     }

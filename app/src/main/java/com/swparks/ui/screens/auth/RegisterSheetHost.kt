@@ -60,29 +60,9 @@ fun RegisterSheetHost(
         appContainer.registerViewModelFactory()
     }
     val uiState by registerViewModel.uiState.collectAsState()
-
     val innerNavController: NavHostController = rememberNavController()
-
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
-
-    LaunchedEffect(Unit) {
-        appContainer.userNotifier.errorFlow.collect { error ->
-            val message = error.toUiText(context)
-            snackbarHostState.showSnackbar(
-                message = message,
-                withDismissAction = true,
-                duration = SnackbarDuration.Short
-            )
-        }
-    }
-
-    LaunchedEffect(show) {
-        if (show) {
-            registerViewModel.resetForNewSession()
-        }
-    }
-
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
         confirmValueChange = { newValue ->
@@ -93,6 +73,20 @@ fun RegisterSheetHost(
             }
         }
     )
+
+    LaunchedEffect(Unit) {
+        appContainer.userNotifier.errorFlow.collect { error ->
+            snackbarHostState.showSnackbar(
+                message = error.toUiText(context),
+                withDismissAction = true,
+                duration = SnackbarDuration.Short
+            )
+        }
+    }
+
+    LaunchedEffect(show) {
+        if (show) registerViewModel.resetForNewSession()
+    }
 
     fun dismissSheet(onComplete: () -> Unit) {
         focusManager.clearFocus(force = true)
@@ -118,42 +112,54 @@ fun RegisterSheetHost(
             RegisterSheetContent(
                 registerViewModel = registerViewModel,
                 innerNavController = innerNavController,
-                snackbarHostState = snackbarHostState,
-                onRegisterSuccess = onRegisterSuccess,
-                onDismissed = onDismissed,
                 uiState = uiState,
-                dismissSheet = { dismissSheet(it) }
+                callbacks = RegisterSheetCallbacks(
+                    onRegisterSuccess = onRegisterSuccess,
+                    onDismissed = onDismissed
+                ),
+                config = RegisterSheetConfig(
+                    snackbarHostState = snackbarHostState,
+                    dismissSheet = { dismissSheet(it) }
+                )
             )
         }
     }
 }
 
+private data class RegisterSheetCallbacks(
+    val onRegisterSuccess: (userId: Long) -> Unit,
+    val onDismissed: () -> Unit
+)
+
+private data class RegisterSheetConfig(
+    val snackbarHostState: SnackbarHostState,
+    val dismissSheet: (() -> Unit) -> Unit
+)
+
 @Composable
 private fun RegisterSheetContent(
     registerViewModel: IRegisterViewModel,
     innerNavController: NavHostController,
-    snackbarHostState: SnackbarHostState,
-    onRegisterSuccess: (userId: Long) -> Unit,
-    onDismissed: () -> Unit,
     uiState: RegisterUiState,
-    dismissSheet: (() -> Unit) -> Unit
+    callbacks: RegisterSheetCallbacks,
+    config: RegisterSheetConfig
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         RegisterNavHost(
             viewModel = registerViewModel,
             innerNavController = innerNavController,
             onRegisterSuccess = { userId ->
-                dismissSheet { onRegisterSuccess(userId) }
+                config.dismissSheet { callbacks.onRegisterSuccess(userId) }
             },
             onClose = {
                 if (uiState.isBusy) return@RegisterNavHost
-                dismissSheet(onDismissed)
+                config.dismissSheet(callbacks.onDismissed)
             },
             modifier = Modifier.disableAllGestures()
         )
 
         SnackbarHost(
-            hostState = snackbarHostState,
+            hostState = config.snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }

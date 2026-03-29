@@ -29,16 +29,24 @@ import com.swparks.ui.ds.ParksListView
 import com.swparks.ui.viewmodel.IUserTrainingParksViewModel
 import com.swparks.ui.viewmodel.UserTrainingParksUiState
 
+data class UserTrainingParksSelectionConfig(
+    val selectionMode: Boolean = false,
+    val onParkSelected: ((Long, String) -> Unit)? = null
+)
+
+data class UserTrainingParksConfig(
+    val onParkClick: (Park) -> Unit = { },
+    val selectionConfig: UserTrainingParksSelectionConfig = UserTrainingParksSelectionConfig()
+)
+
 /**
  * Экран для отображения списка площадок, на которых тренируется пользователь
  *
  * @param modifier Modifier для настройки внешнего вида
  * @param viewModel ViewModel для управления данными экрана
  * @param onBackClick Замыкание, вызываемое при нажатии кнопки "Назад"
- * @param onParkClick Замыкание, вызываемое при нажатии на площадку (обычный режим)
  * @param parentPaddingValues PaddingValues для соблюдения безопасных зон
- * @param selectionMode Если true, экран работает в режиме выбора площадки
- * @param onParkSelected Замыкание, вызываемое при выборе площадки в режиме выбора (parkId, parkName)
+ * @param config Конфигурация экрана - [UserTrainingParksConfig]
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,27 +54,25 @@ fun UserTrainingParksScreen(
     modifier: Modifier = Modifier,
     viewModel: IUserTrainingParksViewModel,
     onBackClick: () -> Unit,
-    onParkClick: (Park) -> Unit = { },
     parentPaddingValues: androidx.compose.foundation.layout.PaddingValues,
-    selectionMode: Boolean = false,
-    onParkSelected: ((Long, String) -> Unit)? = null
+    config: UserTrainingParksConfig = UserTrainingParksConfig()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val pullRefreshState = rememberPullToRefreshState()
 
     val handleParkClick: (Park) -> Unit = { park ->
-        if (selectionMode && onParkSelected != null) {
-            onParkSelected(park.id, park.name)
+        if (config.selectionConfig.selectionMode && config.selectionConfig.onParkSelected != null) {
+            config.selectionConfig.onParkSelected(park.id, park.name)
         } else {
-            onParkClick(park)
+            config.onParkClick(park)
         }
     }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(onBackClick, selectionMode)
+            TopAppBar(onBackClick, config.selectionConfig.selectionMode)
         },
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->

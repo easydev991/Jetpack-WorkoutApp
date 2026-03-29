@@ -43,20 +43,25 @@
 ### Места с потенциально тяжёлыми объектами
 
 **1. `SWRepository.kt:255`** — логирование сырого тела HTTP-ответа
+
 ```kotlin
 logger.e(TAG, "Тело ответа сервера: $responseBody")
 ```
+
 Аналогично: `SWRepository.kt:286`
 
 **2. `SWRepository.kt:257-259`** — здесь заранее собирается строка с полями десериализованного объекта, что тоже создаёт лишнюю работу в release:
+
 ```kotlin
 logger.e(TAG, "Десериализованный ErrorResponse: message=${errorResponse.message}, errors=${errorResponse.errors}")
 ```
 
 **3. `LoggingInterceptor.kt:25-63`** — `buildString` для всего request/response, включая тела
+
 ```kotlin
 val requestLog = buildString { ... append("\n📦 Body: ${buffer.readString(charset)}") }
 ```
+
 Уже отключён в release через условное добавление в `AppContainer`.
 
 ### Часто вызываемые места с `logger.d`

@@ -42,6 +42,8 @@ import com.swparks.ui.ds.ImagePreviewDialog
 import com.swparks.ui.ds.KeyboardAwareBottomBar
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.PickedImagesGrid
+import com.swparks.ui.ds.PickedImagesGridAction
+import com.swparks.ui.ds.PickedImagesGridConfig
 import com.swparks.ui.ds.SWButton
 import com.swparks.ui.ds.SWButtonMode
 import com.swparks.ui.ds.SWButtonSize
@@ -252,12 +254,16 @@ private fun ParkFormContent(
         PickedImagesGrid(
             images = params.selectedPhotos,
             selectionLimit = params.maxNewPhotos,
-            onAddClick = params.onAddPhotoClick,
-            onRemoveClick = { index ->
-                params.selectedPhotos.getOrNull(index)?.let(params.onPhotoRemove)
+            onAction = { action ->
+                when (action) {
+                    is PickedImagesGridAction.AddImage -> params.onAddPhotoClick()
+                    is PickedImagesGridAction.RemoveImage ->
+                        params.selectedPhotos.getOrNull(action.index)?.let(params.onPhotoRemove)
+
+                    is PickedImagesGridAction.ViewImage -> params.onPhotoPreview(action.uri)
+                }
             },
-            onImageClick = { uri, _ -> params.onPhotoPreview(uri) },
-            enabled = params.isEnabled
+            config = PickedImagesGridConfig(enabled = params.isEnabled)
         )
     }
 }

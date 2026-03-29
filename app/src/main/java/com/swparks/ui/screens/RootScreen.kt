@@ -111,7 +111,9 @@ import com.swparks.ui.screens.profile.SelectCityScreen
 import com.swparks.ui.screens.profile.SelectCountryScreen
 import com.swparks.ui.screens.profile.UserFriendsAction
 import com.swparks.ui.screens.profile.UserFriendsScreen
+import com.swparks.ui.screens.profile.UserTrainingParksConfig
 import com.swparks.ui.screens.profile.UserTrainingParksScreen
+import com.swparks.ui.screens.profile.UserTrainingParksSelectionConfig
 import com.swparks.ui.screens.settings.ItemListScreen
 import com.swparks.ui.screens.themeicon.ThemeIconScreen
 import com.swparks.ui.viewmodel.BlacklistViewModel
@@ -897,15 +899,19 @@ fun RootScreen(appState: AppState) {
                     modifier = Modifier.fillMaxSize(),
                     viewModel = viewModel,
                     onBackClick = { appState.navController.popBackStack() },
-                    selectionMode = true,
-                    onParkSelected = { parkId, parkName ->
-                        appState.navController.previousBackStackEntry?.setSelectedParkResult(
-                            parkId = parkId,
-                            parkName = parkName
+                    parentPaddingValues = paddingValues,
+                    config = UserTrainingParksConfig(
+                        selectionConfig = UserTrainingParksSelectionConfig(
+                            selectionMode = true,
+                            onParkSelected = { parkId, parkName ->
+                                appState.navController.previousBackStackEntry?.setSelectedParkResult(
+                                    parkId = parkId,
+                                    parkName = parkName
+                                )
+                                appState.navController.popBackStack()
+                            }
                         )
-                        appState.navController.popBackStack()
-                    },
-                    parentPaddingValues = paddingValues
+                    )
                 )
             }
 
@@ -1193,12 +1199,14 @@ fun RootScreen(appState: AppState) {
                         modifier = Modifier.fillMaxSize(),
                         viewModel = viewModel,
                         onBackClick = { appState.navController.popBackStack() },
-                        onParkClick = { park ->
-                            appState.navController.navigate(
-                                Screen.ParkDetail.createRoute(park.id, args.source)
-                            )
-                        },
-                        parentPaddingValues = paddingValues
+                        parentPaddingValues = paddingValues,
+                        config = UserTrainingParksConfig(
+                            onParkClick = { park ->
+                                appState.navController.navigate(
+                                    Screen.ParkDetail.createRoute(park.id, args.source)
+                                )
+                            }
+                        )
                     )
                 }
             }
