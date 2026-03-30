@@ -250,7 +250,7 @@ fun ParkMapView(
                 updateParksSource(style, parks)
                 lastAppliedParksSignature = newParksSignature
                 if (BuildConfig.DEBUG) {
-                    Log.d(TAG, "parks source updated: parks=${parks.size}")
+                    Log.d(TAG, "Площадки обновлены на карте: parks=${parks.size}")
                 }
             }
 

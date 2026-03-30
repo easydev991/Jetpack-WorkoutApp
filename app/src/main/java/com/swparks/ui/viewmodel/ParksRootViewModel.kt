@@ -24,6 +24,7 @@ import com.swparks.domain.usecase.IFilterParksUseCase
 import com.swparks.domain.usecase.IInitializeParksUseCase
 import com.swparks.domain.usecase.SyncParksUseCase
 import com.swparks.ui.model.ParksTab
+import com.swparks.ui.screens.parks.map.isValidCoordinates
 import com.swparks.ui.state.MapCameraPosition
 import com.swparks.ui.state.MapEvent
 import com.swparks.ui.state.MapUiState
@@ -189,8 +190,11 @@ class ParksRootViewModel(
             } else {
                 currentMapState
             }
+        val withValidCoords = filtered.filter { park ->
+            isValidCoordinates(park.latitude, park.longitude)
+        }
         _uiState.value = _uiState.value.copy(
-            filteredParks = filtered,
+            filteredParks = withValidCoords,
             mapState = updatedMapState
         )
     }
@@ -202,10 +206,6 @@ class ParksRootViewModel(
         private const val SUSPICIOUS_CITY_RADIUS_KM = 250.0
         private const val NORMALIZED_CITY_RADIUS_KM = 75.0
         private const val EARTH_RADIUS_KM = 6371.0
-        private const val MIN_LATITUDE = -90.0
-        private const val MAX_LATITUDE = 90.0
-        private const val MIN_LONGITUDE = -180.0
-        private const val MAX_LONGITUDE = 180.0
 
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
@@ -266,6 +266,17 @@ class ParksRootViewModel(
             }
         } else {
             emptyList()
+        }
+
+        if (parks.isNotEmpty() && cityCoordinates != null) {
+            val validCount = parksWithDistance.size
+            val totalCount = parks.size
+            val invalidCoordCount = totalCount - validCount
+            logger.d(
+                TAG,
+                "Координаты площадок (${selectedCity?.name}): " +
+                    "всего=$totalCount, валидные=$validCount, невалидные=$invalidCoordCount"
+            )
         }
 
         return when {
@@ -339,22 +350,13 @@ class ParksRootViewModel(
     }
 
     private fun parseCityCoordinates(city: City): UiCoordinates? {
-        val latitude = city.lat.toDoubleOrNull()
-        val longitude = city.lon.toDoubleOrNull()
-        return if (
-            latitude != null &&
-            longitude != null &&
-            isValidCoordinates(latitude, longitude)
-        ) {
+        val latitude = city.lat.toDoubleOrNull() ?: return null
+        val longitude = city.lon.toDoubleOrNull() ?: return null
+        return if (isValidCoordinates(latitude, longitude)) {
             UiCoordinates(latitude = latitude, longitude = longitude)
         } else {
             null
         }
-    }
-
-    private fun isValidCoordinates(latitude: Double, longitude: Double): Boolean {
-        return latitude in MIN_LATITUDE..MAX_LATITUDE &&
-            longitude in MIN_LONGITUDE..MAX_LONGITUDE
     }
 
     override fun updateParks(parks: List<Park>) {

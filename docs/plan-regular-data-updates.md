@@ -66,3 +66,19 @@
 ## Осталось
 
 - [ ] *(Опционально)* Ручное тестирование сценариев синхронизации
+
+## Новые задачи
+
+### 1. Логирование валидации парков
+
+Добавить логирование количества валидных парков и количества отфильтрованных в `normalizeSelectedCityParks()`:
+- В начале функции: `totalCount = parks.size`
+- После `mapNotNull`: `validCount = parksWithDistance.size`
+- Логировать: `"Валидация парков: всего=$totalCount, валидных=$validCount, отфильтровано=${totalCount - validCount}"`
+
+### 2. Offline-поддержка для ParkDetailScreen
+
+При ошибках сети/сервера показывать данные из Room:
+1. Добавить метод в `ParkDao`: `suspend fun getParkById(id: Long): ParkEntity?`
+2. Обновить `SWRepository.getPark()`: при IOException - fallback на Room
+3. Обновить `ParkDetailViewModel.loadPark()`: при ошибке - использовать кэшированные данные

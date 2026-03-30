@@ -19,6 +19,28 @@ class ParkMapGeometryTest {
     }
 
     @Test
+    fun isValidCoordinates_stringOverload_whenValid_thenReturnsTrue() {
+        assertTrue(isValidCoordinates(latitude = "55.75", longitude = "37.61"))
+    }
+
+    @Test
+    fun isValidCoordinates_stringOverload_whenNull_thenReturnsFalse() {
+        assertFalse(isValidCoordinates(latitude = null, longitude = "37.61"))
+        assertFalse(isValidCoordinates(latitude = "55.75", longitude = null))
+        assertFalse(isValidCoordinates(latitude = null as String?, longitude = null as String?))
+    }
+
+    @Test
+    fun isValidCoordinates_stringOverload_whenNonNumeric_thenReturnsFalse() {
+        assertFalse(isValidCoordinates(latitude = "abc", longitude = "37.61"))
+    }
+
+    @Test
+    fun isValidCoordinates_stringOverload_whenOutOfRange_thenReturnsFalse() {
+        assertFalse(isValidCoordinates(latitude = "91.0", longitude = "37.0"))
+    }
+
+    @Test
     fun toValidParkPoints_whenContainsInvalidCoordinates_thenFiltersInvalidParks() {
         val parks = listOf(
             createPark(id = 1, latitude = "55.75", longitude = "37.61"),

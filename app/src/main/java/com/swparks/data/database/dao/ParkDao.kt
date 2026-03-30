@@ -50,6 +50,6 @@ interface ParkDao {
      *
      * @return true если база пуста
      */
-    @Query("SELECT COUNT(*) FROM parks")
+    @Query("SELECT COUNT(*) = 0 FROM parks")
     suspend fun isEmpty(): Boolean
 }

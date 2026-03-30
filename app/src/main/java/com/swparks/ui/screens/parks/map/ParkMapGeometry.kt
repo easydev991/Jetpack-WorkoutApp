@@ -30,7 +30,8 @@ internal data class BoundsCameraUpdate(
 )
 
 internal fun List<Park>.toFeatureCollection(): FeatureCollection {
-    val features = toValidParkPoints().map { parkPoint ->
+    val validPoints = toValidParkPoints()
+    val features = validPoints.map { parkPoint ->
         Feature.fromGeometry(
             Point.fromLngLat(parkPoint.longitude, parkPoint.latitude)
         ).apply {
@@ -86,6 +87,12 @@ internal fun MapCameraPosition.isDefaultCityRequestFor(selectedCityCenter: UiCoo
     return kotlin.math.abs(target.latitude - selectedCityCenter.latitude) < CAMERA_EPSILON &&
         kotlin.math.abs(target.longitude - selectedCityCenter.longitude) < CAMERA_EPSILON &&
         kotlin.math.abs(zoom - INITIAL_CITY_ZOOM) < ZOOM_EPSILON
+}
+
+internal fun isValidCoordinates(latitude: String?, longitude: String?): Boolean {
+    val lat = latitude?.toDoubleOrNull() ?: return false
+    val lon = longitude?.toDoubleOrNull() ?: return false
+    return isValidCoordinates(lat, lon)
 }
 
 internal fun isValidCoordinates(latitude: Double, longitude: Double): Boolean {
