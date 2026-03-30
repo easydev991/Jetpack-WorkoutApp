@@ -22,7 +22,8 @@ class UserPreferencesRepository(
         val current_user_id = longPreferencesKey("currentUserId")
         val last_parks_update_date = stringPreferencesKey("lastParksUpdateDate")
         val last_countries_update_date = stringPreferencesKey("lastCountriesUpdateDate")
-        const val DEFAULT_PARKS_DATE = "2025-10-25T00:00:00"
+        const val DEFAULT_PARKS_DATE = "2025-10-25T00:00:00Z"
+        const val DEFAULT_COUNTRIES_DATE = "2025-10-25T00:00:00Z"
         const val tag = "UserPreferencesRepository"
     }
 
@@ -109,7 +110,7 @@ class UserPreferencesRepository(
         .map { it[last_parks_update_date] ?: DEFAULT_PARKS_DATE }
         .distinctUntilChanged()
 
-    val lastCountriesUpdateDate: Flow<String?> = dataStore.data
+    val lastCountriesUpdateDate: Flow<String> = dataStore.data
         .catch { e ->
             if (e is IOException) {
                 Log.e(tag, "Ошибка при загрузке lastCountriesUpdateDate", e)
@@ -118,14 +119,14 @@ class UserPreferencesRepository(
                 throw e
             }
         }
-        .map { it[last_countries_update_date] }
+        .map { it[last_countries_update_date] ?: DEFAULT_COUNTRIES_DATE }
         .distinctUntilChanged()
 
     suspend fun setLastParksUpdateDate(date: String) {
         dataStore.edit {
             it[last_parks_update_date] = date
         }
-        Log.i(tag, "Сохранена дата последнего обновления парков: $date")
+        Log.i(tag, "Сохранена дата последнего обновления площадок: $date")
     }
 
     suspend fun setLastCountriesUpdateDate(date: String) {

@@ -55,14 +55,14 @@ class SyncParksUseCaseTest {
     }
 
     @Test
-    fun invoke_whenNeedUpdateIsTrue_thenCallsGetUpdatedParks() = runTest {
-        every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
+    fun invoke_whenForceTrue_thenCallsGetUpdatedParks() = runTest {
+        every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-27T10:00:00Z")
         coEvery { swRepository.getUpdatedParks(any()) } returns Result.success(emptyList())
         coEvery { swRepository.upsertParks(any()) } returns Unit
 
-        syncParksUseCase()
+        syncParksUseCase(force = true)
 
-        coVerify { swRepository.getUpdatedParks("2025-10-25T00:00:00Z") }
+        coVerify { swRepository.getUpdatedParks("2025-10-27") }
     }
 
     @Test
@@ -95,6 +95,17 @@ class SyncParksUseCaseTest {
         syncParksUseCase()
 
         coVerify(exactly = 0) { userPreferencesRepository.setLastParksUpdateDate(any()) }
+    }
+
+    @Test
+    fun invoke_whenForceTrue_withDateTimeFormat_thenExtractsDateOnly() = runTest {
+        every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-27T15:30:45Z")
+        coEvery { swRepository.getUpdatedParks(any()) } returns Result.success(emptyList())
+        coEvery { swRepository.upsertParks(any()) } returns Unit
+
+        syncParksUseCase(force = true)
+
+        coVerify { swRepository.getUpdatedParks("2025-10-27") }
     }
 
 }

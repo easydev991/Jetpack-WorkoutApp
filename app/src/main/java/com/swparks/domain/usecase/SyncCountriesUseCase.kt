@@ -20,7 +20,7 @@ class SyncCountriesUseCase(
     suspend operator fun invoke(): Result<Unit> {
         val lastUpdateDate = userPreferencesRepository.lastCountriesUpdateDate.first()
 
-        if (lastUpdateDate != null && !lastUpdateDate.isUpdateNeeded(clock)) {
+        if (!lastUpdateDate.isUpdateNeeded(clock)) {
             logger.d(
                 TAG,
                 "Обновление справочника стран не требуется, последнее обновление: $lastUpdateDate"

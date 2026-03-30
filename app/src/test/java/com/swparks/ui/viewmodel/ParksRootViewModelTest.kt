@@ -732,6 +732,27 @@ class ParksRootViewModelTest {
     }
 
     @Test
+    fun refresh_whenAlreadyRefreshing_doesNotLaunchAnotherCoroutines() = runTest {
+        val refreshGate = CompletableDeferred<Unit>()
+        coEvery { syncParksUseCase.invoke(force = true) } coAnswers {
+            refreshGate.await()
+            Result.success(Unit)
+        }
+
+        viewModel.refresh()
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.isRefreshing)
+
+        viewModel.refresh()
+        viewModel.refresh()
+
+        refreshGate.complete(Unit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { syncParksUseCase.invoke(force = true) }
+    }
+
+    @Test
     fun showNoParksFound_whenFilteredParksEmptyAndCitySelectedAndParksLoadedAndNotLoading_showsNoParksFound() {
         val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
 

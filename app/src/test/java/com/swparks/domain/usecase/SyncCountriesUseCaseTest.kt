@@ -93,8 +93,8 @@ class SyncCountriesUseCaseTest {
     }
 
     @Test
-    fun invoke_whenLastCountriesUpdateDateIsNull_thenCallsUpdateCountriesFromServer() = runTest {
-        every { userPreferencesRepository.lastCountriesUpdateDate } returns flowOf(null)
+    fun invoke_whenDefaultDate_thenCallsUpdateCountriesFromServer() = runTest {
+        every { userPreferencesRepository.lastCountriesUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
         coEvery { countriesRepository.updateCountriesFromServer() } returns Result.success(Unit)
 
         syncCountriesUseCase()

@@ -34,7 +34,7 @@ class UserPreferencesRepositoryTest {
     private val currentUserIdKey = longPreferencesKey("currentUserId")
     private val lastParksUpdateDateKey = stringPreferencesKey("lastParksUpdateDate")
     private val lastCountriesUpdateDateKey = stringPreferencesKey("lastCountriesUpdateDate")
-    private val defaultParksDate = "2025-10-25T00:00:00"
+    private val defaultParksDate = "2025-10-25T00:00:00Z"
 
     @Before
     fun setup() {
@@ -148,34 +148,34 @@ class UserPreferencesRepositoryTest {
     }
 
     @Test
-    fun lastCountriesUpdateDate_whenNoDateStored_thenReturnsNull() = runTest {
+    fun lastCountriesUpdateDate_whenNoDateStored_thenReturnsDefaultDate() = runTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
         val repository = UserPreferencesRepository(mockDataStore)
 
         val result = repository.lastCountriesUpdateDate.first()
-        assertEquals(null, result)
+        assertEquals("2025-10-25T00:00:00Z", result)
     }
 
     @Test
     fun lastCountriesUpdateDate_whenDateStored_thenReturnsStoredDate() = runTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
-        val preferences = mutablePreferencesOf(lastCountriesUpdateDateKey to "2025-02-20T15:45:00")
+        val preferences = mutablePreferencesOf(lastCountriesUpdateDateKey to "2025-02-20T15:45:00Z")
         every { mockDataStore.data } returns flowOf(preferences)
         val repository = UserPreferencesRepository(mockDataStore)
 
         val result = repository.lastCountriesUpdateDate.first()
-        assertEquals("2025-02-20T15:45:00", result)
+        assertEquals("2025-02-20T15:45:00Z", result)
     }
 
     @Test
-    fun lastCountriesUpdateDate_whenIOExceptionOccurs_thenReturnsNull() = runTest {
+    fun lastCountriesUpdateDate_whenIOExceptionOccurs_thenReturnsDefaultDate() = runTest {
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flow { throw IOException("Test error") }
         val repository = UserPreferencesRepository(mockDataStore)
 
         val result = repository.lastCountriesUpdateDate.first()
-        assertEquals(null, result)
+        assertEquals("2025-10-25T00:00:00Z", result)
     }
 
     @Test

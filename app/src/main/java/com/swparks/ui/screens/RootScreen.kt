@@ -266,7 +266,9 @@ fun RootScreen(appState: AppState) {
                         ParksTopAppBar(
                             parksCount = parksRootUiState.filteredParks.size,
                             onFilterClick = { parksRootViewModel.onShowFilterDialog() },
-                            isFilterLoading = parksRootUiState.isLoadingFilter
+                            isFilterLoading = parksRootUiState.isLoadingFilter,
+                            onRefreshClick = { parksRootViewModel.refresh() },
+                            isRefreshing = parksRootUiState.isRefreshing
                         )
                     }
 

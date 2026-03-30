@@ -22,7 +22,7 @@ class InitializeParksUseCase(
         return try {
             block()
         } catch (e: Exception) {
-            logger.e(TAG, "Ошибка инициализации парков", e)
+            logger.e(TAG, "Ошибка инициализации площадок", e)
             Result.failure<T>(e)
         }
     }

@@ -178,7 +178,7 @@ interface AppContainer {
     val syncParksUseCase: SyncParksUseCase
     val syncCountriesUseCase: SyncCountriesUseCase
 
-    // Use cases для инициализации парков
+    // Use cases для инициализации площадок
     val initializeParksUseCase: IInitializeParksUseCase
 
     // Use cases для авторизации

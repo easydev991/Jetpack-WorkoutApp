@@ -21,24 +21,25 @@ class SyncParksUseCase(
         val lastUpdateDate = userPreferencesRepository.lastParksUpdateDate.first()
 
         if (!force && !lastUpdateDate.isUpdateNeeded(clock)) {
-            logger.d(TAG, "Обновление парков не требуется, последнее обновление: $lastUpdateDate")
+            logger.d(TAG, "Обновление площадок не требуется, последнее обновление: $lastUpdateDate")
             return Result.success(Unit)
         }
 
-        logger.i(TAG, "Проверка необходимости обновления парков")
+        logger.i(TAG, "Проверка необходимости обновления площадок")
 
-        val result = swRepository.getUpdatedParks(lastUpdateDate)
+        val dateOnly = lastUpdateDate.take(10)
+        val result = swRepository.getUpdatedParks(dateOnly)
         if (result.isFailure) {
-            logger.e(TAG, "Ошибка обновления парков", result.exceptionOrNull())
+            logger.e(TAG, "Ошибка обновления площадок", result.exceptionOrNull())
             return Result.failure(result.exceptionOrNull() ?: Exception("Unknown error"))
         }
 
         val parks = result.getOrNull() ?: emptyList()
         if (parks.isNotEmpty()) {
             swRepository.upsertParks(parks)
-            logger.i(TAG, "Обновлено ${parks.size} парков с сервера")
+            logger.i(TAG, "Обновлено ${parks.size} площадок с сервера")
         } else {
-            logger.i(TAG, "Обновление парков с сервера: изменений нет")
+            logger.i(TAG, "Обновление площадок с сервера: изменений нет")
         }
 
         userPreferencesRepository.setLastParksUpdateDate(clock.nowIsoString())

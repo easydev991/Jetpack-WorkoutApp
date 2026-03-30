@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter
  * Production implementation of [Clock] using system time.
  */
 class SystemClock : Clock {
-    private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+    private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
 
     override fun now(): Instant = Instant.now()
 

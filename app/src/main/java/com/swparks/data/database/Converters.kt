@@ -40,7 +40,7 @@ object UserConverters {
             try {
                 json.decodeFromString<List<Park>>(it)
             } catch (e: SerializationException) {
-                Log.e("UserConverters", "Ошибка десериализации парков: ${e.message}")
+                Log.e("UserConverters", "Ошибка десериализации площадок: ${e.message}")
                 null
             }
         }

@@ -120,27 +120,28 @@ class ParksRootViewModel(
 
     private suspend fun syncParks(force: Boolean = false) {
         if (force) {
-            logger.d(TAG, "Принудительное обновление парков")
+            logger.d(TAG, "Принудительное обновление площадок")
         } else {
-            logger.d(TAG, "Проверка необходимости обновления парков")
+            logger.d(TAG, "Проверка необходимости обновления площадок")
         }
         val result = syncParksUseCase(force = force)
         result.onFailure { error ->
             val message = if (force) {
-                "Ошибка принудительного обновления парков"
+                "Ошибка принудительного обновления площадок"
             } else {
-                "Ошибка обновления парков"
+                "Ошибка обновления площадок"
             }
             logger.e(TAG, message, error)
         }
     }
 
     private suspend fun initializeParks() {
-        logger.d(TAG, "Инициализация seed парков")
+        logger.d(TAG, "Инициализация seed площадок")
         initializeParksUseCase()
     }
 
     override fun refresh() {
+        if (_uiState.value.isRefreshing) return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isRefreshing = true)
             try {
