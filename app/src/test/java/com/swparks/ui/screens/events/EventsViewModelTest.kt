@@ -5,6 +5,7 @@ import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.Event
 import com.swparks.data.model.User
+import com.swparks.data.repository.SWRepository
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.IGetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.IGetPastEventsFlowUseCase
@@ -12,6 +13,7 @@ import com.swparks.domain.usecase.ISyncFutureEventsUseCase
 import com.swparks.domain.usecase.ISyncPastEventsUseCase
 import com.swparks.ui.model.EventKind
 import com.swparks.ui.state.EventsUIState
+import com.swparks.ui.viewmodel.EventsEvent
 import com.swparks.ui.viewmodel.EventsViewModel
 import com.swparks.util.AppNotification
 import com.swparks.util.Logger
@@ -24,6 +26,8 @@ import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -49,6 +53,7 @@ class EventsViewModelTest {
     private val mockCountriesRepository = mockk<CountriesRepository>(relaxed = true)
     private val mockUserNotifier = mockk<UserNotifier>(relaxed = true)
     private val mockLogger = mockk<Logger>(relaxed = true)
+    private val mockSWRepository = mockk<SWRepository>(relaxed = true)
     private val notificationFlow = MutableSharedFlow<AppNotification>(extraBufferCapacity = 10)
 
     @Before
@@ -95,7 +100,8 @@ class EventsViewModelTest {
             userPreferencesRepository = mockUserPreferencesRepository,
             countriesRepository = mockCountriesRepository,
             userNotifier = mockUserNotifier,
-            logger = mockLogger
+            logger = mockLogger,
+            swRepository = mockSWRepository
         )
     }
 
@@ -750,5 +756,111 @@ class EventsViewModelTest {
         assertEquals(1, state.events.size)
         assertEquals("Past Updated", state.events.first().title)
         assertEquals(10L, state.events.first().id)
+    }
+
+    // ==================== FAB click with hasUsedParks logic ====================
+
+    @Test
+    fun onFabClick_whenUserHasUsedParks_thenEmitsNavigateToCreateEvent() = runTest {
+        val userWithParks = User(id = 1L, name = "testuser", image = "", parksCount = "2")
+        val currentUserFlow = MutableStateFlow(userWithParks)
+
+        every { mockGetFutureEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(true)
+        every { mockSWRepository.getCurrentUserFlow() } returns currentUserFlow
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onFabClick()
+        advanceUntilIdle()
+
+        val event = viewModel.events.first()
+        assertEquals(EventsEvent.NavigateToCreateEvent, event)
+    }
+
+    @Test
+    fun onFabClick_whenUserHasNoUsedParks_thenEmitsShowEventCreationRule() = runTest {
+        val userWithoutParks = User(id = 1L, name = "testuser", image = "", parksCount = "0")
+        val currentUserFlow = MutableStateFlow(userWithoutParks)
+
+        every { mockGetFutureEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(true)
+        every { mockSWRepository.getCurrentUserFlow() } returns currentUserFlow
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onFabClick()
+        advanceUntilIdle()
+
+        val event = viewModel.events.first()
+        assertTrue(event is EventsEvent.ShowEventCreationRule)
+    }
+
+    @Test
+    fun onFabClick_whenUserIsUnauthorized_thenDoesNothing() = runTest {
+        every { mockGetFutureEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+        every { mockSWRepository.getCurrentUserFlow() } returns flowOf(null)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onFabClick()
+        advanceUntilIdle()
+
+        verify { mockLogger.d("EventsViewModel", "Пользователь не авторизован, действие не выполняется") }
+    }
+
+    @Test
+    fun onFabClick_whenCurrentUserUpdatesToHasUsedParks_thenEmitsNavigateToCreateEvent() = runTest {
+        val userWithoutParks = User(id = 1L, name = "testuser", image = "", parksCount = "0")
+        val userWithParks = User(id = 1L, name = "testuser", image = "", parksCount = "2")
+        val currentUserFlow = MutableStateFlow(userWithoutParks)
+
+        every { mockGetFutureEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(true)
+        every { mockSWRepository.getCurrentUserFlow() } returns currentUserFlow
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        currentUserFlow.value = userWithParks
+        advanceUntilIdle()
+
+        viewModel.onFabClick()
+        advanceUntilIdle()
+
+        val event = viewModel.events.first()
+        assertEquals(EventsEvent.NavigateToCreateEvent, event)
+    }
+
+    @Test
+    fun onFabClick_whenCurrentUserUpdatesToNoUsedParks_thenEmitsShowEventCreationRule() = runTest {
+        val userWithParks = User(id = 1L, name = "testuser", image = "", parksCount = "2")
+        val userWithoutParks = User(id = 1L, name = "testuser", image = "", parksCount = "0")
+        val currentUserFlow = MutableStateFlow(userWithParks)
+
+        every { mockGetFutureEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+        every { mockUserPreferencesRepository.isAuthorized } returns flowOf(true)
+        every { mockSWRepository.getCurrentUserFlow() } returns currentUserFlow
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        currentUserFlow.value = userWithoutParks
+        advanceUntilIdle()
+
+        viewModel.onFabClick()
+        advanceUntilIdle()
+
+        val event = viewModel.events.first()
+        assertTrue(event is EventsEvent.ShowEventCreationRule)
     }
 }

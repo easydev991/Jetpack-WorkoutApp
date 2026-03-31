@@ -9,6 +9,10 @@
     <string name="events_empty_future">Нет предстоящих мероприятий</string>
     <string name="events_empty_past">Нет прошедших мероприятий</string>
     <string name="events_fab_description">Создать мероприятие</string>
+    <string name="event_creation_rule_title">Необходимо выбрать площадку</string>
+    <string name="event_creation_rule_message">Чтобы создать мероприятие, нужно указать хотя бы одну площадку, где ты тренируешься</string>
+    <string name="event_creation_rule_open_parks">Перейти на карту</string>
+    <string name="event_creation_rule_dismiss">Понятно</string>
     <string name="messages">Сообщения</string>
     <string name="messages_title">Сообщения</string>
     <string name="profile">Профиль</string>

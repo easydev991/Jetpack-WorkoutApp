@@ -229,4 +229,6 @@ class FakeParksRootViewModel : IParksRootViewModel {
         get() = _uiState.value.cities
             .filter { it.name.contains(_uiState.value.citySearchQuery, ignoreCase = true) }
             .map { it.name }
+
+    override fun refresh() {}
 }

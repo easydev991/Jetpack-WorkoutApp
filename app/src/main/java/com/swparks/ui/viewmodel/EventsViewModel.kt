@@ -8,6 +8,8 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.JetpackWorkoutApplication
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Event
+import com.swparks.data.model.User
+import com.swparks.data.repository.SWRepository
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.IGetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.IGetPastEventsFlowUseCase
@@ -37,6 +39,14 @@ sealed class EventsEvent {
      * Навигация к экрану создания мероприятия.
      */
     data object NavigateToCreateEvent : EventsEvent()
+
+    /**
+     * Показать алерт с правилом создания мероприятия.
+     *
+     * Отображается когда пользователь без площадок тренировки
+     * пытается создать мероприятие.
+     */
+    data object ShowEventCreationRule : EventsEvent()
 }
 
 /**
@@ -68,6 +78,7 @@ class EventsViewModel(
     private val countriesRepository: CountriesRepository,
     private val userNotifier: UserNotifier,
     private val logger: Logger,
+    private val swRepository: SWRepository,
 ) : ViewModel(), IEventsViewModel {
     companion object {
         private const val TAG = "EventsViewModel"
@@ -85,7 +96,8 @@ class EventsViewModel(
                     userPreferencesRepository = container.userPreferencesRepository,
                     countriesRepository = container.countriesRepository,
                     userNotifier = container.userNotifier,
-                    logger = container.logger
+                    logger = container.logger,
+                    swRepository = container.swRepository
                 )
             }
         }
@@ -157,12 +169,26 @@ class EventsViewModel(
     private val _events = Channel<EventsEvent>()
     override val events: Flow<EventsEvent> = _events.receiveAsFlow()
 
+    private val _currentUser = MutableStateFlow<User?>(null)
+    override val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
+
     init {
         logger.d(TAG, "Инициализация EventsViewModel")
         observeAuthorization()
+        observeCurrentUser()
         observeFutureEvents()
         syncFutureEventsInternal()
         observePastEvents()
+    }
+
+    private fun observeCurrentUser() {
+        viewModelScope.launch {
+            logger.d(TAG, "Подписка на Flow текущего пользователя")
+            swRepository.getCurrentUserFlow().collect { user ->
+                _currentUser.value = user
+                logger.d(TAG, "Текущий пользователь обновлён: ${user?.name}, hasUsedParks=${user?.hasUsedParks}")
+            }
+        }
     }
 
     private fun observeAuthorization() {
@@ -383,7 +409,20 @@ class EventsViewModel(
     override fun onFabClick() {
         logger.d(TAG, "Нажатие FAB: создание мероприятия")
         viewModelScope.launch {
-            _events.send(EventsEvent.NavigateToCreateEvent)
+            val user = _currentUser.value
+            when {
+                user == null -> {
+                    logger.d(TAG, "Пользователь не авторизован, действие не выполняется")
+                }
+                !user.hasUsedParks -> {
+                    logger.d(TAG, "У пользователя нет площадок тренировки, показываем алерт")
+                    _events.send(EventsEvent.ShowEventCreationRule)
+                }
+                else -> {
+                    logger.d(TAG, "У пользователя есть площадки, переход к созданию мероприятия")
+                    _events.send(EventsEvent.NavigateToCreateEvent)
+                }
+            }
         }
     }
 

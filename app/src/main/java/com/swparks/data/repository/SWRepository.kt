@@ -65,7 +65,6 @@ import java.io.IOException
  *
  * Примечание: Интерфейс содержит много функций по назначению,
  * так как это основной API для работы со всеми функциями сервера.
- * Подавляет предупреждение [TooManyFunctions] от Detekt.
  */
 @Suppress("TooManyFunctions")
 interface SWRepository {
@@ -201,7 +200,6 @@ interface SWRepository {
  *
  * Примечание: Класс содержит много функций по назначению,
  * так как это основная реализация для работы со всеми функциями сервера.
- * Подавляет предупреждение [TooManyFunctions] и [TooGenericExceptionCaught] от Detekt.
  *
  * Примечание по обработке исключений:
  * Все сетевые операции ловят общий Exception и оборачивают в Result.failure().
@@ -848,6 +846,24 @@ class SWRepositoryImp(
                 trainingUsersCount = newCount
             )
         )
+
+        if (currentUserId != null) {
+            val currentUserEntity = userDao.getUserByIdFlow(currentUserId).first()
+            if (currentUserEntity != null) {
+                val currentParksCount = currentUserEntity.parksCount?.toIntOrNull() ?: 0
+                val updatedParksCount = if (trainHere) {
+                    currentParksCount + 1
+                } else {
+                    maxOf(currentParksCount - 1, 0)
+                }
+                userDao.insert(currentUserEntity.copy(parksCount = updatedParksCount.toString()))
+                logger.d(
+                    TAG,
+                    "Обновлён parksCount текущего пользователя: $currentParksCount -> $updatedParksCount"
+                )
+            }
+        }
+
         logger.d(TAG, "Обновлён кэш trainHere для площадки $parkId")
     }
 

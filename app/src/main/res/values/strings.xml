@@ -159,6 +159,10 @@
     <string name="events_empty_future">No upcoming events</string>
     <string name="events_empty_past">No past events</string>
     <string name="events_fab_description">Create event</string>
+    <string name="event_creation_rule_title">You need to select a park</string>
+    <string name="event_creation_rule_message">To create an event, you need to specify at least one park where you train</string>
+    <string name="event_creation_rule_open_parks">Open parks</string>
+    <string name="event_creation_rule_dismiss">Understood</string>
     <string name="messages_title">Messages</string>
     <string name="profile_title">Profile</string>
     <string name="more_title">More</string>

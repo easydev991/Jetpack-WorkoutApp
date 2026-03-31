@@ -804,7 +804,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
         userPreferencesRepository = userPreferencesRepository,
         countriesRepository = countriesRepository,
         userNotifier = userNotifier,
-        logger = logger
+        logger = logger,
+        swRepository = swRepository
     )
 
     /** Factory метод для создания EventDetailViewModel */

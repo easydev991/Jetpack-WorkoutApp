@@ -285,7 +285,8 @@ class Integration404Test {
             userPreferencesRepository = userPreferencesRepository,
             countriesRepository = countriesRepository,
             userNotifier = userNotifier,
-            logger = logger
+            logger = logger,
+            swRepository = swRepository
         )
 
         advanceUntilIdle()

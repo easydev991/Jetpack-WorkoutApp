@@ -78,6 +78,7 @@ class EventsScreenTest {
         viewModel: IEventsViewModel = FakeEventsViewModel(
             eventsUIState = MutableStateFlow(uiState),
             isAuthorized = MutableStateFlow(isAuthorized),
+            currentUser = MutableStateFlow(if (isAuthorized) testUser else null),
             selectedTab = MutableStateFlow(selectedTab)
         )
     ) {
@@ -322,6 +323,7 @@ class EventsScreenTest {
                 )
             )
             override val isAuthorized = MutableStateFlow(true)
+            override val currentUser = MutableStateFlow<User?>(testUser)
             override val selectedTab = MutableStateFlow(EventKind.FUTURE)
             override val isRefreshing = MutableStateFlow(false)
             private val _events = MutableSharedFlow<EventsEvent>()
@@ -364,6 +366,7 @@ class EventsScreenTest {
                 )
             )
             override val isAuthorized = MutableStateFlow(false)
+            override val currentUser = MutableStateFlow<User?>(null)
             override val selectedTab = MutableStateFlow(EventKind.FUTURE)
             override val isRefreshing = MutableStateFlow(false)
             private val _events = MutableSharedFlow<EventsEvent>()
@@ -406,6 +409,7 @@ class EventsScreenTest {
                 )
             )
             override val isAuthorized = MutableStateFlow(false)
+            override val currentUser = MutableStateFlow<User?>(null)
             override val selectedTab = MutableStateFlow(EventKind.FUTURE)
             override val isRefreshing = MutableStateFlow(false)
             private val _events = MutableSharedFlow<EventsEvent>()
@@ -633,5 +637,435 @@ class EventsScreenTest {
         composeTestRule
             .onNodeWithText("Мероприятие без адреса")
             .assertIsDisplayed()
+    }
+
+    // ==================== Event Creation Rule Alert Tests (Stage 2 & 3) ====================
+
+    @Test
+    fun fab_click_whenAuthorizedWithoutUsedParks_showsAlert() {
+        // Given - user without used parks is authorized
+        val userWithoutParks = testUser.copy(parksCount = "0")
+        val viewModel = FakeEventsViewModel(
+            eventsUIState = MutableStateFlow(
+                EventsUIState.Content(
+                    events = emptyList(),
+                    selectedTab = EventKind.FUTURE
+                )
+            ),
+            isAuthorized = MutableStateFlow(true),
+            currentUser = MutableStateFlow(userWithoutParks),
+            selectedTab = MutableStateFlow(EventKind.FUTURE),
+            fabClickResult = EventsEvent.ShowEventCreationRule
+        )
+
+        // When
+        setContent(viewModel = viewModel)
+
+        // Click FAB
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.events_fab_description))
+            .performClick()
+
+        // Then - alert is displayed
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_creation_rule_title))
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_creation_rule_message))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun alert_confirmButton_navigatesToParks() {
+        // Given
+        var navigateToParksCalled = false
+        val viewModel = FakeEventsViewModel(
+            eventsUIState = MutableStateFlow(
+                EventsUIState.Content(
+                    events = emptyList(),
+                    selectedTab = EventKind.FUTURE
+                )
+            ),
+            isAuthorized = MutableStateFlow(true),
+            currentUser = MutableStateFlow(testUser.copy(parksCount = "0")),
+            selectedTab = MutableStateFlow(EventKind.FUTURE),
+            fabClickResult = EventsEvent.ShowEventCreationRule
+        )
+
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                EventsScreen(
+                    viewModel = viewModel,
+                    onNavigateToParks = { navigateToParksCalled = true }
+                )
+            }
+        }
+
+        // Click FAB to show alert
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.events_fab_description))
+            .performClick()
+
+        // Click "Go to map" button
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_creation_rule_open_parks))
+            .performClick()
+
+        // Then
+        assert(navigateToParksCalled) { "onNavigateToParks should be called when confirm button is clicked" }
+    }
+
+    @Test
+    fun alert_dismissButton_closesAlert() {
+        // Given
+        val viewModel = FakeEventsViewModel(
+            eventsUIState = MutableStateFlow(
+                EventsUIState.Content(
+                    events = emptyList(),
+                    selectedTab = EventKind.FUTURE
+                )
+            ),
+            isAuthorized = MutableStateFlow(true),
+            currentUser = MutableStateFlow(testUser.copy(parksCount = "0")),
+            selectedTab = MutableStateFlow(EventKind.FUTURE),
+            fabClickResult = EventsEvent.ShowEventCreationRule
+        )
+
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                EventsScreen(
+                    viewModel = viewModel,
+                    onNavigateToParks = {}
+                )
+            }
+        }
+
+        // Click FAB to show alert
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.events_fab_description))
+            .performClick()
+
+        // Verify alert is shown
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_creation_rule_title))
+            .assertIsDisplayed()
+
+        // Click dismiss button
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_creation_rule_dismiss))
+            .performClick()
+
+        // Then - alert is dismissed
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_creation_rule_title))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun alert_hasCorrectTitle() {
+        // Given
+        val viewModel = FakeEventsViewModel(
+            eventsUIState = MutableStateFlow(
+                EventsUIState.Content(
+                    events = emptyList(),
+                    selectedTab = EventKind.FUTURE
+                )
+            ),
+            isAuthorized = MutableStateFlow(true),
+            currentUser = MutableStateFlow(testUser.copy(parksCount = "0")),
+            selectedTab = MutableStateFlow(EventKind.FUTURE),
+            fabClickResult = EventsEvent.ShowEventCreationRule
+        )
+
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                EventsScreen(viewModel = viewModel)
+            }
+        }
+
+        // Click FAB to show alert
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.events_fab_description))
+            .performClick()
+
+        // Then - title matches expected iOS key Alert.EventCreationRule
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_creation_rule_title))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun alert_hasCorrectMessage() {
+        // Given
+        val viewModel = FakeEventsViewModel(
+            eventsUIState = MutableStateFlow(
+                EventsUIState.Content(
+                    events = emptyList(),
+                    selectedTab = EventKind.FUTURE
+                )
+            ),
+            isAuthorized = MutableStateFlow(true),
+            currentUser = MutableStateFlow(testUser.copy(parksCount = "0")),
+            selectedTab = MutableStateFlow(EventKind.FUTURE),
+            fabClickResult = EventsEvent.ShowEventCreationRule
+        )
+
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                EventsScreen(viewModel = viewModel)
+            }
+        }
+
+        // Click FAB to show alert
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.events_fab_description))
+            .performClick()
+
+        // Then - message matches expected iOS key Alert.EventCreationRule
+        // ru: "Чтобы создать мероприятие, нужно указать хотя бы одну площадку, где ты тренируешься"
+        // en: "To create an event, you need to specify at least one park where you train"
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_creation_rule_message))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun alert_hasGoToMapButton() {
+        // Given
+        val viewModel = FakeEventsViewModel(
+            eventsUIState = MutableStateFlow(
+                EventsUIState.Content(
+                    events = emptyList(),
+                    selectedTab = EventKind.FUTURE
+                )
+            ),
+            isAuthorized = MutableStateFlow(true),
+            currentUser = MutableStateFlow(testUser.copy(parksCount = "0")),
+            selectedTab = MutableStateFlow(EventKind.FUTURE),
+            fabClickResult = EventsEvent.ShowEventCreationRule
+        )
+
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                EventsScreen(viewModel = viewModel)
+            }
+        }
+
+        // Click FAB to show alert
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.events_fab_description))
+            .performClick()
+
+        // Then - "Go to map" button is displayed
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_creation_rule_open_parks))
+            .assertIsDisplayed()
+            .assertHasClickAction()
+    }
+
+    @Test
+    fun alert_hasDismissButton() {
+        // Given
+        val viewModel = FakeEventsViewModel(
+            eventsUIState = MutableStateFlow(
+                EventsUIState.Content(
+                    events = emptyList(),
+                    selectedTab = EventKind.FUTURE
+                )
+            ),
+            isAuthorized = MutableStateFlow(true),
+            currentUser = MutableStateFlow(testUser.copy(parksCount = "0")),
+            selectedTab = MutableStateFlow(EventKind.FUTURE),
+            fabClickResult = EventsEvent.ShowEventCreationRule
+        )
+
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                EventsScreen(viewModel = viewModel)
+            }
+        }
+
+        // Click FAB to show alert
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.events_fab_description))
+            .performClick()
+
+        // Then - dismiss button is displayed with correct text
+        // ru: "Понятно", en: "Understood"
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_creation_rule_dismiss))
+            .assertIsDisplayed()
+            .assertHasClickAction()
+    }
+
+    @Test
+    fun fab_click_whenUserHasUsedParks_doesNotShowAlert() {
+        // Given - user with used parks
+        val userWithParks = testUser.copy(parksCount = "2")
+        val viewModel = FakeEventsViewModel(
+            eventsUIState = MutableStateFlow(
+                EventsUIState.Content(
+                    events = emptyList(),
+                    selectedTab = EventKind.FUTURE
+                )
+            ),
+            isAuthorized = MutableStateFlow(true),
+            currentUser = MutableStateFlow(userWithParks),
+            selectedTab = MutableStateFlow(EventKind.FUTURE),
+            fabClickResult = EventsEvent.NavigateToCreateEvent
+        )
+
+        // When
+        setContent(viewModel = viewModel)
+
+        // Click FAB
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.events_fab_description))
+            .performClick()
+
+        // Then - alert is NOT displayed (FAB navigates to create event instead)
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_creation_rule_title))
+            .assertDoesNotExist()
+    }
+
+    // ==================== Stage 4: End-to-End User Scenarios ====================
+
+    @Test
+    fun fab_click_whenUserHasUsedParks_navigatesToCreateEvent() {
+        // Given - user with used parks
+        var navigateToCreateEventCalled = false
+        val userWithParks = testUser.copy(parksCount = "2")
+        val viewModel = FakeEventsViewModel(
+            eventsUIState = MutableStateFlow(
+                EventsUIState.Content(
+                    events = emptyList(),
+                    selectedTab = EventKind.FUTURE
+                )
+            ),
+            isAuthorized = MutableStateFlow(true),
+            currentUser = MutableStateFlow(userWithParks),
+            selectedTab = MutableStateFlow(EventKind.FUTURE),
+            fabClickResult = EventsEvent.NavigateToCreateEvent
+        )
+
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                EventsScreen(
+                    viewModel = viewModel,
+                    onNavigateToCreateEvent = { navigateToCreateEventCalled = true }
+                )
+            }
+        }
+
+        // When - click FAB
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.events_fab_description))
+            .performClick()
+
+        // Then - navigate to create event is called
+        assert(navigateToCreateEventCalled) { "onNavigateToCreateEvent should be called when user has used parks" }
+    }
+
+    @Test
+    fun fab_click_whenUserWithoutUsedParks_fullFlow_toParksTab() {
+        // Given - user without used parks
+        var navigateToParksCalled = false
+        val userWithoutParks = testUser.copy(parksCount = "0")
+        val viewModel = FakeEventsViewModel(
+            eventsUIState = MutableStateFlow(
+                EventsUIState.Content(
+                    events = emptyList(),
+                    selectedTab = EventKind.FUTURE
+                )
+            ),
+            isAuthorized = MutableStateFlow(true),
+            currentUser = MutableStateFlow(userWithoutParks),
+            selectedTab = MutableStateFlow(EventKind.FUTURE),
+            fabClickResult = EventsEvent.ShowEventCreationRule
+        )
+
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                EventsScreen(
+                    viewModel = viewModel,
+                    onNavigateToParks = { navigateToParksCalled = true }
+                )
+            }
+        }
+
+        // Step 1: Click FAB -> alert appears
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.events_fab_description))
+            .performClick()
+
+        // Verify alert is shown
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_creation_rule_title))
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_creation_rule_message))
+            .assertIsDisplayed()
+
+        // Step 2: Click "Go to map" button -> navigate to Parks tab
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_creation_rule_open_parks))
+            .performClick()
+
+        // Then - onNavigateToParks is called
+        assert(navigateToParksCalled) { "onNavigateToParks should be called when user taps 'Go to map' in alert" }
+    }
+
+    @Test
+    fun fab_click_whenUserWithoutUsedParks_alertDismiss_doesNotNavigate() {
+        // Given - user without used parks
+        var navigateToParksCalled = false
+        var navigateToCreateEventCalled = false
+        val userWithoutParks = testUser.copy(parksCount = "0")
+        val viewModel = FakeEventsViewModel(
+            eventsUIState = MutableStateFlow(
+                EventsUIState.Content(
+                    events = emptyList(),
+                    selectedTab = EventKind.FUTURE
+                )
+            ),
+            isAuthorized = MutableStateFlow(true),
+            currentUser = MutableStateFlow(userWithoutParks),
+            selectedTab = MutableStateFlow(EventKind.FUTURE),
+            fabClickResult = EventsEvent.ShowEventCreationRule
+        )
+
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                EventsScreen(
+                    viewModel = viewModel,
+                    onNavigateToCreateEvent = { navigateToCreateEventCalled = true },
+                    onNavigateToParks = { navigateToParksCalled = true }
+                )
+            }
+        }
+
+        // Step 1: Click FAB -> alert appears
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.events_fab_description))
+            .performClick()
+
+        // Verify alert is shown
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_creation_rule_title))
+            .assertIsDisplayed()
+
+        // Step 2: Click dismiss button -> alert closes, no navigation
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_creation_rule_dismiss))
+            .performClick()
+
+        // Then - alert is dismissed, no navigation occurred
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_creation_rule_title))
+            .assertDoesNotExist()
+
+        assert(!navigateToParksCalled) { "onNavigateToParks should NOT be called when user dismisses alert" }
+        assert(!navigateToCreateEventCalled) { "onNavigateToCreateEvent should NOT be called when user has no parks" }
     }
 }

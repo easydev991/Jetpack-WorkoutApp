@@ -921,14 +921,22 @@ class SWRepositoryParksTest {
     @Test
     fun changeTrainHereStatus_whenTrainHereTrue_thenCallsPostTrainHere() = runTest {
         // Given
+        val currentUserId = 1L
         val mockApi = mockk<SWApi>()
         coEvery { mockApi.postTrainHere(1L) } returns Response.success(Unit)
         coEvery { mockParkDao.getParkById(1L) } returns createParkEntity(trainingUsersCount = null)
+        val mockUser = UserEntity(
+            id = currentUserId,
+            name = "test",
+            parksCount = "0",
+            isCurrentUser = true
+        )
 
+        val currentUserIdKey = longPreferencesKey("currentUserId")
         val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-        every { mockUserDao.getUserByIdFlow(any()) } returns flowOf(null)
+        every { mockDataStore.data } returns flowOf(preferencesOf(currentUserIdKey to currentUserId))
+        every { mockUserDao.getUserByIdFlow(currentUserId) } returns flowOf(mockUser)
+        coEvery { mockUserDao.insert(any()) } returns Unit
 
         val repository = SWRepositoryImp(
             mockApi,
@@ -955,16 +963,36 @@ class SWRepositoryParksTest {
                 it.trainHere == true && it.trainingUsersCount == null
             })
         }
+        coVerify {
+            mockUserDao.insert(withArg { user ->
+                assertEquals("1", user.parksCount)
+            })
+        }
     }
 
     @Test
     fun changeTrainHereStatus_whenTrainHereFalse_thenCallsDeleteTrainHere() = runTest {
         // Given
+        val currentUserId = 1L
         val mockApi = mockk<SWApi>()
         coEvery { mockApi.deleteTrainHere(1L) } returns Response.success(Unit)
+        coEvery {
+            mockParkDao.getParkById(1L)
+        } returns createParkEntity(
+            trainingUsersCount = 1
+        )
+        val mockUser = UserEntity(
+            id = currentUserId,
+            name = "test",
+            parksCount = "1",
+            isCurrentUser = true
+        )
 
+        val currentUserIdKey = longPreferencesKey("currentUserId")
         val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+        every { mockDataStore.data } returns flowOf(preferencesOf(currentUserIdKey to currentUserId))
+        every { mockUserDao.getUserByIdFlow(currentUserId) } returns flowOf(mockUser)
+        coEvery { mockUserDao.insert(any()) } returns Unit
 
         val repository = SWRepositoryImp(
             mockApi,
@@ -986,6 +1014,11 @@ class SWRepositoryParksTest {
         assertTrue(result.isSuccess)
         coVerify { mockApi.deleteTrainHere(1L) }
         coVerify(exactly = 0) { mockApi.postTrainHere(any()) }
+        coVerify {
+            mockUserDao.insert(withArg { user ->
+                assertEquals("0", user.parksCount)
+            })
+        }
     }
 
     @Test

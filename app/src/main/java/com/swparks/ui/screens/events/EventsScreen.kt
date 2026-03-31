@@ -13,6 +13,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -20,11 +22,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -54,20 +60,47 @@ fun EventsScreen(
     viewModel: IEventsViewModel = viewModel<EventsViewModel>(factory = EventsViewModel.Factory),
     onNavigateToEventDetail: (Long) -> Unit = {},
     onNavigateToCreateEvent: () -> Unit = {},
+    onNavigateToParks: () -> Unit = {},
 ) {
     val uiState by viewModel.eventsUIState.collectAsState()
     val isAuthorized by viewModel.isAuthorized.collectAsState()
+    val currentUser by viewModel.currentUser.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
     val selectedTabIndex = if (selectedTab == EventKind.FUTURE) 0 else 1
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val fabDescription = stringResource(id = R.string.events_fab_description)
+    var showEventCreationRuleDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
                 EventsEvent.NavigateToCreateEvent -> onNavigateToCreateEvent()
+                EventsEvent.ShowEventCreationRule -> showEventCreationRuleDialog = true
             }
         }
+    }
+
+    if (showEventCreationRuleDialog) {
+        AlertDialog(
+            onDismissRequest = { showEventCreationRuleDialog = false },
+            title = { Text(text = stringResource(R.string.event_creation_rule_title)) },
+            text = { Text(text = stringResource(R.string.event_creation_rule_message)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showEventCreationRuleDialog = false
+                        onNavigateToParks()
+                    }
+                ) {
+                    Text(text = stringResource(R.string.event_creation_rule_open_parks))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEventCreationRuleDialog = false }) {
+                    Text(text = stringResource(R.string.event_creation_rule_dismiss))
+                }
+            }
+        )
     }
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -89,7 +122,7 @@ fun EventsScreen(
             )
         }
 
-        if (isAuthorized) {
+        if (isAuthorized && currentUser != null) {
             CreateEventFab(
                 onClick = { viewModel.onFabClick() },
                 description = fabDescription,
@@ -143,7 +176,7 @@ private fun EventsStateContent(
     onEventClick: (Event) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    when (val state = uiState) {
+    when (uiState) {
         is EventsUIState.InitialLoading -> Box(modifier = modifier.fillMaxSize()) {
             LoadingOverlayView()
         }
@@ -152,11 +185,11 @@ private fun EventsStateContent(
             Box(modifier = modifier.fillMaxSize()) {
                 EventsListWithRefresh(
                     state = EventsListState(
-                        events = state.events,
-                        addresses = state.addresses,
-                        selectedTab = state.selectedTab,
+                        events = uiState.events,
+                        addresses = uiState.addresses,
+                        selectedTab = uiState.selectedTab,
                         isRefreshing = isRefreshing,
-                        isLoading = state.isLoading
+                        isLoading = uiState.isLoading
                     ),
                     onAction = { action ->
                         when (action) {
@@ -165,7 +198,7 @@ private fun EventsStateContent(
                         }
                     }
                 )
-                if (state.isLoading && !isRefreshing) {
+                if (uiState.isLoading && !isRefreshing) {
                     LoadingOverlayView()
                 }
             }
@@ -173,7 +206,7 @@ private fun EventsStateContent(
 
         is EventsUIState.Error -> ErrorContentView(
             retryAction = onRefresh,
-            message = state.message
+            message = uiState.message
         )
     }
 }

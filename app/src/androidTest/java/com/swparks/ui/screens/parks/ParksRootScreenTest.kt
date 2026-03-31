@@ -88,7 +88,6 @@ class ParksRootScreenTest {
 
             Surface {
                 ParksRootScreen(
-                    parks = emptyList(),
                     appState = appState,
                     onCreateParkClick = {},
                     viewModel = fakeViewModel
@@ -109,7 +108,6 @@ class ParksRootScreenTest {
 
             Surface {
                 ParksRootScreen(
-                    parks = emptyList(),
                     appState = appState,
                     onCreateParkClick = {},
                     viewModel = fakeViewModel
@@ -132,7 +130,6 @@ class ParksRootScreenTest {
 
             Surface {
                 ParksRootScreen(
-                    parks = emptyList(),
                     appState = appState,
                     onCreateParkClick = {},
                     viewModel = fakeViewModel
@@ -159,7 +156,6 @@ class ParksRootScreenTest {
 
             Surface {
                 ParksRootScreen(
-                    parks = emptyList(),
                     appState = appState,
                     onCreateParkClick = { capturedDraft = it },
                     viewModel = fakeViewModel
@@ -193,7 +189,6 @@ class ParksRootScreenTest {
 
             Surface {
                 ParksRootScreen(
-                    parks = emptyList(),
                     appState = appState,
                     onCreateParkClick = { capturedDraft = it },
                     viewModel = fakeViewModel
@@ -227,7 +222,6 @@ class ParksRootScreenTest {
 
             Surface {
                 ParksRootScreen(
-                    parks = emptyList(),
                     appState = appState,
                     onCreateParkClick = { capturedDraft = it },
                     viewModel = fakeViewModel
@@ -266,7 +260,6 @@ class ParksRootScreenTest {
 
             Surface {
                 ParksRootScreen(
-                    parks = emptyList(),
                     appState = appState,
                     onCreateParkClick = { capturedDraft = it },
                     viewModel = fakeViewModel
@@ -299,7 +292,6 @@ class ParksRootScreenTest {
 
             Surface {
                 ParksRootScreen(
-                    parks = emptyList(),
                     appState = appState,
                     onCreateParkClick = {},
                     viewModel = fakeViewModel
@@ -326,7 +318,6 @@ class ParksRootScreenTest {
 
             Surface {
                 ParksRootScreen(
-                    parks = listOf(createPark(1L, 1, 1, 1)),
                     appState = appState,
                     onCreateParkClick = {},
                     viewModel = fakeViewModel
@@ -353,7 +344,6 @@ class ParksRootScreenTest {
 
             Surface {
                 ParksRootScreen(
-                    parks = emptyList(),
                     appState = appState,
                     onCreateParkClick = {},
                     viewModel = fakeViewModel
@@ -386,7 +376,6 @@ class ParksRootScreenTest {
 
             Surface {
                 ParksRootScreen(
-                    parks = emptyList(),
                     appState = appState,
                     onCreateParkClick = {},
                     viewModel = fakeViewModel
@@ -414,7 +403,6 @@ class ParksRootScreenTest {
 
             Surface {
                 ParksRootScreen(
-                    parks = emptyList(),
                     appState = appState,
                     onCreateParkClick = {},
                     viewModel = fakeViewModel
@@ -436,7 +424,6 @@ class ParksRootScreenTest {
 
             Surface {
                 ParksRootScreen(
-                    parks = emptyList(),
                     appState = appState,
                     onCreateParkClick = {},
                     viewModel = fakeViewModel
@@ -460,7 +447,6 @@ class ParksRootScreenTest {
 
             Surface {
                 ParksRootScreen(
-                    parks = emptyList(),
                     appState = appState,
                     onCreateParkClick = {},
                     viewModel = fakeViewModel
@@ -487,7 +473,6 @@ class ParksRootScreenTest {
 
             Surface {
                 ParksRootScreen(
-                    parks = listOf(createPark(1L, 1, 1, 1)),
                     appState = appState,
                     onCreateParkClick = {},
                     viewModel = fakeViewModel
@@ -509,7 +494,6 @@ class ParksRootScreenTest {
 
             Surface {
                 ParksRootScreen(
-                    parks = emptyList(),
                     appState = appState,
                     onCreateParkClick = {},
                     viewModel = fakeViewModel
@@ -542,7 +526,6 @@ class ParksRootScreenTest {
 
             Surface {
                 ParksRootScreen(
-                    parks = listOf(createPark(1L, 1, 1, 1)),
                     appState = appState,
                     onCreateParkClick = {},
                     viewModel = fakeViewModel

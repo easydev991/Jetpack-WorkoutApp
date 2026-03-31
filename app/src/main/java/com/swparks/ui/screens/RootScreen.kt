@@ -351,6 +351,11 @@ fun RootScreen(appState: AppState) {
                     },
                     onNavigateToCreateEvent = {
                         appState.navController.navigate(Screen.CreateEvent.route)
+                    },
+                    onNavigateToParks = {
+                        appState.navigateToTopLevelDestination(
+                            appState.topLevelDestinations.first { it.route == Screen.Parks.route }
+                        )
                     }
                 )
             }

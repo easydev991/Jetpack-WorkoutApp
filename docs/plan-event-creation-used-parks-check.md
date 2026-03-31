@@ -49,27 +49,27 @@
 
 ### Red
 
-- [ ] Добавить unit-тесты для `EventsViewModel`.
-- [ ] Написать тест `onFabClick_whenUserHasUsedParks_thenEmitsNavigateToCreateEvent`.
-- [ ] Написать тест `onFabClick_whenUserHasNoUsedParks_thenEmitsShowEventCreationRule`.
-- [ ] Написать тест `onFabClick_whenUserIsUnauthorized_thenDoesNothing`.
-- [ ] Написать тест на реакцию ViewModel на обновление `currentUser` из `SWRepository.getCurrentUserFlow()`.
+- [x] Добавить unit-тесты для `EventsViewModel`.
+- [x] Написать тест `onFabClick_whenUserHasUsedParks_thenEmitsNavigateToCreateEvent`.
+- [x] Написать тест `onFabClick_whenUserHasNoUsedParks_thenEmitsShowEventCreationRule`.
+- [x] Написать тест `onFabClick_whenUserIsUnauthorized_thenDoesNothing`.
+- [x] Написать тест на реакцию ViewModel на обновление `currentUser` из `SWRepository.getCurrentUserFlow()`.
 
 ### Green
 
-- [ ] Добавить `SWRepository` в зависимости `EventsViewModel`.
-- [ ] Подключить в `EventsViewModel` поток текущего пользователя.
-- [ ] Использовать `User.hasUsedParks` как основной признак для проверки.
-- [ ] Оставить текущий сценарий навигации без изменений для случая `hasUsedParks == true`.
-- [ ] Добавить новое одноразовое событие для показа правила создания.
-- [ ] Обновить контракт `IEventsViewModel`, только если это действительно нужно для тестируемости.
-- [ ] Обновить `AppContainer` и `Factory`/создание `EventsViewModel`, чтобы передавать `SWRepository`.
+- [x] Добавить `SWRepository` в зависимости `EventsViewModel`.
+- [x] Подключить в `EventsViewModel` поток текущего пользователя.
+- [x] Использовать `User.hasUsedParks` как основной признак для проверки.
+- [x] Оставить текущий сценарий навигации без изменений для случая `hasUsedParks == true`.
+- [x] Добавить новое одноразовое событие для показа правила создания.
+- [x] Обновить контракт `IEventsViewModel`, только если это действительно нужно для тестируемости.
+- [x] Обновить `AppContainer` и `Factory`/создание `EventsViewModel`, чтобы передавать `SWRepository`.
 
 ### Refactor
 
-- [ ] Упростить структуру событий `EventsEvent`, чтобы сценарии “навигация” и “показ алерта” были явно разделены.
-- [ ] Убедиться, что логика проверки не дублируется в Compose-экране.
-- [ ] Оставить источник истины один: `currentUser` + `hasUsedParks`.
+- [x] Упростить структуру событий `EventsEvent`, чтобы сценарии “навигация” и “показ алерта” были явно разделены.
+- [x] Убедиться, что логика проверки не дублируется в Compose-экране.
+- [x] Оставить источник истины один: `currentUser` + `hasUsedParks`.
 
 ### Критерий завершения
 
@@ -80,16 +80,16 @@
 
 ### Red
 
-- [ ] Добавить UI-тест или screen-level тест на действие “Перейти на карту”.
-- [ ] Зафиксировать тестом, что после подтверждения в алерте вызывается переход в первую вкладку bottom nav: `Screen.Parks.route`.
-- [ ] Зафиксировать тестом, что экрану нужен отдельный callback для этого сценария, а не переиспользование `onNavigateToCreateEvent`.
+- [x] Добавить UI-тест или screen-level тест на действие "Перейти на карту".
+- [x] Зафиксировать тестом, что после подтверждения в алерте вызывается переход в первую вкладку bottom nav: `Screen.Parks.route`.
+- [x] Зафиксировать тестом, что экрану нужен отдельный callback для этого сценария, а не переиспользование `onNavigateToCreateEvent`.
 
 ### Green
 
-- [ ] Добавить в `EventsScreen` callback `onNavigateToParks`.
-- [ ] Подключить обработку кнопки “Перейти на карту” к `onNavigateToParks`.
-- [ ] В `RootScreen` передать переход в `Screen.Parks.route`.
-- [ ] Сохранить корректную работу bottom navigation при переходе во вкладку `Parks`.
+- [x] Добавить в `EventsScreen` callback `onNavigateToParks`.
+- [x] Подключить обработку кнопки "Перейти на карту" к `onNavigateToParks`.
+- [x] В `RootScreen` передать переход в `Screen.Parks.route`.
+- [x] Сохранить корректную работу bottom navigation при переходе во вкладку `Parks`.
 
 ### Refactor
 
@@ -105,33 +105,33 @@
 
 ### Red
 
-- [ ] Добавить Compose/UI-тест на сценарий:
+- [x] Добавить Compose/UI-тест на сценарий:
   - авторизованный пользователь без `hasUsedParks`
   - нажимает FAB
   - видит алерт с заголовком и сообщением
-- [ ] Проверить тестом наличие кнопки перехода на карту.
-- [ ] Проверить тестом наличие dismiss/cancel-действия.
-- [ ] Зафиксировать тестом точный текст сообщения по iOS-ключу `Alert.EventCreationRule`.
+- [x] Проверить тестом наличие кнопки перехода на карту.
+- [x] Проверить тестом наличие dismiss/cancel-действия.
+- [x] Зафиксировать тестом точный текст сообщения по iOS-ключу `Alert.EventCreationRule`.
 
 ### Green
 
-- [ ] Добавить `AlertDialog` в `EventsScreen`.
-- [ ] Привязать его показ к новому событию от `EventsViewModel`.
-- [ ] Добавить строки в Android-ресурсы:
+- [x] Добавить `AlertDialog` в `EventsScreen`.
+- [x] Привязать его показ к новому событию от `EventsViewModel`.
+- [x] Добавить строки в Android-ресурсы:
   - заголовок алерта
   - сообщение `Alert.EventCreationRule`
   - CTA “Перейти на карту”
   - cancel-кнопку `ru`: “Понятно”, `en`: “Understood”
-- [ ] Зафиксировать локализации сообщения:
+- [x] Зафиксировать локализации сообщения:
   - `ru`: “Чтобы создать мероприятие, нужно указать хотя бы одну площадку, где ты тренируешься”
   - `en`: “To create an event, you need to specify at least one park where you train”
 
 ### Refactor
 
 - [ ] При необходимости вынести конфигурацию алерта в отдельную UI-модель или helper, если экран станет перегруженным.
-- [ ] Убедиться, что Compose-экран только отображает состояние и не содержит бизнес-правила.
+- [x] Убедиться, что Compose-экран только отображает состояние и не содержит бизнес-правила.
 - [ ] Проверить, что алерт не конфликтует с `LoadingOverlayView` и pull-to-refresh.
-- [ ] Проверить, что обработка `EventsEvent` в `LaunchedEffect` осталась простой и не дублирует навигационные ветки.
+- [x] Проверить, что обработка `EventsEvent` в `LaunchedEffect` осталась простой и не дублирует навигационные ветки.
 
 ### Критерий завершения
 
@@ -142,20 +142,20 @@
 
 ### Red
 
-- [ ] Добавить интеграционный Compose/UI-тест:
+- [x] Добавить интеграционный Compose/UI-тест:
   - пользователь без `hasUsedParks`
   - нажимает FAB
   - видит алерт
-  - нажимает “Перейти на карту”
+  - нажимает "Перейти на карту"
   - попадает в первую вкладку bottom nav: `Parks`
-- [ ] Добавить позитивный Compose/UI-тест:
+- [x] Добавить позитивный Compose/UI-тест:
   - пользователь с `hasUsedParks`
   - нажимает FAB
   - открывается `CreateEvent`
 
 ### Green
 
-- [ ] Довести связку `EventsViewModel` → `EventsScreen` → `RootScreen/AppState/ParksRootScreen` до прохождения обоих сценариев.
+- [x] Довести связку `EventsViewModel` → `EventsScreen` → `RootScreen/AppState/ParksRootScreen` до прохождения обоих сценариев.
 
 ### Refactor
 
@@ -187,6 +187,23 @@
   - переход из алерта открывает вкладку `Parks`
   - с площадками → открывается создание мероприятия
   - после logout/login логика обновляется корректно
+
+## Фактический статус
+
+- Этап 1 завершён полностью: ViewModel-логика покрыта unit-тестами и реализована.
+- Этап 2 завершён полностью: переход из алерта в `Parks` подключён и протестирован.
+- Этап 3 завершён полностью: `AlertDialog` и строки локализации добавлены и протестированы.
+- Этап 4 Red завершён: добавлены интеграционные тесты для сквозных пользовательских сценариев.
+- Следующий фокус: этапы 4 Green/Refactor и финальная проверка.
+- Дополнительно устранена регрессия после этапа 1:
+  - событие `ShowEventCreationRule` больше не теряется без UI-эффекта;
+  - FAB на `EventsScreen` не показывается, пока `currentUser` ещё не загружен;
+  - fake/object реализации `IEventsViewModel` приведены к актуальному интерфейсу.
+- Локальная проверка:
+  - `:app:testDebugUnitTest --tests "com.swparks.ui.screens.events.EventsViewModelTest"` — успешно;
+  - `:app:compileDebugAndroidTestKotlin` — успешно;
+  - `make lint` — успешно (предупреждения не связаны с текущей задачей);
+  - `make format` — успешно.
 
 ## Открытые вопросы
 
