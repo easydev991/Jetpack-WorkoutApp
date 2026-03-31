@@ -11,12 +11,12 @@
 ### Android-приложение (Jetpack-WorkoutApp)
 
 - 🚧 **В активной разработке**
-- ✅ Дизайн-система: 41 компонент
-- ✅ Модели данных: 17 API + 7 доменных + 20 UI моделей
-- ✅ API клиент SWApi: 57 endpoints
+- ✅ Дизайн-система: 42 компонента
+- ✅ Модели данных: 19 API + 9 доменных + 22 UI модели
+- ✅ API клиент SWApi: 62 endpoint-аннотации в `SWApi`
 - ✅ Безопасность токена: шифрование, интерцепторы
-- ✅ Use Cases: 24 use case (44 файла с интерфейсами)
-- ✅ ViewModels: 25 ViewModel (48 файлов с интерфейсами и UiState)
+- ✅ Use Cases: 32 реализации + 24 интерфейса (`56` файлов)
+- ✅ ViewModels: 30 реализаций + 25 интерфейсов (`55` файлов)
 - ✅ Namespace: `com.swparks`
 
 #### Реализованные экраны
@@ -36,23 +36,23 @@
 
 #### Реализованные модели данных
 
-**API модели (17):** User, Park, Event, Comment, Photo, JournalResponse, JournalEntryResponse, DialogResponse, MessageResponse, City, Country, ParkType, ParkSize, LoginSuccess, SocialUpdates, ApiFriendAction, ApiBlacklistOption
+**API модели (19):** User, Park, Event, Comment, Photo, JournalResponse, JournalEntryResponse, DialogResponse, MessageResponse, City, Country, ParkType, ParkSize, LoginSuccess, SocialUpdates, ApiFriendAction, ApiBlacklistOption и связанные сетевые DTO
 
-**Доменные модели (7):** AppIcon, AppTheme, Journal, JournalEntry, FriendAction, EditProfileLocations, RegistrationParams
+**Доменные модели (9):** AppIcon, AppTheme, Journal, JournalEntry, FriendAction, EditProfileLocations, RegistrationParams и дополнительные доменные сущности
 
-**UI модели (20):** LoginCredentials, ParkForm, EventForm, MainUserForm, RegisterForm, EditJournalSettingsRequest, FriendAction, BlacklistAction, Gender, JournalAccess, TextEntryOption, TextEntryMode, EditInfo, EventKind, EventType, EventFormMode, ParticipantsMode, PickedImageItem, PickedImagesState, MapUriSet
+**UI модели (22):** LoginCredentials, ParkForm, EventForm, MainUserForm, RegisterForm, EditJournalSettingsRequest, FriendAction, BlacklistAction, Gender, JournalAccess, TextEntryOption, TextEntryMode, EditInfo, EventKind, EventType, EventFormMode, ParticipantsMode, PickedImageItem, PickedImagesState, MapUriSet и связанные UI state/request модели
 
 #### Реализованная архитектура
 
-**Data Layer:** AppContainer (DI), SWRepository (57 endpoints), UserPreferencesRepository (DataStore), SecureTokenRepository (Tink шифрование)
+**Data Layer:** AppContainer (DI), SWRepository (покрывает весь текущий контракт `SWApi`), UserPreferencesRepository (DataStore), SecureTokenRepository (Tink шифрование)
 
 **Network Layer:** SWApi, RetryInterceptor, AuthInterceptor (401), TokenInterceptor
 
 **Security:** CryptoManager (AES-128-GCM-HKDF), EncryptedStringSerializer
 
-**Domain Layer:** 24 use case (44 файла с интерфейсами: авторизация, справочники, дневники, события, смена пароля, удаление пользователя), IconManager, исключения (ServerException, NetworkException)
+**Domain Layer:** 32 реализации use case + 24 интерфейса, IconManager, исключения (ServerException, NetworkException)
 
-**UI layer:** 25 ViewModel (48 файлов с интерфейсами и UiState)
+**UI layer:** 30 ViewModel + 25 интерфейсов/контрактов
 
 ---
 
@@ -163,8 +163,8 @@
 
 **Экраны:**
 - ✅ EventsScreen - список мероприятий
-- ✅ EventDetailScreen - детальная информация
-- ✅ EditEventScreen - создание/редактирование мероприятия
+- ⚠️ EventDetailScreen - детальная информация реализована частично
+- ✅ EventFormScreen - создание/редактирование мероприятия
 - ✅ EventParticipantsScreen - список участников мероприятия
 
 **Основные функции:**
@@ -175,14 +175,14 @@
 - Шаринг
 
 **Технические задачи:**
-- Переключение между типами мероприятий
-- Загрузка фото (до 15 шт.)
-- Комментарии и функции социальной активности
+- ✅ Переключение между типами мероприятий
+- ✅ Загрузка фото (до 15 шт.) в `EventFormScreen`
+- ⚠️ Комментарии и функции социальной активности зависят от доработки `EventDetailScreen`
 
 **Детальные планы:**
 - `docs/screens/5_Events_Screen.md`
 - `docs/screens/5.1_Event_Detail_Screen.md`
-- `docs/screens/5.2_Edit_Event_Screen.md`
+- `docs/screens/doc-event-form-screen.md`
 
 ---
 
@@ -249,7 +249,7 @@
 
 ## Технологический стек
 
-**Основные:** Kotlin 2.3.10, Jetpack Compose (BOM 2026.02.00), Material 3, Android Gradle Plugin 9.0.1, Java 17
+**Основные:** Kotlin 2.3.20, Jetpack Compose (BOM 2026.03.01), Material 3, Android Gradle Plugin 9.1.0, Java 21
 
 **Требования:** minSdk 26, targetSdk 35, compileSdk 36
 
@@ -274,15 +274,15 @@
 ```
 app/src/main/java/com/swparks/
 ├── data/              # Data layer (repository, crypto, datetime, interceptor, serialization, database, model)
-│   └── model/         # API модели и DTOs (17 файлов)
+│   └── model/         # API модели и DTOs (19 файлов)
 ├── domain/            # Domain layer (exception, usecase, model)
-│   └── model/         # Доменные модели (7 файлов)
-├── network/           # API клиенты (SWApi - 57 endpoints)
+│   └── model/         # Доменные модели (9 файлов)
+├── network/           # API клиент (`SWApi`)
 ├── ui/
-│   ├── ds/            # Компоненты дизайн-системы (41)
-│   ├── model/         # UI формы и запросы (20 файлов)
-│   ├── screens/       # Экраны приложения (32 экрана)
-│   ├── viewmodel/     # ViewModels (25 + интерфейсы)
+│   ├── ds/            # Компоненты дизайн-системы (42 файла)
+│   ├── model/         # UI формы и запросы (22 файла)
+│   ├── screens/       # Экраны приложения (57 файлов)
+│   ├── viewmodel/     # ViewModels (30 реализаций + 25 интерфейсов)
 │   └── theme/         # Тема
 ├── navigation/        # Навигация
 └── util/              # Утилиты
@@ -291,8 +291,8 @@ app/src/main/java/com/swparks/
 ### Структура тестов
 
 ```
-app/src/test/java/com/swparks/          # Unit-тесты (113)
-app/src/androidTest/java/com/swparks/    # Интеграционные и UI тесты (23)
+app/src/test/java/com/swparks/          # Unit-тесты (1767 @Test)
+app/src/androidTest/java/com/swparks/   # Интеграционные и UI тесты (437 @Test)
 ```
 
 ---
@@ -311,7 +311,7 @@ app/src/androidTest/java/com/swparks/    # Интеграционные и UI т
 
 ### Компоненты дизайн-системы
 
-- ✅ 41 компонент готов к использованию
+- ✅ 42 компонента готовы к использованию
 
 ---
 
@@ -335,7 +335,7 @@ app/src/androidTest/java/com/swparks/    # Интеграционные и UI т
 
 ### Реализованный API
 
-✅ **57 из 57 endpoints (100%)**
+✅ **62 endpoint-аннотации в `SWApi`**
 
 - Авторизация/профиль: 7 endpoints
 - Друзья/черный список: 10 endpoints
@@ -351,11 +351,11 @@ app/src/androidTest/java/com/swparks/    # Интеграционные и UI т
 
 ### Тестирование
 
-**113 unit-тестов:** Data, Domain, Model, ViewModel, UI state, Utils, Network
+**1767 unit-тестов:** Data, Domain, Model, ViewModel, UI state, Utils, Network
 
-**23 интеграционных и UI тестов:**
+**437 интеграционных и UI тестов:**
 - Интеграционные: CryptoManagerIntegrationTest, JournalEntryDaoTest
-- UI тесты: LoginScreen, MoreScreen, ThemeIconScreen, MyFriendsScreen, MyBlacklistScreen, ProfileRootScreen, UserFriendsScreen, OtherUserProfileScreen, SearchUserScreen, RootScreen, JournalsListScreen, JournalEntriesScreen, JournalSettingsDialog, TextEntryScreen, MessagesRootScreen, ChatScreen, EventsScreen, EventFormScreen, ParticipantsScreen
+- UI тесты: LoginScreen, MoreScreen, ThemeIconScreen, MyFriendsScreen, MyBlacklistScreen, ProfileRootScreen, UserFriendsScreen, OtherUserProfileScreen, SearchUserScreen, RootScreen, JournalsListScreen, JournalEntriesScreen, JournalSettingsDialog, TextEntryScreen, MessagesRootScreen, ChatScreen, EventsScreen, EventFormScreen, ParticipantsScreen, ParkFormScreen, ParkDetailScreen, ParksRootScreen, ParksFilterDialog, PickedImagesGrid и связанные интеграционные сценарии
 
 ---
 
@@ -374,3 +374,4 @@ app/src/androidTest/java/com/swparks/    # Интеграционные и UI т
 - **2026-03-17:** Актуализация навигации и документации - в `RootScreen` реализованы и подключены `EventDetail/EditEvent/EventParticipants`, `ParkDetail/CreatePark/EditPark`, `Chat`, а также typed args parsers/coordinators для key navigation flows.
 - **2026-03-21:** Актуализация метрик проекта - 41 компонент дизайн-системы, 24 use case, 25 ViewModel, 113 unit-тестов, 23 интеграционных/UI тестов, 32 экрана (18 с UI тестами), новые модели (RegistrationParams, EventFormMode, ParticipantsMode, PickedImageItem, PickedImagesState, MapUriSet)
 - **2026-03-31:** TDD план для Offline-поддержки ParkDetailScreen — `docs/screens/doc-park-detail-offline-tdd.md`
+- **2026-03-31:** Актуализация плана по фактическому состоянию кода: обновлены метрики проекта, статус вкладки Events и ссылка на `docs/screens/doc-event-form-screen.md`
