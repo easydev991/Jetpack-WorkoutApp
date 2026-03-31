@@ -17,6 +17,7 @@ import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.ParkDao
 import com.swparks.data.database.dao.UserDao
+import com.swparks.data.database.dao.UserTrainingParkDao
 import com.swparks.data.interceptor.AuthInterceptor
 import com.swparks.data.interceptor.LoggingInterceptor
 import com.swparks.data.interceptor.RetryInterceptor
@@ -406,6 +407,11 @@ class DefaultAppContainer(context: Context) : AppContainer {
      */
     val parkDao: ParkDao by lazy { database.parkDao() }
 
+    /**
+     * DAO для работы с тренировочными площадками пользователя
+     */
+    private val userTrainingParkDao: UserTrainingParkDao by lazy { database.userTrainingParkDao() }
+
     // ==================== Криптография и хранение токена ====================
 
     // Создаем CryptoManager для шифрования токена
@@ -488,7 +494,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
             eventDao = eventDao,
             parkDao = parkDao,
             crashReporter = crashReporter,
-            logger = logger
+            logger = logger,
+            userTrainingParkDao = userTrainingParkDao
         )
     }
 

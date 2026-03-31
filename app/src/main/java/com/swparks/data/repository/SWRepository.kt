@@ -12,6 +12,8 @@ import com.swparks.data.database.dao.EventDao
 import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.ParkDao
 import com.swparks.data.database.dao.UserDao
+import com.swparks.data.database.dao.UserTrainingParkDao
+import com.swparks.data.database.entity.UserTrainingParkEntity
 import com.swparks.data.database.entity.toDomain
 import com.swparks.data.database.entity.toEntity
 import com.swparks.data.database.entity.toEvent
@@ -133,6 +135,10 @@ interface SWRepository {
     suspend fun getParkFromCache(parkId: Long): Park?
     suspend fun cachePark(park: Park)
 
+    // Cache API для UserTrainingParksScreen
+    suspend fun getCachedParksForUser(userId: Long): List<Park>?
+    suspend fun hasCachedParksForUser(userId: Long): Boolean
+
     // 3.5. Мероприятия
     suspend fun getEvents(type: EventType): Result<List<Event>>
     suspend fun getEvent(id: Long): Result<Event>
@@ -222,7 +228,8 @@ class SWRepositoryImp(
     private val eventDao: EventDao,
     private val parkDao: ParkDao,
     private val crashReporter: CrashReporter,
-    private val logger: Logger
+    private val logger: Logger,
+    private val userTrainingParkDao: UserTrainingParkDao? = null
 ) : SWRepository {
     private companion object {
         const val TAG = "SWRepositoryImp"
@@ -782,12 +789,53 @@ class SWRepositoryImp(
     override suspend fun getParksForUser(userId: Long): Result<List<Park>> =
         try {
             val parks = swApi.getParksForUser(userId)
+            cacheParksAndUserRelations(userId, parks)
             Result.success(parks)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "загрузке площадок пользователя"))
         } catch (e: HttpException) {
             Result.failure(handleHttpException(e, "загрузке площадок пользователя"))
         }
+
+    private suspend fun cacheParksAndUserRelations(userId: Long, parks: List<Park>) {
+        withContext(Dispatchers.IO) {
+            if (userTrainingParkDao == null) {
+                logger.d(TAG, "userTrainingParkDao не доступен, пропускаем кэширование связей")
+                return@withContext
+            }
+            val parkEntities = parks.map { it.toEntity() }
+            if (parkEntities.isNotEmpty()) {
+                parkDao.insertAll(parkEntities)
+                logger.d(TAG, "Upsert ${parkEntities.size} parks в общую таблицу parks")
+            }
+
+            val relations = parks.mapIndexed { index, park ->
+                UserTrainingParkEntity(
+                    userId = userId,
+                    parkId = park.id,
+                    position = index
+                )
+            }
+            userTrainingParkDao.replaceForUser(userId, relations)
+            logger.d(TAG, "Сохранены связи пользователя $userId с ${relations.size} площадками")
+        }
+    }
+
+    override suspend fun getCachedParksForUser(userId: Long): List<Park>? {
+        return withContext(Dispatchers.IO) {
+            if (userTrainingParkDao == null || !userTrainingParkDao.hasCachedParksForUser(userId)) {
+                null
+            } else {
+                userTrainingParkDao.getParksForUserFromCache(userId).map { it.toPark() }
+            }
+        }
+    }
+
+    override suspend fun hasCachedParksForUser(userId: Long): Boolean {
+        return withContext(Dispatchers.IO) {
+            userTrainingParkDao?.hasCachedParksForUser(userId) ?: false
+        }
+    }
 
     override suspend fun changeTrainHereStatus(trainHere: Boolean, parkId: Long): Result<Unit> =
         try {

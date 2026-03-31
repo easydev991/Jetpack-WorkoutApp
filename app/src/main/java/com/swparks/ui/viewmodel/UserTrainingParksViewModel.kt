@@ -61,18 +61,69 @@ class UserTrainingParksViewModel(
      */
     private fun loadParks() {
         viewModelScope.launch {
-            swRepository.getParksForUser(userId)
-                .onSuccess { parks ->
-                    _uiState.update { UserTrainingParksUiState.Success(parks) }
-                    logger.i(TAG, "Успешно загружено площадок: ${parks.size}")
+            try {
+                val hasCache = swRepository.hasCachedParksForUser(userId)
+                if (hasCache) {
+                    val cachedParks = swRepository.getCachedParksForUser(userId)
+                    if (cachedParks != null) {
+                        _uiState.update { UserTrainingParksUiState.Success(cachedParks) }
+                        logger.i(TAG, "Показаны кэшированные площадки: ${cachedParks.size}")
+                        refreshInBackground()
+                        return@launch
+                    }
                 }
-                .onFailure { error ->
-                    val errorMessage = "Ошибка загрузки площадок пользователя: ${error.message}"
-                    _uiState.update { UserTrainingParksUiState.Error(errorMessage) }
-                    userNotifier.handleError(AppError.Generic(errorMessage, error))
-                    logger.e(TAG, errorMessage)
-                }
+                _uiState.update { UserTrainingParksUiState.Loading }
+                loadFromNetwork()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                val errorMessage = "Ошибка загрузки площадок пользователя: ${e.message}"
+                _uiState.update { UserTrainingParksUiState.Error(errorMessage) }
+                userNotifier.handleError(AppError.Generic(errorMessage, e))
+                logger.e(TAG, errorMessage, e)
+            }
         }
+    }
+
+    /**
+     * Фоновое обновление данных с сервера после показа кэша
+     */
+    private fun refreshInBackground() {
+        viewModelScope.launch {
+            try {
+                swRepository.getParksForUser(userId)
+                    .onSuccess { parks ->
+                        _uiState.update { UserTrainingParksUiState.Success(parks) }
+                        logger.i(TAG, "Фоновое обновление: получено площадок: ${parks.size}")
+                    }
+                    .onFailure { error ->
+                        val errorMessage = "Ошибка фонового обновления: ${error.message}"
+                        userNotifier.handleError(AppError.Generic(errorMessage, error))
+                        logger.e(TAG, errorMessage)
+                    }
+            } catch (e: Exception) {
+                if (e is CancellationException) return@launch
+                val errorMessage = "Неожиданная ошибка фонового обновления: ${e.message}"
+                userNotifier.handleError(AppError.Generic(errorMessage, e))
+                logger.e(TAG, errorMessage, e)
+            }
+        }
+    }
+
+    /**
+     * Загружает данные с сервера (используется при отсутствии кэша)
+     */
+    private suspend fun loadFromNetwork() {
+        swRepository.getParksForUser(userId)
+            .onSuccess { parks ->
+                _uiState.update { UserTrainingParksUiState.Success(parks) }
+                logger.i(TAG, "Успешно загружено площадок: ${parks.size}")
+            }
+            .onFailure { error ->
+                val errorMessage = "Ошибка загрузки площадок пользователя: ${error.message}"
+                _uiState.update { UserTrainingParksUiState.Error(errorMessage) }
+                userNotifier.handleError(AppError.Generic(errorMessage, error))
+                logger.e(TAG, errorMessage)
+            }
     }
 
     /**
@@ -92,16 +143,28 @@ class UserTrainingParksViewModel(
                     .onFailure { error ->
                         val errorMessage =
                             "Ошибка обновления площадок пользователя: ${error.message}"
-                        _uiState.update { UserTrainingParksUiState.Error(errorMessage) }
-                        userNotifier.handleError(AppError.Generic(errorMessage, error))
-                        logger.e(TAG, errorMessage)
+                        val currentState = _uiState.value
+                        if (currentState is UserTrainingParksUiState.Success) {
+                            userNotifier.handleError(AppError.Generic(errorMessage, error))
+                            logger.w(TAG, "Ошибка refresh при наличии контента, сохраняем текущее состояние")
+                        } else {
+                            _uiState.update { UserTrainingParksUiState.Error(errorMessage) }
+                            userNotifier.handleError(AppError.Generic(errorMessage, error))
+                            logger.e(TAG, errorMessage)
+                        }
                     }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 val errorMessage = "Неожиданная ошибка при обновлении площадок: ${e.message}"
-                _uiState.update { UserTrainingParksUiState.Error(errorMessage) }
-                userNotifier.handleError(AppError.Generic(errorMessage, e))
-                logger.e(TAG, errorMessage, e)
+                val currentState = _uiState.value
+                if (currentState is UserTrainingParksUiState.Success) {
+                    userNotifier.handleError(AppError.Generic(errorMessage, e))
+                    logger.w(TAG, "Неожиданная ошибка refresh при наличии контента, сохраняем текущее состояние")
+                } else {
+                    _uiState.update { UserTrainingParksUiState.Error(errorMessage) }
+                    userNotifier.handleError(AppError.Generic(errorMessage, e))
+                    logger.e(TAG, errorMessage, e)
+                }
             } finally {
                 _isRefreshing.update { false }
             }
