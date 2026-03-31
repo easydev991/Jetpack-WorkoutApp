@@ -10,6 +10,9 @@ import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.ParkDao
 import com.swparks.data.database.dao.UserDao
+import com.swparks.data.database.entity.ParkEntity
+import com.swparks.data.model.Comment
+import com.swparks.data.model.User
 import com.swparks.domain.exception.NetworkException
 import com.swparks.network.SWApi
 import com.swparks.ui.model.TextEntryOption
@@ -458,6 +461,29 @@ class SWRepositoryCommentsTest {
                 commentId = any()
             )
         } returns Response.success(Unit)
+        val cachedComments = listOf(
+            Comment(
+                id = 999L,
+                body = "Test",
+                date = "2024-01-01",
+                user = User(id = 1L, name = "user", image = null)
+            ),
+            Comment(id = 1000L, body = "Other", date = "2024-01-02", user = null)
+        )
+        coEvery { mockParkDao.getParkById(123L) } returns ParkEntity(
+            id = 123L,
+            name = "Park",
+            sizeID = 1,
+            typeID = 1,
+            longitude = "0",
+            latitude = "0",
+            address = "",
+            cityID = 1,
+            countryID = 1,
+            preview = "",
+            commentsCount = 2,
+            comments = cachedComments
+        )
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -480,6 +506,62 @@ class SWRepositoryCommentsTest {
 
         assertTrue(result.isSuccess)
         coVerify { mockApi.deleteParkComment(parkId = 123L, commentId = 999L) }
+        coVerify {
+            mockParkDao.upsertPark(match {
+                it.comments?.map { comment -> comment.id } == listOf(1000L) &&
+                    it.commentsCount == 1
+            })
+        }
+    }
+
+    @Test
+    fun deleteComment_whenParkCacheDoesNotContainComment_thenDoesNotTouchParkCache() = runTest {
+        val mockApi = mockk<SWApi>()
+        coEvery {
+            mockApi.deleteParkComment(
+                parkId = any(),
+                commentId = any()
+            )
+        } returns Response.success(Unit)
+        coEvery { mockParkDao.getParkById(123L) } returns ParkEntity(
+            id = 123L,
+            name = "Park",
+            sizeID = 1,
+            typeID = 1,
+            longitude = "0",
+            latitude = "0",
+            address = "",
+            cityID = 1,
+            countryID = 1,
+            preview = "",
+            commentsCount = 2,
+            comments = listOf(
+                Comment(id = 1000L, body = "Other", date = "2024-01-02", user = null)
+            )
+        )
+
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao,
+            mockEventDao,
+            mockParkDao,
+            crashReporter = crashReporter,
+            logger = logger
+        )
+        val option = TextEntryOption.Park(id = 123L)
+
+        val result = repository.deleteComment(option, 999L)
+
+        assertTrue(result.isSuccess)
+        coVerify { mockApi.deleteParkComment(parkId = 123L, commentId = 999L) }
+        coVerify(exactly = 0) { mockParkDao.upsertPark(any()) }
     }
 
     @Test
@@ -513,6 +595,7 @@ class SWRepositoryCommentsTest {
 
         assertTrue(result.isSuccess)
         coVerify { mockApi.deleteEventComment(eventId = 456L, commentId = 999L) }
+        coVerify(exactly = 0) { mockParkDao.upsertPark(any()) }
     }
 
     @Test

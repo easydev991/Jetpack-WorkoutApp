@@ -3,27 +3,11 @@ package com.swparks.data.database.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.swparks.data.model.Comment
 import com.swparks.data.model.Park
+import com.swparks.data.model.Photo
+import com.swparks.data.model.User
 
-/**
- * Entity для хранения площадок в Room
- *
- * Хранит основную информацию о площадках, полученную с сервера.
- * Используется для локального кэширования и offline-first стратегии.
- *
- * @property id Идентификатор площадки (Primary Key)
- * @property name Название площадки
- * @property sizeID Идентификатор размера площадки (модель ParkSize)
- * @property typeID Идентификатор типа площадки (модель ParkType)
- * @property longitude Долгота
- * @property latitude Широта
- * @property address Адрес площадки
- * @property cityID Идентификатор города
- * @property countryID Идентификатор страны
- * @property preview URL превью изображения
- * @property commentsCount Количество комментариев
- * @property trainingUsersCount Количество пользователей, тренирующихся на площадке
- */
 @Entity(tableName = "parks")
 data class ParkEntity(
     @PrimaryKey
@@ -57,15 +41,42 @@ data class ParkEntity(
     val preview: String,
 
     @ColumnInfo(name = "comments_count")
-    val commentsCount: Int = 0,
+    val commentsCount: Int? = null,
 
     @ColumnInfo(name = "training_users_count")
-    val trainingUsersCount: Int = 0
+    val trainingUsersCount: Int? = null,
+
+    @ColumnInfo(name = "author")
+    val author: User? = null,
+
+    @ColumnInfo(name = "photos")
+    val photos: List<Photo>? = null,
+
+    @ColumnInfo(name = "comments")
+    val comments: List<Comment>? = null,
+
+    @ColumnInfo(name = "training_users")
+    val trainingUsers: List<User>? = null,
+
+    @ColumnInfo(name = "train_here")
+    val trainHere: Boolean? = null,
+
+    @ColumnInfo(name = "mine")
+    val mine: Boolean? = null,
+
+    @ColumnInfo(name = "can_edit")
+    val canEdit: Boolean? = null,
+
+    @ColumnInfo(name = "equipment_ids")
+    val equipmentIDS: List<Int>? = null,
+
+    @ColumnInfo(name = "create_date")
+    val createDate: String? = null,
+
+    @ColumnInfo(name = "modify_date")
+    val modifyDate: String? = null
 )
 
-/**
- * Маппер для преобразования модели [Park] в [ParkEntity]
- */
 fun Park.toEntity(): ParkEntity = ParkEntity(
     id = id,
     name = name,
@@ -77,13 +88,20 @@ fun Park.toEntity(): ParkEntity = ParkEntity(
     cityID = cityID,
     countryID = countryID,
     preview = preview,
-    commentsCount = commentsCount ?: 0,
-    trainingUsersCount = trainingUsersCount ?: 0
+    commentsCount = commentsCount,
+    trainingUsersCount = trainingUsersCount,
+    author = author,
+    photos = photos,
+    comments = comments,
+    trainingUsers = trainingUsers,
+    trainHere = trainHere,
+    mine = mine,
+    canEdit = canEdit,
+    equipmentIDS = equipmentIDS,
+    createDate = createDate,
+    modifyDate = modifyDate
 )
 
-/**
- * Маппер для преобразования [ParkEntity] в модель [Park]
- */
 fun ParkEntity.toPark(): Park = Park(
     id = id,
     name = name,
@@ -94,7 +112,17 @@ fun ParkEntity.toPark(): Park = Park(
     address = address,
     cityID = cityID,
     countryID = countryID,
-    preview = preview,
     commentsCount = commentsCount,
-    trainingUsersCount = trainingUsersCount
+    preview = preview,
+    trainingUsersCount = trainingUsersCount,
+    createDate = createDate,
+    modifyDate = modifyDate,
+    author = author,
+    photos = photos,
+    comments = comments,
+    trainHere = trainHere,
+    equipmentIDS = equipmentIDS,
+    mine = mine,
+    canEdit = canEdit,
+    trainingUsers = trainingUsers
 )

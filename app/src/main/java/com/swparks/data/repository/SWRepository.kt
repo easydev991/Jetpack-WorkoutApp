@@ -130,6 +130,10 @@ interface SWRepository {
     suspend fun importSeedParks(context: Context)
     suspend fun upsertParks(parks: List<Park>)
 
+    // Cache API для ParkDetailScreen
+    suspend fun getParkFromCache(parkId: Long): Park?
+    suspend fun cachePark(park: Park)
+
     // 3.5. Мероприятия
     suspend fun getEvents(type: EventType): Result<List<Event>>
     suspend fun getEvent(id: Long): Result<Event>
@@ -683,6 +687,7 @@ class SWRepositoryImp(
     override suspend fun getPark(id: Long): Result<Park> =
         try {
             val park = swApi.getPark(id)
+            cachePark(park)
             Result.success(park)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "загрузке площадки"))
@@ -737,6 +742,7 @@ class SWRepositoryImp(
             if (currentUserId != null) {
                 updateUserAddedParksCache(currentUserId, id, park)
             }
+            cachePark(park)
             Result.success(park)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "сохранении площадки"))
@@ -752,6 +758,7 @@ class SWRepositoryImp(
                 if (currentUserId != null) {
                     removeParkFromUser(currentUserId, parkId)
                 }
+                parkDao.deleteById(parkId)
                 Result.success(Unit)
             } else {
                 Result.failure(handleResponseError(response, "удалении площадки"))
@@ -792,6 +799,7 @@ class SWRepositoryImp(
                 swApi.deleteTrainHere(parkId)
             }
             if (response.isSuccessful) {
+                updateTrainHereCache(trainHere, parkId)
                 Result.success(Unit)
             } else {
                 Result.failure(handleResponseError(response, "изменении статуса тренировки"))
@@ -801,6 +809,47 @@ class SWRepositoryImp(
         } catch (e: HttpException) {
             Result.failure(handleHttpException(e, "изменении статуса тренировки"))
         }
+
+    private suspend fun updateTrainHereCache(trainHere: Boolean, parkId: Long) {
+        val cachedPark = parkDao.getParkById(parkId) ?: return
+        val currentUserId = preferencesRepository.getCurrentUserIdSync()
+
+        val updatedTrainingUsers = cachedPark.trainingUsers?.toMutableList()
+        val updatedCount = cachedPark.trainingUsersCount
+
+        if (trainHere) {
+            if (currentUserId != null && updatedTrainingUsers != null && updatedCount != null) {
+                val currentUserEntity = userDao.getUserByIdFlow(currentUserId).first()
+                if (currentUserEntity != null) {
+                    val currentUser = currentUserEntity.toDomain()
+                    if (updatedTrainingUsers.none { it.id == currentUser.id }) {
+                        updatedTrainingUsers.add(currentUser)
+                    }
+                }
+            }
+        } else {
+            if (currentUserId != null && updatedTrainingUsers != null) {
+                updatedTrainingUsers.removeAll { it.id == currentUserId }
+            }
+        }
+
+        val newCount = updatedCount?.let { count ->
+            if (trainHere) {
+                count + 1
+            } else {
+                maxOf(count - 1, 0)
+            }
+        }
+
+        parkDao.upsertPark(
+            cachedPark.copy(
+                trainHere = trainHere,
+                trainingUsers = updatedTrainingUsers,
+                trainingUsersCount = newCount
+            )
+        )
+        logger.d(TAG, "Обновлён кэш trainHere для площадки $parkId")
+    }
 
     override suspend fun getUpdatedParks(date: String): Result<List<Park>> =
         try {
@@ -816,6 +865,7 @@ class SWRepositoryImp(
         try {
             val response = swApi.deleteParkPhoto(parkId, photoId)
             if (response.isSuccessful) {
+                updateDeletedPhotoCache(parkId, photoId)
                 Result.success(Unit)
             } else {
                 val errorMessage = parseErrorResponse(response, "удалении фото площадки")
@@ -826,6 +876,51 @@ class SWRepositoryImp(
         } catch (e: HttpException) {
             Result.failure(handleHttpException(e, "удалении фото площадки"))
         }
+
+    private suspend fun updateDeletedPhotoCache(parkId: Long, photoId: Long) {
+        val cachedPark = parkDao.getParkById(parkId) ?: return
+        val photos = cachedPark.photos ?: return
+
+        val photoToDelete = photos.find { it.id == photoId } ?: return
+        val updatedPhotos = photos.filter { it.id != photoId }
+
+        val newPreview = when {
+            cachedPark.preview != photoToDelete.photo -> cachedPark.preview
+            updatedPhotos.isNotEmpty() -> updatedPhotos.first().photo
+            else -> ""
+        }
+
+        parkDao.upsertPark(
+            cachedPark.copy(
+                photos = updatedPhotos,
+                preview = newPreview
+            )
+        )
+        logger.d(TAG, "Обновлён кэш фото для площадки $parkId, удалено фото $photoId")
+    }
+
+    private suspend fun updateDeletedCommentCache(parkId: Long, commentId: Long) {
+        val cachedPark = parkDao.getParkById(parkId) ?: return
+        val comments = cachedPark.comments ?: return
+
+        val updatedComments = comments.filter { it.id != commentId }
+        if (updatedComments.size == comments.size) return
+
+        val newCommentsCount = cachedPark.commentsCount?.let { count ->
+            maxOf(count - 1, 0)
+        }
+
+        parkDao.upsertPark(
+            cachedPark.copy(
+                comments = updatedComments,
+                commentsCount = newCommentsCount
+            )
+        )
+        logger.d(
+            TAG,
+            "Обновлён кэш комментариев для площадки $parkId, удалён комментарий $commentId"
+        )
+    }
 
     private suspend fun removeParkFromUser(userId: Long, parkId: Long) {
         val user = userDao.getUserByIdFlow(userId).first() ?: return
@@ -889,6 +984,19 @@ class SWRepositoryImp(
             val entities = parks.map { it.toEntity() }
             parkDao.insertAll(entities)
             logger.d(TAG, "Upsert ${entities.size} parks в Room")
+        }
+    }
+
+    override suspend fun getParkFromCache(parkId: Long): Park? {
+        return withContext(Dispatchers.IO) {
+            parkDao.getParkById(parkId)?.toPark()
+        }
+    }
+
+    override suspend fun cachePark(park: Park) {
+        withContext(Dispatchers.IO) {
+            parkDao.upsertPark(park.toEntity())
+            logger.d(TAG, "Площадка ${park.id} закэширована в Room")
         }
     }
 
@@ -1410,6 +1518,7 @@ class SWRepositoryImp(
             is TextEntryOption.Park -> try {
                 val response = swApi.deleteParkComment(option.id, commentId)
                 if (response.isSuccessful) {
+                    updateDeletedCommentCache(option.id, commentId)
                     Result.success(Unit)
                 } else {
                     Result.failure(

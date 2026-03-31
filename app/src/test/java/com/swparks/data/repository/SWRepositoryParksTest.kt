@@ -12,8 +12,11 @@ import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.ParkDao
 import com.swparks.data.database.dao.UserDao
+import com.swparks.data.database.entity.ParkEntity
 import com.swparks.data.database.entity.UserEntity
+import com.swparks.data.database.entity.toEntity
 import com.swparks.data.model.Park
+import com.swparks.data.model.Photo
 import com.swparks.domain.exception.NetworkException
 import com.swparks.network.SWApi
 import com.swparks.ui.model.ParkForm
@@ -37,6 +40,7 @@ import okhttp3.RequestBody
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -179,6 +183,62 @@ class SWRepositoryParksTest {
         assertTrue(result.isSuccess)
         assertEquals(mockPark, result.getOrNull())
         coVerify { mockApi.getPark(123L) }
+        coVerify { mockParkDao.upsertPark(mockPark.toEntity()) }
+    }
+
+    @Test
+    fun getParkFromCache_whenEntityExists_thenReturnsCachedPark() = runTest {
+        val cachedEntity = createParkEntity()
+        coEvery { mockParkDao.getParkById(1L) } returns cachedEntity
+
+        val mockApi = mockk<SWApi>()
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao,
+            mockEventDao,
+            mockParkDao,
+            crashReporter,
+            logger
+        )
+
+        val result = repository.getParkFromCache(1L)
+
+        assertNotNull(result)
+        assertEquals(cachedEntity.id, result?.id)
+        assertEquals(cachedEntity.name, result?.name)
+    }
+
+    @Test
+    fun getParkFromCache_whenEntityMissing_thenReturnsNull() = runTest {
+        coEvery { mockParkDao.getParkById(1L) } returns null
+
+        val mockApi = mockk<SWApi>()
+        val mockDataStore = mockk<DataStore<Preferences>>()
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+        val repository = SWRepositoryImp(
+            mockApi,
+            mockDataStore,
+            mockUserDao,
+            mockJournalDao,
+            mockJournalEntryDao,
+            mockDialogDao,
+            mockEventDao,
+            mockParkDao,
+            crashReporter,
+            logger
+        )
+
+        val result = repository.getParkFromCache(1L)
+
+        assertNull(result)
     }
 
     @Test
@@ -863,9 +923,12 @@ class SWRepositoryParksTest {
         // Given
         val mockApi = mockk<SWApi>()
         coEvery { mockApi.postTrainHere(1L) } returns Response.success(Unit)
+        coEvery { mockParkDao.getParkById(1L) } returns createParkEntity(trainingUsersCount = null)
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+        every { mockUserDao.getUserByIdFlow(any()) } returns flowOf(null)
 
         val repository = SWRepositoryImp(
             mockApi,
@@ -887,6 +950,11 @@ class SWRepositoryParksTest {
         assertTrue(result.isSuccess)
         coVerify { mockApi.postTrainHere(1L) }
         coVerify(exactly = 0) { mockApi.deleteTrainHere(any()) }
+        coVerify {
+            mockParkDao.upsertPark(match {
+                it.trainHere == true && it.trainingUsersCount == null
+            })
+        }
     }
 
     @Test
@@ -1017,6 +1085,10 @@ class SWRepositoryParksTest {
         // Given
         val mockApi = mockk<SWApi>()
         coEvery { mockApi.deleteParkPhoto(1L, 100L) } returns Response.success(Unit)
+        coEvery { mockParkDao.getParkById(1L) } returns createParkEntity(
+            preview = "https://example.com/photo.jpg",
+            photos = listOf(Photo(id = 100L, photo = "https://example.com/photo.jpg"))
+        )
 
         val mockDataStore = mockk<DataStore<Preferences>>()
         every { mockDataStore.data } returns flowOf(emptyPreferences())
@@ -1040,6 +1112,11 @@ class SWRepositoryParksTest {
         // Then
         assertTrue(result.isSuccess)
         coVerify { mockApi.deleteParkPhoto(1L, 100L) }
+        coVerify {
+            mockParkDao.upsertPark(match {
+                it.photos == emptyList<Photo>() && it.preview.isEmpty()
+            })
+        }
     }
 
     @Test
@@ -1241,4 +1318,26 @@ class SWRepositoryParksTest {
             })
         }
     }
+
+    private fun createParkEntity(
+        id: Long = 1L,
+        name: String = "Test Park",
+        preview: String = "https://example.com/preview.jpg",
+        photos: List<Photo>? = null,
+        trainingUsersCount: Int? = 5
+    ) = ParkEntity(
+        id = id,
+        name = name,
+        sizeID = 1,
+        typeID = 1,
+        longitude = "0.0",
+        latitude = "0.0",
+        address = "Test Address",
+        cityID = 1,
+        countryID = 1,
+        preview = preview,
+        commentsCount = 1,
+        trainingUsersCount = trainingUsersCount,
+        photos = photos
+    )
 }

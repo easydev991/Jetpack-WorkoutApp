@@ -3,7 +3,7 @@ package com.swparks.data.database.entity
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
-import com.swparks.data.database.UserConverters
+import com.swparks.data.database.AppConverters
 import com.swparks.data.model.Park
 
 /**
@@ -30,7 +30,7 @@ import com.swparks.data.model.Park
  * @property isCurrentUser Флаг - является ли текущим авторизованным пользователем
  */
 @Entity(tableName = "users")
-@TypeConverters(UserConverters::class)
+@TypeConverters(AppConverters::class)
 data class UserEntity(
     @PrimaryKey val id: Long,
     val name: String,

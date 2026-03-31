@@ -2,6 +2,7 @@ package com.swparks.data.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import com.swparks.data.database.dao.DialogDao
 import com.swparks.data.database.dao.EventDao
 import com.swparks.data.database.dao.JournalDao
@@ -33,9 +34,10 @@ import com.swparks.data.database.entity.UserEntity
         EventEntity::class,
         ParkEntity::class
     ],
-    version = 4,
+    version = 1,
     exportSchema = false
 )
+@TypeConverters(AppConverters::class)
 abstract class SWDatabase : RoomDatabase() {
     /**
      * Получить DAO для работы с пользователями

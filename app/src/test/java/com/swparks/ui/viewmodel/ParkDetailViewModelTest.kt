@@ -28,8 +28,10 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -39,6 +41,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ParkDetailViewModelTest {
@@ -67,6 +70,7 @@ class ParkDetailViewModelTest {
 
         every { userPreferencesRepository.isAuthorized } returns flowOf(true)
         every { userPreferencesRepository.currentUserId } returns flowOf(1L)
+        coEvery { swRepository.getParkFromCache(any()) } returns null
 
         coEvery { countriesRepository.getCountryById(any()) } returns null
         coEvery { countriesRepository.getCityById(any()) } returns null
@@ -86,6 +90,50 @@ class ParkDetailViewModelTest {
         val content = state as ParkDetailUIState.Content
         assertEquals(TEST_PARK_ID, content.park.id)
         assertEquals(TEST_PARK_NAME, content.park.name)
+    }
+
+    @Test
+    fun init_whenCacheExists_thenShowsCachedContentBeforeNetworkResult() = runTest {
+        val cachedPark = createPark().copy(name = "Кэш")
+        val freshPark = createPark().copy(name = "Сервер")
+        coEvery { swRepository.getParkFromCache(TEST_PARK_ID) } returns cachedPark
+        coEvery { swRepository.getPark(TEST_PARK_ID) } coAnswers {
+            delay(1_000)
+            Result.success(freshPark)
+        }
+
+        val viewModel = createViewModel()
+        runCurrent()
+
+        val intermediateState = viewModel.uiState.value
+        assertTrue(intermediateState is ParkDetailUIState.Content)
+        assertEquals("Кэш", (intermediateState as ParkDetailUIState.Content).park.name)
+
+        advanceTimeBy(1_000)
+        advanceUntilIdle()
+
+        val finalState = viewModel.uiState.value
+        assertTrue(finalState is ParkDetailUIState.Content)
+        assertEquals("Сервер", (finalState as ParkDetailUIState.Content).park.name)
+    }
+
+    @Test
+    fun init_whenPartialCacheExistsAndNetworkFails_thenKeepsCachedContent() = runTest {
+        val cachedPark = createPark(photos = emptyList()).copy(
+            name = "Частичный кэш",
+            createDate = null,
+            author = null
+        )
+        coEvery { swRepository.getParkFromCache(TEST_PARK_ID) } returns cachedPark
+        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.failure(IOException("offline"))
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue(state is ParkDetailUIState.Content)
+        assertEquals("Частичный кэш", (state as ParkDetailUIState.Content).park.name)
+        verify { userNotifier.handleError(any()) }
     }
 
     @Test
@@ -112,6 +160,27 @@ class ParkDetailViewModelTest {
 
         coVerify(exactly = 2) { swRepository.getPark(TEST_PARK_ID) }
         assertTrue(viewModel.uiState.value is ParkDetailUIState.Content)
+    }
+
+    @Test
+    fun refresh_whenContentAlreadyShownAndNetworkFails_thenKeepsCurrentContent() = runTest {
+        val cachedPark = createPark().copy(name = "Кэш")
+        coEvery { swRepository.getParkFromCache(TEST_PARK_ID) } returns cachedPark
+        coEvery { swRepository.getPark(TEST_PARK_ID) } returnsMany listOf(
+            Result.success(createPark().copy(name = "Сервер")),
+            Result.failure(IOException("offline"))
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue(state is ParkDetailUIState.Content)
+        assertEquals("Сервер", (state as ParkDetailUIState.Content).park.name)
+        verify(atLeast = 1) { userNotifier.handleError(any()) }
     }
 
     @Test

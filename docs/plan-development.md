@@ -154,6 +154,7 @@
 - `docs/screens/4_Parks_Screen.md`
 - `docs/screens/4.1_Parks_Map_Screen.md`
 - `docs/screens/4.2_Park_Detail_Screen.md`
+- `docs/screens/doc-park-detail-offline-tdd.md` — **TDD план** Offline-поддержка ParkDetailScreen
 - `docs/screens/4.3_Edit_Park_Screen.md`
 
 ---
@@ -372,3 +373,4 @@ app/src/androidTest/java/com/swparks/    # Интеграционные и UI т
 - **2026-03-02:** Вкладка "Сообщения" (Messages) ✅ ЗАВЕРШЕНО - ChatScreen реализован (ChatViewModel, ChatScreen.kt, 15 unit-тестов), включает: отправка сообщений, markAsRead через repository, обновление списка диалогов через SharedFlow, автопрокрутка, блокировка ввода при отправке
 - **2026-03-17:** Актуализация навигации и документации - в `RootScreen` реализованы и подключены `EventDetail/EditEvent/EventParticipants`, `ParkDetail/CreatePark/EditPark`, `Chat`, а также typed args parsers/coordinators для key navigation flows.
 - **2026-03-21:** Актуализация метрик проекта - 41 компонент дизайн-системы, 24 use case, 25 ViewModel, 113 unit-тестов, 23 интеграционных/UI тестов, 32 экрана (18 с UI тестами), новые модели (RegistrationParams, EventFormMode, ParticipantsMode, PickedImageItem, PickedImagesState, MapUriSet)
+- **2026-03-31:** TDD план для Offline-поддержки ParkDetailScreen — `docs/screens/doc-park-detail-offline-tdd.md`

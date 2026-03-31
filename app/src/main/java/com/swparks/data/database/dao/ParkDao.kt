@@ -40,6 +40,24 @@ interface ParkDao {
     suspend fun insertAll(parks: List<ParkEntity>)
 
     /**
+     * Вставить или обновить одну площадку.
+     *
+     * При конфликте ID выполняется замена (REPLACE).
+     *
+     * @param park Площадка для сохранения
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertPark(park: ParkEntity)
+
+    /**
+     * Удалить площадку по ID.
+     *
+     * @param parkId Идентификатор площадки
+     */
+    @Query("DELETE FROM parks WHERE id = :parkId")
+    suspend fun deleteById(parkId: Long)
+
+    /**
      * Удалить все площадки
      */
     @Query("DELETE FROM parks")

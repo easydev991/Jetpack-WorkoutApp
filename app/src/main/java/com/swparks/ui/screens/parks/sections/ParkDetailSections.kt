@@ -37,6 +37,7 @@ import com.swparks.ui.ds.SectionView
 import com.swparks.ui.ds.SwitchFormRowView
 import com.swparks.ui.ds.UserRowData
 import com.swparks.ui.ds.UserRowView
+import com.swparks.ui.screens.parks.map.isValidCoordinates
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.util.DateFormatter
 
@@ -119,12 +120,13 @@ private fun ParkHeaderContent(
             )
         }
 
+        val hasValidCoordinates = isValidCoordinates(park.latitude, park.longitude)
         LocationInfoView(
             config = LocationInfoConfig(
                 latitude = park.latitude,
                 longitude = park.longitude,
                 address = address,
-                enabled = !isRefreshing,
+                enabled = !isRefreshing && hasValidCoordinates,
                 onOpenMapClick = { onAction(ParkHeaderAction.OpenMap) },
                 onRouteClick = { onAction(ParkHeaderAction.Route) }
             )

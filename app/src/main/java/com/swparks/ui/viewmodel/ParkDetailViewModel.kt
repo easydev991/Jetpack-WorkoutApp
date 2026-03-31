@@ -198,29 +198,52 @@ class ParkDetailViewModel(
         logger.d(TAG, "Загрузка площадки id=$parkId")
         viewModelScope.launch {
             try {
-                val result = swRepository.getPark(parkId)
-                result.fold(
-                    onSuccess = { park ->
-                        logger.i(TAG, "Площадка загружена: ${park.name}")
-                        val address = buildAddress(park.countryID, park.cityID, park.address)
-                        val authorAddress = buildAuthorAddress(park.author)
-                        _uiState.value = ParkDetailUIState.Content(
-                            park = park,
-                            address = address,
-                            authorAddress = authorAddress
-                        )
-                        updateIsParkAuthor()
-                    },
-                    onFailure = { exception ->
-                        logger.e(
-                            TAG,
-                            "Ошибка загрузки площадки: ${exception.message}",
-                            exception
-                        )
-                        handleError(exception, "загрузке площадки")
-                        _uiState.value = ParkDetailUIState.Error(exception.message)
+                val cachedPark = swRepository.getParkFromCache(parkId)
+                if (cachedPark != null) {
+                    logger.d(TAG, "Кэш найден для площадки id=$parkId, показываем контент")
+                    val address = buildAddress(
+                        cachedPark.countryID,
+                        cachedPark.cityID,
+                        cachedPark.address
+                    )
+                    val authorAddress = buildAuthorAddress(cachedPark.author)
+                    _uiState.value = ParkDetailUIState.Content(
+                        park = cachedPark,
+                        address = address,
+                        authorAddress = authorAddress
+                    )
+                    updateIsParkAuthor()
+                    if (!cachedPark.isFull) {
+                        logger.d(TAG, "Кэш площадки id=$parkId частичный, обновляем с сервера")
                     }
-                )
+                    refreshParkContentInBackground(parkId)
+                } else {
+                    logger.d(TAG, "Кэш не найден для площадки id=$parkId, загружаем с сервера")
+                    _uiState.value = ParkDetailUIState.InitialLoading
+                    val result = swRepository.getPark(parkId)
+                    result.fold(
+                        onSuccess = { park ->
+                            logger.i(TAG, "Площадка загружена с сервера: ${park.name}")
+                            val address = buildAddress(park.countryID, park.cityID, park.address)
+                            val authorAddress = buildAuthorAddress(park.author)
+                            _uiState.value = ParkDetailUIState.Content(
+                                park = park,
+                                address = address,
+                                authorAddress = authorAddress
+                            )
+                            updateIsParkAuthor()
+                        },
+                        onFailure = { exception ->
+                            logger.e(
+                                TAG,
+                                "Ошибка загрузки площадки: ${exception.message}",
+                                exception
+                            )
+                            handleError(exception, "загрузке площадки")
+                            _uiState.value = ParkDetailUIState.Error(exception.message)
+                        }
+                    )
+                }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 logger.e(TAG, "Исключение при загрузке площадки: ${e.message}", e)
@@ -304,6 +327,33 @@ class ParkDetailViewModel(
                     exception
                 )
                 handleError(exception, "обновлении площадки")
+            }
+        )
+    }
+
+    private suspend fun refreshParkContentInBackground(parkId: Long) {
+        val result = swRepository.getPark(parkId)
+        result.fold(
+            onSuccess = { park ->
+                logger.i(TAG, "Фоновое обновление площадки: ${park.name}")
+                val currentState = _uiState.value
+                if (currentState is ParkDetailUIState.Content) {
+                    val address = buildAddress(park.countryID, park.cityID, park.address)
+                    val authorAddress = buildAuthorAddress(park.author)
+                    _uiState.value = currentState.copy(
+                        park = park,
+                        address = address,
+                        authorAddress = authorAddress
+                    )
+                    updateIsParkAuthor()
+                }
+            },
+            onFailure = { exception ->
+                logger.w(
+                    TAG,
+                    "Фоновое обновление площадки не удалось: ${exception.message}"
+                )
+                handleError(exception, "фоновом обновлении площадки")
             }
         )
     }

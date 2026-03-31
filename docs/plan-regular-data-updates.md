@@ -12,26 +12,31 @@
 ## Выполненные этапы
 
 ### Этап 1-3: Data Layer
+
 - [x] Clock abstraction (SystemClock + TestClock)
 - [x] DataStore для дат синхронизации (lastParksUpdateDate, lastCountriesUpdateDate)
 - [x] Локальное хранение parks (Room: ParkEntity, ParkDao, upsert)
 - [x] Локальное хранение countries/cities (JSON-файл: copySeedFromAssets, атомарная запись)
 
 ### Этап 4: Domain Layer (Use Cases)
+
 - [x] SyncParksUseCase (delta-обновление, date-only для API)
 - [x] SyncCountriesUseCase (полный справочник)
 - [x] isUpdateNeeded() extension (проверка >1 дня)
 
 ### Этап 5: UI Layer - Countries sync
+
 - [x] AppForegroundSyncHandler (ON_START lifecycle)
 - [x] Интеграция в RootScreen
 
 ### Этап 6: UI Layer - Parks sync
+
 - [x] ParksRootViewModel (seed-инициализация, подписка на Room, sync)
 - [x] InitializeParksUseCase (изоляция Context)
 - [x] Кнопка обновления в TopAppBar с LoadingOverlayView
 
 ### Этап 7: Интеграция
+
 - [x] Логирование на русском
 - [x] Все тесты (1735) проходят
 - [x] format/lint без ошибок
