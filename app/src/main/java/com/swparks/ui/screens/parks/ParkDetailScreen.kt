@@ -39,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
@@ -62,6 +63,7 @@ import com.swparks.ui.screens.photos.PhotoDetailSheetHost
 import com.swparks.ui.state.ParkDetailUIState
 import com.swparks.ui.state.PhotoDetailConfig
 import com.swparks.ui.state.PhotoOwner
+import com.swparks.ui.testtags.ScreenshotTestTags
 import com.swparks.ui.viewmodel.IParkDetailViewModel
 import com.swparks.ui.viewmodel.ParkDetailEvent
 
@@ -182,7 +184,9 @@ fun ParkDetailScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .testTag(ScreenshotTestTags.PARK_DETAIL_SCREEN),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             CenterAlignedTopAppBar(

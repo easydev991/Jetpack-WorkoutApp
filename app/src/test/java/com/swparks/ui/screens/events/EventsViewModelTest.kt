@@ -813,7 +813,12 @@ class EventsViewModelTest {
         viewModel.onFabClick()
         advanceUntilIdle()
 
-        verify { mockLogger.d("EventsViewModel", "Пользователь не авторизован, действие не выполняется") }
+        verify {
+            mockLogger.d(
+                "EventsViewModel",
+                "Пользователь не авторизован, действие не выполняется"
+            )
+        }
     }
 
     @Test

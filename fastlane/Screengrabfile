@@ -2,13 +2,16 @@
 app_package_name 'com.swparks'
 
 # Имя пакета тестов
-tests_package_name 'com.swparks.test'
+tests_package_name 'com.swparks.screenshots'
+
+# Кастомный instrumentation runner screenshot-модуля
+test_instrumentation_runner 'com.swparks.screenshots.ScreenshotTestRunner'
 
 # Запускать только тесты скриншотов из пакета
 use_tests_in_packages ['com.swparks.screenshots']
 
 # Локали для скриншотов
-locales ['ru-RU', 'en-US']
+locales ['ru-RU']
 
 # Вернуться к базовой локали после завершения тестов
 ending_locale 'ru-RU'

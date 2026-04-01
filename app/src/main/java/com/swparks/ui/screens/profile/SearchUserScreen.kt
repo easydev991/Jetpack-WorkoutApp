@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -41,6 +42,7 @@ import com.swparks.ui.ds.TextFieldConfig
 import com.swparks.ui.ds.UserRowData
 import com.swparks.ui.ds.UserRowView
 import com.swparks.ui.state.SearchUserUiState
+import com.swparks.ui.testtags.ScreenshotTestTags
 import com.swparks.ui.viewmodel.ISearchUserViewModel
 
 data class SearchUserConfig(
@@ -187,7 +189,9 @@ private fun SearchInputField(
 ) {
     SWTextField(
         config = TextFieldConfig(
-            modifier = modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular)),
+            modifier = modifier
+                .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
+                .testTag(ScreenshotTestTags.SEARCH_USER_FIELD),
             text = searchQueryState.query,
             labelID = R.string.username_in_english,
             supportingText = stringResource(R.string.search_min_length_hint),
@@ -262,7 +266,9 @@ private fun UsersList(
             val isDisabled = user.id == currentUserId
             UserRowView(
                 data = UserRowData(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("${ScreenshotTestTags.SEARCH_USER_ROW_PREFIX}${user.id}"),
                     enabled = !isDisabled,
                     imageStringURL = user.image,
                     name = user.name,

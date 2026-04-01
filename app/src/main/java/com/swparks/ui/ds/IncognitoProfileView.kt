@@ -31,6 +31,8 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
 fun IncognitoProfileView(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    authButtonModifier: Modifier = Modifier,
+    registerButtonModifier: Modifier = Modifier,
     onClickAuth: () -> Unit,
     onClickRegister: () -> Unit = {}
 ) {
@@ -47,6 +49,7 @@ fun IncognitoProfileView(
         )
         SWButton(
             config = ButtonConfig(
+                modifier = authButtonModifier,
                 text = stringResource(id = R.string.authorization),
                 enabled = enabled,
                 onClick = onClickAuth
@@ -55,6 +58,7 @@ fun IncognitoProfileView(
         Spacer(modifier = Modifier.padding(dimensionResource(id = R.dimen.spacing_small)))
         SWButton(
             config = ButtonConfig(
+                modifier = registerButtonModifier,
                 mode = SWButtonMode.TINTED,
                 text = stringResource(id = R.string.register),
                 enabled = enabled,

@@ -1,6 +1,7 @@
 package com.swparks.ui.ds
 
 import android.content.res.Configuration
+import android.net.Uri
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
+import java.net.URI
 
 /**
  * Конфигурация для асинхронной загрузки картинки
@@ -57,7 +59,7 @@ fun SWAsyncImage(config: AsyncImageConfig) {
     val shape = config.shape ?: defaultShape
     AsyncImage(
         model = ImageRequest.Builder(context)
-            .data(config.imageStringURL)
+            .data(normalizeImageUrl(config.imageStringURL))
             .crossfade(context.resources.getInteger(R.integer.crossfade_duration_ms))
             .build(),
         placeholder = painterResource(id = R.drawable.defaultworkout),
@@ -78,6 +80,28 @@ fun SWAsyncImage(config: AsyncImageConfig) {
                 it
             }
     )
+}
+
+private fun normalizeImageUrl(rawUrl: String?): String? {
+    if (rawUrl.isNullOrBlank()) return rawUrl
+
+    val trimmed = rawUrl.trim()
+    return runCatching {
+        val parsed = Uri.parse(trimmed)
+        if (parsed.scheme.isNullOrBlank() || parsed.authority.isNullOrBlank()) {
+            trimmed
+        } else {
+            URI(
+                parsed.scheme,
+                parsed.authority,
+                parsed.path,
+                parsed.query,
+                parsed.fragment
+            ).toASCIIString()
+        }
+    }.getOrElse {
+        trimmed.replace(" ", "%20")
+    }
 }
 
 @Preview(showBackground = true)

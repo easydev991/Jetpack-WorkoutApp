@@ -34,11 +34,13 @@ interface UserTrainingParkDao {
         upsertCacheState(UserTrainingParkCacheStateEntity(userId = userId))
     }
 
-    @Query("""
+    @Query(
+        """
         SELECT p.* FROM parks p
         INNER JOIN user_training_parks utp ON p.id = utp.park_id
         WHERE utp.user_id = :userId
         ORDER BY utp.position ASC
-    """)
+    """
+    )
     suspend fun getParksForUserFromCache(userId: Long): List<ParkEntity>
 }

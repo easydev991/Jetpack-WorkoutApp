@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
@@ -48,6 +49,7 @@ import com.swparks.ui.screens.photos.PhotoDetailSheetHost
 import com.swparks.ui.state.EventDetailUIState
 import com.swparks.ui.state.PhotoDetailConfig
 import com.swparks.ui.state.PhotoOwner
+import com.swparks.ui.testtags.ScreenshotTestTags
 import com.swparks.ui.viewmodel.EventDetailEvent
 import com.swparks.ui.viewmodel.IEventDetailViewModel
 import com.swparks.util.DateFormatter
@@ -175,7 +177,9 @@ fun EventDetailScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .testTag(ScreenshotTestTags.EVENT_DETAIL_SCREEN),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             CenterAlignedTopAppBar(

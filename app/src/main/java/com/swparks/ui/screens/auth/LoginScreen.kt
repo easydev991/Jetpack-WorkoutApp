@@ -47,6 +47,7 @@ import com.swparks.ui.ds.SWTextField
 import com.swparks.ui.ds.TextFieldConfig
 import com.swparks.ui.state.LoginEvent
 import com.swparks.ui.state.LoginUiState
+import com.swparks.ui.testtags.ScreenshotTestTags
 import com.swparks.ui.viewmodel.ILoginViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -361,7 +362,7 @@ private fun LoginField(
     SWTextField(
         config =
             TextFieldConfig(
-                modifier = modifier,
+                modifier = modifier.testTag(ScreenshotTestTags.LOGIN_FIELD),
                 text = config.value,
                 labelID = R.string.login_or_email,
                 secure = false,
@@ -381,7 +382,7 @@ private fun PasswordField(config: PasswordFieldConfig) {
     SWTextField(
         config =
             TextFieldConfig(
-                modifier = config.modifier,
+                modifier = config.modifier.testTag(ScreenshotTestTags.PASSWORD_FIELD),
                 text = config.value,
                 labelID = R.string.password,
                 secure = true,
@@ -404,7 +405,7 @@ private fun LoginButton(enabled: Boolean, onClick: () -> Unit, modifier: Modifie
             ButtonConfig(
                 modifier = modifier
                     .fillMaxWidth()
-                    .testTag("signInButton"),
+                    .testTag(ScreenshotTestTags.LOGIN_BUTTON),
                 size = SWButtonSize.LARGE,
                 mode = SWButtonMode.FILLED,
                 text = stringResource(id = R.string.sign_in),

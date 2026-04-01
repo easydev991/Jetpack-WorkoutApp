@@ -20,24 +20,24 @@ class SyncCountriesUseCase(
     suspend operator fun invoke(): Result<Unit> {
         val lastUpdateDate = userPreferencesRepository.lastCountriesUpdateDate.first()
 
-        if (!lastUpdateDate.isUpdateNeeded(clock)) {
+        val shouldSkipSync = !lastUpdateDate.isUpdateNeeded(clock)
+        if (shouldSkipSync) {
             logger.d(
                 TAG,
                 "Обновление справочника стран не требуется, последнее обновление: $lastUpdateDate"
             )
-            return Result.success(Unit)
+        } else {
+            logger.i(TAG, "Проверка необходимости обновления справочника стран")
+
+            val result = countriesRepository.updateCountriesFromServer()
+            if (result.isFailure) {
+                logger.e(TAG, "Ошибка обновления справочника стран", result.exceptionOrNull())
+                return Result.failure(result.exceptionOrNull() ?: Exception("Unknown error"))
+            }
+
+            logger.i(TAG, "Справочник стран успешно обновлен с сервера")
+            userPreferencesRepository.setLastCountriesUpdateDate(clock.nowIsoString())
         }
-
-        logger.i(TAG, "Проверка необходимости обновления справочника стран")
-
-        val result = countriesRepository.updateCountriesFromServer()
-        if (result.isFailure) {
-            logger.e(TAG, "Ошибка обновления справочника стран", result.exceptionOrNull())
-            return Result.failure(result.exceptionOrNull() ?: Exception("Unknown error"))
-        }
-
-        logger.i(TAG, "Справочник стран успешно обновлен с сервера")
-        userPreferencesRepository.setLastCountriesUpdateDate(clock.nowIsoString())
 
         return Result.success(Unit)
     }

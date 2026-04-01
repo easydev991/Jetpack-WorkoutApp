@@ -79,15 +79,25 @@ class EventsViewModel(
     private val userNotifier: UserNotifier,
     private val logger: Logger,
     private val swRepository: SWRepository,
+    private val initialTab: EventKind = EventKind.FUTURE,
 ) : ViewModel(), IEventsViewModel {
     companion object {
         private const val TAG = "EventsViewModel"
+        private const val SCREENSHOT_TEST_APPLICATION_CLASS_NAME =
+            "com.swparks.screenshots.ScreenshotTestApplication"
 
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application =
                     this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as JetpackWorkoutApplication
                 val container = application.container
+                val initialTab = if (
+                    application::class.java.name == SCREENSHOT_TEST_APPLICATION_CLASS_NAME
+                ) {
+                    EventKind.PAST
+                } else {
+                    EventKind.FUTURE
+                }
                 EventsViewModel(
                     getFutureEventsFlowUseCase = container.getFutureEventsFlowUseCase,
                     syncFutureEventsUseCase = container.syncFutureEventsUseCase,
@@ -97,7 +107,8 @@ class EventsViewModel(
                     countriesRepository = container.countriesRepository,
                     userNotifier = container.userNotifier,
                     logger = container.logger,
-                    swRepository = container.swRepository
+                    swRepository = container.swRepository,
+                    initialTab = initialTab
                 )
             }
         }
@@ -153,7 +164,7 @@ class EventsViewModel(
         return addressesCache
     }
 
-    private val _selectedTab = MutableStateFlow(EventKind.FUTURE)
+    private val _selectedTab = MutableStateFlow(initialTab)
     override val selectedTab: StateFlow<EventKind> = _selectedTab.asStateFlow()
 
     private val _eventsUIState =
@@ -186,7 +197,10 @@ class EventsViewModel(
             logger.d(TAG, "Подписка на Flow текущего пользователя")
             swRepository.getCurrentUserFlow().collect { user ->
                 _currentUser.value = user
-                logger.d(TAG, "Текущий пользователь обновлён: ${user?.name}, hasUsedParks=${user?.hasUsedParks}")
+                logger.d(
+                    TAG,
+                    "Текущий пользователь обновлён: ${user?.name}, hasUsedParks=${user?.hasUsedParks}"
+                )
             }
         }
     }
@@ -414,10 +428,12 @@ class EventsViewModel(
                 user == null -> {
                     logger.d(TAG, "Пользователь не авторизован, действие не выполняется")
                 }
+
                 !user.hasUsedParks -> {
                     logger.d(TAG, "У пользователя нет площадок тренировки, показываем алерт")
                     _events.send(EventsEvent.ShowEventCreationRule)
                 }
+
                 else -> {
                     logger.d(TAG, "У пользователя есть площадки, переход к созданию мероприятия")
                     _events.send(EventsEvent.NavigateToCreateEvent)

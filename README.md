@@ -12,6 +12,24 @@
 - Это Android-версия моего пет-проекта "Street Workout Площадки", которая повторяет функциональность [iOS-версии](https://github.com/easydev991/SwiftUI-WorkoutApp) по мере возможности
 - [Ссылка на старое приложение в Play Market](https://workout.su/android)
 
+## Скриншоты
+
+1. Сгенерировать скриншоты:
+
+```shell
+make screenshots
+```
+
+2. Обновить пути в таблице README на последние PNG:
+
+```shell
+make update_readme
+```
+
+| Карта с площадками                                                                                        | Список площадок                                                                                            | Площадка                                                                                                     | Прошедшие мероприятия                                                                                       | Мероприятие                                                                                                   | Профиль                                                                                                  |
+|-----------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| <img src="./fastlane/metadata/android/ru-RU/images/phoneScreenshots/0-parksMap_1775117812727.png" alt=""> | <img src="./fastlane/metadata/android/ru-RU/images/phoneScreenshots/1-parksList_1775117819454.png" alt=""> | <img src="./fastlane/metadata/android/ru-RU/images/phoneScreenshots/2-parkDetails_1775117828334.png" alt=""> | <img src="./fastlane/metadata/android/ru-RU/images/phoneScreenshots/3-pastEvents_1775117832862.png" alt=""> | <img src="./fastlane/metadata/android/ru-RU/images/phoneScreenshots/4-eventDetails_1775117843320.png" alt=""> | <img src="./fastlane/metadata/android/ru-RU/images/phoneScreenshots/5-profile_1775117852127.png" alt=""> |
+
 ## Документация
 
 - [План разработки приложения](docs/plan-development.md)

@@ -10,8 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
+import com.swparks.ui.testtags.ScreenshotTestTags
 
 private const val TAG = "BottomNavigation"
 
@@ -45,6 +47,7 @@ fun BottomNavigationBar(
                     }
 
                 NavigationBarItem(
+                    modifier = Modifier.testTag(bottomNavTag(destination.route)),
                     selected = isSelected,
                     onClick = {
                         Log.d(
@@ -76,4 +79,11 @@ fun BottomNavigationBar(
             }
         }
     }
+}
+
+private fun bottomNavTag(route: String): String = when (route) {
+    Screen.Parks.route -> ScreenshotTestTags.BOTTOM_NAV_PARKS
+    Screen.Events.route -> ScreenshotTestTags.BOTTOM_NAV_EVENTS
+    Screen.Profile.route -> ScreenshotTestTags.BOTTOM_NAV_PROFILE
+    else -> "bottom_nav_${route.lowercase()}"
 }

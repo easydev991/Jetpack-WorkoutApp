@@ -7,9 +7,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import com.swparks.R
 import com.swparks.data.model.Park
+import com.swparks.ui.testtags.ScreenshotTestTags
 
 /**
  * Компонент для отображения списка площадок.
@@ -42,6 +44,7 @@ fun ParksListView(
             ParkRowView(
                 data =
                     ParkRowData(
+                        modifier = Modifier.testTag("${ScreenshotTestTags.PARK_ROW_PREFIX}${park.id}"),
                         imageStringURL = park.preview,
                         name = park.name,
                         address = park.address,

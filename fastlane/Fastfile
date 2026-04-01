@@ -16,6 +16,37 @@
 default_platform(:android)
 
 platform :android do
+  def screenshot_emulator_serial
+    serial_from_env = ENV['ANDROID_SERIAL']
+    return serial_from_env unless serial_from_env.to_s.empty?
+
+    devices_output = sh('adb devices', log: false)
+    devices_output.each_line do |line|
+      normalized = line.strip
+      next if normalized.empty? || normalized.start_with?('List of devices')
+
+      serial, state = normalized.split(/\s+/)
+      next unless state == 'device' && serial.start_with?('emulator-')
+
+      return serial
+    end
+
+    nil
+  end
+
+  def set_moscow_emulator_location
+    serial = screenshot_emulator_serial
+    if serial.nil?
+      UI.important('Эмулятор не найден, шаг установки геолокации Москвы пропущен')
+      return
+    end
+
+    UI.message("Устанавливаем геолокацию Москва для #{serial}")
+    sh("adb -s #{serial} emu geo fix 37.6173 55.7558")
+  rescue => e
+    UI.important("Не удалось установить геолокацию Москва: #{e.message}")
+  end
+
   desc "Runs all the tests"
   lane :test do
     gradle(task: "test")
@@ -36,33 +67,26 @@ platform :android do
     upload_to_play_store
   end
 
-  desc "Создание скриншотов для всех локалей"
+  desc "Создание скриншотов (ru-RU)"
   lane :screenshots do
+    set_moscow_emulator_location
     capture_android_screenshots(
-      locales: ['ru-RU', 'en-US'],
+      locales: ['ru-RU'],
       clear_previous_screenshots: true,
       app_apk_path: File.expand_path('../app/build/outputs/apk/debug/app-debug.apk', __dir__),
-      tests_apk_path: File.expand_path('../app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk', __dir__)
+      tests_apk_path: File.expand_path('../screenshots/build/outputs/apk/debug/screenshots-debug.apk', __dir__)
     )
   end
 
   desc "Создание скриншотов только для русского"
   lane :screenshots_ru do
+    set_moscow_emulator_location
     capture_android_screenshots(
       locales: ['ru-RU'],
       clear_previous_screenshots: true,
       app_apk_path: File.expand_path('../app/build/outputs/apk/debug/app-debug.apk', __dir__),
-      tests_apk_path: File.expand_path('../app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk', __dir__)
+      tests_apk_path: File.expand_path('../screenshots/build/outputs/apk/debug/screenshots-debug.apk', __dir__)
     )
   end
 
-  desc "Создание скриншотов только для английского"
-  lane :screenshots_en do
-    capture_android_screenshots(
-      locales: ['en-US'],
-      clear_previous_screenshots: true,
-      app_apk_path: File.expand_path('../app/build/outputs/apk/debug/app-debug.apk', __dir__),
-      tests_apk_path: File.expand_path('../app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk', __dir__)
-    )
-  end
 end

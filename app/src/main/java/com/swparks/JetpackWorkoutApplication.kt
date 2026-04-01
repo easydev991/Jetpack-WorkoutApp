@@ -8,7 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
-class JetpackWorkoutApplication : Application() {
+open class JetpackWorkoutApplication : Application() {
     lateinit var container: AppContainer
 
     // Scope для операций при старте приложения

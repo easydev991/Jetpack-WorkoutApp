@@ -54,7 +54,8 @@ class ParksRootViewModel(
     private val initializeParksUseCase: IInitializeParksUseCase,
     private val userNotifier: UserNotifier,
     private val locationService: LocationService,
-    private val syncParksUseCase: SyncParksUseCase
+    private val syncParksUseCase: SyncParksUseCase,
+    private val userLocationCameraZoom: Double = USER_LOCATION_CAMERA_ZOOM
 ) : ViewModel(), IParksRootViewModel {
 
     override val parksFilter: StateFlow<ParkFilter> = parksFilterDataStore.filter
@@ -201,8 +202,11 @@ class ParksRootViewModel(
 
     companion object {
         private const val TAG = "ParksRootViewModel"
+        private const val SCREENSHOT_TEST_APPLICATION_CLASS_NAME =
+            "com.swparks.screenshots.ScreenshotTestApplication"
         private const val CITY_CAMERA_ZOOM = 11.0
         private const val USER_LOCATION_CAMERA_ZOOM = 15.0
+        private const val SCREENSHOT_USER_LOCATION_CAMERA_ZOOM = 12.2
         private const val SUSPICIOUS_CITY_RADIUS_KM = 250.0
         private const val NORMALIZED_CITY_RADIUS_KM = 75.0
         private const val EARTH_RADIUS_KM = 6371.0
@@ -212,6 +216,13 @@ class ParksRootViewModel(
                 val application =
                     this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as JetpackWorkoutApplication
                 val container = application.container
+                val userLocationZoom = if (
+                    application::class.java.name == SCREENSHOT_TEST_APPLICATION_CLASS_NAME
+                ) {
+                    SCREENSHOT_USER_LOCATION_CAMERA_ZOOM
+                } else {
+                    USER_LOCATION_CAMERA_ZOOM
+                }
                 ParksRootViewModel(
                     createParkLocationHandler = container.createParkLocationHandler,
                     logger = container.logger,
@@ -222,7 +233,8 @@ class ParksRootViewModel(
                     initializeParksUseCase = container.initializeParksUseCase,
                     userNotifier = container.userNotifier,
                     locationService = container.locationService,
-                    syncParksUseCase = container.syncParksUseCase
+                    syncParksUseCase = container.syncParksUseCase,
+                    userLocationCameraZoom = userLocationZoom
                 )
             }
         }
@@ -712,7 +724,7 @@ class ParksRootViewModel(
                                     latitude = coordinates.latitude,
                                     longitude = coordinates.longitude
                                 ),
-                                zoom = USER_LOCATION_CAMERA_ZOOM
+                                zoom = userLocationCameraZoom
                             ),
                             isLoadingLocation = false,
                             isFollowingUser = false

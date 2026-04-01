@@ -42,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -67,6 +68,7 @@ import com.swparks.ui.ds.UserProfileData
 import com.swparks.ui.model.BlacklistAction
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.screens.common.TextEntrySheetHost
+import com.swparks.ui.testtags.ScreenshotTestTags
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.IOtherUserProfileViewModel
 import com.swparks.ui.viewmodel.OtherUserProfileUiState
@@ -283,6 +285,7 @@ private fun OtherUserProfileScaffoldContent(
         modifier = modifier
             .fillMaxSize()
             .padding(paddingValues)
+            .testTag(ScreenshotTestTags.OTHER_USER_PROFILE_SCREEN)
     ) {
         if (params.isLoadingCurrentUser) {
             LoadingOverlayView(modifier = Modifier.fillMaxSize())
@@ -376,7 +379,7 @@ private fun ProfileUiStateContent(
                             handlers.onTextEntryAction(
                                 TextEntryMode.Message(
                                     action.user.id,
-                                    action.user.fullName ?: action.user.name
+                                    action.user.fullName?.takeIf { it.isNotBlank() } ?: action.user.name
                                 )
                             )
                         }
@@ -572,7 +575,7 @@ private fun ProfileHeaderSection(
     UserProfileCardView(
         data = UserProfileData(
             imageStringURL = viewedUser.image,
-            userName = viewedUser.fullName ?: viewedUser.name,
+            userName = viewedUser.fullName?.takeIf { it.isNotBlank() } ?: viewedUser.name,
             gender = viewedUser.genderOption?.let { stringResource(it.description) } ?: "",
             age = viewedUser.age,
             shortAddress = shortAddress

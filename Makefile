@@ -359,30 +359,24 @@ fastlane:
 	@$(BUNDLE_EXEC) fastlane
 
 # Дополнительно
-## screenshots: Генерировать скриншоты для всех локалей через fastlane
+## screenshots: Генерировать скриншоты (ru-RU) через fastlane
 screenshots:
 	@$(MAKE) _build_screenshots_apk
 	@printf "$(YELLOW)Генерирую скриншоты через fastlane...$(RESET)\n"
 	@$(MAKE) _ensure_fastlane
+	@$(MAKE) _set_emulator_location_moscow
 	@PATH="/Users/Oleg991/Library/Android/sdk/platform-tools:$$PATH" $(BUNDLE_EXEC) fastlane screenshots
 	@$(MAKE) _cleanup_screenshots_apk
+	@$(MAKE) update_readme
 
 ## screenshots-ru: Генерировать скриншоты только на русском
 screenshots-ru:
 	@$(MAKE) _build_screenshots_apk
 	@printf "$(YELLOW)Генерирую скриншоты (русский)...$(RESET)\n"
 	@$(MAKE) _ensure_fastlane
+	@$(MAKE) _set_emulator_location_moscow
 	@PATH="/Users/Oleg991/Library/Android/sdk/platform-tools:$$PATH" $(BUNDLE_EXEC) fastlane screenshots_ru
 	@$(MAKE) _cleanup_screenshots_apk
-
-## screenshots-en: Генерировать скриншоты только на английском
-screenshots-en:
-	@$(MAKE) _build_screenshots_apk
-	@printf "$(YELLOW)Генерирую скриншоты (английский)...$(RESET)\n"
-	@$(MAKE) _ensure_fastlane
-	@PATH="/Users/Oleg991/Library/Android/sdk/platform-tools:$$PATH" $(BUNDLE_EXEC) fastlane screenshots_en
-	@$(MAKE) _cleanup_screenshots_apk
-
 
 ## update_readme: Обновить таблицу со скриншотами и версии в README.md
 update_readme:
@@ -405,13 +399,15 @@ update_readme_versions:
 _build_screenshots_apk:
 	@printf "$(YELLOW)Удаляю старые APK артефакты...$(RESET)\n"
 	@rm -rf app/build/outputs/apk
+	@rm -rf screenshots/build/outputs/apk
 	@printf "$(YELLOW)Собираю APK для скриншотов...$(RESET)\n"
-	@./gradlew assembleDebug assembleDebugAndroidTest --quiet
+	@./gradlew :app:assembleDebug :screenshots:assembleDebug --quiet
 
 ## _cleanup_screenshots_apk: Удалить APK артефакты после генерации скриншотов
 _cleanup_screenshots_apk:
 	@printf "$(YELLOW)Удаляю APK артефакты после генерации...$(RESET)\n"
 	@rm -rf app/build/outputs/apk
+	@rm -rf screenshots/build/outputs/apk
 	@printf "$(GREEN)Скриншоты готовы: fastlane/metadata/android$(RESET)\n"
 
 ## _ensure_fastlane: Проверить что fastlane готов к использованию
@@ -423,6 +419,16 @@ _ensure_fastlane:
 	@if ! command -v rbenv >/dev/null 2>&1; then \
 		printf "$(RED)rbenv не установлен. Запустите: make setup$(RESET)\n"; \
 		exit 1; \
+	fi
+
+## _set_emulator_location_moscow: Установить геолокацию Москва на первом запущенном Android-эмуляторе
+_set_emulator_location_moscow:
+	@SERIAL=$$(adb devices | awk '/^emulator-[0-9]+\tdevice$$/{print $$1; exit}'); \
+	if [ -z "$$SERIAL" ]; then \
+		printf "$(YELLOW)Эмулятор не найден, шаг геолокации пропущен$(RESET)\n"; \
+	else \
+		printf "$(YELLOW)Устанавливаю геолокацию Москва для $$SERIAL...$(RESET)\n"; \
+		adb -s "$$SERIAL" emu geo fix 37.6173 55.7558 >/dev/null 2>&1 || true; \
 	fi
 
 ## android-test-report: Открыть HTML отчет интеграционных тестов в браузере
@@ -458,4 +464,4 @@ release:
 ## all: Полная проверка (сборка + тесты + линтер) и установка APK на устройство
 all: check install
 
-.PHONY: build clean test lint format check install all android-test test-all android-test-report screenshots screenshots-ru screenshots-en update_readme update_readme_versions _build_screenshots_apk _cleanup_screenshots_apk _ensure_fastlane setup setup_fastlane update_fastlane fastlane help release apk _check_rbenv _check_ruby _check_ruby_version_file _check_bundler _check_gemfile _install_gemfile_deps _check_markdownlint _load_secrets setup_ssh
+.PHONY: build clean test lint format check install all android-test test-all android-test-report screenshots screenshots-ru update_readme update_readme_versions _build_screenshots_apk _cleanup_screenshots_apk _ensure_fastlane _set_emulator_location_moscow setup setup_fastlane update_fastlane fastlane help release apk _check_rbenv _check_ruby _check_ruby_version_file _check_bundler _check_gemfile _install_gemfile_deps _check_markdownlint _load_secrets setup_ssh

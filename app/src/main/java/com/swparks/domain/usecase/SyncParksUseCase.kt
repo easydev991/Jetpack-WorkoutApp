@@ -15,34 +15,35 @@ class SyncParksUseCase(
 ) {
     companion object {
         private const val TAG = "SyncParksUseCase"
+        private const val ISO_DATE_LENGTH = 10
     }
 
     suspend operator fun invoke(force: Boolean = false): Result<Unit> {
         val lastUpdateDate = userPreferencesRepository.lastParksUpdateDate.first()
 
-        if (!force && !lastUpdateDate.isUpdateNeeded(clock)) {
+        val shouldSkipSync = !force && !lastUpdateDate.isUpdateNeeded(clock)
+        if (shouldSkipSync) {
             logger.d(TAG, "Обновление площадок не требуется, последнее обновление: $lastUpdateDate")
-            return Result.success(Unit)
-        }
-
-        logger.i(TAG, "Проверка необходимости обновления площадок")
-
-        val dateOnly = lastUpdateDate.take(10)
-        val result = swRepository.getUpdatedParks(dateOnly)
-        if (result.isFailure) {
-            logger.e(TAG, "Ошибка обновления площадок", result.exceptionOrNull())
-            return Result.failure(result.exceptionOrNull() ?: Exception("Unknown error"))
-        }
-
-        val parks = result.getOrNull() ?: emptyList()
-        if (parks.isNotEmpty()) {
-            swRepository.upsertParks(parks)
-            logger.i(TAG, "Обновлено ${parks.size} площадок с сервера")
         } else {
-            logger.i(TAG, "Обновление площадок с сервера: изменений нет")
-        }
+            logger.i(TAG, "Проверка необходимости обновления площадок")
 
-        userPreferencesRepository.setLastParksUpdateDate(clock.nowIsoString())
+            val dateOnly = lastUpdateDate.take(ISO_DATE_LENGTH)
+            val result = swRepository.getUpdatedParks(dateOnly)
+            if (result.isFailure) {
+                logger.e(TAG, "Ошибка обновления площадок", result.exceptionOrNull())
+                return Result.failure(result.exceptionOrNull() ?: Exception("Unknown error"))
+            }
+
+            val parks = result.getOrNull() ?: emptyList()
+            if (parks.isNotEmpty()) {
+                swRepository.upsertParks(parks)
+                logger.i(TAG, "Обновлено ${parks.size} площадок с сервера")
+            } else {
+                logger.i(TAG, "Обновление площадок с сервера: изменений нет")
+            }
+
+            userPreferencesRepository.setLastParksUpdateDate(clock.nowIsoString())
+        }
 
         return Result.success(Unit)
     }

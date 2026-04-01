@@ -32,6 +32,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -54,6 +55,7 @@ import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.ds.UsedParksButton
 import com.swparks.ui.ds.UserProfileCardView
 import com.swparks.ui.ds.UserProfileData
+import com.swparks.ui.testtags.ScreenshotTestTags
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.IProfileViewModel
 import com.swparks.ui.viewmodel.ProfileUiState
@@ -108,6 +110,7 @@ fun ProfileRootScreen(
                         start = dimensionResource(R.dimen.spacing_regular),
                         end = dimensionResource(R.dimen.spacing_regular)
                     ),
+                authButtonModifier = Modifier.testTag(ScreenshotTestTags.PROFILE_AUTH_BUTTON),
                 onClickAuth = { onAuthAction(ProfileAuthAction.ShowLoginSheet) },
                 onClickRegister = { onAuthAction(ProfileAuthAction.ShowRegisterSheet) }
             )
@@ -151,7 +154,11 @@ private fun AuthorizedProfileContent(
     onShowLogoutDialog: () -> Unit,
     config: ProfileRootConfig
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .testTag(ScreenshotTestTags.PROFILE_SCREEN)
+    ) {
         val pullRefreshState = rememberPullToRefreshState()
         PullToRefreshBox(
             isRefreshing = state.isRefreshing,
@@ -220,7 +227,7 @@ private fun ProfileCardSection(
         data = UserProfileData(
             modifier = Modifier,
             imageStringURL = user.image,
-            userName = user.fullName ?: user.name,
+            userName = user.fullName?.takeIf { it.isNotBlank() } ?: user.name,
             gender = user.genderOption?.let { stringResource(id = it.description) } ?: "",
             age = user.age,
             shortAddress = shortAddress
@@ -339,7 +346,10 @@ fun ProfileTopAppBar(
         },
         actions = {
             if (appState.isAuthorized) {
-                IconButton(onClick = onSearchUsersClick) {
+                IconButton(
+                    modifier = Modifier.testTag(ScreenshotTestTags.PROFILE_SEARCH_USERS_BUTTON),
+                    onClick = onSearchUsersClick
+                ) {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = stringResource(id = R.string.profile)

@@ -12,10 +12,15 @@ private val SYNC_INTERVAL = Duration.ofDays(1)
  * @return true if update is needed (null date, invalid date, or >1 day since last sync)
  */
 fun String?.isUpdateNeeded(clock: Clock): Boolean {
-    if (this == null) return true
-    val lastUpdate = runCatching { Instant.parse(this) }.getOrNull()
-        ?: return true
-    val now = clock.now()
-    val timeSinceUpdate = Duration.between(lastUpdate, now)
-    return timeSinceUpdate > SYNC_INTERVAL
+    val lastUpdate = this?.let { value ->
+        runCatching { Instant.parse(value) }.getOrNull()
+    }
+    return when (lastUpdate) {
+        null -> true
+        else -> {
+            val now = clock.now()
+            val timeSinceUpdate = Duration.between(lastUpdate, now)
+            timeSinceUpdate > SYNC_INTERVAL
+        }
+    }
 }

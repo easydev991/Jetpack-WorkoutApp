@@ -146,7 +146,10 @@ class UserTrainingParksViewModel(
                         val currentState = _uiState.value
                         if (currentState is UserTrainingParksUiState.Success) {
                             userNotifier.handleError(AppError.Generic(errorMessage, error))
-                            logger.w(TAG, "Ошибка refresh при наличии контента, сохраняем текущее состояние")
+                            logger.w(
+                                TAG,
+                                "Ошибка refresh при наличии контента, сохраняем текущее состояние"
+                            )
                         } else {
                             _uiState.update { UserTrainingParksUiState.Error(errorMessage) }
                             userNotifier.handleError(AppError.Generic(errorMessage, error))
@@ -159,7 +162,10 @@ class UserTrainingParksViewModel(
                 val currentState = _uiState.value
                 if (currentState is UserTrainingParksUiState.Success) {
                     userNotifier.handleError(AppError.Generic(errorMessage, e))
-                    logger.w(TAG, "Неожиданная ошибка refresh при наличии контента, сохраняем текущее состояние")
+                    logger.w(
+                        TAG,
+                        "Неожиданная ошибка refresh при наличии контента, сохраняем текущее состояние"
+                    )
                 } else {
                     _uiState.update { UserTrainingParksUiState.Error(errorMessage) }
                     userNotifier.handleError(AppError.Generic(errorMessage, e))

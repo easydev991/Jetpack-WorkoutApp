@@ -32,8 +32,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -48,6 +50,7 @@ import com.swparks.ui.model.EventKind
 import com.swparks.ui.state.EventsListAction
 import com.swparks.ui.state.EventsListState
 import com.swparks.ui.state.EventsUIState
+import com.swparks.ui.testtags.ScreenshotTestTags
 import com.swparks.ui.viewmodel.EventsEvent
 import com.swparks.ui.viewmodel.EventsViewModel
 import com.swparks.ui.viewmodel.IEventsViewModel
@@ -152,6 +155,15 @@ private fun EventsTabRow(
     ) {
         EventKind.entries.forEachIndexed { index, eventKind ->
             Tab(
+                modifier = Modifier
+                    .focusProperties { canFocus = false }
+                    .testTag(
+                        if (eventKind == EventKind.FUTURE) {
+                            ScreenshotTestTags.EVENTS_TAB_FUTURE
+                        } else {
+                            ScreenshotTestTags.EVENTS_TAB_PAST
+                        }
+                    ),
                 selected = selectedTabIndex == index,
                 enabled = !isRefreshing,
                 onClick = { onTabSelected(eventKind) },
@@ -234,11 +246,7 @@ private fun EventsListWithRefresh(
     onAction: (EventsListAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PullToRefreshBox(
-        isRefreshing = state.isRefreshing,
-        onRefresh = { onAction(EventsListAction.Refresh) },
-        modifier = modifier.fillMaxSize()
-    ) {
+    val content: @Composable () -> Unit = {
         if (state.events.isEmpty() && !state.isLoading) {
             Box(
                 modifier = Modifier
@@ -261,6 +269,14 @@ private fun EventsListWithRefresh(
                 onEventClick = { event -> onAction(EventsListAction.EventClick(event)) }
             )
         }
+    }
+
+    PullToRefreshBox(
+        isRefreshing = state.isRefreshing,
+        onRefresh = { onAction(EventsListAction.Refresh) },
+        modifier = modifier.fillMaxSize()
+    ) {
+        content()
     }
 }
 
@@ -291,6 +307,7 @@ private fun EventsList(
         ) { event ->
             EventRowView(
                 data = EventRowData(
+                    modifier = Modifier.testTag("${ScreenshotTestTags.EVENT_ROW_PREFIX}${event.id}"),
                     imageStringURL = event.preview,
                     name = event.title,
                     dateString = DateFormatter.formatDate(

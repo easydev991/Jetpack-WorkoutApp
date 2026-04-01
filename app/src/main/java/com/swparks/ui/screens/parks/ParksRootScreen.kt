@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -64,6 +65,7 @@ import com.swparks.ui.ds.ParksListView
 import com.swparks.ui.model.ParksTab
 import com.swparks.ui.state.MapEvent
 import com.swparks.ui.state.UiCoordinates
+import com.swparks.ui.testtags.ScreenshotTestTags
 import com.swparks.ui.viewmodel.IParksRootViewModel
 import com.swparks.ui.viewmodel.ParksRootEvent
 import com.swparks.ui.viewmodel.PermissionDialogCause
@@ -504,6 +506,13 @@ private fun ParksTabRow(
     ) {
         ParksTab.entries.forEachIndexed { index, parksTab ->
             Tab(
+                modifier = Modifier.testTag(
+                    if (parksTab == ParksTab.MAP) {
+                        ScreenshotTestTags.PARKS_TAB_MAP
+                    } else {
+                        ScreenshotTestTags.PARKS_TAB_LIST
+                    }
+                ),
                 selected = selectedTabIndex == index,
                 enabled = !isGettingLocation,
                 onClick = { onTabSelected(parksTab) },

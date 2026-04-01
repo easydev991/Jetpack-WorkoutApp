@@ -13,11 +13,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.swparks.R
+import com.swparks.ui.testtags.ScreenshotTestTags
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 @Composable
@@ -28,7 +30,7 @@ fun MyLocationFab(
 ) {
     FloatingActionButton(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.testTag(ScreenshotTestTags.MAP_MY_LOCATION_FAB),
         containerColor = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer
     ) {
