@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,12 +44,14 @@ fun EmptyStateView(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             if (buttonTitle != null) {
-                Button(
-                    enabled = enabled,
-                    onClick = onButtonClick
-                ) {
-                    Text(text = buttonTitle)
-                }
+                SWButton(
+                    config = ButtonConfig(
+                        size = SWButtonSize.SMALL,
+                        text = buttonTitle,
+                        enabled = enabled,
+                        onClick = onButtonClick
+                    )
+                )
             }
         }
     }

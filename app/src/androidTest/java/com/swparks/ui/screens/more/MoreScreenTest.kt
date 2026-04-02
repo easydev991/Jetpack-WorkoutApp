@@ -40,7 +40,7 @@ class MoreScreenTest {
 
         // Then
         composeTestRule
-            .onNodeWithText(context.getString(R.string.app_theme_and_icon), ignoreCase = true)
+            .onNodeWithText(context.getString(R.string.appearance), ignoreCase = true)
             .assertIsDisplayed()
     }
 
@@ -164,7 +164,7 @@ class MoreScreenTest {
 
         // Кнопка "App Theme and Icon"
         composeTestRule
-            .onNodeWithText(context.getString(R.string.app_theme_and_icon), ignoreCase = true)
+            .onNodeWithText(context.getString(R.string.appearance), ignoreCase = true)
             .assertIsDisplayed()
 
         // Секция "About App"

@@ -87,7 +87,7 @@ internal fun ThemeIconScreenContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.app_theme_and_icon)) },
+                title = { Text(stringResource(R.string.appearance)) },
                 navigationIcon = {
                     IconButton(onClick = params.onBackClick) {
                         Icon(

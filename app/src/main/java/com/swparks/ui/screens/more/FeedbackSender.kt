@@ -101,19 +101,3 @@ fun shareApp(context: Context) {
         Log.e(TAG, "Не удалось открыть ShareSheet: ${e.message}")
     }
 }
-
-/**
- * Открывает репозиторий приложения на GitHub.
- */
-fun openGitHub(context: Context) {
-    val intent = Intent(
-        Intent.ACTION_VIEW,
-        Uri.parse(AppConstants.GITHUB_REPOSITORY_URL)
-    )
-
-    try {
-        context.startActivity(intent)
-    } catch (e: ActivityNotFoundException) {
-        Log.e(TAG, "Не удалось открыть GitHub: ${e.message}")
-    }
-}

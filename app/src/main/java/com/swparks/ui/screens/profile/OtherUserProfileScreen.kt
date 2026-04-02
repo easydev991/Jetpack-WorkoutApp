@@ -20,7 +20,6 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.PersonRemove
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,11 +56,13 @@ import com.swparks.navigation.Screen
 import com.swparks.navigation.navigateToUserAddedParks
 import com.swparks.ui.ds.AddedParksButton
 import com.swparks.ui.ds.ButtonConfig
+import com.swparks.ui.ds.EmptyStateView
 import com.swparks.ui.ds.FriendsButton
 import com.swparks.ui.ds.JournalsButton
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.SWButton
 import com.swparks.ui.ds.SWButtonMode
+import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.ds.UsedParksButton
 import com.swparks.ui.ds.UserProfileCardView
 import com.swparks.ui.ds.UserProfileData
@@ -379,7 +380,8 @@ private fun ProfileUiStateContent(
                             handlers.onTextEntryAction(
                                 TextEntryMode.Message(
                                     action.user.id,
-                                    action.user.fullName?.takeIf { it.isNotBlank() } ?: action.user.name
+                                    action.user.fullName?.takeIf { it.isNotBlank() }
+                                        ?: action.user.name
                                 )
                             )
                         }
@@ -709,21 +711,14 @@ internal fun FriendActionButton(action: FriendAction, onClick: () -> Unit, enabl
 
 @Composable
 internal fun UserNotFoundContent(onBack: () -> Unit) {
-    Column(
+    EmptyStateView(
         modifier = Modifier
             .fillMaxSize()
             .padding(dimensionResource(R.dimen.spacing_regular)),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = stringResource(R.string.user_not_found),
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_regular)))
-        Button(onClick = onBack) { Text(stringResource(R.string.go_back)) }
-    }
+        text = stringResource(R.string.user_not_found),
+        buttonTitle = stringResource(R.string.go_back),
+        onButtonClick = onBack
+    )
 }
 
 @Composable
@@ -741,7 +736,13 @@ internal fun BlockedByUserContent(onBack: () -> Unit) {
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_regular)))
-        Button(onClick = onBack) { Text(stringResource(R.string.go_back)) }
+        SWButton(
+            config = ButtonConfig(
+                size = SWButtonSize.SMALL,
+                text = stringResource(R.string.go_back),
+                onClick = onBack
+            )
+        )
     }
 }
 
@@ -761,7 +762,13 @@ internal fun ErrorContent(message: String, canRetry: Boolean, onRetry: () -> Uni
         )
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_regular)))
         if (canRetry) {
-            Button(onClick = onRetry) { Text(stringResource(R.string.try_again_button)) }
+            SWButton(
+                config = ButtonConfig(
+                    size = SWButtonSize.SMALL,
+                    text = stringResource(R.string.try_again_button),
+                    onClick = onRetry
+                )
+            )
         }
     }
 }

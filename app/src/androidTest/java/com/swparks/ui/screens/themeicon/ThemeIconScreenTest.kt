@@ -61,7 +61,7 @@ class ThemeIconScreenTest {
 
         // Then
         composeTestRule
-            .onNodeWithText(context.getString(R.string.app_theme_and_icon), ignoreCase = true)
+            .onNodeWithText(context.getString(R.string.appearance), ignoreCase = true)
             .assertIsDisplayed()
 
         composeTestRule

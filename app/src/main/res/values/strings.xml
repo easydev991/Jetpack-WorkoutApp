@@ -133,14 +133,13 @@
     <string name="app_developer">App developer</string>
     <string name="app_version">Version</string>
     <string name="support_project">Support the project</string>
-    <string name="workout_shop">WORKOUT shop</string>
     <string name="choose_email_client">Choose an Email client</string>
     <string name="other_apps">Other apps</string>
-    <string name="app_theme_and_icon">App theme and icon</string>
+    <string name="appearance">Appearance</string>
     <string name="share_the_app">Share the app</string>
     <string name="github_page">GitHub page</string>
-    <string name="share_chooser_title">Share WorkOut</string>
-    <string name="share_text">Check out WorkOut app for street workout parks</string>
+    <string name="share_chooser_title">Share SW Parks</string>
+    <string name="share_text">Check out this app for street workout parks</string>
     <string name="days_counter_app">Days Counter</string>
     <string name="app_theme">App theme</string>
     <string name="dynamic_colors">Dynamic colors</string>

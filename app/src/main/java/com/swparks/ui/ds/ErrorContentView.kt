@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -41,12 +40,14 @@ fun ErrorContentView(
             )
         }
 
-        Button(
-            onClick = retryAction,
-            modifier = Modifier.padding(top = dimensionResource(R.dimen.spacing_regular))
-        ) {
-            Text(text = stringResource(R.string.try_again_button))
-        }
+        SWButton(
+            config = ButtonConfig(
+                modifier = Modifier.padding(top = dimensionResource(R.dimen.spacing_regular)),
+                size = SWButtonSize.SMALL,
+                text = stringResource(R.string.try_again_button),
+                onClick = retryAction
+            )
+        )
     }
 }
 

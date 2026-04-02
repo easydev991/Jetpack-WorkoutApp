@@ -11,7 +11,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,9 +30,12 @@ import com.swparks.R
 import com.swparks.data.model.ParkFilter
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
+import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.CheckmarkRowView
 import com.swparks.ui.ds.FormCardContainer
 import com.swparks.ui.ds.FormCardContainerParams
+import com.swparks.ui.ds.SWButton
+import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.ds.SectionView
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
@@ -57,15 +59,17 @@ fun ParksFilterDialog(
             FilterDialogContent(state = state)
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    onFilterChange(state.toParkFilter())
-                    onApply()
-                },
-                enabled = state.canApply
-            ) {
-                Text(stringResource(R.string.apply_button))
-            }
+            SWButton(
+                config = ButtonConfig(
+                    size = SWButtonSize.SMALL,
+                    text = stringResource(R.string.apply_button),
+                    enabled = state.canApply,
+                    onClick = {
+                        onFilterChange(state.toParkFilter())
+                        onApply()
+                    }
+                )
+            )
         },
         dismissButton = {
             TextButton(

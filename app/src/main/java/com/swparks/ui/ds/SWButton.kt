@@ -13,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -102,6 +101,11 @@ data class ButtonConfig(
  */
 @Composable
 fun SWButton(config: ButtonConfig) {
+    val buttonColors = when (config.mode) {
+        SWButtonMode.FILLED -> ButtonDefaults.buttonColors()
+        SWButtonMode.TINTED -> ButtonDefaults.filledTonalButtonColors()
+    }
+
     Button(
         modifier = config.modifier
             .scaleOnTap()
@@ -111,16 +115,7 @@ fun SWButton(config: ButtonConfig) {
                 }
                 it
             },
-        colors = ButtonDefaults.buttonColors(
-            containerColor = when (config.mode) {
-                SWButtonMode.FILLED -> MaterialTheme.colorScheme.primary
-                SWButtonMode.TINTED -> MaterialTheme.colorScheme.secondary
-            },
-            contentColor = when (config.mode) {
-                SWButtonMode.FILLED -> MaterialTheme.colorScheme.onPrimary
-                SWButtonMode.TINTED -> MaterialTheme.colorScheme.onSecondary
-            }
-        ),
+        colors = buttonColors,
         contentPadding = config.size.paddingValues,
         shape = RoundedCornerShape(dimensionResource(R.dimen.spacing_small)),
         enabled = config.enabled,
@@ -133,9 +128,8 @@ fun SWButton(config: ButtonConfig) {
                     .size(config.size.iconSize),
                 imageVector = config.imageVector,
                 colorFilter = ColorFilter.tint(
-                    if (config.mode == SWButtonMode.FILLED)
-                        MaterialTheme.colorScheme.onPrimary
-                    else MaterialTheme.colorScheme.onSecondary
+                    if (config.enabled) buttonColors.contentColor
+                    else buttonColors.disabledContentColor
                 ),
                 contentDescription = null
             )

@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,6 +16,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
+import com.swparks.ui.ds.ButtonConfig
+import com.swparks.ui.ds.SWButton
+import com.swparks.ui.ds.SWButtonSize
 
 @Composable
 fun NoParksFoundView(
@@ -43,24 +45,28 @@ fun NoParksFoundView(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Button(
-            onClick = onSelectCity,
-            modifier = Modifier
-                .padding(top = dimensionResource(R.dimen.spacing_regular))
-                .semantics { contentDescription = selectAnotherCityDesc }
-        ) {
-            Text(text = selectAnotherCityDesc)
-        }
+        SWButton(
+            config = ButtonConfig(
+                modifier = Modifier
+                    .padding(top = dimensionResource(R.dimen.spacing_regular))
+                    .semantics { contentDescription = selectAnotherCityDesc },
+                size = SWButtonSize.SMALL,
+                text = selectAnotherCityDesc,
+                onClick = onSelectCity
+            )
+        )
 
         if (isSizeTypeFilterEdited) {
-            Button(
-                onClick = onOpenFilters,
-                modifier = Modifier
-                    .padding(top = dimensionResource(R.dimen.spacing_xsmall))
-                    .semantics { contentDescription = changeFiltersDesc }
-            ) {
-                Text(text = changeFiltersDesc)
-            }
+            SWButton(
+                config = ButtonConfig(
+                    modifier = Modifier
+                        .padding(top = dimensionResource(R.dimen.spacing_xsmall))
+                        .semantics { contentDescription = changeFiltersDesc },
+                    size = SWButtonSize.SMALL,
+                    text = changeFiltersDesc,
+                    onClick = onOpenFilters
+                )
+            )
         }
     }
 }

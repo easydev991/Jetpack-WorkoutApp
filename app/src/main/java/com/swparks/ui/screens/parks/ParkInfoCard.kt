@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -27,6 +26,9 @@ import com.swparks.R
 import com.swparks.data.model.Park
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
+import com.swparks.ui.ds.ButtonConfig
+import com.swparks.ui.ds.SWButton
+import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 private val PARK_INFO_CARD_MAX_WIDTH = 420.dp
@@ -61,14 +63,13 @@ fun ParkInfoCard(
 
             ParkInfoDescription(park = park)
 
-            Button(
-                onClick = { onDetailsClick(park) }
-            ) {
-                Text(
+            SWButton(
+                config = ButtonConfig(
+                    size = SWButtonSize.SMALL,
                     text = stringResource(R.string.see_details),
-                    style = MaterialTheme.typography.labelLarge
+                    onClick = { onDetailsClick(park) }
                 )
-            }
+            )
         }
     }
 }

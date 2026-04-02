@@ -3,11 +3,11 @@
 package com.swparks.ui.screens.journals
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
@@ -15,8 +15,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,10 +34,13 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.swparks.R
 import com.swparks.domain.model.Journal
+import com.swparks.ui.ds.ButtonConfig
+import com.swparks.ui.ds.LoadingOverlayView
+import com.swparks.ui.ds.SWButton
+import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.ds.SWRadioButton
 import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
@@ -73,11 +74,10 @@ fun JournalSettingsDialog(
             .widthIn(max = configuration.containerDpSize.width - (dimensionResource(R.dimen.spacing_regular)) * 2),
         onDismissRequest = onDismiss,
         title = { DialogTitle(onDismiss) },
-        text = { DialogContent(state) },
+        text = { DialogContent(state = state, isSaving = isSaving) },
         confirmButton = {
             SaveButton(
-                isEnabled = state.isSaveButtonEnabled,
-                isSaving = isSaving,
+                isEnabled = state.isSaveButtonEnabled && !isSaving,
                 onSave = {
                     if (state.title.text.isNotBlank()) {
                         viewModel.editJournalSettings(
@@ -148,17 +148,28 @@ private fun DialogTitle(onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun DialogContent(state: JournalSettingsDialogState) {
-    HorizontalDivider()
-    Column(
-        Modifier
-            .verticalScroll(rememberScrollState())
-            .padding(vertical = dimensionResource(R.dimen.spacing_xsmall))
-    ) {
-        TitleField(state)
-        ViewAccessSection(state)
-        CommentAccessSection(state)
-        HorizontalDivider(Modifier.padding(top = dimensionResource(R.dimen.spacing_xsmall)))
+private fun DialogContent(
+    state: JournalSettingsDialogState,
+    isSaving: Boolean
+) {
+    Box {
+        Column {
+            HorizontalDivider()
+            Column(
+                Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(vertical = dimensionResource(R.dimen.spacing_xsmall))
+            ) {
+                TitleField(state)
+                ViewAccessSection(state)
+                CommentAccessSection(state)
+                HorizontalDivider(Modifier.padding(top = dimensionResource(R.dimen.spacing_xsmall)))
+            }
+        }
+
+        if (isSaving) {
+            LoadingOverlayView()
+        }
     }
 }
 
@@ -202,23 +213,17 @@ private fun CommentAccessSection(state: JournalSettingsDialogState) {
 @Composable
 private fun SaveButton(
     isEnabled: Boolean,
-    isSaving: Boolean,
     onSave: () -> Unit
 ) {
-    Button(
-        modifier = Modifier.testTag("saveButton"),
-        onClick = onSave,
-        enabled = isEnabled && !isSaving
-    ) {
-        if (isSaving) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(16.dp),
-                strokeWidth = 2.dp
-            )
-        } else {
-            Text(stringResource(R.string.save))
-        }
-    }
+    SWButton(
+        config = ButtonConfig(
+            modifier = Modifier.testTag("saveButton"),
+            size = SWButtonSize.SMALL,
+            text = stringResource(R.string.save),
+            enabled = isEnabled,
+            onClick = onSave
+        )
+    )
 }
 
 private val AccessOptions = listOf(
@@ -344,4 +349,3 @@ private fun JournalSettingsDialogPreviewDark() {
         )
     }
 }
-

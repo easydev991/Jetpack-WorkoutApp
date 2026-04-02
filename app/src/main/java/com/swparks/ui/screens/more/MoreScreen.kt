@@ -31,10 +31,9 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.util.AppConstants
 
 private object Links {
-    const val rateApp = AppConstants.APP_RATE_URL
-    const val officialSite = "https://workout.su"
-    const val appDeveloper = "https://t.me/easy_dev991"
-    const val workoutShop = "https://workoutshop.ru"
+    const val RATE_APP = AppConstants.APP_RATE_URL
+    const val OFFICIAL_SITE = "https://workout.su"
+    const val APP_DEVELOPER = "https://t.me/easy_dev991"
 }
 
 @Composable
@@ -122,17 +121,17 @@ private fun AboutAppSection(
             SendFeedbackRow(context = context)
             ExternalLinkRow(
                 textResId = R.string.rate_app,
-                url = Links.rateApp,
+                url = Links.RATE_APP,
                 uriHandler = uriHandler
             )
             ExternalLinkRow(
                 textResId = R.string.official_site,
-                url = Links.officialSite,
+                url = Links.OFFICIAL_SITE,
                 uriHandler = uriHandler
             )
             ExternalLinkRow(
                 textResId = R.string.app_developer,
-                url = Links.appDeveloper,
+                url = Links.APP_DEVELOPER,
                 uriHandler = uriHandler
             )
             ShareAppRow(context = context)
@@ -197,11 +196,10 @@ private fun SupportProjectSection(
             verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_xxsmall))
         ) {
             ExternalLinkRow(
-                textResId = R.string.workout_shop,
-                url = Links.workoutShop,
+                textResId = R.string.github_page,
+                url = AppConstants.GITHUB_REPOSITORY_URL,
                 uriHandler = uriHandler
             )
-            GithubRow(context = LocalContext.current)
         }
     }
 }
@@ -218,7 +216,11 @@ private fun OtherAppsSection(
         Column(
             verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_xxsmall))
         ) {
-            DaysCounterRow(uriHandler = uriHandler)
+            ExternalLinkRow(
+                textResId = R.string.days_counter_app,
+                url = AppConstants.DAYS_COUNTER_APP_STORE_URL,
+                uriHandler = uriHandler
+            )
         }
     }
 }
@@ -229,7 +231,7 @@ private fun ThemeAndIconRow(
 ) {
     ListRowView(
         data = ListRowData(
-            leadingText = stringResource(id = R.string.app_theme_and_icon),
+            leadingText = stringResource(id = R.string.appearance),
             showChevron = true,
             modifier = Modifier.clickable {
                 navController?.navigate(Screen.ThemeIcon.route)
@@ -248,36 +250,6 @@ private fun ShareAppRow(
             showChevron = true,
             modifier = Modifier.clickable {
                 shareApp(context)
-            }
-        )
-    )
-}
-
-@Composable
-private fun DaysCounterRow(
-    uriHandler: UriHandler
-) {
-    ListRowView(
-        data = ListRowData(
-            leadingText = stringResource(id = R.string.days_counter_app),
-            showChevron = true,
-            modifier = Modifier.clickable {
-                uriHandler.openUri(AppConstants.DAYS_COUNTER_APP_STORE_URL)
-            }
-        )
-    )
-}
-
-@Composable
-private fun GithubRow(
-    context: Context
-) {
-    ListRowView(
-        data = ListRowData(
-            leadingText = stringResource(id = R.string.github_page),
-            showChevron = true,
-            modifier = Modifier.clickable {
-                openGitHub(context)
             }
         )
     )
