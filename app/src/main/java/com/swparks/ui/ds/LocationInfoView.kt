@@ -60,7 +60,6 @@ fun LocationInfoView(
             config = ButtonConfig(
                 modifier = Modifier.weight(1f),
                 size = SWButtonSize.SMALL,
-                mode = SWButtonMode.TINTED,
                 imageVector = Icons.Default.Map,
                 text = stringResource(R.string.event_open_map),
                 enabled = config.enabled,
