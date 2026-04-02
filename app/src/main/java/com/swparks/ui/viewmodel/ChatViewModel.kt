@@ -1,6 +1,5 @@
 package com.swparks.ui.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -10,6 +9,8 @@ import com.swparks.network.SWApi
 import com.swparks.ui.state.ChatEvent
 import com.swparks.ui.state.ChatUiState
 import com.swparks.util.AppError
+import com.swparks.util.CrashReporter
+import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,7 +35,9 @@ import java.io.IOException
 class ChatViewModel(
     private val swApi: SWApi,
     private val swRepository: SWRepository,
-    private val userNotifier: UserNotifier
+    private val userNotifier: UserNotifier,
+    private val logger: Logger,
+    private val crashReporter: CrashReporter
 ) : ViewModel(), IChatViewModel {
 
     private companion object {
@@ -61,7 +64,8 @@ class ChatViewModel(
             try {
                 refreshMessagesInternal(dialogId)
             } catch (e: IOException) {
-                Log.e(TAG, "Ошибка загрузки сообщений: ${e.message}", e)
+                logger.e(TAG, "Ошибка загрузки сообщений: ${e.message}", e)
+                crashReporter.logException(e, "Ошибка загрузки сообщений")
                 _uiState.value = ChatUiState.Error(e.message ?: "Неизвестная ошибка")
                 userNotifier.handleError(
                     AppError.Generic(
@@ -70,7 +74,8 @@ class ChatViewModel(
                     )
                 )
             } catch (e: HttpException) {
-                Log.e(TAG, "HTTP ошибка загрузки сообщений: ${e.code()} ${e.message()}", e)
+                logger.e(TAG, "HTTP ошибка загрузки сообщений: ${e.code()} ${e.message()}", e)
+                crashReporter.logException(e, "HTTP ошибка загрузки сообщений: ${e.code()}")
                 _uiState.value = ChatUiState.Error(e.message())
                 userNotifier.handleError(
                     AppError.Generic(
@@ -89,7 +94,8 @@ class ChatViewModel(
             try {
                 refreshMessagesInternal(dialogId)
             } catch (e: IOException) {
-                Log.e(TAG, "Ошибка обновления сообщений: ${e.message}", e)
+                logger.e(TAG, "Ошибка обновления сообщений: ${e.message}", e)
+                crashReporter.logException(e, "Ошибка обновления сообщений")
                 userNotifier.handleError(
                     AppError.Generic(
                         e.message ?: "Ошибка обновления сообщений",
@@ -97,7 +103,8 @@ class ChatViewModel(
                     )
                 )
             } catch (e: HttpException) {
-                Log.e(TAG, "HTTP ошибка обновления сообщений: ${e.code()} ${e.message()}", e)
+                logger.e(TAG, "HTTP ошибка обновления сообщений: ${e.code()} ${e.message()}", e)
+                crashReporter.logException(e, "HTTP ошибка обновления сообщений: ${e.code()}")
                 userNotifier.handleError(
                     AppError.Generic(
                         e.message(),
@@ -130,7 +137,8 @@ class ChatViewModel(
                 // Эмитим событие об успешной отправке сообщения
                 _events.emit(ChatEvent.MessageSent(dialogId))
             } catch (e: IOException) {
-                Log.e(TAG, "Ошибка отправки сообщения: ${e.message}", e)
+                logger.e(TAG, "Ошибка отправки сообщения: ${e.message}", e)
+                crashReporter.logException(e, "Ошибка отправки сообщения")
                 userNotifier.handleError(
                     AppError.Generic(
                         e.message ?: "Ошибка отправки сообщения",
@@ -138,7 +146,8 @@ class ChatViewModel(
                     )
                 )
             } catch (e: HttpException) {
-                Log.e(TAG, "HTTP ошибка отправки сообщения: ${e.code()} ${e.message()}", e)
+                logger.e(TAG, "HTTP ошибка отправки сообщения: ${e.code()} ${e.message()}", e)
+                crashReporter.logException(e, "HTTP ошибка отправки сообщения: ${e.code()}")
                 userNotifier.handleError(
                     AppError.Generic(
                         e.message(),
@@ -156,14 +165,14 @@ class ChatViewModel(
         viewModelScope.launch {
             val result = swRepository.markDialogAsRead(dialogId, userId)
             if (result.isSuccess) {
-                Log.i(TAG, "Диалог помечен как прочитанный: dialogId=$dialogId, userId=$userId")
+                logger.i(TAG, "Диалог помечен как прочитанный: dialogId=$dialogId, userId=$userId")
             } else {
                 // Ошибки markAsRead логируем, но не беспокоим пользователя
-                Log.e(
-                    TAG,
-                    "Ошибка markAsRead: ${result.exceptionOrNull()?.message}",
-                    result.exceptionOrNull()
-                )
+                val error = result.exceptionOrNull()
+                logger.e(TAG, "Ошибка markAsRead: ${error?.message}", error)
+                if (error != null) {
+                    crashReporter.logException(error, "Ошибка markAsRead")
+                }
             }
         }
     }

@@ -1,6 +1,5 @@
 package com.swparks.ui.viewmodel
 
-import android.util.Log
 import app.cash.turbine.test
 import com.swparks.data.model.MessageResponse
 import com.swparks.data.repository.SWRepository
@@ -8,18 +7,17 @@ import com.swparks.network.SWApi
 import com.swparks.ui.state.ChatEvent
 import com.swparks.ui.state.ChatUiState
 import com.swparks.util.AppError
+import com.swparks.util.CrashReporter
+import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -44,6 +42,8 @@ class ChatViewModelTest {
     private lateinit var swApi: SWApi
     private lateinit var swRepository: SWRepository
     private lateinit var userNotifier: UserNotifier
+    private lateinit var logger: Logger
+    private lateinit var crashReporter: CrashReporter
     private lateinit var viewModel: ChatViewModel
 
     private val testMessage = MessageResponse(
@@ -56,20 +56,11 @@ class ChatViewModelTest {
 
     @Before
     fun setup() {
-        mockkStatic(Log::class)
-        every { Log.i(any<String>(), any<String>()) } returns 0
-        every { Log.e(any<String>(), any<String>()) } returns 0
-        every { Log.e(any<String>(), any<String>(), any()) } returns 0
-        every { Log.w(any<String>(), any<String>()) } returns 0
-
         swApi = mockk(relaxed = true)
         swRepository = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
-    }
-
-    @After
-    fun tearDown() {
-        unmockkAll()
+        logger = mockk(relaxed = true)
+        crashReporter = mockk(relaxed = true)
     }
 
     // ==================== Initial State ====================
@@ -79,7 +70,7 @@ class ChatViewModelTest {
         // Given - нет предварительных условий
 
         // When
-        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter)
 
         // Then
         assertTrue(viewModel.uiState.value is ChatUiState.Loading)
@@ -95,7 +86,7 @@ class ChatViewModelTest {
         coEvery { swApi.getMessages(dialogId) } returns messages
 
         // When
-        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter)
         viewModel.loadMessages(dialogId)
         advanceUntilIdle()
 
@@ -134,7 +125,7 @@ class ChatViewModelTest {
         coEvery { swApi.getMessages(dialogId) } returns listOf(message3, message1, message2)
 
         // When
-        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter)
         viewModel.loadMessages(dialogId)
         advanceUntilIdle()
 
@@ -156,7 +147,7 @@ class ChatViewModelTest {
         coEvery { swApi.getMessages(dialogId) } throws exception
 
         // When
-        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter)
         viewModel.loadMessages(dialogId)
         advanceUntilIdle()
 
@@ -164,6 +155,8 @@ class ChatViewModelTest {
         val state = viewModel.uiState.value
         assertTrue("Expected Error state but got $state", state is ChatUiState.Error)
         coVerify { userNotifier.handleError(any<AppError>()) }
+        verify { logger.e(any(), match { it.contains("Ошибка загрузки сообщений") }, exception) }
+        verify { crashReporter.logException(exception, "Ошибка загрузки сообщений") }
     }
 
     // ==================== refreshMessages ====================
@@ -176,7 +169,7 @@ class ChatViewModelTest {
         coEvery { swApi.getMessages(dialogId) } returns messages
 
         // When
-        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter)
         viewModel.loadMessages(dialogId)
         advanceUntilIdle()
         viewModel.refreshMessages()
@@ -195,7 +188,7 @@ class ChatViewModelTest {
         )
 
         // When
-        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter)
         viewModel.loadMessages(dialogId)
         advanceUntilIdle()
         viewModel.refreshMessages()
@@ -203,6 +196,14 @@ class ChatViewModelTest {
 
         // Then
         coVerify { userNotifier.handleError(any<AppError>()) }
+        verify {
+            logger.e(
+                any(),
+                match { it.contains("Ошибка обновления сообщений") },
+                any<IOException>()
+            )
+        }
+        verify { crashReporter.logException(any<IOException>(), "Ошибка обновления сообщений") }
     }
 
     @Test
@@ -216,7 +217,7 @@ class ChatViewModelTest {
         }
 
         // When
-        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter)
         viewModel.loadMessages(dialogId)
         advanceUntilIdle()
 
@@ -239,7 +240,7 @@ class ChatViewModelTest {
         coEvery { swApi.getMessages(any()) } returns emptyList()
 
         // When
-        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter)
         viewModel.messageText.value = ""
         viewModel.sendMessage(userId)
         advanceUntilIdle()
@@ -263,7 +264,7 @@ class ChatViewModelTest {
         } returns mockk(relaxed = true)
 
         // When
-        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter)
         viewModel.loadMessages(dialogId)
         advanceUntilIdle()
         viewModel.messageText.value = "Test message"
@@ -285,7 +286,7 @@ class ChatViewModelTest {
         coEvery { swApi.sendMessageTo(userId.toLong(), any()) } throws IOException("Network error")
 
         // When
-        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter)
         viewModel.loadMessages(dialogId)
         advanceUntilIdle()
         viewModel.messageText.value = "Test message"
@@ -294,6 +295,8 @@ class ChatViewModelTest {
 
         // Then
         coVerify { userNotifier.handleError(any<AppError>()) }
+        verify { logger.e(any(), match { it.contains("Ошибка отправки сообщения") }, any<IOException>()) }
+        verify { crashReporter.logException(any<IOException>(), "Ошибка отправки сообщения") }
     }
 
     @Test
@@ -308,7 +311,7 @@ class ChatViewModelTest {
         }
 
         // When
-        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter)
         viewModel.loadMessages(dialogId)
         advanceUntilIdle()
 
@@ -334,7 +337,7 @@ class ChatViewModelTest {
         coEvery { swRepository.markDialogAsRead(dialogId, userId) } returns Result.success(Unit)
 
         // When
-        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter)
         viewModel.loadMessages(dialogId)
         advanceUntilIdle()
         viewModel.markAsRead(userId)
@@ -351,7 +354,7 @@ class ChatViewModelTest {
         // No dialogId loaded
 
         // When
-        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter)
         // Don't call loadMessages, so currentDialogId is null
         viewModel.markAsRead(userId)
         advanceUntilIdle()
@@ -371,7 +374,7 @@ class ChatViewModelTest {
         } returns Result.failure(Exception("Network error"))
 
         // When
-        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter)
         viewModel.loadMessages(dialogId)
         advanceUntilIdle()
         viewModel.markAsRead(userId)
@@ -379,6 +382,8 @@ class ChatViewModelTest {
 
         // Then - markAsRead errors should NOT call userNotifier.handleError
         verify(exactly = 0) { userNotifier.handleError(any<AppError>()) }
+        verify { logger.e(any(), match { it.contains("Ошибка markAsRead") }, any()) }
+        verify { crashReporter.logException(any(), "Ошибка markAsRead") }
     }
 
     // ==================== events flow ====================
@@ -392,7 +397,7 @@ class ChatViewModelTest {
         coEvery { swApi.sendMessageTo(userId.toLong(), any()) } returns mockk(relaxed = true)
 
         // When
-        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter)
         viewModel.loadMessages(dialogId)
         advanceUntilIdle()
 
@@ -422,7 +427,7 @@ class ChatViewModelTest {
         coEvery { swApi.getMessages(dialogId) } throws httpException
 
         // When
-        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter)
         viewModel.loadMessages(dialogId)
         advanceUntilIdle()
 
@@ -443,7 +448,7 @@ class ChatViewModelTest {
         coEvery { swApi.getMessages(dialogId) } returns listOf(testMessage) andThenThrows httpException
 
         // When
-        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter)
         viewModel.loadMessages(dialogId)
         advanceUntilIdle()
         viewModel.refreshMessages()
@@ -466,7 +471,7 @@ class ChatViewModelTest {
         coEvery { swApi.sendMessageTo(userId.toLong(), any()) } throws httpException
 
         // When
-        viewModel = ChatViewModel(swApi, swRepository, userNotifier)
+        viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter)
         viewModel.loadMessages(dialogId)
         advanceUntilIdle()
         viewModel.messageText.value = "Test message"

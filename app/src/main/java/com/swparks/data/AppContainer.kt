@@ -761,7 +761,9 @@ class DefaultAppContainer(context: Context) : AppContainer {
     override fun chatViewModelFactory() = ChatViewModel(
         swApi = provideMessagesApi(),
         swRepository = swRepository,
-        userNotifier = userNotifier
+        userNotifier = userNotifier,
+        logger = logger,
+        crashReporter = crashReporter
     )
 
     /** Factory метод для создания SearchUserViewModel */
