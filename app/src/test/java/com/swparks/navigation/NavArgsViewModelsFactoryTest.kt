@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import io.mockk.every
 import io.mockk.mockk
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -41,7 +42,7 @@ class NavArgsViewModelsFactoryTest {
         val result = factory.create(EditEventNavArgsViewModel::class.java)
 
         assertNotNull(result)
-        assertTrue(result is EditEventNavArgsViewModel)
+        assertEquals(EditEventNavArgsViewModel::class.java, result::class.java)
     }
 
     @Test
@@ -64,7 +65,7 @@ class NavArgsViewModelsFactoryTest {
         val result = factory.create(EventParticipantsNavArgsViewModel::class.java)
 
         assertNotNull(result)
-        assertTrue(result is EventParticipantsNavArgsViewModel)
+        assertEquals(EventParticipantsNavArgsViewModel::class.java, result::class.java)
     }
 
     @Test

@@ -5,6 +5,7 @@ import com.swparks.data.AppContainer
 import com.swparks.ui.model.EventFormMode
 import io.mockk.every
 import io.mockk.mockk
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -23,7 +24,7 @@ class EventFormViewModelFactoryTest {
         val result = factory.create(EventFormViewModel::class.java)
 
         assertNotNull(result)
-        assertTrue(result is EventFormViewModel)
+        assertEquals(EventFormViewModel::class.java, result::class.java)
     }
 
     @Test

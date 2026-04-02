@@ -32,6 +32,7 @@ import com.swparks.navigation.TopLevelDestinations.MESSAGES
 import com.swparks.navigation.TopLevelDestinations.MORE
 import com.swparks.navigation.TopLevelDestinations.PARKS
 import com.swparks.navigation.TopLevelDestinations.PROFILE
+import com.swparks.util.AnalyticsReporter
 
 private const val TAG = "Navigation"
 
@@ -41,9 +42,10 @@ private const val TAG = "Navigation"
 @Composable
 fun rememberAppState(
     navController: NavHostController = rememberNavController(),
+    analyticsReporter: AnalyticsReporter,
 ): AppState {
     val appState = remember(navController) {
-        AppState(navController)
+        AppState(navController, analyticsReporter)
     }
 
     // Слушаем изменения навигации для обновления активной вкладки
@@ -57,6 +59,12 @@ fun rememberAppState(
                         "arguments=${arguments?.keySet()}"
                 )
                 appState.onDestinationChanged(destination.route, arguments)
+                val analyticsRoute =
+                    destination.route?.substringBefore("?") ?: destination.displayName
+                appState.analyticsReporter.logScreenView(
+                    screenName = analyticsRoute.substringBefore("/"),
+                    screenClass = analyticsRoute,
+                )
             }
         navController.addOnDestinationChangedListener(listener)
         onDispose {
@@ -73,6 +81,7 @@ fun rememberAppState(
  */
 class AppState(
     val navController: NavHostController,
+    val analyticsReporter: AnalyticsReporter,
 ) {
     private val previousDestination =
         mutableStateOf<NavDestination?>(null)

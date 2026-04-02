@@ -3,6 +3,7 @@ package com.swparks.navigation
 import android.util.Log
 import androidx.navigation.NavHostController
 import com.swparks.data.model.User
+import com.swparks.util.AnalyticsReporter
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -24,6 +25,7 @@ import org.junit.Test
 class AppStateTest {
 
     private lateinit var navController: NavHostController
+    private lateinit var analyticsReporter: AnalyticsReporter
     private lateinit var appState: AppState
 
     // Вспомогательный метод для создания тестового пользователя
@@ -52,7 +54,8 @@ class AppStateTest {
         every { Log.e(any(), any()) } returns 0
 
         navController = mockk(relaxed = true)
-        appState = AppState(navController)
+        analyticsReporter = mockk(relaxed = true)
+        appState = AppState(navController, analyticsReporter)
     }
 
     @After

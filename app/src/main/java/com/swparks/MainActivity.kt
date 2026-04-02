@@ -34,6 +34,7 @@ class MainActivity : ComponentActivity() {
 
         // Создаём DataStore для настроек приложения
         val dataStore = AppSettingsDataStore(applicationContext)
+        val appContainer = (applicationContext as JetpackWorkoutApplication).container
 
         setContent {
             // Создаём ViewModel для MainActivity
@@ -53,7 +54,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    val appState = rememberAppState(rememberNavController())
+                    val appState = rememberAppState(
+                        navController = rememberNavController(),
+                        analyticsReporter = appContainer.analyticsReporter,
+                    )
                     RootScreen(
                         appState = appState
                     )

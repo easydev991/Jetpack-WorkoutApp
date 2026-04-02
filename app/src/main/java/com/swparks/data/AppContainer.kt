@@ -122,12 +122,14 @@ import com.swparks.ui.viewmodel.TextEntryViewModel
 import com.swparks.ui.viewmodel.UserAddedParksViewModel
 import com.swparks.ui.viewmodel.UserFriendsViewModel
 import com.swparks.ui.viewmodel.UserTrainingParksViewModel
+import com.swparks.util.AnalyticsReporter
 import com.swparks.util.AndroidLogger
 import com.swparks.util.CrashReporter
 import com.swparks.util.Logger
 import com.swparks.util.NoOpLogger
 import com.swparks.util.UserNotifier
 import com.swparks.util.UserNotifierImpl
+import com.swparks.util.analytics.FirebaseAnalyticsReporter
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -158,6 +160,7 @@ interface AppContainer {
     val logger: Logger
     val userNotifier: UserNotifier
     val crashReporter: CrashReporter
+    val analyticsReporter: AnalyticsReporter
 
     // Event notifiers
     val messageSentNotifier: MessageSentNotifier
@@ -302,6 +305,13 @@ class DefaultAppContainer(context: Context) : AppContainer {
     override val logger: Logger = if (BuildConfig.DEBUG) AndroidLogger() else NoOpLogger()
     override val userNotifier: UserNotifier = UserNotifierImpl(logger)
     override val crashReporter: CrashReporter = com.swparks.util.crash.FirebaseCrashReporter
+    override val analyticsReporter: AnalyticsReporter by lazy {
+        FirebaseAnalyticsReporter(
+            context = appContext,
+            logger = logger,
+            crashReporter = crashReporter,
+        )
+    }
     override val messageSentNotifier: MessageSentNotifier = MessageSentNotifier()
     override val clock: com.swparks.domain.util.Clock by lazy { SystemClock() }
 
