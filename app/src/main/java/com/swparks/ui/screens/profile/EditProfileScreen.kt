@@ -79,9 +79,13 @@ private const val GENDER_DROPDOWN_MENU_WIDTH_FRACTION = 0.3f
 
 sealed class EditProfileNavigationAction {
     object Back : EditProfileNavigationAction()
+
     object ChangePassword : EditProfileNavigationAction()
+
     object SelectCountry : EditProfileNavigationAction()
+
     object SelectCity : EditProfileNavigationAction()
+
     object NavigateToLogin : EditProfileNavigationAction()
 }
 
@@ -118,11 +122,12 @@ fun EditProfileScreen(
     val scrollState = rememberScrollState()
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    val photoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri: Uri? ->
-        viewModel.onAvatarSelected(uri)
-    }
+    val photoPickerLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.PickVisualMedia()
+        ) { uri: Uri? ->
+            viewModel.onAvatarSelected(uri)
+        }
 
     val launchPhotoPicker: () -> Unit = {
         photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
@@ -154,12 +159,13 @@ fun EditProfileScreen(
         modifier = modifier
     ) { paddingValues ->
         EditProfileContent(
-            params = createContentParams(
-                uiState = uiState,
-                currentUser = currentUser,
-                launchPhotoPicker = launchPhotoPicker,
-                viewModel = viewModel
-            ),
+            params =
+                createContentParams(
+                    uiState = uiState,
+                    currentUser = currentUser,
+                    launchPhotoPicker = launchPhotoPicker,
+                    viewModel = viewModel
+                ),
             paddingValues = paddingValues,
             scrollState = scrollState
         )
@@ -199,26 +205,27 @@ private fun createContentParams(
     currentUser: User?,
     launchPhotoPicker: () -> Unit,
     viewModel: IEditProfileViewModel
-): EditProfileContentParams = EditProfileContentParams(
-    avatarUrl = currentUser?.image,
-    selectedAvatarUri = uiState.selectedAvatarUri,
-    avatarError = uiState.avatarError,
-    userForm = uiState.userForm,
-    emailError = uiState.emailError,
-    birthDateError = uiState.birthDateError,
-    selectedCountry = uiState.selectedCountry,
-    selectedCity = uiState.selectedCity,
-    isLoading = uiState.isLoading,
-    onChangeAvatarClick = launchPhotoPicker,
-    onLoginChange = viewModel::onLoginChange,
-    onEmailChange = viewModel::onEmailChange,
-    onFullNameChange = viewModel::onFullNameChange,
-    onGenderChange = viewModel::onGenderChange,
-    onBirthDateChange = viewModel::onBirthDateChange,
-    onCountryClick = viewModel::onCountryClick,
-    onCityClick = viewModel::onCityClick,
-    onChangePasswordClick = viewModel::onChangePasswordClick
-)
+): EditProfileContentParams =
+    EditProfileContentParams(
+        avatarUrl = currentUser?.image,
+        selectedAvatarUri = uiState.selectedAvatarUri,
+        avatarError = uiState.avatarError,
+        userForm = uiState.userForm,
+        emailError = uiState.emailError,
+        birthDateError = uiState.birthDateError,
+        selectedCountry = uiState.selectedCountry,
+        selectedCity = uiState.selectedCity,
+        isLoading = uiState.isLoading,
+        onChangeAvatarClick = launchPhotoPicker,
+        onLoginChange = viewModel::onLoginChange,
+        onEmailChange = viewModel::onEmailChange,
+        onFullNameChange = viewModel::onFullNameChange,
+        onGenderChange = viewModel::onGenderChange,
+        onBirthDateChange = viewModel::onBirthDateChange,
+        onCountryClick = viewModel::onCountryClick,
+        onCityClick = viewModel::onCityClick,
+        onChangePasswordClick = viewModel::onChangePasswordClick
+    )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -255,14 +262,15 @@ private fun EditProfileContent(
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(scrollState)
-                .padding(
-                    horizontal = dimensionResource(R.dimen.spacing_regular),
-                    vertical = dimensionResource(R.dimen.spacing_regular)
-                ),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .verticalScroll(scrollState)
+                    .padding(
+                        horizontal = dimensionResource(R.dimen.spacing_regular),
+                        vertical = dimensionResource(R.dimen.spacing_regular)
+                    ),
             verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
         ) {
             val isEnabled = !params.isLoading
@@ -347,7 +355,7 @@ private fun GenderSection(
         params = FormCardContainerParams(enabled = isEnabled)
     ) {
         Column(
-            modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
+            modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small))
         ) {
             GenderPicker(
                 selectedGender = Gender.entries.find { it.rawValue == params.userForm.genderCode },
@@ -419,9 +427,10 @@ private fun AvatarSection(
         AsyncImage(
             model = selectedAvatarUri ?: avatarUrl,
             contentDescription = stringResource(R.string.photo),
-            modifier = Modifier
-                .size(150.dp)
-                .clip(RoundedCornerShape(dimensionResource(R.dimen.spacing_small))),
+            modifier =
+                Modifier
+                    .size(150.dp)
+                    .clip(RoundedCornerShape(dimensionResource(R.dimen.spacing_small))),
             contentScale = ContentScale.Crop,
             alpha = if (enabled) 1f else 0.5f
         )
@@ -436,13 +445,14 @@ private fun AvatarSection(
         }
 
         SWButton(
-            config = ButtonConfig(
-                mode = SWButtonMode.TINTED,
-                size = SWButtonSize.SMALL,
-                text = stringResource(R.string.change_photo),
-                enabled = enabled,
-                onClick = onChangeAvatarClick
-            )
+            config =
+                ButtonConfig(
+                    mode = SWButtonMode.TINTED,
+                    size = SWButtonSize.SMALL,
+                    text = stringResource(R.string.change_photo),
+                    enabled = enabled,
+                    onClick = onChangeAvatarClick
+                )
         )
     }
 }
@@ -454,12 +464,13 @@ private fun LoginField(
     onValueChange: (String) -> Unit
 ) {
     SWTextField(
-        config = TextFieldConfig(
-            text = value,
-            labelID = R.string.login,
-            enabled = enabled,
-            onTextChange = onValueChange
-        )
+        config =
+            TextFieldConfig(
+                text = value,
+                labelID = R.string.login,
+                enabled = enabled,
+                onTextChange = onValueChange
+            )
     )
 }
 
@@ -471,15 +482,16 @@ private fun EmailField(
     onValueChange: (String) -> Unit
 ) {
     SWTextField(
-        config = TextFieldConfig(
-            text = value,
-            labelID = R.string.email,
-            enabled = enabled,
-            isError = error != null,
-            supportingText = error ?: "",
-            onTextChange = onValueChange,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-        )
+        config =
+            TextFieldConfig(
+                text = value,
+                labelID = R.string.email,
+                enabled = enabled,
+                isError = error != null,
+                supportingText = error ?: "",
+                onTextChange = onValueChange,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+            )
     )
 }
 
@@ -490,12 +502,13 @@ private fun FullNameField(
     onValueChange: (String) -> Unit
 ) {
     SWTextField(
-        config = TextFieldConfig(
-            text = value,
-            labelID = R.string.full_name,
-            enabled = enabled,
-            onTextChange = onValueChange
-        )
+        config =
+            TextFieldConfig(
+                text = value,
+                labelID = R.string.full_name,
+                enabled = enabled,
+                onTextChange = onValueChange
+            )
     )
 }
 
@@ -505,20 +518,22 @@ private fun ChangePasswordButton(
     onClick: () -> Unit
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                enabled = enabled,
-                onClick = onClick
-            )
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(
+                    enabled = enabled,
+                    onClick = onClick
+                )
     ) {
         ListRowView(
-            data = ListRowData(
-                leadingIconID = R.drawable.outline_key,
-                leadingText = stringResource(R.string.change_password),
-                showChevron = true,
-                enabled = enabled
-            )
+            data =
+                ListRowData(
+                    leadingIconID = R.drawable.outline_key,
+                    leadingText = stringResource(R.string.change_password),
+                    showChevron = true,
+                    enabled = enabled
+                )
         )
     }
 }
@@ -536,19 +551,22 @@ private fun GenderPicker(
         modifier = Modifier.fillMaxWidth()
     ) {
         ListRowView(
-            data = ListRowData(
-                leadingText = stringResource(R.string.gender),
-                trailingText = selectedGender?.let { stringResource(it.sex) }
-                    ?: stringResource(R.string.select_gender),
-                showChevron = true,
-                enabled = enabled
-            )
+            data =
+                ListRowData(
+                    leadingText = stringResource(R.string.gender),
+                    trailingText =
+                        selectedGender?.let { stringResource(it.sex) }
+                            ?: stringResource(R.string.select_gender),
+                    showChevron = true,
+                    enabled = enabled
+                )
         )
         // Якорь для DropdownMenu в правой части
         Box(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .fillMaxWidth(GENDER_DROPDOWN_MENU_WIDTH_FRACTION)
+            modifier =
+                Modifier
+                    .align(Alignment.CenterEnd)
+                    .fillMaxWidth(GENDER_DROPDOWN_MENU_WIDTH_FRACTION)
         ) {
             DropdownMenu(
                 expanded = expanded,
@@ -567,9 +585,10 @@ private fun GenderPicker(
         }
         // Прозрачный слой для перехвата кликов по всей строке
         Box(
-            modifier = Modifier
-                .matchParentSize()
-                .clickable(enabled = enabled) { expanded = true }
+            modifier =
+                Modifier
+                    .matchParentSize()
+                    .clickable(enabled = enabled) { expanded = true }
         )
     }
 }
@@ -581,33 +600,35 @@ private fun BirthdayPicker(
     enabled: Boolean,
     onBirthDateChange: (Long) -> Unit
 ) {
-    val initialTimestamp = remember(birthDate) {
-        if (birthDate.isNotBlank()) {
-            try {
-                val localDate = LocalDate.parse(birthDate)
-                // Используем UTC для корректного отображения даты без смещения на 1 день
-                localDate.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
-            } catch (_: DateTimeParseException) {
-                System.currentTimeMillis()
-            } catch (_: IllegalArgumentException) {
+    val initialTimestamp =
+        remember(birthDate) {
+            if (birthDate.isNotBlank()) {
+                try {
+                    val localDate = LocalDate.parse(birthDate)
+                    // Используем UTC для корректного отображения даты без смещения на 1 день
+                    localDate.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
+                } catch (_: DateTimeParseException) {
+                    System.currentTimeMillis()
+                } catch (_: IllegalArgumentException) {
+                    System.currentTimeMillis()
+                }
+            } else {
                 System.currentTimeMillis()
             }
-        } else {
-            System.currentTimeMillis()
         }
-    }
 
     val currentYear = LocalDate.now().year
 
     Column {
         SWDateTimePicker(
-            config = DateTimePickerConfig(
-                mode = SWDatePickerMode.BIRTHDAY,
-                initialSelectedDateMillis = initialTimestamp,
-                yearRange = 1900..currentYear,
-                enabled = enabled,
-                onClickSaveDate = onBirthDateChange
-            )
+            config =
+                DateTimePickerConfig(
+                    mode = SWDatePickerMode.BIRTHDAY,
+                    initialSelectedDateMillis = initialTimestamp,
+                    yearRange = 1900..currentYear,
+                    enabled = enabled,
+                    onClickSaveDate = onBirthDateChange
+                )
         )
         if (!error.isNullOrEmpty()) {
             Text(
@@ -627,20 +648,22 @@ private fun CountryPicker(
     onClick: () -> Unit
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                enabled = enabled,
-                onClick = onClick
-            )
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(
+                    enabled = enabled,
+                    onClick = onClick
+                )
     ) {
         ListRowView(
-            data = ListRowData(
-                leadingText = stringResource(R.string.country),
-                trailingText = countryName ?: stringResource(R.string.select_country),
-                showChevron = true,
-                enabled = enabled
-            )
+            data =
+                ListRowData(
+                    leadingText = stringResource(R.string.country),
+                    trailingText = countryName ?: stringResource(R.string.select_country),
+                    showChevron = true,
+                    enabled = enabled
+                )
         )
     }
 }
@@ -652,20 +675,22 @@ private fun CityPicker(
     onClick: () -> Unit
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                enabled = enabled,
-                onClick = onClick
-            )
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(
+                    enabled = enabled,
+                    onClick = onClick
+                )
     ) {
         ListRowView(
-            data = ListRowData(
-                leadingText = stringResource(R.string.city),
-                trailingText = cityName ?: stringResource(R.string.select_city),
-                showChevron = true,
-                enabled = enabled
-            )
+            data =
+                ListRowData(
+                    leadingText = stringResource(R.string.city),
+                    trailingText = cityName ?: stringResource(R.string.select_city),
+                    showChevron = true,
+                    enabled = enabled
+                )
         )
     }
 }
@@ -676,13 +701,14 @@ private fun SaveButton(
     onClick: () -> Unit
 ) {
     SWButton(
-        config = ButtonConfig(
-            mode = SWButtonMode.FILLED,
-            size = SWButtonSize.LARGE,
-            text = stringResource(R.string.save_changes),
-            enabled = enabled,
-            onClick = onClick
-        )
+        config =
+            ButtonConfig(
+                mode = SWButtonMode.FILLED,
+                size = SWButtonSize.LARGE,
+                text = stringResource(R.string.save_changes),
+                enabled = enabled,
+                onClick = onClick
+            )
     )
 }
 

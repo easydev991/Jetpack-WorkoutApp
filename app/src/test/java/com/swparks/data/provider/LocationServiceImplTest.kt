@@ -31,7 +31,6 @@ import org.robolectric.RobolectricTestRunner
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class LocationServiceImplTest {
-
     private lateinit var context: Context
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationManager: LocationManager
@@ -50,104 +49,109 @@ class LocationServiceImplTest {
     }
 
     @Test
-    fun getCurrentLocation_whenPermissionDenied_thenReturnsFailureWithoutFusedCall() = runTest {
-        setPermissionsGranted(false)
-        val service = createService()
+    fun getCurrentLocation_whenPermissionDenied_thenReturnsFailureWithoutFusedCall() =
+        runTest {
+            setPermissionsGranted(false)
+            val service = createService()
 
-        val result = service.getCurrentLocation()
+            val result = service.getCurrentLocation()
 
-        assertTrue(result.isFailure)
-        assertTrue(result.exceptionOrNull() is SecurityException)
-        verify(exactly = 0) {
-            fusedLocationClient.getCurrentLocation(any<Int>(), any<CancellationToken>())
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is SecurityException)
+            verify(exactly = 0) {
+                fusedLocationClient.getCurrentLocation(any<Int>(), any<CancellationToken>())
+            }
         }
-    }
 
     @Test
-    fun getCurrentLocation_whenFusedReturnsLocation_thenReturnsCoordinates() = runTest {
-        setPermissionsGranted(true)
-        every {
-            fusedLocationClient.getCurrentLocation(any<Int>(), any<CancellationToken>())
-        } returns successTask(location("fused", 55.751244, 37.618423))
-        val service = createService()
+    fun getCurrentLocation_whenFusedReturnsLocation_thenReturnsCoordinates() =
+        runTest {
+            setPermissionsGranted(true)
+            every {
+                fusedLocationClient.getCurrentLocation(any<Int>(), any<CancellationToken>())
+            } returns successTask(location("fused", 55.751244, 37.618423))
+            val service = createService()
 
-        val result = service.getCurrentLocation()
+            val result = service.getCurrentLocation()
 
-        assertTrue(result.isSuccess)
-        assertEquals(55.751244, result.getOrThrow().latitude, 0.0)
-        assertEquals(37.618423, result.getOrThrow().longitude, 0.0)
-    }
-
-    @Test
-    fun getCurrentLocation_whenFusedReturnsNull_thenUsesLastKnownLocationFallback() = runTest {
-        setPermissionsGranted(true)
-        every {
-            fusedLocationClient.getCurrentLocation(any<Int>(), any<CancellationToken>())
-        } returns successTask(null)
-        every { context.getSystemService(Context.LOCATION_SERVICE) } returns locationManager
-        every { locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) } returns true
-        every { locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) } returns
-            location("gps", 59.938632, 30.314130)
-        val service = createService()
-
-        val result = service.getCurrentLocation()
-
-        assertTrue(result.isSuccess)
-        assertEquals(59.938632, result.getOrThrow().latitude, 0.0)
-        assertEquals(30.314130, result.getOrThrow().longitude, 0.0)
-    }
+            assertTrue(result.isSuccess)
+            assertEquals(55.751244, result.getOrThrow().latitude, 0.0)
+            assertEquals(37.618423, result.getOrThrow().longitude, 0.0)
+        }
 
     @Test
-    fun getCurrentLocation_whenTimeout_thenUsesLastKnownLocationFallback() = runTest {
-        setPermissionsGranted(true)
-        every {
-            fusedLocationClient.getCurrentLocation(any<Int>(), any<CancellationToken>())
-        } returns pendingTask()
-        every { context.getSystemService(Context.LOCATION_SERVICE) } returns locationManager
-        every { locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) } returns true
-        every { locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) } returns
-            location("gps", 48.856613, 2.352222)
-        val service = createService(timeoutMillis = 1L)
+    fun getCurrentLocation_whenFusedReturnsNull_thenUsesLastKnownLocationFallback() =
+        runTest {
+            setPermissionsGranted(true)
+            every {
+                fusedLocationClient.getCurrentLocation(any<Int>(), any<CancellationToken>())
+            } returns successTask(null)
+            every { context.getSystemService(Context.LOCATION_SERVICE) } returns locationManager
+            every { locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) } returns true
+            every { locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) } returns
+                location("gps", 59.938632, 30.314130)
+            val service = createService()
 
-        val deferred = async { service.getCurrentLocation() }
-        advanceUntilIdle()
-        val result = deferred.await()
+            val result = service.getCurrentLocation()
 
-        assertTrue(result.isSuccess)
-        assertEquals(48.856613, result.getOrThrow().latitude, 0.0)
-        assertEquals(2.352222, result.getOrThrow().longitude, 0.0)
-    }
+            assertTrue(result.isSuccess)
+            assertEquals(59.938632, result.getOrThrow().latitude, 0.0)
+            assertEquals(30.314130, result.getOrThrow().longitude, 0.0)
+        }
 
     @Test
-    fun getCurrentLocation_whenFusedFailsAndFallbackFails_thenReturnsFusedException() = runTest {
-        setPermissionsGranted(true)
-        val expected = IllegalStateException("fused failed")
-        every {
-            fusedLocationClient.getCurrentLocation(any<Int>(), any<CancellationToken>())
-        } returns failureTask(expected)
-        every { context.getSystemService(Context.LOCATION_SERVICE) } returns null
-        val service = createService()
+    fun getCurrentLocation_whenTimeout_thenUsesLastKnownLocationFallback() =
+        runTest {
+            setPermissionsGranted(true)
+            every {
+                fusedLocationClient.getCurrentLocation(any<Int>(), any<CancellationToken>())
+            } returns pendingTask()
+            every { context.getSystemService(Context.LOCATION_SERVICE) } returns locationManager
+            every { locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) } returns true
+            every { locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) } returns
+                location("gps", 48.856613, 2.352222)
+            val service = createService(timeoutMillis = 1L)
 
-        val result = service.getCurrentLocation()
+            val deferred = async { service.getCurrentLocation() }
+            advanceUntilIdle()
+            val result = deferred.await()
 
-        assertTrue(result.isFailure)
-        assertEquals(expected, result.exceptionOrNull())
-    }
+            assertTrue(result.isSuccess)
+            assertEquals(48.856613, result.getOrThrow().latitude, 0.0)
+            assertEquals(2.352222, result.getOrThrow().longitude, 0.0)
+        }
 
-    private fun createService(timeoutMillis: Long = 10_000L): LocationServiceImpl {
-        return LocationServiceImpl(
+    @Test
+    fun getCurrentLocation_whenFusedFailsAndFallbackFails_thenReturnsFusedException() =
+        runTest {
+            setPermissionsGranted(true)
+            val expected = IllegalStateException("fused failed")
+            every {
+                fusedLocationClient.getCurrentLocation(any<Int>(), any<CancellationToken>())
+            } returns failureTask(expected)
+            every { context.getSystemService(Context.LOCATION_SERVICE) } returns null
+            val service = createService()
+
+            val result = service.getCurrentLocation()
+
+            assertTrue(result.isFailure)
+            assertEquals(expected, result.exceptionOrNull())
+        }
+
+    private fun createService(timeoutMillis: Long = 10_000L): LocationServiceImpl =
+        LocationServiceImpl(
             context = context,
             fusedLocationClientProvider = { fusedLocationClient },
             locationTimeoutMillis = timeoutMillis
         )
-    }
 
     private fun setPermissionsGranted(granted: Boolean) {
-        val status = if (granted) {
-            PackageManager.PERMISSION_GRANTED
-        } else {
-            PackageManager.PERMISSION_DENIED
-        }
+        val status =
+            if (granted) {
+                PackageManager.PERMISSION_GRANTED
+            } else {
+                PackageManager.PERMISSION_DENIED
+            }
         every {
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
         } returns status
@@ -156,12 +160,15 @@ class LocationServiceImplTest {
         } returns status
     }
 
-    private fun location(provider: String, latitude: Double, longitude: Double): Location {
-        return Location(provider).apply {
+    private fun location(
+        provider: String,
+        latitude: Double,
+        longitude: Double
+    ): Location =
+        Location(provider).apply {
             this.latitude = latitude
             this.longitude = longitude
         }
-    }
 
     private fun successTask(location: Location?): Task<Location?> {
         val task = mockk<Task<Location?>>(relaxed = true)

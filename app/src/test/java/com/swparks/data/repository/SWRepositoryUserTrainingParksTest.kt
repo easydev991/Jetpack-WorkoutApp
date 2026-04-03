@@ -64,8 +64,8 @@ class SWRepositoryUserTrainingParksTest {
         unmockkAll()
     }
 
-    private fun createMockPark(id: Long = 1L): Park {
-        return Park(
+    private fun createMockPark(id: Long = 1L): Park =
+        Park(
             id = id,
             name = "Test Park $id",
             sizeID = 1,
@@ -77,14 +77,13 @@ class SWRepositoryUserTrainingParksTest {
             countryID = 1,
             preview = ""
         )
-    }
 
     private fun createRepository(
         mockApi: SWApi,
         mockDataStore: DataStore<Preferences>,
         userTrainingParkDao: UserTrainingParkDao = mockUserTrainingParkDao
-    ): SWRepositoryImp {
-        return SWRepositoryImp(
+    ): SWRepositoryImp =
+        SWRepositoryImp(
             swApi = mockApi,
             dataStore = mockDataStore,
             userDao = mockUserDao,
@@ -97,185 +96,197 @@ class SWRepositoryUserTrainingParksTest {
             crashReporter = crashReporter,
             logger = logger
         )
-    }
 
     @Test
-    fun getParksForUser_whenNetworkSucceeds_thenUpsertsParksIntoCommonParkTable() = runTest {
-        val userId = 1L
-        val mockParksList = listOf(createMockPark(1L), createMockPark(2L), createMockPark(3L))
-        val mockApi = mockk<SWApi>()
-        coEvery { mockApi.getParksForUser(userId) } returns mockParksList
+    fun getParksForUser_whenNetworkSucceeds_thenUpsertsParksIntoCommonParkTable() =
+        runTest {
+            val userId = 1L
+            val mockParksList = listOf(createMockPark(1L), createMockPark(2L), createMockPark(3L))
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.getParksForUser(userId) } returns mockParksList
 
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = createRepository(mockApi, mockDataStore)
+            val repository = createRepository(mockApi, mockDataStore)
 
-        repository.getParksForUser(userId)
+            repository.getParksForUser(userId)
 
-        coVerify {
-            mockParkDao.insertAll(match { entities ->
-                entities.size == 3 &&
-                    entities.map { it.id }.toSet() == setOf(1L, 2L, 3L)
-            })
+            coVerify {
+                mockParkDao.insertAll(
+                    match { entities ->
+                        entities.size == 3 &&
+                            entities.map { it.id }.toSet() == setOf(1L, 2L, 3L)
+                    }
+                )
+            }
         }
-    }
 
     @Test
-    fun getParksForUser_whenNetworkSucceeds_thenReplacesUserParkRelations() = runTest {
-        val userId = 1L
-        val mockParksList = listOf(createMockPark(10L), createMockPark(20L))
-        val mockApi = mockk<SWApi>()
-        coEvery { mockApi.getParksForUser(userId) } returns mockParksList
+    fun getParksForUser_whenNetworkSucceeds_thenReplacesUserParkRelations() =
+        runTest {
+            val userId = 1L
+            val mockParksList = listOf(createMockPark(10L), createMockPark(20L))
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.getParksForUser(userId) } returns mockParksList
 
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = createRepository(mockApi, mockDataStore)
+            val repository = createRepository(mockApi, mockDataStore)
 
-        repository.getParksForUser(userId)
+            repository.getParksForUser(userId)
 
-        coVerify {
-            mockUserTrainingParkDao.replaceForUser(
-                userId = userId,
-                relations = match { relations ->
-                    relations.map { it.parkId }.toSet() == setOf(10L, 20L)
-                }
-            )
+            coVerify {
+                mockUserTrainingParkDao.replaceForUser(
+                    userId = userId,
+                    relations =
+                        match { relations ->
+                            relations.map { it.parkId }.toSet() == setOf(10L, 20L)
+                        }
+                )
+            }
         }
-    }
 
     @Test
-    fun getParksForUser_whenNetworkReturnsEmptyList_thenClearsUserRelations() = runTest {
-        val userId = 1L
-        val mockApi = mockk<SWApi>()
-        coEvery { mockApi.getParksForUser(userId) } returns emptyList()
+    fun getParksForUser_whenNetworkReturnsEmptyList_thenClearsUserRelations() =
+        runTest {
+            val userId = 1L
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.getParksForUser(userId) } returns emptyList()
 
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = createRepository(mockApi, mockDataStore)
+            val repository = createRepository(mockApi, mockDataStore)
 
-        val result = repository.getParksForUser(userId)
+            val result = repository.getParksForUser(userId)
 
-        assertTrue(result.isSuccess)
-        assertTrue(result.getOrNull()?.isEmpty() == true)
-        coVerify { mockUserTrainingParkDao.replaceForUser(userId, emptyList()) }
-        coVerify(exactly = 0) { mockParkDao.insertAll(any()) }
-    }
-
-    @Test
-    fun getCachedParksForUser_whenRelationsExist_thenReturnsParksFromRoom() = runTest {
-        val userId = 1L
-        val cachedParks = listOf(
-            createParkEntity(10L, "Cached Park 1"),
-            createParkEntity(20L, "Cached Park 2")
-        )
-
-        coEvery { mockUserTrainingParkDao.hasCachedParksForUser(userId) } returns true
-        coEvery { mockUserTrainingParkDao.getParksForUserFromCache(userId) } returns cachedParks
-
-        val mockApi = mockk<SWApi>()
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = createRepository(mockApi, mockDataStore)
-
-        val result = repository.getCachedParksForUser(userId)
-
-        assertNotNull(result)
-        assertEquals(2, result?.size)
-        assertEquals(10L, result?.get(0)?.id)
-        assertEquals(20L, result?.get(1)?.id)
-    }
+            assertTrue(result.isSuccess)
+            assertTrue(result.getOrNull()?.isEmpty() == true)
+            coVerify { mockUserTrainingParkDao.replaceForUser(userId, emptyList()) }
+            coVerify(exactly = 0) { mockParkDao.insertAll(any()) }
+        }
 
     @Test
-    fun getCachedParksForUser_whenNoCache_thenReturnsNull() = runTest {
-        val userId = 1L
+    fun getCachedParksForUser_whenRelationsExist_thenReturnsParksFromRoom() =
+        runTest {
+            val userId = 1L
+            val cachedParks =
+                listOf(
+                    createParkEntity(10L, "Cached Park 1"),
+                    createParkEntity(20L, "Cached Park 2")
+                )
 
-        coEvery { mockUserTrainingParkDao.hasCachedParksForUser(userId) } returns false
+            coEvery { mockUserTrainingParkDao.hasCachedParksForUser(userId) } returns true
+            coEvery { mockUserTrainingParkDao.getParksForUserFromCache(userId) } returns cachedParks
 
-        val mockApi = mockk<SWApi>()
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockApi = mockk<SWApi>()
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = createRepository(mockApi, mockDataStore)
+            val repository = createRepository(mockApi, mockDataStore)
 
-        val result = repository.getCachedParksForUser(userId)
+            val result = repository.getCachedParksForUser(userId)
 
-        assertNull(result)
-    }
-
-    @Test
-    fun getCachedParksForUser_whenNeverLoaded_thenReturnsCacheMissInsteadOfEmptyList() = runTest {
-        val userId = 1L
-
-        coEvery { mockUserTrainingParkDao.hasCachedParksForUser(userId) } returns false
-
-        val mockApi = mockk<SWApi>()
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = createRepository(mockApi, mockDataStore)
-
-        val result = repository.getCachedParksForUser(userId)
-
-        assertNull(result)
-        coVerify(exactly = 0) { mockUserTrainingParkDao.getParksForUserFromCache(any()) }
-    }
+            assertNotNull(result)
+            assertEquals(2, result?.size)
+            assertEquals(10L, result?.get(0)?.id)
+            assertEquals(20L, result?.get(1)?.id)
+        }
 
     @Test
-    fun getCachedParksForUser_whenCacheInitializedButEmpty_thenReturnsEmptyList() = runTest {
-        val userId = 1L
+    fun getCachedParksForUser_whenNoCache_thenReturnsNull() =
+        runTest {
+            val userId = 1L
 
-        coEvery { mockUserTrainingParkDao.hasCachedParksForUser(userId) } returns true
-        coEvery { mockUserTrainingParkDao.getParksForUserFromCache(userId) } returns emptyList()
+            coEvery { mockUserTrainingParkDao.hasCachedParksForUser(userId) } returns false
 
-        val mockApi = mockk<SWApi>()
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockApi = mockk<SWApi>()
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = createRepository(mockApi, mockDataStore)
+            val repository = createRepository(mockApi, mockDataStore)
 
-        val result = repository.getCachedParksForUser(userId)
+            val result = repository.getCachedParksForUser(userId)
 
-        assertNotNull(result)
-        assertTrue(result!!.isEmpty())
-    }
-
-    @Test
-    fun hasCachedParksForUser_whenRelationsExist_thenReturnsTrue() = runTest {
-        val userId = 1L
-
-        coEvery { mockUserTrainingParkDao.hasCachedParksForUser(userId) } returns true
-
-        val mockApi = mockk<SWApi>()
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = createRepository(mockApi, mockDataStore)
-
-        val result = repository.hasCachedParksForUser(userId)
-
-        assertTrue(result)
-    }
+            assertNull(result)
+        }
 
     @Test
-    fun hasCachedParksForUser_whenNoRelations_thenReturnsFalse() = runTest {
-        val userId = 1L
+    fun getCachedParksForUser_whenNeverLoaded_thenReturnsCacheMissInsteadOfEmptyList() =
+        runTest {
+            val userId = 1L
 
-        coEvery { mockUserTrainingParkDao.hasCachedParksForUser(userId) } returns false
+            coEvery { mockUserTrainingParkDao.hasCachedParksForUser(userId) } returns false
 
-        val mockApi = mockk<SWApi>()
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockApi = mockk<SWApi>()
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = createRepository(mockApi, mockDataStore)
+            val repository = createRepository(mockApi, mockDataStore)
 
-        val result = repository.hasCachedParksForUser(userId)
+            val result = repository.getCachedParksForUser(userId)
 
-        assertFalse(result)
-    }
+            assertNull(result)
+            coVerify(exactly = 0) { mockUserTrainingParkDao.getParksForUserFromCache(any()) }
+        }
+
+    @Test
+    fun getCachedParksForUser_whenCacheInitializedButEmpty_thenReturnsEmptyList() =
+        runTest {
+            val userId = 1L
+
+            coEvery { mockUserTrainingParkDao.hasCachedParksForUser(userId) } returns true
+            coEvery { mockUserTrainingParkDao.getParksForUserFromCache(userId) } returns emptyList()
+
+            val mockApi = mockk<SWApi>()
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+            val repository = createRepository(mockApi, mockDataStore)
+
+            val result = repository.getCachedParksForUser(userId)
+
+            assertNotNull(result)
+            assertTrue(result!!.isEmpty())
+        }
+
+    @Test
+    fun hasCachedParksForUser_whenRelationsExist_thenReturnsTrue() =
+        runTest {
+            val userId = 1L
+
+            coEvery { mockUserTrainingParkDao.hasCachedParksForUser(userId) } returns true
+
+            val mockApi = mockk<SWApi>()
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+            val repository = createRepository(mockApi, mockDataStore)
+
+            val result = repository.hasCachedParksForUser(userId)
+
+            assertTrue(result)
+        }
+
+    @Test
+    fun hasCachedParksForUser_whenNoRelations_thenReturnsFalse() =
+        runTest {
+            val userId = 1L
+
+            coEvery { mockUserTrainingParkDao.hasCachedParksForUser(userId) } returns false
+
+            val mockApi = mockk<SWApi>()
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+            val repository = createRepository(mockApi, mockDataStore)
+
+            val result = repository.hasCachedParksForUser(userId)
+
+            assertFalse(result)
+        }
 
     @Test
     fun getParksForUser_whenCacheExistsAndNetworkSucceeds_thenUpdatesBothCacheAndRelations() =
@@ -284,9 +295,10 @@ class SWRepositoryUserTrainingParksTest {
             val mockParksList = listOf(createMockPark(100L), createMockPark(200L))
 
             coEvery { mockUserTrainingParkDao.hasCachedParksForUser(userId) } returns true
-            coEvery { mockUserTrainingParkDao.getParksForUserFromCache(userId) } returns listOf(
-                createParkEntity(50L, "Old Cached Park")
-            )
+            coEvery { mockUserTrainingParkDao.getParksForUserFromCache(userId) } returns
+                listOf(
+                    createParkEntity(50L, "Old Cached Park")
+                )
 
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.getParksForUser(userId) } returns mockParksList
@@ -301,42 +313,50 @@ class SWRepositoryUserTrainingParksTest {
             assertTrue(result.isSuccess)
             assertEquals(mockParksList, result.getOrNull())
             coVerify {
-                mockParkDao.insertAll(match {
-                    it.map { e -> e.id }.toSet() == setOf(
-                        100L,
-                        200L
-                    )
-                })
+                mockParkDao.insertAll(
+                    match {
+                        it.map { e -> e.id }.toSet() ==
+                            setOf(
+                                100L,
+                                200L
+                            )
+                    }
+                )
             }
             coVerify {
                 mockUserTrainingParkDao.replaceForUser(
                     userId = userId,
-                    relations = match { relations ->
-                        relations.map { it.parkId }.toSet() == setOf(100L, 200L)
-                    }
+                    relations =
+                        match { relations ->
+                            relations.map { it.parkId }.toSet() == setOf(100L, 200L)
+                        }
                 )
             }
         }
 
     @Test
-    fun getParksForUser_whenNetworkFails_thenDoesNotClearExistingRelations() = runTest {
-        val userId = 1L
-        val mockApi = mockk<SWApi>()
-        coEvery { mockApi.getParksForUser(userId) } throws IOException("Network error")
+    fun getParksForUser_whenNetworkFails_thenDoesNotClearExistingRelations() =
+        runTest {
+            val userId = 1L
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.getParksForUser(userId) } throws IOException("Network error")
 
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = createRepository(mockApi, mockDataStore)
+            val repository = createRepository(mockApi, mockDataStore)
 
-        val result = repository.getParksForUser(userId)
+            val result = repository.getParksForUser(userId)
 
-        assertTrue(result.isFailure)
-        coVerify(exactly = 0) { mockUserTrainingParkDao.clearForUser(any()) }
-        coVerify(exactly = 0) { mockUserTrainingParkDao.replaceForUser(any(), any()) }
-    }
+            assertTrue(result.isFailure)
+            coVerify(exactly = 0) { mockUserTrainingParkDao.clearForUser(any()) }
+            coVerify(exactly = 0) { mockUserTrainingParkDao.replaceForUser(any(), any()) }
+        }
 
-    private fun createParkEntity(id: Long, name: String) = ParkEntity(
+    private fun createParkEntity(
+        id: Long,
+        name: String
+    ) = ParkEntity(
         id = id,
         name = name,
         sizeID = 1,

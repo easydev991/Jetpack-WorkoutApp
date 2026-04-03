@@ -11,8 +11,9 @@ import okhttp3.Response
  *
  * @param logger Логгер для записи попыток retry
  */
-class RetryInterceptor(private val logger: Logger) : Interceptor {
-
+class RetryInterceptor(
+    private val logger: Logger
+) : Interceptor {
     companion object {
         private const val MAX_RETRIES = 3
         private const val RETRY_DELAY_MS = 500L

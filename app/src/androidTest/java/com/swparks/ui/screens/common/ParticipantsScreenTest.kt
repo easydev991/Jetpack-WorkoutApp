@@ -2,8 +2,6 @@ package com.swparks.ui.screens.common
 
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsEnabled
-import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -46,11 +44,12 @@ class ParticipantsScreenTest {
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
                 ParticipantsScreen(
-                    config = ParticipantsConfig(
-                        mode = mode,
-                        users = users,
-                        currentUserId = currentUserId
-                    ),
+                    config =
+                        ParticipantsConfig(
+                            mode = mode,
+                            users = users,
+                            currentUserId = currentUserId
+                        ),
                     onAction = { action ->
                         when (action) {
                             is ParticipantsAction.Back -> onBack()
@@ -136,11 +135,12 @@ class ParticipantsScreenTest {
     @Test
     fun participantsScreen_withUsers_displaysAllUsers() {
         // Given
-        val users = listOf(
-            User(id = 1L, name = "User1", image = null),
-            User(id = 2L, name = "User2", image = null),
-            User(id = 3L, name = "User3", image = null)
-        )
+        val users =
+            listOf(
+                User(id = 1L, name = "User1", image = null),
+                User(id = 2L, name = "User2", image = null),
+                User(id = 3L, name = "User3", image = null)
+            )
 
         // When
         setContent(users = users)
@@ -200,16 +200,25 @@ class ParticipantsScreenTest {
         // Given
         val currentUserId = 1L
         val currentUser = User(id = currentUserId, name = "CurrentUser", image = null)
+        var clickedUserId: Long? = null
 
         setContent(
             users = listOf(currentUser),
-            currentUserId = currentUserId
+            currentUserId = currentUserId,
+            onUserClick = { clickedUserId = it }
         )
 
-        // Then - Строка текущего пользователя не активна
+        // Then - текущий пользователь отображается
         composeTestRule
             .onNodeWithText(currentUser.name)
-            .assertIsNotEnabled()
+            .assertIsDisplayed()
+
+        // И клик по нему не приводит к вызову callback
+        composeTestRule
+            .onNodeWithText(currentUser.name)
+            .performClick()
+
+        assertNull("Клик по текущему пользователю не должен вызывать onUserClick", clickedUserId)
     }
 
     @Test
@@ -225,10 +234,14 @@ class ParticipantsScreenTest {
             onUserClick = { clickedUserId = it }
         )
 
-        // Then - Текущий пользователь disabled и колбэк не вызывается
+        // Then - Текущий пользователь отображается и колбэк не вызывается
         composeTestRule
             .onNodeWithText(currentUser.name)
-            .assertIsNotEnabled()
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText(currentUser.name)
+            .performClick()
 
         assertNull("Клик по текущему пользователю не должен вызывать onUserClick", clickedUserId)
     }
@@ -237,30 +250,39 @@ class ParticipantsScreenTest {
     fun participantsScreen_mixedUsers_currentUserNotClickableOthersClickable() {
         // Given
         val currentUserId = 1L
-        val users = listOf(
-            User(id = currentUserId, name = "CurrentUser", image = null),
-            User(id = 2L, name = "OtherUser1", image = null),
-            User(id = 3L, name = "OtherUser2", image = null)
-        )
+        var clickedUserId: Long? = null
+        val users =
+            listOf(
+                User(id = currentUserId, name = "CurrentUser", image = null),
+                User(id = 2L, name = "OtherUser1", image = null),
+                User(id = 3L, name = "OtherUser2", image = null)
+            )
 
         setContent(
             users = users,
-            currentUserId = currentUserId
+            currentUserId = currentUserId,
+            onUserClick = { clickedUserId = it }
         )
 
-        // Then - Текущий пользователь не кликабелен
+        // Then - текущий пользователь не вызывает callback
         composeTestRule
             .onNodeWithText("CurrentUser")
-            .assertIsNotEnabled()
+            .performClick()
 
-        // Другие пользователи кликабельны
+        assertNull("Клик по текущему пользователю не должен вызывать onUserClick", clickedUserId)
+
+        // Другие пользователи вызывают callback
         composeTestRule
             .onNodeWithText("OtherUser1")
-            .assertIsEnabled()
+            .performClick()
+
+        assertEquals(2L, clickedUserId)
 
         composeTestRule
             .onNodeWithText("OtherUser2")
-            .assertIsEnabled()
+            .performClick()
+
+        assertEquals(3L, clickedUserId)
     }
 
     // ==================== Тесты back кнопки ====================
@@ -287,9 +309,10 @@ class ParticipantsScreenTest {
     @Test
     fun participantsScreen_manyUsers_allDisplayed() {
         // Given
-        val users = List(10) { index ->
-            User(id = index.toLong(), name = "User$index", image = null)
-        }
+        val users =
+            List(10) { index ->
+                User(id = index.toLong(), name = "User$index", image = null)
+            }
 
         // When
         setContent(users = users)
@@ -301,5 +324,4 @@ class ParticipantsScreenTest {
                 .assertIsDisplayed()
         }
     }
-
 }

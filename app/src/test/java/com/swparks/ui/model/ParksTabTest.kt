@@ -5,7 +5,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ParksTabTest {
-
     @Test
     fun map_entry_has_correct_string_resource() {
         assertEquals(R.string.parks_map, ParksTab.MAP.description)

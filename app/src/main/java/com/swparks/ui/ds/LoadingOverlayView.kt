@@ -31,9 +31,10 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
 fun LoadingOverlayView(modifier: Modifier = Modifier) {
     val loadingText = stringResource(R.string.loading_content_description)
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .blockInput(loadingText),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .blockInput(loadingText),
         contentAlignment = Alignment.Center
     ) {
         LoadingIndicator()
@@ -50,9 +51,10 @@ fun LoadingOverlayView(modifier: Modifier = Modifier) {
 fun BoxScope.LoadingOverlayView(modifier: Modifier = Modifier) {
     val loadingText = stringResource(R.string.loading_content_description)
     Box(
-        modifier = modifier
-            .matchParentSize()
-            .blockInput(loadingText),
+        modifier =
+            modifier
+                .matchParentSize()
+                .blockInput(loadingText),
         contentAlignment = Alignment.Center
     ) {
         LoadingIndicator()
@@ -73,18 +75,19 @@ private fun LoadingIndicator() {
 /**
  * Модификатор для блокировки всех жестов с поддержкой доступности
  */
-private fun Modifier.blockInput(contentDescription: String): Modifier = this
-    .semantics {
-        this.contentDescription = contentDescription
-    }
-    .pointerInput(Unit) {
-        awaitPointerEventScope {
-            while (true) {
-                val event = awaitPointerEvent(pass = PointerEventPass.Initial)
-                event.changes.forEach { it.consume() }
+private fun Modifier.blockInput(contentDescription: String): Modifier =
+    this
+        .semantics {
+            this.contentDescription = contentDescription
+        }
+        .pointerInput(Unit) {
+            awaitPointerEventScope {
+                while (true) {
+                    val event = awaitPointerEvent(pass = PointerEventPass.Initial)
+                    event.changes.forEach { it.consume() }
+                }
             }
         }
-    }
 
 @Preview(
     showBackground = true,

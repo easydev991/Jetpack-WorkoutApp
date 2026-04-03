@@ -117,18 +117,6 @@ class MoreScreenTest {
     }
 
     @Test
-    fun moreScreen_whenDisplayed_thenShowsWorkoutShopButton() {
-        // When
-        setContent()
-
-        // Then
-        composeTestRule
-            .onNodeWithText(context.getString(R.string.workout_shop), ignoreCase = true)
-            .assertIsDisplayed()
-            .assertHasClickAction()
-    }
-
-    @Test
     fun moreScreen_whenDisplayed_thenShowsGitHubPageButton() {
         // When
         setContent()

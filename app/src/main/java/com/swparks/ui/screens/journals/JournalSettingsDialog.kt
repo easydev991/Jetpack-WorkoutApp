@@ -70,8 +70,9 @@ fun JournalSettingsDialog(
 
     AlertDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
-        modifier = Modifier
-            .widthIn(max = configuration.containerDpSize.width - (dimensionResource(R.dimen.spacing_regular)) * 2),
+        modifier =
+            Modifier
+                .widthIn(max = configuration.containerDpSize.width - (dimensionResource(R.dimen.spacing_regular)) * 2),
         onDismissRequest = onDismiss,
         title = { DialogTitle(onDismiss) },
         text = { DialogContent(state = state, isSaving = isSaving) },
@@ -107,17 +108,18 @@ private class JournalSettingsDialogState(
     var titleAttemptedSave by mutableStateOf(false)
 
     val hasChanges: Boolean
-        get() = title.text != journal.title ||
-            viewAccess != journal.viewAccess ||
-            commentAccess != journal.commentAccess
+        get() =
+            title.text != journal.title ||
+                viewAccess != journal.viewAccess ||
+                commentAccess != journal.commentAccess
 
     val isSaveButtonEnabled: Boolean
         get() = title.text.isNotBlank() && hasChanges
 }
 
 @Composable
-private fun rememberJournalSettingsDialogState(journal: Journal): JournalSettingsDialogState {
-    return remember(journal) {
+private fun rememberJournalSettingsDialogState(journal: Journal): JournalSettingsDialogState =
+    remember(journal) {
         JournalSettingsDialogState(
             journal = journal,
             title = TextFieldValue(journal.title ?: ""),
@@ -125,7 +127,6 @@ private fun rememberJournalSettingsDialogState(journal: Journal): JournalSetting
             commentAccess = journal.commentAccess ?: JournalAccess.ALL
         )
     }
-}
 
 @Composable
 private fun DialogTitle(onDismiss: () -> Unit) {
@@ -179,9 +180,10 @@ private fun TitleField(state: JournalSettingsDialogState) {
         value = state.title,
         onValueChange = { state.title = it },
         label = { Text(stringResource(R.string.journal_title_placeholder)) },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = dimensionResource(R.dimen.spacing_xsmall)),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = dimensionResource(R.dimen.spacing_xsmall)),
         singleLine = true,
         isError = state.title.text.isBlank() && state.titleAttemptedSave
     )
@@ -216,21 +218,23 @@ private fun SaveButton(
     onSave: () -> Unit
 ) {
     SWButton(
-        config = ButtonConfig(
-            modifier = Modifier.testTag("saveButton"),
-            size = SWButtonSize.SMALL,
-            text = stringResource(R.string.save),
-            enabled = isEnabled,
-            onClick = onSave
-        )
+        config =
+            ButtonConfig(
+                modifier = Modifier.testTag("saveButton"),
+                size = SWButtonSize.SMALL,
+                text = stringResource(R.string.save),
+                enabled = isEnabled,
+                onClick = onSave
+            )
     )
 }
 
-private val AccessOptions = listOf(
-    JournalAccessOption(JournalAccess.ALL, R.string.everybody_access),
-    JournalAccessOption(JournalAccess.FRIENDS, R.string.friends_access),
-    JournalAccessOption(JournalAccess.NOBODY, R.string.only_me_access)
-)
+private val AccessOptions =
+    listOf(
+        JournalAccessOption(JournalAccess.ALL, R.string.everybody_access),
+        JournalAccessOption(JournalAccess.FRIENDS, R.string.friends_access),
+        JournalAccessOption(JournalAccess.NOBODY, R.string.only_me_access)
+    )
 
 /**
  * Вспомогательный тип для опции доступа
@@ -281,32 +285,34 @@ private fun JournalAccessGroup(
 @Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_NO)
 @Composable
 private fun JournalSettingsDialogPreviewLight() {
-    val mockViewModel = object : IJournalSettingsViewModel {
-        override val isSavingSettings: StateFlow<Boolean> = MutableStateFlow(false)
+    val mockViewModel =
+        object : IJournalSettingsViewModel {
+            override val isSavingSettings: StateFlow<Boolean> = MutableStateFlow(false)
 
-        override fun editJournalSettings(
-            journalId: Long,
-            title: String,
-            viewAccess: JournalAccess,
-            commentAccess: JournalAccess
-        ) = Unit
-    }
+            override fun editJournalSettings(
+                journalId: Long,
+                title: String,
+                viewAccess: JournalAccess,
+                commentAccess: JournalAccess
+            ) = Unit
+        }
 
     JetpackWorkoutAppTheme {
         JournalSettingsDialog(
-            journal = Journal(
-                id = 1L,
-                title = "Мой дневник тренировок",
-                lastMessageImage = null,
-                createDate = "2024-01-15T10:00:00Z",
-                modifyDate = "2024-01-20T14:30:00Z",
-                lastMessageDate = null,
-                lastMessageText = null,
-                entriesCount = null,
-                ownerId = 123L,
-                viewAccess = JournalAccess.FRIENDS,
-                commentAccess = JournalAccess.ALL
-            ),
+            journal =
+                Journal(
+                    id = 1L,
+                    title = "Мой дневник тренировок",
+                    lastMessageImage = null,
+                    createDate = "2024-01-15T10:00:00Z",
+                    modifyDate = "2024-01-20T14:30:00Z",
+                    lastMessageDate = null,
+                    lastMessageText = null,
+                    entriesCount = null,
+                    ownerId = 123L,
+                    viewAccess = JournalAccess.FRIENDS,
+                    commentAccess = JournalAccess.ALL
+                ),
             onDismiss = {},
             viewModel = mockViewModel,
             isSaving = false
@@ -317,32 +323,34 @@ private fun JournalSettingsDialogPreviewLight() {
 @Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun JournalSettingsDialogPreviewDark() {
-    val mockViewModel = object : IJournalSettingsViewModel {
-        override val isSavingSettings: StateFlow<Boolean> = MutableStateFlow(false)
+    val mockViewModel =
+        object : IJournalSettingsViewModel {
+            override val isSavingSettings: StateFlow<Boolean> = MutableStateFlow(false)
 
-        override fun editJournalSettings(
-            journalId: Long,
-            title: String,
-            viewAccess: JournalAccess,
-            commentAccess: JournalAccess
-        ) = Unit
-    }
+            override fun editJournalSettings(
+                journalId: Long,
+                title: String,
+                viewAccess: JournalAccess,
+                commentAccess: JournalAccess
+            ) = Unit
+        }
 
     JetpackWorkoutAppTheme {
         JournalSettingsDialog(
-            journal = Journal(
-                id = 1L,
-                title = "Мой дневник тренировок",
-                lastMessageImage = null,
-                createDate = "2024-01-15T10:00:00Z",
-                modifyDate = "2024-01-20T14:30:00Z",
-                lastMessageDate = null,
-                lastMessageText = null,
-                entriesCount = null,
-                ownerId = 123L,
-                viewAccess = JournalAccess.FRIENDS,
-                commentAccess = JournalAccess.ALL
-            ),
+            journal =
+                Journal(
+                    id = 1L,
+                    title = "Мой дневник тренировок",
+                    lastMessageImage = null,
+                    createDate = "2024-01-15T10:00:00Z",
+                    modifyDate = "2024-01-20T14:30:00Z",
+                    lastMessageDate = null,
+                    lastMessageText = null,
+                    entriesCount = null,
+                    ownerId = 123L,
+                    viewAccess = JournalAccess.FRIENDS,
+                    commentAccess = JournalAccess.ALL
+                ),
             onDismiss = {},
             viewModel = mockViewModel,
             isSaving = false

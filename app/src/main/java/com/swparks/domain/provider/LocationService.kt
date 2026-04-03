@@ -7,7 +7,6 @@ import com.swparks.domain.model.LocationCoordinates
  * Интерфейс сервиса для получения текущих координат устройства.
  */
 interface LocationService {
-
     /**
      * Возвращает текущие координаты устройства.
      *
@@ -25,6 +24,10 @@ interface LocationService {
 
 sealed class LocationSettingsCheckResult {
     data object SettingsOk : LocationSettingsCheckResult()
-    data class NeedsResolution(val intentSender: IntentSender) : LocationSettingsCheckResult()
+
+    data class NeedsResolution(
+        val intentSender: IntentSender
+    ) : LocationSettingsCheckResult()
+
     data object SettingsDisabled : LocationSettingsCheckResult()
 }

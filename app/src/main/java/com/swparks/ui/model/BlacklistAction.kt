@@ -27,7 +27,8 @@ enum class BlacklistAction(
 /**
  * Преобразует UI-модель BlacklistAction в API-модель ApiBlacklistOption
  */
-fun BlacklistAction.toApiOption(): ApiBlacklistOption = when (this) {
-    BlacklistAction.BLOCK -> ApiBlacklistOption.ADD
-    BlacklistAction.UNBLOCK -> ApiBlacklistOption.REMOVE
-}
+fun BlacklistAction.toApiOption(): ApiBlacklistOption =
+    when (this) {
+        BlacklistAction.BLOCK -> ApiBlacklistOption.ADD
+        BlacklistAction.UNBLOCK -> ApiBlacklistOption.REMOVE
+    }

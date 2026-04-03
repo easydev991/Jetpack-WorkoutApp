@@ -7,7 +7,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MapUiStateTest {
-
     @Test
     fun defaultMapUiState_hasNullSelectedParkId() {
         val state = MapUiState()
@@ -77,18 +76,19 @@ class MapUiStateTest {
 
     @Test
     fun park_toDoubleOrNull_convertsValidCoordinates() {
-        val park = Park(
-            id = 1L,
-            name = "Test Park",
-            sizeID = 1,
-            typeID = 1,
-            longitude = "37.6173",
-            latitude = "55.7558",
-            address = "Test Address",
-            cityID = 1,
-            countryID = 1,
-            preview = ""
-        )
+        val park =
+            Park(
+                id = 1L,
+                name = "Test Park",
+                sizeID = 1,
+                typeID = 1,
+                longitude = "37.6173",
+                latitude = "55.7558",
+                address = "Test Address",
+                cityID = 1,
+                countryID = 1,
+                preview = ""
+            )
         val latitude = park.latitude.toDoubleOrNull()
         val longitude = park.longitude.toDoubleOrNull()
         assertEquals(55.7558, latitude!!, 0.0001)
@@ -97,72 +97,76 @@ class MapUiStateTest {
 
     @Test
     fun park_toDoubleOrNull_returnsNullForInvalidLatitude() {
-        val park = Park(
-            id = 1L,
-            name = "Test Park",
-            sizeID = 1,
-            typeID = 1,
-            longitude = "37.6173",
-            latitude = "invalid",
-            address = "Test Address",
-            cityID = 1,
-            countryID = 1,
-            preview = ""
-        )
+        val park =
+            Park(
+                id = 1L,
+                name = "Test Park",
+                sizeID = 1,
+                typeID = 1,
+                longitude = "37.6173",
+                latitude = "invalid",
+                address = "Test Address",
+                cityID = 1,
+                countryID = 1,
+                preview = ""
+            )
         val latitude = park.latitude.toDoubleOrNull()
         assertNull(latitude)
     }
 
     @Test
     fun park_toDoubleOrNull_returnsNullForInvalidLongitude() {
-        val park = Park(
-            id = 1L,
-            name = "Test Park",
-            sizeID = 1,
-            typeID = 1,
-            longitude = "invalid",
-            latitude = "55.7558",
-            address = "Test Address",
-            cityID = 1,
-            countryID = 1,
-            preview = ""
-        )
+        val park =
+            Park(
+                id = 1L,
+                name = "Test Park",
+                sizeID = 1,
+                typeID = 1,
+                longitude = "invalid",
+                latitude = "55.7558",
+                address = "Test Address",
+                cityID = 1,
+                countryID = 1,
+                preview = ""
+            )
         val longitude = park.longitude.toDoubleOrNull()
         assertNull(longitude)
     }
 
     @Test
     fun park_toDoubleOrNull_returnsNullForEmptyStrings() {
-        val park = Park(
-            id = 1L,
-            name = "Test Park",
-            sizeID = 1,
-            typeID = 1,
-            longitude = "",
-            latitude = "",
-            address = "Test Address",
-            cityID = 1,
-            countryID = 1,
-            preview = ""
-        )
+        val park =
+            Park(
+                id = 1L,
+                name = "Test Park",
+                sizeID = 1,
+                typeID = 1,
+                longitude = "",
+                latitude = "",
+                address = "Test Address",
+                cityID = 1,
+                countryID = 1,
+                preview = ""
+            )
         assertNull(park.latitude.toDoubleOrNull())
         assertNull(park.longitude.toDoubleOrNull())
     }
 
     @Test
     fun park_toDoubleOrNull_returnsNullForOutOfRangeValues() {
-        val park = Park(
-            id = 1L,
-            name = "Test Park",
-            sizeID = 1,
-            typeID = 1,
-            longitude = "200.0",
-            latitude = "100.0",
-            address = "Test Address",
-            cityID = 1,
-            countryID = 1,
-            preview = ""
-        )
+        val park =
+            Park(
+                id = 1L,
+                name = "Test Park",
+                sizeID = 1,
+                typeID = 1,
+                longitude = "200.0",
+                latitude = "100.0",
+                address = "Test Address",
+                cityID = 1,
+                countryID = 1,
+                preview = ""
+            )
         val latitude = park.latitude.toDoubleOrNull()
         val longitude = park.longitude.toDoubleOrNull()
         assertEquals(100.0, latitude!!, 0.0)

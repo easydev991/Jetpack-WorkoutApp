@@ -15,5 +15,5 @@ data class ThemeIconUiState(
     val theme: AppTheme = AppTheme.SYSTEM,
     val useDynamicColors: Boolean = true,
     val icon: AppIcon = AppIcon.DEFAULT,
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = false
 )

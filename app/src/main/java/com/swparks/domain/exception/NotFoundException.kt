@@ -10,6 +10,11 @@ package com.swparks.domain.exception
 sealed class NotFoundException : Exception() {
     abstract val resourceId: Long
 
-    data class ParkNotFound(override val resourceId: Long) : NotFoundException()
-    data class EventNotFound(override val resourceId: Long) : NotFoundException()
+    data class ParkNotFound(
+        override val resourceId: Long
+    ) : NotFoundException()
+
+    data class EventNotFound(
+        override val resourceId: Long
+    ) : NotFoundException()
 }

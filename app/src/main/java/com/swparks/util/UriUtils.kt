@@ -20,8 +20,11 @@ object UriUtils {
      * @param uri Uri для конвертации
      * @return Result.success(ByteArray) или Result.failure с описанием ошибки
      */
-    fun uriToByteArray(context: Context, uri: Uri): Result<ByteArray> {
-        return try {
+    fun uriToByteArray(
+        context: Context,
+        uri: Uri
+    ): Result<ByteArray> =
+        try {
             context.contentResolver.openInputStream(uri)?.use { inputStream ->
                 Result.success(inputStream.readBytes())
             } ?: Result.failure(IOException("Cannot open input stream for uri: $uri"))
@@ -31,11 +34,12 @@ object UriUtils {
         } catch (e: IOException) {
             Log.w(TAG, "Ошибка ввода-вывода при чтении uri: $uri", e)
             Result.failure(e)
-        } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
+        } catch (
+            @Suppress("TooGenericExceptionCaught") e: Exception
+        ) {
             Log.e(TAG, "Неожиданная ошибка при чтении uri: $uri", e)
             Result.failure(IOException("Unexpected error reading uri: ${e.message}"))
         }
-    }
 }
 
 fun readJSONFromAssets(
@@ -47,7 +51,7 @@ fun readJSONFromAssets(
         val file = context.assets.open(path)
         Log.i(
             identifier,
-            "Нашли файл: $file.",
+            "Нашли файл: $file."
         )
         val bufferedReader = BufferedReader(InputStreamReader(file))
         val stringBuilder = StringBuilder()
@@ -59,13 +63,13 @@ fun readJSONFromAssets(
         val jsonString = stringBuilder.toString()
         Log.i(
             identifier,
-            "Успешно прочитали JSON из ассетов по адресу: $path",
+            "Успешно прочитали JSON из ассетов по адресу: $path"
         )
         return jsonString
     } catch (e: IOException) {
         Log.e(
             identifier,
-            "Не смогли прочитать JSON, ошибка: $e.",
+            "Не смогли прочитать JSON, ошибка: $e."
         )
         return ""
     }

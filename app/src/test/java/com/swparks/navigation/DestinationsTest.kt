@@ -14,7 +14,6 @@ import org.robolectric.RobolectricTestRunner
  */
 @RunWith(RobolectricTestRunner::class)
 class DestinationsTest {
-
     // ==================== Тесты getScreenBySource ====================
 
     @Test
@@ -67,13 +66,14 @@ class DestinationsTest {
 
     @Test
     fun getScreenBySource_whenAllValidSources_thenReturnCorrectScreens() {
-        val mappings = listOf(
-            "parks" to Screen.Parks,
-            "events" to Screen.Events,
-            "messages" to Screen.Messages,
-            "profile" to Screen.Profile,
-            "more" to Screen.More
-        )
+        val mappings =
+            listOf(
+                "parks" to Screen.Parks,
+                "events" to Screen.Events,
+                "messages" to Screen.Messages,
+                "profile" to Screen.Profile,
+                "more" to Screen.More
+            )
 
         mappings.forEach { (source, expectedScreen) ->
             val result = getScreenBySource(source, Screen.Profile)
@@ -408,15 +408,17 @@ class DestinationsTest {
 
     @Test
     fun findParentTab_whenJournalEntriesRoute_thenHandlesComplexRoute() {
-        val arguments = Bundle().apply {
-            putString("source", "events")
-            putString("userId", "123")
-            putString("journalTitle", "My Journal")
-        }
-        val result = Screen.findParentTab(
-            "journal_entries/456?userId=123&title=My%20Journal&source=events",
-            arguments
-        )
+        val arguments =
+            Bundle().apply {
+                putString("source", "events")
+                putString("userId", "123")
+                putString("journalTitle", "My Journal")
+            }
+        val result =
+            Screen.findParentTab(
+                "journal_entries/456?userId=123&title=My%20Journal&source=events",
+                arguments
+            )
         assertEquals(Screen.Events, result)
     }
 
@@ -437,45 +439,48 @@ class DestinationsTest {
     @Test
     fun findParentTab_whenAllSourceValuesWithAllScreens_thenCorrectlyMaps() {
         // Проверяем все комбинации source для экранов с динамическим parentTab
-        val screensWithSource = listOf(
-            "other_user_profile",
-            "user_search",
-            "user_friends",
-            "user_parks",
-            "user_training_parks",
-            "journals_list",
-            "journal_entries",
-            "park_detail",
-            "edit_park",
-            "create_event_for_park",
-            "park_route",
-            "add_park_comment",
-            "park_trainees",
-            "park_gallery",
-            "event_detail",
-            "edit_event",
-            "event_participants",
-            "event_gallery",
-            "add_event_comment",
-            "chat"
-        )
+        val screensWithSource =
+            listOf(
+                "other_user_profile",
+                "user_search",
+                "user_friends",
+                "user_parks",
+                "user_training_parks",
+                "journals_list",
+                "journal_entries",
+                "park_detail",
+                "edit_park",
+                "create_event_for_park",
+                "park_route",
+                "add_park_comment",
+                "park_trainees",
+                "park_gallery",
+                "event_detail",
+                "edit_event",
+                "event_participants",
+                "event_gallery",
+                "add_event_comment",
+                "chat"
+            )
 
-        val sources = listOf(
-            "parks" to Screen.Parks,
-            "events" to Screen.Events,
-            "messages" to Screen.Messages,
-            "profile" to Screen.Profile,
-            "more" to Screen.More
-        )
+        val sources =
+            listOf(
+                "parks" to Screen.Parks,
+                "events" to Screen.Events,
+                "messages" to Screen.Messages,
+                "profile" to Screen.Profile,
+                "more" to Screen.More
+            )
 
         screensWithSource.forEach { baseRoute ->
             sources.forEach { (source, expectedScreen) ->
                 val arguments = Bundle().apply { putString("source", source) }
-                val route = if (baseRoute == "user_search") {
-                    baseRoute
-                } else {
-                    "$baseRoute/123"
-                }
+                val route =
+                    if (baseRoute == "user_search") {
+                        baseRoute
+                    } else {
+                        "$baseRoute/123"
+                    }
                 val result = Screen.findParentTab(route, arguments)
                 assertEquals(
                     "Route '$route' с source='$source' должен возвращать $expectedScreen",

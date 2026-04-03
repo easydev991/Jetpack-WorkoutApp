@@ -10,5 +10,6 @@ interface IPhotoDetailViewModel {
     val uiState: StateFlow<PhotoDetailUIState>
     val events: Channel<PhotoDetailEvent>
     val isAuthorized: StateFlow<Boolean>
+
     fun onAction(action: PhotoDetailAction)
 }

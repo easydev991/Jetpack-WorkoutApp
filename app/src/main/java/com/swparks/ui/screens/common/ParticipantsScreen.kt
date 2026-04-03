@@ -39,7 +39,10 @@ data class ParticipantsConfig(
 
 sealed class ParticipantsAction {
     object Back : ParticipantsAction()
-    data class UserClick(val userId: Long) : ParticipantsAction()
+
+    data class UserClick(
+        val userId: Long
+    ) : ParticipantsAction()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,9 +72,10 @@ fun ParticipantsScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
         ) {
             ParticipantsContent(config = config, onAction = onAction)
         }
@@ -90,12 +94,13 @@ private fun ParticipantsContent(
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                start = dimensionResource(R.dimen.spacing_regular),
-                top = dimensionResource(R.dimen.spacing_small),
-                end = dimensionResource(R.dimen.spacing_regular),
-                bottom = dimensionResource(R.dimen.spacing_regular)
-            ),
+            contentPadding =
+                PaddingValues(
+                    start = dimensionResource(R.dimen.spacing_regular),
+                    top = dimensionResource(R.dimen.spacing_small),
+                    end = dimensionResource(R.dimen.spacing_regular),
+                    bottom = dimensionResource(R.dimen.spacing_regular)
+                ),
             verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
         ) {
             items(
@@ -104,14 +109,15 @@ private fun ParticipantsContent(
             ) { user ->
                 val isCurrentUser = user.id == config.currentUserId
                 UserRowView(
-                    data = UserRowData(
-                        modifier = Modifier,
-                        enabled = !isCurrentUser,
-                        imageStringURL = user.image,
-                        name = user.name,
-                        address = null,
-                        onClick = { onAction(ParticipantsAction.UserClick(user.id)) }
-                    )
+                    data =
+                        UserRowData(
+                            modifier = Modifier,
+                            enabled = !isCurrentUser,
+                            imageStringURL = user.image,
+                            name = user.name,
+                            address = null,
+                            onClick = { onAction(ParticipantsAction.UserClick(user.id)) }
+                        )
                 )
             }
         }
@@ -128,15 +134,17 @@ private fun ParticipantsContent(
 private fun ParticipantsScreenWithUsersPreview() {
     JetpackWorkoutAppTheme {
         ParticipantsScreen(
-            config = ParticipantsConfig(
-                mode = ParticipantsMode.Event,
-                users = listOf(
-                    User(id = 1L, name = "CurrentUser", image = null),
-                    User(id = 2L, name = "StreetAthlete", image = null),
-                    User(id = 3L, name = "WorkoutPro", image = null)
+            config =
+                ParticipantsConfig(
+                    mode = ParticipantsMode.Event,
+                    users =
+                        listOf(
+                            User(id = 1L, name = "CurrentUser", image = null),
+                            User(id = 2L, name = "StreetAthlete", image = null),
+                            User(id = 3L, name = "WorkoutPro", image = null)
+                        ),
+                    currentUserId = 1L
                 ),
-                currentUserId = 1L
-            ),
             onAction = {}
         )
     }
@@ -147,11 +155,12 @@ private fun ParticipantsScreenWithUsersPreview() {
 private fun ParticipantsScreenEmptyPreview() {
     JetpackWorkoutAppTheme {
         ParticipantsScreen(
-            config = ParticipantsConfig(
-                mode = ParticipantsMode.Park,
-                users = emptyList(),
-                currentUserId = null
-            ),
+            config =
+                ParticipantsConfig(
+                    mode = ParticipantsMode.Park,
+                    users = emptyList(),
+                    currentUserId = null
+                ),
             onAction = {}
         )
     }

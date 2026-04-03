@@ -3,10 +3,6 @@ package com.swparks.data.database.entity
 import com.swparks.data.model.User
 
 /**
- * Конвертеры между [User] и [UserEntity]
- */
-
-/**
  * Конвертировать [User] в [UserEntity] с указанием флагов категоризации
  *
  * @param isCurrentUser Является ли текущим авторизованным пользователем
@@ -20,45 +16,47 @@ fun User.toEntity(
     isFriend: Boolean = false,
     isFriendRequest: Boolean = false,
     isBlacklisted: Boolean = false
-): UserEntity = UserEntity(
-    id = id,
-    name = name,
-    image = image,
-    cityId = cityID,
-    countryId = countryID,
-    birthDate = birthDate,
-    email = email,
-    fullName = fullName,
-    genderCode = genderCode,
-    friendRequestCount = friendRequestCount,
-    friendsCount = friendsCount,
-    parksCount = parksCount,
-    addedParks = addedParks,
-    journalCount = journalCount,
-    isCurrentUser = isCurrentUser,
-    isFriend = isFriend,
-    isFriendRequest = isFriendRequest,
-    isBlacklisted = isBlacklisted
-)
+): UserEntity =
+    UserEntity(
+        id = id,
+        name = name,
+        image = image,
+        cityId = cityID,
+        countryId = countryID,
+        birthDate = birthDate,
+        email = email,
+        fullName = fullName,
+        genderCode = genderCode,
+        friendRequestCount = friendRequestCount,
+        friendsCount = friendsCount,
+        parksCount = parksCount,
+        addedParks = addedParks,
+        journalCount = journalCount,
+        isCurrentUser = isCurrentUser,
+        isFriend = isFriend,
+        isFriendRequest = isFriendRequest,
+        isBlacklisted = isBlacklisted
+    )
 
 /**
  * Конвертировать [UserEntity] в [User]
  *
  * @return [User] без флагов категоризации и с восстановленными добавленными площадками
  */
-fun UserEntity.toDomain(): User = User(
-    id = id,
-    name = name,
-    image = image,
-    cityID = cityId,
-    countryID = countryId,
-    birthDate = birthDate,
-    email = email,
-    fullName = fullName,
-    genderCode = genderCode,
-    friendRequestCount = friendRequestCount,
-    friendsCount = friendsCount,
-    parksCount = parksCount,
-    addedParks = addedParks,
-    journalCount = journalCount
-)
+fun UserEntity.toDomain(): User =
+    User(
+        id = id,
+        name = name,
+        image = image,
+        cityID = cityId,
+        countryID = countryId,
+        birthDate = birthDate,
+        email = email,
+        fullName = fullName,
+        genderCode = genderCode,
+        friendRequestCount = friendRequestCount,
+        friendsCount = friendsCount,
+        parksCount = parksCount,
+        addedParks = addedParks,
+        journalCount = journalCount
+    )

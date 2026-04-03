@@ -32,7 +32,7 @@ private object PreferencesKeys {
  * Реализация DataStore для настроек приложения.
  */
 class AppSettingsDataStore(
-    private val context: Context,
+    private val context: Context
 ) {
     /**
      * Сохраняет выбранную тему приложения.
@@ -128,5 +128,5 @@ class AppSettingsDataStore(
  */
 fun createAppSettingsDataStore(context: Context): AppSettingsDataStore =
     AppSettingsDataStore(
-        context.applicationContext,
+        context.applicationContext
     )

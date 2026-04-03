@@ -17,7 +17,10 @@ interface JournalEntriesRepository {
      * @param journalId Идентификатор дневника
      * @return Flow со списком записей, отсортированным по дате изменения
      */
-    fun observeJournalEntries(userId: Long, journalId: Long): Flow<List<JournalEntry>>
+    fun observeJournalEntries(
+        userId: Long,
+        journalId: Long
+    ): Flow<List<JournalEntry>>
 
     /**
      * Обновить записи дневника с сервера
@@ -26,7 +29,10 @@ interface JournalEntriesRepository {
      * @param journalId Идентификатор дневника
      * @return Result успеха или ошибки операции
      */
-    suspend fun refreshJournalEntries(userId: Long, journalId: Long): Result<Unit>
+    suspend fun refreshJournalEntries(
+        userId: Long,
+        journalId: Long
+    ): Result<Unit>
 
     /**
      * Удалить запись из дневника
@@ -51,5 +57,8 @@ interface JournalEntriesRepository {
      * @param journalId Идентификатор дневника
      * @return true если удаление разрешено, false если это первая запись
      */
-    suspend fun canDeleteEntry(entryId: Long, journalId: Long): Boolean
+    suspend fun canDeleteEntry(
+        entryId: Long,
+        journalId: Long
+    ): Boolean
 }

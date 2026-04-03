@@ -19,7 +19,6 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class CryptoManagerIntegrationTest {
-
     private lateinit var context: Context
     private lateinit var cryptoManager: CryptoManager
 
@@ -95,13 +94,14 @@ class CryptoManagerIntegrationTest {
     @Test
     fun encryptAndDecrypt_whenMultiple_encryption_thenAllDecryptCorrectly() {
         // Given
-        val dataList = listOf(
-            "data_1".toByteArray(),
-            "data_2".toByteArray(),
-            "data_3".toByteArray(),
-            "another_token_12345".toByteArray(),
-            "final_test_data".toByteArray()
-        )
+        val dataList =
+            listOf(
+                "data_1".toByteArray(),
+                "data_2".toByteArray(),
+                "data_3".toByteArray(),
+                "another_token_12345".toByteArray(),
+                "final_test_data".toByteArray()
+            )
 
         // When & Then
         for (originalData in dataList) {

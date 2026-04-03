@@ -80,7 +80,10 @@ data class JournalNavigationParams(
 
 sealed class JournalsListAction {
     object Back : JournalsListAction()
-    data class JournalClick(val params: JournalNavigationParams) : JournalsListAction()
+
+    data class JournalClick(
+        val params: JournalNavigationParams
+    ) : JournalsListAction()
 }
 
 data class JournalsScreenParams(
@@ -119,7 +122,10 @@ data class JournalsContentState(
  */
 sealed class JournalsContentAction {
     object Refresh : JournalsContentAction()
-    data class JournalClick(val params: JournalNavigationParams) : JournalsContentAction()
+
+    data class JournalClick(
+        val params: JournalNavigationParams
+    ) : JournalsContentAction()
 }
 
 /**
@@ -148,8 +154,12 @@ data class JournalsMainContentParams(
  */
 sealed class JournalsMainContentAction {
     object Retry : JournalsMainContentAction()
+
     object Refresh : JournalsMainContentAction()
-    data class JournalClick(val params: JournalNavigationParams) : JournalsMainContentAction()
+
+    data class JournalClick(
+        val params: JournalNavigationParams
+    ) : JournalsMainContentAction()
 }
 
 /**
@@ -221,40 +231,49 @@ fun JournalsListScreen(
         }
     ) { innerPadding ->
         JournalsScaffoldContent(
-            params = JournalsScaffoldContentParams(
-                innerPadding = innerPadding,
-                parentPaddingValues = config.parentPaddingValues,
-                layoutDirection = layoutDirection,
-                contentParams = JournalsMainContentParams(
-                    uiState,
-                    isRefreshing,
-                    isDeleting,
-                    ownerConfig
+            params =
+                JournalsScaffoldContentParams(
+                    innerPadding = innerPadding,
+                    parentPaddingValues = config.parentPaddingValues,
+                    layoutDirection = layoutDirection,
+                    contentParams =
+                        JournalsMainContentParams(
+                            uiState,
+                            isRefreshing,
+                            isDeleting,
+                            ownerConfig
+                        ),
+                    dialogsParams =
+                        JournalsDialogsParams(
+                            dialogState.toState(),
+                            uiState,
+                            viewModel
+                        ),
+                    dialogsActions =
+                        JournalsDialogsActions(
+                            onDeleteDismiss = { dialogState.showDeleteDialog = false },
+                            onDeleteConfirm = {
+                                dialogState.journalToDelete?.let { viewModel.deleteJournal(it.id) }
+                                dialogState.showDeleteDialog = false
+                            },
+                            onSettingsDismiss = { dialogState.journalToEditSettings = null },
+                            onTextEntryDismiss = { dialogState.clearTextEntry() },
+                            onTextEntrySuccess = {
+                                dialogState.clearTextEntry()
+                                viewModel.loadJournals()
+                            }
+                        )
                 ),
-                dialogsParams = JournalsDialogsParams(dialogState.toState(), uiState, viewModel),
-                dialogsActions = JournalsDialogsActions(
-                    onDeleteDismiss = { dialogState.showDeleteDialog = false },
-                    onDeleteConfirm = {
-                        dialogState.journalToDelete?.let { viewModel.deleteJournal(it.id) }
-                        dialogState.showDeleteDialog = false
-                    },
-                    onSettingsDismiss = { dialogState.journalToEditSettings = null },
-                    onTextEntryDismiss = { dialogState.clearTextEntry() },
-                    onTextEntrySuccess = {
-                        dialogState.clearTextEntry()
-                        viewModel.loadJournals()
-                    }
-                )
-            ),
             onContentAction = { action ->
                 when (action) {
                     is JournalsMainContentAction.Retry -> viewModel.retry()
                     is JournalsMainContentAction.Refresh -> viewModel.loadJournals()
-                    is JournalsMainContentAction.JournalClick -> onAction(
-                        JournalsListAction.JournalClick(
-                            action.params
+                    is JournalsMainContentAction.JournalClick ->
+                        onAction(
+                            JournalsListAction.JournalClick(
+                                action.params
+                            )
                         )
-                    )
                 }
             }
         )
@@ -268,9 +287,14 @@ private class JournalsDialogState {
     var showTextEntrySheet by mutableStateOf(false)
     var textEntryMode by mutableStateOf<TextEntryMode?>(null)
 
-    fun toState() = JournalsDialogsState(
-        showDeleteDialog, journalToDelete, journalToEditSettings, showTextEntrySheet, textEntryMode
-    )
+    fun toState() =
+        JournalsDialogsState(
+            showDeleteDialog,
+            journalToDelete,
+            journalToEditSettings,
+            showTextEntrySheet,
+            textEntryMode
+        )
 
     fun clearTextEntry() {
         showTextEntrySheet = false
@@ -279,17 +303,15 @@ private class JournalsDialogState {
 }
 
 @Composable
-private fun rememberJournalsDialogState(): JournalsDialogState {
-    return remember { JournalsDialogState() }
-}
+private fun rememberJournalsDialogState(): JournalsDialogState = remember { JournalsDialogState() }
 
 @Composable
 private fun rememberOwnerConfig(
     isOwner: Boolean,
     userId: Long,
     dialogState: JournalsDialogState
-): OwnerDisplayConfig {
-    return remember(isOwner, userId) {
+): OwnerDisplayConfig =
+    remember(isOwner, userId) {
         OwnerDisplayConfig(
             isOwner = isOwner,
             onDeleteClick = { journal ->
@@ -303,7 +325,6 @@ private fun rememberOwnerConfig(
             }
         )
     }
-}
 
 @Composable
 private fun JournalsScaffoldContent(
@@ -311,14 +332,15 @@ private fun JournalsScaffoldContent(
     onContentAction: (JournalsMainContentAction) -> Unit
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                start = params.parentPaddingValues.calculateStartPadding(params.layoutDirection),
-                top = params.parentPaddingValues.calculateTopPadding(),
-                end = params.parentPaddingValues.calculateEndPadding(params.layoutDirection)
-            )
-            .padding(params.innerPadding)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(
+                    start = params.parentPaddingValues.calculateStartPadding(params.layoutDirection),
+                    top = params.parentPaddingValues.calculateTopPadding(),
+                    end = params.parentPaddingValues.calculateEndPadding(params.layoutDirection)
+                )
+                .padding(params.innerPadding)
     ) {
         JournalsMainContent(params = params.contentParams, onAction = onContentAction)
     }
@@ -369,29 +391,33 @@ private fun JournalsMainContent(
     when (params.uiState) {
         is JournalsUiState.InitialLoading -> LoadingOverlayView()
 
-        is JournalsUiState.Error -> ErrorContentView(
-            retryAction = { onAction(JournalsMainContentAction.Retry) },
-            message = params.uiState.message
-        )
+        is JournalsUiState.Error ->
+            ErrorContentView(
+                retryAction = { onAction(JournalsMainContentAction.Retry) },
+                message = params.uiState.message
+            )
 
-        is JournalsUiState.Content -> ContentScreen(
-            state = JournalsContentState(
-                journals = params.uiState.journals,
-                isRefreshing = params.isRefreshing,
-                isDeleting = params.isDeleting,
-                ownerConfig = params.ownerConfig
-            ),
-            onAction = { action ->
-                when (action) {
-                    JournalsContentAction.Refresh -> onAction(JournalsMainContentAction.Refresh)
-                    is JournalsContentAction.JournalClick -> onAction(
-                        JournalsMainContentAction.JournalClick(
-                            action.params
-                        )
-                    )
+        is JournalsUiState.Content ->
+            ContentScreen(
+                state =
+                    JournalsContentState(
+                        journals = params.uiState.journals,
+                        isRefreshing = params.isRefreshing,
+                        isDeleting = params.isDeleting,
+                        ownerConfig = params.ownerConfig
+                    ),
+                onAction = { action ->
+                    when (action) {
+                        JournalsContentAction.Refresh -> onAction(JournalsMainContentAction.Refresh)
+                        is JournalsContentAction.JournalClick ->
+                            onAction(
+                                JournalsMainContentAction.JournalClick(
+                                    action.params
+                                )
+                            )
+                    }
                 }
-            }
-        )
+            )
     }
 }
 
@@ -476,9 +502,10 @@ private fun ContentScreen(
             PullToRefreshDefaults.Indicator(
                 state = pullRefreshState,
                 isRefreshing = state.isRefreshing,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = dimensionResource(R.dimen.spacing_regular))
+                modifier =
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = dimensionResource(R.dimen.spacing_regular))
             )
         }
     ) {
@@ -520,12 +547,13 @@ private fun JournalsList(
 ) {
     val context = LocalContext.current
     LazyColumn(
-        contentPadding = PaddingValues(
-            start = dimensionResource(R.dimen.spacing_regular),
-            top = dimensionResource(R.dimen.spacing_small),
-            end = dimensionResource(R.dimen.spacing_regular),
-            bottom = dimensionResource(R.dimen.spacing_regular)
-        ),
+        contentPadding =
+            PaddingValues(
+                start = dimensionResource(R.dimen.spacing_regular),
+                top = dimensionResource(R.dimen.spacing_small),
+                end = dimensionResource(R.dimen.spacing_regular),
+                bottom = dimensionResource(R.dimen.spacing_regular)
+            ),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
     ) {
         items(items = journals, key = { it.id }) { journal ->
@@ -549,41 +577,44 @@ private fun JournalItem(
     onClick: (JournalNavigationParams) -> Unit
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = enabled) {
-                onClick(
-                    JournalNavigationParams(
-                        journalId = journal.id,
-                        journalOwnerId = journal.ownerId!!,
-                        journalTitle = journal.title ?: "",
-                        viewAccess = journal.viewAccess?.name ?: JournalAccess.NOBODY.name,
-                        commentAccess = journal.commentAccess?.name ?: JournalAccess.NOBODY.name
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(enabled = enabled) {
+                    onClick(
+                        JournalNavigationParams(
+                            journalId = journal.id,
+                            journalOwnerId = journal.ownerId!!,
+                            journalTitle = journal.title ?: "",
+                            viewAccess = journal.viewAccess?.name ?: JournalAccess.NOBODY.name,
+                            commentAccess = journal.commentAccess?.name ?: JournalAccess.NOBODY.name
+                        )
                     )
-                )
-            }
+                }
     ) {
         JournalRowView(
-            data = JournalRowData(
-                modifier = Modifier.fillMaxWidth(),
-                imageStringURL = journal.lastMessageImage,
-                title = journal.title ?: "",
-                dateString = DateFormatter.formatDate(context, journal.lastMessageDate),
-                bodyText = journal.lastMessageText ?: "",
-                mode = JournalRowMode.ROOT,
-                actions = if (ownerConfig.isOwner) {
-                    listOf(JournalAction.SETUP, JournalAction.DELETE)
-                } else {
-                    emptyList()
-                },
-                onClickAction = { action ->
-                    if (action == JournalAction.DELETE) {
-                        ownerConfig.onDeleteClick(journal)
-                    } else if (action == JournalAction.SETUP) {
-                        ownerConfig.onSetupClick(journal)
+            data =
+                JournalRowData(
+                    modifier = Modifier.fillMaxWidth(),
+                    imageStringURL = journal.lastMessageImage,
+                    title = journal.title ?: "",
+                    dateString = DateFormatter.formatDate(context, journal.lastMessageDate),
+                    bodyText = journal.lastMessageText ?: "",
+                    mode = JournalRowMode.ROOT,
+                    actions =
+                        if (ownerConfig.isOwner) {
+                            listOf(JournalAction.SETUP, JournalAction.DELETE)
+                        } else {
+                            emptyList()
+                        },
+                    onClickAction = { action ->
+                        if (action == JournalAction.DELETE) {
+                            ownerConfig.onDeleteClick(journal)
+                        } else if (action == JournalAction.SETUP) {
+                            ownerConfig.onSetupClick(journal)
+                        }
                     }
-                }
-            )
+                )
         )
     }
 }
@@ -607,9 +638,10 @@ private fun DeleteConfirmationDialog(
         confirmButton = {
             TextButton(
                 onClick = onConfirm,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
+                colors =
+                    ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
             ) {
                 Text(stringResource(R.string.delete))
             }
@@ -619,10 +651,11 @@ private fun DeleteConfirmationDialog(
                 Text(stringResource(R.string.cancel))
             }
         },
-        properties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true
-        )
+        properties =
+            DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true
+            )
     )
 }
 
@@ -632,20 +665,22 @@ private fun DeleteConfirmationDialog(
 @Preview(showBackground = true, locale = "ru", name = "Empty Journals List - Owner")
 @Composable
 private fun JournalsListScreenEmptyPreview() {
-    val ownerConfig = OwnerDisplayConfig(
-        isOwner = true,
-        onDeleteClick = {},
-        onSetupClick = {},
-        onCreateJournalClick = {}
-    )
+    val ownerConfig =
+        OwnerDisplayConfig(
+            isOwner = true,
+            onDeleteClick = {},
+            onSetupClick = {},
+            onCreateJournalClick = {}
+        )
     JetpackWorkoutAppTheme {
         ContentScreen(
-            state = JournalsContentState(
-                journals = emptyList(),
-                isRefreshing = false,
-                isDeleting = false,
-                ownerConfig = ownerConfig
-            ),
+            state =
+                JournalsContentState(
+                    journals = emptyList(),
+                    isRefreshing = false,
+                    isDeleting = false,
+                    ownerConfig = ownerConfig
+                ),
             onAction = {}
         )
     }
@@ -655,20 +690,22 @@ private fun JournalsListScreenEmptyPreview() {
 @Preview(showBackground = true, locale = "ru", name = "Empty Journals List - Other User Loading")
 @Composable
 private fun JournalsListScreenEmptyOtherUserLoadingPreview() {
-    val ownerConfig = OwnerDisplayConfig(
-        isOwner = false,
-        onDeleteClick = {},
-        onSetupClick = {},
-        onCreateJournalClick = {}
-    )
+    val ownerConfig =
+        OwnerDisplayConfig(
+            isOwner = false,
+            onDeleteClick = {},
+            onSetupClick = {},
+            onCreateJournalClick = {}
+        )
     JetpackWorkoutAppTheme {
         ContentScreen(
-            state = JournalsContentState(
-                journals = emptyList(),
-                isRefreshing = true,
-                isDeleting = false,
-                ownerConfig = ownerConfig
-            ),
+            state =
+                JournalsContentState(
+                    journals = emptyList(),
+                    isRefreshing = true,
+                    isDeleting = false,
+                    ownerConfig = ownerConfig
+                ),
             onAction = {}
         )
     }
@@ -678,20 +715,22 @@ private fun JournalsListScreenEmptyOtherUserLoadingPreview() {
 @Preview(showBackground = true, locale = "ru", name = "Empty Journals List - Other User Loaded")
 @Composable
 private fun JournalsListScreenEmptyOtherUserLoadedPreview() {
-    val ownerConfig = OwnerDisplayConfig(
-        isOwner = false,
-        onDeleteClick = {},
-        onSetupClick = {},
-        onCreateJournalClick = {}
-    )
+    val ownerConfig =
+        OwnerDisplayConfig(
+            isOwner = false,
+            onDeleteClick = {},
+            onSetupClick = {},
+            onCreateJournalClick = {}
+        )
     JetpackWorkoutAppTheme {
         ContentScreen(
-            state = JournalsContentState(
-                journals = emptyList(),
-                isRefreshing = false,
-                isDeleting = false,
-                ownerConfig = ownerConfig
-            ),
+            state =
+                JournalsContentState(
+                    journals = emptyList(),
+                    isRefreshing = false,
+                    isDeleting = false,
+                    ownerConfig = ownerConfig
+                ),
             onAction = {}
         )
     }
@@ -701,49 +740,52 @@ private fun JournalsListScreenEmptyOtherUserLoadedPreview() {
 @Preview(showBackground = true, locale = "ru", name = "Journals List with Items")
 @Composable
 private fun JournalsListScreenWithItemsPreview() {
-    val sampleJournals = listOf(
-        Journal(
-            id = 1,
-            title = "Мой первый дневник",
-            lastMessageText = "Сегодня была отличная тренировка!",
-            lastMessageDate = "2024-01-15T10:30:00",
-            lastMessageImage = null,
-            createDate = "2024-01-01T00:00:00",
-            modifyDate = "2024-01-15T10:30:00",
-            entriesCount = 5,
-            ownerId = 1,
-            viewAccess = JournalAccess.FRIENDS,
-            commentAccess = JournalAccess.FRIENDS
-        ),
-        Journal(
-            id = 2,
-            title = "Дневник питания",
-            lastMessageText = "Завтрак: овсянка с фруктами",
-            lastMessageDate = "2024-01-14T08:00:00",
-            lastMessageImage = null,
-            createDate = "2024-01-02T00:00:00",
-            modifyDate = "2024-01-14T08:00:00",
-            entriesCount = 3,
-            ownerId = 1,
-            viewAccess = JournalAccess.NOBODY,
-            commentAccess = JournalAccess.NOBODY
+    val sampleJournals =
+        listOf(
+            Journal(
+                id = 1,
+                title = "Мой первый дневник",
+                lastMessageText = "Сегодня была отличная тренировка!",
+                lastMessageDate = "2024-01-15T10:30:00",
+                lastMessageImage = null,
+                createDate = "2024-01-01T00:00:00",
+                modifyDate = "2024-01-15T10:30:00",
+                entriesCount = 5,
+                ownerId = 1,
+                viewAccess = JournalAccess.FRIENDS,
+                commentAccess = JournalAccess.FRIENDS
+            ),
+            Journal(
+                id = 2,
+                title = "Дневник питания",
+                lastMessageText = "Завтрак: овсянка с фруктами",
+                lastMessageDate = "2024-01-14T08:00:00",
+                lastMessageImage = null,
+                createDate = "2024-01-02T00:00:00",
+                modifyDate = "2024-01-14T08:00:00",
+                entriesCount = 3,
+                ownerId = 1,
+                viewAccess = JournalAccess.NOBODY,
+                commentAccess = JournalAccess.NOBODY
+            )
         )
-    )
 
-    val ownerConfig = OwnerDisplayConfig(
-        isOwner = true,
-        onDeleteClick = {},
-        onSetupClick = {},
-        onCreateJournalClick = {}
-    )
+    val ownerConfig =
+        OwnerDisplayConfig(
+            isOwner = true,
+            onDeleteClick = {},
+            onSetupClick = {},
+            onCreateJournalClick = {}
+        )
     JetpackWorkoutAppTheme {
         ContentScreen(
-            state = JournalsContentState(
-                journals = sampleJournals,
-                isRefreshing = false,
-                isDeleting = false,
-                ownerConfig = ownerConfig
-            ),
+            state =
+                JournalsContentState(
+                    journals = sampleJournals,
+                    isRefreshing = false,
+                    isDeleting = false,
+                    ownerConfig = ownerConfig
+                ),
             onAction = {}
         )
     }

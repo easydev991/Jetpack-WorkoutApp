@@ -5,7 +5,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RootScreenBottomBarVisibilityTest {
-
     @Test
     fun shouldShowBottomBar_whenCreateEventRoute_thenReturnFalse() {
         assertFalse(shouldShowBottomBar("create_event"))

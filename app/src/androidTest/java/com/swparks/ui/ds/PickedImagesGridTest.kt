@@ -132,11 +132,12 @@ class PickedImagesGridTest {
         val images = createUriList(3)
         setContent(images = images, selectionLimit = 15)
 
-        val expectedTitle = context.resources.getQuantityString(
-            R.plurals.photoSectionHeader,
-            3,
-            3
-        )
+        val expectedTitle =
+            context.resources.getQuantityString(
+                R.plurals.photoSectionHeader,
+                3,
+                3
+            )
         composeTestRule
             .onNodeWithText(expectedTitle)
             .assertIsDisplayed()
@@ -156,19 +157,19 @@ class PickedImagesGridTest {
         val images = createUriList(1)
         setContent(images = images, selectionLimit = 15)
 
-        val expectedTitle = context.resources.getQuantityString(
-            R.plurals.photoSectionHeader,
-            1,
-            1
-        )
+        val expectedTitle =
+            context.resources.getQuantityString(
+                R.plurals.photoSectionHeader,
+                1,
+                1
+            )
         composeTestRule
             .onNodeWithText(expectedTitle)
             .assertIsDisplayed()
     }
 
-    private fun createUriList(count: Int): List<Uri> {
-        return List(count) { index ->
+    private fun createUriList(count: Int): List<Uri> =
+        List(count) { index ->
             Uri.parse("content://media/external/images/media/$index")
         }
-    }
 }

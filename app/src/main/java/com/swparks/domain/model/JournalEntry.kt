@@ -37,13 +37,14 @@ data class JournalEntry(
  *
  * @return Доменная модель [JournalEntry]
  */
-fun JournalEntryResponse.toDomain(): JournalEntry = JournalEntry(
-    id = id,
-    journalId = journalId?.toLong(),
-    authorId = authorId?.toLong(),
-    authorName = name,
-    message = parsedMessage,
-    createDate = createDate,
-    modifyDate = modifyDate,
-    authorImage = image
-)
+fun JournalEntryResponse.toDomain(): JournalEntry =
+    JournalEntry(
+        id = id,
+        journalId = journalId?.toLong(),
+        authorId = authorId?.toLong(),
+        authorName = name,
+        message = parsedMessage,
+        createDate = createDate,
+        modifyDate = modifyDate,
+        authorImage = image
+    )

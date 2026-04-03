@@ -11,15 +11,16 @@ import org.junit.Test
  * с использованием IntStringSerializer и LongStringSerializer
  */
 class EventDeserializationTest {
-
-    private val json = Json {
-        ignoreUnknownKeys = true
-    }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+        }
 
     @Test
     fun deserialize_whenAllInts_thenReturnsEvent() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {
                 "id": 123,
                 "title": "Test Event",
@@ -44,7 +45,7 @@ class EventDeserializationTest {
                 "can_edit": true,
                 "train_here": true
             }
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<Event>(jsonString)
@@ -63,7 +64,8 @@ class EventDeserializationTest {
     @Test
     fun deserialize_whenAllStrings_thenReturnsEvent() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {
                 "id": "123",
                 "title": "Test Event",
@@ -88,7 +90,7 @@ class EventDeserializationTest {
                 "can_edit": true,
                 "train_here": true
             }
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<Event>(jsonString)
@@ -107,7 +109,8 @@ class EventDeserializationTest {
     @Test
     fun deserialize_whenMixedIntsAndStrings_thenReturnsEvent() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {
                 "id": "123",
                 "title": "Test Event",
@@ -132,7 +135,7 @@ class EventDeserializationTest {
                 "can_edit": true,
                 "train_here": true
             }
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<Event>(jsonString)
@@ -151,7 +154,8 @@ class EventDeserializationTest {
     @Test
     fun deserialize_whenZeroValues_thenReturnsEvent() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {
                 "id": "123",
                 "title": "Test Event",
@@ -176,7 +180,7 @@ class EventDeserializationTest {
                 "can_edit": true,
                 "train_here": true
             }
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<Event>(jsonString)
@@ -193,7 +197,8 @@ class EventDeserializationTest {
     @Test
     fun deserialize_whenNegativeValues_thenReturnsEvent() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {
                 "id": "123",
                 "title": "Test Event",
@@ -218,7 +223,7 @@ class EventDeserializationTest {
                 "can_edit": true,
                 "train_here": true
             }
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<Event>(jsonString)

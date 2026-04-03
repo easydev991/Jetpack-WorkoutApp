@@ -32,9 +32,9 @@ class FriendsListViewModel(
     private val userDao: UserDao,
     private val swRepository: SWRepository,
     private val logger: Logger,
-    private val userNotifier: UserNotifier,
-) : ViewModel(), IFriendsListViewModel {
-
+    private val userNotifier: UserNotifier
+) : ViewModel(),
+    IFriendsListViewModel {
     private companion object {
         private const val TAG = "FriendsListViewModel"
     }
@@ -50,11 +50,11 @@ class FriendsListViewModel(
     private val _uiState = MutableStateFlow<FriendsListUiState>(FriendsListUiState.Loading)
     override val uiState: StateFlow<FriendsListUiState> = _uiState.asStateFlow()
 
-    private val _isProcessing = MutableStateFlow(false)
+    private val isProcessingFlow = MutableStateFlow(false)
 
     init {
         viewModelScope.launch {
-            combine(friendRequests, friends, _isProcessing) { requests, friendList, processing ->
+            combine(friendRequests, friends, isProcessingFlow) { requests, friendList, processing ->
                 val requestsUsers = requests.map { it.toDomain() }
                 val friendsUsers = friendList.map { it.toDomain() }
                 FriendsListUiState.Success(
@@ -62,8 +62,7 @@ class FriendsListViewModel(
                     friends = friendsUsers,
                     isProcessing = processing
                 )
-            }
-                .collect { state -> _uiState.value = state }
+            }.collect { state -> _uiState.value = state }
         }
 
         viewModelScope.launch {
@@ -85,8 +84,7 @@ class FriendsListViewModel(
                         .getSocialUpdates(currentUser.toDomain().id)
                         .onSuccess {
                             logger.i(TAG, "Социальные данные успешно загружены из кэша")
-                        }
-                        .onFailure { error ->
+                        }.onFailure { error ->
                             logger.e(TAG, "Ошибка загрузки социальных данных: ${error.message}")
                         }
                 } else {
@@ -103,14 +101,14 @@ class FriendsListViewModel(
      */
     override fun onAcceptFriendRequest(userId: Long) {
         viewModelScope.launch {
-            _isProcessing.value = true
+            isProcessingFlow.value = true
 
             logger.i(TAG, "Принятие заявки на добавление в друга: userId=$userId")
-            swRepository.respondToFriendRequest(userId, accept = true)
+            swRepository
+                .respondToFriendRequest(userId, accept = true)
                 .onSuccess {
                     logger.i(TAG, "Заявка успешно принята: userId=$userId")
-                }
-                .onFailure { error ->
+                }.onFailure { error ->
                     userNotifier.handleError(
                         AppError.Network(
                             message = "Не удалось принять заявку. Проверьте подключение к интернету.",
@@ -118,7 +116,7 @@ class FriendsListViewModel(
                         )
                     )
                 }
-            _isProcessing.value = false
+            isProcessingFlow.value = false
         }
     }
 
@@ -129,14 +127,14 @@ class FriendsListViewModel(
      */
     override fun onDeclineFriendRequest(userId: Long) {
         viewModelScope.launch {
-            _isProcessing.value = true
+            isProcessingFlow.value = true
 
             logger.i(TAG, "Отклонение заявки на добавление в друга: userId=$userId")
-            swRepository.respondToFriendRequest(userId, accept = false)
+            swRepository
+                .respondToFriendRequest(userId, accept = false)
                 .onSuccess {
                     logger.i(TAG, "Заявка успешно отклонена: userId=$userId")
-                }
-                .onFailure { error ->
+                }.onFailure { error ->
                     userNotifier.handleError(
                         AppError.Network(
                             message = "Не удалось отклонить заявку. Проверьте подключение к интернету.",
@@ -144,7 +142,7 @@ class FriendsListViewModel(
                         )
                     )
                 }
-            _isProcessing.value = false
+            isProcessingFlow.value = false
         }
     }
 

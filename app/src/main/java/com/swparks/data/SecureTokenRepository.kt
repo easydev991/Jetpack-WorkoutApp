@@ -46,28 +46,28 @@ class SecureTokenRepository(
      *
      * @return Flow<String?> Токен авторизации или null если не установлен
      */
-    val authToken: Flow<String?> = dataStore.data
-        .catch {
-            if (it is IOException) {
-                Log.e(
-                    TAG,
-                    "Ошибка при загрузке токена",
-                    it
-                )
-                emit(emptyPreferences())
-            } else {
-                throw it
+    val authToken: Flow<String?> =
+        dataStore.data
+            .catch {
+                if (it is IOException) {
+                    Log.e(
+                        TAG,
+                        "Ошибка при загрузке токена",
+                        it
+                    )
+                    emit(emptyPreferences())
+                } else {
+                    throw it
+                }
+            }.map { preferences ->
+                val encryptedTokenBase64 = preferences[encrypted_token]
+                if (encryptedTokenBase64 != null) {
+                    val encryptedToken = Base64.decode(encryptedTokenBase64, Base64.NO_WRAP)
+                    serializer.deserialize(encryptedToken)
+                } else {
+                    null
+                }
             }
-        }
-        .map { preferences ->
-            val encryptedTokenBase64 = preferences[encrypted_token]
-            if (encryptedTokenBase64 != null) {
-                val encryptedToken = Base64.decode(encryptedTokenBase64, Base64.NO_WRAP)
-                serializer.deserialize(encryptedToken)
-            } else {
-                null
-            }
-        }
 
     /**
      * Сохраняет токен авторизации с шифрованием.

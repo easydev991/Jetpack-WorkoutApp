@@ -36,5 +36,7 @@ sealed class JournalEntriesUiState {
      *
      * @param message Сообщение об ошибке для отображения пользователю
      */
-    data class Error(val message: String) : JournalEntriesUiState()
+    data class Error(
+        val message: String
+    ) : JournalEntriesUiState()
 }

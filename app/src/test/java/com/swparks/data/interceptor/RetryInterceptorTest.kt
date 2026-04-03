@@ -16,7 +16,6 @@ import java.io.IOException
 
 /** Unit тесты для RetryInterceptor */
 class RetryInterceptorTest {
-
     private lateinit var logger: Logger
     private lateinit var retryInterceptor: RetryInterceptor
 

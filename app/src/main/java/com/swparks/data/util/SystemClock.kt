@@ -13,9 +13,9 @@ class SystemClock : Clock {
 
     override fun now(): Instant = Instant.now()
 
-    override fun nowIsoString(): String {
-        return Instant.now()
+    override fun nowIsoString(): String =
+        Instant
+            .now()
             .atZone(ZoneOffset.UTC)
             .format(formatter)
-    }
 }

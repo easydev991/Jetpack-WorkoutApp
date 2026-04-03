@@ -5,7 +5,5 @@ import com.swparks.data.repository.SWRepository
 class SyncPastEventsUseCase(
     private val swRepository: SWRepository
 ) : ISyncPastEventsUseCase {
-    override suspend fun invoke(): Result<Unit> {
-        return swRepository.syncPastEvents()
-    }
+    override suspend fun invoke(): Result<Unit> = swRepository.syncPastEvents()
 }

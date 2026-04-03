@@ -23,28 +23,28 @@ import org.junit.Test
  * - Навигации и определения активной вкладки (включая parentTab для дочерних экранов)
  */
 class AppStateTest {
-
     private lateinit var navController: NavHostController
     private lateinit var analyticsReporter: AnalyticsReporter
     private lateinit var appState: AppState
 
     // Вспомогательный метод для создания тестового пользователя
-    private fun createTestUser(id: Long = 1L) = User(
-        id = id,
-        name = "testuser",
-        image = "https://example.com/image.jpg",
-        cityID = null,
-        countryID = null,
-        birthDate = null,
-        email = null,
-        fullName = null,
-        genderCode = null,
-        friendRequestCount = null,
-        friendsCount = null,
-        parksCount = null,
-        addedParks = null,
-        journalCount = null
-    )
+    private fun createTestUser(id: Long = 1L) =
+        User(
+            id = id,
+            name = "testuser",
+            image = "https://example.com/image.jpg",
+            cityID = null,
+            countryID = null,
+            birthDate = null,
+            email = null,
+            fullName = null,
+            genderCode = null,
+            friendRequestCount = null,
+            friendsCount = null,
+            parksCount = null,
+            addedParks = null,
+            journalCount = null
+        )
 
     @Before
     fun setup() {
@@ -352,13 +352,14 @@ class AppStateTest {
     @Test
     fun onDestinationChanged_whenAllTopLevelDestinations_thenEachIsSelected() {
         // Проверяем, что все 5 вкладок корректно определяются
-        val destinations = listOf(
-            "parks" to TopLevelDestinations.PARKS,
-            "events" to TopLevelDestinations.EVENTS,
-            "messages" to TopLevelDestinations.MESSAGES,
-            "profile" to TopLevelDestinations.PROFILE,
-            "more" to TopLevelDestinations.MORE
-        )
+        val destinations =
+            listOf(
+                "parks" to TopLevelDestinations.PARKS,
+                "events" to TopLevelDestinations.EVENTS,
+                "messages" to TopLevelDestinations.MESSAGES,
+                "profile" to TopLevelDestinations.PROFILE,
+                "more" to TopLevelDestinations.MORE
+            )
 
         destinations.forEach { (route, expectedDestination) ->
             // When
@@ -376,25 +377,26 @@ class AppStateTest {
     @Test
     fun onDestinationChanged_whenChildScreens_thenParentTabIsSelected() {
         // Проверяем различные дочерние экраны и их родительские вкладки
-        val childScreens = listOf(
-            // Дочерние экраны Profile
-            "edit_profile" to TopLevelDestinations.PROFILE,
-            "user_parks/123" to TopLevelDestinations.PROFILE,
-            "my_friends" to TopLevelDestinations.PROFILE,
-            "blacklist" to TopLevelDestinations.PROFILE,
-            // Дочерние экраны Parks
-            "park_detail/456" to TopLevelDestinations.PARKS,
-            "create_park" to TopLevelDestinations.PARKS,
-            "park_filter" to TopLevelDestinations.PARKS,
-            // Дочерние экраны Events
-            "event_detail/789" to TopLevelDestinations.EVENTS,
-            "create_event" to TopLevelDestinations.EVENTS,
-            // Дочерние экраны Messages
-            "chat/123" to TopLevelDestinations.MESSAGES,
-            "friends" to TopLevelDestinations.MESSAGES,
-            // Дочерние экраны More
-            "theme_icon" to TopLevelDestinations.MORE
-        )
+        val childScreens =
+            listOf(
+                // Дочерние экраны Profile
+                "edit_profile" to TopLevelDestinations.PROFILE,
+                "user_parks/123" to TopLevelDestinations.PROFILE,
+                "my_friends" to TopLevelDestinations.PROFILE,
+                "blacklist" to TopLevelDestinations.PROFILE,
+                // Дочерние экраны Parks
+                "park_detail/456" to TopLevelDestinations.PARKS,
+                "create_park" to TopLevelDestinations.PARKS,
+                "park_filter" to TopLevelDestinations.PARKS,
+                // Дочерние экраны Events
+                "event_detail/789" to TopLevelDestinations.EVENTS,
+                "create_event" to TopLevelDestinations.EVENTS,
+                // Дочерние экраны Messages
+                "chat/123" to TopLevelDestinations.MESSAGES,
+                "friends" to TopLevelDestinations.MESSAGES,
+                // Дочерние экраны More
+                "theme_icon" to TopLevelDestinations.MORE
+            )
 
         childScreens.forEach { (route, expectedDestination) ->
             // When
@@ -415,9 +417,10 @@ class AppStateTest {
     @Test
     fun onDestinationChanged_whenUserSearchFromMessages_thenMessagesTabIsSelected() {
         // When - UserSearch открыт из Messages
-        val arguments = mockk<android.os.Bundle>(relaxed = true) {
-            every { getString("source") } returns "messages"
-        }
+        val arguments =
+            mockk<android.os.Bundle>(relaxed = true) {
+                every { getString("source") } returns "messages"
+            }
         appState.onDestinationChanged("user_search", arguments)
 
         // Then
@@ -431,9 +434,10 @@ class AppStateTest {
     @Test
     fun onDestinationChanged_whenUserSearchFromProfile_thenProfileTabIsSelected() {
         // When - UserSearch открыт из Profile
-        val arguments = mockk<android.os.Bundle>(relaxed = true) {
-            every { getString("source") } returns "profile"
-        }
+        val arguments =
+            mockk<android.os.Bundle>(relaxed = true) {
+                every { getString("source") } returns "profile"
+            }
         appState.onDestinationChanged("user_search", arguments)
 
         // Then
@@ -460,9 +464,10 @@ class AppStateTest {
     @Test
     fun onDestinationChanged_whenOtherUserProfileFromMessages_thenMessagesTabIsSelected() {
         // When - OtherUserProfile открыт из Messages (через UserSearch)
-        val arguments = mockk<android.os.Bundle>(relaxed = true) {
-            every { getString("source") } returns "messages"
-        }
+        val arguments =
+            mockk<android.os.Bundle>(relaxed = true) {
+                every { getString("source") } returns "messages"
+            }
         appState.onDestinationChanged("other_user_profile/123", arguments)
 
         // Then
@@ -476,9 +481,10 @@ class AppStateTest {
     @Test
     fun onDestinationChanged_whenOtherUserProfileFromProfile_thenProfileTabIsSelected() {
         // When - OtherUserProfile открыт из Profile
-        val arguments = mockk<android.os.Bundle>(relaxed = true) {
-            every { getString("source") } returns "profile"
-        }
+        val arguments =
+            mockk<android.os.Bundle>(relaxed = true) {
+                every { getString("source") } returns "profile"
+            }
         appState.onDestinationChanged("other_user_profile/123", arguments)
 
         // Then
@@ -505,9 +511,10 @@ class AppStateTest {
     @Test
     fun onDestinationChanged_whenOtherUserProfileFromParks_thenParksTabIsSelected() {
         // When - OtherUserProfile открыт из Parks
-        val arguments = mockk<android.os.Bundle>(relaxed = true) {
-            every { getString("source") } returns "parks"
-        }
+        val arguments =
+            mockk<android.os.Bundle>(relaxed = true) {
+                every { getString("source") } returns "parks"
+            }
         appState.onDestinationChanged("other_user_profile/123", arguments)
 
         // Then
@@ -521,9 +528,10 @@ class AppStateTest {
     @Test
     fun onDestinationChanged_whenOtherUserProfileFromLegacyPark_thenParksTabIsSelected() {
         // When - OtherUserProfile открыт из legacy source=park
-        val arguments = mockk<android.os.Bundle>(relaxed = true) {
-            every { getString("source") } returns "park"
-        }
+        val arguments =
+            mockk<android.os.Bundle>(relaxed = true) {
+                every { getString("source") } returns "park"
+            }
         appState.onDestinationChanged("other_user_profile/123", arguments)
 
         // Then
@@ -537,9 +545,10 @@ class AppStateTest {
     @Test
     fun onDestinationChanged_whenOtherUserProfileFromEvents_thenEventsTabIsSelected() {
         // When - OtherUserProfile открыт из Events
-        val arguments = mockk<android.os.Bundle>(relaxed = true) {
-            every { getString("source") } returns "events"
-        }
+        val arguments =
+            mockk<android.os.Bundle>(relaxed = true) {
+                every { getString("source") } returns "events"
+            }
         appState.onDestinationChanged("other_user_profile/123", arguments)
 
         // Then
@@ -553,9 +562,10 @@ class AppStateTest {
     @Test
     fun onDestinationChanged_whenOtherUserProfileFromMore_thenMoreTabIsSelected() {
         // When - OtherUserProfile открыт из More
-        val arguments = mockk<android.os.Bundle>(relaxed = true) {
-            every { getString("source") } returns "more"
-        }
+        val arguments =
+            mockk<android.os.Bundle>(relaxed = true) {
+                every { getString("source") } returns "more"
+            }
         appState.onDestinationChanged("other_user_profile/123", arguments)
 
         // Then
@@ -568,9 +578,10 @@ class AppStateTest {
 
     @Test
     fun onDestinationChanged_whenParkFlowFromProfile_thenProfileTabIsPreservedForChildScreens() {
-        val profileArguments = mockk<android.os.Bundle>(relaxed = true) {
-            every { getString("source") } returns "profile"
-        }
+        val profileArguments =
+            mockk<android.os.Bundle>(relaxed = true) {
+                every { getString("source") } returns "profile"
+            }
 
         appState.onDestinationChanged("park_detail/10", profileArguments)
         assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
@@ -586,63 +597,70 @@ class AppStateTest {
 
     @Test
     fun onDestinationChanged_whenUserParksFromProfile_thenProfileTabIsSelected() {
-        val arguments = mockk<android.os.Bundle>(relaxed = true) {
-            every { getString("source") } returns "profile"
-        }
+        val arguments =
+            mockk<android.os.Bundle>(relaxed = true) {
+                every { getString("source") } returns "profile"
+            }
         appState.onDestinationChanged("user_parks/123", arguments)
         assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
     }
 
     @Test
     fun onDestinationChanged_whenUserParksFromParks_thenParksTabIsSelected() {
-        val arguments = mockk<android.os.Bundle>(relaxed = true) {
-            every { getString("source") } returns "parks"
-        }
+        val arguments =
+            mockk<android.os.Bundle>(relaxed = true) {
+                every { getString("source") } returns "parks"
+            }
         appState.onDestinationChanged("user_parks/456", arguments)
         assertEquals(TopLevelDestinations.PARKS, appState.currentTopLevelDestination)
     }
 
     @Test
     fun onDestinationChanged_whenUserTrainingParksFromProfile_thenProfileTabIsSelected() {
-        val arguments = mockk<android.os.Bundle>(relaxed = true) {
-            every { getString("source") } returns "profile"
-        }
+        val arguments =
+            mockk<android.os.Bundle>(relaxed = true) {
+                every { getString("source") } returns "profile"
+            }
         appState.onDestinationChanged("user_training_parks/123", arguments)
         assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
     }
 
     @Test
     fun onDestinationChanged_whenJournalsListFromProfile_thenProfileTabIsSelected() {
-        val arguments = mockk<android.os.Bundle>(relaxed = true) {
-            every { getString("source") } returns "profile"
-        }
+        val arguments =
+            mockk<android.os.Bundle>(relaxed = true) {
+                every { getString("source") } returns "profile"
+            }
         appState.onDestinationChanged("journals_list/123", arguments)
         assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
     }
 
     @Test
     fun onDestinationChanged_whenJournalsListFromEvents_thenEventsTabIsSelected() {
-        val arguments = mockk<android.os.Bundle>(relaxed = true) {
-            every { getString("source") } returns "events"
-        }
+        val arguments =
+            mockk<android.os.Bundle>(relaxed = true) {
+                every { getString("source") } returns "events"
+            }
         appState.onDestinationChanged("journals_list/456", arguments)
         assertEquals(TopLevelDestinations.EVENTS, appState.currentTopLevelDestination)
     }
 
     @Test
     fun onDestinationChanged_whenJournalEntriesFromProfile_thenProfileTabIsSelected() {
-        val arguments = mockk<android.os.Bundle>(relaxed = true) {
-            every { getString("source") } returns "profile"
-        }
+        val arguments =
+            mockk<android.os.Bundle>(relaxed = true) {
+                every { getString("source") } returns "profile"
+            }
         appState.onDestinationChanged("journal_entries/123", arguments)
         assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
     }
 
     @Test
     fun onDestinationChanged_whenJournalEntriesFromMessages_thenMessagesTabIsSelected() {
-        val arguments = mockk<android.os.Bundle>(relaxed = true) {
-            every { getString("source") } returns "messages"
-        }
+        val arguments =
+            mockk<android.os.Bundle>(relaxed = true) {
+                every { getString("source") } returns "messages"
+            }
         appState.onDestinationChanged("journal_entries/456", arguments)
         assertEquals(TopLevelDestinations.MESSAGES, appState.currentTopLevelDestination)
     }
@@ -651,9 +669,10 @@ class AppStateTest {
 
     @Test
     fun onDestinationChanged_whenProfileChain_thenProfileTabIsPreserved() {
-        val profileArguments = mockk<android.os.Bundle>(relaxed = true) {
-            every { getString("source") } returns "profile"
-        }
+        val profileArguments =
+            mockk<android.os.Bundle>(relaxed = true) {
+                every { getString("source") } returns "profile"
+            }
 
         appState.onDestinationChanged("user_training_parks/1", profileArguments)
         assertEquals(TopLevelDestinations.PROFILE, appState.currentTopLevelDestination)
@@ -670,9 +689,10 @@ class AppStateTest {
 
     @Test
     fun onDestinationChanged_whenParksChain_thenParksTabIsPreserved() {
-        val parksArguments = mockk<android.os.Bundle>(relaxed = true) {
-            every { getString("source") } returns "parks"
-        }
+        val parksArguments =
+            mockk<android.os.Bundle>(relaxed = true) {
+                every { getString("source") } returns "parks"
+            }
 
         appState.onDestinationChanged("park_detail/10", parksArguments)
         assertEquals(TopLevelDestinations.PARKS, appState.currentTopLevelDestination)

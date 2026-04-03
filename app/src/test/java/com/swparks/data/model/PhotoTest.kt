@@ -4,17 +4,19 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class PhotoTest {
-
-    private fun createPhoto(id: Long, url: String = "https://example.com/photo$id.jpg") =
-        Photo(id = id, photo = url)
+    private fun createPhoto(
+        id: Long,
+        url: String = "https://example.com/photo$id.jpg"
+    ) = Photo(id = id, photo = url)
 
     @Test
     fun removePhotoById_whenDeletingFirstPhoto_thenReturnsRenumberedList() {
-        val photos = listOf(
-            createPhoto(id = 1),
-            createPhoto(id = 2),
-            createPhoto(id = 3)
-        )
+        val photos =
+            listOf(
+                createPhoto(id = 1),
+                createPhoto(id = 2),
+                createPhoto(id = 3)
+            )
 
         val result = photos.removePhotoById(photoId = 1)
 
@@ -27,11 +29,12 @@ class PhotoTest {
 
     @Test
     fun removePhotoById_whenDeletingMiddlePhoto_thenReturnsRenumberedList() {
-        val photos = listOf(
-            createPhoto(id = 1),
-            createPhoto(id = 2),
-            createPhoto(id = 3)
-        )
+        val photos =
+            listOf(
+                createPhoto(id = 1),
+                createPhoto(id = 2),
+                createPhoto(id = 3)
+            )
 
         val result = photos.removePhotoById(photoId = 2)
 
@@ -44,11 +47,12 @@ class PhotoTest {
 
     @Test
     fun removePhotoById_whenDeletingLastPhoto_thenReturnsRenumberedList() {
-        val photos = listOf(
-            createPhoto(id = 1),
-            createPhoto(id = 2),
-            createPhoto(id = 3)
-        )
+        val photos =
+            listOf(
+                createPhoto(id = 1),
+                createPhoto(id = 2),
+                createPhoto(id = 3)
+            )
 
         val result = photos.removePhotoById(photoId = 3)
 
@@ -61,11 +65,12 @@ class PhotoTest {
 
     @Test
     fun removePhotoById_whenDeletingNonExistentId_thenReturnsSameList() {
-        val photos = listOf(
-            createPhoto(id = 1),
-            createPhoto(id = 2),
-            createPhoto(id = 3)
-        )
+        val photos =
+            listOf(
+                createPhoto(id = 1),
+                createPhoto(id = 2),
+                createPhoto(id = 3)
+            )
 
         val result = photos.removePhotoById(photoId = 999)
 
@@ -95,12 +100,13 @@ class PhotoTest {
 
     @Test
     fun removePhotoById_whenDeletingFromFourPhotos_thenReturnsCorrectlyRenumbered() {
-        val photos = listOf(
-            createPhoto(id = 1),
-            createPhoto(id = 2),
-            createPhoto(id = 3),
-            createPhoto(id = 4)
-        )
+        val photos =
+            listOf(
+                createPhoto(id = 1),
+                createPhoto(id = 2),
+                createPhoto(id = 3),
+                createPhoto(id = 4)
+            )
 
         val result = photos.removePhotoById(photoId = 2)
 

@@ -66,9 +66,10 @@ data class Event(
      * Есть ли комментарии
      */
     val hasComments = !comments.isNullOrEmpty()
-    private val needUpdateComments = commentsCount?.let {
-        it > 0 && comments.isNullOrEmpty()
-    } ?: false
+    private val needUpdateComments =
+        commentsCount?.let {
+            it > 0 && comments.isNullOrEmpty()
+        } ?: false
 
     /**
      * Есть ли фотографии
@@ -79,9 +80,10 @@ data class Event(
      * Есть ли участники
      */
     val hasParticipants = !trainingUsers.isNullOrEmpty()
-    private val needUpdateParticipants = trainingUsersCount?.let {
-        it > 0 && trainingUsers.isNullOrEmpty()
-    } ?: false
+    private val needUpdateParticipants =
+        trainingUsersCount?.let {
+            it > 0 && trainingUsers.isNullOrEmpty()
+        } ?: false
 
     /**
      * Ссылка на мероприятие, которой можно поделиться

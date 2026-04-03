@@ -16,8 +16,14 @@ import kotlinx.coroutines.launch
 
 sealed class UserAddedParksUiState {
     data object Loading : UserAddedParksUiState()
-    data class Success(val parks: List<Park>) : UserAddedParksUiState()
-    data class Error(val message: String) : UserAddedParksUiState()
+
+    data class Success(
+        val parks: List<Park>
+    ) : UserAddedParksUiState()
+
+    data class Error(
+        val message: String
+    ) : UserAddedParksUiState()
 }
 
 @Suppress("TooGenericExceptionCaught", "InstanceOfCheckForException")
@@ -28,8 +34,8 @@ class UserAddedParksViewModel(
     private val requiresFetch: Boolean,
     private val logger: Logger,
     private val userNotifier: UserNotifier
-) : ViewModel(), IUserAddedParksViewModel {
-
+) : ViewModel(),
+    IUserAddedParksViewModel {
     private companion object {
         private const val TAG = "UserAddedParksViewModel"
     }
@@ -45,55 +51,71 @@ class UserAddedParksViewModel(
             _uiState.update { UserAddedParksUiState.Success(seedParks) }
             logger.i(TAG, "Добавленные площадки получены из seed: ${seedParks.size}")
         } else {
-            loadAddedParks()
+            loadAddedParks(LoadMode.INITIAL)
         }
     }
 
     override fun refresh() {
-        loadAddedParks(isRefresh = true)
+        loadAddedParks(LoadMode.REFRESH)
+    }
+
+    override fun retry() {
+        loadAddedParks(LoadMode.RETRY)
     }
 
     override fun removePark(parkId: Long) {
         _uiState.update { state ->
             if (state is UserAddedParksUiState.Success) {
                 state.copy(parks = state.parks.filter { it.id != parkId })
-            } else state
+            } else {
+                state
+            }
         }
         logger.i(TAG, "Площадка $parkId удалена из локального списка")
     }
 
-    private fun loadAddedParks(isRefresh: Boolean = false) {
+    private fun loadAddedParks(mode: LoadMode) {
         viewModelScope.launch {
-            if (isRefresh) {
-                _isRefreshing.update { true }
-            } else {
-                _uiState.update { UserAddedParksUiState.Loading }
+            val previousState = _uiState.value
+
+            when (mode) {
+                LoadMode.INITIAL, LoadMode.RETRY -> _uiState.update { UserAddedParksUiState.Loading }
+                LoadMode.REFRESH -> _isRefreshing.update { true }
             }
 
             try {
-                swRepository.getUser(userId)
+                swRepository
+                    .getUser(userId)
                     .onSuccess { user ->
                         val parks = user.addedParks.orEmpty()
                         _uiState.update { UserAddedParksUiState.Success(parks) }
                         logger.i(TAG, "Успешно загружено добавленных площадок: ${parks.size}")
-                    }
-                    .onFailure { error ->
+                    }.onFailure { error ->
                         val message = "Ошибка загрузки добавленных площадок: ${error.message}"
-                        _uiState.update { UserAddedParksUiState.Error(message) }
                         userNotifier.handleError(AppError.Generic(message, error))
+                        applyLoadFailureState(previousState, message)
                         logger.e(TAG, message, error)
                     }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 val message = "Неожиданная ошибка загрузки добавленных площадок: ${e.message}"
-                _uiState.update { UserAddedParksUiState.Error(message) }
                 userNotifier.handleError(AppError.Generic(message, e))
+                applyLoadFailureState(previousState, message)
                 logger.e(TAG, message, e)
             } finally {
-                if (isRefresh) {
+                if (mode == LoadMode.REFRESH) {
                     _isRefreshing.update { false }
                 }
             }
+        }
+    }
+
+    private fun applyLoadFailureState(
+        previousState: UserAddedParksUiState,
+        message: String
+    ) {
+        if (previousState !is UserAddedParksUiState.Success) {
+            _uiState.update { UserAddedParksUiState.Error(message) }
         }
     }
 }

@@ -15,15 +15,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ParkDetailContractsTest {
-
     @Test
     fun parkDetailUIState_content_hasRequiredFields() {
         val park = createPark()
-        val state = ParkDetailUIState.Content(
-            park = park,
-            address = "Москва, Россия",
-            authorAddress = "Москва, Россия"
-        )
+        val state =
+            ParkDetailUIState.Content(
+                park = park,
+                address = "Москва, Россия",
+                authorAddress = "Москва, Россия"
+            )
 
         assertEquals(park, state.park)
         assertEquals("Москва, Россия", state.address)
@@ -70,14 +70,16 @@ class ParkDetailContractsTest {
 
     @Test
     fun parkDetailEvent_navigateToTrainees_hasParkIdAndUsers() {
-        val users = listOf(
-            User(id = 1L, name = "User 1", image = null),
-            User(id = 2L, name = "User 2", image = null)
-        )
-        val event = ParkDetailEvent.NavigateToTrainees(
-            parkId = 100L,
-            users = users
-        )
+        val users =
+            listOf(
+                User(id = 1L, name = "User 1", image = null),
+                User(id = 2L, name = "User 2", image = null)
+            )
+        val event =
+            ParkDetailEvent.NavigateToTrainees(
+                parkId = 100L,
+                users = users
+            )
 
         assertEquals(100L, event.parkId)
         assertEquals(users, event.users)
@@ -85,10 +87,11 @@ class ParkDetailContractsTest {
 
     @Test
     fun parkDetailEvent_navigateToCreateEvent_hasParkIdAndParkName() {
-        val event = ParkDetailEvent.NavigateToCreateEvent(
-            parkId = 100L,
-            parkName = "Test Park"
-        )
+        val event =
+            ParkDetailEvent.NavigateToCreateEvent(
+                parkId = 100L,
+                parkName = "Test Park"
+            )
 
         assertEquals(100L, event.parkId)
         assertEquals("Test Park", event.parkName)
@@ -96,11 +99,12 @@ class ParkDetailContractsTest {
 
     @Test
     fun parkDetailEvent_sendCommentComplaint_hasParkComment() {
-        val complaint = Complaint.ParkComment(
-            parkTitle = "Park",
-            author = "Author",
-            commentText = "Text"
-        )
+        val complaint =
+            Complaint.ParkComment(
+                parkTitle = "Park",
+                author = "Author",
+                commentText = "Text"
+            )
         val event = ParkDetailEvent.SendCommentComplaint(complaint)
 
         assertEquals(complaint, event.complaint)
@@ -117,12 +121,13 @@ class ParkDetailContractsTest {
     @Test
     fun parkDetailEvent_navigateToPhotoDetail_hasRequiredFields() {
         val photo = Photo(id = 1L, photo = "url")
-        val event = ParkDetailEvent.NavigateToPhotoDetail(
-            photo = photo,
-            parkId = 100L,
-            parkTitle = "Test Park",
-            isParkAuthor = true
-        )
+        val event =
+            ParkDetailEvent.NavigateToPhotoDetail(
+                photo = photo,
+                parkId = 100L,
+                parkTitle = "Test Park",
+                isParkAuthor = true
+            )
 
         assertEquals(photo, event.photo)
         assertEquals(100L, event.parkId)
@@ -133,12 +138,13 @@ class ParkDetailContractsTest {
     @Test
     fun parkDetailEvent_navigateToPhotoDetail_whenNotAuthor_isParkAuthorFalse() {
         val photo = Photo(id = 1L, photo = "url")
-        val event = ParkDetailEvent.NavigateToPhotoDetail(
-            photo = photo,
-            parkId = 100L,
-            parkTitle = "Test Park",
-            isParkAuthor = false
-        )
+        val event =
+            ParkDetailEvent.NavigateToPhotoDetail(
+                photo = photo,
+                parkId = 100L,
+                parkTitle = "Test Park",
+                isParkAuthor = false
+            )
 
         assertFalse(event.isParkAuthor)
     }
@@ -184,25 +190,27 @@ class ParkDetailContractsTest {
         assertTrue(viewModel.methodsCalled)
     }
 
-    private fun createPark() = com.swparks.data.model.Park(
-        id = 1L,
-        name = "Test Park",
-        sizeID = 1,
-        typeID = 1,
-        longitude = "37.5",
-        latitude = "55.5",
-        address = "Test Address",
-        cityID = 1,
-        countryID = 1,
-        preview = "preview_url"
-    )
+    private fun createPark() =
+        com.swparks.data.model.Park(
+            id = 1L,
+            name = "Test Park",
+            sizeID = 1,
+            typeID = 1,
+            longitude = "37.5",
+            latitude = "55.5",
+            address = "Test Address",
+            cityID = 1,
+            countryID = 1,
+            preview = "preview_url"
+        )
 
     private class FakeParkDetailViewModel : IParkDetailViewModel {
         var methodsCalled = false
 
-        override val uiState = kotlinx.coroutines.flow.MutableStateFlow<ParkDetailUIState>(
-            ParkDetailUIState.InitialLoading
-        )
+        override val uiState =
+            kotlinx.coroutines.flow.MutableStateFlow<ParkDetailUIState>(
+                ParkDetailUIState.InitialLoading
+            )
         override val events = kotlinx.coroutines.flow.MutableSharedFlow<ParkDetailEvent>()
         override val isRefreshing = kotlinx.coroutines.flow.MutableStateFlow(false)
         override val isAuthorized = kotlinx.coroutines.flow.MutableStateFlow(false)
@@ -270,7 +278,10 @@ class ParkDetailContractsTest {
             methodsCalled = true
         }
 
-        override fun onCommentActionClick(commentId: Long, action: CommentAction) {
+        override fun onCommentActionClick(
+            commentId: Long,
+            action: CommentAction
+        ) {
             methodsCalled = true
         }
 

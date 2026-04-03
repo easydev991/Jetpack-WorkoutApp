@@ -11,50 +11,54 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
 @Preview(showBackground = true, locale = "ru", name = "Success State")
 @Composable
 fun MyFriendsScreenSuccessPreview() {
-    val friends = listOf(
-        User(
-            id = 1,
-            name = "Ivan",
-            fullName = "Ivan Ivanov",
-            image = null,
-            email = "ivan@example.com"
-        ),
-        User(
-            id = 2,
-            name = "Petr",
-            fullName = null,
-            image = null,
-            email = "petr@example.com"
+    val friends =
+        listOf(
+            User(
+                id = 1,
+                name = "Ivan",
+                fullName = "Ivan Ivanov",
+                image = null,
+                email = "ivan@example.com"
+            ),
+            User(
+                id = 2,
+                name = "Petr",
+                fullName = null,
+                image = null,
+                email = "petr@example.com"
+            )
         )
-    )
-    val requests = listOf(
-        User(
-            id = 3,
-            name = "Sid",
-            fullName = "Sid Vicious",
-            image = null,
-            email = "sid@example.com"
-        ),
-        User(
-            id = 4,
-            name = "Sid1",
-            fullName = "Sid Vicious",
-            image = null,
-            email = "sid@example.com"
+    val requests =
+        listOf(
+            User(
+                id = 3,
+                name = "Sid",
+                fullName = "Sid Vicious",
+                image = null,
+                email = "sid@example.com"
+            ),
+            User(
+                id = 4,
+                name = "Sid1",
+                fullName = "Sid Vicious",
+                image = null,
+                email = "sid@example.com"
+            )
         )
-    )
 
     JetpackWorkoutAppTheme {
         MyFriendsScreenContent(
-            uiState = FriendsListUiState.Success(
-                friends = friends,
-                friendRequests = requests,
-                isProcessing = false
-            ),
-            config = FriendsScreenConfig(
-                parentPaddingValues = PaddingValues(0.dp),
-                currentUserId = null
-            ),
+            uiState =
+                FriendsListUiState.Success(
+                    friends = friends,
+                    friendRequests = requests,
+                    isProcessing = false
+                ),
+            config =
+                FriendsScreenConfig(
+                    parentPaddingValues = PaddingValues(0.dp),
+                    currentUserId = null
+                ),
             onFriendClick = {},
             onAction = {}
         )
@@ -67,10 +71,11 @@ fun MyFriendsScreenLoadingPreview() {
     JetpackWorkoutAppTheme {
         MyFriendsScreenContent(
             uiState = FriendsListUiState.Loading,
-            config = FriendsScreenConfig(
-                parentPaddingValues = PaddingValues(0.dp),
-                currentUserId = null
-            ),
+            config =
+                FriendsScreenConfig(
+                    parentPaddingValues = PaddingValues(0.dp),
+                    currentUserId = null
+                ),
             onFriendClick = {},
             onAction = {}
         )
@@ -83,10 +88,11 @@ fun MyFriendsScreenErrorPreview() {
     JetpackWorkoutAppTheme {
         MyFriendsScreenContent(
             uiState = FriendsListUiState.Error("Не удалось загрузить список друзей"),
-            config = FriendsScreenConfig(
-                parentPaddingValues = PaddingValues(0.dp),
-                currentUserId = null
-            ),
+            config =
+                FriendsScreenConfig(
+                    parentPaddingValues = PaddingValues(0.dp),
+                    currentUserId = null
+                ),
             onFriendClick = {},
             onAction = {}
         )

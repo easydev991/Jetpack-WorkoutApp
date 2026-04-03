@@ -1,6 +1,5 @@
 package com.swparks.ui.viewmodel
 
-
 import com.swparks.data.model.LoginSuccess
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
@@ -30,7 +29,6 @@ import org.junit.Test
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoginViewModelTest {
-
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -45,11 +43,12 @@ class LoginViewModelTest {
     fun setup() {
         loginUseCase = mockk(relaxed = true)
         resetPasswordUseCase = mockk(relaxed = true)
-        loginViewModel = LoginViewModel(
-            testLogger,
-            loginUseCase,
-            resetPasswordUseCase
-        )
+        loginViewModel =
+            LoginViewModel(
+                testLogger,
+                loginUseCase,
+                resetPasswordUseCase
+            )
     }
 
     @After
@@ -70,7 +69,6 @@ class LoginViewModelTest {
         assertTrue(loginViewModel.loginErrorState.value == null)
 
         assertTrue(loginViewModel.resetErrorState.value == null)
-
     }
 
     @Test
@@ -86,7 +84,6 @@ class LoginViewModelTest {
         assertTrue(loginViewModel.loginErrorState.value == null)
 
         assertTrue(loginViewModel.resetErrorState.value == null)
-
     }
 
     @Test
@@ -101,7 +98,6 @@ class LoginViewModelTest {
         assertTrue(loginViewModel.loginErrorState.value == null)
 
         assertTrue(loginViewModel.resetErrorState.value == null)
-
     }
 
     @Test
@@ -116,7 +112,6 @@ class LoginViewModelTest {
         assertTrue(loginViewModel.loginErrorState.value == null)
 
         assertTrue(loginViewModel.resetErrorState.value == null)
-
     }
 
     @Test
@@ -131,114 +126,120 @@ class LoginViewModelTest {
         assertTrue(loginViewModel.loginErrorState.value == null)
 
         assertTrue(loginViewModel.resetErrorState.value == null)
-
     }
 
     @Test
-    fun login_whenValidCredentials_thenReturnsSuccess() = runTest {
-        // Given
-        val credentials = LoginCredentials(login = "user@test.com", password = "password123")
-        loginViewModel.onLoginChange("user@test.com")
-        loginViewModel.onPasswordChange("password123")
-        coEvery { loginUseCase(credentials) } returns Result.success(testLoginSuccess)
+    fun login_whenValidCredentials_thenReturnsSuccess() =
+        runTest {
+            // Given
+            val credentials = LoginCredentials(login = "user@test.com", password = "password123")
+            loginViewModel.onLoginChange("user@test.com")
+            loginViewModel.onPasswordChange("password123")
+            coEvery { loginUseCase(credentials) } returns Result.success(testLoginSuccess)
 
-        // When
-        loginViewModel.login()
-        advanceUntilIdle()
+            // When
+            loginViewModel.login()
+            advanceUntilIdle()
 
-        // Then
-        val state = loginViewModel.uiState.value
-        assertTrue(state is LoginUiState.Idle)
-        assertNull(loginViewModel.loginErrorState.value)
+            // Then
+            val state = loginViewModel.uiState.value
+            assertTrue(state is LoginUiState.Idle)
+            assertNull(loginViewModel.loginErrorState.value)
 
-        val event = loginViewModel.loginEvents.first()
-        assertTrue(event is LoginEvent.Success)
-        assertTrue((event as LoginEvent.Success).userId == testLoginSuccess.userId)
+            val event = loginViewModel.loginEvents.first()
+            assertTrue(event is LoginEvent.Success)
+            assertTrue((event as LoginEvent.Success).userId == testLoginSuccess.userId)
 
-        coVerify(exactly = 1) { loginUseCase(credentials) }
-    }
-
-    @Test
-    fun login_whenInvalidCredentials_thenReturnsError() = runTest {
-        // Given
-        val credentials = LoginCredentials(login = "user@test.com", password = "password123")
-        loginViewModel.onLoginChange("user@test.com")
-        loginViewModel.onPasswordChange("password123")
-        val errorMessage = "Неверные учетные данные"
-        coEvery { loginUseCase(credentials) } returns Result.failure(
-            Exception(errorMessage)
-        )
-
-        // When
-        loginViewModel.login()
-        advanceUntilIdle()
-
-        // Then
-        val state = loginViewModel.uiState.value
-        assertTrue(state is LoginUiState.LoginError)
-        val errorState = state as LoginUiState.LoginError
-        assertTrue(errorState.message == errorMessage)
-        assertTrue(loginViewModel.loginErrorState.value == errorMessage)
-        coVerify(exactly = 1) { loginUseCase(credentials) }
-    }
+            coVerify(exactly = 1) { loginUseCase(credentials) }
+        }
 
     @Test
-    fun resetPassword_whenEmptyLogin_thenShowsAlert() = runTest {
-        // Given
-        loginViewModel.onLoginChange("")
+    fun login_whenInvalidCredentials_thenReturnsError() =
+        runTest {
+            // Given
+            val credentials = LoginCredentials(login = "user@test.com", password = "password123")
+            loginViewModel.onLoginChange("user@test.com")
+            loginViewModel.onPasswordChange("password123")
+            val errorMessage = "Неверные учетные данные"
+            coEvery { loginUseCase(credentials) } returns
+                Result.failure(
+                    Exception(errorMessage)
+                )
 
-        // When
-        loginViewModel.resetPassword()
-        advanceUntilIdle()
+            // When
+            loginViewModel.login()
+            advanceUntilIdle()
 
-        // Then
-        val state = loginViewModel.uiState.value
-        assertTrue(state is LoginUiState.Idle)
-        coVerify(exactly = 0) { resetPasswordUseCase(any()) }
-    }
-
-    @Test
-    fun resetPassword_whenValidLogin_thenReturnsSuccess() = runTest {
-        // Given
-        loginViewModel.onLoginChange("user@test.com")
-        coEvery { resetPasswordUseCase(any()) } returns Result.success(Unit)
-
-        // When
-        loginViewModel.resetPassword()
-        advanceUntilIdle()
-
-        // Then
-        val state = loginViewModel.uiState.value
-        assertTrue(state is LoginUiState.Idle)
-
-        val event = loginViewModel.loginEvents.first()
-        assertTrue(event is LoginEvent.ResetSuccess)
-        assertTrue((event as LoginEvent.ResetSuccess).email == "user@test.com")
-
-        coVerify(exactly = 1) { resetPasswordUseCase("user@test.com") }
-    }
+            // Then
+            val state = loginViewModel.uiState.value
+            assertTrue(state is LoginUiState.LoginError)
+            val errorState = state as LoginUiState.LoginError
+            assertTrue(errorState.message == errorMessage)
+            assertTrue(loginViewModel.loginErrorState.value == errorMessage)
+            coVerify(exactly = 1) { loginUseCase(credentials) }
+        }
 
     @Test
-    fun resetPassword_whenApiReturnsError_thenReturnsError() = runTest {
-        // Given
-        loginViewModel.onLoginChange("user@test.com")
-        val errorMessage = "Пользователь не найден"
-        coEvery { resetPasswordUseCase("user@test.com") } returns Result.failure(
-            Exception(errorMessage)
-        )
+    fun resetPassword_whenEmptyLogin_thenShowsAlert() =
+        runTest {
+            // Given
+            loginViewModel.onLoginChange("")
 
-        // When
-        loginViewModel.resetPassword()
-        advanceUntilIdle()
+            // When
+            loginViewModel.resetPassword()
+            advanceUntilIdle()
 
-        // Then
-        val state = loginViewModel.uiState.value
-        assertTrue(state is LoginUiState.ResetError)
-        val errorState = state as LoginUiState.ResetError
-        assertTrue(errorState.message == errorMessage)
-        assertTrue(loginViewModel.resetErrorState.value == errorMessage)
-        coVerify(exactly = 1) { resetPasswordUseCase("user@test.com") }
-    }
+            // Then
+            val state = loginViewModel.uiState.value
+            assertTrue(state is LoginUiState.Idle)
+            coVerify(exactly = 0) { resetPasswordUseCase(any()) }
+        }
+
+    @Test
+    fun resetPassword_whenValidLogin_thenReturnsSuccess() =
+        runTest {
+            // Given
+            loginViewModel.onLoginChange("user@test.com")
+            coEvery { resetPasswordUseCase(any()) } returns Result.success(Unit)
+
+            // When
+            loginViewModel.resetPassword()
+            advanceUntilIdle()
+
+            // Then
+            val state = loginViewModel.uiState.value
+            assertTrue(state is LoginUiState.Idle)
+
+            val event = loginViewModel.loginEvents.first()
+            assertTrue(event is LoginEvent.ResetSuccess)
+            assertTrue((event as LoginEvent.ResetSuccess).email == "user@test.com")
+
+            coVerify(exactly = 1) { resetPasswordUseCase("user@test.com") }
+        }
+
+    @Test
+    fun resetPassword_whenApiReturnsError_thenReturnsError() =
+        runTest {
+            // Given
+            loginViewModel.onLoginChange("user@test.com")
+            val errorMessage = "Пользователь не найден"
+            coEvery { resetPasswordUseCase("user@test.com") } returns
+                Result.failure(
+                    Exception(errorMessage)
+                )
+
+            // When
+            loginViewModel.resetPassword()
+            advanceUntilIdle()
+
+            // Then
+            val state = loginViewModel.uiState.value
+            assertTrue(state is LoginUiState.ResetError)
+            val errorState = state as LoginUiState.ResetError
+            assertTrue(errorState.message == errorMessage)
+            assertTrue(loginViewModel.resetErrorState.value == errorMessage)
+            coVerify(exactly = 1) { resetPasswordUseCase("user@test.com") }
+        }
 
     @Test
     fun login_whenValidCredentialsButNoError_thenCanLogInReturnsTrue() {
@@ -247,9 +248,10 @@ class LoginViewModelTest {
         loginViewModel.onPasswordChange("password123")
 
         // When
-        val canLogIn = loginViewModel.credentials.canLogIn(
-            isError = loginViewModel.loginErrorState.value != null
-        )
+        val canLogIn =
+            loginViewModel.credentials.canLogIn(
+                isError = loginViewModel.loginErrorState.value != null
+            )
 
         // Then
         assertTrue(canLogIn)
@@ -262,33 +264,36 @@ class LoginViewModelTest {
         loginViewModel.onPasswordChange("123") // Пароль слишком короткий
 
         // When
-        val canLogIn = loginViewModel.credentials.canLogIn(
-            isError = loginViewModel.loginErrorState.value != null
-        )
+        val canLogIn =
+            loginViewModel.credentials.canLogIn(
+                isError = loginViewModel.loginErrorState.value != null
+            )
 
         // Then
         assertFalse(canLogIn)
     }
 
     @Test
-    fun login_whenHasError_thenCanLogInReturnsFalse() = runTest {
-        // Given
-        val credentials = LoginCredentials(login = "user@test.com", password = "password123")
-        loginViewModel.onLoginChange("user@test.com")
-        loginViewModel.onPasswordChange("password123")
-        // Trigger error by calling login with failure
-        coEvery { loginUseCase(credentials) } returns Result.failure(Exception("Error"))
-        loginViewModel.login()
-        advanceUntilIdle()
+    fun login_whenHasError_thenCanLogInReturnsFalse() =
+        runTest {
+            // Given
+            val credentials = LoginCredentials(login = "user@test.com", password = "password123")
+            loginViewModel.onLoginChange("user@test.com")
+            loginViewModel.onPasswordChange("password123")
+            // Trigger error by calling login with failure
+            coEvery { loginUseCase(credentials) } returns Result.failure(Exception("Error"))
+            loginViewModel.login()
+            advanceUntilIdle()
 
-        // When
-        val canLogIn = loginViewModel.credentials.canLogIn(
-            isError = loginViewModel.loginErrorState.value != null
-        )
+            // When
+            val canLogIn =
+                loginViewModel.credentials.canLogIn(
+                    isError = loginViewModel.loginErrorState.value != null
+                )
 
-        // Then
-        assertFalse(canLogIn)
-    }
+            // Then
+            assertFalse(canLogIn)
+        }
 
     @Test
     fun resetPassword_whenLoginNotEmpty_thenCanRestorePasswordReturnsTrue() {
@@ -315,44 +320,46 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun login_whenServer400Error_thenSetsErrorUnderField() = runTest {
-        // Given
-        val credentials = LoginCredentials(login = "user@test.com", password = "password123")
-        loginViewModel.onLoginChange("user@test.com")
-        loginViewModel.onPasswordChange("password123")
-        val serverException = Exception("Не найден пользователь с таким логином или e-mail")
-        coEvery { loginUseCase(credentials) } returns Result.failure(serverException)
+    fun login_whenServer400Error_thenSetsErrorUnderField() =
+        runTest {
+            // Given
+            val credentials = LoginCredentials(login = "user@test.com", password = "password123")
+            loginViewModel.onLoginChange("user@test.com")
+            loginViewModel.onPasswordChange("password123")
+            val serverException = Exception("Не найден пользователь с таким логином или e-mail")
+            coEvery { loginUseCase(credentials) } returns Result.failure(serverException)
 
-        // When
-        loginViewModel.login()
-        advanceUntilIdle()
+            // When
+            loginViewModel.login()
+            advanceUntilIdle()
 
-        // Then
-        val state = loginViewModel.uiState.value
-        assertTrue(state is LoginUiState.LoginError)
-        val errorState = state as LoginUiState.LoginError
-        assertTrue(errorState.message == "Не найден пользователь с таким логином или e-mail")
-        assertTrue(loginViewModel.loginErrorState.value == "Не найден пользователь с таким логином или e-mail")
-        coVerify(exactly = 1) { loginUseCase(credentials) }
-    }
+            // Then
+            val state = loginViewModel.uiState.value
+            assertTrue(state is LoginUiState.LoginError)
+            val errorState = state as LoginUiState.LoginError
+            assertTrue(errorState.message == "Не найден пользователь с таким логином или e-mail")
+            assertTrue(loginViewModel.loginErrorState.value == "Не найден пользователь с таким логином или e-mail")
+            coVerify(exactly = 1) { loginUseCase(credentials) }
+        }
 
     @Test
-    fun resetPassword_whenServer400Error_thenSetsErrorUnderField() = runTest {
-        // Given
-        loginViewModel.onLoginChange("user@test.com")
-        val serverException = Exception("Не найден пользователь с таким логином или e-mail")
-        coEvery { resetPasswordUseCase("user@test.com") } returns Result.failure(serverException)
+    fun resetPassword_whenServer400Error_thenSetsErrorUnderField() =
+        runTest {
+            // Given
+            loginViewModel.onLoginChange("user@test.com")
+            val serverException = Exception("Не найден пользователь с таким логином или e-mail")
+            coEvery { resetPasswordUseCase("user@test.com") } returns Result.failure(serverException)
 
-        // When
-        loginViewModel.resetPassword()
-        advanceUntilIdle()
+            // When
+            loginViewModel.resetPassword()
+            advanceUntilIdle()
 
-        // Then
-        val state = loginViewModel.uiState.value
-        assertTrue(state is LoginUiState.ResetError)
-        val errorState = state as LoginUiState.ResetError
-        assertTrue(errorState.message == "Не найден пользователь с таким логином или e-mail")
-        assertTrue(loginViewModel.resetErrorState.value == "Не найден пользователь с таким логином или e-mail")
-        coVerify(exactly = 1) { resetPasswordUseCase("user@test.com") }
-    }
+            // Then
+            val state = loginViewModel.uiState.value
+            assertTrue(state is LoginUiState.ResetError)
+            val errorState = state as LoginUiState.ResetError
+            assertTrue(errorState.message == "Не найден пользователь с таким логином или e-mail")
+            assertTrue(loginViewModel.resetErrorState.value == "Не найден пользователь с таким логином или e-mail")
+            coVerify(exactly = 1) { resetPasswordUseCase("user@test.com") }
+        }
 }

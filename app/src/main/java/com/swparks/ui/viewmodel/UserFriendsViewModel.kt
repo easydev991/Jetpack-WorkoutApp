@@ -17,8 +17,14 @@ import kotlinx.coroutines.launch
  */
 sealed interface UserFriendsUiState {
     data object Loading : UserFriendsUiState
-    data class Success(val friends: List<User>) : UserFriendsUiState
-    data class Error(val message: String) : UserFriendsUiState
+
+    data class Success(
+        val friends: List<User>
+    ) : UserFriendsUiState
+
+    data class Error(
+        val message: String
+    ) : UserFriendsUiState
 }
 
 /**
@@ -33,9 +39,8 @@ class UserFriendsViewModel(
     private val userId: Long,
     private val swRepository: SWRepository,
     private val logger: Logger,
-    private val userNotifier: UserNotifier,
+    private val userNotifier: UserNotifier
 ) : ViewModel() {
-
     private companion object {
         private const val TAG = "UserFriendsViewModel"
     }
@@ -52,12 +57,12 @@ class UserFriendsViewModel(
             logger.i(TAG, "Загрузка друзей пользователя: userId=$userId")
             _uiState.value = UserFriendsUiState.Loading
 
-            swRepository.getFriendsForUser(userId)
+            swRepository
+                .getFriendsForUser(userId)
                 .onSuccess { friends ->
                     logger.i(TAG, "Друзья загружены: ${friends.size}")
                     _uiState.value = UserFriendsUiState.Success(friends)
-                }
-                .onFailure { error ->
+                }.onFailure { error ->
                     logger.e(TAG, "Ошибка загрузки друзей: ${error.message}")
                     userNotifier.handleError(
                         AppError.Network(
@@ -65,9 +70,10 @@ class UserFriendsViewModel(
                             throwable = error
                         )
                     )
-                    _uiState.value = UserFriendsUiState.Error(
-                        message = error.message ?: "Неизвестная ошибка"
-                    )
+                    _uiState.value =
+                        UserFriendsUiState.Error(
+                            message = error.message ?: "Неизвестная ошибка"
+                        )
                 }
         }
     }

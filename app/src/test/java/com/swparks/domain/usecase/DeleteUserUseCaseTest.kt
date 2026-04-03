@@ -26,7 +26,6 @@ import java.io.IOException
  * - Очистка токена и локальных данных при успехе
  */
 class DeleteUserUseCaseTest {
-
     private lateinit var secureTokenRepository: SecureTokenRepository
     private lateinit var swRepository: SWRepository
     private lateinit var deleteUserUseCase: DeleteUserUseCase
@@ -49,67 +48,71 @@ class DeleteUserUseCaseTest {
     }
 
     @Test
-    fun invoke_whenApiSuccess_thenReturnsSuccessAndClearsData() = runTest {
-        // Given
-        coEvery { swRepository.deleteUser() } returns Result.success(Unit)
+    fun invoke_whenApiSuccess_thenReturnsSuccessAndClearsData() =
+        runTest {
+            // Given
+            coEvery { swRepository.deleteUser() } returns Result.success(Unit)
 
-        // When
-        val result = deleteUserUseCase()
+            // When
+            val result = deleteUserUseCase()
 
-        // Then
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) { swRepository.deleteUser() }
-        coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(null) }
-        coVerify(exactly = 1) { swRepository.clearUserData() }
-        coVerify(exactly = 1) { swRepository.forceLogout() }
-    }
-
-    @Test
-    fun invoke_whenApiSuccess_thenClearsTokenBeforeClearingData() = runTest {
-        // Given
-        coEvery { swRepository.deleteUser() } returns Result.success(Unit)
-
-        // When
-        deleteUserUseCase()
-
-        // Then - проверяем порядок вызовов через последовательность verify
-        coVerify {
-            swRepository.deleteUser()
-            secureTokenRepository.saveAuthToken(null)
-            swRepository.clearUserData()
-            swRepository.forceLogout()
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) { swRepository.deleteUser() }
+            coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(null) }
+            coVerify(exactly = 1) { swRepository.clearUserData() }
+            coVerify(exactly = 1) { swRepository.forceLogout() }
         }
-    }
 
     @Test
-    fun invoke_whenApiFails_thenReturnsFailureAndDoesNotClearData() = runTest {
-        // Given
-        val error = IOException("Network error")
-        coEvery { swRepository.deleteUser() } returns Result.failure(error)
+    fun invoke_whenApiSuccess_thenClearsTokenBeforeClearingData() =
+        runTest {
+            // Given
+            coEvery { swRepository.deleteUser() } returns Result.success(Unit)
 
-        // When
-        val result = deleteUserUseCase()
+            // When
+            deleteUserUseCase()
 
-        // Then
-        assertTrue(result.isFailure)
-        assertEquals("Network error", result.exceptionOrNull()?.message)
-        coVerify(exactly = 1) { swRepository.deleteUser() }
-        coVerify(exactly = 0) { secureTokenRepository.saveAuthToken(null) }
-        coVerify(exactly = 0) { swRepository.clearUserData() }
-        coVerify(exactly = 0) { swRepository.forceLogout() }
-    }
+            // Then - проверяем порядок вызовов через последовательность verify
+            coVerify {
+                swRepository.deleteUser()
+                secureTokenRepository.saveAuthToken(null)
+                swRepository.clearUserData()
+                swRepository.forceLogout()
+            }
+        }
 
     @Test
-    fun invoke_whenApiFailsWithHttpException_thenReturnsFailure() = runTest {
-        // Given
-        val error = RuntimeException("Server error 500")
-        coEvery { swRepository.deleteUser() } returns Result.failure(error)
+    fun invoke_whenApiFails_thenReturnsFailureAndDoesNotClearData() =
+        runTest {
+            // Given
+            val error = IOException("Network error")
+            coEvery { swRepository.deleteUser() } returns Result.failure(error)
 
-        // When
-        val result = deleteUserUseCase()
+            // When
+            val result = deleteUserUseCase()
 
-        // Then
-        assertTrue(result.isFailure)
-        assertEquals("Server error 500", result.exceptionOrNull()?.message)
-    }
+            // Then
+            assertTrue(result.isFailure)
+            assertEquals("Network error", result.exceptionOrNull()?.message)
+            coVerify(exactly = 1) { swRepository.deleteUser() }
+            coVerify(exactly = 0) { secureTokenRepository.saveAuthToken(null) }
+            coVerify(exactly = 0) { swRepository.clearUserData() }
+            coVerify(exactly = 0) { swRepository.forceLogout() }
+        }
+
+    @Test
+    fun invoke_whenApiFailsWithHttpException_thenReturnsFailure() =
+        runTest {
+            // Given
+            val error = RuntimeException("Server error 500")
+            coEvery { swRepository.deleteUser() } returns Result.failure(error)
+
+            // When
+            val result = deleteUserUseCase()
+
+            // Then
+            assertTrue(result.isFailure)
+            assertEquals("Server error 500", result.exceptionOrNull()?.message)
+        }
 }

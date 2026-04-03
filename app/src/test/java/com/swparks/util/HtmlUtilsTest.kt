@@ -13,7 +13,6 @@ import org.junit.Test
  * @see parseHtmlOrNull
  */
 class HtmlUtilsTest {
-
     // === Базовые тесты ===
 
     @Test

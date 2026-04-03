@@ -43,10 +43,11 @@ class JournalSettingsDialogTest {
     private fun setContent(
         journal: Journal,
         isSaving: Boolean = false,
-        viewModel: IJournalsViewModel = FakeJournalsViewModel(
-            uiState = MutableStateFlow(JournalsUiState.Content(journals = emptyList())),
-            isRefreshing = MutableStateFlow(false)
-        ),
+        viewModel: IJournalsViewModel =
+            FakeJournalsViewModel(
+                uiState = MutableStateFlow(JournalsUiState.Content(journals = emptyList())),
+                isRefreshing = MutableStateFlow(false)
+            ),
         onDismiss: () -> Unit = {}
     ) {
         composeTestRule.setContent {
@@ -80,6 +81,15 @@ class JournalSettingsDialogTest {
         commentAccess = commentAccess
     )
 
+    private fun clickRadioOption(
+        textRes: Int,
+        index: Int = 0
+    ) {
+        composeTestRule
+            .onAllNodes(hasText(context.getString(textRes)), useUnmergedTree = true)[index]
+            .performClick()
+    }
+
     /**
      * Тест 1: Кнопка "Сохранить" заблокирована при пустом названии
      */
@@ -103,11 +113,12 @@ class JournalSettingsDialogTest {
     @Test
     fun journalSettingsDialog_saveButtonDisabled_whenNoChanges() {
         // Given - диалог открыт с текущими значениями без изменений
-        val journal = createTestJournal(
-            title = "Тестовый дневник",
-            viewAccess = JournalAccess.FRIENDS,
-            commentAccess = JournalAccess.NOBODY
-        )
+        val journal =
+            createTestJournal(
+                title = "Тестовый дневник",
+                viewAccess = JournalAccess.FRIENDS,
+                commentAccess = JournalAccess.NOBODY
+            )
 
         // When
         setContent(journal)
@@ -147,10 +158,11 @@ class JournalSettingsDialogTest {
     @Test
     fun journalSettingsDialog_saveButtonEnabled_whenViewAccessChanged() {
         // Given - диалог открыт с viewAccess = ALL
-        val journal = createTestJournal(
-            title = "Тестовый дневник",
-            viewAccess = JournalAccess.ALL
-        )
+        val journal =
+            createTestJournal(
+                title = "Тестовый дневник",
+                viewAccess = JournalAccess.ALL
+            )
 
         // When
         setContent(journal)
@@ -172,10 +184,11 @@ class JournalSettingsDialogTest {
     @Test
     fun journalSettingsDialog_saveButtonEnabled_whenCommentAccessChanged() {
         // Given - диалог открыт с commentAccess = ALL
-        val journal = createTestJournal(
-            title = "Тестовый дневник",
-            commentAccess = JournalAccess.ALL
-        )
+        val journal =
+            createTestJournal(
+                title = "Тестовый дневник",
+                commentAccess = JournalAccess.ALL
+            )
 
         // When
         setContent(journal)
@@ -200,24 +213,21 @@ class JournalSettingsDialogTest {
     @Test
     fun journalSettingsDialog_radioButtonChangesSelection_whenClicked() {
         // Given - диалог открыт с viewAccess = ALL
-        val journal = createTestJournal(
-            title = "Тестовый дневник",
-            viewAccess = JournalAccess.ALL
-        )
+        val journal =
+            createTestJournal(
+                title = "Тестовый дневник",
+                viewAccess = JournalAccess.ALL
+            )
 
         // When
         setContent(journal)
 
         // Кликаем на "Друзья" для "Кто видит записи" (первая секция)
-        composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.friends_access)))[0]
-            .performClick()
+        clickRadioOption(R.string.friends_access)
 
         // Then - SWRadioButton "Друзья" должен быть выбран
         // (в Compose тестах мы проверяем только наличие кликабельных элементов)
-        composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.friends_access)))[0]
-            .assertHasClickAction()
+        composeTestRule.onNodeWithTag("saveButton").assertIsEnabled()
     }
 
     /**
@@ -232,18 +242,12 @@ class JournalSettingsDialogTest {
         setContent(journal)
 
         // Then - Все SWRadioButton строки должны быть кликабельны
-        // Проверяем хотя бы один элемент для каждого варианта (в первой секции)
-        composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.everybody_access)))[0]
-            .assertHasClickAction()
+        // Проверяем это через фактическую смену формы после кликов по разным секциям.
+        clickRadioOption(R.string.friends_access)
+        composeTestRule.onNodeWithTag("saveButton").assertIsEnabled()
 
-        composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.friends_access)))[0]
-            .assertHasClickAction()
-
-        composeTestRule
-            .onAllNodes(hasText(context.getString(R.string.only_me_access)))[0]
-            .assertHasClickAction()
+        clickRadioOption(R.string.everybody_access, index = 1)
+        composeTestRule.onNodeWithTag("saveButton").assertIsEnabled()
     }
 
     /**
@@ -252,10 +256,11 @@ class JournalSettingsDialogTest {
     @Test
     fun journalSettingsDialog_showsLoadingIndicator_whenSaving() {
         // Given - диалог открыт и isSaving = true
-        val journal = createTestJournal(
-            title = "Тестовый дневник",
-            viewAccess = JournalAccess.FRIENDS
-        )
+        val journal =
+            createTestJournal(
+                title = "Тестовый дневник",
+                viewAccess = JournalAccess.FRIENDS
+            )
 
         // When
         setContent(journal, isSaving = true)
@@ -272,10 +277,11 @@ class JournalSettingsDialogTest {
     @Test
     fun journalSettingsDialog_saveButtonDisabled_whenSavingAndHasChanges() {
         // Given - диалог открыт, есть изменения и isSaving = true
-        val journal = createTestJournal(
-            title = "Тестовый дневник",
-            viewAccess = JournalAccess.FRIENDS
-        )
+        val journal =
+            createTestJournal(
+                title = "Тестовый дневник",
+                viewAccess = JournalAccess.FRIENDS
+            )
 
         // When - меняем viewAccess на ALL (первая секция - "Кто видит записи")
         setContent(journal, isSaving = true)

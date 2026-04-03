@@ -49,7 +49,10 @@ interface IDialogsViewModel {
      * @param dialogId Идентификатор диалога
      * @param userId Идентификатор собеседника (может быть null)
      */
-    fun onDialogClick(dialogId: Long, userId: Int?)
+    fun onDialogClick(
+        dialogId: Long,
+        userId: Int?
+    )
 
     /**
      * Скрыть ошибку синхронизации.
@@ -84,5 +87,8 @@ interface IDialogsViewModel {
      * @param dialogId Идентификатор диалога
      * @param userId Идентификатор собеседника
      */
-    fun markDialogAsRead(dialogId: Long, userId: Int)
+    fun markDialogAsRead(
+        dialogId: Long,
+        userId: Int
+    )
 }

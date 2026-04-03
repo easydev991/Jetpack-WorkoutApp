@@ -10,8 +10,10 @@ import com.swparks.ui.screens.settings.ItemListMode
  */
 data class ItemListUiState(
     val mode: ItemListMode,
-    val items: List<String>, // Уже отфильтрованный список
+    // Уже отфильтрованный список
+    val items: List<String>,
     val selectedItem: String?,
     val searchQuery: String = "",
-    val isEmpty: Boolean = false // Вычисляется в Composable
+    // Вычисляется в Composable
+    val isEmpty: Boolean = false
 )

@@ -24,6 +24,11 @@ interface IUserAddedParksViewModel {
     fun refresh()
 
     /**
+     * Повторить загрузку после full-screen ошибки.
+     */
+    fun retry()
+
+    /**
      * Удалить площадку из локального списка без серверного запроса.
      */
     fun removePark(parkId: Long)

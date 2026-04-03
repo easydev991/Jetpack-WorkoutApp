@@ -47,7 +47,10 @@ class TextEntryUseCase(
         return result
     }
 
-    override suspend fun createJournal(userId: Long, title: String): Result<Unit> {
+    override suspend fun createJournal(
+        userId: Long,
+        title: String
+    ): Result<Unit> {
         val result = createJournalUseCase(userId, title)
         result.onSuccess {
             Log.i("TextEntryUseCase", "Дневник создан для пользователя $userId")
@@ -105,7 +108,10 @@ class TextEntryUseCase(
         return result
     }
 
-    override suspend fun sendMessageTo(userId: Long, message: String): Result<Unit> {
+    override suspend fun sendMessageTo(
+        userId: Long,
+        message: String
+    ): Result<Unit> {
         val result = swRepository.sendMessage(message, userId)
         result.onSuccess {
             Log.i("TextEntryUseCase", "Сообщение отправлено пользователю $userId")

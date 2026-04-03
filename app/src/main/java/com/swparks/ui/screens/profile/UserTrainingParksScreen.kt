@@ -80,16 +80,18 @@ fun UserTrainingParksScreen(
             isRefreshing = isRefreshing,
             onRefresh = { viewModel.refreshParks() },
             state = pullRefreshState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(parentPaddingValues),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(parentPaddingValues),
             indicator = {
                 PullToRefreshDefaults.Indicator(
                     state = pullRefreshState,
                     isRefreshing = isRefreshing,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = dimensionResource(R.dimen.spacing_regular))
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = dimensionResource(R.dimen.spacing_regular))
                 )
             }
         ) {
@@ -102,7 +104,10 @@ fun UserTrainingParksScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TopAppBar(onBackClick: () -> Unit, selectionMode: Boolean = false) {
+private fun TopAppBar(
+    onBackClick: () -> Unit,
+    selectionMode: Boolean = false
+) {
     CenterAlignedTopAppBar(
         title = {
             Text(
@@ -138,7 +143,10 @@ private fun UserTrainingParksContent(
 }
 
 @Composable
-private fun SuccessContent(parks: List<Park>, onParkClick: (Park) -> Unit) {
+private fun SuccessContent(
+    parks: List<Park>,
+    onParkClick: (Park) -> Unit
+) {
     if (parks.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize(),

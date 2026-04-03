@@ -11,15 +11,21 @@ sealed class Screen(
 ) {
     // Верхнеуровневые вкладки
     object Parks : Screen("parks")
+
     object Events : Screen("events")
+
     object Messages : Screen("messages")
+
     object Profile : Screen("profile")
+
     object More : Screen("more")
 
     // Детальные экраны площадок
     object ParkDetail : Screen("park_detail/{parkId}?source={source}", parentTab = Parks) {
-        fun createRoute(parkId: Long, source: String = "parks") =
-            "park_detail/$parkId?source=$source"
+        fun createRoute(
+            parkId: Long,
+            source: String = "parks"
+        ) = "park_detail/$parkId?source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "parks"
@@ -37,7 +43,10 @@ sealed class Screen(
     }
 
     object EditPark : Screen("edit_park/{parkId}?source={source}", parentTab = Parks) {
-        fun createRoute(parkId: Long, source: String = "parks") = "edit_park/$parkId?source=$source"
+        fun createRoute(
+            parkId: Long,
+            source: String = "parks"
+        ) = "edit_park/$parkId?source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "parks"
@@ -52,7 +61,11 @@ sealed class Screen(
             "create_event_for_park/{parkId}?parkName={parkName}&source={source}",
             parentTab = Parks
         ) {
-        fun createRoute(parkId: Long, parkName: String, source: String = "parks") =
+        fun createRoute(
+            parkId: Long,
+            parkName: String,
+            source: String = "parks"
+        ) =
             "create_event_for_park/$parkId?parkName=${android.net.Uri.encode(parkName)}&source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
@@ -62,8 +75,10 @@ sealed class Screen(
     }
 
     object ParkRoute : Screen("park_route/{parkId}?source={source}", parentTab = Parks) {
-        fun createRoute(parkId: Long, source: String = "parks") =
-            "park_route/$parkId?source=$source"
+        fun createRoute(
+            parkId: Long,
+            source: String = "parks"
+        ) = "park_route/$parkId?source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "parks"
@@ -72,8 +87,10 @@ sealed class Screen(
     }
 
     object AddParkComment : Screen("add_park_comment/{parkId}?source={source}", parentTab = Parks) {
-        fun createRoute(parkId: Long, source: String = "parks") =
-            "add_park_comment/$parkId?source=$source"
+        fun createRoute(
+            parkId: Long,
+            source: String = "parks"
+        ) = "add_park_comment/$parkId?source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "parks"
@@ -82,8 +99,10 @@ sealed class Screen(
     }
 
     object ParkTrainees : Screen("park_trainees/{parkId}?source={source}", parentTab = Parks) {
-        fun createRoute(parkId: Long, source: String = "parks") =
-            "park_trainees/$parkId?source=$source"
+        fun createRoute(
+            parkId: Long,
+            source: String = "parks"
+        ) = "park_trainees/$parkId?source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "parks"
@@ -92,8 +111,10 @@ sealed class Screen(
     }
 
     object ParkGallery : Screen("park_gallery/{parkId}?source={source}", parentTab = Parks) {
-        fun createRoute(parkId: Long, source: String = "parks") =
-            "park_gallery/$parkId?source=$source"
+        fun createRoute(
+            parkId: Long,
+            source: String = "parks"
+        ) = "park_gallery/$parkId?source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "parks"
@@ -103,8 +124,10 @@ sealed class Screen(
 
     // Детальные экраны мероприятий
     object EventDetail : Screen("event_detail/{eventId}?source={source}", parentTab = Events) {
-        fun createRoute(eventId: Long, source: String = "events") =
-            "event_detail/$eventId?source=$source"
+        fun createRoute(
+            eventId: Long,
+            source: String = "events"
+        ) = "event_detail/$eventId?source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "events"
@@ -113,9 +136,12 @@ sealed class Screen(
     }
 
     object CreateEvent : Screen("create_event", parentTab = Events)
+
     object EditEvent : Screen("edit_event/{eventId}?source={source}", parentTab = Events) {
-        fun createRoute(eventId: Long, source: String = "events") =
-            "edit_event/$eventId?source=$source"
+        fun createRoute(
+            eventId: Long,
+            source: String = "events"
+        ) = "edit_event/$eventId?source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "events"
@@ -125,8 +151,10 @@ sealed class Screen(
 
     object EventParticipants :
         Screen("event_participants/{eventId}?source={source}", parentTab = Events) {
-        fun createRoute(eventId: Long, source: String = "events") =
-            "event_participants/$eventId?source=$source"
+        fun createRoute(
+            eventId: Long,
+            source: String = "events"
+        ) = "event_participants/$eventId?source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "events"
@@ -135,8 +163,10 @@ sealed class Screen(
     }
 
     object EventGallery : Screen("event_gallery/{eventId}?source={source}", parentTab = Events) {
-        fun createRoute(eventId: Long, source: String = "events") =
-            "event_gallery/$eventId?source=$source"
+        fun createRoute(
+            eventId: Long,
+            source: String = "events"
+        ) = "event_gallery/$eventId?source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "events"
@@ -146,8 +176,10 @@ sealed class Screen(
 
     object AddEventComment :
         Screen("add_event_comment/{eventId}?source={source}", parentTab = Events) {
-        fun createRoute(eventId: Long, source: String = "events") =
-            "add_event_comment/$eventId?source=$source"
+        fun createRoute(
+            eventId: Long,
+            source: String = "events"
+        ) = "add_event_comment/$eventId?source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "events"
@@ -157,8 +189,10 @@ sealed class Screen(
 
     object SelectParkForEvent :
         Screen("select_park_for_event/{userId}?source={source}", parentTab = Events) {
-        fun createRoute(userId: Long, source: String = "events") =
-            "select_park_for_event/$userId?source=$source"
+        fun createRoute(
+            userId: Long,
+            source: String = "events"
+        ) = "select_park_for_event/$userId?source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "events"
@@ -190,8 +224,11 @@ sealed class Screen(
     }
 
     object Friends : Screen("friends", parentTab = Messages)
+
     object FriendsForDialog : Screen("friends_for_dialog", parentTab = Messages)
+
     object MyFriends : Screen("my_friends", parentTab = Profile)
+
     object UserSearch : Screen("user_search?source={source}", parentTab = Messages) {
         fun createRoute(source: String = "messages") = "user_search?source=$source"
 
@@ -205,8 +242,10 @@ sealed class Screen(
     object EditProfile : Screen("edit_profile", parentTab = Profile)
 
     object UserParks : Screen("user_parks/{userId}?source={source}", parentTab = Profile) {
-        fun createRoute(userId: Long, source: String = "profile") =
-            "user_parks/$userId?source=$source"
+        fun createRoute(
+            userId: Long,
+            source: String = "profile"
+        ) = "user_parks/$userId?source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "profile"
@@ -216,8 +255,10 @@ sealed class Screen(
 
     object UserTrainingParks :
         Screen("user_training_parks/{userId}?source={source}", parentTab = Profile) {
-        fun createRoute(userId: Long, source: String = "profile") =
-            "user_training_parks/$userId?source=$source"
+        fun createRoute(
+            userId: Long,
+            source: String = "profile"
+        ) = "user_training_parks/$userId?source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "profile"
@@ -226,8 +267,10 @@ sealed class Screen(
     }
 
     object UserFriends : Screen("user_friends/{userId}?source={source}", parentTab = Profile) {
-        fun createRoute(userId: Long, source: String = "profile") =
-            "user_friends/$userId?source=$source"
+        fun createRoute(
+            userId: Long,
+            source: String = "profile"
+        ) = "user_friends/$userId?source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "profile"
@@ -237,8 +280,10 @@ sealed class Screen(
 
     object OtherUserProfile :
         Screen("other_user_profile/{userId}?source={source}", parentTab = Profile) {
-        fun createRoute(userId: Long, source: String = "profile") =
-            "other_user_profile/$userId?source=$source"
+        fun createRoute(
+            userId: Long,
+            source: String = "profile"
+        ) = "other_user_profile/$userId?source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "profile"
@@ -249,8 +294,10 @@ sealed class Screen(
     object Blacklist : Screen("blacklist", parentTab = Profile)
 
     object JournalsList : Screen("journals_list/{userId}?source={source}", parentTab = Profile) {
-        fun createRoute(userId: Long, source: String = "profile") =
-            "journals_list/$userId?source=$source"
+        fun createRoute(
+            userId: Long,
+            source: String = "profile"
+        ) = "journals_list/$userId?source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "profile"
@@ -287,8 +334,11 @@ sealed class Screen(
     }
 
     object ChangePassword : Screen("change_password", parentTab = Profile)
+
     object SelectCountry : Screen("select_country", parentTab = Profile)
+
     object SelectCity : Screen("select_city", parentTab = Profile)
+
     object SelectCityForFilter : Screen("select_city_for_filter", parentTab = Parks)
 
     // Экраны настроек
@@ -298,24 +348,48 @@ sealed class Screen(
         val allScreens by lazy {
             listOf(
                 // Верхнеуровневые вкладки
-                Parks, Events, Messages, Profile, More,
-
+                Parks,
+                Events,
+                Messages,
+                Profile,
+                More,
                 // Детальные экраны площадок
-                ParkDetail, CreatePark, EditPark, ParkFilter,
-                CreateEventForPark, ParkRoute, AddParkComment,
-                ParkTrainees, ParkGallery, SelectCityForFilter,
-
+                ParkDetail,
+                CreatePark,
+                EditPark,
+                ParkFilter,
+                CreateEventForPark,
+                ParkRoute,
+                AddParkComment,
+                ParkTrainees,
+                ParkGallery,
+                SelectCityForFilter,
                 // Детальные экраны мероприятий
-                EventDetail, CreateEvent, EditEvent, EventParticipants,
-                EventGallery, AddEventComment, SelectParkForEvent,
-
+                EventDetail,
+                CreateEvent,
+                EditEvent,
+                EventParticipants,
+                EventGallery,
+                AddEventComment,
+                SelectParkForEvent,
                 // Экраны сообщений
-                Chat, Friends, FriendsForDialog, MyFriends, UserSearch,
-
+                Chat,
+                Friends,
+                FriendsForDialog,
+                MyFriends,
+                UserSearch,
                 // Экраны профиля
-                EditProfile, UserParks, UserTrainingParks, UserFriends, OtherUserProfile,
-                Blacklist, JournalsList, JournalEntries, ChangePassword, SelectCountry, SelectCity,
-
+                EditProfile,
+                UserParks,
+                UserTrainingParks,
+                UserFriends,
+                OtherUserProfile,
+                Blacklist,
+                JournalsList,
+                JournalEntries,
+                ChangePassword,
+                SelectCountry,
+                SelectCity,
                 // Экраны настроек
                 ThemeIcon
             )
@@ -328,7 +402,10 @@ sealed class Screen(
          * @param route строка маршрута (может содержать placeholder-ы)
          * @param arguments Bundle с фактическими значениями аргументов навигации (включая source)
          */
-        fun findParentTab(route: String, arguments: Bundle? = null): Screen? {
+        fun findParentTab(
+            route: String,
+            arguments: Bundle? = null
+        ): Screen? {
             // Special cases: UserSearch и OtherUserProfile с source параметром
             return when (val baseRoute = route.substringBefore("/").substringBefore("?")) {
                 "user_search" -> UserSearch.findParentTab(arguments)
@@ -362,9 +439,11 @@ sealed class Screen(
                 "chat" -> Chat.findParentTab(arguments)
 
                 // Остальные экраны - используем parentTab из определения
-                else -> allScreens.find {
-                    it.route.substringBefore("/").substringBefore("?") == baseRoute
-                }?.parentTab
+                else ->
+                    allScreens
+                        .find {
+                            it.route.substringBefore("/").substringBefore("?") == baseRoute
+                        }?.parentTab
             }
         }
     }
@@ -377,8 +456,11 @@ sealed class Screen(
  * @param default Screen по умолчанию, если source не распознан
  * @return Screen соответствующий source или default
  */
-fun getScreenBySource(source: String, default: Screen): Screen {
-    return when (source) {
+fun getScreenBySource(
+    source: String,
+    default: Screen
+): Screen =
+    when (source) {
         "parks", "park" -> Screen.Parks
         "events" -> Screen.Events
         "messages" -> Screen.Messages
@@ -386,4 +468,3 @@ fun getScreenBySource(source: String, default: Screen): Screen {
         "more" -> Screen.More
         else -> default
     }
-}

@@ -32,9 +32,10 @@ fun NoParksFoundView(
     val changeFiltersDesc = stringResource(R.string.change_filters)
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(dimensionResource(R.dimen.spacing_large)),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(dimensionResource(R.dimen.spacing_large)),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -46,26 +47,30 @@ fun NoParksFoundView(
         )
 
         SWButton(
-            config = ButtonConfig(
-                modifier = Modifier
-                    .padding(top = dimensionResource(R.dimen.spacing_regular))
-                    .semantics { contentDescription = selectAnotherCityDesc },
-                size = SWButtonSize.SMALL,
-                text = selectAnotherCityDesc,
-                onClick = onSelectCity
-            )
+            config =
+                ButtonConfig(
+                    modifier =
+                        Modifier
+                            .padding(top = dimensionResource(R.dimen.spacing_regular))
+                            .semantics { contentDescription = selectAnotherCityDesc },
+                    size = SWButtonSize.SMALL,
+                    text = selectAnotherCityDesc,
+                    onClick = onSelectCity
+                )
         )
 
         if (isSizeTypeFilterEdited) {
             SWButton(
-                config = ButtonConfig(
-                    modifier = Modifier
-                        .padding(top = dimensionResource(R.dimen.spacing_xsmall))
-                        .semantics { contentDescription = changeFiltersDesc },
-                    size = SWButtonSize.SMALL,
-                    text = changeFiltersDesc,
-                    onClick = onOpenFilters
-                )
+                config =
+                    ButtonConfig(
+                        modifier =
+                            Modifier
+                                .padding(top = dimensionResource(R.dimen.spacing_xsmall))
+                                .semantics { contentDescription = changeFiltersDesc },
+                        size = SWButtonSize.SMALL,
+                        text = changeFiltersDesc,
+                        onClick = onOpenFilters
+                    )
             )
         }
     }

@@ -19,15 +19,15 @@ interface IGetCitiesByCountryUseCase {
  *
  * @param countriesRepository Репозиторий для работы со справочником стран и городов
  */
-class GetCitiesByCountryUseCase(private val countriesRepository: CountriesRepository) :
-    IGetCitiesByCountryUseCase {
+class GetCitiesByCountryUseCase(
+    private val countriesRepository: CountriesRepository
+) : IGetCitiesByCountryUseCase {
     /**
      * Получить список городов для страны по идентификатору.
      *
      * @param countryId Идентификатор страны
      * @return Список городов страны
      */
-    override suspend operator fun invoke(countryId: String): List<City> {
-        return countriesRepository.getCitiesByCountry(countryId)
-    }
+    override suspend operator fun invoke(countryId: String): List<City> =
+        countriesRepository.getCitiesByCountry(countryId)
 }

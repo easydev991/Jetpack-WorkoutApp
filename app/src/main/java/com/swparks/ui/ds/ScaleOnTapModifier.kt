@@ -24,33 +24,35 @@ private enum class ButtonState {
 /**
  * Изменяет размер вьюшки при нажатии
  */
-fun Modifier.scaleOnTap() = composed {
-    var buttonState by remember { mutableStateOf(ButtonState.Idle) }
-    val animatedTranslation by animateFloatAsState(
-        targetValue = if (buttonState == ButtonState.Pressed) 0.98f else 1f,
-        animationSpec = tween(durationMillis = 100, easing = LinearEasing),
-        label = "scaleOnTapAnimation"
-    )
-
-    this
-        .graphicsLayer {
-            scaleX = animatedTranslation
-            scaleY = animatedTranslation
-        }
-        .clickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = null,
-            onClick = { }
+fun Modifier.scaleOnTap() =
+    composed {
+        var buttonState by remember { mutableStateOf(ButtonState.Idle) }
+        val animatedTranslation by animateFloatAsState(
+            targetValue = if (buttonState == ButtonState.Pressed) 0.98f else 1f,
+            animationSpec = tween(durationMillis = 100, easing = LinearEasing),
+            label = "scaleOnTapAnimation"
         )
-        .pointerInput(buttonState) {
-            awaitPointerEventScope {
-                buttonState = if (buttonState == ButtonState.Pressed) {
-                    waitForUpOrCancellation()
-                    ButtonState.Idle
-                } else {
-                    awaitFirstDown(false)
-                    ButtonState.Pressed
+
+        this
+            .graphicsLayer {
+                scaleX = animatedTranslation
+                scaleY = animatedTranslation
+            }
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = { }
+            )
+            .pointerInput(buttonState) {
+                awaitPointerEventScope {
+                    buttonState =
+                        if (buttonState == ButtonState.Pressed) {
+                            waitForUpOrCancellation()
+                            ButtonState.Idle
+                        } else {
+                            awaitFirstDown(false)
+                            ButtonState.Pressed
+                        }
                 }
             }
-        }
-}
+    }

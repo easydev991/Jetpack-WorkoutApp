@@ -25,7 +25,6 @@
 
     <string name="auth_invitation">Авторизуйтесь, чтобы иметь доступ ко всем возможностям</string>
     <string name="authorization">Войти</string>
-    <string name="registration_info">Регистрация доступна на сайте workout.su</string>
 
     <string name="future_events">Планируемые</string>
     <string name="past_events">Прошедшие</string>

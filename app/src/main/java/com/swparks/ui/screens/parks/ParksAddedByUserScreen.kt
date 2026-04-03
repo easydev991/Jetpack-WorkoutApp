@@ -58,7 +58,9 @@ fun ParksAddedByUserScreen(config: ParksAddedByUserConfig) {
     val pullRefreshState = rememberPullToRefreshState()
 
     LaunchedEffect(config.navBackStackEntry) {
-        config.navBackStackEntry?.savedStateHandle?.getStateFlow<Long?>("deletedParkId", null)
+        config.navBackStackEntry
+            ?.savedStateHandle
+            ?.getStateFlow<Long?>("deletedParkId", null)
             ?.collect { parkId ->
                 if (parkId != null) {
                     config.viewModel.removePark(parkId)
@@ -78,7 +80,7 @@ fun ParksAddedByUserScreen(config: ParksAddedByUserConfig) {
                     IconButton(onClick = config.onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 }
@@ -90,33 +92,37 @@ fun ParksAddedByUserScreen(config: ParksAddedByUserConfig) {
             isRefreshing = isRefreshing,
             onRefresh = { config.viewModel.refresh() },
             state = pullRefreshState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(config.parentPaddingValues)
-                .padding(innerPadding),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(config.parentPaddingValues)
+                    .padding(innerPadding),
             indicator = {
                 PullToRefreshDefaults.Indicator(
                     state = pullRefreshState,
                     isRefreshing = isRefreshing,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = dimensionResource(R.dimen.spacing_regular))
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = dimensionResource(R.dimen.spacing_regular))
                 )
             }
         ) {
             when (val state = uiState) {
                 UserAddedParksUiState.Loading -> LoadingOverlayView()
-                is UserAddedParksUiState.Success -> ParksListView(
-                    parks = state.parks,
-                    onParkClick = config.onParkClick,
-                    enabled = !isRefreshing
-                )
+                is UserAddedParksUiState.Success ->
+                    ParksListView(
+                        parks = state.parks,
+                        onParkClick = config.onParkClick,
+                        enabled = !isRefreshing
+                    )
 
-                is UserAddedParksUiState.Error -> ErrorContentView(
-                    retryAction = { config.viewModel.refresh() },
-                    modifier = Modifier.fillMaxSize(),
-                    message = state.message
-                )
+                is UserAddedParksUiState.Error ->
+                    ErrorContentView(
+                        retryAction = { config.viewModel.retry() },
+                        modifier = Modifier.fillMaxSize(),
+                        message = state.message
+                    )
             }
         }
     }

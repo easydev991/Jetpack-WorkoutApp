@@ -19,7 +19,6 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P])
 class ParkNavArgsTest {
-
     private lateinit var savedStateHandle: SavedStateHandle
 
     @Before
@@ -33,10 +32,11 @@ class ParkNavArgsTest {
         val usersJson = WorkoutAppJson.encodeToString(users)
         savedStateHandle[PARK_TRAINEES_USERS_JSON_KEY] = usersJson
 
-        val bundle = Bundle().apply {
-            putLong("parkId", 42L)
-            putString("source", "parks")
-        }
+        val bundle =
+            Bundle().apply {
+                putLong("parkId", 42L)
+                putString("source", "parks")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeParkTraineesArgs()
@@ -51,10 +51,11 @@ class ParkNavArgsTest {
 
     @Test
     fun consumeParkTraineesArgs_whenNoUsersJson_thenReturnsEmptyList() {
-        val bundle = Bundle().apply {
-            putLong("parkId", 100L)
-            putString("source", "profile")
-        }
+        val bundle =
+            Bundle().apply {
+                putLong("parkId", 100L)
+                putString("source", "profile")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeParkTraineesArgs()
@@ -68,10 +69,11 @@ class ParkNavArgsTest {
     @Test
     fun consumeParkTraineesArgs_whenMalformedJson_thenReturnsEmptyList() {
         savedStateHandle[PARK_TRAINEES_USERS_JSON_KEY] = "{invalid json"
-        val bundle = Bundle().apply {
-            putLong("parkId", 1L)
-            putString("source", "parks")
-        }
+        val bundle =
+            Bundle().apply {
+                putLong("parkId", 1L)
+                putString("source", "parks")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeParkTraineesArgs()
@@ -83,10 +85,11 @@ class ParkNavArgsTest {
     @Test
     fun consumeParkTraineesArgs_whenConsumed_thenKeyRemovedFromSavedStateHandle() {
         savedStateHandle[PARK_TRAINEES_USERS_JSON_KEY] = "[]"
-        val bundle = Bundle().apply {
-            putLong("parkId", 1L)
-            putString("source", "parks")
-        }
+        val bundle =
+            Bundle().apply {
+                putLong("parkId", 1L)
+                putString("source", "parks")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         navBackStackEntry.consumeParkTraineesArgs()
@@ -94,19 +97,19 @@ class ParkNavArgsTest {
         assertNull(savedStateHandle.get<String>(PARK_TRAINEES_USERS_JSON_KEY))
     }
 
-    private fun createUser(id: Long) = User(
-        id = id,
-        name = "User $id",
-        image = "https://example.com/user$id.jpg"
-    )
+    private fun createUser(id: Long) =
+        User(
+            id = id,
+            name = "User $id",
+            image = "https://example.com/user$id.jpg"
+        )
 
     private fun createNavBackStackEntry(
         arguments: Bundle,
         savedStateHandle: SavedStateHandle
-    ): androidx.navigation.NavBackStackEntry {
-        return mockk {
+    ): androidx.navigation.NavBackStackEntry =
+        mockk {
             every { this@mockk.arguments } returns arguments
             every { this@mockk.savedStateHandle } returns savedStateHandle
         }
-    }
 }

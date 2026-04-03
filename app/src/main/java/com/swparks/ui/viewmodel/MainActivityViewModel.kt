@@ -22,7 +22,7 @@ private const val STATE_TIMEOUT_MS = 5000L
  * @property dataStore DataStore для настроек приложения
  */
 class MainActivityViewModel(
-    private val dataStore: AppSettingsDataStore,
+    private val dataStore: AppSettingsDataStore
 ) : ViewModel() {
     companion object {
         /**
@@ -38,20 +38,22 @@ class MainActivityViewModel(
     }
 
     /** Тема приложения из DataStore */
-    val theme: StateFlow<AppTheme> = dataStore.theme
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(STATE_TIMEOUT_MS),
-            initialValue = AppTheme.SYSTEM,
-        )
+    val theme: StateFlow<AppTheme> =
+        dataStore.theme
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(STATE_TIMEOUT_MS),
+                initialValue = AppTheme.SYSTEM
+            )
 
     /** Использование динамических цветов из DataStore */
-    val useDynamicColors: StateFlow<Boolean> = dataStore.useDynamicColors
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(STATE_TIMEOUT_MS),
-            initialValue = false,
-        )
+    val useDynamicColors: StateFlow<Boolean> =
+        dataStore.useDynamicColors
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(STATE_TIMEOUT_MS),
+                initialValue = false
+            )
 
     /**
      * Обновляет тему приложения.

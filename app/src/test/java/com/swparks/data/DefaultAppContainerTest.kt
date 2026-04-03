@@ -15,7 +15,6 @@ import org.junit.Test
  * т.к. DefaultAppContainer создает реальные экземпляры с Android-зависимостями.
  */
 class DefaultAppContainerTest {
-
     private lateinit var mockContext: Context
 
     @Before

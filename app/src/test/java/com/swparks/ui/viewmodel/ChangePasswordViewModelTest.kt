@@ -28,7 +28,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChangePasswordViewModelTest {
-
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -44,12 +43,13 @@ class ChangePasswordViewModelTest {
         userNotifier = mockk(relaxed = true)
         resourcesProvider = mockk(relaxed = true)
         every { resourcesProvider.getString(any()) } returns "Пароль успешно изменён"
-        viewModel = ChangePasswordViewModel(
-            changePasswordUseCase = changePasswordUseCase,
-            logger = testLogger,
-            userNotifier = userNotifier,
-            resources = resourcesProvider
-        )
+        viewModel =
+            ChangePasswordViewModel(
+                changePasswordUseCase = changePasswordUseCase,
+                logger = testLogger,
+                userNotifier = userNotifier,
+                resources = resourcesProvider
+            )
     }
 
     @After
@@ -163,109 +163,128 @@ class ChangePasswordViewModelTest {
     }
 
     @Test
-    fun onSaveClick_whenSuccess_showsInfoAndNavigatesBack() = runTest {
-        // Given
-        viewModel.onCurrentPasswordChange("oldPass123")
-        viewModel.onNewPasswordChange("newPass456")
-        viewModel.onConfirmPasswordChange("newPass456")
-        coEvery { changePasswordUseCase("oldPass123", "newPass456") } returns Result.success(Unit)
+    fun onSaveClick_whenSuccess_showsInfoAndNavigatesBack() =
+        runTest {
+            // Given
+            viewModel.onCurrentPasswordChange("oldPass123")
+            viewModel.onNewPasswordChange("newPass456")
+            viewModel.onConfirmPasswordChange("newPass456")
+            coEvery { changePasswordUseCase("oldPass123", "newPass456") } returns
+                Result.success(
+                    Unit
+                )
 
-        // When
-        viewModel.onSaveClick()
-        advanceUntilIdle()
+            // When
+            viewModel.onSaveClick()
+            advanceUntilIdle()
 
-        // Then
-        verify { resourcesProvider.getString(com.swparks.R.string.password_changed_successfully) }
-        verify { userNotifier.showInfo("Пароль успешно изменён") }
-        val event = viewModel.events.first()
-        assertTrue(event is ChangePasswordEvent.NavigateBack)
-        coVerify(exactly = 1) { changePasswordUseCase("oldPass123", "newPass456") }
-    }
-
-    @Test
-    fun onSaveClick_whenFailure_handlesError() = runTest {
-        // Given
-        viewModel.onCurrentPasswordChange("oldPass123")
-        viewModel.onNewPasswordChange("newPass456")
-        viewModel.onConfirmPasswordChange("newPass456")
-        val error = Exception("Неверный пароль")
-        coEvery { changePasswordUseCase("oldPass123", "newPass456") } returns Result.failure(error)
-
-        // When
-        viewModel.onSaveClick()
-        advanceUntilIdle()
-
-        // Then
-        coVerify {
-            userNotifier.handleError(match { error ->
-                error is AppError.Generic && error.message == "Неверный пароль"
-            })
+            // Then
+            verify { resourcesProvider.getString(com.swparks.R.string.password_changed_successfully) }
+            verify { userNotifier.showInfo("Пароль успешно изменён") }
+            val event = viewModel.events.first()
+            assertTrue(event is ChangePasswordEvent.NavigateBack)
+            coVerify(exactly = 1) { changePasswordUseCase("oldPass123", "newPass456") }
         }
-        assertFalse(viewModel.uiState.value.isSaving)
-    }
 
     @Test
-    fun onSaveClick_whenCannotSave_doesNothing() = runTest {
-        // Given
-        viewModel.onCurrentPasswordChange("")
-        viewModel.onNewPasswordChange("newPass456")
-        viewModel.onConfirmPasswordChange("newPass456")
+    fun onSaveClick_whenFailure_handlesError() =
+        runTest {
+            // Given
+            viewModel.onCurrentPasswordChange("oldPass123")
+            viewModel.onNewPasswordChange("newPass456")
+            viewModel.onConfirmPasswordChange("newPass456")
+            val error = Exception("Неверный пароль")
+            coEvery { changePasswordUseCase("oldPass123", "newPass456") } returns
+                Result.failure(
+                    error
+                )
 
-        // When
-        viewModel.onSaveClick()
-        advanceUntilIdle()
+            // When
+            viewModel.onSaveClick()
+            advanceUntilIdle()
 
-        // Then
-        coVerify(exactly = 0) { changePasswordUseCase(any(), any()) }
-        verify(exactly = 0) { userNotifier.showInfo(any()) }
-    }
-
-    @Test
-    fun onSaveClick_setsSavingState_andResetsOnSuccess() = runTest {
-        // Given
-        viewModel.onCurrentPasswordChange("oldPass123")
-        viewModel.onNewPasswordChange("newPass456")
-        viewModel.onConfirmPasswordChange("newPass456")
-        coEvery { changePasswordUseCase(any(), any()) } returns Result.success(Unit)
-
-        // When
-        viewModel.onSaveClick()
-        advanceUntilIdle()
-
-        // Then - isSaving should be false after completion
-        // (success path navigates away, so isSaving stays true in UI state)
-        // Note: In success case, the screen navigates away,
-        // so we don't reset isSaving
-        // But we can verify the flow completed by checking the event
-        val event = viewModel.events.first()
-        assertTrue(event is ChangePasswordEvent.NavigateBack)
-    }
+            // Then
+            coVerify {
+                userNotifier.handleError(
+                    match { error ->
+                        error is AppError.Generic && error.message == "Неверный пароль"
+                    }
+                )
+            }
+            assertFalse(viewModel.uiState.value.isSaving)
+        }
 
     @Test
-    fun onSaveClick_setsSavingState_andResetsOnFailure() = runTest {
-        // Given
-        viewModel.onCurrentPasswordChange("oldPass123")
-        viewModel.onNewPasswordChange("newPass456")
-        viewModel.onConfirmPasswordChange("newPass456")
-        coEvery { changePasswordUseCase(any(), any()) } returns Result.failure(Exception("Error"))
+    fun onSaveClick_whenCannotSave_doesNothing() =
+        runTest {
+            // Given
+            viewModel.onCurrentPasswordChange("")
+            viewModel.onNewPasswordChange("newPass456")
+            viewModel.onConfirmPasswordChange("newPass456")
 
-        // When
-        viewModel.onSaveClick()
-        advanceUntilIdle()
+            // When
+            viewModel.onSaveClick()
+            advanceUntilIdle()
 
-        // Then
-        assertFalse(viewModel.uiState.value.isSaving)
-    }
+            // Then
+            coVerify(exactly = 0) { changePasswordUseCase(any(), any()) }
+            verify(exactly = 0) { userNotifier.showInfo(any()) }
+        }
+
+    @Test
+    fun onSaveClick_setsSavingState_andResetsOnSuccess() =
+        runTest {
+            // Given
+            viewModel.onCurrentPasswordChange("oldPass123")
+            viewModel.onNewPasswordChange("newPass456")
+            viewModel.onConfirmPasswordChange("newPass456")
+            coEvery { changePasswordUseCase(any(), any()) } returns Result.success(Unit)
+
+            // When
+            viewModel.onSaveClick()
+            advanceUntilIdle()
+
+            // Then - isSaving should be false after completion
+            // (success path navigates away, so isSaving stays true in UI state)
+            // Note: In success case, the screen navigates away,
+            // so we don't reset isSaving
+            // But we can verify the flow completed by checking the event
+            val event = viewModel.events.first()
+            assertTrue(event is ChangePasswordEvent.NavigateBack)
+        }
+
+    @Test
+    fun onSaveClick_setsSavingState_andResetsOnFailure() =
+        runTest {
+            // Given
+            viewModel.onCurrentPasswordChange("oldPass123")
+            viewModel.onNewPasswordChange("newPass456")
+            viewModel.onConfirmPasswordChange("newPass456")
+            coEvery {
+                changePasswordUseCase(
+                    any(),
+                    any()
+                )
+            } returns Result.failure(Exception("Error"))
+
+            // When
+            viewModel.onSaveClick()
+            advanceUntilIdle()
+
+            // Then
+            assertFalse(viewModel.uiState.value.isSaving)
+        }
 
     @Test
     fun canSave_whenSaving_isFalse() {
         // Given - using reflection to set isSaving since we can't easily capture mid-operation state
-        val initialState = ChangePasswordUiState(
-            currentPassword = "oldPass123",
-            newPassword = "newPass456",
-            confirmPassword = "newPass456",
-            isSaving = true
-        )
+        val initialState =
+            ChangePasswordUiState(
+                currentPassword = "oldPass123",
+                newPassword = "newPass456",
+                confirmPassword = "newPass456",
+                isSaving = true
+            )
 
         // When
         val canSave = initialState.canSave

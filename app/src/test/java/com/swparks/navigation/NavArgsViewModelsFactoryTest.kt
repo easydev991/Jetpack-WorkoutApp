@@ -19,20 +19,20 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P])
 class NavArgsViewModelsFactoryTest {
-
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var navBackStackEntry: androidx.navigation.NavBackStackEntry
 
     @Before
     fun setUp() {
         savedStateHandle = SavedStateHandle()
-        navBackStackEntry = createNavBackStackEntry(
-            Bundle().apply {
-                putLong("eventId", 1L)
-                putString("source", "test")
-            },
-            savedStateHandle
-        )
+        navBackStackEntry =
+            createNavBackStackEntry(
+                Bundle().apply {
+                    putLong("eventId", 1L)
+                    putString("source", "test")
+                },
+                savedStateHandle
+            )
     }
 
     @Test
@@ -49,9 +49,10 @@ class NavArgsViewModelsFactoryTest {
     fun create_whenUnexpectedModelClassForEditEvent_thenThrowsIllegalArgumentException() {
         val factory = EditEventNavArgsViewModel.factory(navBackStackEntry)
 
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            factory.create(UnexpectedViewModel::class.java)
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                factory.create(UnexpectedViewModel::class.java)
+            }
 
         val message = exception.message.orEmpty()
         assertTrue(message.contains("Неизвестный класс ViewModel"))
@@ -72,9 +73,10 @@ class NavArgsViewModelsFactoryTest {
     fun create_whenUnexpectedModelClassForEventParticipants_thenThrowsIllegalArgumentException() {
         val factory = EventParticipantsNavArgsViewModel.factory(navBackStackEntry)
 
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            factory.create(UnexpectedViewModel::class.java)
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                factory.create(UnexpectedViewModel::class.java)
+            }
 
         val message = exception.message.orEmpty()
         assertTrue(message.contains("Неизвестный класс ViewModel"))
@@ -86,10 +88,9 @@ class NavArgsViewModelsFactoryTest {
     private fun createNavBackStackEntry(
         arguments: Bundle,
         savedStateHandle: SavedStateHandle
-    ): androidx.navigation.NavBackStackEntry {
-        return mockk {
+    ): androidx.navigation.NavBackStackEntry =
+        mockk {
             every { this@mockk.arguments } returns arguments
             every { this@mockk.savedStateHandle } returns savedStateHandle
         }
-    }
 }

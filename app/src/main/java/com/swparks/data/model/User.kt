@@ -54,38 +54,42 @@ data class User(
     @SerialName("journal_count")
     val journalCount: Int? = null
 ) {
-    val genderOption: Gender? = if (genderCode != null) {
-        Gender.entries.firstOrNull { it.rawValue == genderCode }
-    } else {
-        null
-    }
+    val genderOption: Gender? =
+        if (genderCode != null) {
+            Gender.entries.firstOrNull { it.rawValue == genderCode }
+        } else {
+            null
+        }
 
     /**
      * Есть ли дневники
      */
-    val hasJournals = if (journalCount != null) {
-        journalCount > 0
-    } else {
-        false
-    }
+    val hasJournals =
+        if (journalCount != null) {
+            journalCount > 0
+        } else {
+            false
+        }
 
     /**
      * Есть ли друзья
      */
-    val hasFriends = if (friendsCount != null) {
-        friendsCount > 0
-    } else {
-        false
-    }
+    val hasFriends =
+        if (friendsCount != null) {
+            friendsCount > 0
+        } else {
+            false
+        }
 
     /**
      * Тренируется ли на каких-нибудь площадках
      */
-    val hasUsedParks = if (parksCount?.toIntOrNull() != null) {
-        parksCount.toInt() > 0
-    } else {
-        false
-    }
+    val hasUsedParks =
+        if (parksCount?.toIntOrNull() != null) {
+            parksCount.toInt() > 0
+        } else {
+            false
+        }
 
     /**
      * Добавил ли какие-нибудь площадки

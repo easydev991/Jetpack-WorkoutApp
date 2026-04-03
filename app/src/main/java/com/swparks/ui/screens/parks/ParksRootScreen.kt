@@ -45,7 +45,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -91,30 +90,34 @@ fun ParksRootScreen(
     val uiState by viewModel.uiState.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
     var parkInfoCardHeightPx by remember { mutableIntStateOf(0) }
-    val mapLocationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        viewModel.onMapEvent(MapEvent.OnLocationPermissionResult(granted))
-        if (granted) {
-            viewModel.onMapEvent(MapEvent.CenterOnUser)
+    val mapLocationPermissionLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            val granted =
+                permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                    permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+            viewModel.onMapEvent(MapEvent.OnLocationPermissionResult(granted))
+            if (granted) {
+                viewModel.onMapEvent(MapEvent.CenterOnUser)
+            }
         }
-    }
 
     LaunchedEffect(uiState.isGettingLocation) {
         onGettingLocationStateChange(uiState.isGettingLocation)
     }
 
     LaunchedEffect(Unit) {
-        val hasFineLocation = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        val hasCoarseLocation = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
+        val hasFineLocation =
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        val hasCoarseLocation =
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
         val granted = hasFineLocation || hasCoarseLocation
         if (uiState.mapState.locationPermissionGranted != granted) {
             viewModel.onMapEvent(MapEvent.OnLocationPermissionResult(granted))
@@ -147,25 +150,27 @@ fun ParksRootScreen(
     val isParkInfoCardVisible =
         selectedTab == ParksTab.MAP && uiState.mapState.selectedParkId != null
     val fabCardGap = dimensionResource(R.dimen.spacing_regular)
-    val createParkFabBottomOffsetTarget = if (isParkInfoCardVisible && parkInfoCardHeightPx > 0) {
-        with(density) { parkInfoCardHeightPx.toDp() } + fabCardGap
-    } else {
-        0.dp
-    }
+    val createParkFabBottomOffsetTarget =
+        if (isParkInfoCardVisible && parkInfoCardHeightPx > 0) {
+            with(density) { parkInfoCardHeightPx.toDp() } + fabCardGap
+        } else {
+            0.dp
+        }
     val createParkFabBottomOffset by animateDpAsState(
         targetValue = createParkFabBottomOffsetTarget,
         animationSpec = tween(durationMillis = PARK_INFO_CARD_ANIMATION_DURATION_MS),
         label = "create_park_fab_bottom_offset"
     )
-    val selectedCityCenter = uiState.selectedCity?.let { city ->
-        val latitude = city.lat.toDoubleOrNull()
-        val longitude = city.lon.toDoubleOrNull()
-        if (latitude != null && longitude != null) {
-            UiCoordinates(latitude = latitude, longitude = longitude)
-        } else {
-            null
+    val selectedCityCenter =
+        uiState.selectedCity?.let { city ->
+            val latitude = city.lat.toDoubleOrNull()
+            val longitude = city.lon.toDoubleOrNull()
+            if (latitude != null && longitude != null) {
+                UiCoordinates(latitude = latitude, longitude = longitude)
+            } else {
+                null
+            }
         }
-    }
 
     Scaffold(
         modifier = modifier,
@@ -176,24 +181,27 @@ fun ParksRootScreen(
                 enabled = !uiState.isGettingLocation,
                 modifier = Modifier.padding(bottom = createParkFabBottomOffset),
                 onClick = {
-                    val hasFineLocation = ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    ) == PackageManager.PERMISSION_GRANTED
-                    val hasCoarseLocation = ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                    ) == PackageManager.PERMISSION_GRANTED
+                    val hasFineLocation =
+                        ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        ) == PackageManager.PERMISSION_GRANTED
+                    val hasCoarseLocation =
+                        ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        ) == PackageManager.PERMISSION_GRANTED
 
                     if (hasFineLocation || hasCoarseLocation) {
                         viewModel.onPermissionGranted()
                     } else {
                         val activity = context as? Activity
-                        val shouldShowRationale = activity != null &&
-                            ActivityCompat.shouldShowRequestPermissionRationale(
-                                activity,
-                                Manifest.permission.ACCESS_FINE_LOCATION
-                            )
+                        val shouldShowRationale =
+                            activity != null &&
+                                ActivityCompat.shouldShowRequestPermissionRationale(
+                                    activity,
+                                    Manifest.permission.ACCESS_FINE_LOCATION
+                                )
                         viewModel.onPermissionDenied(shouldShowRationale)
                     }
                 }
@@ -202,9 +210,10 @@ fun ParksRootScreen(
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
             ) {
                 ParksTabRow(
@@ -215,28 +224,19 @@ fun ParksRootScreen(
                 SearchCityButton(
                     cityName = uiState.selectedCity?.name,
                     onClick = onNavigateToSelectCity,
-                    onClearClick = if (uiState.selectedCity != null) {
-                        viewModel::onClearCityFilter
-                    } else {
-                        null
-                    }
+                    onClearClick =
+                        if (uiState.selectedCity != null) {
+                            viewModel::onClearCityFilter
+                        } else {
+                            null
+                        }
                 )
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
                 ) {
-                    ParkMapView(
-                        parks = uiState.filteredParks,
-                        selectedParkId = uiState.mapState.selectedParkId,
-                        selectedCityCenter = selectedCityCenter,
-                        cameraPosition = uiState.mapState.cameraPosition,
-                        onMapEvent = viewModel::onMapEvent,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .alpha(if (selectedTab == ParksTab.MAP && !uiState.showNoParksFound) 1f else 0f)
-                    )
-
                     if (selectedTab == ParksTab.MAP) {
                         if (uiState.showNoParksFound) {
                             NoParksFoundView(
@@ -245,49 +245,82 @@ fun ParksRootScreen(
                                 isSizeTypeFilterEdited = uiState.isSizeTypeFilterEdited
                             )
                         } else {
-                            val selectedPark = uiState.mapState.selectedParkId?.let { parkId ->
-                                uiState.filteredParks.find { it.id == parkId }
-                            }
+                            ParkMapView(
+                                parks = uiState.filteredParks,
+                                selectedParkId = uiState.mapState.selectedParkId,
+                                selectedCityCenter = selectedCityCenter,
+                                cameraPosition = uiState.mapState.cameraPosition,
+                                onMapEvent = viewModel::onMapEvent,
+                                modifier = Modifier.fillMaxSize()
+                            )
+
+                            val selectedPark =
+                                uiState.mapState.selectedParkId?.let { parkId ->
+                                    uiState.filteredParks.find { it.id == parkId }
+                                }
                             ParkSelectionAnimatedVisibility(
                                 visible = selectedPark != null,
                                 modifier = Modifier.align(Alignment.BottomCenter),
-                                enter = fadeIn(
-                                    animationSpec = tween(durationMillis = PARK_INFO_CARD_ANIMATION_DURATION_MS)
-                                ) + slideInVertically(
-                                    animationSpec = tween(durationMillis = PARK_INFO_CARD_ANIMATION_DURATION_MS),
-                                    initialOffsetY = { fullHeight -> fullHeight / 2 }
-                                ),
-                                exit = fadeOut(
-                                    animationSpec = tween(durationMillis = PARK_INFO_CARD_ANIMATION_DURATION_MS)
-                                ) + slideOutVertically(
-                                    animationSpec = tween(durationMillis = PARK_INFO_CARD_ANIMATION_DURATION_MS),
-                                    targetOffsetY = { fullHeight -> fullHeight / 2 }
-                                )
+                                enter =
+                                    fadeIn(
+                                        animationSpec =
+                                            tween(
+                                                durationMillis =
+                                                    PARK_INFO_CARD_ANIMATION_DURATION_MS
+                                            )
+                                    ) +
+                                        slideInVertically(
+                                            animationSpec =
+                                                tween(
+                                                    durationMillis =
+                                                        PARK_INFO_CARD_ANIMATION_DURATION_MS
+                                                ),
+                                            initialOffsetY = { fullHeight -> fullHeight / 2 }
+                                        ),
+                                exit =
+                                    fadeOut(
+                                        animationSpec =
+                                            tween(
+                                                durationMillis =
+                                                    PARK_INFO_CARD_ANIMATION_DURATION_MS
+                                            )
+                                    ) +
+                                        slideOutVertically(
+                                            animationSpec =
+                                                tween(
+                                                    durationMillis =
+                                                        PARK_INFO_CARD_ANIMATION_DURATION_MS
+                                                ),
+                                            targetOffsetY = { fullHeight -> fullHeight / 2 }
+                                        )
                             ) {
                                 selectedPark?.let { park ->
                                     ParkInfoCard(
                                         park = park,
                                         onDetailsClick = onParkClick,
                                         onDismiss = { viewModel.onMapEvent(MapEvent.ClearSelection) },
-                                        modifier = Modifier
-                                            .onGloballyPositioned { coordinates ->
-                                                parkInfoCardHeightPx = coordinates.size.height
-                                            }
-                                            .padding(16.dp)
+                                        modifier =
+                                            Modifier
+                                                .onGloballyPositioned { coordinates ->
+                                                    parkInfoCardHeightPx = coordinates.size.height
+                                                }
+                                                .padding(16.dp)
                                     )
                                 }
                             }
 
                             MyLocationFab(
                                 onClick = {
-                                    val hasFineLocation = ContextCompat.checkSelfPermission(
-                                        context,
-                                        Manifest.permission.ACCESS_FINE_LOCATION
-                                    ) == PackageManager.PERMISSION_GRANTED
-                                    val hasCoarseLocation = ContextCompat.checkSelfPermission(
-                                        context,
-                                        Manifest.permission.ACCESS_COARSE_LOCATION
-                                    ) == PackageManager.PERMISSION_GRANTED
+                                    val hasFineLocation =
+                                        ContextCompat.checkSelfPermission(
+                                            context,
+                                            Manifest.permission.ACCESS_FINE_LOCATION
+                                        ) == PackageManager.PERMISSION_GRANTED
+                                    val hasCoarseLocation =
+                                        ContextCompat.checkSelfPermission(
+                                            context,
+                                            Manifest.permission.ACCESS_COARSE_LOCATION
+                                        ) == PackageManager.PERMISSION_GRANTED
                                     if (hasFineLocation || hasCoarseLocation) {
                                         if (!uiState.mapState.locationPermissionGranted) {
                                             viewModel.onMapEvent(
@@ -307,9 +340,10 @@ fun ParksRootScreen(
                                     }
                                 },
                                 isLoading = uiState.mapState.isLoadingLocation,
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .padding(dimensionResource(R.dimen.spacing_regular))
+                                modifier =
+                                    Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(dimensionResource(R.dimen.spacing_regular))
                             )
                         }
                     }
@@ -358,21 +392,24 @@ private fun ParkSelectionAnimatedVisibility(
 
 @Composable
 private fun SetupPermissionLaunchers(viewModel: IParksRootViewModel) {
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        viewModel.onPermissionResult(permissions)
-    }
+    val permissionLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            viewModel.onPermissionResult(permissions)
+        }
 
-    val openSettingsLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { }
+    val openSettingsLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult()
+        ) { }
 
-    val resolveLocationSettingsLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartIntentSenderForResult()
-    ) { result ->
-        viewModel.onLocationSettingsResolutionResult(result.resultCode == Activity.RESULT_OK)
-    }
+    val resolveLocationSettingsLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartIntentSenderForResult()
+        ) { result ->
+            viewModel.onLocationSettingsResolutionResult(result.resultCode == Activity.RESULT_OK)
+        }
 
     LaunchedEffect(Unit) {
         viewModel.permissionLauncher = { _ ->
@@ -410,9 +447,10 @@ private fun LocationPermissionDialog(
             onDismiss = onDismiss,
             onConfirm = onConfirm,
             onOpenSettings = {
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                    data = Uri.fromParts("package", context.packageName, null)
-                }
+                val intent =
+                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.fromParts("package", context.packageName, null)
+                    }
                 onOpenSettings(intent)
             },
             isDeniedForever = permissionDialogCause == PermissionDialogCause.FOREVER_DENIED
@@ -472,11 +510,12 @@ fun CreateParkFab(
                 if (!enabled) return@FloatingActionButton
                 onClick()
             },
-            containerColor = if (enabled) {
-                MaterialTheme.colorScheme.primaryContainer
-            } else {
-                MaterialTheme.colorScheme.surfaceVariant
-            }
+            containerColor =
+                if (enabled) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant
+                }
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
@@ -496,23 +535,25 @@ private fun ParksTabRow(
 ) {
     PrimaryTabRow(
         selectedTabIndex = selectedTabIndex,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                start = dimensionResource(id = R.dimen.spacing_regular),
-                end = dimensionResource(id = R.dimen.spacing_regular),
-                top = dimensionResource(id = R.dimen.spacing_small)
-            )
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(
+                    start = dimensionResource(id = R.dimen.spacing_regular),
+                    end = dimensionResource(id = R.dimen.spacing_regular),
+                    top = dimensionResource(id = R.dimen.spacing_small)
+                )
     ) {
         ParksTab.entries.forEachIndexed { index, parksTab ->
             Tab(
-                modifier = Modifier.testTag(
-                    if (parksTab == ParksTab.MAP) {
-                        ScreenshotTestTags.PARKS_TAB_MAP
-                    } else {
-                        ScreenshotTestTags.PARKS_TAB_LIST
-                    }
-                ),
+                modifier =
+                    Modifier.testTag(
+                        if (parksTab == ParksTab.MAP) {
+                            ScreenshotTestTags.PARKS_TAB_MAP
+                        } else {
+                            ScreenshotTestTags.PARKS_TAB_LIST
+                        }
+                    ),
                 selected = selectedTabIndex == index,
                 enabled = !isGettingLocation,
                 onClick = { onTabSelected(parksTab) },

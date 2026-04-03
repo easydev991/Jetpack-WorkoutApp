@@ -29,18 +29,19 @@ class UserTest {
     }
 
     // Вспомогательные методы для создания тестовых данных
-    private fun createTestPark(id: Long = 1L) = Park(
-        id = id,
-        name = "Test Park",
-        sizeID = 1,
-        typeID = 1,
-        longitude = "37.6173",
-        latitude = "55.7558",
-        address = "Test Address",
-        cityID = 1,
-        countryID = 1,
-        preview = "https://example.com/preview.jpg"
-    )
+    private fun createTestPark(id: Long = 1L) =
+        Park(
+            id = id,
+            name = "Test Park",
+            sizeID = 1,
+            typeID = 1,
+            longitude = "37.6173",
+            latitude = "55.7558",
+            address = "Test Address",
+            cityID = 1,
+            countryID = 1,
+            preview = "https://example.com/preview.jpg"
+        )
 
     private fun createTestUser(
         genderCode: Int? = null,
@@ -251,7 +252,10 @@ class UserTest {
     @Test
     fun age_whenBirthDateIsValid_thenReturnsPositiveAge() {
         // Given
-        val currentYear = java.time.LocalDate.now().year
+        val currentYear =
+            java.time.LocalDate
+                .now()
+                .year
         val user = createTestUser(birthDate = "$currentYear-01-01")
 
         // When & Then
@@ -261,7 +265,10 @@ class UserTest {
     @Test
     fun age_whenBirthDateIsPastYear_thenReturnsCorrectAge() {
         // Given
-        val currentYear = java.time.LocalDate.now().year
+        val currentYear =
+            java.time.LocalDate
+                .now()
+                .year
         val birthYear = currentYear - 30
         val user = createTestUser(birthDate = "$birthYear-01-01")
 
@@ -275,7 +282,10 @@ class UserTest {
     @Test
     fun age_whenBirthDateIsInFuture_thenReturnsZero() {
         // Given
-        val futureYear = java.time.LocalDate.now().year + 10
+        val futureYear =
+            java.time.LocalDate
+                .now()
+                .year + 10
         val user = createTestUser(birthDate = "$futureYear-01-01")
 
         // When & Then

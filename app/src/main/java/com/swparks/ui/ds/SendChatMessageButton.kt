@@ -35,21 +35,24 @@ fun SendChatMessageButton(
     enabled: Boolean = true,
     onClick: () -> Unit
 ) {
-    val containerColor = if (enabled) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant
-    }
-    val contentColor = if (enabled) {
-        MaterialTheme.colorScheme.onPrimary
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    }
+    val containerColor =
+        if (enabled) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant
+        }
+    val contentColor =
+        if (enabled) {
+            MaterialTheme.colorScheme.onPrimary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        }
 
     Surface(
-        modifier = modifier
-            .size(SendChatMessageButtonDefaults.ButtonSize)
-            .testTag("SendChatMessageButton"),
+        modifier =
+            modifier
+                .size(SendChatMessageButtonDefaults.ButtonSize)
+                .testTag("SendChatMessageButton"),
         shape = CircleShape,
         color = containerColor,
         onClick = onClick,
@@ -86,9 +89,10 @@ fun SendChatMessageButtonPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             Row(
-                modifier = Modifier
-                    .padding(dimensionResource(R.dimen.spacing_regular))
-                    .fillMaxWidth(),
+                modifier =
+                    Modifier
+                        .padding(dimensionResource(R.dimen.spacing_regular))
+                        .fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular)),
                 verticalAlignment = Alignment.CenterVertically
             ) {

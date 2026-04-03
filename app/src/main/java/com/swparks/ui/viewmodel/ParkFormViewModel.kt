@@ -37,26 +37,27 @@ class ParkFormViewModel(
     private val geocodingService: GeocodingService,
     private val findCityByCoordinatesUseCase: IFindCityByCoordinatesUseCase,
     private val userDao: UserDao
-) : ViewModel(), IParkFormViewModel {
-
+) : ViewModel(),
+    IParkFormViewModel {
     companion object {
         private const val TAG = "ParkFormViewModel"
 
         fun factory(
             mode: ParkFormMode,
             appContainer: com.swparks.data.AppContainer
-        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                require(modelClass.isAssignableFrom(ParkFormViewModel::class.java)) {
-                    "Неизвестный класс ViewModel: ${modelClass.name}, " +
-                        "ожидается: ${ParkFormViewModel::class.java.name}"
-                }
-                val viewModel = appContainer.parkFormViewModelFactory(mode)
-                return checkNotNull(modelClass.cast(viewModel)) {
-                    "Не удалось привести ${ParkFormViewModel::class.java.name} к ${modelClass.name}"
+        ): ViewModelProvider.Factory =
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    require(modelClass.isAssignableFrom(ParkFormViewModel::class.java)) {
+                        "Неизвестный класс ViewModel: ${modelClass.name}, " +
+                            "ожидается: ${ParkFormViewModel::class.java.name}"
+                    }
+                    val viewModel = appContainer.parkFormViewModelFactory(mode)
+                    return checkNotNull(modelClass.cast(viewModel)) {
+                        "Не удалось привести ${ParkFormViewModel::class.java.name} к ${modelClass.name}"
+                    }
                 }
             }
-        }
     }
 
     private val _uiState = MutableStateFlow(createInitialState())
@@ -68,11 +69,13 @@ class ParkFormViewModel(
     init {
         logger.d(TAG, ">>> ParkFormViewModel.init() mode: $mode")
         if (mode is ParkFormMode.Create) {
-            val shouldGeocode = mode.initialAddress.isEmpty() ||
-                mode.initialCityId == null ||
-                mode.initialCityId == 0
+            val shouldGeocode =
+                mode.initialAddress.isEmpty() ||
+                    mode.initialCityId == null ||
+                    mode.initialCityId == 0
             logger.d(
-                TAG, "init: shouldGeocode=$shouldGeocode, " +
+                TAG,
+                "init: shouldGeocode=$shouldGeocode, " +
                     "address='${mode.initialAddress}', cityId=${mode.initialCityId}"
             )
             if (shouldGeocode) {
@@ -94,18 +97,22 @@ class ParkFormViewModel(
         logger.d(TAG, "<<< ParkFormViewModel.init() done")
     }
 
-    private suspend fun performGeocoding(latitude: Double, longitude: Double) {
+    private suspend fun performGeocoding(
+        latitude: Double,
+        longitude: Double
+    ) {
         logger.d(TAG, ">>> performGeocoding($latitude, $longitude)")
         _uiState.update { it.copy(isGeocoding = true) }
         try {
             geocodingService.reverseGeocode(latitude, longitude).fold(
                 onSuccess = { result ->
                     logger.d(TAG, "performGeocoding: reverseGeocode success, result=$result")
-                    val cityId = findCityByCoordinatesUseCase(
-                        result.locality,
-                        latitude,
-                        longitude
-                    )
+                    val cityId =
+                        findCityByCoordinatesUseCase(
+                            result.locality,
+                            latitude,
+                            longitude
+                        )
                     logger.d(TAG, "performGeocoding: cityId from lookup: $cityId")
                     val finalCityId = cityId ?: getCurrentUserCityId()
                     if (finalCityId != cityId && finalCityId != null) {
@@ -113,14 +120,16 @@ class ParkFormViewModel(
                     }
                     _uiState.update { state ->
                         state.copy(
-                            form = state.form.copy(
-                                address = result.address,
-                                cityId = finalCityId ?: state.form.cityId
-                            )
+                            form =
+                                state.form.copy(
+                                    address = result.address,
+                                    cityId = finalCityId ?: state.form.cityId
+                                )
                         )
                     }
                     logger.d(
-                        TAG, "performGeocoding: UI state updated, " +
+                        TAG,
+                        "performGeocoding: UI state updated, " +
                             "address='${result.address}', cityId=$finalCityId"
                     )
                     logger.d(TAG, "<<< performGeocoding() done - SUCCESS")
@@ -142,24 +151,24 @@ class ParkFormViewModel(
         }
     }
 
-    private suspend fun getCurrentUserCityId(): Int? {
-        return try {
+    private suspend fun getCurrentUserCityId(): Int? =
+        try {
             userDao.getCurrentUserFlow().first()?.cityId
         } catch (e: Exception) {
             logger.e(TAG, "Failed to get current user cityId: ${e.message}", e)
             null
         }
-    }
 
-    private fun createInitialState(): ParkFormUiState {
-        return when (val m = mode) {
+    private fun createInitialState(): ParkFormUiState =
+        when (val m = mode) {
             is ParkFormMode.Create -> {
-                val form = ParkForm.create(
-                    address = m.initialAddress,
-                    latitude = m.initialLatitude.toDoubleOrNull() ?: 0.0,
-                    longitude = m.initialLongitude.toDoubleOrNull() ?: 0.0,
-                    cityId = m.initialCityId
-                )
+                val form =
+                    ParkForm.create(
+                        address = m.initialAddress,
+                        latitude = m.initialLatitude.toDoubleOrNull() ?: 0.0,
+                        longitude = m.initialLongitude.toDoubleOrNull() ?: 0.0,
+                        cityId = m.initialCityId
+                    )
                 ParkFormUiState(
                     mode = mode,
                     form = form,
@@ -178,7 +187,6 @@ class ParkFormViewModel(
                 )
             }
         }
-    }
 
     override fun onAddressChange(value: String) {
         _uiState.update { it.copy(form = it.form.copy(address = value)) }
@@ -242,10 +250,11 @@ class ParkFormViewModel(
 
         if (!currentState.canSave || currentState.isSaving) {
             when {
-                !currentState.canSave -> logger.w(
-                    TAG,
-                    "Попытка сохранить без изменений или невалидные данные"
-                )
+                !currentState.canSave ->
+                    logger.w(
+                        TAG,
+                        "Попытка сохранить без изменений или невалидные данные"
+                    )
 
                 currentState.isSaving -> logger.w(TAG, "Сохранение уже в процессе")
             }
@@ -263,8 +272,8 @@ class ParkFormViewModel(
         }
     }
 
-    private fun prepareImageBytes(uris: List<Uri>): List<ByteArray> {
-        return uris.mapNotNull { uri ->
+    private fun prepareImageBytes(uris: List<Uri>): List<ByteArray> =
+        uris.mapNotNull { uri ->
             avatarHelper.uriToByteArray(uri).fold(
                 onSuccess = { bytes ->
                     val jpegBytes = ImageUtils.convertToJpeg(bytes)
@@ -284,22 +293,23 @@ class ParkFormViewModel(
                 }
             )
         }
-    }
 
     private suspend fun savePark(
         currentState: ParkFormUiState,
         photos: List<ByteArray>
     ) {
-        val parkId = when (currentState.mode) {
-            is ParkFormMode.Create -> null
-            is ParkFormMode.Edit -> currentState.mode.parkId
-        }
+        val parkId =
+            when (currentState.mode) {
+                is ParkFormMode.Create -> null
+                is ParkFormMode.Edit -> currentState.mode.parkId
+            }
 
-        val result = swRepository.savePark(
-            id = parkId,
-            form = currentState.form,
-            photos = photos.takeIf { it.isNotEmpty() }
-        )
+        val result =
+            swRepository.savePark(
+                id = parkId,
+                form = currentState.form,
+                photos = photos.takeIf { it.isNotEmpty() }
+            )
 
         result.fold(
             onSuccess = { savedPark ->

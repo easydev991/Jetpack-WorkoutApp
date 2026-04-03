@@ -22,5 +22,8 @@ interface ResourcesProvider {
      * @param args Аргументы для форматирования
      * @return Локализованная строка с подставленными аргументами
      */
-    fun getString(resId: Int, vararg args: Any): String
+    fun getString(
+        resId: Int,
+        vararg args: Any
+    ): String
 }

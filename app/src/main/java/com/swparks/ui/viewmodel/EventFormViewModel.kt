@@ -39,8 +39,8 @@ class EventFormViewModel(
     private val avatarHelper: AvatarHelper,
     private val logger: Logger,
     private val userNotifier: UserNotifier
-) : ViewModel(), IEventFormViewModel {
-
+) : ViewModel(),
+    IEventFormViewModel {
     companion object {
         private const val TAG = "EventFormViewModel"
         private val serverDateTimeFormatter: DateTimeFormatter =
@@ -49,18 +49,19 @@ class EventFormViewModel(
         fun factory(
             mode: EventFormMode,
             appContainer: com.swparks.data.AppContainer
-        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                require(modelClass.isAssignableFrom(EventFormViewModel::class.java)) {
-                    "Неизвестный класс ViewModel: ${modelClass.name}, " +
-                        "ожидается: ${EventFormViewModel::class.java.name}"
-                }
-                val viewModel = appContainer.eventFormViewModelFactory(mode)
-                return checkNotNull(modelClass.cast(viewModel)) {
-                    "Не удалось привести ${EventFormViewModel::class.java.name} к ${modelClass.name}"
+        ): ViewModelProvider.Factory =
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    require(modelClass.isAssignableFrom(EventFormViewModel::class.java)) {
+                        "Неизвестный класс ViewModel: ${modelClass.name}, " +
+                            "ожидается: ${EventFormViewModel::class.java.name}"
+                    }
+                    val viewModel = appContainer.eventFormViewModelFactory(mode)
+                    return checkNotNull(modelClass.cast(viewModel)) {
+                        "Не удалось привести ${EventFormViewModel::class.java.name} к ${modelClass.name}"
+                    }
                 }
             }
-        }
     }
 
     private val _uiState = MutableStateFlow(createInitialState())
@@ -70,10 +71,12 @@ class EventFormViewModel(
     override val events: SharedFlow<EventFormEvent> = _events.asSharedFlow()
 
     private fun createInitialState(): EventFormUiState {
-        val now = LocalDateTime.now()
-            .withSecond(0)
-            .withNano(0)
-            .format(serverDateTimeFormatter)
+        val now =
+            LocalDateTime
+                .now()
+                .withSecond(0)
+                .withNano(0)
+                .format(serverDateTimeFormatter)
 
         return when (mode) {
             is EventFormMode.RegularCreate -> {
@@ -87,11 +90,12 @@ class EventFormViewModel(
             }
 
             is EventFormMode.CreateForSelected -> {
-                val form = EventForm(
-                    date = now,
-                    parkId = mode.parkId,
-                    parkName = mode.parkName
-                )
+                val form =
+                    EventForm(
+                        date = now,
+                        parkId = mode.parkId,
+                        parkName = mode.parkName
+                    )
                 EventFormUiState(
                     mode = mode,
                     form = form,
@@ -102,14 +106,15 @@ class EventFormViewModel(
 
             is EventFormMode.EditExisting -> {
                 val event = mode.event
-                val form = EventForm(
-                    title = event.title,
-                    description = event.description,
-                    date = normalizeDateForServer(event.beginDate),
-                    parkId = event.parkID ?: 0L,
-                    parkName = "№${event.parkID ?: 0L}",
-                    photosCount = event.photos.size
-                )
+                val form =
+                    EventForm(
+                        title = event.title,
+                        description = event.description,
+                        date = normalizeDateForServer(event.beginDate),
+                        parkId = event.parkID ?: 0L,
+                        parkName = "№${event.parkID ?: 0L}",
+                        photosCount = event.photos.size
+                    )
                 EventFormUiState(
                     mode = mode,
                     form = form,
@@ -122,19 +127,21 @@ class EventFormViewModel(
 
     private fun normalizeDateForServer(dateString: String): String {
         return try {
-            val localDateTime = when {
-                dateString.contains('Z') || dateString.contains('+') -> {
-                    OffsetDateTime.parse(dateString)
-                        .atZoneSameInstant(ZoneId.systemDefault())
-                        .toLocalDateTime()
-                }
+            val localDateTime =
+                when {
+                    dateString.contains('Z') || dateString.contains('+') -> {
+                        OffsetDateTime
+                            .parse(dateString)
+                            .atZoneSameInstant(ZoneId.systemDefault())
+                            .toLocalDateTime()
+                    }
 
-                dateString.contains('T') -> {
-                    LocalDateTime.parse(dateString, serverDateTimeFormatter)
-                }
+                    dateString.contains('T') -> {
+                        LocalDateTime.parse(dateString, serverDateTimeFormatter)
+                    }
 
-                else -> return dateString
-            }
+                    else -> return dateString
+                }
             localDateTime
                 .withNano(0)
                 .format(serverDateTimeFormatter)
@@ -154,26 +161,34 @@ class EventFormViewModel(
     }
 
     override fun onDateChange(timestamp: Long) {
-        val localDate = Instant.ofEpochMilli(timestamp)
-            .atZone(ZoneId.systemDefault())
-            .toLocalDate()
+        val localDate =
+            Instant
+                .ofEpochMilli(timestamp)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate()
         val currentDateTime = parseFormDateTimeOrNow(_uiState.value.form.date)
-        val formatted = LocalDateTime.of(localDate, currentDateTime.toLocalTime())
-            .withNano(0)
-            .format(serverDateTimeFormatter)
+        val formatted =
+            LocalDateTime
+                .of(localDate, currentDateTime.toLocalTime())
+                .withNano(0)
+                .format(serverDateTimeFormatter)
 
         _uiState.update { it.copy(form = it.form.copy(date = formatted)) }
         logger.d(TAG, "Дата изменена: $formatted")
     }
 
-    override fun onTimeChange(hour: Int, minute: Int) {
+    override fun onTimeChange(
+        hour: Int,
+        minute: Int
+    ) {
         val currentDateTime = parseFormDateTimeOrNow(_uiState.value.form.date)
-        val formatted = currentDateTime
-            .withHour(hour)
-            .withMinute(minute)
-            .withSecond(0)
-            .withNano(0)
-            .format(serverDateTimeFormatter)
+        val formatted =
+            currentDateTime
+                .withHour(hour)
+                .withMinute(minute)
+                .withSecond(0)
+                .withNano(0)
+                .format(serverDateTimeFormatter)
 
         _uiState.update { it.copy(form = it.form.copy(date = formatted)) }
         logger.d(TAG, "Время изменено: $formatted")
@@ -187,7 +202,8 @@ class EventFormViewModel(
         return try {
             when {
                 dateString.contains('Z') || dateString.contains('+') -> {
-                    OffsetDateTime.parse(dateString)
+                    OffsetDateTime
+                        .parse(dateString)
                         .atZoneSameInstant(ZoneId.systemDefault())
                         .toLocalDateTime()
                 }
@@ -204,7 +220,8 @@ class EventFormViewModel(
                 }
 
                 else -> {
-                    LocalDate.parse(dateString)
+                    LocalDate
+                        .parse(dateString)
                         .atTime(LocalTime.now().withSecond(0).withNano(0))
                 }
             }.withNano(0)
@@ -214,20 +231,26 @@ class EventFormViewModel(
     }
 
     override fun onParkClick() {
-        val currentParkId = _uiState.value.form.parkId.takeIf { it > 0 }
+        val currentParkId =
+            _uiState.value.form.parkId
+                .takeIf { it > 0 }
         viewModelScope.launch {
             _events.emit(EventFormEvent.NavigateToSelectPark(currentParkId))
         }
         logger.d(TAG, "Клик по выбору парка: $currentParkId")
     }
 
-    override fun onParkSelected(parkId: Long, parkName: String) {
+    override fun onParkSelected(
+        parkId: Long,
+        parkName: String
+    ) {
         _uiState.update {
             it.copy(
-                form = it.form.copy(
-                    parkId = parkId,
-                    parkName = parkName
-                )
+                form =
+                    it.form.copy(
+                        parkId = parkId,
+                        parkName = parkName
+                    )
             )
         }
         logger.d(TAG, "Выбран парк: id=$parkId, name=$parkName")
@@ -275,10 +298,11 @@ class EventFormViewModel(
 
         if (!currentState.canSave || currentState.isSaving) {
             when {
-                !currentState.canSave -> logger.w(
-                    TAG,
-                    "Попытка сохранить без изменений или невалидные данные"
-                )
+                !currentState.canSave ->
+                    logger.w(
+                        TAG,
+                        "Попытка сохранить без изменений или невалидные данные"
+                    )
 
                 currentState.isSaving -> logger.w(TAG, "Сохранение уже в процессе")
             }
@@ -296,8 +320,8 @@ class EventFormViewModel(
         }
     }
 
-    private fun prepareImageBytes(uris: List<Uri>): List<ByteArray> {
-        return uris.mapNotNull { uri ->
+    private fun prepareImageBytes(uris: List<Uri>): List<ByteArray> =
+        uris.mapNotNull { uri ->
             avatarHelper.uriToByteArray(uri).fold(
                 onSuccess = { bytes ->
                     val jpegBytes = ImageUtils.convertToJpeg(bytes)
@@ -317,35 +341,35 @@ class EventFormViewModel(
                 }
             )
         }
-    }
 
     private suspend fun saveEvent(
         currentState: EventFormUiState,
         photos: List<ByteArray>
     ) {
-        val result = when (val m = currentState.mode) {
-            is EventFormMode.RegularCreate -> {
-                createEventUseCase(
-                    form = currentState.form,
-                    photos = photos.takeIf { it.isNotEmpty() }
-                )
-            }
+        val result =
+            when (val m = currentState.mode) {
+                is EventFormMode.RegularCreate -> {
+                    createEventUseCase(
+                        form = currentState.form,
+                        photos = photos.takeIf { it.isNotEmpty() }
+                    )
+                }
 
-            is EventFormMode.CreateForSelected -> {
-                createEventUseCase(
-                    form = currentState.form,
-                    photos = photos.takeIf { it.isNotEmpty() }
-                )
-            }
+                is EventFormMode.CreateForSelected -> {
+                    createEventUseCase(
+                        form = currentState.form,
+                        photos = photos.takeIf { it.isNotEmpty() }
+                    )
+                }
 
-            is EventFormMode.EditExisting -> {
-                editEventUseCase(
-                    eventId = m.eventId,
-                    form = currentState.form,
-                    photos = photos.takeIf { it.isNotEmpty() }
-                )
+                is EventFormMode.EditExisting -> {
+                    editEventUseCase(
+                        eventId = m.eventId,
+                        form = currentState.form,
+                        photos = photos.takeIf { it.isNotEmpty() }
+                    )
+                }
             }
-        }
 
         result.fold(
             onSuccess = { savedEvent ->
@@ -372,7 +396,6 @@ class EventFormViewModel(
         )
     }
 
-
     override fun onAction(action: EventFormAction) {
         when (action) {
             is EventFormAction.TitleChange -> onTitleChange(action.value)
@@ -385,9 +408,22 @@ class EventFormViewModel(
 }
 
 sealed class EventFormAction {
-    data class TitleChange(val value: String) : EventFormAction()
-    data class DescriptionChange(val value: String) : EventFormAction()
+    data class TitleChange(
+        val value: String
+    ) : EventFormAction()
+
+    data class DescriptionChange(
+        val value: String
+    ) : EventFormAction()
+
     data object ParkClick : EventFormAction()
-    data class DateChange(val timestamp: Long) : EventFormAction()
-    data class TimeChange(val hour: Int, val minute: Int) : EventFormAction()
+
+    data class DateChange(
+        val timestamp: Long
+    ) : EventFormAction()
+
+    data class TimeChange(
+        val hour: Int,
+        val minute: Int
+    ) : EventFormAction()
 }

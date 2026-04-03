@@ -22,27 +22,27 @@ class FakeLoginViewModel(
     initialLogin: String = "",
     initialPassword: String = ""
 ) : ILoginViewModel {
-
     // Поток событий для тестирования
-    private val _events = MutableSharedFlow<LoginEvent>()
-    override val loginEvents: SharedFlow<LoginEvent> = _events.asSharedFlow()
+    private val eventsFlow = MutableSharedFlow<LoginEvent>()
+    override val loginEvents: SharedFlow<LoginEvent> = eventsFlow.asSharedFlow()
 
     // Состояние учетных данных
-    private val _login = MutableStateFlow(initialLogin)
-    private val _password = MutableStateFlow(initialPassword)
+    private val loginFlow = MutableStateFlow(initialLogin)
+    private val passwordFlow = MutableStateFlow(initialPassword)
 
     override val credentials: LoginCredentials
-        get() = LoginCredentials(
-            login = _login.value,
-            password = _password.value
-        )
+        get() =
+            LoginCredentials(
+                login = loginFlow.value,
+                password = passwordFlow.value
+            )
 
     /**
      * Обновляет логин пользователя.
      * В тестах состояние устанавливается напрямую через конструктор.
      */
     override fun onLoginChange(value: String) {
-        _login.value = value
+        loginFlow.value = value
     }
 
     /**
@@ -50,7 +50,7 @@ class FakeLoginViewModel(
      * В тестах состояние устанавливается напрямую через конструктор.
      */
     override fun onPasswordChange(value: String) {
-        _password.value = value
+        passwordFlow.value = value
     }
 
     /**

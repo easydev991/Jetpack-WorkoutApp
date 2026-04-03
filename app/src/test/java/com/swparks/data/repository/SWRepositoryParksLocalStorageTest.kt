@@ -50,7 +50,8 @@ class SWRepositoryParksLocalStorageTest {
     private lateinit var mockDataStore: DataStore<Preferences>
     private lateinit var repository: SWRepositoryImp
 
-    private val parksJson = """
+    private val parksJson =
+        """
         [
             {
                 "id": 1,
@@ -81,7 +82,7 @@ class SWRepositoryParksLocalStorageTest {
                 "trainings": 2
             }
         ]
-    """.trimIndent()
+        """.trimIndent()
 
     @Before
     fun setup() {
@@ -97,18 +98,19 @@ class SWRepositoryParksLocalStorageTest {
 
         every { mockContext.assets.open("parks.json") } returns parksJson.byteInputStream()
 
-        repository = SWRepositoryImp(
-            mockk(relaxed = true),
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
+        repository =
+            SWRepositoryImp(
+                mockk(relaxed = true),
+                mockDataStore,
+                mockUserDao,
+                mockJournalDao,
+                mockJournalEntryDao,
+                mockDialogDao,
+                mockEventDao,
+                mockParkDao,
+                crashReporter,
+                logger
+            )
     }
 
     @After
@@ -116,8 +118,11 @@ class SWRepositoryParksLocalStorageTest {
         unmockkAll()
     }
 
-    private fun createMockPark(id: Long = 1L, name: String = "Test Park"): Park {
-        return Park(
+    private fun createMockPark(
+        id: Long = 1L,
+        name: String = "Test Park"
+    ): Park =
+        Park(
             id = id,
             name = name,
             sizeID = 1,
@@ -129,112 +134,121 @@ class SWRepositoryParksLocalStorageTest {
             countryID = 1,
             preview = ""
         )
-    }
 
     @Test
-    fun importSeedParks_whenRoomIsEmpty_importsParksFromAssets() = runTest {
-        coEvery { mockParkDao.isEmpty() } returns true
+    fun importSeedParks_whenRoomIsEmpty_importsParksFromAssets() =
+        runTest {
+            coEvery { mockParkDao.isEmpty() } returns true
 
-        repository.importSeedParks(mockContext)
+            repository.importSeedParks(mockContext)
 
-        coVerify { mockParkDao.insertAll(any()) }
-    }
-
-    @Test
-    fun importSeedParks_whenRoomIsNotEmpty_doesNotImportAgain() = runTest {
-        coEvery { mockParkDao.isEmpty() } returns false
-
-        repository.importSeedParks(mockContext)
-
-        coVerify(exactly = 0) { mockParkDao.insertAll(any()) }
-    }
+            coVerify { mockParkDao.insertAll(any()) }
+        }
 
     @Test
-    fun importSeedParks_whenEmpty_insertsCorrectParks() = runTest {
-        coEvery { mockParkDao.isEmpty() } returns true
-        val insertedEntities = slot<List<com.swparks.data.database.entity.ParkEntity>>()
+    fun importSeedParks_whenRoomIsNotEmpty_doesNotImportAgain() =
+        runTest {
+            coEvery { mockParkDao.isEmpty() } returns false
 
-        repository.importSeedParks(mockContext)
+            repository.importSeedParks(mockContext)
 
-        coVerify { mockParkDao.insertAll(capture(insertedEntities)) }
-        assertEquals(2, insertedEntities.captured.size)
-        assertEquals(1L, insertedEntities.captured[0].id)
-        assertEquals("Парк Горького", insertedEntities.captured[0].name)
-        assertEquals(2L, insertedEntities.captured[1].id)
-        assertEquals("Сокольники", insertedEntities.captured[1].name)
-    }
+            coVerify(exactly = 0) { mockParkDao.insertAll(any()) }
+        }
 
     @Test
-    fun upsertParks_existingPark_updatesById() = runTest {
-        val updatedPark = createMockPark(id = 1L, name = "Updated Name")
-        val insertedEntities = slot<List<com.swparks.data.database.entity.ParkEntity>>()
+    fun importSeedParks_whenEmpty_insertsCorrectParks() =
+        runTest {
+            coEvery { mockParkDao.isEmpty() } returns true
+            val insertedEntities = slot<List<com.swparks.data.database.entity.ParkEntity>>()
 
-        repository.upsertParks(listOf(updatedPark))
+            repository.importSeedParks(mockContext)
 
-        coVerify { mockParkDao.insertAll(capture(insertedEntities)) }
-        assertEquals(1, insertedEntities.captured.size)
-        assertEquals("Updated Name", insertedEntities.captured[0].name)
-    }
-
-    @Test
-    fun upsertParks_newPark_insertsWithNewId() = runTest {
-        val newPark = createMockPark(id = 999L, name = "New Park")
-        val insertedEntities = slot<List<com.swparks.data.database.entity.ParkEntity>>()
-
-        repository.upsertParks(listOf(newPark))
-
-        coVerify { mockParkDao.insertAll(capture(insertedEntities)) }
-        assertEquals(1, insertedEntities.captured.size)
-        assertEquals(999L, insertedEntities.captured[0].id)
-        assertEquals("New Park", insertedEntities.captured[0].name)
-    }
+            coVerify { mockParkDao.insertAll(capture(insertedEntities)) }
+            assertEquals(2, insertedEntities.captured.size)
+            assertEquals(1L, insertedEntities.captured[0].id)
+            assertEquals("Парк Горького", insertedEntities.captured[0].name)
+            assertEquals(2L, insertedEntities.captured[1].id)
+            assertEquals("Сокольники", insertedEntities.captured[1].name)
+        }
 
     @Test
-    fun upsertParks_multipleParks_insertsAll() = runTest {
-        val parks = listOf(
-            createMockPark(id = 1L, name = "Park 1"),
-            createMockPark(id = 2L, name = "Park 2"),
-            createMockPark(id = 3L, name = "Park 3")
-        )
-        val insertedEntities = slot<List<com.swparks.data.database.entity.ParkEntity>>()
+    fun upsertParks_existingPark_updatesById() =
+        runTest {
+            val updatedPark = createMockPark(id = 1L, name = "Updated Name")
+            val insertedEntities = slot<List<com.swparks.data.database.entity.ParkEntity>>()
 
-        repository.upsertParks(parks)
+            repository.upsertParks(listOf(updatedPark))
 
-        coVerify { mockParkDao.insertAll(capture(insertedEntities)) }
-        assertEquals(3, insertedEntities.captured.size)
-    }
+            coVerify { mockParkDao.insertAll(capture(insertedEntities)) }
+            assertEquals(1, insertedEntities.captured.size)
+            assertEquals("Updated Name", insertedEntities.captured[0].name)
+        }
 
     @Test
-    fun getParksFlow_returnsParksFromRoom() = runTest {
-        val parkEntity = com.swparks.data.database.entity.ParkEntity(
-            id = 1L,
-            name = "Room Park",
-            sizeID = 1,
-            typeID = 1,
-            longitude = "37.0",
-            latitude = "55.0",
-            address = "Test Address",
-            cityID = 1,
-            countryID = 1,
-            preview = "",
-            commentsCount = 0,
-            trainingUsersCount = 0
-        )
-        every { mockParkDao.getAllParks() } returns flowOf(listOf(parkEntity))
+    fun upsertParks_newPark_insertsWithNewId() =
+        runTest {
+            val newPark = createMockPark(id = 999L, name = "New Park")
+            val insertedEntities = slot<List<com.swparks.data.database.entity.ParkEntity>>()
 
-        val parks = repository.getParksFlow().first()
+            repository.upsertParks(listOf(newPark))
 
-        assertEquals(1, parks.size)
-        assertEquals(1L, parks[0].id)
-        assertEquals("Room Park", parks[0].name)
-    }
+            coVerify { mockParkDao.insertAll(capture(insertedEntities)) }
+            assertEquals(1, insertedEntities.captured.size)
+            assertEquals(999L, insertedEntities.captured[0].id)
+            assertEquals("New Park", insertedEntities.captured[0].name)
+        }
 
     @Test
-    fun getParksFlow_whenRoomIsEmpty_returnsEmptyList() = runTest {
-        every { mockParkDao.getAllParks() } returns flowOf(emptyList())
+    fun upsertParks_multipleParks_insertsAll() =
+        runTest {
+            val parks =
+                listOf(
+                    createMockPark(id = 1L, name = "Park 1"),
+                    createMockPark(id = 2L, name = "Park 2"),
+                    createMockPark(id = 3L, name = "Park 3")
+                )
+            val insertedEntities = slot<List<com.swparks.data.database.entity.ParkEntity>>()
 
-        val parks = repository.getParksFlow().first()
+            repository.upsertParks(parks)
 
-        assertTrue(parks.isEmpty())
-    }
+            coVerify { mockParkDao.insertAll(capture(insertedEntities)) }
+            assertEquals(3, insertedEntities.captured.size)
+        }
+
+    @Test
+    fun getParksFlow_returnsParksFromRoom() =
+        runTest {
+            val parkEntity =
+                com.swparks.data.database.entity.ParkEntity(
+                    id = 1L,
+                    name = "Room Park",
+                    sizeID = 1,
+                    typeID = 1,
+                    longitude = "37.0",
+                    latitude = "55.0",
+                    address = "Test Address",
+                    cityID = 1,
+                    countryID = 1,
+                    preview = "",
+                    commentsCount = 0,
+                    trainingUsersCount = 0
+                )
+            every { mockParkDao.getAllParks() } returns flowOf(listOf(parkEntity))
+
+            val parks = repository.getParksFlow().first()
+
+            assertEquals(1, parks.size)
+            assertEquals(1L, parks[0].id)
+            assertEquals("Room Park", parks[0].name)
+        }
+
+    @Test
+    fun getParksFlow_whenRoomIsEmpty_returnsEmptyList() =
+        runTest {
+            every { mockParkDao.getAllParks() } returns flowOf(emptyList())
+
+            val parks = repository.getParksFlow().first()
+
+            assertTrue(parks.isEmpty())
+        }
 }

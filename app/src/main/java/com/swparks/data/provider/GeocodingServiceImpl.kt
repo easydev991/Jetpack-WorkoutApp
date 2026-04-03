@@ -24,7 +24,6 @@ class GeocodingServiceImpl(
         )
     }
 ) : GeocodingService {
-
     private val geocoder: Geocoder by lazy {
         geocoderProvider(context, Locale("ru", "RU"))
     }
@@ -128,7 +127,10 @@ class GeocodingServiceImpl(
         return parts.joinToString(", ")
     }
 
-    private fun addIfNotDuplicate(parts: MutableList<String>, value: String) {
+    private fun addIfNotDuplicate(
+        parts: MutableList<String>,
+        value: String
+    ) {
         val normalized = value.trim()
         if (normalized.isNotEmpty() && !parts.any { it.contains(normalized, ignoreCase = true) }) {
             parts.add(normalized)

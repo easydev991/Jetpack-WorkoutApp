@@ -58,27 +58,30 @@ fun SWAsyncImage(config: AsyncImageConfig) {
     val defaultShape = RoundedCornerShape(dimensionResource(id = R.dimen.spacing_xsmall))
     val shape = config.shape ?: defaultShape
     AsyncImage(
-        model = ImageRequest.Builder(context)
-            .data(normalizeImageUrl(config.imageStringURL))
-            .crossfade(context.resources.getInteger(R.integer.crossfade_duration_ms))
-            .build(),
+        model =
+            ImageRequest
+                .Builder(context)
+                .data(normalizeImageUrl(config.imageStringURL))
+                .crossfade(context.resources.getInteger(R.integer.crossfade_duration_ms))
+                .build(),
         placeholder = painterResource(id = R.drawable.defaultworkout),
         error = painterResource(id = R.drawable.defaultworkout),
         contentDescription = "Preview",
         contentScale = config.contentScale,
-        modifier = config.modifier
-            .size(config.size)
-            .clip(shape)
-            .let {
-                if (config.showBorder) {
-                    return@let it.border(
-                        width = dimensionResource(id = R.dimen.border_width_small),
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = shape
-                    )
+        modifier =
+            config.modifier
+                .size(config.size)
+                .clip(shape)
+                .let {
+                    if (config.showBorder) {
+                        return@let it.border(
+                            width = dimensionResource(id = R.dimen.border_width_small),
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = shape
+                        )
+                    }
+                    it
                 }
-                it
-            }
     )
 }
 
@@ -118,30 +121,34 @@ fun SWAsyncImagePreview() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 SWAsyncImage(
-                    config = AsyncImageConfig(
-                        imageStringURL = null,
-                        size = 42.dp
-                    )
+                    config =
+                        AsyncImageConfig(
+                            imageStringURL = null,
+                            size = 42.dp
+                        )
                 )
                 SWAsyncImage(
-                    config = AsyncImageConfig(
-                        imageStringURL = null,
-                        size = 42.dp,
-                        shape = CircleShape
-                    )
+                    config =
+                        AsyncImageConfig(
+                            imageStringURL = null,
+                            size = 42.dp,
+                            shape = CircleShape
+                        )
                 )
                 SWAsyncImage(
-                    config = AsyncImageConfig(
-                        imageStringURL = null,
-                        size = 74.dp,
-                        showBorder = false
-                    )
+                    config =
+                        AsyncImageConfig(
+                            imageStringURL = null,
+                            size = 74.dp,
+                            showBorder = false
+                        )
                 )
                 SWAsyncImage(
-                    config = AsyncImageConfig(
-                        imageStringURL = null,
-                        size = 150.dp
-                    )
+                    config =
+                        AsyncImageConfig(
+                            imageStringURL = null,
+                            size = 150.dp
+                        )
                 )
             }
         }

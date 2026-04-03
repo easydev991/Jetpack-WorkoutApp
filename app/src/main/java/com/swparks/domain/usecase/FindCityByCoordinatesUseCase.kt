@@ -14,7 +14,6 @@ import com.swparks.domain.repository.CountriesRepository
 class FindCityByCoordinatesUseCase(
     private val countriesRepository: CountriesRepository
 ) : IFindCityByCoordinatesUseCase {
-
     override suspend operator fun invoke(
         locality: String?,
         latitude: Double,
@@ -25,14 +24,13 @@ class FindCityByCoordinatesUseCase(
         val normalizedLocality = normalizeLocality(locality)
         val allCities = countriesRepository.getAllCities()
 
-        val matchingCity = allCities.find { city ->
-            normalizeLocality(city.name) == normalizedLocality
-        }
+        val matchingCity =
+            allCities.find { city ->
+                normalizeLocality(city.name) == normalizedLocality
+            }
 
         return matchingCity?.id?.toIntOrNull()
     }
 
-    private fun normalizeLocality(locality: String): String {
-        return locality.trim().lowercase()
-    }
+    private fun normalizeLocality(locality: String): String = locality.trim().lowercase()
 }

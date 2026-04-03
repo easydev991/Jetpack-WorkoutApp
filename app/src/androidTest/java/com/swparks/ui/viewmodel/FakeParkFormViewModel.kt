@@ -12,16 +12,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 class FakeParkFormViewModel(
-    initialState: ParkFormUiState = ParkFormUiState(
-        mode = ParkFormMode.Create(
-            initialAddress = "",
-            initialLatitude = "",
-            initialLongitude = "",
-            initialCityId = null
+    initialState: ParkFormUiState =
+        ParkFormUiState(
+            mode =
+                ParkFormMode.Create(
+                    initialAddress = "",
+                    initialLatitude = "",
+                    initialLongitude = "",
+                    initialCityId = null
+                )
         )
-    )
 ) : IParkFormViewModel {
-
     private val _uiState = MutableStateFlow(initialState)
     override val uiState: StateFlow<ParkFormUiState> = _uiState
 
@@ -29,36 +30,41 @@ class FakeParkFormViewModel(
     override val events: SharedFlow<ParkFormEvent> = _events.asSharedFlow()
 
     override fun onAddressChange(value: String) {
-        _uiState.value = _uiState.value.copy(
-            form = _uiState.value.form.copy(address = value)
-        )
+        _uiState.value =
+            _uiState.value.copy(
+                form = _uiState.value.form.copy(address = value)
+            )
     }
 
     override fun onTypeChange(typeId: Int) {
-        _uiState.value = _uiState.value.copy(
-            form = _uiState.value.form.copy(typeId = typeId)
-        )
+        _uiState.value =
+            _uiState.value.copy(
+                form = _uiState.value.form.copy(typeId = typeId)
+            )
     }
 
     override fun onSizeChange(sizeId: Int) {
-        _uiState.value = _uiState.value.copy(
-            form = _uiState.value.form.copy(sizeId = sizeId)
-        )
+        _uiState.value =
+            _uiState.value.copy(
+                form = _uiState.value.form.copy(sizeId = sizeId)
+            )
     }
 
     override fun onAddPhotoClick() {
     }
 
     override fun onPhotoSelected(uris: List<Uri>) {
-        _uiState.value = _uiState.value.copy(
-            selectedPhotos = _uiState.value.selectedPhotos + uris
-        )
+        _uiState.value =
+            _uiState.value.copy(
+                selectedPhotos = _uiState.value.selectedPhotos + uris
+            )
     }
 
     override fun onPhotoRemove(uri: Uri) {
-        _uiState.value = _uiState.value.copy(
-            selectedPhotos = _uiState.value.selectedPhotos - uri
-        )
+        _uiState.value =
+            _uiState.value.copy(
+                selectedPhotos = _uiState.value.selectedPhotos - uri
+            )
     }
 
     override fun onSaveClick() {

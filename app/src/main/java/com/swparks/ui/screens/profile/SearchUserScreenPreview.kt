@@ -14,14 +14,16 @@ fun SearchUserScreenInitialPreview() {
     JetpackWorkoutAppTheme {
         SearchUserScreenContent(
             uiState = SearchUserUiState.Initial,
-            searchQueryState = SearchQueryState(
-                query = "",
-                onQueryChange = {}
-            ),
-            config = SearchUserConfig(
-                parentPaddingValues = PaddingValues(0.dp),
-                currentUserId = null
-            ),
+            searchQueryState =
+                SearchQueryState(
+                    query = "",
+                    onQueryChange = {}
+                ),
+            config =
+                SearchUserConfig(
+                    parentPaddingValues = PaddingValues(0.dp),
+                    currentUserId = null
+                ),
             onAction = {}
         )
     }
@@ -33,14 +35,16 @@ fun SearchUserScreenLoadingPreview() {
     JetpackWorkoutAppTheme {
         SearchUserScreenContent(
             uiState = SearchUserUiState.Loading,
-            searchQueryState = SearchQueryState(
-                query = "test",
-                onQueryChange = {}
-            ),
-            config = SearchUserConfig(
-                parentPaddingValues = PaddingValues(0.dp),
-                currentUserId = null
-            ),
+            searchQueryState =
+                SearchQueryState(
+                    query = "test",
+                    onQueryChange = {}
+                ),
+            config =
+                SearchUserConfig(
+                    parentPaddingValues = PaddingValues(0.dp),
+                    currentUserId = null
+                ),
             onAction = {}
         )
     }
@@ -49,41 +53,44 @@ fun SearchUserScreenLoadingPreview() {
 @Preview(showBackground = true, locale = "ru", name = "Success State")
 @Composable
 fun SearchUserScreenSuccessPreview() {
-    val users = listOf(
-        User(
-            id = 1,
-            name = "ivan_petrov",
-            fullName = "Ivan Petrov",
-            image = null,
-            email = "ivan@example.com"
-        ),
-        User(
-            id = 2,
-            name = "workout_master",
-            fullName = "Workout Master",
-            image = null,
-            email = "master@example.com"
-        ),
-        User(
-            id = 3,
-            name = "fitness_queen",
-            fullName = null,
-            image = null,
-            email = "queen@example.com"
+    val users =
+        listOf(
+            User(
+                id = 1,
+                name = "ivan_petrov",
+                fullName = "Ivan Petrov",
+                image = null,
+                email = "ivan@example.com"
+            ),
+            User(
+                id = 2,
+                name = "workout_master",
+                fullName = "Workout Master",
+                image = null,
+                email = "master@example.com"
+            ),
+            User(
+                id = 3,
+                name = "fitness_queen",
+                fullName = null,
+                image = null,
+                email = "queen@example.com"
+            )
         )
-    )
 
     JetpackWorkoutAppTheme {
         SearchUserScreenContent(
             uiState = SearchUserUiState.Success(users),
-            searchQueryState = SearchQueryState(
-                query = "test",
-                onQueryChange = {}
-            ),
-            config = SearchUserConfig(
-                parentPaddingValues = PaddingValues(0.dp),
-                currentUserId = null
-            ),
+            searchQueryState =
+                SearchQueryState(
+                    query = "test",
+                    onQueryChange = {}
+                ),
+            config =
+                SearchUserConfig(
+                    parentPaddingValues = PaddingValues(0.dp),
+                    currentUserId = null
+                ),
             onAction = {}
         )
     }
@@ -95,14 +102,16 @@ fun SearchUserScreenEmptyPreview() {
     JetpackWorkoutAppTheme {
         SearchUserScreenContent(
             uiState = SearchUserUiState.Empty,
-            searchQueryState = SearchQueryState(
-                query = "notfound",
-                onQueryChange = {}
-            ),
-            config = SearchUserConfig(
-                parentPaddingValues = PaddingValues(0.dp),
-                currentUserId = null
-            ),
+            searchQueryState =
+                SearchQueryState(
+                    query = "notfound",
+                    onQueryChange = {}
+                ),
+            config =
+                SearchUserConfig(
+                    parentPaddingValues = PaddingValues(0.dp),
+                    currentUserId = null
+                ),
             onAction = {}
         )
     }
@@ -114,14 +123,16 @@ fun SearchUserScreenNetworkErrorPreview() {
     JetpackWorkoutAppTheme {
         SearchUserScreenContent(
             uiState = SearchUserUiState.NetworkError,
-            searchQueryState = SearchQueryState(
-                query = "test",
-                onQueryChange = {}
-            ),
-            config = SearchUserConfig(
-                parentPaddingValues = PaddingValues(0.dp),
-                currentUserId = null
-            ),
+            searchQueryState =
+                SearchQueryState(
+                    query = "test",
+                    onQueryChange = {}
+                ),
+            config =
+                SearchUserConfig(
+                    parentPaddingValues = PaddingValues(0.dp),
+                    currentUserId = null
+                ),
             onAction = {}
         )
     }

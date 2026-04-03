@@ -15,5 +15,7 @@ sealed class FriendsListUiState {
     ) : FriendsListUiState()
 
     /** Состояние ошибки с сообщением */
-    data class Error(val message: String) : FriendsListUiState()
+    data class Error(
+        val message: String
+    ) : FriendsListUiState()
 }

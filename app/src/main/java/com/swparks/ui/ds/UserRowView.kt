@@ -35,41 +35,44 @@ data class UserRowData(
 @Composable
 fun UserRowView(data: UserRowData) {
     FormCardContainer(
-        params = FormCardContainerParams(
-            modifier = data.modifier,
-            enabled = data.enabled,
-            onClick = data.onClick
-        )
+        params =
+            FormCardContainerParams(
+                modifier = data.modifier,
+                enabled = data.enabled,
+                onClick = data.onClick
+            )
     ) {
         FormRowContainer(
-            config = FormRowConfig(
-                horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
-                verticalPadding = dimensionResource(R.dimen.spacing_small),
-                content = {
-                    SWAsyncImage(
-                        config = AsyncImageConfig(
-                            imageStringURL = data.imageStringURL,
-                            size = 42.dp,
-                            shape = CircleShape
+            config =
+                FormRowConfig(
+                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
+                    verticalPadding = dimensionResource(R.dimen.spacing_small),
+                    content = {
+                        SWAsyncImage(
+                            config =
+                                AsyncImageConfig(
+                                    imageStringURL = data.imageStringURL,
+                                    size = 42.dp,
+                                    shape = CircleShape
+                                )
                         )
-                    )
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall))
-                    ) {
-                        Text(
-                            text = data.name,
-                            maxLines = 1,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        if (!data.address.isNullOrBlank()) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall))
+                        ) {
                             Text(
-                                text = data.address,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                text = data.name,
+                                maxLines = 1,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
+                            if (!data.address.isNullOrBlank()) {
+                                Text(
+                                    text = data.address,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
-                }
-            )
+                )
         )
     }
 }
@@ -85,11 +88,12 @@ fun UserRowViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             UserRowView(
-                data = UserRowData(
-                    imageStringURL = null,
-                    name = "yellowmouse215",
-                    address = "Россия, Москва"
-                )
+                data =
+                    UserRowData(
+                        imageStringURL = null,
+                        name = "yellowmouse215",
+                        address = "Россия, Москва"
+                    )
             )
         }
     }

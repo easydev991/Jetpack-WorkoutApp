@@ -7,7 +7,7 @@ package com.swparks.util
 class NoOpCrashReporter : CrashReporter {
     override fun logException(
         exception: Throwable,
-        message: String?,
+        message: String?
     ) {
         // Ничего не делаем в тестах
     }
@@ -18,7 +18,7 @@ class NoOpCrashReporter : CrashReporter {
 
     override fun setCustomKey(
         key: String,
-        value: Any,
+        value: Any
     ) {
         // Ничего не делаем в тестах
     }

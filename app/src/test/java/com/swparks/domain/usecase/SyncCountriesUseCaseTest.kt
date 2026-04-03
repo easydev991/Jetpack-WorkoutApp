@@ -18,7 +18,6 @@ import org.junit.Before
 import org.junit.Test
 
 class SyncCountriesUseCaseTest {
-
     private lateinit var clock: Clock
     private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var countriesRepository: CountriesRepository
@@ -29,12 +28,13 @@ class SyncCountriesUseCaseTest {
         clock = TestClock("2025-10-27T12:00:00Z")
         userPreferencesRepository = mockk(relaxed = true)
         countriesRepository = mockk(relaxed = true)
-        syncCountriesUseCase = SyncCountriesUseCase(
-            clock,
-            userPreferencesRepository,
-            countriesRepository,
-            NoOpLogger()
-        )
+        syncCountriesUseCase =
+            SyncCountriesUseCase(
+                clock,
+                userPreferencesRepository,
+                countriesRepository,
+                NoOpLogger()
+            )
     }
 
     @Test
@@ -50,55 +50,61 @@ class SyncCountriesUseCaseTest {
     }
 
     @Test
-    fun invoke_whenNeedUpdateIsFalse_thenDoesNotCallUpdateCountriesFromServer() = runTest {
-        every { userPreferencesRepository.lastCountriesUpdateDate } returns flowOf("2025-10-27T10:00:00Z")
+    fun invoke_whenNeedUpdateIsFalse_thenDoesNotCallUpdateCountriesFromServer() =
+        runTest {
+            every { userPreferencesRepository.lastCountriesUpdateDate } returns flowOf("2025-10-27T10:00:00Z")
 
-        syncCountriesUseCase()
+            syncCountriesUseCase()
 
-        coVerify(exactly = 0) { countriesRepository.updateCountriesFromServer() }
-    }
-
-    @Test
-    fun invoke_whenNeedUpdateIsTrue_thenCallsUpdateCountriesFromServer() = runTest {
-        every { userPreferencesRepository.lastCountriesUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
-        coEvery { countriesRepository.updateCountriesFromServer() } returns Result.success(Unit)
-
-        syncCountriesUseCase()
-
-        coVerify { countriesRepository.updateCountriesFromServer() }
-    }
+            coVerify(exactly = 0) { countriesRepository.updateCountriesFromServer() }
+        }
 
     @Test
-    fun invoke_whenSuccessfulUpdate_thenSavesDate() = runTest {
-        every { userPreferencesRepository.lastCountriesUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
-        coEvery { countriesRepository.updateCountriesFromServer() } returns Result.success(Unit)
+    fun invoke_whenNeedUpdateIsTrue_thenCallsUpdateCountriesFromServer() =
+        runTest {
+            every { userPreferencesRepository.lastCountriesUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
+            coEvery { countriesRepository.updateCountriesFromServer() } returns Result.success(Unit)
 
-        syncCountriesUseCase()
+            syncCountriesUseCase()
 
-        coVerify { userPreferencesRepository.setLastCountriesUpdateDate(clock.nowIsoString()) }
-    }
-
-    @Test
-    fun invoke_whenNetworkError_thenDoesNotSaveDate() = runTest {
-        every { userPreferencesRepository.lastCountriesUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
-        coEvery { countriesRepository.updateCountriesFromServer() } returns Result.failure(
-            Exception(
-                "Network error"
-            )
-        )
-
-        syncCountriesUseCase()
-
-        coVerify(exactly = 0) { userPreferencesRepository.setLastCountriesUpdateDate(any()) }
-    }
+            coVerify { countriesRepository.updateCountriesFromServer() }
+        }
 
     @Test
-    fun invoke_whenDefaultDate_thenCallsUpdateCountriesFromServer() = runTest {
-        every { userPreferencesRepository.lastCountriesUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
-        coEvery { countriesRepository.updateCountriesFromServer() } returns Result.success(Unit)
+    fun invoke_whenSuccessfulUpdate_thenSavesDate() =
+        runTest {
+            every { userPreferencesRepository.lastCountriesUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
+            coEvery { countriesRepository.updateCountriesFromServer() } returns Result.success(Unit)
 
-        syncCountriesUseCase()
+            syncCountriesUseCase()
 
-        coVerify { countriesRepository.updateCountriesFromServer() }
-    }
+            coVerify { userPreferencesRepository.setLastCountriesUpdateDate(clock.nowIsoString()) }
+        }
+
+    @Test
+    fun invoke_whenNetworkError_thenDoesNotSaveDate() =
+        runTest {
+            every { userPreferencesRepository.lastCountriesUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
+            coEvery { countriesRepository.updateCountriesFromServer() } returns
+                Result.failure(
+                    Exception(
+                        "Network error"
+                    )
+                )
+
+            syncCountriesUseCase()
+
+            coVerify(exactly = 0) { userPreferencesRepository.setLastCountriesUpdateDate(any()) }
+        }
+
+    @Test
+    fun invoke_whenDefaultDate_thenCallsUpdateCountriesFromServer() =
+        runTest {
+            every { userPreferencesRepository.lastCountriesUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
+            coEvery { countriesRepository.updateCountriesFromServer() } returns Result.success(Unit)
+
+            syncCountriesUseCase()
+
+            coVerify { countriesRepository.updateCountriesFromServer() }
+        }
 }

@@ -34,18 +34,18 @@ class CountriesRepositoryImpl(
     private val swApi: SWApi,
     private val logger: Logger
 ) : CountriesRepository {
-
     companion object {
         private const val TAG = "CountriesRepository"
         private const val LOCAL_FILENAME = "countries.json"
     }
 
     /** JSON-сериализатор */
-    private val json = Json {
-        isLenient = true
-        ignoreUnknownKeys = true
-        prettyPrint = false
-    }
+    private val json =
+        Json {
+            isLenient = true
+            ignoreUnknownKeys = true
+            prettyPrint = false
+        }
 
     /** Кэшированные данные стран в памяти */
     private val cachedCountries: MutableStateFlow<List<Country>> = MutableStateFlow(emptyList())
@@ -109,35 +109,34 @@ class CountriesRepositoryImpl(
      * Читает справочник стран из локального JSON файла
      */
     private fun loadCountriesFromLocalFile() {
-        if (isLoaded) {
-            return
-        }
-
-        // Сначала копируем seed если локального файла нет
-        if (!localFileExists()) {
-            copySeedFromAssets()
-        }
-
-        val file = localFile
-        if (!file.exists()) {
-            logger.e(TAG, "Локальный файл countries.json не существует после копирования seed")
-            return
-        }
-
-        try {
-            val jsonString = file.readText()
-            if (jsonString.isEmpty()) {
-                logger.e(TAG, "Прочитан пустой файл countries.json")
-                return
+        if (!isLoaded) {
+            // Сначала копируем seed если локального файла нет
+            if (!localFileExists()) {
+                copySeedFromAssets()
             }
 
-            val countries: List<Country> = json.decodeFromString(jsonString)
-            updateCache(countries)
-            logger.i(TAG, "Загружен справочник стран из локального файла: ${countries.size} стран")
-        } catch (e: SerializationException) {
-            logger.e(TAG, "Ошибка десериализации countries.json: ${e.message}", e)
-        } catch (e: IOException) {
-            logger.e(TAG, "Ошибка чтения countries.json: ${e.message}", e)
+            val file = localFile
+            if (!file.exists()) {
+                logger.e(TAG, "Локальный файл countries.json не существует после копирования seed")
+            } else {
+                try {
+                    val jsonString = file.readText()
+                    if (jsonString.isEmpty()) {
+                        logger.e(TAG, "Прочитан пустой файл countries.json")
+                    } else {
+                        val countries: List<Country> = json.decodeFromString(jsonString)
+                        updateCache(countries)
+                        logger.i(
+                            TAG,
+                            "Загружен справочник стран из локального файла: ${countries.size} стран"
+                        )
+                    }
+                } catch (e: SerializationException) {
+                    logger.e(TAG, "Ошибка десериализации countries.json: ${e.message}", e)
+                } catch (e: IOException) {
+                    logger.e(TAG, "Ошибка чтения countries.json: ${e.message}", e)
+                }
+            }
         }
     }
 
@@ -149,9 +148,11 @@ class CountriesRepositoryImpl(
         isLoaded = true
         countriesByIdMap = countries.associateBy { it.id }
         citiesByIdMap = countries.flatMap { it.cities }.associateBy { it.id }
-        countryByCityIdMap = countries.flatMap { country ->
-            country.cities.map { city -> city.id to country }
-        }.toMap()
+        countryByCityIdMap =
+            countries
+                .flatMap { country ->
+                    country.cities.map { city -> city.id to country }
+                }.toMap()
     }
 
     /**
@@ -188,9 +189,7 @@ class CountriesRepositoryImpl(
      *
      * @return Flow со списком всех стран
      */
-    override fun getCountriesFlow(): Flow<List<Country>> {
-        return cachedCountries.map { it }
-    }
+    override fun getCountriesFlow(): Flow<List<Country>> = cachedCountries.map { it }
 
     /**
      * Получить страну по идентификатору
@@ -264,8 +263,8 @@ class CountriesRepositoryImpl(
      *
      * @return Result<Unit> с результатом операции
      */
-    override suspend fun updateCountriesFromServer(): Result<Unit> {
-        return try {
+    override suspend fun updateCountriesFromServer(): Result<Unit> =
+        try {
             logger.i(TAG, "Загрузка справочника стран с сервера")
             val countries = swApi.getCountries()
 
@@ -295,5 +294,4 @@ class CountriesRepositoryImpl(
                 )
             )
         }
-    }
 }

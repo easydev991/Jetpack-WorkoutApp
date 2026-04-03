@@ -27,7 +27,6 @@ import java.util.Locale
 data class JournalEntity(
     @PrimaryKey
     val id: Long,
-
     val title: String?,
     val lastMessageImage: String?,
     val createDate: String?,
@@ -46,19 +45,20 @@ data class JournalEntity(
  * Конвертирует даты из String формата ISO8601 в Long timestamp
  * для корректной сортировки в базе данных
  */
-fun Journal.toEntity(): JournalEntity = JournalEntity(
-    id = id,
-    title = title,
-    lastMessageImage = lastMessageImage,
-    createDate = createDate,
-    modifyDate = parseDateToTimestamp(modifyDate),
-    lastMessageDate = lastMessageDate,
-    lastMessageText = lastMessageText,
-    entriesCount = entriesCount,
-    ownerId = ownerId,
-    viewAccess = viewAccess?.rawValue,
-    commentAccess = commentAccess?.rawValue
-)
+fun Journal.toEntity(): JournalEntity =
+    JournalEntity(
+        id = id,
+        title = title,
+        lastMessageImage = lastMessageImage,
+        createDate = createDate,
+        modifyDate = parseDateToTimestamp(modifyDate),
+        lastMessageDate = lastMessageDate,
+        lastMessageText = lastMessageText,
+        entriesCount = entriesCount,
+        ownerId = ownerId,
+        viewAccess = viewAccess?.rawValue,
+        commentAccess = commentAccess?.rawValue
+    )
 
 /**
  * Вспомогательная функция для конвертации строки даты в timestamp
@@ -72,9 +72,10 @@ private fun parseDateToTimestamp(dateString: String?): Long {
     }
 
     return try {
-        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply {
-            timeZone = java.util.TimeZone.getTimeZone("UTC")
-        }
+        val format =
+            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply {
+                timeZone = java.util.TimeZone.getTimeZone("UTC")
+            }
         format.isLenient = false
         val date = format.parse(dateString)
         date?.time ?: 0L
@@ -91,19 +92,20 @@ private fun parseDateToTimestamp(dateString: String?): Long {
  * Конвертирует даты из Long timestamp обратно в String (ISO формат)
  * и мапит уровни доступа из Int в JournalAccess
  */
-fun JournalEntity.toDomain(): Journal = Journal(
-    id = id,
-    title = title,
-    lastMessageImage = lastMessageImage,
-    createDate = createDate,
-    modifyDate = parseTimestampToDate(modifyDate),
-    lastMessageDate = lastMessageDate,
-    lastMessageText = lastMessageText,
-    entriesCount = entriesCount,
-    ownerId = ownerId,
-    viewAccess = viewAccess?.let { JournalAccess.from(it) },
-    commentAccess = commentAccess?.let { JournalAccess.from(it) }
-)
+fun JournalEntity.toDomain(): Journal =
+    Journal(
+        id = id,
+        title = title,
+        lastMessageImage = lastMessageImage,
+        createDate = createDate,
+        modifyDate = parseTimestampToDate(modifyDate),
+        lastMessageDate = lastMessageDate,
+        lastMessageText = lastMessageText,
+        entriesCount = entriesCount,
+        ownerId = ownerId,
+        viewAccess = viewAccess?.let { JournalAccess.from(it) },
+        commentAccess = commentAccess?.let { JournalAccess.from(it) }
+    )
 
 /**
  * Вспомогательная функция для конвертации timestamp в строку даты
@@ -117,9 +119,10 @@ private fun parseTimestampToDate(timestamp: Long): String? {
     }
 
     return try {
-        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply {
-            timeZone = java.util.TimeZone.getTimeZone("UTC")
-        }
+        val format =
+            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply {
+                timeZone = java.util.TimeZone.getTimeZone("UTC")
+            }
         format.format(java.util.Date(timestamp))
     } catch (_: Exception) {
         // Если не удалось конвертировать timestamp, возвращаем null

@@ -25,25 +25,41 @@ interface IParksRootViewModel {
     var resolveLocationSettingsLauncher: ((IntentSender) -> Unit)?
 
     fun onPermissionGranted()
+
     fun onPermissionDenied(shouldShowRationale: Boolean)
+
     fun onPermissionResult(permissions: Map<String, Boolean>)
+
     fun onLocationSettingsResolutionResult(succeeded: Boolean)
+
     fun onDismissDialog()
+
     fun onConfirmDialog()
+
     fun onOpenSettings(intent: Intent)
 
     val parksFilter: StateFlow<ParkFilter>
+
     fun onLocalFilterChange(filter: ParkFilter)
+
     fun onFilterToggleSize(size: ParkSize)
+
     fun onFilterToggleType(type: ParkType)
+
     fun onFilterReset()
+
     fun onFilterApply()
+
     fun onShowFilterDialog()
+
     fun onDismissFilterDialog()
 
     fun onSelectCityClick()
+
     fun onCitySearchQueryChange(query: String)
+
     fun onCitySelected(cityName: String)
+
     fun onClearCityFilter()
 
     fun updateParks(parks: List<Park>)
@@ -51,6 +67,7 @@ interface IParksRootViewModel {
     val cityNames: List<String>
 
     val selectedTab: StateFlow<ParksTab>
+
     fun onTabSelected(tab: ParksTab)
 
     fun onMapEvent(event: MapEvent)
@@ -82,8 +99,12 @@ val ParksRootUiState.isSizeTypeFilterEdited: Boolean
     get() = ParkFilter(sizes = localFilter.sizes, types = localFilter.types) != ParkFilter()
 
 sealed class ParksRootEvent {
-    data class NavigateToCreatePark(val draft: NewParkDraft) : ParksRootEvent()
+    data class NavigateToCreatePark(
+        val draft: NewParkDraft
+    ) : ParksRootEvent()
+
     data object OpenSettings : ParksRootEvent()
+
     data class ResolveLocationSettings(
         val intentSender: IntentSender
     ) : ParksRootEvent()
@@ -94,12 +115,14 @@ enum class PermissionDialogCause {
     FOREVER_DENIED
 }
 
-fun ParksRootUiState.toItemListUiState(): ItemListUiState = ItemListUiState(
-    mode = ItemListMode.CITY,
-    items = cities
-        .filter { it.name.contains(citySearchQuery, ignoreCase = true) }
-        .map { it.name },
-    selectedItem = selectedCity?.name,
-    searchQuery = citySearchQuery,
-    isEmpty = false
-)
+fun ParksRootUiState.toItemListUiState(): ItemListUiState =
+    ItemListUiState(
+        mode = ItemListMode.CITY,
+        items =
+            cities
+                .filter { it.name.contains(citySearchQuery, ignoreCase = true) }
+                .map { it.name },
+        selectedItem = selectedCity?.name,
+        searchQuery = citySearchQuery,
+        isEmpty = false
+    )

@@ -13,7 +13,6 @@ import org.junit.Test
  * @see DateFormatter
  */
 class DateFormatterTest {
-
     @Test
     fun parseIsoDate_whenIso8601WithSeconds_thenReturnsDate() {
         // Given

@@ -41,12 +41,13 @@ fun ErrorContentView(
         }
 
         SWButton(
-            config = ButtonConfig(
-                modifier = Modifier.padding(top = dimensionResource(R.dimen.spacing_regular)),
-                size = SWButtonSize.SMALL,
-                text = stringResource(R.string.try_again_button),
-                onClick = retryAction
-            )
+            config =
+                ButtonConfig(
+                    modifier = Modifier.padding(top = dimensionResource(R.dimen.spacing_regular)),
+                    size = SWButtonSize.SMALL,
+                    text = stringResource(R.string.try_again_button),
+                    onClick = retryAction
+                )
         )
     }
 }

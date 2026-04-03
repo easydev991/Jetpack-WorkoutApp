@@ -46,10 +46,11 @@ class ParksFilterDialogTest {
 
     @Test
     fun parksFilterDialog_render_withCustomFilter_displaysCorrectSelections() {
-        val customFilter = ParkFilter(
-            sizes = setOf(ParkSize.SMALL, ParkSize.LARGE),
-            types = setOf(ParkType.SOVIET, ParkType.MODERN)
-        )
+        val customFilter =
+            ParkFilter(
+                sizes = setOf(ParkSize.SMALL, ParkSize.LARGE),
+                types = setOf(ParkType.SOVIET, ParkType.MODERN)
+            )
         setContent(filter = customFilter)
 
         composeTestRule
@@ -73,10 +74,11 @@ class ParksFilterDialogTest {
     fun parksFilterDialog_resetButton_doesNotCallOnFilterChange() {
         var filterChangeCalled = false
         setContent(
-            filter = ParkFilter(
-                sizes = setOf(ParkSize.SMALL),
-                types = setOf(ParkType.SOVIET)
-            ),
+            filter =
+                ParkFilter(
+                    sizes = setOf(ParkSize.SMALL),
+                    types = setOf(ParkType.SOVIET)
+                ),
             onFilterChange = { filter ->
                 filterChangeCalled = true
             }
@@ -167,10 +169,11 @@ class ParksFilterDialogTest {
 
     @Test
     fun parksFilterDialog_openWithNonDefaultFilter_applyButton_isDisabled() {
-        val nonDefaultFilter = ParkFilter(
-            sizes = setOf(ParkSize.SMALL),
-            types = setOf(ParkType.SOVIET)
-        )
+        val nonDefaultFilter =
+            ParkFilter(
+                sizes = setOf(ParkSize.SMALL),
+                types = setOf(ParkType.SOVIET)
+            )
         setContent(filter = nonDefaultFilter)
 
         composeTestRule
@@ -181,5 +184,4 @@ class ParksFilterDialogTest {
             .onNodeWithText(context.getString(R.string.reset_filter))
             .assertIsEnabled()
     }
-
 }

@@ -9,21 +9,22 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class ConvertersTest {
-
-    private val testUser = User(
-        id = 1L,
-        name = "testuser",
-        image = "https://example.com/avatar.jpg"
-    )
+    private val testUser =
+        User(
+            id = 1L,
+            name = "testuser",
+            image = "https://example.com/avatar.jpg"
+        )
 
     private val testPhoto = Photo(id = 10L, photo = "https://example.com/photo.jpg")
 
-    private val testComment = Comment(
-        id = 100L,
-        body = "Test comment",
-        date = "2024-01-15",
-        user = testUser
-    )
+    private val testComment =
+        Comment(
+            id = 100L,
+            body = "Test comment",
+            date = "2024-01-15",
+            user = testUser
+        )
 
     @Test
     fun photoListConverter_whenSerializedAndDeserialized_thenReturnsCorrectResult() {

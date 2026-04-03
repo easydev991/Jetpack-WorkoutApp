@@ -17,10 +17,11 @@ data class ParkFormUiState(
         get() = form != initialForm || selectedPhotos.isNotEmpty()
 
     val canSave: Boolean
-        get() = when (mode) {
-            is ParkFormMode.Create -> form.isReadyToCreate
-            is ParkFormMode.Edit -> form.isReadyToUpdate(initialForm) || selectedPhotos.isNotEmpty()
-        }
+        get() =
+            when (mode) {
+                is ParkFormMode.Create -> form.isReadyToCreate
+                is ParkFormMode.Edit -> form.isReadyToUpdate(initialForm) || selectedPhotos.isNotEmpty()
+            }
 
     val photosCount: Int
         get() = form.photosCount
@@ -37,7 +38,9 @@ data class ParkFormUiState(
 }
 
 sealed interface ParkFormEvent {
-    data class Saved(val park: com.swparks.data.model.Park) : ParkFormEvent
+    data class Saved(
+        val park: com.swparks.data.model.Park
+    ) : ParkFormEvent
 
     data object NavigateBack : ParkFormEvent
 

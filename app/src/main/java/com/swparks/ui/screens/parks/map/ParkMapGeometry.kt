@@ -31,35 +31,39 @@ internal data class BoundsCameraUpdate(
 
 internal fun List<Park>.toFeatureCollection(): FeatureCollection {
     val validPoints = toValidParkPoints()
-    val features = validPoints.map { parkPoint ->
-        Feature.fromGeometry(
-            Point.fromLngLat(parkPoint.longitude, parkPoint.latitude)
-        ).apply {
-            addNumberProperty("id", parkPoint.park.id.toDouble())
-            addStringProperty("name", parkPoint.park.name)
+    val features =
+        validPoints.map { parkPoint ->
+            Feature
+                .fromGeometry(
+                    Point.fromLngLat(parkPoint.longitude, parkPoint.latitude)
+                ).apply {
+                    addNumberProperty("id", parkPoint.park.id.toDouble())
+                    addStringProperty("name", parkPoint.park.name)
+                }
         }
-    }
 
     return FeatureCollection.fromFeatures(features)
 }
 
-internal fun List<Park>.toValidParkPoints(): List<ValidParkPoint> = mapNotNull { park ->
-    val latitude = park.latitude.toDoubleOrNull() ?: return@mapNotNull null
-    val longitude = park.longitude.toDoubleOrNull() ?: return@mapNotNull null
-    if (!isValidCoordinates(latitude, longitude)) {
-        return@mapNotNull null
+internal fun List<Park>.toValidParkPoints(): List<ValidParkPoint> =
+    mapNotNull { park ->
+        val latitude = park.latitude.toDoubleOrNull() ?: return@mapNotNull null
+        val longitude = park.longitude.toDoubleOrNull() ?: return@mapNotNull null
+        if (!isValidCoordinates(latitude, longitude)) {
+            return@mapNotNull null
+        }
+
+        ValidParkPoint(
+            park = park,
+            latitude = latitude,
+            longitude = longitude
+        )
     }
 
-    ValidParkPoint(
-        park = park,
-        latitude = latitude,
-        longitude = longitude
-    )
-}
-
-internal fun List<Park>.toValidLatLngs(): List<LatLng> = toValidParkPoints().map { parkPoint ->
-    LatLng(parkPoint.latitude, parkPoint.longitude)
-}
+internal fun List<Park>.toValidLatLngs(): List<LatLng> =
+    toValidParkPoints().map { parkPoint ->
+        LatLng(parkPoint.latitude, parkPoint.longitude)
+    }
 
 internal fun selectedCityBoundsCameraUpdate(
     parks: List<LatLng>,
@@ -67,9 +71,10 @@ internal fun selectedCityBoundsCameraUpdate(
     requestedCamera: MapCameraPosition
 ): BoundsCameraUpdate? {
     val uniqueCoordinateCount = parks.uniqueCoordinateCount()
-    val shouldBuildBounds = parks.size >= 2 &&
-        requestedCamera.isDefaultCityRequestFor(selectedCityCenter) &&
-        uniqueCoordinateCount >= 2
+    val shouldBuildBounds =
+        parks.size >= 2 &&
+            requestedCamera.isDefaultCityRequestFor(selectedCityCenter) &&
+            uniqueCoordinateCount >= 2
 
     return if (shouldBuildBounds) {
         val boundsBuilder = LatLngBounds.Builder()
@@ -83,27 +88,30 @@ internal fun selectedCityBoundsCameraUpdate(
     }
 }
 
-internal fun MapCameraPosition.isDefaultCityRequestFor(selectedCityCenter: UiCoordinates): Boolean {
-    return kotlin.math.abs(target.latitude - selectedCityCenter.latitude) < CAMERA_EPSILON &&
+internal fun MapCameraPosition.isDefaultCityRequestFor(selectedCityCenter: UiCoordinates): Boolean =
+    kotlin.math.abs(target.latitude - selectedCityCenter.latitude) < CAMERA_EPSILON &&
         kotlin.math.abs(target.longitude - selectedCityCenter.longitude) < CAMERA_EPSILON &&
         kotlin.math.abs(zoom - INITIAL_CITY_ZOOM) < ZOOM_EPSILON
+
+internal fun isValidCoordinates(
+    latitude: String?,
+    longitude: String?
+): Boolean {
+    val lat = latitude?.toDoubleOrNull()
+    val lon = longitude?.toDoubleOrNull()
+    return lat != null && lon != null && isValidCoordinates(lat, lon)
 }
 
-internal fun isValidCoordinates(latitude: String?, longitude: String?): Boolean {
-    val lat = latitude?.toDoubleOrNull() ?: return false
-    val lon = longitude?.toDoubleOrNull() ?: return false
-    return isValidCoordinates(lat, lon)
-}
-
-internal fun isValidCoordinates(latitude: Double, longitude: Double): Boolean {
-    return latitude in MIN_LATITUDE..MAX_LATITUDE &&
+internal fun isValidCoordinates(
+    latitude: Double,
+    longitude: Double
+): Boolean =
+    latitude in MIN_LATITUDE..MAX_LATITUDE &&
         longitude in MIN_LONGITUDE..MAX_LONGITUDE
-}
 
-internal fun List<LatLng>.uniqueCoordinateCount(): Int {
-    return map { "${it.latitude.formatCoordinateKey()}:${it.longitude.formatCoordinateKey()}" }
+internal fun List<LatLng>.uniqueCoordinateCount(): Int =
+    map { "${it.latitude.formatCoordinateKey()}:${it.longitude.formatCoordinateKey()}" }
         .toSet()
         .size
-}
 
 internal fun Double.formatCoordinateKey(): String = String.format(Locale.US, "%.6f", this)

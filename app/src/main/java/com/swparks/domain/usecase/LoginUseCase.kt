@@ -35,7 +35,6 @@ class LoginUseCase(
     private val preferencesRepository: UserPreferencesRepository,
     private val crashReporter: CrashReporter
 ) : ILoginUseCase {
-
     /**
      * Выполняет авторизацию пользователя.
      *

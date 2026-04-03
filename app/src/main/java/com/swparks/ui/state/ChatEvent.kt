@@ -11,5 +11,7 @@ sealed class ChatEvent {
      *
      * @param dialogId ID диалога, в который отправлено сообщение
      */
-    data class MessageSent(val dialogId: Long) : ChatEvent()
+    data class MessageSent(
+        val dialogId: Long
+    ) : ChatEvent()
 }

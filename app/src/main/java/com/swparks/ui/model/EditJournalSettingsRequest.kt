@@ -19,12 +19,11 @@ data class EditJournalSettingsRequest(
             title: String,
             viewAccess: JournalAccess,
             commentAccess: JournalAccess
-        ): EditJournalSettingsRequest {
-            return EditJournalSettingsRequest(
+        ): EditJournalSettingsRequest =
+            EditJournalSettingsRequest(
                 title = title,
                 viewAccess = viewAccess.rawValue.toString(),
                 commentAccess = commentAccess.rawValue.toString()
             )
-        }
     }
 }

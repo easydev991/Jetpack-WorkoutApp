@@ -25,7 +25,6 @@ import com.swparks.ui.viewmodel.ITextEntryViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 private data class SheetContentParams(
     val sheetState: SheetState,
@@ -68,17 +67,19 @@ fun TextEntrySheetHost(
     val appContainer =
         (LocalContext.current.applicationContext as JetpackWorkoutApplication).container
 
-    val viewModel: ITextEntryViewModel = remember(mode) {
-        appContainer.textEntryViewModelFactory(mode)
-    }
+    val viewModel: ITextEntryViewModel =
+        remember(mode) {
+            appContainer.textEntryViewModelFactory(mode)
+        }
     val uiState by viewModel.uiState.collectAsState()
 
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-        confirmValueChange = { newValue ->
-            if (newValue == SheetValue.Hidden) allowHide.value else true
-        }
-    )
+    val sheetState =
+        rememberModalBottomSheetState(
+            skipPartiallyExpanded = true,
+            confirmValueChange = { newValue ->
+                if (newValue == SheetValue.Hidden) allowHide.value else true
+            }
+        )
 
     LaunchedEffect(show) {
         if (show) {

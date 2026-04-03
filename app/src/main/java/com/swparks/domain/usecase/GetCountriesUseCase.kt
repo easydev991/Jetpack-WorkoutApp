@@ -17,14 +17,13 @@ interface IGetCountriesUseCase {
  *
  * @param countriesRepository Репозиторий для работы со справочником стран и городов
  */
-class GetCountriesUseCase(private val countriesRepository: CountriesRepository) :
-    IGetCountriesUseCase {
+class GetCountriesUseCase(
+    private val countriesRepository: CountriesRepository
+) : IGetCountriesUseCase {
     /**
      * Получить список всех стран в виде Flow.
      *
      * @return Flow со списком всех стран
      */
-    override operator fun invoke(): Flow<List<Country>> {
-        return countriesRepository.getCountriesFlow()
-    }
+    override operator fun invoke(): Flow<List<Country>> = countriesRepository.getCountriesFlow()
 }

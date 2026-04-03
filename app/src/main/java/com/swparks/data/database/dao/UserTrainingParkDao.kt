@@ -11,7 +11,6 @@ import com.swparks.data.database.entity.UserTrainingParkEntity
 
 @Dao
 interface UserTrainingParkDao {
-
     @Query("SELECT park_id FROM user_training_parks WHERE user_id = :userId ORDER BY position ASC")
     suspend fun getParkIdsForUser(userId: Long): List<Long>
 
@@ -28,7 +27,10 @@ interface UserTrainingParkDao {
     suspend fun clearForUser(userId: Long)
 
     @Transaction
-    suspend fun replaceForUser(userId: Long, relations: List<UserTrainingParkEntity>) {
+    suspend fun replaceForUser(
+        userId: Long,
+        relations: List<UserTrainingParkEntity>
+    ) {
         clearForUser(userId)
         insertForUser(relations)
         upsertCacheState(UserTrainingParkCacheStateEntity(userId = userId))

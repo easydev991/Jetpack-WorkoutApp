@@ -12,7 +12,6 @@ class CryptoManagerImpl(
     private val keysetName: String = "auth_token_keyset",
     private val prefFileName: String = "tink_prefs"
 ) : CryptoManager {
-
     private companion object {
         private const val TAG = "CryptoManager"
     }
@@ -20,7 +19,8 @@ class CryptoManagerImpl(
     @Suppress("DEPRECATION")
     private val aead: Aead by lazy {
         AeadConfig.register()
-        AndroidKeysetManager.Builder()
+        AndroidKeysetManager
+            .Builder()
             .withSharedPref(context, keysetName, prefFileName)
             .withKeyTemplate(KeyTemplates.get("AES128_GCM"))
             .withMasterKeyUri("android-keystore://master_key_alias")
@@ -29,19 +29,19 @@ class CryptoManagerImpl(
             .getPrimitive(Aead::class.java)
     }
 
-
     override fun encrypt(data: ByteArray): ByteArray {
         val encrypted = aead.encrypt(data, null)
         Log.d(TAG, "Encrypted ${data.size} -> ${encrypted.size} bytes")
         return encrypted
     }
 
-    override fun decrypt(ciphertext: ByteArray): ByteArray = try {
-        val decrypted = aead.decrypt(ciphertext, null)
-        Log.d(TAG, "Decrypted ${ciphertext.size} -> ${decrypted.size} bytes")
-        decrypted
-    } catch (e: SecurityException) {
-        Log.e(TAG, "Decryption failed", e)
-        throw e
-    }
+    override fun decrypt(ciphertext: ByteArray): ByteArray =
+        try {
+            val decrypted = aead.decrypt(ciphertext, null)
+            Log.d(TAG, "Decrypted ${ciphertext.size} -> ${decrypted.size} bytes")
+            decrypted
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Decryption failed", e)
+            throw e
+        }
 }

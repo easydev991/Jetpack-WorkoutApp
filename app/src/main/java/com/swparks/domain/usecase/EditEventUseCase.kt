@@ -11,6 +11,5 @@ class EditEventUseCase(
         eventId: Long,
         form: EventForm,
         photos: List<ByteArray>?
-    ): Result<Event> =
-        repository.saveEvent(id = eventId, form = form, photos = photos)
+    ): Result<Event> = repository.saveEvent(id = eventId, form = form, photos = photos)
 }

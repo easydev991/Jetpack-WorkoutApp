@@ -16,12 +16,13 @@ import com.swparks.util.Feedback
 import com.swparks.util.LocationFeedback
 
 private object FeedbackData {
-    const val subject = "Jetpack WorkoutApp: Обратная связь"
-    val body = """
+    const val SUBJECT = "Jetpack WorkoutApp: Обратная связь"
+    val BODY =
+        """
         Android SDK: ${Build.VERSION.SDK_INT}
         App version: ${BuildConfig.VERSION_NAME}
         Над чем нам стоит поработать?
-    """.trimIndent()
+        """.trimIndent()
 }
 
 private const val TAG = "FeedbackSender"
@@ -30,8 +31,8 @@ private const val TAG = "FeedbackSender"
  * Отправляет отзыв по электронной почте.
  */
 fun sendFeedback(context: Context) {
-    val encodedSubject = Uri.encode(FeedbackData.subject)
-    val encodedBody = Uri.encode(FeedbackData.body)
+    val encodedSubject = Uri.encode(FeedbackData.SUBJECT)
+    val encodedBody = Uri.encode(FeedbackData.BODY)
     val uri =
         "mailto:${Feedback.recipients.joinToString(",")}?subject=$encodedSubject&body=$encodedBody".toUri()
     val intent = Intent(Intent.ACTION_SENDTO, uri)
@@ -49,7 +50,10 @@ fun sendFeedback(context: Context) {
  * @param complaint Модель жалобы с темой и телом письма
  * @param context Android Context
  */
-fun sendComplaint(complaint: Complaint, context: Context) {
+fun sendComplaint(
+    complaint: Complaint,
+    context: Context
+) {
     val encodedSubject = Uri.encode(complaint.subject)
     val encodedBody = Uri.encode(complaint.body)
     val uri =
@@ -63,7 +67,10 @@ fun sendComplaint(complaint: Complaint, context: Context) {
     }
 }
 
-fun sendLocationFeedback(context: Context, feedback: LocationFeedback) {
+fun sendLocationFeedback(
+    context: Context,
+    feedback: LocationFeedback
+) {
     val encodedSubject = Uri.encode(feedback.subject)
     val encodedBody = Uri.encode(feedback.body)
     val uri =
@@ -81,14 +88,15 @@ fun sendLocationFeedback(context: Context, feedback: LocationFeedback) {
  * Делится ссылкой на приложение через ShareSheet.
  */
 fun shareApp(context: Context) {
-    val intent = Intent(Intent.ACTION_SEND).apply {
-        type = "text/plain"
-        putExtra(
-            Intent.EXTRA_TEXT,
-            context.getString(R.string.share_text) + "\n" + AppConstants.APP_SHARE_URL
-        )
-        putExtra(Intent.EXTRA_TITLE, context.getString(R.string.share_chooser_title))
-    }
+    val intent =
+        Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(
+                Intent.EXTRA_TEXT,
+                context.getString(R.string.share_text) + "\n" + AppConstants.APP_SHARE_URL
+            )
+            putExtra(Intent.EXTRA_TITLE, context.getString(R.string.share_chooser_title))
+        }
 
     try {
         context.startActivity(

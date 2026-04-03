@@ -1,8 +1,11 @@
 package com.swparks.ui.screens.events
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -40,18 +43,19 @@ class EventsScreenTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     // Тестовые данные
-    private val testUser = User(
-        id = 1L,
-        name = "testuser",
-        image = null
-    )
+    private val testUser =
+        User(
+            id = 1L,
+            name = "testuser",
+            image = null
+        )
 
     private fun createTestEvent(
         id: Long = 1L,
         title: String = "Test Event",
         beginDate: String = "2026-03-15"
-    ): Event {
-        return Event(
+    ): Event =
+        Event(
             id = id,
             title = title,
             description = "Test description",
@@ -66,21 +70,22 @@ class EventsScreenTest {
             author = testUser,
             name = title
         )
-    }
 
     private fun setContent(
-        uiState: EventsUIState = EventsUIState.Content(
-            events = emptyList(),
-            selectedTab = EventKind.FUTURE
-        ),
+        uiState: EventsUIState =
+            EventsUIState.Content(
+                events = emptyList(),
+                selectedTab = EventKind.FUTURE
+            ),
         isAuthorized: Boolean = false,
         selectedTab: EventKind = EventKind.FUTURE,
-        viewModel: IEventsViewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(uiState),
-            isAuthorized = MutableStateFlow(isAuthorized),
-            currentUser = MutableStateFlow(if (isAuthorized) testUser else null),
-            selectedTab = MutableStateFlow(selectedTab)
-        )
+        viewModel: IEventsViewModel =
+            FakeEventsViewModel(
+                eventsUIState = MutableStateFlow(uiState),
+                isAuthorized = MutableStateFlow(isAuthorized),
+                currentUser = MutableStateFlow(if (isAuthorized) testUser else null),
+                selectedTab = MutableStateFlow(selectedTab)
+            )
     ) {
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -94,11 +99,12 @@ class EventsScreenTest {
     @Test
     fun whenLoading_showsLoadingOverlay() {
         // Given
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(EventsUIState.InitialLoading),
-            isAuthorized = MutableStateFlow(false),
-            selectedTab = MutableStateFlow(EventKind.FUTURE)
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState = MutableStateFlow(EventsUIState.InitialLoading),
+                isAuthorized = MutableStateFlow(false),
+                selectedTab = MutableStateFlow(EventKind.FUTURE)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -112,17 +118,19 @@ class EventsScreenTest {
     @Test
     fun whenContentWithLoading_showsLoadingOverlay() {
         // Given
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.PAST,
-                    isLoading = true
-                )
-            ),
-            isAuthorized = MutableStateFlow(false),
-            selectedTab = MutableStateFlow(EventKind.PAST)
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.PAST,
+                            isLoading = true
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(false),
+                selectedTab = MutableStateFlow(EventKind.PAST)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -134,25 +142,27 @@ class EventsScreenTest {
 
         // EmptyStateView НЕ отображается при первичной загрузке
         composeTestRule
-            .onNodeWithText(context.getString(R.string.events_empty_past))
-            .assertDoesNotExist()
+            .onAllNodesWithText(context.getString(R.string.events_empty_past))
+            .assertCountEquals(0)
     }
 
     @Test
     fun whenContentWithRefreshLoading_hidesLoadingOverlay() {
         // Given - pull-to-refresh in progress
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.PAST,
-                    isLoading = true
-                )
-            ),
-            isAuthorized = MutableStateFlow(false),
-            selectedTab = MutableStateFlow(EventKind.PAST),
-            isRefreshing = MutableStateFlow(true)
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.PAST,
+                            isLoading = true
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(false),
+                selectedTab = MutableStateFlow(EventKind.PAST),
+                isRefreshing = MutableStateFlow(true)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -167,16 +177,18 @@ class EventsScreenTest {
     fun whenContent_showsEventsList() {
         // Given
         val testEvent = createTestEvent(title = "Тренировка в парке")
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = listOf(testEvent),
-                    selectedTab = EventKind.FUTURE
-                )
-            ),
-            isAuthorized = MutableStateFlow(false),
-            selectedTab = MutableStateFlow(EventKind.FUTURE)
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = listOf(testEvent),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(false),
+                selectedTab = MutableStateFlow(EventKind.FUTURE)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -191,11 +203,12 @@ class EventsScreenTest {
     fun whenError_showsErrorView() {
         // Given
         val errorMessage = "Ошибка загрузки мероприятий"
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(EventsUIState.Error(message = errorMessage)),
-            isAuthorized = MutableStateFlow(false),
-            selectedTab = MutableStateFlow(EventKind.FUTURE)
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState = MutableStateFlow(EventsUIState.Error(message = errorMessage)),
+                isAuthorized = MutableStateFlow(false),
+                selectedTab = MutableStateFlow(EventKind.FUTURE)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -210,16 +223,18 @@ class EventsScreenTest {
     fun tabSelection_future_showsFutureEvents() {
         // Given
         val futureEvent = createTestEvent(id = 1L, title = "Будущее мероприятие")
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = listOf(futureEvent),
-                    selectedTab = EventKind.FUTURE
-                )
-            ),
-            isAuthorized = MutableStateFlow(false),
-            selectedTab = MutableStateFlow(EventKind.FUTURE)
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = listOf(futureEvent),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(false),
+                selectedTab = MutableStateFlow(EventKind.FUTURE)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -239,16 +254,18 @@ class EventsScreenTest {
     fun tabSelection_past_showsPastEvents() {
         // Given
         val pastEvent = createTestEvent(id = 2L, title = "Прошедшее мероприятие")
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = listOf(pastEvent),
-                    selectedTab = EventKind.PAST
-                )
-            ),
-            isAuthorized = MutableStateFlow(false),
-            selectedTab = MutableStateFlow(EventKind.PAST)
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = listOf(pastEvent),
+                            selectedTab = EventKind.PAST
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(false),
+                selectedTab = MutableStateFlow(EventKind.PAST)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -262,21 +279,27 @@ class EventsScreenTest {
         composeTestRule
             .onNodeWithText("Прошедшее мероприятие")
             .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.events_empty_past))
+            .assertDoesNotExist()
     }
 
     @Test
     fun fab_whenAuthorized_isVisible() {
         // Given
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.FUTURE
-                )
-            ),
-            isAuthorized = MutableStateFlow(true),
-            selectedTab = MutableStateFlow(EventKind.FUTURE)
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(true),
+                selectedTab = MutableStateFlow(EventKind.FUTURE)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -291,53 +314,62 @@ class EventsScreenTest {
     @Test
     fun fab_whenNotAuthorized_isHidden() {
         // Given
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.FUTURE
-                )
-            ),
-            isAuthorized = MutableStateFlow(false),
-            selectedTab = MutableStateFlow(EventKind.FUTURE)
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(false),
+                selectedTab = MutableStateFlow(EventKind.FUTURE)
+            )
 
         // When
         setContent(viewModel = viewModel)
 
         // Then - FAB не отображается
         composeTestRule
-            .onNodeWithContentDescription(context.getString(R.string.events_fab_description))
-            .assertDoesNotExist()
+            .onAllNodesWithContentDescription(context.getString(R.string.events_fab_description))
+            .assertCountEquals(0)
     }
 
     @Test
     fun fab_click_logsAction() {
         // Given
         var fabClickCalled = false
-        val viewModel = object : IEventsViewModel {
-            override val eventsUIState = MutableStateFlow<EventsUIState>(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.FUTURE
-                )
-            )
-            override val isAuthorized = MutableStateFlow(true)
-            override val currentUser = MutableStateFlow<User?>(testUser)
-            override val selectedTab = MutableStateFlow(EventKind.FUTURE)
-            override val isRefreshing = MutableStateFlow(false)
-            private val _events = MutableSharedFlow<EventsEvent>()
-            override val events: Flow<EventsEvent> = _events.asSharedFlow()
-            override fun onTabSelected(tab: EventKind) {}
-            override fun refresh() {}
-            override fun onEventClick(event: Event) {}
-            override fun onFabClick() {
-                fabClickCalled = true
-            }
+        val viewModel =
+            object : IEventsViewModel {
+                override val eventsUIState =
+                    MutableStateFlow<EventsUIState>(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    )
+                override val isAuthorized = MutableStateFlow(true)
+                override val currentUser = MutableStateFlow<User?>(testUser)
+                override val selectedTab = MutableStateFlow(EventKind.FUTURE)
+                override val isRefreshing = MutableStateFlow(false)
+                private val _events = MutableSharedFlow<EventsEvent>()
+                override val events: Flow<EventsEvent> = _events.asSharedFlow()
 
-            override fun addCreatedEvent(event: Event) {}
-            override fun removeDeletedEvent(eventId: Long) {}
-        }
+                override fun onTabSelected(tab: EventKind) {}
+
+                override fun refresh() {}
+
+                override fun onEventClick(event: Event) {}
+
+                override fun onFabClick() {
+                    fabClickCalled = true
+                }
+
+                override fun addCreatedEvent(event: Event) {}
+
+                override fun removeDeletedEvent(eventId: Long) {}
+            }
 
         // When
         setContent(viewModel = viewModel)
@@ -358,30 +390,37 @@ class EventsScreenTest {
         var eventClickCalled = false
         var clickedEventId: Long? = null
 
-        val viewModel = object : IEventsViewModel {
-            override val eventsUIState = MutableStateFlow<EventsUIState>(
-                EventsUIState.Content(
-                    events = listOf(testEvent),
-                    selectedTab = EventKind.FUTURE
-                )
-            )
-            override val isAuthorized = MutableStateFlow(false)
-            override val currentUser = MutableStateFlow<User?>(null)
-            override val selectedTab = MutableStateFlow(EventKind.FUTURE)
-            override val isRefreshing = MutableStateFlow(false)
-            private val _events = MutableSharedFlow<EventsEvent>()
-            override val events: Flow<EventsEvent> = _events.asSharedFlow()
-            override fun onTabSelected(tab: EventKind) {}
-            override fun refresh() {}
-            override fun onEventClick(event: Event) {
-                eventClickCalled = true
-                clickedEventId = event.id
-            }
+        val viewModel =
+            object : IEventsViewModel {
+                override val eventsUIState =
+                    MutableStateFlow<EventsUIState>(
+                        EventsUIState.Content(
+                            events = listOf(testEvent),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    )
+                override val isAuthorized = MutableStateFlow(false)
+                override val currentUser = MutableStateFlow<User?>(null)
+                override val selectedTab = MutableStateFlow(EventKind.FUTURE)
+                override val isRefreshing = MutableStateFlow(false)
+                private val _events = MutableSharedFlow<EventsEvent>()
+                override val events: Flow<EventsEvent> = _events.asSharedFlow()
 
-            override fun onFabClick() {}
-            override fun addCreatedEvent(event: Event) {}
-            override fun removeDeletedEvent(eventId: Long) {}
-        }
+                override fun onTabSelected(tab: EventKind) {}
+
+                override fun refresh() {}
+
+                override fun onEventClick(event: Event) {
+                    eventClickCalled = true
+                    clickedEventId = event.id
+                }
+
+                override fun onFabClick() {}
+
+                override fun addCreatedEvent(event: Event) {}
+
+                override fun removeDeletedEvent(eventId: Long) {}
+            }
 
         // When
         setContent(viewModel = viewModel)
@@ -400,30 +439,37 @@ class EventsScreenTest {
     fun pullToRefresh_triggersRefresh() {
         // Given
         var refreshCalled = false
-        val viewModel = object : IEventsViewModel {
-            override val eventsUIState = MutableStateFlow<EventsUIState>(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.FUTURE,
-                    isLoading = false
-                )
-            )
-            override val isAuthorized = MutableStateFlow(false)
-            override val currentUser = MutableStateFlow<User?>(null)
-            override val selectedTab = MutableStateFlow(EventKind.FUTURE)
-            override val isRefreshing = MutableStateFlow(false)
-            private val _events = MutableSharedFlow<EventsEvent>()
-            override val events: Flow<EventsEvent> = _events.asSharedFlow()
-            override fun onTabSelected(tab: EventKind) {}
-            override fun refresh() {
-                refreshCalled = true
-            }
+        val viewModel =
+            object : IEventsViewModel {
+                override val eventsUIState =
+                    MutableStateFlow<EventsUIState>(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.FUTURE,
+                            isLoading = false
+                        )
+                    )
+                override val isAuthorized = MutableStateFlow(false)
+                override val currentUser = MutableStateFlow<User?>(null)
+                override val selectedTab = MutableStateFlow(EventKind.FUTURE)
+                override val isRefreshing = MutableStateFlow(false)
+                private val _events = MutableSharedFlow<EventsEvent>()
+                override val events: Flow<EventsEvent> = _events.asSharedFlow()
 
-            override fun onEventClick(event: Event) {}
-            override fun onFabClick() {}
-            override fun addCreatedEvent(event: Event) {}
-            override fun removeDeletedEvent(eventId: Long) {}
-        }
+                override fun onTabSelected(tab: EventKind) {}
+
+                override fun refresh() {
+                    refreshCalled = true
+                }
+
+                override fun onEventClick(event: Event) {}
+
+                override fun onFabClick() {}
+
+                override fun addCreatedEvent(event: Event) {}
+
+                override fun removeDeletedEvent(eventId: Long) {}
+            }
 
         // When
         setContent(viewModel = viewModel)
@@ -444,16 +490,18 @@ class EventsScreenTest {
     @Test
     fun emptyState_future_showsNoUpcomingEvents() {
         // Given
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.FUTURE
-                )
-            ),
-            isAuthorized = MutableStateFlow(false),
-            selectedTab = MutableStateFlow(EventKind.FUTURE)
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(false),
+                selectedTab = MutableStateFlow(EventKind.FUTURE)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -467,16 +515,18 @@ class EventsScreenTest {
     @Test
     fun emptyState_past_showsNoPastEvents() {
         // Given
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.PAST
-                )
-            ),
-            isAuthorized = MutableStateFlow(false),
-            selectedTab = MutableStateFlow(EventKind.PAST)
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.PAST
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(false),
+                selectedTab = MutableStateFlow(EventKind.PAST)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -490,16 +540,18 @@ class EventsScreenTest {
     @Test
     fun segmentedButtons_bothTabsAreDisplayed() {
         // Given
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.FUTURE
-                )
-            ),
-            isAuthorized = MutableStateFlow(false),
-            selectedTab = MutableStateFlow(EventKind.FUTURE)
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(false),
+                selectedTab = MutableStateFlow(EventKind.FUTURE)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -519,21 +571,24 @@ class EventsScreenTest {
     @Test
     fun multipleEvents_displayedInList() {
         // Given
-        val events = listOf(
-            createTestEvent(id = 1L, title = "Мероприятие 1", beginDate = "2026-03-20"),
-            createTestEvent(id = 2L, title = "Мероприятие 2", beginDate = "2026-03-21"),
-            createTestEvent(id = 3L, title = "Мероприятие 3", beginDate = "2026-03-22")
-        )
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = events,
-                    selectedTab = EventKind.FUTURE
-                )
-            ),
-            isAuthorized = MutableStateFlow(false),
-            selectedTab = MutableStateFlow(EventKind.FUTURE)
-        )
+        val events =
+            listOf(
+                createTestEvent(id = 1L, title = "Мероприятие 1", beginDate = "2026-03-20"),
+                createTestEvent(id = 2L, title = "Мероприятие 2", beginDate = "2026-03-21"),
+                createTestEvent(id = 3L, title = "Мероприятие 3", beginDate = "2026-03-22")
+            )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = events,
+                            selectedTab = EventKind.FUTURE
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(false),
+                selectedTab = MutableStateFlow(EventKind.FUTURE)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -549,11 +604,12 @@ class EventsScreenTest {
     @Test
     fun errorState_retryButtonIsClickable() {
         // Given
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(EventsUIState.Error(message = "Ошибка")),
-            isAuthorized = MutableStateFlow(false),
-            selectedTab = MutableStateFlow(EventKind.FUTURE)
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState = MutableStateFlow(EventsUIState.Error(message = "Ошибка")),
+                isAuthorized = MutableStateFlow(false),
+                selectedTab = MutableStateFlow(EventKind.FUTURE)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -566,29 +622,197 @@ class EventsScreenTest {
     }
 
     @Test
+    fun errorState_retryClick_showsLoadingThenContent() {
+        // Given
+        val uiState = MutableStateFlow<EventsUIState>(EventsUIState.Error(message = "Ошибка"))
+        val viewModel =
+            object : IEventsViewModel {
+                override val eventsUIState = uiState
+                override val isAuthorized = MutableStateFlow(false)
+                override val currentUser = MutableStateFlow<User?>(null)
+                override val selectedTab = MutableStateFlow(EventKind.FUTURE)
+                override val isRefreshing = MutableStateFlow(false)
+                private val _events = MutableSharedFlow<EventsEvent>()
+                override val events: Flow<EventsEvent> = _events.asSharedFlow()
+
+                override fun onTabSelected(tab: EventKind) {}
+
+                override fun refresh() {
+                    uiState.value = EventsUIState.InitialLoading
+                }
+
+                override fun onEventClick(event: Event) {}
+
+                override fun onFabClick() {}
+
+                override fun addCreatedEvent(event: Event) {}
+
+                override fun removeDeletedEvent(eventId: Long) {}
+            }
+
+        setContent(viewModel = viewModel)
+
+        // When
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.try_again_button))
+            .performClick()
+
+        // Then
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.loading_content_description))
+            .assertIsDisplayed()
+
+        composeTestRule.runOnIdle {
+            uiState.value =
+                EventsUIState.Content(
+                    events = emptyList(),
+                    selectedTab = EventKind.FUTURE
+                )
+        }
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.try_again_button))
+            .assertDoesNotExist()
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.events_empty_future))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun errorState_retryClick_showsLoadingThenErrorOnFailure() {
+        // Given
+        val retryError = "Повторная ошибка"
+        val uiState = MutableStateFlow<EventsUIState>(EventsUIState.Error(message = "Ошибка"))
+        val viewModel =
+            object : IEventsViewModel {
+                override val eventsUIState = uiState
+                override val isAuthorized = MutableStateFlow(false)
+                override val currentUser = MutableStateFlow<User?>(null)
+                override val selectedTab = MutableStateFlow(EventKind.FUTURE)
+                override val isRefreshing = MutableStateFlow(false)
+                private val _events = MutableSharedFlow<EventsEvent>()
+                override val events: Flow<EventsEvent> = _events.asSharedFlow()
+
+                override fun onTabSelected(tab: EventKind) {}
+
+                override fun refresh() {
+                    uiState.value = EventsUIState.InitialLoading
+                }
+
+                override fun onEventClick(event: Event) {}
+
+                override fun onFabClick() {}
+
+                override fun addCreatedEvent(event: Event) {}
+
+                override fun removeDeletedEvent(eventId: Long) {}
+            }
+
+        setContent(viewModel = viewModel)
+
+        // When
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.try_again_button))
+            .performClick()
+
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.loading_content_description))
+            .assertIsDisplayed()
+
+        // Retry завершилась новой ошибкой
+        composeTestRule.runOnIdle {
+            uiState.value = EventsUIState.Error(message = retryError)
+        }
+
+        // Then
+        composeTestRule
+            .onNodeWithText(retryError, ignoreCase = true)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun contentState_refreshFailure_keepsContentAndDoesNotShowErrorView() {
+        val event = createTestEvent(id = 42L, title = "Сохраненное мероприятие")
+        val uiState =
+            MutableStateFlow<EventsUIState>(
+                EventsUIState.Content(
+                    events = listOf(event),
+                    selectedTab = EventKind.FUTURE
+                )
+            )
+        val isRefreshing = MutableStateFlow(false)
+        val viewModel =
+            object : IEventsViewModel {
+                override val eventsUIState = uiState
+                override val isAuthorized = MutableStateFlow(false)
+                override val currentUser = MutableStateFlow<User?>(null)
+                override val selectedTab = MutableStateFlow(EventKind.FUTURE)
+                override val isRefreshing = isRefreshing
+                private val _events = MutableSharedFlow<EventsEvent>()
+                override val events: Flow<EventsEvent> = _events.asSharedFlow()
+
+                override fun onTabSelected(tab: EventKind) {}
+
+                override fun refresh() {
+                    isRefreshing.value = true
+                    isRefreshing.value = false
+                }
+
+                override fun onEventClick(event: Event) {}
+
+                override fun onFabClick() {}
+
+                override fun addCreatedEvent(event: Event) {}
+
+                override fun removeDeletedEvent(eventId: Long) {}
+            }
+
+        setContent(viewModel = viewModel)
+
+        composeTestRule.onNodeWithText("Сохраненное мероприятие").assertIsDisplayed()
+
+        assert(
+            composeTestRule
+                .onAllNodesWithText(context.getString(R.string.error_label))
+                .fetchSemanticsNodes()
+                .isEmpty()
+        ) { "Error label should not be displayed" }
+        assert(
+            composeTestRule
+                .onAllNodesWithText(context.getString(R.string.try_again_button))
+                .fetchSemanticsNodes()
+                .isEmpty()
+        ) { "Retry button should not be displayed" }
+    }
+
+    @Test
     fun eventsList_whenAddressLoaded_shouldDisplayIt() {
         // Given
-        val testEvent = createTestEvent(
-            id = 1L,
-            title = "Мероприятие с адресом",
-            beginDate = "2026-03-15"
-        ).copy(countryID = 1, cityID = 1)
+        val testEvent =
+            createTestEvent(
+                id = 1L,
+                title = "Мероприятие с адресом",
+                beginDate = "2026-03-15"
+            ).copy(countryID = 1, cityID = 1)
 
-        val addresses = mapOf(
-            (1 to 1) to "Россия, Москва"
-        )
+        val addresses =
+            mapOf(
+                (1 to 1) to "Россия, Москва"
+            )
 
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = listOf(testEvent),
-                    selectedTab = EventKind.FUTURE,
-                    addresses = addresses
-                )
-            ),
-            isAuthorized = MutableStateFlow(false),
-            selectedTab = MutableStateFlow(EventKind.FUTURE)
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = listOf(testEvent),
+                            selectedTab = EventKind.FUTURE,
+                            addresses = addresses
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(false),
+                selectedTab = MutableStateFlow(EventKind.FUTURE)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -607,23 +831,26 @@ class EventsScreenTest {
     @Test
     fun eventsList_whenAddressNotLoaded_shouldFallbackToIds() {
         // Given
-        val testEvent = createTestEvent(
-            id = 1L,
-            title = "Мероприятие без адреса",
-            beginDate = "2026-03-15"
-        ).copy(countryID = 99, cityID = 88)
+        val testEvent =
+            createTestEvent(
+                id = 1L,
+                title = "Мероприятие без адреса",
+                beginDate = "2026-03-15"
+            ).copy(countryID = 99, cityID = 88)
 
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = listOf(testEvent),
-                    selectedTab = EventKind.FUTURE,
-                    addresses = emptyMap()
-                )
-            ),
-            isAuthorized = MutableStateFlow(false),
-            selectedTab = MutableStateFlow(EventKind.FUTURE)
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = listOf(testEvent),
+                            selectedTab = EventKind.FUTURE,
+                            addresses = emptyMap()
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(false),
+                selectedTab = MutableStateFlow(EventKind.FUTURE)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -645,18 +872,20 @@ class EventsScreenTest {
     fun fab_click_whenAuthorizedWithoutUsedParks_showsAlert() {
         // Given - user without used parks is authorized
         val userWithoutParks = testUser.copy(parksCount = "0")
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.FUTURE
-                )
-            ),
-            isAuthorized = MutableStateFlow(true),
-            currentUser = MutableStateFlow(userWithoutParks),
-            selectedTab = MutableStateFlow(EventKind.FUTURE),
-            fabClickResult = EventsEvent.ShowEventCreationRule
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(true),
+                currentUser = MutableStateFlow(userWithoutParks),
+                selectedTab = MutableStateFlow(EventKind.FUTURE),
+                fabClickResult = EventsEvent.ShowEventCreationRule
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -679,18 +908,20 @@ class EventsScreenTest {
     fun alert_confirmButton_navigatesToParks() {
         // Given
         var navigateToParksCalled = false
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.FUTURE
-                )
-            ),
-            isAuthorized = MutableStateFlow(true),
-            currentUser = MutableStateFlow(testUser.copy(parksCount = "0")),
-            selectedTab = MutableStateFlow(EventKind.FUTURE),
-            fabClickResult = EventsEvent.ShowEventCreationRule
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(true),
+                currentUser = MutableStateFlow(testUser.copy(parksCount = "0")),
+                selectedTab = MutableStateFlow(EventKind.FUTURE),
+                fabClickResult = EventsEvent.ShowEventCreationRule
+            )
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -718,18 +949,20 @@ class EventsScreenTest {
     @Test
     fun alert_dismissButton_closesAlert() {
         // Given
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.FUTURE
-                )
-            ),
-            isAuthorized = MutableStateFlow(true),
-            currentUser = MutableStateFlow(testUser.copy(parksCount = "0")),
-            selectedTab = MutableStateFlow(EventKind.FUTURE),
-            fabClickResult = EventsEvent.ShowEventCreationRule
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(true),
+                currentUser = MutableStateFlow(testUser.copy(parksCount = "0")),
+                selectedTab = MutableStateFlow(EventKind.FUTURE),
+                fabClickResult = EventsEvent.ShowEventCreationRule
+            )
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -764,18 +997,20 @@ class EventsScreenTest {
     @Test
     fun alert_hasCorrectTitle() {
         // Given
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.FUTURE
-                )
-            ),
-            isAuthorized = MutableStateFlow(true),
-            currentUser = MutableStateFlow(testUser.copy(parksCount = "0")),
-            selectedTab = MutableStateFlow(EventKind.FUTURE),
-            fabClickResult = EventsEvent.ShowEventCreationRule
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(true),
+                currentUser = MutableStateFlow(testUser.copy(parksCount = "0")),
+                selectedTab = MutableStateFlow(EventKind.FUTURE),
+                fabClickResult = EventsEvent.ShowEventCreationRule
+            )
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -797,18 +1032,20 @@ class EventsScreenTest {
     @Test
     fun alert_hasCorrectMessage() {
         // Given
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.FUTURE
-                )
-            ),
-            isAuthorized = MutableStateFlow(true),
-            currentUser = MutableStateFlow(testUser.copy(parksCount = "0")),
-            selectedTab = MutableStateFlow(EventKind.FUTURE),
-            fabClickResult = EventsEvent.ShowEventCreationRule
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(true),
+                currentUser = MutableStateFlow(testUser.copy(parksCount = "0")),
+                selectedTab = MutableStateFlow(EventKind.FUTURE),
+                fabClickResult = EventsEvent.ShowEventCreationRule
+            )
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -832,18 +1069,20 @@ class EventsScreenTest {
     @Test
     fun alert_hasGoToMapButton() {
         // Given
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.FUTURE
-                )
-            ),
-            isAuthorized = MutableStateFlow(true),
-            currentUser = MutableStateFlow(testUser.copy(parksCount = "0")),
-            selectedTab = MutableStateFlow(EventKind.FUTURE),
-            fabClickResult = EventsEvent.ShowEventCreationRule
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(true),
+                currentUser = MutableStateFlow(testUser.copy(parksCount = "0")),
+                selectedTab = MutableStateFlow(EventKind.FUTURE),
+                fabClickResult = EventsEvent.ShowEventCreationRule
+            )
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -866,18 +1105,20 @@ class EventsScreenTest {
     @Test
     fun alert_hasDismissButton() {
         // Given
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.FUTURE
-                )
-            ),
-            isAuthorized = MutableStateFlow(true),
-            currentUser = MutableStateFlow(testUser.copy(parksCount = "0")),
-            selectedTab = MutableStateFlow(EventKind.FUTURE),
-            fabClickResult = EventsEvent.ShowEventCreationRule
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(true),
+                currentUser = MutableStateFlow(testUser.copy(parksCount = "0")),
+                selectedTab = MutableStateFlow(EventKind.FUTURE),
+                fabClickResult = EventsEvent.ShowEventCreationRule
+            )
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -902,18 +1143,20 @@ class EventsScreenTest {
     fun fab_click_whenUserHasUsedParks_doesNotShowAlert() {
         // Given - user with used parks
         val userWithParks = testUser.copy(parksCount = "2")
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.FUTURE
-                )
-            ),
-            isAuthorized = MutableStateFlow(true),
-            currentUser = MutableStateFlow(userWithParks),
-            selectedTab = MutableStateFlow(EventKind.FUTURE),
-            fabClickResult = EventsEvent.NavigateToCreateEvent
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(true),
+                currentUser = MutableStateFlow(userWithParks),
+                selectedTab = MutableStateFlow(EventKind.FUTURE),
+                fabClickResult = EventsEvent.NavigateToCreateEvent
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -936,18 +1179,20 @@ class EventsScreenTest {
         // Given - user with used parks
         var navigateToCreateEventCalled = false
         val userWithParks = testUser.copy(parksCount = "2")
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.FUTURE
-                )
-            ),
-            isAuthorized = MutableStateFlow(true),
-            currentUser = MutableStateFlow(userWithParks),
-            selectedTab = MutableStateFlow(EventKind.FUTURE),
-            fabClickResult = EventsEvent.NavigateToCreateEvent
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(true),
+                currentUser = MutableStateFlow(userWithParks),
+                selectedTab = MutableStateFlow(EventKind.FUTURE),
+                fabClickResult = EventsEvent.NavigateToCreateEvent
+            )
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -972,18 +1217,20 @@ class EventsScreenTest {
         // Given - user without used parks
         var navigateToParksCalled = false
         val userWithoutParks = testUser.copy(parksCount = "0")
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.FUTURE
-                )
-            ),
-            isAuthorized = MutableStateFlow(true),
-            currentUser = MutableStateFlow(userWithoutParks),
-            selectedTab = MutableStateFlow(EventKind.FUTURE),
-            fabClickResult = EventsEvent.ShowEventCreationRule
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(true),
+                currentUser = MutableStateFlow(userWithoutParks),
+                selectedTab = MutableStateFlow(EventKind.FUTURE),
+                fabClickResult = EventsEvent.ShowEventCreationRule
+            )
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -1022,18 +1269,20 @@ class EventsScreenTest {
         var navigateToParksCalled = false
         var navigateToCreateEventCalled = false
         val userWithoutParks = testUser.copy(parksCount = "0")
-        val viewModel = FakeEventsViewModel(
-            eventsUIState = MutableStateFlow(
-                EventsUIState.Content(
-                    events = emptyList(),
-                    selectedTab = EventKind.FUTURE
-                )
-            ),
-            isAuthorized = MutableStateFlow(true),
-            currentUser = MutableStateFlow(userWithoutParks),
-            selectedTab = MutableStateFlow(EventKind.FUTURE),
-            fabClickResult = EventsEvent.ShowEventCreationRule
-        )
+        val viewModel =
+            FakeEventsViewModel(
+                eventsUIState =
+                    MutableStateFlow(
+                        EventsUIState.Content(
+                            events = emptyList(),
+                            selectedTab = EventKind.FUTURE
+                        )
+                    ),
+                isAuthorized = MutableStateFlow(true),
+                currentUser = MutableStateFlow(userWithoutParks),
+                selectedTab = MutableStateFlow(EventKind.FUTURE),
+                fabClickResult = EventsEvent.ShowEventCreationRule
+            )
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {

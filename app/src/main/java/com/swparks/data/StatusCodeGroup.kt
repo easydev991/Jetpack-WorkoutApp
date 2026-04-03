@@ -20,8 +20,8 @@ enum class StatusCodeGroup {
          * Создает группу на основе кода статуса
          */
         @Suppress("MagicNumber")
-        fun fromCode(code: Int): StatusCodeGroup {
-            return when (code) {
+        fun fromCode(code: Int): StatusCodeGroup =
+            when (code) {
                 in 100..199 -> INFO
                 in 200..299 -> SUCCESS
                 in 300..399 -> REDIRECT
@@ -29,7 +29,6 @@ enum class StatusCodeGroup {
                 in 500..599 -> SERVER_ERROR
                 else -> UNKNOWN
             }
-        }
     }
 
     /**

@@ -18,9 +18,16 @@ import kotlinx.coroutines.launch
  */
 sealed class AuthUiState {
     data object Idle : AuthUiState()
+
     data object Loading : AuthUiState()
-    data class Success(val loginSuccess: LoginSuccess) : AuthUiState()
-    data class Error(val message: String) : AuthUiState()
+
+    data class Success(
+        val loginSuccess: LoginSuccess
+    ) : AuthUiState()
+
+    data class Error(
+        val message: String
+    ) : AuthUiState()
 }
 
 /**
@@ -36,9 +43,8 @@ sealed class AuthUiState {
 class AuthViewModel(
     private val loginUseCase: ILoginUseCase,
     private val logoutUseCase: ILogoutUseCase,
-    private val userNotifier: UserNotifier,
+    private val userNotifier: UserNotifier
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
@@ -53,8 +59,7 @@ class AuthViewModel(
             loginUseCase(credentials)
                 .onSuccess { loginSuccess ->
                     _uiState.value = AuthUiState.Success(loginSuccess)
-                }
-                .onFailure { exception ->
+                }.onFailure { exception ->
                     val errorMessage = exception.message ?: "Неизвестная ошибка авторизации"
                     _uiState.value = AuthUiState.Error(message = errorMessage)
 

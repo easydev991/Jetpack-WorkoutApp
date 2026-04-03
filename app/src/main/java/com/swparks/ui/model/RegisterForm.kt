@@ -40,16 +40,17 @@ data class RegisterForm(
      * - isPolicyAccepted == true
      */
     val isValid: Boolean
-        get() = login.isNotBlank() &&
-            email.isValidEmail() &&
-            password.trueCount >= MIN_PASSWORD_LENGTH &&
-            fullName.isNotBlank() &&
-            genderCode != null &&
-            birthDate != null &&
-            !birthDate.isInFuture() &&
-            countryId != null &&
-            cityId != null &&
-            isPolicyAccepted
+        get() =
+            login.isNotBlank() &&
+                email.isValidEmail() &&
+                password.trueCount >= MIN_PASSWORD_LENGTH &&
+                fullName.isNotBlank() &&
+                genderCode != null &&
+                birthDate != null &&
+                !birthDate.isInFuture() &&
+                countryId != null &&
+                cityId != null &&
+                isPolicyAccepted
 
     companion object {
         const val MIN_PASSWORD_LENGTH = 6

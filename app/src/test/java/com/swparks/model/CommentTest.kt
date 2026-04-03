@@ -8,11 +8,12 @@ import org.junit.Test
 
 class CommentTest {
     // Вспомогательные методы для создания тестовых данных
-    private fun createTestUser(id: Long = 1L) = User(
-        id = id,
-        name = "testuser",
-        image = "https://example.com/image.jpg"
-    )
+    private fun createTestUser(id: Long = 1L) =
+        User(
+            id = id,
+            name = "testuser",
+            image = "https://example.com/image.jpg"
+        )
 
     private fun createTestComment(
         id: Long = 1L,
@@ -94,12 +95,13 @@ class CommentTest {
     fun comment_whenAllFieldsArePresent_thenCreatesCorrectly() {
         // Given
         val user = createTestUser(id = 2L)
-        val comment = createTestComment(
-            id = 1L,
-            body = "Test comment body",
-            date = "2024-01-01",
-            user = user
-        )
+        val comment =
+            createTestComment(
+                id = 1L,
+                body = "Test comment body",
+                date = "2024-01-01",
+                user = user
+            )
 
         // When & Then
         assertEquals(1L, comment.id)

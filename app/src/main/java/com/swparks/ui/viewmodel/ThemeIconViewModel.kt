@@ -30,8 +30,9 @@ import kotlinx.coroutines.launch
  */
 class ThemeIconViewModel(
     private val dataStore: AppSettingsDataStore,
-    private val iconManager: IconManager,
-) : ViewModel(), IThemeIconViewModel {
+    private val iconManager: IconManager
+) : ViewModel(),
+    IThemeIconViewModel {
     companion object {
         private const val STATE_TIMEOUT_MS = 5000L
         private const val TAG = "ThemeIconViewModel"
@@ -45,7 +46,7 @@ class ThemeIconViewModel(
          */
         fun factory(
             dataStore: AppSettingsDataStore,
-            application: Application,
+            application: Application
         ): ViewModelProvider.Factory =
             viewModelFactory {
                 val iconManager = IconManager(application)
@@ -58,18 +59,18 @@ class ThemeIconViewModel(
         combine(
             dataStore.theme,
             dataStore.useDynamicColors,
-            dataStore.icon,
+            dataStore.icon
         ) { theme, useDynamicColors, icon ->
             ThemeIconUiState(
                 theme = theme,
                 useDynamicColors = useDynamicColors,
                 icon = icon,
-                isLoading = false,
+                isLoading = false
             )
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STATE_TIMEOUT_MS),
-            initialValue = ThemeIconUiState(),
+            initialValue = ThemeIconUiState()
         )
 
     /**

@@ -8,7 +8,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class UserParksSeedPayloadTest {
-
     @Test
     fun fromParks_whenPayloadIsSmall_thenReturnsSeedJson() {
         val payload = UserParksSeedPayload.fromParks(listOf(createPark(1L)))
@@ -27,16 +26,20 @@ class UserParksSeedPayloadTest {
         assertNull(payload.parksJson)
     }
 
-    private fun createPark(id: Long, longText: String = "short"): Park = Park(
-        id = id,
-        name = "Park $id",
-        sizeID = 1,
-        typeID = 1,
-        longitude = "37.6173",
-        latitude = "55.7558",
-        address = "Address $id $longText",
-        cityID = 1,
-        countryID = 1,
-        preview = "https://example.com/$id.jpg"
-    )
+    private fun createPark(
+        id: Long,
+        longText: String = "short"
+    ): Park =
+        Park(
+            id = id,
+            name = "Park $id",
+            sizeID = 1,
+            typeID = 1,
+            longitude = "37.6173",
+            latitude = "55.7558",
+            address = "Address $id $longText",
+            cityID = 1,
+            countryID = 1,
+            preview = "https://example.com/$id.jpg"
+        )
 }

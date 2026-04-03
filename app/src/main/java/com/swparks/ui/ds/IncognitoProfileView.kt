@@ -48,22 +48,24 @@ fun IncognitoProfileView(
             modifier = Modifier.padding(bottom = dimensionResource(id = R.dimen.spacing_medium_plus))
         )
         SWButton(
-            config = ButtonConfig(
-                modifier = authButtonModifier,
-                text = stringResource(id = R.string.authorization),
-                enabled = enabled,
-                onClick = onClickAuth
-            )
+            config =
+                ButtonConfig(
+                    modifier = authButtonModifier,
+                    text = stringResource(id = R.string.authorization),
+                    enabled = enabled,
+                    onClick = onClickAuth
+                )
         )
         Spacer(modifier = Modifier.padding(dimensionResource(id = R.dimen.spacing_small)))
         SWButton(
-            config = ButtonConfig(
-                modifier = registerButtonModifier,
-                mode = SWButtonMode.TINTED,
-                text = stringResource(id = R.string.register),
-                enabled = enabled,
-                onClick = onClickRegister
-            )
+            config =
+                ButtonConfig(
+                    modifier = registerButtonModifier,
+                    mode = SWButtonMode.TINTED,
+                    text = stringResource(id = R.string.register),
+                    enabled = enabled,
+                    onClick = onClickRegister
+                )
         )
     }
 }

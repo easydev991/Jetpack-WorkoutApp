@@ -50,19 +50,20 @@ data class JournalResponse(
 /**
  * Маппер для преобразования [JournalResponse] в доменную модель [Journal]
  */
-fun JournalResponse.toDomain(): Journal = Journal(
-    id = id,
-    title = title,
-    lastMessageImage = lastMessageImage,
-    createDate = createDate,
-    modifyDate = modifyDate,
-    lastMessageDate = lastMessageDate,
-    lastMessageText = parsedLastMessageText,
-    entriesCount = count,
-    ownerId = ownerId?.toLong(),
-    viewAccess = journalAccessOption,
-    commentAccess = commentAccessOption
-)
+fun JournalResponse.toDomain(): Journal =
+    Journal(
+        id = id,
+        title = title,
+        lastMessageImage = lastMessageImage,
+        createDate = createDate,
+        modifyDate = modifyDate,
+        lastMessageDate = lastMessageDate,
+        lastMessageText = parsedLastMessageText,
+        entriesCount = count,
+        ownerId = ownerId?.toLong(),
+        viewAccess = journalAccessOption,
+        commentAccess = commentAccessOption
+    )
 
 /**
  * Маппер для преобразования [JournalResponse] в [JournalEntity]

@@ -18,7 +18,6 @@ import org.junit.Test
 
 /** Unit тесты для TextEntryUseCase */
 class TextEntryUseCaseTest {
-
     private lateinit var swRepository: SWRepository
     private lateinit var createJournalUseCase: ICreateJournalUseCase
     private lateinit var messageSentNotifier: MessageSentNotifier
@@ -48,197 +47,208 @@ class TextEntryUseCaseTest {
     }
 
     @Test
-    fun addJournalEntry_whenSuccess_thenReturnsSuccess() = runTest {
-        // Given
-        coEvery { swRepository.addComment(any(), any()) } returns Result.success(Unit)
+    fun addJournalEntry_whenSuccess_thenReturnsSuccess() =
+        runTest {
+            // Given
+            coEvery { swRepository.addComment(any(), any()) } returns Result.success(Unit)
 
-        // When
-        val result = textEntryUseCase.addJournalEntry(testOwnerId, testJournalId, testText)
+            // When
+            val result = textEntryUseCase.addJournalEntry(testOwnerId, testJournalId, testText)
 
-        // Then
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) {
-            swRepository.addComment(
-                match { it is com.swparks.ui.model.TextEntryOption.Journal },
-                testText
-            )
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) {
+                swRepository.addComment(
+                    match { it is com.swparks.ui.model.TextEntryOption.Journal },
+                    testText
+                )
+            }
         }
-    }
 
     @Test
-    fun addJournalEntry_whenError_thenReturnsError() = runTest {
-        // Given
-        val exception = Exception("Network error")
-        coEvery { swRepository.addComment(any(), any()) } returns Result.failure(exception)
+    fun addJournalEntry_whenError_thenReturnsError() =
+        runTest {
+            // Given
+            val exception = Exception("Network error")
+            coEvery { swRepository.addComment(any(), any()) } returns Result.failure(exception)
 
-        // When
-        val result = textEntryUseCase.addJournalEntry(testOwnerId, testJournalId, testText)
+            // When
+            val result = textEntryUseCase.addJournalEntry(testOwnerId, testJournalId, testText)
 
-        // Then
-        assertTrue(result.isFailure)
-        coVerify(exactly = 1) {
-            swRepository.addComment(
-                match { it is com.swparks.ui.model.TextEntryOption.Journal },
-                testText
-            )
+            // Then
+            assertTrue(result.isFailure)
+            coVerify(exactly = 1) {
+                swRepository.addComment(
+                    match { it is com.swparks.ui.model.TextEntryOption.Journal },
+                    testText
+                )
+            }
         }
-    }
 
     @Test
-    fun editJournalEntry_whenSuccess_thenReturnsSuccess() = runTest {
-        // Given
-        coEvery { swRepository.editComment(any(), any(), any()) } returns Result.success(Unit)
+    fun editJournalEntry_whenSuccess_thenReturnsSuccess() =
+        runTest {
+            // Given
+            coEvery { swRepository.editComment(any(), any(), any()) } returns Result.success(Unit)
 
-        // When
-        val result =
-            textEntryUseCase.editJournalEntry(testOwnerId, testJournalId, testEntryId, testText)
+            // When
+            val result =
+                textEntryUseCase.editJournalEntry(testOwnerId, testJournalId, testEntryId, testText)
 
-        // Then
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) {
-            swRepository.editComment(
-                match { it is com.swparks.ui.model.TextEntryOption.Journal },
-                testEntryId,
-                testText
-            )
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) {
+                swRepository.editComment(
+                    match { it is com.swparks.ui.model.TextEntryOption.Journal },
+                    testEntryId,
+                    testText
+                )
+            }
         }
-    }
 
     @Test
-    fun addParkComment_whenSuccess_thenReturnsSuccess() = runTest {
-        // Given
-        coEvery { swRepository.addComment(any(), any()) } returns Result.success(Unit)
+    fun addParkComment_whenSuccess_thenReturnsSuccess() =
+        runTest {
+            // Given
+            coEvery { swRepository.addComment(any(), any()) } returns Result.success(Unit)
 
-        // When
-        val result = textEntryUseCase.addParkComment(testParkId, testText)
+            // When
+            val result = textEntryUseCase.addParkComment(testParkId, testText)
 
-        // Then
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) {
-            swRepository.addComment(
-                match { it is com.swparks.ui.model.TextEntryOption.Park },
-                testText
-            )
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) {
+                swRepository.addComment(
+                    match { it is com.swparks.ui.model.TextEntryOption.Park },
+                    testText
+                )
+            }
         }
-    }
 
     @Test
-    fun editParkComment_whenSuccess_thenReturnsSuccess() = runTest {
-        // Given
-        coEvery { swRepository.editComment(any(), any(), any()) } returns Result.success(Unit)
+    fun editParkComment_whenSuccess_thenReturnsSuccess() =
+        runTest {
+            // Given
+            coEvery { swRepository.editComment(any(), any(), any()) } returns Result.success(Unit)
 
-        // When
-        val result = textEntryUseCase.editParkComment(testParkId, testCommentId, testText)
+            // When
+            val result = textEntryUseCase.editParkComment(testParkId, testCommentId, testText)
 
-        // Then
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) {
-            swRepository.editComment(
-                match { it is com.swparks.ui.model.TextEntryOption.Park },
-                testCommentId,
-                testText
-            )
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) {
+                swRepository.editComment(
+                    match { it is com.swparks.ui.model.TextEntryOption.Park },
+                    testCommentId,
+                    testText
+                )
+            }
         }
-    }
 
     @Test
-    fun addEventComment_whenSuccess_thenReturnsSuccess() = runTest {
-        // Given
-        coEvery { swRepository.addComment(any(), any()) } returns Result.success(Unit)
+    fun addEventComment_whenSuccess_thenReturnsSuccess() =
+        runTest {
+            // Given
+            coEvery { swRepository.addComment(any(), any()) } returns Result.success(Unit)
 
-        // When
-        val result = textEntryUseCase.addEventComment(testEventId, testText)
+            // When
+            val result = textEntryUseCase.addEventComment(testEventId, testText)
 
-        // Then
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) {
-            swRepository.addComment(
-                match { it is com.swparks.ui.model.TextEntryOption.Event },
-                testText
-            )
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) {
+                swRepository.addComment(
+                    match { it is com.swparks.ui.model.TextEntryOption.Event },
+                    testText
+                )
+            }
         }
-    }
 
     @Test
-    fun editEventComment_whenSuccess_thenReturnsSuccess() = runTest {
-        // Given
-        coEvery { swRepository.editComment(any(), any(), any()) } returns Result.success(Unit)
+    fun editEventComment_whenSuccess_thenReturnsSuccess() =
+        runTest {
+            // Given
+            coEvery { swRepository.editComment(any(), any(), any()) } returns Result.success(Unit)
 
-        // When
-        val result = textEntryUseCase.editEventComment(testEventId, testCommentId, testText)
+            // When
+            val result = textEntryUseCase.editEventComment(testEventId, testCommentId, testText)
 
-        // Then
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) {
-            swRepository.editComment(
-                match { it is com.swparks.ui.model.TextEntryOption.Event },
-                testCommentId,
-                testText
-            )
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) {
+                swRepository.editComment(
+                    match { it is com.swparks.ui.model.TextEntryOption.Event },
+                    testCommentId,
+                    testText
+                )
+            }
         }
-    }
 
     @Test
-    fun sendMessageTo_whenSuccess_thenReturnsSuccess() = runTest {
-        // Given
-        val userId = 123L
-        val message = "Hello!"
-        coEvery { swRepository.sendMessage(message, userId) } returns Result.success(Unit)
+    fun sendMessageTo_whenSuccess_thenReturnsSuccess() =
+        runTest {
+            // Given
+            val userId = 123L
+            val message = "Hello!"
+            coEvery { swRepository.sendMessage(message, userId) } returns Result.success(Unit)
 
-        // When
-        val result = textEntryUseCase.sendMessageTo(userId, message)
+            // When
+            val result = textEntryUseCase.sendMessageTo(userId, message)
 
-        // Then
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) { swRepository.sendMessage(message, userId) }
-    }
-
-    @Test
-    fun sendMessageTo_whenError_thenReturnsError() = runTest {
-        // Given
-        val userId = 123L
-        val message = "Hello!"
-        val exception = Exception("Network error")
-        coEvery { swRepository.sendMessage(message, userId) } returns Result.failure(exception)
-
-        // When
-        val result = textEntryUseCase.sendMessageTo(userId, message)
-
-        // Then
-        assertTrue(result.isFailure)
-        coVerify(exactly = 1) { swRepository.sendMessage(message, userId) }
-    }
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) { swRepository.sendMessage(message, userId) }
+        }
 
     @Test
-    fun sendMessageTo_whenSuccess_notifiesMessageSent() = runTest {
-        // Given
-        val userId = 123L
-        val message = "Hello!"
-        coEvery { swRepository.sendMessage(message, userId) } returns Result.success(Unit)
+    fun sendMessageTo_whenError_thenReturnsError() =
+        runTest {
+            // Given
+            val userId = 123L
+            val message = "Hello!"
+            val exception = Exception("Network error")
+            coEvery { swRepository.sendMessage(message, userId) } returns Result.failure(exception)
 
-        // When
-        textEntryUseCase.sendMessageTo(userId, message)
+            // When
+            val result = textEntryUseCase.sendMessageTo(userId, message)
 
-        // Then
-        verify { messageSentNotifier.notifyMessageSent(userId) }
-    }
+            // Then
+            assertTrue(result.isFailure)
+            coVerify(exactly = 1) { swRepository.sendMessage(message, userId) }
+        }
 
     @Test
-    fun sendMessageTo_whenError_doesNotNotifyMessageSent() = runTest {
-        // Given
-        val userId = 123L
-        val message = "Hello!"
-        coEvery {
-            swRepository.sendMessage(
-                message,
-                userId
-            )
-        } returns Result.failure(Exception("Error"))
+    fun sendMessageTo_whenSuccess_notifiesMessageSent() =
+        runTest {
+            // Given
+            val userId = 123L
+            val message = "Hello!"
+            coEvery { swRepository.sendMessage(message, userId) } returns Result.success(Unit)
 
-        // When
-        textEntryUseCase.sendMessageTo(userId, message)
+            // When
+            textEntryUseCase.sendMessageTo(userId, message)
 
-        // Then
-        verify(exactly = 0) { messageSentNotifier.notifyMessageSent(any()) }
-    }
+            // Then
+            verify { messageSentNotifier.notifyMessageSent(userId) }
+        }
+
+    @Test
+    fun sendMessageTo_whenError_doesNotNotifyMessageSent() =
+        runTest {
+            // Given
+            val userId = 123L
+            val message = "Hello!"
+            coEvery {
+                swRepository.sendMessage(
+                    message,
+                    userId
+                )
+            } returns Result.failure(Exception("Error"))
+
+            // When
+            textEntryUseCase.sendMessageTo(userId, message)
+
+            // Then
+            verify(exactly = 0) { messageSentNotifier.notifyMessageSent(any()) }
+        }
 }

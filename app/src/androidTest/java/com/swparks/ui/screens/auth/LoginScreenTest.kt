@@ -105,7 +105,7 @@ class LoginScreenTest {
 
         // Then - Кнопка "sign_in" отображается (по testTag)
         composeTestRule
-            .onNodeWithTag("signInButton")
+            .onNodeWithTag("login_button")
             .assertIsDisplayed()
     }
 
@@ -127,7 +127,7 @@ class LoginScreenTest {
 
         // Then - Кнопка "sign_in" должна быть отключена при пустых полях
         composeTestRule
-            .onNodeWithTag("signInButton")
+            .onNodeWithTag("login_button")
             .assertIsNotEnabled()
     }
 
@@ -141,7 +141,7 @@ class LoginScreenTest {
 
         // Then - Кнопка "sign_in" должна быть отключена (пароль не введен или слишком короткий)
         composeTestRule
-            .onNodeWithTag("signInButton")
+            .onNodeWithTag("login_button")
             .assertIsNotEnabled()
     }
 
@@ -155,7 +155,7 @@ class LoginScreenTest {
 
         // Then - Кнопка "sign_in" должна быть отключена (логин не введен)
         composeTestRule
-            .onNodeWithTag("signInButton")
+            .onNodeWithTag("login_button")
             .assertIsNotEnabled()
     }
 
@@ -173,7 +173,7 @@ class LoginScreenTest {
 
         // Then - Кнопка "sign_in" должна быть включена (отображается и не отключена)
         composeTestRule
-            .onNodeWithTag("signInButton")
+            .onNodeWithTag("login_button")
             .assertIsDisplayed()
     }
 
@@ -191,7 +191,7 @@ class LoginScreenTest {
 
         // Then - Кнопка "sign_in" должна быть отключена
         composeTestRule
-            .onNodeWithTag("signInButton")
+            .onNodeWithTag("login_button")
             .assertIsNotEnabled()
     }
 

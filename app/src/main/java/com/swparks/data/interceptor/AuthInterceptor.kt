@@ -20,7 +20,6 @@ import okhttp3.Response
 class AuthInterceptor(
     private val preferencesRepository: UserPreferencesRepository
 ) : Interceptor {
-
     private companion object {
         private const val TAG = "AuthInterceptor"
         private const val UNAUTHORIZED_STATUS_CODE = 401
@@ -44,9 +43,10 @@ class AuthInterceptor(
         if (response.code == UNAUTHORIZED_STATUS_CODE) {
             // Проверяем путь запроса - НЕ логаут для эндпоинтов авторизации
             val path = request.url.encodedPath
-            val isAuthEndpoint = path.contains("/login") ||
-                path.contains("/register") ||
-                path.contains("/reset-password")
+            val isAuthEndpoint =
+                path.contains("/login") ||
+                    path.contains("/register") ||
+                    path.contains("/reset-password")
 
             if (!isAuthEndpoint) {
                 Log.e(TAG, "Ошибка авторизации (401): токен недействителен или истек для $path")

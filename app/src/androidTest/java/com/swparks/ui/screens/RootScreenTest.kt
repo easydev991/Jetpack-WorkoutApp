@@ -11,6 +11,7 @@ import com.swparks.R
 import com.swparks.data.AppContainer
 import com.swparks.navigation.rememberAppState
 import com.swparks.util.AppError
+import com.swparks.util.FakeAnalyticsReporter
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -24,7 +25,6 @@ import java.io.IOException
  */
 @RunWith(AndroidJUnit4::class)
 class RootScreenTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -45,7 +45,7 @@ class RootScreenTest {
         // Given - настраиваем UI
         composeTestRule.setContent {
             RootScreen(
-                appState = rememberAppState()
+                appState = rememberAppState(analyticsReporter = FakeAnalyticsReporter())
             )
         }
 
@@ -76,7 +76,7 @@ class RootScreenTest {
         // Given - настраиваем UI
         composeTestRule.setContent {
             RootScreen(
-                appState = rememberAppState()
+                appState = rememberAppState(analyticsReporter = FakeAnalyticsReporter())
             )
         }
 
@@ -107,7 +107,7 @@ class RootScreenTest {
         // Given - настраиваем UI
         composeTestRule.setContent {
             RootScreen(
-                appState = rememberAppState()
+                appState = rememberAppState(analyticsReporter = FakeAnalyticsReporter())
             )
         }
         // Ждем, когда UI будет готов
@@ -137,7 +137,7 @@ class RootScreenTest {
         // Given - настраиваем UI
         composeTestRule.setContent {
             RootScreen(
-                appState = rememberAppState()
+                appState = rememberAppState(analyticsReporter = FakeAnalyticsReporter())
             )
         }
 

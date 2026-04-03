@@ -5,7 +5,5 @@ import com.swparks.data.repository.SWRepository
 class DeleteParkUseCase(
     private val swRepository: SWRepository
 ) {
-    suspend operator fun invoke(parkId: Long): Result<Unit> {
-        return swRepository.removeParkLocally(parkId)
-    }
+    suspend operator fun invoke(parkId: Long): Result<Unit> = swRepository.removeParkLocally(parkId)
 }

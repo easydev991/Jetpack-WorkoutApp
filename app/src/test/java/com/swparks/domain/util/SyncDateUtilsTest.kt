@@ -5,7 +5,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SyncDateUtilsTest {
-
     private val clock = TestClock("2025-10-27T12:00:00Z")
 
     @Test

@@ -46,7 +46,7 @@ data class ThemeIconScreenParams(
     val onDynamicColorsChange: (Boolean) -> Unit = {},
     val onIconChange: (AppIcon) -> Unit = {},
     val onBackClick: () -> Unit = {},
-    val parentPaddingValues: PaddingValues = PaddingValues(0.dp, 0.dp),
+    val parentPaddingValues: PaddingValues = PaddingValues(0.dp, 0.dp)
 )
 
 /** Экран для выбора темы и иконки приложения. */
@@ -55,7 +55,7 @@ data class ThemeIconScreenParams(
 fun ThemeIconScreen(
     viewModel: IThemeIconViewModel,
     onBackClick: () -> Unit,
-    parentPaddingValues: PaddingValues = PaddingValues(0.dp, 0.dp),
+    parentPaddingValues: PaddingValues = PaddingValues(0.dp, 0.dp)
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -69,8 +69,8 @@ fun ThemeIconScreen(
                 onDynamicColorsChange = { viewModel.updateDynamicColors(it) },
                 onIconChange = { viewModel.updateIcon(it) },
                 onBackClick = onBackClick,
-                parentPaddingValues = parentPaddingValues,
-            ),
+                parentPaddingValues = parentPaddingValues
+            )
     )
 }
 
@@ -81,9 +81,7 @@ fun ThemeIconScreen(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ThemeIconScreenContent(
-    params: ThemeIconScreenParams,
-) {
+internal fun ThemeIconScreenContent(params: ThemeIconScreenParams) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -92,12 +90,12 @@ internal fun ThemeIconScreenContent(
                     IconButton(onClick = params.onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
-                },
+                }
             )
-        },
+        }
     ) { paddingValues ->
         val scrollState = rememberScrollState()
         Column(
@@ -108,25 +106,25 @@ internal fun ThemeIconScreenContent(
                     .padding(params.parentPaddingValues)
                     .padding(paddingValues)
                     .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             ThemeSection(
                 theme = params.theme,
-                onThemeChange = params.onThemeChange,
+                onThemeChange = params.onThemeChange
             )
 
             HorizontalDivider()
 
             DynamicColorsSection(
                 useDynamicColors = params.useDynamicColors,
-                onDynamicColorsChange = params.onDynamicColorsChange,
+                onDynamicColorsChange = params.onDynamicColorsChange
             )
 
             HorizontalDivider()
 
             IconSection(
                 icon = params.icon,
-                onIconChange = params.onIconChange,
+                onIconChange = params.onIconChange
             )
         }
     }
@@ -136,12 +134,12 @@ internal fun ThemeIconScreenContent(
 @Composable
 private fun ThemeSection(
     theme: AppTheme,
-    onThemeChange: (AppTheme) -> Unit,
+    onThemeChange: (AppTheme) -> Unit
 ) {
     Text(
         text = stringResource(R.string.app_theme),
         style = androidx.compose.material3.MaterialTheme.typography.titleMedium,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth()
     )
 
     Column(
@@ -152,21 +150,21 @@ private fun ThemeSection(
         SWRadioButton(
             text = stringResource(R.string.light),
             selected = theme == AppTheme.LIGHT,
-            onClick = { onThemeChange(AppTheme.LIGHT) },
+            onClick = { onThemeChange(AppTheme.LIGHT) }
         )
 
         // Тёмная тема
         SWRadioButton(
             text = stringResource(R.string.dark),
             selected = theme == AppTheme.DARK,
-            onClick = { onThemeChange(AppTheme.DARK) },
+            onClick = { onThemeChange(AppTheme.DARK) }
         )
 
         // Системная тема
         SWRadioButton(
             text = stringResource(R.string.system),
             selected = theme == AppTheme.SYSTEM,
-            onClick = { onThemeChange(AppTheme.SYSTEM) },
+            onClick = { onThemeChange(AppTheme.SYSTEM) }
         )
     }
 }
@@ -175,7 +173,7 @@ private fun ThemeSection(
 @Composable
 private fun DynamicColorsSection(
     useDynamicColors: Boolean,
-    onDynamicColorsChange: (Boolean) -> Unit,
+    onDynamicColorsChange: (Boolean) -> Unit
 ) {
     // Секция отображается только если доступны динамические цвета (Android 12+)
     val dynamicColorAvailable = DynamicColors.isDynamicColorAvailable()
@@ -184,29 +182,29 @@ private fun DynamicColorsSection(
         Text(
             text = stringResource(R.string.dynamic_colors),
             style = androidx.compose.material3.MaterialTheme.typography.titleMedium,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth()
         )
 
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = stringResource(R.string.use_dynamic_colors),
                     style = androidx.compose.material3.MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f)
                 )
                 Switch(
                     checked = useDynamicColors,
-                    onCheckedChange = onDynamicColorsChange,
+                    onCheckedChange = onDynamicColorsChange
                 )
             }
             Text(
                 text = stringResource(R.string.dynamic_colors_hint),
                 style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -216,20 +214,21 @@ private fun DynamicColorsSection(
 @Composable
 private fun IconSection(
     icon: AppIcon,
-    onIconChange: (AppIcon) -> Unit,
+    onIconChange: (AppIcon) -> Unit
 ) {
     Text(
         text = stringResource(R.string.app_icon),
         style = androidx.compose.material3.MaterialTheme.typography.titleMedium,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 8.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
     )
 
     IconGrid(
         icons = AppIcon.entries,
         selectedIcon = icon,
-        onIconClick = onIconChange,
+        onIconClick = onIconChange
     )
 }
 
@@ -243,21 +242,21 @@ private fun IconSection(
 private fun IconGrid(
     icons: List<AppIcon>,
     selectedIcon: AppIcon,
-    onIconClick: (AppIcon) -> Unit,
+    onIconClick: (AppIcon) -> Unit
 ) {
     FlowRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(32.dp),
-        verticalArrangement = Arrangement.spacedBy(32.dp),
+        verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
         icons.forEach { appIcon ->
             Row(
-                modifier = Modifier.width(64.dp),
+                modifier = Modifier.width(64.dp)
             ) {
                 IconPreviewItem(
                     appIcon = appIcon,
                     isSelected = appIcon == selectedIcon,
-                    onClick = { onIconClick(appIcon) },
+                    onClick = { onIconClick(appIcon) }
                 )
             }
         }

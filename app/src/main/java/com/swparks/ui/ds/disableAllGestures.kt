@@ -13,14 +13,13 @@ import kotlin.math.abs
  *
  * @param threshold Минимальное расстояние свайпа для активации блокировки
  */
-fun Modifier.disableAllGestures(
-    threshold: Float = 0.5f
-): Modifier = pointerInput(Unit) {
-    detectDragGestures { change, dragAmount ->
-        // Блокируем все жесты (как вертикальные, так и горизонтальные)
-        // Порог чувствительности для игнорирования случайных касаний
-        if (abs(dragAmount.x) > threshold || abs(dragAmount.y) > threshold) {
-            change.consume()
+fun Modifier.disableAllGestures(threshold: Float = 0.5f): Modifier =
+    pointerInput(Unit) {
+        detectDragGestures { change, dragAmount ->
+            // Блокируем все жесты (как вертикальные, так и горизонтальные)
+            // Порог чувствительности для игнорирования случайных касаний
+            if (abs(dragAmount.x) > threshold || abs(dragAmount.y) > threshold) {
+                change.consume()
+            }
         }
     }
-}

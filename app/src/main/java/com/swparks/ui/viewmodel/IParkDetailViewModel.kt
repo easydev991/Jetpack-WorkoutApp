@@ -139,7 +139,10 @@ interface IParkDetailViewModel {
      * @param commentId Идентификатор комментария
      * @param action Выбранное действие
      */
-    fun onCommentActionClick(commentId: Long, action: CommentAction)
+    fun onCommentActionClick(
+        commentId: Long,
+        action: CommentAction
+    )
 
     /**
      * Обработка подтверждения удаления комментария.

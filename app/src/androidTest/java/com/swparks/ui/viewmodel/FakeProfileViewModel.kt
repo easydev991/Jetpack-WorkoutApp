@@ -17,7 +17,6 @@ class FakeProfileViewModel(
     override val blacklist: StateFlow<List<User>> = MutableStateFlow(emptyList()),
     override val isLoadingProfile: StateFlow<Boolean> = MutableStateFlow(false)
 ) : IProfileViewModel {
-
     /**
      * Функция-заглушка для загрузки профиля с сервера.
      * В тестах состояние устанавливается напрямую через конструктор.

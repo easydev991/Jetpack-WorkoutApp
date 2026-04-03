@@ -23,7 +23,7 @@ private const val TAG = "BottomNavigation"
 @Composable
 fun BottomNavigationBar(
     appState: AppState,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val currentDestination = appState.currentTopLevelDestination
     val isAuthorized = appState.isAuthorized
@@ -37,7 +37,7 @@ fun BottomNavigationBar(
 
     key(currentDestination?.route, isAuthorized, bottomNavVisualEpoch) {
         NavigationBar(
-            modifier = modifier,
+            modifier = modifier
         ) {
             appState.topLevelDestinations.forEach { destination ->
                 val isSelected = currentDestination?.route == destination.route
@@ -59,12 +59,13 @@ fun BottomNavigationBar(
                     interactionSource = interactionSource,
                     icon = {
                         Icon(
-                            imageVector = if (isSelected) {
-                                destination.selectedIcon
-                            } else {
-                                destination.unselectedIcon
-                            },
-                            contentDescription = stringResource(id = destination.iconTextId),
+                            imageVector =
+                                if (isSelected) {
+                                    destination.selectedIcon
+                                } else {
+                                    destination.unselectedIcon
+                                },
+                            contentDescription = stringResource(id = destination.iconTextId)
                         )
                     },
                     label = {
@@ -81,9 +82,10 @@ fun BottomNavigationBar(
     }
 }
 
-private fun bottomNavTag(route: String): String = when (route) {
-    Screen.Parks.route -> ScreenshotTestTags.BOTTOM_NAV_PARKS
-    Screen.Events.route -> ScreenshotTestTags.BOTTOM_NAV_EVENTS
-    Screen.Profile.route -> ScreenshotTestTags.BOTTOM_NAV_PROFILE
-    else -> "bottom_nav_${route.lowercase()}"
-}
+private fun bottomNavTag(route: String): String =
+    when (route) {
+        Screen.Parks.route -> ScreenshotTestTags.BOTTOM_NAV_PARKS
+        Screen.Events.route -> ScreenshotTestTags.BOTTOM_NAV_EVENTS
+        Screen.Profile.route -> ScreenshotTestTags.BOTTOM_NAV_PROFILE
+        else -> "bottom_nav_${route.lowercase()}"
+    }

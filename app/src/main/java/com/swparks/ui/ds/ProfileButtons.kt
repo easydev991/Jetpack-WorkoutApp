@@ -25,11 +25,12 @@ fun FriendsButton(
     FormRowView(
         modifier = modifier.fillMaxWidth(),
         leadingText = stringResource(id = R.string.friends),
-        trailingText = pluralStringResource(
-            id = R.plurals.friendsCount,
-            count = friendsCount,
-            friendsCount
-        ),
+        trailingText =
+            pluralStringResource(
+                id = R.plurals.friendsCount,
+                count = friendsCount,
+                friendsCount
+            ),
         badgeValue = if (friendRequestsCount > 0) friendRequestsCount else null,
         enabled = enabled,
         onClick = onClick
@@ -49,11 +50,12 @@ fun UsedParksButton(
     FormRowView(
         modifier = modifier.fillMaxWidth(),
         leadingText = stringResource(id = R.string.where_trains),
-        trailingText = pluralStringResource(
-            id = R.plurals.parksCount,
-            count = parksCount,
-            parksCount
-        ),
+        trailingText =
+            pluralStringResource(
+                id = R.plurals.parksCount,
+                count = parksCount,
+                parksCount
+            ),
         enabled = enabled,
         onClick = onClick
     )
@@ -72,11 +74,12 @@ fun AddedParksButton(
     FormRowView(
         modifier = modifier.fillMaxWidth(),
         leadingText = stringResource(id = R.string.male_added_parks),
-        trailingText = pluralStringResource(
-            id = R.plurals.parksCount,
-            count = addedParksCount,
-            addedParksCount
-        ),
+        trailingText =
+            pluralStringResource(
+                id = R.plurals.parksCount,
+                count = addedParksCount,
+                addedParksCount
+            ),
         enabled = enabled,
         onClick = onClick
     )
@@ -95,15 +98,16 @@ fun JournalsButton(
     FormRowView(
         modifier = modifier.fillMaxWidth(),
         leadingText = stringResource(id = R.string.journals),
-        trailingText = if (journalsCount > 0) {
-            pluralStringResource(
-                id = R.plurals.journalsCount,
-                count = journalsCount,
-                journalsCount
-            )
-        } else {
-            ""
-        },
+        trailingText =
+            if (journalsCount > 0) {
+                pluralStringResource(
+                    id = R.plurals.journalsCount,
+                    count = journalsCount,
+                    journalsCount
+                )
+            } else {
+                ""
+            },
         enabled = enabled,
         onClick = onClick
     )
@@ -122,11 +126,12 @@ fun BlacklistButton(
     FormRowView(
         modifier = modifier.fillMaxWidth(),
         leadingText = stringResource(id = R.string.black_list),
-        trailingText = pluralStringResource(
-            id = R.plurals.peopleCount,
-            count = blacklistCount,
-            blacklistCount
-        ),
+        trailingText =
+            pluralStringResource(
+                id = R.plurals.peopleCount,
+                count = blacklistCount,
+                blacklistCount
+            ),
         enabled = enabled,
         onClick = onClick
     )

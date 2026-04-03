@@ -58,7 +58,9 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 
 sealed class ChatAction {
     object Back : ChatAction()
+
     object AvatarClick : ChatAction()
+
     object MessageSent : ChatAction()
 }
 
@@ -88,7 +90,9 @@ data class ChatContentParams(
 /**
  * Параметры для ChatTopAppBar
  */
-data class ChatTopAppBarParams @OptIn(ExperimentalMaterial3Api::class) constructor(
+data class ChatTopAppBarParams
+@OptIn(ExperimentalMaterial3Api::class)
+constructor(
     val userName: String,
     val userImage: String?,
     val onAction: (ChatAction) -> Unit,
@@ -129,21 +133,22 @@ fun ChatScreen(
 
     ChatContent(
         modifier = modifier,
-        params = ChatContentParams(
-            uiState = uiState,
-            isLoading = isLoading,
-            messageText = messageText,
-            otherUserId = userParams.userId,
-            userName = userParams.userName,
-            userImage = userParams.userImage,
-            currentUserId = currentUserId,
-            onMessageTextChange = { viewModel.messageText.value = it },
-            onSendClick = { userId ->
-                viewModel.sendMessage(userId)
-            },
-            onRefresh = { viewModel.refreshMessages() },
-            onAction = onAction
-        )
+        params =
+            ChatContentParams(
+                uiState = uiState,
+                isLoading = isLoading,
+                messageText = messageText,
+                otherUserId = userParams.userId,
+                userName = userParams.userName,
+                userImage = userParams.userImage,
+                currentUserId = currentUserId,
+                onMessageTextChange = { viewModel.messageText.value = it },
+                onSendClick = { userId ->
+                    viewModel.sendMessage(userId)
+                },
+                onRefresh = { viewModel.refreshMessages() },
+                onAction = onAction
+            )
     )
 }
 
@@ -160,13 +165,14 @@ fun ChatContent(
         modifier = modifier,
         topBar = {
             ChatTopAppBar(
-                params = ChatTopAppBarParams(
-                    userName = params.userName,
-                    userImage = params.userImage,
-                    onAction = params.onAction,
-                    onRefresh = params.onRefresh,
-                    scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
-                )
+                params =
+                    ChatTopAppBarParams(
+                        userName = params.userName,
+                        userImage = params.userImage,
+                        onAction = params.onAction,
+                        onRefresh = params.onRefresh,
+                        scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
+                    )
             )
         },
         bottomBar = {
@@ -179,13 +185,14 @@ fun ChatContent(
         }
     ) { paddingValues ->
         ChatScreenContent(
-            state = ChatScreenState(
-                uiState = params.uiState,
-                currentUserId = params.currentUserId,
-                isLoading = params.isLoading,
-                scrollState = scrollState,
-                modifier = Modifier.padding(paddingValues)
-            ),
+            state =
+                ChatScreenState(
+                    uiState = params.uiState,
+                    currentUserId = params.currentUserId,
+                    isLoading = params.isLoading,
+                    scrollState = scrollState,
+                    modifier = Modifier.padding(paddingValues)
+                ),
             onMarkAsRead = { }
         )
     }
@@ -268,10 +275,12 @@ private fun MessagesList(
         if (messages.isEmpty()) return@LaunchedEffect
 
         snapshotFlow {
-            val lastVisibleIndex = scrollState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
+            val lastVisibleIndex =
+                scrollState.layoutInfo.visibleItemsInfo
+                    .lastOrNull()
+                    ?.index ?: -1
             lastVisibleIndex >= messages.size - 1
-        }
-            .distinctUntilChanged()
+        }.distinctUntilChanged()
             .collect { isLastMessageVisible ->
                 if (isLastMessageVisible) {
                     messages.lastOrNull()?.userId?.let { userId ->
@@ -287,12 +296,13 @@ private fun MessagesList(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         state = scrollState,
-        contentPadding = PaddingValues(
-            start = dimensionResource(R.dimen.spacing_regular),
-            end = dimensionResource(R.dimen.spacing_regular),
-            top = dimensionResource(R.dimen.spacing_small),
-            bottom = dimensionResource(R.dimen.spacing_regular)
-        ),
+        contentPadding =
+            PaddingValues(
+                start = dimensionResource(R.dimen.spacing_regular),
+                end = dimensionResource(R.dimen.spacing_regular),
+                top = dimensionResource(R.dimen.spacing_small),
+                bottom = dimensionResource(R.dimen.spacing_regular)
+            ),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
     ) {
         itemsIndexed(messages) { _, message ->
@@ -300,11 +310,12 @@ private fun MessagesList(
             val messageType = if (isSentByCurrentUser) MessageType.SENT else MessageType.INCOMING
 
             // Форматируем дату
-            val formattedDate = DateFormatter.formatDate(
-                context = context,
-                dateString = message.created,
-                showTimeInThisYear = true
-            )
+            val formattedDate =
+                DateFormatter.formatDate(
+                    context = context,
+                    dateString = message.created,
+                    showTimeInThisYear = true
+                )
 
             MessageBubbleView(
                 messageType = messageType,
@@ -336,13 +347,14 @@ private fun ChatTopAppBar(
                     modifier = Modifier.testTag("AvatarButton")
                 ) {
                     SWAsyncImage(
-                        config = AsyncImageConfig(
-                            imageStringURL = params.userImage,
-                            size = 32.dp,
-                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                            shape = CircleShape,
-                            showBorder = false
-                        )
+                        config =
+                            AsyncImageConfig(
+                                imageStringURL = params.userImage,
+                                size = 32.dp,
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                shape = CircleShape,
+                                showBorder = false
+                            )
                     )
                 }
                 Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_xxsmall)))
@@ -387,46 +399,48 @@ private fun ChatTopAppBar(
 )
 @Composable
 fun ChatContentPreview() {
-    val messages = listOf(
-        MessageResponse(
-            id = 1,
-            userId = 2,
-            message = "Привет! Как дела?",
-            name = "Друг",
-            created = "2024-01-15T10:30:00Z"
-        ),
-        MessageResponse(
-            id = 2,
-            userId = 1,
-            message = "Привет! Всё отлично, спасибо!",
-            name = "Я",
-            created = "2024-01-15T10:31:00Z"
-        ),
-        MessageResponse(
-            id = 3,
-            userId = 2,
-            message = "Отлично! Чем занимаешься?",
-            name = "Друг",
-            created = "2024-01-15T10:32:00Z"
+    val messages =
+        listOf(
+            MessageResponse(
+                id = 1,
+                userId = 2,
+                message = "Привет! Как дела?",
+                name = "Друг",
+                created = "2024-01-15T10:30:00Z"
+            ),
+            MessageResponse(
+                id = 2,
+                userId = 1,
+                message = "Привет! Всё отлично, спасибо!",
+                name = "Я",
+                created = "2024-01-15T10:31:00Z"
+            ),
+            MessageResponse(
+                id = 3,
+                userId = 2,
+                message = "Отлично! Чем занимаешься?",
+                name = "Друг",
+                created = "2024-01-15T10:32:00Z"
+            )
         )
-    )
 
     MaterialTheme {
         Surface {
             ChatContent(
-                params = ChatContentParams(
-                    uiState = ChatUiState.Success(messages),
-                    isLoading = false,
-                    messageText = "",
-                    otherUserId = 2,
-                    userName = "Иван Петров",
-                    userImage = null,
-                    currentUserId = 1,
-                    onMessageTextChange = {},
-                    onSendClick = {},
-                    onRefresh = {},
-                    onAction = {}
-                )
+                params =
+                    ChatContentParams(
+                        uiState = ChatUiState.Success(messages),
+                        isLoading = false,
+                        messageText = "",
+                        otherUserId = 2,
+                        userName = "Иван Петров",
+                        userImage = null,
+                        currentUserId = 1,
+                        onMessageTextChange = {},
+                        onSendClick = {},
+                        onRefresh = {},
+                        onAction = {}
+                    )
             )
         }
     }
@@ -441,19 +455,20 @@ fun ChatContentLoadingPreview() {
     MaterialTheme {
         Surface {
             ChatContent(
-                params = ChatContentParams(
-                    uiState = ChatUiState.Loading,
-                    isLoading = false,
-                    messageText = "",
-                    otherUserId = 2,
-                    userName = "Иван Петров",
-                    userImage = null,
-                    currentUserId = 1,
-                    onMessageTextChange = {},
-                    onSendClick = {},
-                    onRefresh = {},
-                    onAction = {}
-                )
+                params =
+                    ChatContentParams(
+                        uiState = ChatUiState.Loading,
+                        isLoading = false,
+                        messageText = "",
+                        otherUserId = 2,
+                        userName = "Иван Петров",
+                        userImage = null,
+                        currentUserId = 1,
+                        onMessageTextChange = {},
+                        onSendClick = {},
+                        onRefresh = {},
+                        onAction = {}
+                    )
             )
         }
     }
@@ -468,19 +483,20 @@ fun ChatContentEmptyPreview() {
     MaterialTheme {
         Surface {
             ChatContent(
-                params = ChatContentParams(
-                    uiState = ChatUiState.Success(emptyList()),
-                    isLoading = false,
-                    messageText = "",
-                    otherUserId = 2,
-                    userName = "Иван Петров",
-                    userImage = null,
-                    currentUserId = 1,
-                    onMessageTextChange = {},
-                    onSendClick = {},
-                    onRefresh = {},
-                    onAction = {}
-                )
+                params =
+                    ChatContentParams(
+                        uiState = ChatUiState.Success(emptyList()),
+                        isLoading = false,
+                        messageText = "",
+                        otherUserId = 2,
+                        userName = "Иван Петров",
+                        userImage = null,
+                        currentUserId = 1,
+                        onMessageTextChange = {},
+                        onSendClick = {},
+                        onRefresh = {},
+                        onAction = {}
+                    )
             )
         }
     }

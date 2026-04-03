@@ -40,23 +40,26 @@ fun ChatInputBar(
     onSendClick: () -> Unit
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(dimensionResource(R.dimen.spacing_regular)),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(dimensionResource(R.dimen.spacing_regular)),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
     ) {
         SWTextField(
-            config = TextFieldConfig(
-                modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = MinTextFieldHeight),
-                text = text,
-                labelID = R.string.message_placeholder,
-                singleLine = false,
-                enabled = !isLoading,
-                onTextChange = onTextChange
-            )
+            config =
+                TextFieldConfig(
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .heightIn(min = MinTextFieldHeight),
+                    text = text,
+                    labelID = R.string.message_placeholder,
+                    singleLine = false,
+                    enabled = !isLoading,
+                    onTextChange = onTextChange
+                )
         )
         SendChatMessageButton(
             enabled = text.isNotEmpty() && !isLoading,

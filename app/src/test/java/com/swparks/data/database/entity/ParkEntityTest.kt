@@ -10,21 +10,22 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class ParkEntityTest {
-
-    private val testUser = User(
-        id = 1L,
-        name = "testuser",
-        image = "https://example.com/avatar.jpg"
-    )
+    private val testUser =
+        User(
+            id = 1L,
+            name = "testuser",
+            image = "https://example.com/avatar.jpg"
+        )
 
     private val testPhoto = Photo(id = 10L, photo = "https://example.com/photo.jpg")
 
-    private val testComment = Comment(
-        id = 100L,
-        body = "Test comment",
-        date = "2024-01-15",
-        user = testUser
-    )
+    private val testComment =
+        Comment(
+            id = 100L,
+            body = "Test comment",
+            date = "2024-01-15",
+            user = testUser
+        )
 
     @Suppress("LongParameterList")
     private fun createFullPark(
@@ -118,30 +119,31 @@ class ParkEntityTest {
 
     @Test
     fun toEntity_whenNullComplexFields_thenPreservesNullValues() {
-        val park = Park(
-            id = 1L,
-            name = "Short Park",
-            sizeID = 1,
-            typeID = 1,
-            longitude = "0",
-            latitude = "0",
-            address = "",
-            cityID = 1,
-            countryID = 1,
-            preview = "",
-            commentsCount = null,
-            trainingUsersCount = null,
-            createDate = null,
-            modifyDate = null,
-            author = null,
-            photos = null,
-            comments = null,
-            trainHere = null,
-            equipmentIDS = null,
-            mine = null,
-            canEdit = null,
-            trainingUsers = null
-        )
+        val park =
+            Park(
+                id = 1L,
+                name = "Short Park",
+                sizeID = 1,
+                typeID = 1,
+                longitude = "0",
+                latitude = "0",
+                address = "",
+                cityID = 1,
+                countryID = 1,
+                preview = "",
+                commentsCount = null,
+                trainingUsersCount = null,
+                createDate = null,
+                modifyDate = null,
+                author = null,
+                photos = null,
+                comments = null,
+                trainHere = null,
+                equipmentIDS = null,
+                mine = null,
+                canEdit = null,
+                trainingUsers = null
+            )
 
         val entity = park.toEntity()
 
@@ -161,18 +163,19 @@ class ParkEntityTest {
 
     @Test
     fun toPark_whenEntityWithNullComplexFields_thenPreservesNullValues() {
-        val entity = ParkEntity(
-            id = 1L,
-            name = "Short Park",
-            sizeID = 1,
-            typeID = 1,
-            longitude = "0",
-            latitude = "0",
-            address = "",
-            cityID = 1,
-            countryID = 1,
-            preview = ""
-        )
+        val entity =
+            ParkEntity(
+                id = 1L,
+                name = "Short Park",
+                sizeID = 1,
+                typeID = 1,
+                longitude = "0",
+                latitude = "0",
+                address = "",
+                cityID = 1,
+                countryID = 1,
+                preview = ""
+            )
 
         val park = entity.toPark()
 
@@ -192,40 +195,42 @@ class ParkEntityTest {
 
     @Test
     fun roundTrip_whenToEntityToPark_thenPreservesNullableCountersSemantics() {
-        val parkWithNullCounters = Park(
-            id = 1L,
-            name = "Park",
-            sizeID = 1,
-            typeID = 1,
-            longitude = "0",
-            latitude = "0",
-            address = "",
-            cityID = 1,
-            countryID = 1,
-            preview = "",
-            commentsCount = null,
-            trainingUsersCount = null
-        )
+        val parkWithNullCounters =
+            Park(
+                id = 1L,
+                name = "Park",
+                sizeID = 1,
+                typeID = 1,
+                longitude = "0",
+                latitude = "0",
+                address = "",
+                cityID = 1,
+                countryID = 1,
+                preview = "",
+                commentsCount = null,
+                trainingUsersCount = null
+            )
 
         val restored = parkWithNullCounters.toEntity().toPark()
 
         assertNull(restored.commentsCount)
         assertNull(restored.trainingUsersCount)
 
-        val parkWithZeroCounters = Park(
-            id = 1L,
-            name = "Park",
-            sizeID = 1,
-            typeID = 1,
-            longitude = "0",
-            latitude = "0",
-            address = "",
-            cityID = 1,
-            countryID = 1,
-            preview = "",
-            commentsCount = 0,
-            trainingUsersCount = 0
-        )
+        val parkWithZeroCounters =
+            Park(
+                id = 1L,
+                name = "Park",
+                sizeID = 1,
+                typeID = 1,
+                longitude = "0",
+                latitude = "0",
+                address = "",
+                cityID = 1,
+                countryID = 1,
+                preview = "",
+                commentsCount = 0,
+                trainingUsersCount = 0
+            )
 
         val restoredZero = parkWithZeroCounters.toEntity().toPark()
 

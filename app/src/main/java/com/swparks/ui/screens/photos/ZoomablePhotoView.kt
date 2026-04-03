@@ -66,10 +66,11 @@ private fun clampOffset(
     )
 }
 
-private val zoomAnimationSpec = spring<Float>(
-    dampingRatio = Spring.DampingRatioNoBouncy,
-    stiffness = Spring.StiffnessMedium
-)
+private val zoomAnimationSpec =
+    spring<Float>(
+        dampingRatio = Spring.DampingRatioNoBouncy,
+        stiffness = Spring.StiffnessMedium
+    )
 
 private class ZoomState(
     val scale: Animatable<Float, *>,
@@ -105,68 +106,75 @@ fun ZoomablePhotoView(config: ZoomConfig) {
     val offsetY = remember { Animatable(0f) }
     var containerSize by remember { mutableStateOf(IntSize.Zero) }
 
-    val zoomState = remember {
-        ZoomState(scale, offsetX, offsetY, config.minScale, config.maxScale)
-    }
-
-    val transformableState = rememberTransformableState { zoomChange, panChange, _ ->
-        scope.launch {
-            val currentScale = scale.value
-            val newScale = (currentScale * zoomChange).coerceIn(
-                config.minScale,
-                config.maxScale
-            )
-            val scaleRatio = if (currentScale == 0f) 1f else newScale / currentScale
-            val rawOffset = if (newScale > config.minScale) {
-                Offset(offsetX.value, offsetY.value) * scaleRatio + panChange
-            } else {
-                Offset.Zero
-            }
-            val clamped = clampOffset(
-                rawOffset,
-                newScale,
-                config.minScale,
-                containerSize
-            )
-            scale.snapTo(newScale)
-            offsetX.snapTo(clamped.x)
-            offsetY.snapTo(clamped.y)
+    val zoomState =
+        remember {
+            ZoomState(scale, offsetX, offsetY, config.minScale, config.maxScale)
         }
-    }
+
+    val transformableState =
+        rememberTransformableState { zoomChange, panChange, _ ->
+            scope.launch {
+                val currentScale = scale.value
+                val newScale =
+                    (currentScale * zoomChange).coerceIn(
+                        config.minScale,
+                        config.maxScale
+                    )
+                val scaleRatio = if (currentScale == 0f) 1f else newScale / currentScale
+                val rawOffset =
+                    if (newScale > config.minScale) {
+                        Offset(offsetX.value, offsetY.value) * scaleRatio + panChange
+                    } else {
+                        Offset.Zero
+                    }
+                val clamped =
+                    clampOffset(
+                        rawOffset,
+                        newScale,
+                        config.minScale,
+                        containerSize
+                    )
+                scale.snapTo(newScale)
+                offsetX.snapTo(clamped.x)
+                offsetY.snapTo(clamped.y)
+            }
+        }
 
     Box(
-        modifier = config.modifier
-            .fillMaxSize()
-            .onSizeChanged { containerSize = it }
-            .pointerInput(
-                config.minScale,
-                config.maxScale,
-                config.doubleTapScale,
-                containerSize
-            ) {
-                detectTapGestures(
-                    onDoubleTap = { tapOffset ->
-                        handleDoubleTap(
-                            scope = scope,
-                            zoomState = zoomState,
-                            doubleTapScale = config.doubleTapScale,
-                            containerSize = containerSize,
-                            tapOffset = tapOffset
-                        )
-                    }
-                )
-            }
-            .transformable(state = transformableState),
+        modifier =
+            config.modifier
+                .fillMaxSize()
+                .onSizeChanged { containerSize = it }
+                .pointerInput(
+                    config.minScale,
+                    config.maxScale,
+                    config.doubleTapScale,
+                    containerSize
+                ) {
+                    detectTapGestures(
+                        onDoubleTap = { tapOffset ->
+                            handleDoubleTap(
+                                scope = scope,
+                                zoomState = zoomState,
+                                doubleTapScale = config.doubleTapScale,
+                                containerSize = containerSize,
+                                tapOffset = tapOffset
+                            )
+                        }
+                    )
+                }
+                .transformable(state = transformableState),
         contentAlignment = Alignment.Center
     ) {
         TransformableImage(
-            params = ImageTransformParams(
-                imageUrl = config.imageUrl,
-                imageSize = config.imageSize,
-                scale = scale.value,
-                offsetX = offsetX.value,
-                offsetY = offsetY.value
-            )
+            params =
+                ImageTransformParams(
+                    imageUrl = config.imageUrl,
+                    imageSize = config.imageSize,
+                    scale = scale.value,
+                    offsetX = offsetX.value,
+                    offsetY = offsetY.value
+                )
         )
     }
 }
@@ -183,12 +191,13 @@ private fun handleDoubleTap(
             scope.animateResetZoom(zoomState)
         } else {
             val targetScale = doubleTapScale.coerceIn(zoomState.minScale, zoomState.maxScale)
-            val targetOffset = calculateTargetOffset(
-                containerSize = containerSize,
-                tapOffset = tapOffset,
-                targetScale = targetScale,
-                minScale = zoomState.minScale
-            )
+            val targetOffset =
+                calculateTargetOffset(
+                    containerSize = containerSize,
+                    tapOffset = tapOffset,
+                    targetScale = targetScale,
+                    minScale = zoomState.minScale
+                )
             scope.animateZoomToTarget(zoomState, targetScale, targetOffset)
         }
     }
@@ -216,19 +225,21 @@ private fun TransformableImage(
     modifier: Modifier = Modifier
 ) {
     SWAsyncImage(
-        config = AsyncImageConfig(
-            modifier = modifier
-                .fillMaxSize()
-                .graphicsLayer(
-                    scaleX = params.scale,
-                    scaleY = params.scale,
-                    translationX = params.offsetX,
-                    translationY = params.offsetY
-                ),
-            imageStringURL = params.imageUrl,
-            size = params.imageSize,
-            contentScale = ContentScale.Fit,
-            showBorder = false
-        )
+        config =
+            AsyncImageConfig(
+                modifier =
+                    modifier
+                        .fillMaxSize()
+                        .graphicsLayer(
+                            scaleX = params.scale,
+                            scaleY = params.scale,
+                            translationX = params.offsetX,
+                            translationY = params.offsetY
+                        ),
+                imageStringURL = params.imageUrl,
+                size = params.imageSize,
+                contentScale = ContentScale.Fit,
+                showBorder = false
+            )
     )
 }

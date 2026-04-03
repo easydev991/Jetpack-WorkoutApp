@@ -11,7 +11,6 @@ import java.util.Base64
  * Использует java.util.Base64 (кроссплатформенное решение).
  */
 class TokenEncoder {
-
     /**
      * Генерирует токен авторизации из учетных данных.
      *
@@ -27,7 +26,8 @@ class TokenEncoder {
         }
 
         val credentialsString = "$trimmedLogin:$trimmedPassword"
-        return Base64.getEncoder()
+        return Base64
+            .getEncoder()
             .encodeToString(credentialsString.toByteArray(StandardCharsets.UTF_8))
     }
 }

@@ -7,19 +7,20 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 class PhotoDetailSheetHostTest {
-
     @Test
     fun buildPhotoDetailViewModelKey_whenSamePhotoIdButDifferentOwnerType_thenKeysDifferent() {
-        val eventConfig = createConfig(
-            photoId = 1L,
-            parentId = 10L,
-            ownerType = PhotoOwner.Event
-        )
-        val parkConfig = createConfig(
-            photoId = 1L,
-            parentId = 10L,
-            ownerType = PhotoOwner.Park
-        )
+        val eventConfig =
+            createConfig(
+                photoId = 1L,
+                parentId = 10L,
+                ownerType = PhotoOwner.Event
+            )
+        val parkConfig =
+            createConfig(
+                photoId = 1L,
+                parentId = 10L,
+                ownerType = PhotoOwner.Park
+            )
 
         val eventKey = buildPhotoDetailViewModelKey(eventConfig)
         val parkKey = buildPhotoDetailViewModelKey(parkConfig)
@@ -29,16 +30,18 @@ class PhotoDetailSheetHostTest {
 
     @Test
     fun buildPhotoDetailViewModelKey_whenSamePhotoIdAndOwnerButDifferentParentId_thenKeysDifferent() {
-        val firstConfig = createConfig(
-            photoId = 1L,
-            parentId = 10L,
-            ownerType = PhotoOwner.Event
-        )
-        val secondConfig = createConfig(
-            photoId = 1L,
-            parentId = 11L,
-            ownerType = PhotoOwner.Event
-        )
+        val firstConfig =
+            createConfig(
+                photoId = 1L,
+                parentId = 10L,
+                ownerType = PhotoOwner.Event
+            )
+        val secondConfig =
+            createConfig(
+                photoId = 1L,
+                parentId = 11L,
+                ownerType = PhotoOwner.Event
+            )
 
         val firstKey = buildPhotoDetailViewModelKey(firstConfig)
         val secondKey = buildPhotoDetailViewModelKey(secondConfig)
@@ -48,11 +51,12 @@ class PhotoDetailSheetHostTest {
 
     @Test
     fun buildPhotoDetailViewModelKey_whenSameConfig_thenStableKey() {
-        val config = createConfig(
-            photoId = 7L,
-            parentId = 42L,
-            ownerType = PhotoOwner.Park
-        )
+        val config =
+            createConfig(
+                photoId = 7L,
+                parentId = 42L,
+                ownerType = PhotoOwner.Park
+            )
 
         val firstKey = buildPhotoDetailViewModelKey(config)
         val secondKey = buildPhotoDetailViewModelKey(config)

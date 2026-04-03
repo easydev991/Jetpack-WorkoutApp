@@ -39,7 +39,6 @@ class LocationServiceImpl(
     },
     private val locationTimeoutMillis: Long = LOCATION_TIMEOUT_MILLIS
 ) : LocationService {
-
     private val fusedLocationClient: FusedLocationProviderClient by lazy {
         fusedLocationClientProvider(context)
     }
@@ -59,45 +58,47 @@ class LocationServiceImpl(
             return Result.failure(SecurityException("Location permission is not granted"))
         }
 
-        val locationResult = withTimeoutOrNull(locationTimeoutMillis) {
-            suspendCancellableCoroutine { continuation ->
-                val cancellationTokenSource = CancellationTokenSource()
+        val locationResult =
+            withTimeoutOrNull(locationTimeoutMillis) {
+                suspendCancellableCoroutine { continuation ->
+                    val cancellationTokenSource = CancellationTokenSource()
 
-                try {
-                    fusedLocationClient.getCurrentLocation(
-                        Priority.PRIORITY_HIGH_ACCURACY,
-                        cancellationTokenSource.token
-                    ).addOnSuccessListener { location: Location? ->
-                        if (location != null) {
-                            continuation.resumeIfActive(
-                                Result.success(
-                                    LocationCoordinates(
-                                        latitude = location.latitude,
-                                        longitude = location.longitude
+                    try {
+                        fusedLocationClient
+                            .getCurrentLocation(
+                                Priority.PRIORITY_HIGH_ACCURACY,
+                                cancellationTokenSource.token
+                            ).addOnSuccessListener { location: Location? ->
+                                if (location != null) {
+                                    continuation.resumeIfActive(
+                                        Result.success(
+                                            LocationCoordinates(
+                                                latitude = location.latitude,
+                                                longitude = location.longitude
+                                            )
+                                        )
                                     )
-                                )
-                            )
-                        } else {
-                            val fallbackResult = getLastKnownLocationFallback()
-                            continuation.resumeIfActive(fallbackResult)
-                        }
-                    }.addOnFailureListener { exception: Exception ->
-                        val fallbackResult = getLastKnownLocationFallback()
-                        if (fallbackResult.isFailure) {
-                            continuation.resumeIfActive(Result.failure(exception))
-                        } else {
-                            continuation.resumeIfActive(fallbackResult)
-                        }
+                                } else {
+                                    val fallbackResult = getLastKnownLocationFallback()
+                                    continuation.resumeIfActive(fallbackResult)
+                                }
+                            }.addOnFailureListener { exception: Exception ->
+                                val fallbackResult = getLastKnownLocationFallback()
+                                if (fallbackResult.isFailure) {
+                                    continuation.resumeIfActive(Result.failure(exception))
+                                } else {
+                                    continuation.resumeIfActive(fallbackResult)
+                                }
+                            }
+                    } catch (securityException: SecurityException) {
+                        continuation.resumeIfActive(Result.failure(securityException))
                     }
-                } catch (securityException: SecurityException) {
-                    continuation.resumeIfActive(Result.failure(securityException))
-                }
 
-                continuation.invokeOnCancellation {
-                    cancellationTokenSource.cancel()
+                    continuation.invokeOnCancellation {
+                        cancellationTokenSource.cancel()
+                    }
                 }
             }
-        }
 
         return locationResult ?: getLastKnownLocationFallback()
     }
@@ -115,32 +116,33 @@ class LocationServiceImpl(
 
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
         val provider = locationManager?.let { findEnabledProvider(it) }
-        val location = try {
-            provider?.let { locationManager.getLastKnownLocation(it) }
-        } catch (_: SecurityException) {
-            null
-        }
+        val location =
+            try {
+                provider?.let { locationManager.getLastKnownLocation(it) }
+            } catch (_: SecurityException) {
+                null
+            }
 
         return when {
             locationManager == null -> Result.failure(IllegalStateException("LocationManager not available"))
             provider == null -> Result.failure(IllegalStateException("No location provider available"))
             location == null -> Result.failure(IllegalStateException("Last known location is null"))
-            else -> Result.success(
-                LocationCoordinates(
-                    latitude = location.latitude,
-                    longitude = location.longitude
+            else ->
+                Result.success(
+                    LocationCoordinates(
+                        latitude = location.latitude,
+                        longitude = location.longitude
+                    )
                 )
-            )
         }
     }
 
-    private fun findEnabledProvider(locationManager: LocationManager): String? {
-        return when {
+    private fun findEnabledProvider(locationManager: LocationManager): String? =
+        when {
             locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
             locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
             else -> locationManager.allProviders.firstOrNull()
         }
-    }
 
     override suspend fun checkLocationSettings(): Result<LocationSettingsCheckResult> {
         return withContext(Dispatchers.IO) {
@@ -149,15 +151,19 @@ class LocationServiceImpl(
                     return@withContext Result.success(LocationSettingsCheckResult.SettingsDisabled)
                 }
 
-                val locationRequest = LocationRequest.Builder(
-                    Priority.PRIORITY_HIGH_ACCURACY,
-                    LOCATION_REQUEST_INTERVAL_MILLIS
-                ).build()
+                val locationRequest =
+                    LocationRequest
+                        .Builder(
+                            Priority.PRIORITY_HIGH_ACCURACY,
+                            LOCATION_REQUEST_INTERVAL_MILLIS
+                        ).build()
 
-                val locationSettingsRequest = LocationSettingsRequest.Builder()
-                    .addLocationRequest(locationRequest)
-                    .setAlwaysShow(true)
-                    .build()
+                val locationSettingsRequest =
+                    LocationSettingsRequest
+                        .Builder()
+                        .addLocationRequest(locationRequest)
+                        .setAlwaysShow(true)
+                        .build()
 
                 val task = settingsClient.checkLocationSettings(locationSettingsRequest)
                 val result = Tasks.await(task, SETTINGS_CHECK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -170,7 +176,9 @@ class LocationServiceImpl(
                 }
             } catch (e: ResolvableApiException) {
                 Result.success(LocationSettingsCheckResult.NeedsResolution(e.resolution.intentSender))
-            } catch (@Suppress("SwallowedException") e: SecurityException) {
+            } catch (
+                @Suppress("SwallowedException") e: SecurityException
+            ) {
                 Result.success(LocationSettingsCheckResult.SettingsDisabled)
             } catch (e: ExecutionException) {
                 when (val cause = e.cause) {
@@ -194,14 +202,16 @@ class LocationServiceImpl(
     }
 
     private fun hasLocationPermission(): Boolean {
-        val finePermissionGranted = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        val coarsePermissionGranted = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
+        val finePermissionGranted =
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        val coarsePermissionGranted =
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
 
         return finePermissionGranted || coarsePermissionGranted
     }

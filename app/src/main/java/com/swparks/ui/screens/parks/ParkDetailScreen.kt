@@ -49,16 +49,6 @@ import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.screens.common.TextEntrySheetHost
 import com.swparks.ui.screens.more.sendComplaint
-import com.swparks.ui.screens.parks.sections.CommentItemAction
-import com.swparks.ui.screens.parks.sections.CommentItemConfig
-import com.swparks.ui.screens.parks.sections.ParkAddCommentButton
-import com.swparks.ui.screens.parks.sections.ParkAuthorConfig
-import com.swparks.ui.screens.parks.sections.ParkAuthorSection
-import com.swparks.ui.screens.parks.sections.ParkCommentItem
-import com.swparks.ui.screens.parks.sections.ParkHeaderAction
-import com.swparks.ui.screens.parks.sections.ParkHeaderMapSection
-import com.swparks.ui.screens.parks.sections.ParkParticipantsSection
-import com.swparks.ui.screens.parks.sections.ParkPhotosSection
 import com.swparks.ui.screens.photos.PhotoDetailSheetHost
 import com.swparks.ui.state.ParkDetailUIState
 import com.swparks.ui.state.PhotoDetailConfig
@@ -69,16 +59,29 @@ import com.swparks.ui.viewmodel.ParkDetailEvent
 
 sealed class ParkDetailAction {
     object OnBack : ParkDetailAction()
-    data class OnParkDeleted(val parkId: Long) : ParkDetailAction()
-    data class OnNavigateToUserProfile(val userId: Long) : ParkDetailAction()
+
+    data class OnParkDeleted(
+        val parkId: Long
+    ) : ParkDetailAction()
+
+    data class OnNavigateToUserProfile(
+        val userId: Long
+    ) : ParkDetailAction()
+
     data class OnNavigateToTrainees(
         val parkId: Long,
         val parkName: String,
         val users: List<User>
     ) : ParkDetailAction()
 
-    data class OnNavigateToCreateEvent(val parkId: Long, val parkName: String) : ParkDetailAction()
-    data class OnNavigateToEditPark(val park: com.swparks.data.model.Park) : ParkDetailAction()
+    data class OnNavigateToCreateEvent(
+        val parkId: Long,
+        val parkName: String
+    ) : ParkDetailAction()
+
+    data class OnNavigateToEditPark(
+        val park: com.swparks.data.model.Park
+    ) : ParkDetailAction()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -164,14 +167,15 @@ fun ParkDetailScreen(
                 }
 
                 is ParkDetailEvent.NavigateToPhotoDetail -> {
-                    photoDetailConfig = PhotoDetailConfig(
-                        photoId = event.photo.id,
-                        parentId = event.parkId,
-                        parentTitle = event.parkTitle,
-                        isAuthor = event.isParkAuthor,
-                        photoUrl = event.photo.photo,
-                        ownerType = PhotoOwner.Park
-                    )
+                    photoDetailConfig =
+                        PhotoDetailConfig(
+                            photoId = event.photo.id,
+                            parentId = event.parkId,
+                            parentTitle = event.parkTitle,
+                            isAuthor = event.isParkAuthor,
+                            photoUrl = event.photo.photo,
+                            ownerType = PhotoOwner.Park
+                        )
                     showPhotoDetailSheet = true
                 }
 
@@ -184,9 +188,10 @@ fun ParkDetailScreen(
     }
 
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag(ScreenshotTestTags.PARK_DETAIL_SCREEN),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .testTag(ScreenshotTestTags.PARK_DETAIL_SCREEN),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             CenterAlignedTopAppBar(
@@ -205,11 +210,12 @@ fun ParkDetailScreen(
                         ParkShareButton(
                             isRefreshing = isRefreshing,
                             onShareClick = {
-                                val sendIntent = Intent().apply {
-                                    action = Intent.ACTION_SEND
-                                    putExtra(Intent.EXTRA_TEXT, state.park.shareLinkStringURL)
-                                    type = "text/plain"
-                                }
+                                val sendIntent =
+                                    Intent().apply {
+                                        action = Intent.ACTION_SEND
+                                        putExtra(Intent.EXTRA_TEXT, state.park.shareLinkStringURL)
+                                        type = "text/plain"
+                                    }
                                 context.startActivity(Intent.createChooser(sendIntent, null))
                             }
                         )
@@ -226,34 +232,40 @@ fun ParkDetailScreen(
         }
     ) { paddingValues ->
         when (val state = uiState) {
-            ParkDetailUIState.InitialLoading -> LoadingOverlayView(
-                modifier = Modifier
-                    .padding(parentPaddingValues)
-                    .padding(paddingValues)
-            )
+            ParkDetailUIState.InitialLoading ->
+                LoadingOverlayView(
+                    modifier =
+                        Modifier
+                            .padding(parentPaddingValues)
+                            .padding(paddingValues)
+                )
 
-            is ParkDetailUIState.Error -> ErrorContentView(
-                modifier = Modifier
-                    .padding(parentPaddingValues)
-                    .padding(paddingValues),
-                message = state.message,
-                retryAction = viewModel::refresh
-            )
+            is ParkDetailUIState.Error ->
+                ErrorContentView(
+                    modifier =
+                        Modifier
+                            .padding(parentPaddingValues)
+                            .padding(paddingValues),
+                    message = state.message,
+                    retryAction = viewModel::refresh
+                )
 
             is ParkDetailUIState.Content -> {
                 PullToRefreshBox(
                     isRefreshing = isRefreshing,
                     onRefresh = viewModel::refresh,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(parentPaddingValues)
-                        .padding(paddingValues)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(parentPaddingValues)
+                            .padding(paddingValues)
                 ) {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(
-                            dimensionResource(R.dimen.spacing_regular)
-                        )
+                        verticalArrangement =
+                            Arrangement.spacedBy(
+                                dimensionResource(R.dimen.spacing_regular)
+                            )
                     ) {
                         item {
                             ParkHeaderMapSection(
@@ -296,11 +308,12 @@ fun ParkDetailScreen(
                             ParkAuthorSection(
                                 park = state.park,
                                 address = state.authorAddress,
-                                config = ParkAuthorConfig(
-                                    isAuthorized = isAuthorized,
-                                    isRefreshing = isRefreshing,
-                                    isParkAuthor = isParkAuthor
-                                ),
+                                config =
+                                    ParkAuthorConfig(
+                                        isAuthorized = isAuthorized,
+                                        isRefreshing = isRefreshing,
+                                        isParkAuthor = isParkAuthor
+                                    ),
                                 onAuthorClick = { userId ->
                                     onAction(
                                         ParkDetailAction.OnNavigateToUserProfile(
@@ -317,24 +330,28 @@ fun ParkDetailScreen(
                         ) { index, comment ->
                             ParkCommentItem(
                                 comment = comment,
-                                config = CommentItemConfig(
-                                    enabled = isAuthorized && !isRefreshing,
-                                    currentUserId = currentUserId,
-                                    showSectionHeader = index == 0
-                                ),
-                                modifier = Modifier.padding(
-                                    horizontal = dimensionResource(R.dimen.spacing_regular)
-                                ),
+                                config =
+                                    CommentItemConfig(
+                                        enabled = isAuthorized && !isRefreshing,
+                                        currentUserId = currentUserId,
+                                        showSectionHeader = index == 0
+                                    ),
+                                modifier =
+                                    Modifier.padding(
+                                        horizontal = dimensionResource(R.dimen.spacing_regular)
+                                    ),
                                 onAction = { action ->
                                     when (action) {
-                                        is CommentItemAction.AuthorClick -> onAction(
-                                            ParkDetailAction.OnNavigateToUserProfile(action.userId)
-                                        )
+                                        is CommentItemAction.AuthorClick ->
+                                            onAction(
+                                                ParkDetailAction.OnNavigateToUserProfile(action.userId)
+                                            )
 
-                                        is CommentItemAction.CommentAction -> viewModel.onCommentActionClick(
-                                            action.commentId,
-                                            action.action
-                                        )
+                                        is CommentItemAction.CommentAction ->
+                                            viewModel.onCommentActionClick(
+                                                action.commentId,
+                                                action.action
+                                            )
                                     }
                                 }
                             )
@@ -362,9 +379,10 @@ fun ParkDetailScreen(
             title = { Text(text = stringResource(R.string.delete_ground)) },
             confirmButton = {
                 TextButton(
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    ),
+                    colors =
+                        ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
                     onClick = {
                         showDeleteParkDialog = false
                         viewModel.onDeleteConfirm()
@@ -395,9 +413,10 @@ fun ParkDetailScreen(
             title = { Text(text = stringResource(R.string.event_delete_photo_confirm_title)) },
             confirmButton = {
                 TextButton(
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    ),
+                    colors =
+                        ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
                     onClick = {
                         showDeletePhotoDialog = false
                         viewModel.onPhotoDeleteConfirm()
@@ -429,9 +448,10 @@ fun ParkDetailScreen(
             text = { Text(text = stringResource(R.string.event_delete_comment_confirm_message)) },
             confirmButton = {
                 TextButton(
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    ),
+                    colors =
+                        ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
                     onClick = {
                         showDeleteCommentDialog = false
                         viewModel.onCommentDeleteConfirm()

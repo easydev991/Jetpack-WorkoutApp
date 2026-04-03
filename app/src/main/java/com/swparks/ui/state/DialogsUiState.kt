@@ -16,12 +16,16 @@ sealed class DialogsUiState {
      *
      * @param dialogs Список диалогов
      */
-    data class Success(val dialogs: List<DialogEntity>) : DialogsUiState()
+    data class Success(
+        val dialogs: List<DialogEntity>
+    ) : DialogsUiState()
 
     /**
      * Ошибка загрузки с возможностью повтора.
      *
      * @param message Сообщение об ошибке для отображения пользователю
      */
-    data class Error(val message: String) : DialogsUiState()
+    data class Error(
+        val message: String
+    ) : DialogsUiState()
 }

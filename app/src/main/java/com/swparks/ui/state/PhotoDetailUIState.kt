@@ -15,10 +15,11 @@ sealed class PhotoOwner {
     }
 
     companion object {
-        fun fromName(name: String): PhotoOwner = when (name) {
-            Park.name -> Park
-            else -> Event
-        }
+        fun fromName(name: String): PhotoOwner =
+            when (name) {
+                Park.name -> Park
+                else -> Event
+            }
     }
 }
 
@@ -30,7 +31,9 @@ sealed class PhotoDetailUIState {
         val isLoading: Boolean = false
     ) : PhotoDetailUIState()
 
-    data class Error(val message: String) : PhotoDetailUIState()
+    data class Error(
+        val message: String
+    ) : PhotoDetailUIState()
 }
 
 data class PhotoDetailConfig(
@@ -44,15 +47,26 @@ data class PhotoDetailConfig(
 
 sealed class PhotoDetailAction {
     data object Close : PhotoDetailAction()
+
     data object DeleteClick : PhotoDetailAction()
+
     data object DeleteConfirm : PhotoDetailAction()
+
     data object DeleteDismiss : PhotoDetailAction()
+
     data object Report : PhotoDetailAction()
 }
 
 sealed class PhotoDetailEvent {
     data object CloseScreen : PhotoDetailEvent()
+
     data object ShowDeleteConfirmDialog : PhotoDetailEvent()
-    data class SendPhotoComplaint(val complaint: Complaint) : PhotoDetailEvent()
-    data class PhotoDeleted(val photoId: Long) : PhotoDetailEvent()
+
+    data class SendPhotoComplaint(
+        val complaint: Complaint
+    ) : PhotoDetailEvent()
+
+    data class PhotoDeleted(
+        val photoId: Long
+    ) : PhotoDetailEvent()
 }

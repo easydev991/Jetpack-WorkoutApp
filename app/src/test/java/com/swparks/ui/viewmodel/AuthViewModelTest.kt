@@ -23,7 +23,6 @@ import org.junit.Test
 /** Unit тесты для AuthViewModel */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthViewModelTest {
-
     private lateinit var loginUseCase: ILoginUseCase
     private lateinit var logoutUseCase: ILogoutUseCase
     private lateinit var userNotifier: UserNotifier
@@ -38,9 +37,10 @@ class AuthViewModelTest {
         loginUseCase = mockk(relaxed = true)
         logoutUseCase = mockk(relaxed = true)
         val mockErrorFlow = MutableSharedFlow<AppError>()
-        userNotifier = mockk(relaxed = true) {
-            every { errorFlow } returns mockErrorFlow
-        }
+        userNotifier =
+            mockk(relaxed = true) {
+                every { errorFlow } returns mockErrorFlow
+            }
 
         // Настраиваем возвращаемое значение для loginUseCase
         coEvery { loginUseCase(any()) } returns Result.success(testLoginSuccess)
@@ -54,37 +54,40 @@ class AuthViewModelTest {
     }
 
     @Test
-    fun login_whenCalled_thenInvokesLoginUseCase() = runTest {
-        // When
-        authViewModel.login(testCredentials)
-        advanceUntilIdle()
+    fun login_whenCalled_thenInvokesLoginUseCase() =
+        runTest {
+            // When
+            authViewModel.login(testCredentials)
+            advanceUntilIdle()
 
-        // Then
-        coVerify(exactly = 1) { loginUseCase(testCredentials) }
-    }
-
-    @Test
-    fun login_whenCalledTwice_thenInvokesLoginUseCaseTwice() = runTest {
-        // When
-        authViewModel.login(testCredentials)
-        advanceUntilIdle()
-
-        authViewModel.login(testCredentials)
-        advanceUntilIdle()
-
-        // Then
-        coVerify(exactly = 2) { loginUseCase(testCredentials) }
-    }
+            // Then
+            coVerify(exactly = 1) { loginUseCase(testCredentials) }
+        }
 
     @Test
-    fun logout_whenCalled_thenInvokesLogoutUseCase() = runTest {
-        // When
-        authViewModel.logout()
-        advanceUntilIdle()
+    fun login_whenCalledTwice_thenInvokesLoginUseCaseTwice() =
+        runTest {
+            // When
+            authViewModel.login(testCredentials)
+            advanceUntilIdle()
 
-        // Then
-        coVerify(exactly = 1) { logoutUseCase() }
-    }
+            authViewModel.login(testCredentials)
+            advanceUntilIdle()
+
+            // Then
+            coVerify(exactly = 2) { loginUseCase(testCredentials) }
+        }
+
+    @Test
+    fun logout_whenCalled_thenInvokesLogoutUseCase() =
+        runTest {
+            // When
+            authViewModel.logout()
+            advanceUntilIdle()
+
+            // Then
+            coVerify(exactly = 1) { logoutUseCase() }
+        }
 
     @Test
     fun clearError_whenCalled_thenSetsIdleState() {
@@ -97,23 +100,24 @@ class AuthViewModelTest {
     }
 
     @Test
-    fun login_whenUseCaseFails_thenCallsUserNotifier() = runTest {
-        // Given
-        val testException = RuntimeException("Login failed")
-        coEvery { loginUseCase(any()) } returns Result.failure(testException)
+    fun login_whenUseCaseFails_thenCallsUserNotifier() =
+        runTest {
+            // Given
+            val testException = RuntimeException("Login failed")
+            coEvery { loginUseCase(any()) } returns Result.failure(testException)
 
-        // When
-        authViewModel.login(testCredentials)
-        advanceUntilIdle()
+            // When
+            authViewModel.login(testCredentials)
+            advanceUntilIdle()
 
-        // Then - проверяем, что userNotifier.handleError был вызван
-        coVerify {
-            userNotifier.handleError(
-                match<AppError> { error ->
-                    error is AppError.Network &&
-                        error.message.contains("Не удалось войти")
-                }
-            )
+            // Then - проверяем, что userNotifier.handleError был вызван
+            coVerify {
+                userNotifier.handleError(
+                    match<AppError> { error ->
+                        error is AppError.Network &&
+                            error.message.contains("Не удалось войти")
+                    }
+                )
+            }
         }
-    }
 }

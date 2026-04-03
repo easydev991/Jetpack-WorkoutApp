@@ -32,7 +32,11 @@ import com.swparks.ui.viewmodel.UserFriendsViewModel
 
 sealed class UserFriendsAction {
     object Back : UserFriendsAction()
-    data class UserClick(val userId: Long) : UserFriendsAction()
+
+    data class UserClick(
+        val userId: Long
+    ) : UserFriendsAction()
+
     object Refresh : UserFriendsAction()
 }
 
@@ -101,10 +105,11 @@ fun UserFriendsScreenContent(
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(config.parentPaddingValues)
-                .padding(innerPadding)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(config.parentPaddingValues)
+                    .padding(innerPadding)
         ) {
             when (uiState) {
                 is UserFriendsUiState.Loading -> {
@@ -155,26 +160,28 @@ private fun FriendsList(
 ) {
     LazyColumn(
         modifier = modifier,
-        contentPadding = PaddingValues(
-            start = dimensionResource(R.dimen.spacing_regular),
-            top = dimensionResource(R.dimen.spacing_small),
-            end = dimensionResource(R.dimen.spacing_regular),
-            bottom = dimensionResource(R.dimen.spacing_regular)
-        ),
+        contentPadding =
+            PaddingValues(
+                start = dimensionResource(R.dimen.spacing_regular),
+                top = dimensionResource(R.dimen.spacing_small),
+                end = dimensionResource(R.dimen.spacing_regular),
+                bottom = dimensionResource(R.dimen.spacing_regular)
+            ),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
     ) {
         items(friends.size) { index ->
             val user = friends[index]
             val isDisabled = user.id == currentUserId
             UserRowView(
-                data = UserRowData(
-                    modifier = Modifier,
-                    enabled = !isDisabled,
-                    imageStringURL = user.image,
-                    name = user.name,
-                    address = null,
-                    onClick = { onUserClick(user.id) }
-                )
+                data =
+                    UserRowData(
+                        modifier = Modifier,
+                        enabled = !isDisabled,
+                        imageStringURL = user.image,
+                        name = user.name,
+                        address = null,
+                        onClick = { onUserClick(user.id) }
+                    )
             )
         }
     }

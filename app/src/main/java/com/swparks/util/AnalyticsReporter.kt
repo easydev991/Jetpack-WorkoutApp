@@ -11,5 +11,8 @@ interface AnalyticsReporter {
      * @param screenName Короткое имя экрана
      * @param screenClass Полный маршрут/класс экрана
      */
-    fun logScreenView(screenName: String, screenClass: String? = null)
+    fun logScreenView(
+        screenName: String,
+        screenClass: String? = null
+    )
 }

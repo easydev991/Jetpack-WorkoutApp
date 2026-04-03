@@ -62,11 +62,13 @@ class TextEntryScreenTest {
     fun textEntryScreen_whenNewForPark_thenShowsNewCommentTitle() {
         // Given
         val mode = TextEntryMode.NewForPark(parkId = 1L)
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(mode = mode)
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(mode = mode)
+                    )
             )
-        )
 
         // When
         setContent(viewModel)
@@ -81,11 +83,13 @@ class TextEntryScreenTest {
     fun textEntryScreen_whenNewForEvent_thenShowsNewCommentTitle() {
         // Given
         val mode = TextEntryMode.NewForEvent(eventId = 1L)
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(mode = mode)
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(mode = mode)
+                    )
             )
-        )
 
         // When
         setContent(viewModel)
@@ -100,11 +104,13 @@ class TextEntryScreenTest {
     fun textEntryScreen_whenNewForJournal_thenShowsNewEntryTitle() {
         // Given
         val mode = TextEntryMode.NewForJournal(ownerId = 1L, journalId = 1L)
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(mode = mode)
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(mode = mode)
+                    )
             )
-        )
 
         // When
         setContent(viewModel)
@@ -120,11 +126,13 @@ class TextEntryScreenTest {
         // Given
         val editInfo = EditInfo(parentObjectId = 1L, entryId = 1L, oldEntry = "Old comment")
         val mode = TextEntryMode.EditPark(editInfo)
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(mode = mode)
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(mode = mode)
+                    )
             )
-        )
 
         // When
         setContent(viewModel)
@@ -140,11 +148,13 @@ class TextEntryScreenTest {
         // Given
         val editInfo = EditInfo(parentObjectId = 1L, entryId = 1L, oldEntry = "Old comment")
         val mode = TextEntryMode.EditEvent(editInfo)
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(mode = mode)
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(mode = mode)
+                    )
             )
-        )
 
         // When
         setContent(viewModel)
@@ -160,11 +170,13 @@ class TextEntryScreenTest {
         // Given
         val editInfo = EditInfo(parentObjectId = 1L, entryId = 1L, oldEntry = "Old entry")
         val mode = TextEntryMode.EditJournalEntry(ownerId = 1L, editInfo)
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(mode = mode)
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(mode = mode)
+                    )
             )
-        )
 
         // When
         setContent(viewModel)
@@ -180,11 +192,13 @@ class TextEntryScreenTest {
         // Given
         val mode = TextEntryMode.NewForJournal(ownerId = 1L, journalId = 1L)
         val placeholder = context.getString(R.string.new_entry_placeholder)
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(mode = mode)
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(mode = mode)
+                    )
             )
-        )
 
         // When
         setContent(viewModel)
@@ -200,11 +214,13 @@ class TextEntryScreenTest {
         // Given
         val mode = TextEntryMode.NewForPark(parkId = 1L)
         val placeholder = context.getString(R.string.new_entry_placeholder)
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(mode = mode)
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(mode = mode)
+                    )
             )
-        )
 
         // When
         setContent(viewModel)
@@ -219,14 +235,16 @@ class TextEntryScreenTest {
     fun textEntryScreen_whenSendButtonEnabled_thenShowsSendButton() {
         // Given
         val mode = TextEntryMode.NewForPark(parkId = 1L)
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(
-                    mode = mode,
-                    isSendEnabled = true
-                )
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(
+                            mode = mode,
+                            isSendEnabled = true
+                        )
+                    )
             )
-        )
 
         // When
         setContent(viewModel)
@@ -241,14 +259,16 @@ class TextEntryScreenTest {
     fun textEntryScreen_whenSendButtonDisabled_thenShowsDisabledSendButton() {
         // Given
         val mode = TextEntryMode.NewForPark(parkId = 1L)
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(
-                    mode = mode,
-                    isSendEnabled = false
-                )
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(
+                            mode = mode,
+                            isSendEnabled = false
+                        )
+                    )
             )
-        )
 
         // When
         setContent(viewModel)
@@ -264,14 +284,16 @@ class TextEntryScreenTest {
         // Given
         val mode = TextEntryMode.NewForPark(parkId = 1L)
         var dismissCalled = false
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(
-                    mode = mode,
-                    isLoading = false
-                )
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(
+                            mode = mode,
+                            isLoading = false
+                        )
+                    )
             )
-        )
 
         // When
         setContent(viewModel, onDismiss = { dismissCalled = true })
@@ -291,11 +313,13 @@ class TextEntryScreenTest {
         // Given
         val mode = TextEntryMode.NewForPark(parkId = 1L)
         var dismissCalled = false
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(mode = mode)
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(mode = mode)
+                    )
             )
-        )
 
         // When
         setContent(viewModel, onDismiss = { dismissCalled = true })
@@ -315,14 +339,16 @@ class TextEntryScreenTest {
         // Given
         val mode = TextEntryMode.NewForPark(parkId = 1L)
         val loadingDescription = context.getString(R.string.loading_content_description)
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(
-                    mode = mode,
-                    isLoading = true
-                )
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(
+                            mode = mode,
+                            isLoading = true
+                        )
+                    )
             )
-        )
 
         // When
         setContent(viewModel)
@@ -337,15 +363,17 @@ class TextEntryScreenTest {
     fun textEntryScreen_whenLoading_thenSendButtonDisabled() {
         // Given
         val mode = TextEntryMode.NewForPark(parkId = 1L)
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(
-                    mode = mode,
-                    isSendEnabled = true,
-                    isLoading = true
-                )
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(
+                            mode = mode,
+                            isSendEnabled = true,
+                            isLoading = true
+                        )
+                    )
             )
-        )
 
         // When
         setContent(viewModel)
@@ -360,14 +388,16 @@ class TextEntryScreenTest {
     fun textEntryScreen_whenLoading_thenCloseButtonDisabled() {
         // Given
         val mode = TextEntryMode.NewForPark(parkId = 1L)
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(
-                    mode = mode,
-                    isLoading = true
-                )
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(
+                            mode = mode,
+                            isLoading = true
+                        )
+                    )
             )
-        )
 
         // When
         setContent(viewModel)
@@ -385,15 +415,17 @@ class TextEntryScreenTest {
         val oldText = "Old comment text"
         val editInfo = EditInfo(parentObjectId = 1L, entryId = 1L, oldEntry = oldText)
         val mode = TextEntryMode.EditPark(editInfo)
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(
-                    mode = mode,
-                    text = oldText,
-                    isSendEnabled = false
-                )
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(
+                            mode = mode,
+                            text = oldText,
+                            isSendEnabled = false
+                        )
+                    )
             )
-        )
 
         // When
         setContent(viewModel)
@@ -410,15 +442,17 @@ class TextEntryScreenTest {
         val oldText = "Old event comment"
         val editInfo = EditInfo(parentObjectId = 1L, entryId = 1L, oldEntry = oldText)
         val mode = TextEntryMode.EditEvent(editInfo)
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(
-                    mode = mode,
-                    text = oldText,
-                    isSendEnabled = false
-                )
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(
+                            mode = mode,
+                            text = oldText,
+                            isSendEnabled = false
+                        )
+                    )
             )
-        )
 
         // When
         setContent(viewModel)
@@ -435,15 +469,17 @@ class TextEntryScreenTest {
         val oldText = "Old journal entry"
         val editInfo = EditInfo(parentObjectId = 1L, entryId = 1L, oldEntry = oldText)
         val mode = TextEntryMode.EditJournalEntry(ownerId = 1L, editInfo)
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(
-                    mode = mode,
-                    text = oldText,
-                    isSendEnabled = false
-                )
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(
+                            mode = mode,
+                            text = oldText,
+                            isSendEnabled = false
+                        )
+                    )
             )
-        )
 
         // When
         setContent(viewModel)
@@ -458,15 +494,17 @@ class TextEntryScreenTest {
     fun textEntryScreen_whenNewMode_thenTextFieldEmpty() {
         // Given
         val mode = TextEntryMode.NewForPark(parkId = 1L)
-        val viewModel = FakeTextEntryViewModel(
-            uiState = MutableStateFlow(
-                TextEntryUiState(
-                    mode = mode,
-                    text = "",
-                    isSendEnabled = false
-                )
+        val viewModel =
+            FakeTextEntryViewModel(
+                uiState =
+                    MutableStateFlow(
+                        TextEntryUiState(
+                            mode = mode,
+                            text = "",
+                            isSendEnabled = false
+                        )
+                    )
             )
-        )
 
         // When
         setContent(viewModel)

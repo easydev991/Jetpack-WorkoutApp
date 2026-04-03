@@ -49,29 +49,31 @@ fun createFriendsPickerParams(
     currentUserId: Long?,
     onFriendClick: (Long, String) -> Unit,
     onBackClick: () -> Unit
-): FriendsPickerParams {
-    return when (uiState) {
-        is FriendsListUiState.Loading -> FriendsPickerParams(
-            friendsCount = 0,
-            friendRequestsCount = 0,
-            isEmpty = false,
-            isLoading = true,
-            errorMessage = null,
-            disabledFriendIds = emptySet(),
-            onFriendClick = onFriendClick,
-            onBackClick = onBackClick
-        )
+): FriendsPickerParams =
+    when (uiState) {
+        is FriendsListUiState.Loading ->
+            FriendsPickerParams(
+                friendsCount = 0,
+                friendRequestsCount = 0,
+                isEmpty = false,
+                isLoading = true,
+                errorMessage = null,
+                disabledFriendIds = emptySet(),
+                onFriendClick = onFriendClick,
+                onBackClick = onBackClick
+            )
 
-        is FriendsListUiState.Error -> FriendsPickerParams(
-            friendsCount = 0,
-            friendRequestsCount = 0,
-            isEmpty = false,
-            isLoading = false,
-            errorMessage = uiState.message,
-            disabledFriendIds = emptySet(),
-            onFriendClick = onFriendClick,
-            onBackClick = onBackClick
-        )
+        is FriendsListUiState.Error ->
+            FriendsPickerParams(
+                friendsCount = 0,
+                friendRequestsCount = 0,
+                isEmpty = false,
+                isLoading = false,
+                errorMessage = uiState.message,
+                disabledFriendIds = emptySet(),
+                onFriendClick = onFriendClick,
+                onBackClick = onBackClick
+            )
 
         is FriendsListUiState.Success -> {
             val friends = uiState.friends
@@ -88,7 +90,6 @@ fun createFriendsPickerParams(
             )
         }
     }
-}
 
 data class FriendsPickerConfig(
     val parentPaddingValues: PaddingValues,
@@ -144,10 +145,11 @@ fun MessagesFriendsPickerContent(
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(config.parentPaddingValues)
-                .padding(innerPadding)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(config.parentPaddingValues)
+                    .padding(innerPadding)
         ) {
             when (uiState) {
                 is FriendsListUiState.Loading -> {
@@ -192,12 +194,13 @@ private fun FriendsOnlyContent(
     } else {
         LazyColumn(
             modifier = modifier,
-            contentPadding = PaddingValues(
-                start = dimensionResource(R.dimen.spacing_regular),
-                top = dimensionResource(R.dimen.spacing_small),
-                end = dimensionResource(R.dimen.spacing_regular),
-                bottom = dimensionResource(R.dimen.spacing_regular)
-            ),
+            contentPadding =
+                PaddingValues(
+                    start = dimensionResource(R.dimen.spacing_regular),
+                    top = dimensionResource(R.dimen.spacing_small),
+                    end = dimensionResource(R.dimen.spacing_regular),
+                    bottom = dimensionResource(R.dimen.spacing_regular)
+                ),
             verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
         ) {
             item {
@@ -211,4 +214,3 @@ private fun FriendsOnlyContent(
         }
     }
 }
-

@@ -16,12 +16,16 @@ sealed class ChatUiState {
      *
      * @param messages Список сообщений
      */
-    data class Success(val messages: List<MessageResponse>) : ChatUiState()
+    data class Success(
+        val messages: List<MessageResponse>
+    ) : ChatUiState()
 
     /**
      * Ошибка загрузки с возможностью повтора.
      *
      * @param message Сообщение об ошибке для отображения пользователю
      */
-    data class Error(val message: String) : ChatUiState()
+    data class Error(
+        val message: String
+    ) : ChatUiState()
 }

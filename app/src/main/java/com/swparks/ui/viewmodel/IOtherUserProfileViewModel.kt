@@ -14,7 +14,10 @@ interface IOtherUserProfileViewModel {
     val isFriendActionLoading: StateFlow<Boolean>
 
     fun loadUser()
+
     fun refreshUser()
+
     fun performFriendAction()
+
     fun performBlacklistAction(onBlocked: () -> Unit)
 }

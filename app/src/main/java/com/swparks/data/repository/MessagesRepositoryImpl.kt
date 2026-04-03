@@ -28,7 +28,6 @@ class MessagesRepositoryImpl(
     private val logger: Logger,
     private val crashReporter: CrashReporter
 ) : MessagesRepository {
-
     companion object {
         private const val TAG = "MessagesRepository"
     }
@@ -37,26 +36,27 @@ class MessagesRepositoryImpl(
     override val dialogs: Flow<List<DialogEntity>> = dialogsDao.getDialogsFlow()
 
     // Вызывается при открытии экрана и pull-to-refresh
-    override suspend fun refreshDialogs(): Result<Unit> = try {
-        Log.i(TAG, "Загружаем диалоги с сервера")
+    override suspend fun refreshDialogs(): Result<Unit> =
+        try {
+            Log.i(TAG, "Загружаем диалоги с сервера")
 
-        // Загружаем диалоги с сервера
-        val remoteDialogs = swApi.getDialogs()
-        Log.i(TAG, "Получено ${remoteDialogs.size} диалогов с сервера")
+            // Загружаем диалоги с сервера
+            val remoteDialogs = swApi.getDialogs()
+            Log.i(TAG, "Получено ${remoteDialogs.size} диалогов с сервера")
 
-        // Очищаем старые данные и вставляем новые
-        dialogsDao.deleteAll()
-        dialogsDao.insertAll(remoteDialogs.map { it.toEntity() })
+            // Очищаем старые данные и вставляем новые
+            dialogsDao.deleteAll()
+            dialogsDao.insertAll(remoteDialogs.map { it.toEntity() })
 
-        Log.i(TAG, "Успешно сохранено ${remoteDialogs.size} диалогов в БД")
-        Result.success(Unit)
-    } catch (e: IOException) {
-        logger.e(TAG, "Ошибка загрузки диалогов: ${e.message}")
-        crashReporter.logException(e, "Ошибка загрузки диалогов")
-        Result.failure(e)
-    } catch (e: HttpException) {
-        logger.e(TAG, "HTTP ошибка при загрузке диалогов: ${e.code()} ${e.message()}")
-        crashReporter.logException(e, "HTTP ошибка загрузки диалогов: ${e.code()}")
-        Result.failure(e)
-    }
+            Log.i(TAG, "Успешно сохранено ${remoteDialogs.size} диалогов в БД")
+            Result.success(Unit)
+        } catch (e: IOException) {
+            logger.e(TAG, "Ошибка загрузки диалогов: ${e.message}")
+            crashReporter.logException(e, "Ошибка загрузки диалогов")
+            Result.failure(e)
+        } catch (e: HttpException) {
+            logger.e(TAG, "HTTP ошибка при загрузке диалогов: ${e.code()} ${e.message()}")
+            crashReporter.logException(e, "HTTP ошибка загрузки диалогов: ${e.code()}")
+            Result.failure(e)
+        }
 }

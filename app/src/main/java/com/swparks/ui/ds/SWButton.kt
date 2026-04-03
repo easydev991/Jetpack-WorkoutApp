@@ -45,10 +45,11 @@ enum class SWButtonSize(
      */
     LARGE(
         horizontalSpacing = 10.dp,
-        paddingValues = PaddingValues(
-            horizontal = 20.dp,
-            vertical = 12.dp
-        ),
+        paddingValues =
+            PaddingValues(
+                horizontal = 20.dp,
+                vertical = 12.dp
+            ),
         iconSize = 19.dp
     ),
 
@@ -57,10 +58,11 @@ enum class SWButtonSize(
      */
     SMALL(
         horizontalSpacing = 6.dp,
-        paddingValues = PaddingValues(
-            horizontal = 16.dp,
-            vertical = 8.dp
-        ),
+        paddingValues =
+            PaddingValues(
+                horizontal = 16.dp,
+                vertical = 8.dp
+            ),
         iconSize = 15.dp
     )
 }
@@ -101,20 +103,22 @@ data class ButtonConfig(
  */
 @Composable
 fun SWButton(config: ButtonConfig) {
-    val buttonColors = when (config.mode) {
-        SWButtonMode.FILLED -> ButtonDefaults.buttonColors()
-        SWButtonMode.TINTED -> ButtonDefaults.filledTonalButtonColors()
-    }
+    val buttonColors =
+        when (config.mode) {
+            SWButtonMode.FILLED -> ButtonDefaults.buttonColors()
+            SWButtonMode.TINTED -> ButtonDefaults.filledTonalButtonColors()
+        }
 
     Button(
-        modifier = config.modifier
-            .scaleOnTap()
-            .let {
-                if (config.size == SWButtonSize.LARGE) {
-                    return@let it.fillMaxWidth()
-                }
-                it
-            },
+        modifier =
+            config.modifier
+                .scaleOnTap()
+                .let {
+                    if (config.size == SWButtonSize.LARGE) {
+                        return@let it.fillMaxWidth()
+                    }
+                    it
+                },
         colors = buttonColors,
         contentPadding = config.size.paddingValues,
         shape = RoundedCornerShape(dimensionResource(R.dimen.spacing_small)),
@@ -123,21 +127,25 @@ fun SWButton(config: ButtonConfig) {
     ) {
         if (config.imageVector != null) {
             Image(
-                modifier = Modifier
-                    .padding(end = config.size.horizontalSpacing)
-                    .size(config.size.iconSize),
+                modifier =
+                    Modifier
+                        .padding(end = config.size.horizontalSpacing)
+                        .size(config.size.iconSize),
                 imageVector = config.imageVector,
-                colorFilter = ColorFilter.tint(
-                    if (config.enabled) buttonColors.contentColor
-                    else buttonColors.disabledContentColor
-                ),
+                colorFilter =
+                    ColorFilter.tint(
+                        if (config.enabled) {
+                            buttonColors.contentColor
+                        } else {
+                            buttonColors.disabledContentColor
+                        }
+                    ),
                 contentDescription = null
             )
         }
         Text(text = config.text)
     }
 }
-
 
 @Preview(
     showBackground = true,
@@ -166,51 +174,57 @@ fun SWButtonPreview() {
 @Composable
 private fun PreviewSmallButtons() {
     SWButton(
-        config = ButtonConfig(
-            size = SWButtonSize.SMALL,
-            text = stringResource(id = R.string.authorization),
-            enabled = false,
-            onClick = {}
-        )
+        config =
+            ButtonConfig(
+                size = SWButtonSize.SMALL,
+                text = stringResource(id = R.string.authorization),
+                enabled = false,
+                onClick = {}
+            )
     )
     SWButton(
-        config = ButtonConfig(
-            size = SWButtonSize.SMALL,
-            text = stringResource(id = R.string.authorization),
-            onClick = {}
-        )
+        config =
+            ButtonConfig(
+                size = SWButtonSize.SMALL,
+                text = stringResource(id = R.string.authorization),
+                onClick = {}
+            )
     )
     SWButton(
-        config = ButtonConfig(
-            size = SWButtonSize.SMALL,
-            text = stringResource(id = R.string.authorization),
-            imageVector = Icons.Default.Add,
-            onClick = {}
-        )
+        config =
+            ButtonConfig(
+                size = SWButtonSize.SMALL,
+                text = stringResource(id = R.string.authorization),
+                imageVector = Icons.Default.Add,
+                onClick = {}
+            )
     )
 }
 
 @Composable
 private fun PreviewLargeButtons() {
     SWButton(
-        config = ButtonConfig(
-            text = stringResource(id = R.string.authorization),
-            enabled = false,
-            onClick = {}
-        )
+        config =
+            ButtonConfig(
+                text = stringResource(id = R.string.authorization),
+                enabled = false,
+                onClick = {}
+            )
     )
     SWButton(
-        config = ButtonConfig(
-            text = stringResource(id = R.string.authorization),
-            onClick = {}
-        )
+        config =
+            ButtonConfig(
+                text = stringResource(id = R.string.authorization),
+                onClick = {}
+            )
     )
     SWButton(
-        config = ButtonConfig(
-            text = stringResource(id = R.string.authorization),
-            imageVector = Icons.Default.Add,
-            onClick = {}
-        )
+        config =
+            ButtonConfig(
+                text = stringResource(id = R.string.authorization),
+                imageVector = Icons.Default.Add,
+                onClick = {}
+            )
     )
 }
 
@@ -235,30 +249,33 @@ fun SWButtonTintedPreview() {
 @Composable
 private fun PreviewTintedButtons() {
     SWButton(
-        config = ButtonConfig(
-            size = SWButtonSize.SMALL,
-            mode = SWButtonMode.TINTED,
-            enabled = false,
-            text = stringResource(id = R.string.authorization),
-            onClick = {}
-        )
+        config =
+            ButtonConfig(
+                size = SWButtonSize.SMALL,
+                mode = SWButtonMode.TINTED,
+                enabled = false,
+                text = stringResource(id = R.string.authorization),
+                onClick = {}
+            )
     )
     SWButton(
-        config = ButtonConfig(
-            size = SWButtonSize.SMALL,
-            mode = SWButtonMode.TINTED,
-            text = stringResource(id = R.string.authorization),
-            onClick = {}
-        )
+        config =
+            ButtonConfig(
+                size = SWButtonSize.SMALL,
+                mode = SWButtonMode.TINTED,
+                text = stringResource(id = R.string.authorization),
+                onClick = {}
+            )
     )
     SWButton(
-        config = ButtonConfig(
-            size = SWButtonSize.SMALL,
-            mode = SWButtonMode.TINTED,
-            imageVector = Icons.Default.Add,
-            text = stringResource(id = R.string.authorization),
-            onClick = {}
-        )
+        config =
+            ButtonConfig(
+                size = SWButtonSize.SMALL,
+                mode = SWButtonMode.TINTED,
+                imageVector = Icons.Default.Add,
+                text = stringResource(id = R.string.authorization),
+                onClick = {}
+            )
     )
 }
 
@@ -283,26 +300,29 @@ fun SWButtonMixedPreview() {
 @Composable
 private fun PreviewMixedButtons() {
     SWButton(
-        config = ButtonConfig(
-            mode = SWButtonMode.TINTED,
-            enabled = false,
-            text = stringResource(id = R.string.authorization),
-            onClick = {}
-        )
+        config =
+            ButtonConfig(
+                mode = SWButtonMode.TINTED,
+                enabled = false,
+                text = stringResource(id = R.string.authorization),
+                onClick = {}
+            )
     )
     SWButton(
-        config = ButtonConfig(
-            mode = SWButtonMode.TINTED,
-            text = stringResource(id = R.string.authorization),
-            onClick = {}
-        )
+        config =
+            ButtonConfig(
+                mode = SWButtonMode.TINTED,
+                text = stringResource(id = R.string.authorization),
+                onClick = {}
+            )
     )
     SWButton(
-        config = ButtonConfig(
-            imageVector = Icons.Default.Add,
-            text = stringResource(id = R.string.authorization),
-            mode = SWButtonMode.TINTED,
-            onClick = {}
-        )
+        config =
+            ButtonConfig(
+                imageVector = Icons.Default.Add,
+                text = stringResource(id = R.string.authorization),
+                mode = SWButtonMode.TINTED,
+                onClick = {}
+            )
     )
 }

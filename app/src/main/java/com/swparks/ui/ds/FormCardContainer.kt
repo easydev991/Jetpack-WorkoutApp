@@ -44,56 +44,64 @@ fun FormCardContainer(
 ) {
     val isLight = MaterialTheme.colorScheme.isLight()
     val interactionSource = remember { MutableInteractionSource() }
+    val onClick = if (params.enabled) params.onClick else null
+    val onLongClick = if (params.enabled) params.onLongClick else null
+    val onLongClickWithOffset = if (params.enabled) params.onLongClickWithOffset else null
 
-    val cardModifier = when {
-        params.onLongClickWithOffset != null && params.onClick != null -> {
-            params.modifier.pointerInput(params.enabled) {
-                if (params.enabled) {
-                    detectTapGestures(
-                        onTap = { params.onClick() },
-                        onLongPress = { offset ->
-                            params.onLongClickWithOffset(offset.x, offset.y)
-                        }
-                    )
+    val cardModifier =
+        when {
+            onLongClickWithOffset != null && onClick != null -> {
+                params.modifier.pointerInput(params.enabled) {
+                    if (params.enabled) {
+                        detectTapGestures(
+                            onTap = { onClick() },
+                            onLongPress = { offset ->
+                                onLongClickWithOffset(offset.x, offset.y)
+                            }
+                        )
+                    }
                 }
             }
-        }
 
-        params.onLongClickWithOffset != null -> {
-            params.modifier.pointerInput(params.enabled) {
-                if (params.enabled) {
-                    detectTapGestures(
-                        onLongPress = { offset ->
-                            params.onLongClickWithOffset(offset.x, offset.y)
-                        }
-                    )
+            onLongClickWithOffset != null -> {
+                params.modifier.pointerInput(params.enabled) {
+                    if (params.enabled) {
+                        detectTapGestures(
+                            onLongPress = { offset ->
+                                onLongClickWithOffset(offset.x, offset.y)
+                            }
+                        )
+                    }
                 }
             }
-        }
 
-        params.onClick != null || params.onLongClick != null -> {
-            params.modifier.combinedClickable(
-                enabled = params.enabled,
-                interactionSource = interactionSource,
-                onClick = params.onClick ?: {},
-                onLongClick = params.onLongClick
-            )
-        }
+            onClick != null || onLongClick != null -> {
+                params.modifier.combinedClickable(
+                    enabled = params.enabled,
+                    interactionSource = interactionSource,
+                    onClick = onClick ?: {},
+                    onLongClick = onLongClick
+                )
+            }
 
-        else -> params.modifier
-    }
+            else -> params.modifier
+        }
 
     Card(
         modifier = cardModifier.alpha(if (params.enabled) 1f else DISABLED_CARD_ALPHA),
         shape = RoundedCornerShape(dimensionResource(R.dimen.spacing_small)),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        ),
-        elevation = CardDefaults.cardElevation(
-            if (isLight)
-                dimensionResource(R.dimen.elevation_small)
-            else dimensionResource(R.dimen.elevation_none)
-        )
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer
+            ),
+        elevation =
+            CardDefaults.cardElevation(
+                if (isLight) {
+                    dimensionResource(R.dimen.elevation_small)
+                } else {
+                    dimensionResource(R.dimen.elevation_none)
+                }
+            )
     ) {
         content()
     }

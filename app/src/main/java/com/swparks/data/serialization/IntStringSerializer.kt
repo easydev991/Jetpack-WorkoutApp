@@ -31,8 +31,9 @@ object IntStringSerializer : KSerializer<Int> {
         PrimitiveSerialDescriptor("IntString", PrimitiveKind.INT)
 
     override fun deserialize(decoder: Decoder): Int {
-        val jsonDecoder = decoder as? JsonDecoder
-            ?: throw SerializationException("IntStringSerializer поддерживает только JSON")
+        val jsonDecoder =
+            decoder as? JsonDecoder
+                ?: throw SerializationException("IntStringSerializer поддерживает только JSON")
 
         return when (val element = jsonDecoder.decodeJsonElement()) {
             is JsonPrimitive -> {
@@ -49,7 +50,10 @@ object IntStringSerializer : KSerializer<Int> {
         }
     }
 
-    override fun serialize(encoder: Encoder, value: Int) {
+    override fun serialize(
+        encoder: Encoder,
+        value: Int
+    ) {
         encoder.encodeInt(value)
     }
 }

@@ -18,14 +18,16 @@ object FirebaseCrashReporter : CrashReporter {
 
     override fun logException(
         exception: Throwable,
-        message: String?,
+        message: String?
     ) {
         try {
             message?.let {
                 crashlytics.setCustomKey("error_message", it)
             }
             crashlytics.recordException(exception)
-        } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
+        } catch (
+            @Suppress("TooGenericExceptionCaught") e: Exception
+        ) {
             logger.e("FirebaseCrashReporter", "Не удалось записать исключение в Crashlytics", e)
         }
     }
@@ -37,14 +39,16 @@ object FirebaseCrashReporter : CrashReporter {
             } else {
                 crashlytics.setUserId("")
             }
-        } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
+        } catch (
+            @Suppress("TooGenericExceptionCaught") e: Exception
+        ) {
             logger.e("FirebaseCrashReporter", "Не удалось установить userId в Crashlytics", e)
         }
     }
 
     override fun setCustomKey(
         key: String,
-        value: Any,
+        value: Any
     ) {
         try {
             when (value) {
@@ -56,7 +60,9 @@ object FirebaseCrashReporter : CrashReporter {
                 is Float -> crashlytics.setCustomKey(key, value)
                 else -> crashlytics.setCustomKey(key, value.toString())
             }
-        } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
+        } catch (
+            @Suppress("TooGenericExceptionCaught") e: Exception
+        ) {
             logger.e("FirebaseCrashReporter", "Не удалось установить ключ $key в Crashlytics", e)
         }
     }
@@ -64,7 +70,9 @@ object FirebaseCrashReporter : CrashReporter {
     override fun log(message: String) {
         try {
             crashlytics.log(message)
-        } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
+        } catch (
+            @Suppress("TooGenericExceptionCaught") e: Exception
+        ) {
             logger.e("FirebaseCrashReporter", "Не удалось записать лог в Crashlytics", e)
         }
     }

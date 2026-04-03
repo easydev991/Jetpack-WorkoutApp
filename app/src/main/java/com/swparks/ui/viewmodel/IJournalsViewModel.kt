@@ -78,5 +78,7 @@ sealed interface JournalsEvent {
      *
      * @property journal Обновленный дневник
      */
-    data class JournalSettingsSaved(val journal: com.swparks.domain.model.Journal) : JournalsEvent
+    data class JournalSettingsSaved(
+        val journal: com.swparks.domain.model.Journal
+    ) : JournalsEvent
 }

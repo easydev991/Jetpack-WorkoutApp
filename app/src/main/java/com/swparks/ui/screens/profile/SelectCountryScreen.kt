@@ -33,25 +33,31 @@ fun SelectCountryScreen(
 
     var searchQuery by rememberSaveable { mutableStateOf("") }
 
-    val allCountries = remember(state.countries) {
-        state.countries.map { it.name }
-    }
+    val allCountries =
+        remember(state.countries) {
+            state.countries.map { it.name }
+        }
 
-    val filteredItems = remember(searchQuery, allCountries) {
-        if (searchQuery.isEmpty()) allCountries
-        else allCountries.filter { it.contains(searchQuery, ignoreCase = true) }
-    }
+    val filteredItems =
+        remember(searchQuery, allCountries) {
+            if (searchQuery.isEmpty()) {
+                allCountries
+            } else {
+                allCountries.filter { it.contains(searchQuery, ignoreCase = true) }
+            }
+        }
 
     val isEmpty = filteredItems.isEmpty() && searchQuery.isNotEmpty()
 
     ItemListScreen(
-        state = ItemListUiState(
-            mode = ItemListMode.COUNTRY,
-            items = filteredItems,
-            selectedItem = state.selectedCountry?.name,
-            searchQuery = searchQuery,
-            isEmpty = isEmpty
-        ),
+        state =
+            ItemListUiState(
+                mode = ItemListMode.COUNTRY,
+                items = filteredItems,
+                selectedItem = state.selectedCountry?.name,
+                searchQuery = searchQuery,
+                isEmpty = isEmpty
+            ),
         onSearchQueryChange = { searchQuery = it },
         onItemSelected = { countryName ->
             viewModel.onCountrySelected(countryName)

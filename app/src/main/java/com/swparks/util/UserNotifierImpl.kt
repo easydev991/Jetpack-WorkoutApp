@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.asSharedFlow
  * @property logger Логгер для записи ошибок и уведомлений
  */
 class UserNotifierImpl(
-    private val logger: Logger,
+    private val logger: Logger
 ) : UserNotifier {
     private companion object {
         private const val TAG = "UserNotifier"
@@ -26,10 +26,11 @@ class UserNotifierImpl(
      * Поток ошибок для подписки из UI-слоя.
      * Использует SharedFlow для поддержки множества подписчиков.
      */
-    private val _errorFlow = MutableSharedFlow<AppError>(
-        extraBufferCapacity = ERROR_BUFFER_CAPACITY,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
-    )
+    private val _errorFlow =
+        MutableSharedFlow<AppError>(
+            extraBufferCapacity = ERROR_BUFFER_CAPACITY,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
 
     /**
      * Публичный поток ошибок для подписки из UI-слоя.
@@ -40,10 +41,11 @@ class UserNotifierImpl(
      * Поток уведомлений для подписки из UI-слоя.
      * Использует SharedFlow для поддержки множества подписчиков.
      */
-    private val _notificationFlow = MutableSharedFlow<AppNotification>(
-        extraBufferCapacity = NOTIFICATION_BUFFER_CAPACITY,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
-    )
+    private val _notificationFlow =
+        MutableSharedFlow<AppNotification>(
+            extraBufferCapacity = NOTIFICATION_BUFFER_CAPACITY,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
 
     /**
      * Публичный поток уведомлений для подписки из UI-слоя.

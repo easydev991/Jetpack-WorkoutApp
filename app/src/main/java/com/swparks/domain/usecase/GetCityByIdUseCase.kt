@@ -19,15 +19,15 @@ interface IGetCityByIdUseCase {
  *
  * @param countriesRepository Репозиторий для работы со справочником стран и городов
  */
-class GetCityByIdUseCase(private val countriesRepository: CountriesRepository) :
-    IGetCityByIdUseCase {
+class GetCityByIdUseCase(
+    private val countriesRepository: CountriesRepository
+) : IGetCityByIdUseCase {
     /**
      * Получить город по идентификатору.
      *
      * @param cityId Идентификатор города
      * @return Город или null, если не найден
      */
-    override suspend operator fun invoke(cityId: String): City? {
-        return countriesRepository.getCityById(cityId)
-    }
+    override suspend operator fun invoke(cityId: String): City? =
+        countriesRepository.getCityById(cityId)
 }

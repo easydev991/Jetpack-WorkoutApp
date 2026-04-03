@@ -1,6 +1,5 @@
 package com.swparks.domain.model
 
-
 /**
  * Перечисление доступных иконок приложения.
  *
@@ -27,7 +26,7 @@ enum class AppIcon {
     ICON_8,
     ICON_9,
     ICON_10,
-    ICON_11,
+    ICON_11
     ;
 
     /**

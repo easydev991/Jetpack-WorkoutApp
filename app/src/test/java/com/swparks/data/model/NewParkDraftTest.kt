@@ -7,7 +7,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NewParkDraftTest {
-
     private fun createDraft(
         latitude: Double = 55.7558,
         longitude: Double = 37.6173,
@@ -109,13 +108,14 @@ class NewParkDraftTest {
 
     @Test
     fun withCoordinates_createsCopyWithNewCoordsAndCurrentDate() {
-        val original = createDraft(
-            latitude = 55.0,
-            longitude = 37.0,
-            lastLocationRequestDate = 1000L,
-            address = "Old Address",
-            cityId = 5
-        )
+        val original =
+            createDraft(
+                latitude = 55.0,
+                longitude = 37.0,
+                lastLocationRequestDate = 1000L,
+                address = "Old Address",
+                cityId = 5
+            )
         val updated = original.withCoordinates(59.9343, 30.3351)
 
         assertEquals(59.9343, updated.latitude, 0.0)
@@ -128,12 +128,13 @@ class NewParkDraftTest {
 
     @Test
     fun withGeocodingData_createsCopyWithNewAddressAndCityId() {
-        val original = createDraft(
-            latitude = 55.7558,
-            longitude = 37.6173,
-            address = "",
-            cityId = null
-        )
+        val original =
+            createDraft(
+                latitude = 55.7558,
+                longitude = 37.6173,
+                address = "",
+                cityId = null
+            )
         val updated = original.withGeocodingData("New Address", 3)
 
         assertEquals(55.7558, updated.latitude, 0.0)
@@ -144,12 +145,13 @@ class NewParkDraftTest {
 
     @Test
     fun withoutAddress_createsCopyWithEmptyAddress() {
-        val original = createDraft(
-            latitude = 55.7558,
-            longitude = 37.6173,
-            address = "Some Address",
-            cityId = 5
-        )
+        val original =
+            createDraft(
+                latitude = 55.7558,
+                longitude = 37.6173,
+                address = "Some Address",
+                cityId = 5
+            )
         val updated = original.withoutAddress()
 
         assertEquals(55.7558, updated.latitude, 0.0)
@@ -169,13 +171,14 @@ class NewParkDraftTest {
 
     @Test
     fun copy_preservesAllFieldsWhenNotSpecified() {
-        val original = createDraft(
-            latitude = 55.7558,
-            longitude = 37.6173,
-            lastLocationRequestDate = 1000L,
-            address = "Test Address",
-            cityId = 42
-        )
+        val original =
+            createDraft(
+                latitude = 55.7558,
+                longitude = 37.6173,
+                lastLocationRequestDate = 1000L,
+                address = "Test Address",
+                cityId = 42
+            )
         val copy = original.copy()
 
         assertEquals(original.latitude, copy.latitude, 0.0)

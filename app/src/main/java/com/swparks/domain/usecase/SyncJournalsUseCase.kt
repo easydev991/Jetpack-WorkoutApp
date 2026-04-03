@@ -11,8 +11,9 @@ import com.swparks.domain.repository.JournalsRepository
  *
  * @param journalsRepository Репозиторий для работы с дневниками
  */
-class SyncJournalsUseCase(private val journalsRepository: JournalsRepository) :
-    ISyncJournalsUseCase {
+class SyncJournalsUseCase(
+    private val journalsRepository: JournalsRepository
+) : ISyncJournalsUseCase {
     /**
      * Обновить дневники пользователя с сервера.
      *

@@ -35,7 +35,6 @@ import retrofit2.Response
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class OtherUserProfileViewModelTest {
-
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -75,202 +74,219 @@ class OtherUserProfileViewModelTest {
     // === loadUser tests ===
 
     @Test
-    fun init_whenCreated_thenLoadsUser() = runTest {
-        val userId = 123L
-        val user = User(id = userId, name = "test", image = null)
-        coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+    fun init_whenCreated_thenLoadsUser() =
+        runTest {
+            val userId = 123L
+            val user = User(id = userId, name = "test", image = null)
+            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
 
-        val viewModel = OtherUserProfileViewModel(
-            userId,
-            mockCountriesRepository,
-            mockSwRepository,
-            mockLogger,
-            mockUserNotifier,
-            mockResources
-        )
-        advanceUntilIdle()
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockSwRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources
+                )
+            advanceUntilIdle()
 
-        assertEquals(user, viewModel.viewedUser.value)
-        coVerify { mockSwRepository.getUser(userId) }
-    }
-
-    @Test
-    fun loadUser_whenNotFound_thenShowsUserNotFound() = runTest {
-        val userId = 999L
-        val error = HttpException(Response.error<Any>(404, "".toResponseBody()))
-        coEvery { mockSwRepository.getUser(userId) } returns Result.failure(error)
-
-        val viewModel = OtherUserProfileViewModel(
-            userId,
-            mockCountriesRepository,
-            mockSwRepository,
-            mockLogger,
-            mockUserNotifier,
-            mockResources
-        )
-        advanceUntilIdle()
-
-        assertTrue(viewModel.uiState.value is OtherUserProfileUiState.UserNotFound)
-    }
+            assertEquals(user, viewModel.viewedUser.value)
+            coVerify { mockSwRepository.getUser(userId) }
+        }
 
     @Test
-    fun loadUser_whenNetworkError_thenShowsErrorWithRetry() = runTest {
-        val userId = 999L
-        coEvery { mockSwRepository.getUser(userId) } returns Result.failure(Exception("Network error"))
+    fun loadUser_whenNotFound_thenShowsUserNotFound() =
+        runTest {
+            val userId = 999L
+            val error = HttpException(Response.error<Any>(404, "".toResponseBody()))
+            coEvery { mockSwRepository.getUser(userId) } returns Result.failure(error)
 
-        val viewModel = OtherUserProfileViewModel(
-            userId,
-            mockCountriesRepository,
-            mockSwRepository,
-            mockLogger,
-            mockUserNotifier,
-            mockResources
-        )
-        advanceUntilIdle()
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockSwRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources
+                )
+            advanceUntilIdle()
 
-        val state = viewModel.uiState.value
-        assertTrue(state is OtherUserProfileUiState.Error)
-        assertTrue((state as OtherUserProfileUiState.Error).canRetry)
-    }
+            assertTrue(viewModel.uiState.value is OtherUserProfileUiState.UserNotFound)
+        }
+
+    @Test
+    fun loadUser_whenNetworkError_thenShowsErrorWithRetry() =
+        runTest {
+            val userId = 999L
+            coEvery { mockSwRepository.getUser(userId) } returns Result.failure(Exception("Network error"))
+
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockSwRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources
+                )
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertTrue(state is OtherUserProfileUiState.Error)
+            assertTrue((state as OtherUserProfileUiState.Error).canRetry)
+        }
 
     // === refreshUser tests ===
 
     @Test
-    fun refreshUser_whenNetworkError_doesNotChangeUiStateToError() = runTest {
-        val userId = 123L
-        val user = User(id = userId, name = "test", image = null)
-        coEvery { mockSwRepository.getUser(userId) } returns Result.success(user) andThen
-            Result.failure(Exception("Network error"))
+    fun refreshUser_whenNetworkError_doesNotChangeUiStateToError() =
+        runTest {
+            val userId = 123L
+            val user = User(id = userId, name = "test", image = null)
+            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user) andThen
+                Result.failure(Exception("Network error"))
 
-        val viewModel = OtherUserProfileViewModel(
-            userId,
-            mockCountriesRepository,
-            mockSwRepository,
-            mockLogger,
-            mockUserNotifier,
-            mockResources
-        )
-        advanceUntilIdle()
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockSwRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources
+                )
+            advanceUntilIdle()
 
-        val stateBeforeRefresh = viewModel.uiState.value
-        assertTrue(stateBeforeRefresh is OtherUserProfileUiState.Success)
+            val stateBeforeRefresh = viewModel.uiState.value
+            assertTrue(stateBeforeRefresh is OtherUserProfileUiState.Success)
 
-        viewModel.refreshUser()
-        advanceUntilIdle()
+            viewModel.refreshUser()
+            advanceUntilIdle()
 
-        // После ошибки refresh состояние остается Success (не меняется на Error)
-        assertTrue(viewModel.uiState.value is OtherUserProfileUiState.Success)
-    }
+            // После ошибки refresh состояние остается Success (не меняется на Error)
+            assertTrue(viewModel.uiState.value is OtherUserProfileUiState.Success)
+        }
 
     // === Address loading tests ===
 
     @Test
-    fun loadUser_whenNoCountryIdOrCityId_doesNotLoadAddress() = runTest {
-        val userId = 123L
-        val user = User(id = userId, name = "test", image = null, countryID = null, cityID = null)
-        coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+    fun loadUser_whenNoCountryIdOrCityId_doesNotLoadAddress() =
+        runTest {
+            val userId = 123L
+            val user =
+                User(id = userId, name = "test", image = null, countryID = null, cityID = null)
+            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
 
-        val viewModel = OtherUserProfileViewModel(
-            userId,
-            mockCountriesRepository,
-            mockSwRepository,
-            mockLogger,
-            mockUserNotifier,
-            mockResources
-        )
-        advanceUntilIdle()
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockSwRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources
+                )
+            advanceUntilIdle()
 
-        val state = viewModel.uiState.value
-        assertTrue(state is OtherUserProfileUiState.Success)
-        assertEquals(null, (state as OtherUserProfileUiState.Success).country)
-        assertEquals(null, state.city)
+            val state = viewModel.uiState.value
+            assertTrue(state is OtherUserProfileUiState.Success)
+            assertEquals(null, (state as OtherUserProfileUiState.Success).country)
+            assertEquals(null, state.city)
 
-        // Проверяем, что репозиторий стран не вызывался
-        coVerify(exactly = 0) { mockCountriesRepository.getCountryById(any()) }
-        coVerify(exactly = 0) { mockCountriesRepository.getCityById(any()) }
-    }
+            // Проверяем, что репозиторий стран не вызывался
+            coVerify(exactly = 0) { mockCountriesRepository.getCountryById(any()) }
+            coVerify(exactly = 0) { mockCountriesRepository.getCityById(any()) }
+        }
 
     @Test
-    fun refreshUser_whenAddressUnchanged_usesCache() = runTest {
-        val userId = 123L
-        val country = Country(id = "1", name = "Russia", cities = emptyList())
-        val city = City(id = "100", name = "Moscow", lat = "0", lon = "0")
-        val user = User(id = userId, name = "test", image = null, countryID = 1, cityID = 100)
+    fun refreshUser_whenAddressUnchanged_usesCache() =
+        runTest {
+            val userId = 123L
+            val country = Country(id = "1", name = "Russia", cities = emptyList())
+            val city = City(id = "100", name = "Moscow", lat = "0", lon = "0")
+            val user = User(id = userId, name = "test", image = null, countryID = 1, cityID = 100)
 
-        coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
-        coEvery { mockCountriesRepository.getCountryById("1") } returns country
-        coEvery { mockCountriesRepository.getCityById("100") } returns city
+            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery { mockCountriesRepository.getCountryById("1") } returns country
+            coEvery { mockCountriesRepository.getCityById("100") } returns city
 
-        val viewModel = OtherUserProfileViewModel(
-            userId,
-            mockCountriesRepository,
-            mockSwRepository,
-            mockLogger,
-            mockUserNotifier,
-            mockResources
-        )
-        advanceUntilIdle()
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockSwRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources
+                )
+            advanceUntilIdle()
 
-        // Первый вызов — загружаем адрес
-        coVerify(exactly = 1) { mockCountriesRepository.getCountryById("1") }
+            // Первый вызов — загружаем адрес
+            coVerify(exactly = 1) { mockCountriesRepository.getCountryById("1") }
 
-        // Refresh с теми же ID
-        viewModel.refreshUser()
-        advanceUntilIdle()
+            // Refresh с теми же ID
+            viewModel.refreshUser()
+            advanceUntilIdle()
 
-        // Второй вызов — используем кэш (getCountryById вызван только 1 раз)
-        coVerify(exactly = 1) { mockCountriesRepository.getCountryById("1") }
-    }
+            // Второй вызов — используем кэш (getCountryById вызван только 1 раз)
+            coVerify(exactly = 1) { mockCountriesRepository.getCountryById("1") }
+        }
 
     // === Friend action tests ===
 
     @Test
-    fun performFriendAction_whenNotFriend_thenCallsAddFriend() = runTest {
-        val userId = 123L
-        val user = User(id = userId, name = "test", image = null)
-        coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
-        coEvery {
-            mockSwRepository.friendAction(
-                userId,
-                ApiFriendAction.ADD
-            )
-        } returns Result.success(Unit)
+    fun performFriendAction_whenNotFriend_thenCallsAddFriend() =
+        runTest {
+            val userId = 123L
+            val user = User(id = userId, name = "test", image = null)
+            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery {
+                mockSwRepository.friendAction(
+                    userId,
+                    ApiFriendAction.ADD
+                )
+            } returns Result.success(Unit)
 
-        val viewModel = OtherUserProfileViewModel(
-            userId,
-            mockCountriesRepository,
-            mockSwRepository,
-            mockLogger,
-            mockUserNotifier,
-            mockResources
-        )
-        advanceUntilIdle()
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockSwRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources
+                )
+            advanceUntilIdle()
 
-        viewModel.performFriendAction()
-        advanceUntilIdle()
+            viewModel.performFriendAction()
+            advanceUntilIdle()
 
-        coVerify { mockSwRepository.friendAction(userId, ApiFriendAction.ADD) }
-    }
+            coVerify { mockSwRepository.friendAction(userId, ApiFriendAction.ADD) }
+        }
 
     @Test
-    fun performFriendAction_whenStarts_isFriendActionLoadingIsFalseInitially() = runTest {
-        val userId = 123L
-        val user = User(id = userId, name = "test", image = null)
-        coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+    fun performFriendAction_whenStarts_isFriendActionLoadingIsFalseInitially() =
+        runTest {
+            val userId = 123L
+            val user = User(id = userId, name = "test", image = null)
+            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
 
-        val viewModel = OtherUserProfileViewModel(
-            userId,
-            mockCountriesRepository,
-            mockSwRepository,
-            mockLogger,
-            mockUserNotifier,
-            mockResources
-        )
-        advanceUntilIdle()
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockSwRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources
+                )
+            advanceUntilIdle()
 
-        // До вызова - не в состоянии загрузки
-        assertEquals(false, viewModel.isFriendActionLoading.value)
-    }
+            // До вызова - не в состоянии загрузки
+            assertEquals(false, viewModel.isFriendActionLoading.value)
+        }
 
     @Test
     fun performFriendAction_whenSuccess_thenIsFriendActionLoadingIsFalseAfterCompletion() =
@@ -285,14 +301,15 @@ class OtherUserProfileViewModelTest {
                 )
             } returns Result.success(Unit)
 
-            val viewModel = OtherUserProfileViewModel(
-                userId,
-                mockCountriesRepository,
-                mockSwRepository,
-                mockLogger,
-                mockUserNotifier,
-                mockResources
-            )
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockSwRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources
+                )
             advanceUntilIdle()
 
             viewModel.performFriendAction()
@@ -302,116 +319,123 @@ class OtherUserProfileViewModelTest {
         }
 
     @Test
-    fun performFriendAction_whenError_thenIsFriendActionLoadingIsFalseAfterCompletion() = runTest {
-        val userId = 123L
-        val user = User(id = userId, name = "test", image = null)
-        coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
-        coEvery {
-            mockSwRepository.friendAction(
-                userId,
-                ApiFriendAction.ADD
-            )
-        } returns Result.failure(Exception("Network error"))
+    fun performFriendAction_whenError_thenIsFriendActionLoadingIsFalseAfterCompletion() =
+        runTest {
+            val userId = 123L
+            val user = User(id = userId, name = "test", image = null)
+            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery {
+                mockSwRepository.friendAction(
+                    userId,
+                    ApiFriendAction.ADD
+                )
+            } returns Result.failure(Exception("Network error"))
 
-        val viewModel = OtherUserProfileViewModel(
-            userId,
-            mockCountriesRepository,
-            mockSwRepository,
-            mockLogger,
-            mockUserNotifier,
-            mockResources
-        )
-        advanceUntilIdle()
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockSwRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources
+                )
+            advanceUntilIdle()
 
-        viewModel.performFriendAction()
-        advanceUntilIdle()
+            viewModel.performFriendAction()
+            advanceUntilIdle()
 
-        assertEquals(false, viewModel.isFriendActionLoading.value)
-    }
+            assertEquals(false, viewModel.isFriendActionLoading.value)
+        }
 
     // === Blacklist action tests ===
 
     @Test
-    fun performBlacklistAction_whenNotBlocked_thenCallsAddToBlacklist() = runTest {
-        val userId = 123L
-        val user = User(id = userId, name = "test", image = null)
-        coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
-        coEvery {
-            mockSwRepository.blacklistAction(
-                user,
-                ApiBlacklistOption.ADD
-            )
-        } returns Result.success(Unit)
+    fun performBlacklistAction_whenNotBlocked_thenCallsAddToBlacklist() =
+        runTest {
+            val userId = 123L
+            val user = User(id = userId, name = "test", image = null)
+            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery {
+                mockSwRepository.blacklistAction(
+                    user,
+                    ApiBlacklistOption.ADD
+                )
+            } returns Result.success(Unit)
 
-        val viewModel = OtherUserProfileViewModel(
-            userId,
-            mockCountriesRepository,
-            mockSwRepository,
-            mockLogger,
-            mockUserNotifier,
-            mockResources
-        )
-        advanceUntilIdle()
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockSwRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources
+                )
+            advanceUntilIdle()
 
-        var onBlockedCalled = false
-        viewModel.performBlacklistAction { onBlockedCalled = true }
-        advanceUntilIdle()
+            var onBlockedCalled = false
+            viewModel.performBlacklistAction { onBlockedCalled = true }
+            advanceUntilIdle()
 
-        coVerify { mockSwRepository.blacklistAction(user, ApiBlacklistOption.ADD) }
-        assertTrue(onBlockedCalled) // После блокировки вызывается callback
-    }
+            coVerify { mockSwRepository.blacklistAction(user, ApiBlacklistOption.ADD) }
+            assertTrue(onBlockedCalled) // После блокировки вызывается callback
+        }
 
     // === Current user timeout test ===
 
     @Test
-    fun waitForCurrentUser_whenTimeout_showsAuthErrorWithoutRetry() = runTest {
-        val userId = 123L
-        // currentUser всегда null (эмуляция ошибки авторизации)
-        currentUserFlow.tryEmit(null)
-        every { mockSwRepository.getCurrentUserFlow() } returns flowOf(null)
+    fun waitForCurrentUser_whenTimeout_showsAuthErrorWithoutRetry() =
+        runTest {
+            val userId = 123L
+            // currentUser всегда null (эмуляция ошибки авторизации)
+            currentUserFlow.tryEmit(null)
+            every { mockSwRepository.getCurrentUserFlow() } returns flowOf(null)
 
-        val viewModel = OtherUserProfileViewModel(
-            userId,
-            mockCountriesRepository,
-            mockSwRepository,
-            mockLogger,
-            mockUserNotifier,
-            mockResources
-        )
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockSwRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources
+                )
 
-        // Используем advanceTimeBy для срабатывания timeout (10 сек + запас)
-        advanceTimeBy(OtherUserProfileViewModel.CURRENT_USER_LOAD_TIMEOUT_MS + 100)
-        advanceUntilIdle()
+            // Используем advanceTimeBy для срабатывания timeout (10 сек + запас)
+            advanceTimeBy(OtherUserProfileViewModel.CURRENT_USER_LOAD_TIMEOUT_MS + 100)
+            advanceUntilIdle()
 
-        // После timeout показывается ошибка авторизации без возможности retry
-        val state = viewModel.uiState.value
-        assertTrue(state is OtherUserProfileUiState.Error)
-        assertTrue(!(state as OtherUserProfileUiState.Error).canRetry)
-    }
+            // После timeout показывается ошибка авторизации без возможности retry
+            val state = viewModel.uiState.value
+            assertTrue(state is OtherUserProfileUiState.Error)
+            assertTrue(!(state as OtherUserProfileUiState.Error).canRetry)
+        }
 
     // === Runtime exception handling tests ===
 
     @Test
-    fun loadProfileAddress_whenRuntimeException_thenCallsHandleError() = runTest {
-        val userId = 123L
-        val user = User(id = userId, name = "test", image = null, countryID = 1, cityID = 100)
-        coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+    fun loadProfileAddress_whenRuntimeException_thenCallsHandleError() =
+        runTest {
+            val userId = 123L
+            val user = User(id = userId, name = "test", image = null, countryID = 1, cityID = 100)
+            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
 
-        // Мокируем выброс RuntimeException при загрузке страны
-        coEvery { mockCountriesRepository.getCountryById("1") } throws RuntimeException("Unexpected error")
+            // Мокируем выброс RuntimeException при загрузке страны
+            coEvery { mockCountriesRepository.getCountryById("1") } throws RuntimeException("Unexpected error")
 
-        OtherUserProfileViewModel(
-            userId,
-            mockCountriesRepository,
-            mockSwRepository,
-            mockLogger,
-            mockUserNotifier,
-            mockResources
-        )
+            OtherUserProfileViewModel(
+                userId,
+                mockCountriesRepository,
+                mockSwRepository,
+                mockLogger,
+                mockUserNotifier,
+                mockResources
+            )
 
-        advanceUntilIdle()
+            advanceUntilIdle()
 
-        // Then - userNotifier.handleError должен быть вызван
-        coVerify { mockUserNotifier.handleError(any<AppError>()) }
-    }
+            // Then - userNotifier.handleError должен быть вызван
+            coVerify { mockUserNotifier.handleError(any<AppError>()) }
+        }
 }

@@ -37,7 +37,6 @@ import org.junit.Test
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DialogsViewModelTest {
-
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -48,15 +47,16 @@ class DialogsViewModelTest {
     private lateinit var messageSentNotifier: MessageSentNotifier
     private lateinit var viewModel: DialogsViewModel
 
-    private val testDialog = DialogEntity(
-        id = 1L,
-        anotherUserId = 123,
-        name = "Тестовый пользователь",
-        image = "https://example.com/avatar.png",
-        lastMessageText = "Привет!",
-        lastMessageDate = "2024-01-15 12:30",
-        unreadCount = 2
-    )
+    private val testDialog =
+        DialogEntity(
+            id = 1L,
+            anotherUserId = 123,
+            name = "Тестовый пользователь",
+            image = "https://example.com/avatar.png",
+            lastMessageText = "Привет!",
+            lastMessageDate = "2024-01-15 12:30",
+            unreadCount = 2
+        )
 
     @Before
     fun setup() {
@@ -81,218 +81,236 @@ class DialogsViewModelTest {
     }
 
     @Test
-    fun init_collectsDialogsFromRepository() = runTest {
-        // Given
-        val dialogs = listOf(testDialog)
-        coEvery { messagesRepository.dialogs } returns flowOf(dialogs)
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+    fun init_collectsDialogsFromRepository() =
+        runTest {
+            // Given
+            val dialogs = listOf(testDialog)
+            coEvery { messagesRepository.dialogs } returns flowOf(dialogs)
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
-
-        // Then
-        coVerify { messagesRepository.dialogs }
-        coVerify { messagesRepository.refreshDialogs() }
-    }
-
-    @Test
-    fun refresh_callsRepositoryRefreshDialogs() = runTest {
-        // Given
-        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
-        viewModel.refresh()
-        advanceUntilIdle()
-
-        // Then
-        coVerify(exactly = 2) { messagesRepository.refreshDialogs() }
-    }
-
-    @Test
-    fun refresh_onSuccess_updatesIsRefreshing() = runTest {
-        // Given
-        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-
-        // Then
-        viewModel.isRefreshing.test {
-            // Initial state
-            assertEquals(false, awaitItem())
-            // After init completes
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
             advanceUntilIdle()
-        }
-    }
 
-    @Test
-    fun refresh_onFailureWithNonEmptyCache_showsSyncError() = runTest {
-        // Given
-        val dialogs = listOf(testDialog)
-        coEvery { messagesRepository.dialogs } returns flowOf(dialogs)
-        coEvery { messagesRepository.refreshDialogs() } returns Result.failure(Exception("Network error"))
-
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
-
-        // Then
-        viewModel.syncError.test {
-            val error = awaitItem()
-            assertEquals("Ошибка синхронизации", error)
-        }
-    }
-
-    @Test
-    fun refresh_onEmptyCacheAndFailure_showsErrorState() = runTest {
-        // Given
-        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
-        coEvery { messagesRepository.refreshDialogs() } returns Result.failure(Exception("Network error"))
-
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
-
-        // Then - при пустом кэше и ошибке должен быть Error state
-        val state = viewModel.uiState.value
-        assertTrue("Expected Error state but got $state", state is DialogsUiState.Error)
-    }
-
-    @Test
-    fun refresh_debounce_ignoresMultipleRapidCalls() = runTest {
-        // Given - создаём viewModel с успешной загрузкой
-        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
-
-        // На этом этапе refresh из init уже завершён (вызван 1 раз)
-        // Теперь вызываем refresh вручную два раза подряд
-        // Поскольку первый вызов завершается синхронно (isRefreshing сразу false),
-        // второй вызов тоже должен быть обработан
-        viewModel.refresh()
-        viewModel.refresh()
-
-        advanceUntilIdle()
-
-        // Then - refresh должен быть вызван 3 раза:
-        // 1 раз из init + 2 раза из ручных вызовов (так как они не перекрываются во времени)
-        coVerify(exactly = 3) { messagesRepository.refreshDialogs() }
-    }
-
-    @Test
-    fun onDialogClick_withValidUserId_logsClick() = runTest {
-        // Given
-        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
-        viewModel.onDialogClick(dialogId = 1L, userId = 123)
-
-        // Then
-        verify { logger.i(any(), any()) }
-    }
-
-    @Test
-    fun onDialogClick_withNullUserId_logsWarning() = runTest {
-        // Given
-        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
-        viewModel.onDialogClick(dialogId = 1L, userId = null)
-
-        // Then
-        verify { logger.w(any(), any()) }
-    }
-
-    @Test
-    fun dismissSyncError_clearsError() = runTest {
-        // Given
-        val dialogs = listOf(testDialog)
-        coEvery { messagesRepository.dialogs } returns flowOf(dialogs)
-        coEvery { messagesRepository.refreshDialogs() } returns Result.failure(Exception("Network error"))
-
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
-
-        // Verify error was set
-        viewModel.syncError.test {
-            assertEquals("Ошибка синхронизации", awaitItem())
+            // Then
+            coVerify { messagesRepository.dialogs }
+            coVerify { messagesRepository.refreshDialogs() }
         }
 
-        // Dismiss error
-        viewModel.dismissSyncError()
+    @Test
+    fun refresh_callsRepositoryRefreshDialogs() =
+        runTest {
+            // Given
+            coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
-        // Then
-        assertNull(viewModel.syncError.value)
-    }
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
+            viewModel.refresh()
+            advanceUntilIdle()
+
+            // Then
+            coVerify(exactly = 2) { messagesRepository.refreshDialogs() }
+        }
+
+    @Test
+    fun refresh_onSuccess_updatesIsRefreshing() =
+        runTest {
+            // Given
+            coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+
+            // Then
+            viewModel.isRefreshing.test {
+                // Initial state
+                assertEquals(false, awaitItem())
+                // After init completes
+                advanceUntilIdle()
+            }
+        }
+
+    @Test
+    fun refresh_onFailureWithNonEmptyCache_showsSyncError() =
+        runTest {
+            // Given
+            val dialogs = listOf(testDialog)
+            coEvery { messagesRepository.dialogs } returns flowOf(dialogs)
+            coEvery { messagesRepository.refreshDialogs() } returns Result.failure(Exception("Network error"))
+
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
+
+            // Then
+            viewModel.syncError.test {
+                val error = awaitItem()
+                assertEquals("Ошибка синхронизации", error)
+            }
+        }
+
+    @Test
+    fun refresh_onEmptyCacheAndFailure_showsErrorState() =
+        runTest {
+            // Given
+            coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+            coEvery { messagesRepository.refreshDialogs() } returns Result.failure(Exception("Network error"))
+
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
+
+            // Then - при пустом кэше и ошибке должен быть Error state
+            val state = viewModel.uiState.value
+            assertTrue("Expected Error state but got $state", state is DialogsUiState.Error)
+        }
+
+    @Test
+    fun refresh_debounce_ignoresMultipleRapidCalls() =
+        runTest {
+            // Given - создаём viewModel с успешной загрузкой
+            coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
+
+            // На этом этапе refresh из init уже завершён (вызван 1 раз)
+            // Теперь вызываем refresh вручную два раза подряд
+            // Поскольку первый вызов завершается синхронно (isRefreshing сразу false),
+            // второй вызов тоже должен быть обработан
+            viewModel.refresh()
+            viewModel.refresh()
+
+            advanceUntilIdle()
+
+            // Then - refresh должен быть вызван 3 раза:
+            // 1 раз из init + 2 раза из ручных вызовов (так как они не перекрываются во времени)
+            coVerify(exactly = 3) { messagesRepository.refreshDialogs() }
+        }
+
+    @Test
+    fun onDialogClick_withValidUserId_logsClick() =
+        runTest {
+            // Given
+            coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
+            viewModel.onDialogClick(dialogId = 1L, userId = 123)
+
+            // Then
+            verify { logger.i(any(), any()) }
+        }
+
+    @Test
+    fun onDialogClick_withNullUserId_logsWarning() =
+        runTest {
+            // Given
+            coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
+            viewModel.onDialogClick(dialogId = 1L, userId = null)
+
+            // Then
+            verify { logger.w(any(), any()) }
+        }
+
+    @Test
+    fun dismissSyncError_clearsError() =
+        runTest {
+            // Given
+            val dialogs = listOf(testDialog)
+            coEvery { messagesRepository.dialogs } returns flowOf(dialogs)
+            coEvery { messagesRepository.refreshDialogs() } returns Result.failure(Exception("Network error"))
+
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
+
+            // Verify error was set
+            viewModel.syncError.test {
+                assertEquals("Ошибка синхронизации", awaitItem())
+            }
+
+            // Dismiss error
+            viewModel.dismissSyncError()
+
+            // Then
+            assertNull(viewModel.syncError.value)
+        }
 
     /**
      * Тест для бага #6: проверяет что refresh() можно вызвать повторно после
@@ -303,42 +321,44 @@ class DialogsViewModelTest {
      * Этот тест проверяет что refresh() работает корректно при повторном вызове.
      */
     @Test
-    fun refresh_afterReLogin_loadsDialogs() = runTest {
-        // Given - создаём viewModel с непустым списком диалогов (имитируем кэшированные данные)
-        val cachedDialogs = listOf(testDialog)
-        coEvery { messagesRepository.dialogs } returns flowOf(cachedDialogs)
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+    fun refresh_afterReLogin_loadsDialogs() =
+        runTest {
+            // Given - создаём viewModel с непустым списком диалогов (имитируем кэшированные данные)
+            val cachedDialogs = listOf(testDialog)
+            coEvery { messagesRepository.dialogs } returns flowOf(cachedDialogs)
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
-        // When - инициализация (первая авторизация)
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
+            // When - инициализация (первая авторизация)
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
 
-        // Проверяем что состояние Success с кэшированными данными
-        val stateAfterInit = viewModel.uiState.value
-        assertTrue(
-            "Expected Success state after init but got $stateAfterInit",
-            stateAfterInit is DialogsUiState.Success
-        )
-        assertEquals(cachedDialogs, (stateAfterInit as DialogsUiState.Success).dialogs)
+            // Проверяем что состояние Success с кэшированными данными
+            val stateAfterInit = viewModel.uiState.value
+            assertTrue(
+                "Expected Success state after init but got $stateAfterInit",
+                stateAfterInit is DialogsUiState.Success
+            )
+            assertEquals(cachedDialogs, (stateAfterInit as DialogsUiState.Success).dialogs)
 
-        // Simulate logout -> login: вызываем refresh снова
-        // (в реальном приложении это делает LaunchedEffect при изменении isAuthorized)
-        viewModel.refresh()
-        advanceUntilIdle()
+            // Simulate logout -> login: вызываем refresh снова
+            // (в реальном приложении это делает LaunchedEffect при изменении isAuthorized)
+            viewModel.refresh()
+            advanceUntilIdle()
 
-        // Then - состояние остаётся Success (не Error)
-        val stateAfterRefresh = viewModel.uiState.value
-        assertTrue(
-            "Expected Success state after re-login refresh but got $stateAfterRefresh",
-            stateAfterRefresh is DialogsUiState.Success
-        )
-    }
+            // Then - состояние остаётся Success (не Error)
+            val stateAfterRefresh = viewModel.uiState.value
+            assertTrue(
+                "Expected Success state after re-login refresh but got $stateAfterRefresh",
+                stateAfterRefresh is DialogsUiState.Success
+            )
+        }
 
     /**
      * Тест для бага #8: проверяет что при успешном ответе сервера с 0 диалогами
@@ -348,28 +368,30 @@ class DialogsViewModelTest {
      * Ожидается: Success(emptyList()) для отображения EmptyStateViewForDialogs.
      */
     @Test
-    fun refresh_withEmptyDialogsResponse_showsSuccessEmptyState() = runTest {
-        // Given - сервер возвращает 0 диалогов (успешный ответ)
-        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+    fun refresh_withEmptyDialogsResponse_showsSuccessEmptyState() =
+        runTest {
+            // Given - сервер возвращает 0 диалогов (успешный ответ)
+            coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
 
-        // Then - должен быть Success с пустым списком, а не Error
-        val state = viewModel.uiState.value
-        assertTrue(
-            "Expected Success state with empty list but got $state",
-            state is DialogsUiState.Success && state.dialogs.isEmpty()
-        )
-    }
+            // Then - должен быть Success с пустым списком, а не Error
+            val state = viewModel.uiState.value
+            assertTrue(
+                "Expected Success state with empty list but got $state",
+                state is DialogsUiState.Success && state.dialogs.isEmpty()
+            )
+        }
 
     // ==================== Тесты для deleteDialog ====================
 
@@ -377,117 +399,125 @@ class DialogsViewModelTest {
      * Тест: успешное удаление диалога вызывает swRepository.deleteDialog.
      */
     @Test
-    fun deleteDialog_whenSuccess_callsRepositoryDeleteDialog() = runTest {
-        // Given
-        val dialogId = 1L
-        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-        coEvery { swRepository.deleteDialog(dialogId) } returns Result.success(Unit)
+    fun deleteDialog_whenSuccess_callsRepositoryDeleteDialog() =
+        runTest {
+            // Given
+            val dialogId = 1L
+            coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+            coEvery { swRepository.deleteDialog(dialogId) } returns Result.success(Unit)
 
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
-        viewModel.deleteDialog(dialogId)
-        advanceUntilIdle()
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
+            viewModel.deleteDialog(dialogId)
+            advanceUntilIdle()
 
-        // Then
-        coVerify { swRepository.deleteDialog(dialogId) }
-    }
+            // Then
+            coVerify { swRepository.deleteDialog(dialogId) }
+        }
 
     /**
      * Тест: успешное удаление диалога обновляет isDeleting.
      */
     @Test
-    fun deleteDialog_whenSuccess_updatesIsDeleting() = runTest {
-        // Given
-        val dialogId = 1L
-        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-        // Добавляем небольшую задержку, чтобы успеть проверить состояние isDeleting = true
-        coEvery { swRepository.deleteDialog(dialogId) } coAnswers {
-            kotlinx.coroutines.delay(100)
-            Result.success(Unit)
-        }
+    fun deleteDialog_whenSuccess_updatesIsDeleting() =
+        runTest {
+            // Given
+            val dialogId = 1L
+            coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+            // Добавляем небольшую задержку, чтобы успеть проверить состояние isDeleting = true
+            coEvery { swRepository.deleteDialog(dialogId) } coAnswers {
+                kotlinx.coroutines.delay(100)
+                Result.success(Unit)
+            }
 
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
 
-        // Test isDeleting flow
-        viewModel.isDeleting.test {
-            assertEquals(false, awaitItem()) // Initial state
-            viewModel.deleteDialog(dialogId)
-            assertEquals(true, awaitItem()) // During deletion
-            advanceUntilIdle() // Wait for deletion to complete
-            assertEquals(false, awaitItem()) // After deletion
+            // Test isDeleting flow
+            viewModel.isDeleting.test {
+                assertEquals(false, awaitItem()) // Initial state
+                viewModel.deleteDialog(dialogId)
+                assertEquals(true, awaitItem()) // During deletion
+                advanceUntilIdle() // Wait for deletion to complete
+                assertEquals(false, awaitItem()) // After deletion
+            }
         }
-    }
 
     /**
      * Тест: неудачное удаление диалога показывает ошибку.
      */
     @Test
-    fun deleteDialog_whenFailure_showsSyncError() = runTest {
-        // Given
-        val dialogId = 1L
-        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-        coEvery { swRepository.deleteDialog(dialogId) } returns Result.failure(Exception("Network error"))
+    fun deleteDialog_whenFailure_showsSyncError() =
+        runTest {
+            // Given
+            val dialogId = 1L
+            coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+            coEvery { swRepository.deleteDialog(dialogId) } returns Result.failure(Exception("Network error"))
 
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
-        viewModel.deleteDialog(dialogId)
-        advanceUntilIdle()
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
+            viewModel.deleteDialog(dialogId)
+            advanceUntilIdle()
 
-        // Then
-        assertEquals("Ошибка удаления диалога", viewModel.syncError.value)
-    }
+            // Then
+            assertEquals("Ошибка удаления диалога", viewModel.syncError.value)
+        }
 
     /**
      * Тест: неудачное удаление диалога логирует ошибку.
      */
     @Test
-    fun deleteDialog_whenFailure_logsError() = runTest {
-        // Given
-        val dialogId = 1L
-        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-        coEvery { swRepository.deleteDialog(dialogId) } returns Result.failure(Exception("Network error"))
+    fun deleteDialog_whenFailure_logsError() =
+        runTest {
+            // Given
+            val dialogId = 1L
+            coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+            coEvery { swRepository.deleteDialog(dialogId) } returns Result.failure(Exception("Network error"))
 
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
-        viewModel.deleteDialog(dialogId)
-        advanceUntilIdle()
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
+            viewModel.deleteDialog(dialogId)
+            advanceUntilIdle()
 
-        // Then
-        verify { logger.e(any(), any(), any()) }
-    }
+            // Then
+            verify { logger.e(any(), any(), any()) }
+        }
 
     // ==================== Тесты для markDialogAsRead ====================
 
@@ -495,130 +525,138 @@ class DialogsViewModelTest {
      * Тест: успешная отметка диалога вызывает swRepository.markDialogAsRead.
      */
     @Test
-    fun markDialogAsRead_whenSuccess_callsRepositoryMarkAsRead() = runTest {
-        // Given
-        val dialogId = 1L
-        val userId = 123
-        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-        coEvery { swRepository.markDialogAsRead(dialogId, userId) } returns Result.success(Unit)
+    fun markDialogAsRead_whenSuccess_callsRepositoryMarkAsRead() =
+        runTest {
+            // Given
+            val dialogId = 1L
+            val userId = 123
+            coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+            coEvery { swRepository.markDialogAsRead(dialogId, userId) } returns Result.success(Unit)
 
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
-        viewModel.markDialogAsRead(dialogId, userId)
-        advanceUntilIdle()
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
+            viewModel.markDialogAsRead(dialogId, userId)
+            advanceUntilIdle()
 
-        // Then
-        coVerify { swRepository.markDialogAsRead(dialogId, userId) }
-    }
+            // Then
+            coVerify { swRepository.markDialogAsRead(dialogId, userId) }
+        }
 
     /**
      * Тест: успешная отметка диалога обновляет isMarkingAsRead.
      */
     @Test
-    fun markDialogAsRead_whenSuccess_updatesIsMarkingAsRead() = runTest {
-        // Given
-        val dialogId = 1L
-        val userId = 123
-        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-        coEvery { swRepository.markDialogAsRead(dialogId, userId) } coAnswers {
-            kotlinx.coroutines.delay(100)
-            Result.success(Unit)
-        }
+    fun markDialogAsRead_whenSuccess_updatesIsMarkingAsRead() =
+        runTest {
+            // Given
+            val dialogId = 1L
+            val userId = 123
+            coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+            coEvery { swRepository.markDialogAsRead(dialogId, userId) } coAnswers {
+                kotlinx.coroutines.delay(100)
+                Result.success(Unit)
+            }
 
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
 
-        // Test isMarkingAsRead flow
-        viewModel.isMarkingAsRead.test {
-            assertEquals(false, awaitItem()) // Initial state
-            viewModel.markDialogAsRead(dialogId, userId)
-            assertEquals(true, awaitItem()) // During marking
-            advanceUntilIdle() // Wait for operation to complete
-            assertEquals(false, awaitItem()) // After marking
+            // Test isMarkingAsRead flow
+            viewModel.isMarkingAsRead.test {
+                assertEquals(false, awaitItem()) // Initial state
+                viewModel.markDialogAsRead(dialogId, userId)
+                assertEquals(true, awaitItem()) // During marking
+                advanceUntilIdle() // Wait for operation to complete
+                assertEquals(false, awaitItem()) // After marking
+            }
         }
-    }
 
     /**
      * Тест: неудачная отметка диалога показывает ошибку синхронизации.
      */
     @Test
-    fun markDialogAsRead_whenFailure_showsSyncError() = runTest {
-        // Given
-        val dialogId = 1L
-        val userId = 123
-        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-        coEvery {
-            swRepository.markDialogAsRead(
-                dialogId,
-                userId
-            )
-        } returns Result.failure(Exception("Network error"))
+    fun markDialogAsRead_whenFailure_showsSyncError() =
+        runTest {
+            // Given
+            val dialogId = 1L
+            val userId = 123
+            coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+            coEvery {
+                swRepository.markDialogAsRead(
+                    dialogId,
+                    userId
+                )
+            } returns Result.failure(Exception("Network error"))
 
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
-        viewModel.markDialogAsRead(dialogId, userId)
-        advanceUntilIdle()
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
+            viewModel.markDialogAsRead(dialogId, userId)
+            advanceUntilIdle()
 
-        // Then
-        assertEquals("Ошибка синхронизации", viewModel.syncError.value)
-    }
+            // Then
+            assertEquals("Ошибка синхронизации", viewModel.syncError.value)
+        }
 
     /**
      * Тест: неудачная отметка диалога логирует ошибку.
      */
     @Test
-    fun markDialogAsRead_whenFailure_logsError() = runTest {
-        // Given
-        val dialogId = 1L
-        val userId = 123
-        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-        coEvery {
-            swRepository.markDialogAsRead(
-                dialogId,
-                userId
-            )
-        } returns Result.failure(Exception("Network error"))
+    fun markDialogAsRead_whenFailure_logsError() =
+        runTest {
+            // Given
+            val dialogId = 1L
+            val userId = 123
+            coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+            coEvery {
+                swRepository.markDialogAsRead(
+                    dialogId,
+                    userId
+                )
+            } returns Result.failure(Exception("Network error"))
 
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
-        viewModel.markDialogAsRead(dialogId, userId)
-        advanceUntilIdle()
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
+            viewModel.markDialogAsRead(dialogId, userId)
+            advanceUntilIdle()
 
-        // Then
-        verify { logger.e(any(), any(), any()) }
-    }
+            // Then
+            verify { logger.e(any(), any(), any()) }
+        }
 
     /**
      * Тест для бага EmptyStateView: проверяет что после повторной авторизации с пустым списком
@@ -643,13 +681,14 @@ class DialogsViewModelTest {
             coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
             // When - первая инициализация с кэшированными диалогами
-            viewModel = DialogsViewModel(
-                messagesRepository,
-                swRepository,
-                logger,
-                resources,
-                messageSentNotifier
-            )
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
             advanceUntilIdle()
 
             // Проверяем что состояние Success с диалогами
@@ -694,33 +733,36 @@ class DialogsViewModelTest {
      * Баг: если Room Flow не эмитит сразу после insertAll(), uiState остаётся в Loading.
      */
     @Test
-    fun loadDialogsAfterAuth_whenFlowEmitsWithDelay_showsSuccessEmptyState() = runTest {
-        // Given - Flow эмитит данные с задержкой (симулируем Room async behavior)
-        val dialogFlow = kotlinx.coroutines.flow.MutableStateFlow<List<DialogEntity>>(emptyList())
-        coEvery { messagesRepository.dialogs } returns dialogFlow
-        coEvery { messagesRepository.refreshDialogs() } coAnswers {
-            // Симулируем что сервер возвращает пустой список, но Flow обновляется не сразу
-            kotlinx.coroutines.delay(500)
-            Result.success(Unit)
+    fun loadDialogsAfterAuth_whenFlowEmitsWithDelay_showsSuccessEmptyState() =
+        runTest {
+            // Given - Flow эмитит данные с задержкой (симулируем Room async behavior)
+            val dialogFlow =
+                kotlinx.coroutines.flow.MutableStateFlow<List<DialogEntity>>(emptyList())
+            coEvery { messagesRepository.dialogs } returns dialogFlow
+            coEvery { messagesRepository.refreshDialogs() } coAnswers {
+                // Симулируем что сервер возвращает пустой список, но Flow обновляется не сразу
+                kotlinx.coroutines.delay(500)
+                Result.success(Unit)
+            }
+
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
+
+            // Then - даже если Flow ещё не эмитит, должен быть Success с пустым списком
+            val state = viewModel.uiState.value
+            assertTrue(
+                "Expected Success state with empty list but got $state",
+                state is DialogsUiState.Success && state.dialogs.isEmpty()
+            )
         }
-
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
-
-        // Then - даже если Flow ещё не эмитит, должен быть Success с пустым списком
-        val state = viewModel.uiState.value
-        assertTrue(
-            "Expected Success state with empty list but got $state",
-            state is DialogsUiState.Success && state.dialogs.isEmpty()
-        )
-    }
 
     /**
      * Тест: fallback при runtime-ошибке чтения из dialogs.first().
@@ -742,13 +784,14 @@ class DialogsViewModelTest {
             coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
             // When
-            viewModel = DialogsViewModel(
-                messagesRepository,
-                swRepository,
-                logger,
-                resources,
-                messageSentNotifier
-            )
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
             advanceUntilIdle()
 
             // Then - должен быть Success с пустым списком (fallback)
@@ -765,63 +808,67 @@ class DialogsViewModelTest {
      * Тест: isUpdating = true когда isDeleting = true или isMarkingAsRead = true.
      */
     @Test
-    fun isUpdating_whenDeletingOrMarkingAsRead_isTrue() = runTest {
-        // Given
-        val dialogId = 1L
-        val userId = 123
-        coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-        coEvery { swRepository.deleteDialog(dialogId) } coAnswers {
-            kotlinx.coroutines.delay(100)
-            Result.success(Unit)
-        }
-        coEvery { swRepository.markDialogAsRead(dialogId, userId) } coAnswers {
-            kotlinx.coroutines.delay(100)
-            Result.success(Unit)
-        }
+    fun isUpdating_whenDeletingOrMarkingAsRead_isTrue() =
+        runTest {
+            // Given
+            val dialogId = 1L
+            val userId = 123
+            coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+            coEvery { swRepository.deleteDialog(dialogId) } coAnswers {
+                kotlinx.coroutines.delay(100)
+                Result.success(Unit)
+            }
+            coEvery { swRepository.markDialogAsRead(dialogId, userId) } coAnswers {
+                kotlinx.coroutines.delay(100)
+                Result.success(Unit)
+            }
 
-        // When
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
-
-        // Test isUpdating flow with deleteDialog
-        viewModel.isUpdating.test {
-            assertEquals(false, awaitItem()) // Initial state
-            viewModel.deleteDialog(dialogId)
-            assertEquals(true, awaitItem()) // During deletion
+            // When
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
             advanceUntilIdle()
-            assertEquals(false, awaitItem()) // After deletion
+
+            // Test isUpdating flow with deleteDialog
+            viewModel.isUpdating.test {
+                assertEquals(false, awaitItem()) // Initial state
+                viewModel.deleteDialog(dialogId)
+                assertEquals(true, awaitItem()) // During deletion
+                advanceUntilIdle()
+                assertEquals(false, awaitItem()) // After deletion
+            }
         }
-    }
 
     // ==================== Тесты для MessageSentNotifier ====================
 
     @Test
-    fun whenMessageSentEventReceived_callsRefresh() = runTest {
-        val dialogs = listOf(testDialog)
-        coEvery { messagesRepository.dialogs } returns flowOf(dialogs)
-        coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+    fun whenMessageSentEventReceived_callsRefresh() =
+        runTest {
+            val dialogs = listOf(testDialog)
+            coEvery { messagesRepository.dialogs } returns flowOf(dialogs)
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
 
-        viewModel = DialogsViewModel(
-            messagesRepository,
-            swRepository,
-            logger,
-            resources,
-            messageSentNotifier
-        )
-        advanceUntilIdle()
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier
+                )
+            advanceUntilIdle()
 
-        coVerify(exactly = 1) { messagesRepository.refreshDialogs() }
+            coVerify(exactly = 1) { messagesRepository.refreshDialogs() }
 
-        messageSentNotifier.notifyMessageSent(123L)
-        advanceUntilIdle()
+            messageSentNotifier.notifyMessageSent(123L)
+            advanceUntilIdle()
 
-        coVerify(exactly = 2) { messagesRepository.refreshDialogs() }
-    }
+            coVerify(exactly = 2) { messagesRepository.refreshDialogs() }
+        }
 }

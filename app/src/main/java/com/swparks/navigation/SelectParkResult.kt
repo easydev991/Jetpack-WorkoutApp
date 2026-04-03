@@ -10,7 +10,10 @@ data class SelectedParkResult(
     val parkName: String
 )
 
-fun NavBackStackEntry.setSelectedParkResult(parkId: Long, parkName: String) {
+fun NavBackStackEntry.setSelectedParkResult(
+    parkId: Long,
+    parkName: String
+) {
     savedStateHandle[SELECTED_PARK_ID_KEY] = parkId
     savedStateHandle[SELECTED_PARK_NAME_KEY] = parkName
 }
@@ -18,11 +21,12 @@ fun NavBackStackEntry.setSelectedParkResult(parkId: Long, parkName: String) {
 fun NavBackStackEntry.consumeSelectedParkResult(): SelectedParkResult? {
     val parkId = savedStateHandle.get<Long>(SELECTED_PARK_ID_KEY)
     val parkName = savedStateHandle.get<String>(SELECTED_PARK_NAME_KEY)
-    val result = if (parkId != null && parkName != null) {
-        SelectedParkResult(parkId, parkName)
-    } else {
-        null
-    }
+    val result =
+        if (parkId != null && parkName != null) {
+            SelectedParkResult(parkId, parkName)
+        } else {
+            null
+        }
 
     if (result != null) {
         savedStateHandle.remove<Long>(SELECTED_PARK_ID_KEY)

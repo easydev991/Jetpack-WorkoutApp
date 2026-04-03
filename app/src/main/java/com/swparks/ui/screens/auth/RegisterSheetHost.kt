@@ -56,23 +56,25 @@ fun RegisterSheetHost(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    val registerViewModel: IRegisterViewModel = remember(appContainer) {
-        appContainer.registerViewModelFactory()
-    }
+    val registerViewModel: IRegisterViewModel =
+        remember(appContainer) {
+            appContainer.registerViewModelFactory()
+        }
     val uiState by registerViewModel.uiState.collectAsState()
     val innerNavController: NavHostController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-        confirmValueChange = { newValue ->
-            when (newValue) {
-                SheetValue.Expanded -> true
-                SheetValue.PartiallyExpanded -> false
-                SheetValue.Hidden -> allowHide
+    val sheetState =
+        rememberModalBottomSheetState(
+            skipPartiallyExpanded = true,
+            confirmValueChange = { newValue ->
+                when (newValue) {
+                    SheetValue.Expanded -> true
+                    SheetValue.PartiallyExpanded -> false
+                    SheetValue.Hidden -> allowHide
+                }
             }
-        }
-    )
+        )
 
     LaunchedEffect(Unit) {
         appContainer.userNotifier.errorFlow.collect { error ->
@@ -104,23 +106,26 @@ fun RegisterSheetHost(
             onDismissRequest = {},
             sheetState = sheetState,
             dragHandle = null,
-            properties = ModalBottomSheetProperties(
-                shouldDismissOnBackPress = false,
-                shouldDismissOnClickOutside = false
-            ),
+            properties =
+                ModalBottomSheetProperties(
+                    shouldDismissOnBackPress = false,
+                    shouldDismissOnClickOutside = false
+                )
         ) {
             RegisterSheetContent(
                 registerViewModel = registerViewModel,
                 innerNavController = innerNavController,
                 uiState = uiState,
-                callbacks = RegisterSheetCallbacks(
-                    onRegisterSuccess = onRegisterSuccess,
-                    onDismissed = onDismissed
-                ),
-                config = RegisterSheetConfig(
-                    snackbarHostState = snackbarHostState,
-                    dismissSheet = { dismissSheet(it) }
-                )
+                callbacks =
+                    RegisterSheetCallbacks(
+                        onRegisterSuccess = onRegisterSuccess,
+                        onDismissed = onDismissed
+                    ),
+                config =
+                    RegisterSheetConfig(
+                        snackbarHostState = snackbarHostState,
+                        dismissSheet = { dismissSheet(it) }
+                    )
             )
         }
     }
@@ -188,13 +193,15 @@ private fun RegisterNavHost(
                     when (action) {
                         is RegisterNavigationAction.RegisterSuccess -> onRegisterSuccess(action.userId)
                         RegisterNavigationAction.Close -> onClose()
-                        RegisterNavigationAction.SelectCountry -> innerNavController.navigate(
-                            RegisterRoutes.SELECT_COUNTRY
-                        )
+                        RegisterNavigationAction.SelectCountry ->
+                            innerNavController.navigate(
+                                RegisterRoutes.SELECT_COUNTRY
+                            )
 
-                        RegisterNavigationAction.SelectCity -> innerNavController.navigate(
-                            RegisterRoutes.SELECT_CITY
-                        )
+                        RegisterNavigationAction.SelectCity ->
+                            innerNavController.navigate(
+                                RegisterRoutes.SELECT_CITY
+                            )
                     }
                 }
             )

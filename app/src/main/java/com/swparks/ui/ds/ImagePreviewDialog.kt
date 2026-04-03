@@ -44,16 +44,18 @@ fun ImagePreviewDialog(
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            dismissOnBackPress = true,
-            dismissOnClickOutside = false
-        )
+        properties =
+            DialogProperties(
+                usePlatformDefaultWidth = false,
+                dismissOnBackPress = true,
+                dismissOnClickOutside = false
+            )
     ) {
         Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(Color.Black)
+            modifier =
+                modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
         ) {
             Scaffold(
                 containerColor = Color.Transparent,
@@ -65,12 +67,14 @@ fun ImagePreviewDialog(
                 }
             ) { paddingValues ->
                 ZoomablePhotoView(
-                    config = ZoomConfig(
-                        imageUrl = uri.toString(),
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues)
-                    )
+                    config =
+                        ZoomConfig(
+                            imageUrl = uri.toString(),
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(paddingValues)
+                        )
                 )
             }
         }
@@ -115,9 +119,10 @@ private fun ImagePreviewTopBar(
                 )
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.Transparent
-        )
+        colors =
+            TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent
+            )
     )
 }
 

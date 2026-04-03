@@ -21,35 +21,39 @@ fun Modifier.circleBackground(
     color: Color,
     padding: Dp
 ): Modifier {
-    val backgroundModifier = drawBehind {
-        drawCircle(
-            color,
-            size.width / 2f,
-            center = Offset(
+    val backgroundModifier =
+        drawBehind {
+            drawCircle(
+                color,
                 size.width / 2f,
-                size.height / 2f
-            )
-        )
-    }
-    val layoutModifier = layout { measurable, constraints ->
-        val adjustedConstraints = constraints.offset(-padding.roundToPx())
-        val placeable = measurable.measure(adjustedConstraints)
-        val currentHeight = placeable.height
-        val currentWidth = placeable.width
-        val newDiameter = maxOf(
-            currentHeight,
-            currentWidth
-        ) + padding.roundToPx() * 2
-        layout(
-            newDiameter,
-            newDiameter
-        ) {
-            placeable.placeRelative(
-                (newDiameter - currentWidth) / 2,
-                (newDiameter - currentHeight) / 2
+                center =
+                    Offset(
+                        size.width / 2f,
+                        size.height / 2f
+                    )
             )
         }
-    }
+    val layoutModifier =
+        layout { measurable, constraints ->
+            val adjustedConstraints = constraints.offset(-padding.roundToPx())
+            val placeable = measurable.measure(adjustedConstraints)
+            val currentHeight = placeable.height
+            val currentWidth = placeable.width
+            val newDiameter =
+                maxOf(
+                    currentHeight,
+                    currentWidth
+                ) + padding.roundToPx() * 2
+            layout(
+                newDiameter,
+                newDiameter
+            ) {
+                placeable.placeRelative(
+                    (newDiameter - currentWidth) / 2,
+                    (newDiameter - currentHeight) / 2
+                )
+            }
+        }
 
     return this then backgroundModifier then layoutModifier
 }

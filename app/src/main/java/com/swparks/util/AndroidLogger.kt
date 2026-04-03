@@ -7,7 +7,7 @@ package com.swparks.util
 class AndroidLogger : Logger {
     override fun d(
         tag: String,
-        message: String,
+        message: String
     ) {
         android.util.Log.d(tag, message)
     }
@@ -15,7 +15,7 @@ class AndroidLogger : Logger {
     override fun w(
         tag: String,
         message: String,
-        throwable: Throwable?,
+        throwable: Throwable?
     ) {
         if (throwable != null) {
             android.util.Log.w(tag, message, throwable)
@@ -27,7 +27,7 @@ class AndroidLogger : Logger {
     override fun e(
         tag: String,
         message: String,
-        throwable: Throwable?,
+        throwable: Throwable?
     ) {
         if (throwable != null) {
             android.util.Log.e(tag, message, throwable)
@@ -38,7 +38,7 @@ class AndroidLogger : Logger {
 
     override fun i(
         tag: String,
-        message: String,
+        message: String
     ) {
         android.util.Log.i(tag, message)
     }

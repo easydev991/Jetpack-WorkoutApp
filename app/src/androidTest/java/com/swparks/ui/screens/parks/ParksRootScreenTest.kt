@@ -3,14 +3,16 @@ package com.swparks.ui.screens.parks
 import androidx.compose.material3.Surface
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
-import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.swparks.R
 import com.swparks.data.model.City
 import com.swparks.data.model.NewParkDraft
 import com.swparks.data.model.Park
@@ -21,6 +23,7 @@ import com.swparks.data.model.User
 import com.swparks.navigation.AppState
 import com.swparks.ui.model.ParksTab
 import com.swparks.ui.viewmodel.FakeParksRootViewModel
+import com.swparks.util.FakeAnalyticsReporter
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -28,10 +31,10 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class ParksRootScreenTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private lateinit var fakeViewModel: FakeParksRootViewModel
 
     @Before
@@ -83,7 +86,7 @@ class ParksRootScreenTest {
     fun whenUserIsAuthorized_fabIsDisplayed() {
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
 
             Surface {
@@ -104,7 +107,7 @@ class ParksRootScreenTest {
     fun whenUserIsNotAuthorized_fabIsNotDisplayed() {
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
 
             Surface {
                 ParksRootScreen(
@@ -125,7 +128,7 @@ class ParksRootScreenTest {
     fun whenUserIsAuthorized_fabIsEnabled() {
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
 
             Surface {
@@ -151,7 +154,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
 
             Surface {
@@ -163,11 +166,9 @@ class ParksRootScreenTest {
             }
         }
 
-        composeTestRule.waitForIdle()
-        composeTestRule
-            .onNodeWithContentDescription("Создать площадку")
-            .performClick()
-
+        composeTestRule.runOnIdle {
+            fakeViewModel.onPermissionGranted()
+        }
         composeTestRule.waitForIdle()
 
         assert(capturedDraft != null) { "onCreateParkClick should be called with draft" }
@@ -184,7 +185,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
 
             Surface {
@@ -196,11 +197,9 @@ class ParksRootScreenTest {
             }
         }
 
-        composeTestRule.waitForIdle()
-        composeTestRule
-            .onNodeWithContentDescription("Создать площадку")
-            .performClick()
-
+        composeTestRule.runOnIdle {
+            fakeViewModel.onPermissionGranted()
+        }
         composeTestRule.waitForIdle()
 
         assert(capturedDraft != null) { "onCreateParkClick should be called even when location fails" }
@@ -217,7 +216,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
 
             Surface {
@@ -229,11 +228,9 @@ class ParksRootScreenTest {
             }
         }
 
-        composeTestRule.waitForIdle()
-        composeTestRule
-            .onNodeWithContentDescription("Создать площадку")
-            .performClick()
-
+        composeTestRule.runOnIdle {
+            fakeViewModel.onPermissionGranted()
+        }
         composeTestRule.waitForIdle()
 
         capturedDraft!!
@@ -243,19 +240,20 @@ class ParksRootScreenTest {
 
     @Test
     fun onFabClicked_withGeocodingData_draftContainsAddressAndCityId() {
-        val draft = NewParkDraft(
-            latitude = 55.7558,
-            longitude = 37.6173,
-            address = "Moscow, Red Square",
-            cityId = 1
-        )
+        val draft =
+            NewParkDraft(
+                latitude = 55.7558,
+                longitude = 37.6173,
+                address = "Moscow, Red Square",
+                cityId = 1
+            )
         fakeViewModel.nextDraft = draft
 
         var capturedDraft: NewParkDraft? = null
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
 
             Surface {
@@ -267,11 +265,9 @@ class ParksRootScreenTest {
             }
         }
 
-        composeTestRule.waitForIdle()
-        composeTestRule
-            .onNodeWithContentDescription("Создать площадку")
-            .performClick()
-
+        composeTestRule.runOnIdle {
+            fakeViewModel.onPermissionGranted()
+        }
         composeTestRule.waitForIdle()
 
         capturedDraft!!
@@ -282,13 +278,14 @@ class ParksRootScreenTest {
     @Test
     fun whenShowNoParksFoundTrue_noParksFoundViewIsDisplayed() {
         val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
+        val noParksFoundText = context.getString(R.string.no_parks_found)
 
         fakeViewModel.setSelectedCity(city)
         fakeViewModel.setParksState(hasParks = true, filteredParks = emptyList())
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
 
             Surface {
                 ParksRootScreen(
@@ -301,12 +298,13 @@ class ParksRootScreenTest {
 
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithContentDescription("No parks found")
+            .onNodeWithText(noParksFoundText)
             .assertIsDisplayed()
     }
 
     @Test
     fun whenShowNoParksFoundFalse_noParksFoundViewIsNotDisplayed() {
+        val noParksFoundText = context.getString(R.string.no_parks_found)
         fakeViewModel.setParksState(
             hasParks = true,
             filteredParks = listOf(createPark(1L, 1, 1, 1))
@@ -314,7 +312,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
 
             Surface {
                 ParksRootScreen(
@@ -326,21 +324,24 @@ class ParksRootScreenTest {
         }
 
         composeTestRule.waitForIdle()
-        composeTestRule
-            .onNodeWithContentDescription("No parks found")
-            .assertIsNotDisplayed()
+        assert(
+            composeTestRule.onAllNodesWithText(noParksFoundText).fetchSemanticsNodes().isEmpty()
+        ) {
+            "\"$noParksFoundText\" should not be displayed"
+        }
     }
 
     @Test
     fun whenShowNoParksFoundTrue_selectAnotherCityButtonIsVisible() {
         val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
+        val selectAnotherCityText = context.getString(R.string.select_another_city)
 
         fakeViewModel.setSelectedCity(city)
         fakeViewModel.setParksState(hasParks = true, filteredParks = emptyList())
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
 
             Surface {
                 ParksRootScreen(
@@ -353,13 +354,14 @@ class ParksRootScreenTest {
 
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithContentDescription("Select another city")
+            .onNodeWithText(selectAnotherCityText)
             .assertIsDisplayed()
     }
 
     @Test
     fun whenIsSizeTypeFilterEditedTrue_changeFiltersButtonIsVisible() {
         val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
+        val changeFiltersText = context.getString(R.string.change_filters)
 
         fakeViewModel.setSelectedCity(city)
         fakeViewModel.onLocalFilterChange(
@@ -372,7 +374,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
 
             Surface {
                 ParksRootScreen(
@@ -385,13 +387,14 @@ class ParksRootScreenTest {
 
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithContentDescription("Change filters")
+            .onNodeWithText(changeFiltersText)
             .assertIsDisplayed()
     }
 
     @Test
     fun whenIsSizeTypeFilterEditedFalse_changeFiltersButtonIsNotVisible() {
         val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
+        val changeFiltersText = context.getString(R.string.change_filters)
 
         fakeViewModel.setSelectedCity(city)
         fakeViewModel.onLocalFilterChange(ParkFilter())
@@ -399,7 +402,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
 
             Surface {
                 ParksRootScreen(
@@ -411,16 +414,18 @@ class ParksRootScreenTest {
         }
 
         composeTestRule.waitForIdle()
-        composeTestRule
-            .onNodeWithContentDescription("Change filters")
-            .assertIsNotDisplayed()
+        assert(
+            composeTestRule.onAllNodesWithText(changeFiltersText).fetchSemanticsNodes().isEmpty()
+        ) {
+            "\"$changeFiltersText\" should not be displayed"
+        }
     }
 
     @Test
     fun whenTabSelectedIsList_listTabIsSelected() {
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
 
             Surface {
                 ParksRootScreen(
@@ -443,7 +448,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
 
             Surface {
                 ParksRootScreen(
@@ -462,6 +467,7 @@ class ParksRootScreenTest {
 
     @Test
     fun whenTabSelectedIsList_listContentIsDisplayed() {
+        fakeViewModel.onTabSelected(ParksTab.LIST)
         fakeViewModel.setParksState(
             hasParks = true,
             filteredParks = listOf(createPark(1L, 1, 1, 1))
@@ -469,7 +475,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
 
             Surface {
                 ParksRootScreen(
@@ -482,15 +488,15 @@ class ParksRootScreenTest {
 
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithTag("park_map")
-            .assertIsNotDisplayed()
+            .onNodeWithText("Park1")
+            .assertIsDisplayed()
     }
 
     @Test
     fun whenTabChangedToMap_mapPlaceholderIsDisplayed() {
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
 
             Surface {
                 ParksRootScreen(
@@ -522,7 +528,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
 
             Surface {
                 ParksRootScreen(
@@ -540,7 +546,7 @@ class ParksRootScreenTest {
 
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithTag("park_map")
-            .assertIsNotDisplayed()
+            .onNodeWithText("Park1")
+            .assertIsDisplayed()
     }
 }

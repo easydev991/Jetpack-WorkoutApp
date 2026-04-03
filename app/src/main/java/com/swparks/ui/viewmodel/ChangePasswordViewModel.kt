@@ -24,8 +24,8 @@ class ChangePasswordViewModel(
     private val logger: Logger,
     private val userNotifier: UserNotifier,
     private val resources: ResourcesProvider
-) : ViewModel(), IChangePasswordViewModel {
-
+) : ViewModel(),
+    IChangePasswordViewModel {
     private companion object {
         private const val TAG = "ChangePasswordViewModel"
     }
@@ -59,10 +59,11 @@ class ChangePasswordViewModel(
         _uiState.update { it.copy(isSaving = true) }
 
         viewModelScope.launch {
-            val result = changePasswordUseCase(
-                current = state.currentPassword,
-                new = state.newPassword
-            )
+            val result =
+                changePasswordUseCase(
+                    current = state.currentPassword,
+                    new = state.newPassword
+                )
 
             result.fold(
                 onSuccess = {

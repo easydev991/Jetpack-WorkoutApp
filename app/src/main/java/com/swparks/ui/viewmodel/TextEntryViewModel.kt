@@ -35,8 +35,8 @@ class TextEntryViewModel(
     private val userNotifier: UserNotifier,
     private val mode: TextEntryMode,
     private val context: Context
-) : ViewModel(), ITextEntryViewModel {
-
+) : ViewModel(),
+    ITextEntryViewModel {
     private val _uiState = MutableStateFlow(TextEntryUiState(mode, text = getInitialText(mode)))
     override val uiState: StateFlow<TextEntryUiState> = _uiState.asStateFlow()
 
@@ -48,11 +48,12 @@ class TextEntryViewModel(
      * Вычисляет флаг isSendEnabled на основе режима и текста.
      */
     override fun onTextChanged(text: String) {
-        _uiState.value = _uiState.value.copy(
-            text = text,
-            isSendEnabled = isSendEnabled(text),
-            error = null
-        )
+        _uiState.value =
+            _uiState.value.copy(
+                text = text,
+                isSendEnabled = isSendEnabled(text),
+                error = null
+            )
     }
 
     override fun onSend() {
@@ -72,52 +73,61 @@ class TextEntryViewModel(
         }
     }
 
-    private suspend fun performSend(trimmedText: String): Result<Unit> = when (mode) {
-        is TextEntryMode.NewForPark -> textEntryUseCase.addParkComment(
-            mode.parkId,
-            trimmedText
-        )
+    private suspend fun performSend(trimmedText: String): Result<Unit> =
+        when (mode) {
+            is TextEntryMode.NewForPark ->
+                textEntryUseCase.addParkComment(
+                    mode.parkId,
+                    trimmedText
+                )
 
-        is TextEntryMode.NewForEvent -> textEntryUseCase.addEventComment(
-            mode.eventId,
-            trimmedText
-        )
+            is TextEntryMode.NewForEvent ->
+                textEntryUseCase.addEventComment(
+                    mode.eventId,
+                    trimmedText
+                )
 
-        is TextEntryMode.NewForJournal -> textEntryUseCase.addJournalEntry(
-            mode.ownerId,
-            mode.journalId,
-            trimmedText
-        )
+            is TextEntryMode.NewForJournal ->
+                textEntryUseCase.addJournalEntry(
+                    mode.ownerId,
+                    mode.journalId,
+                    trimmedText
+                )
 
-        is TextEntryMode.NewJournal -> textEntryUseCase.createJournal(
-            userId = mode.userId,
-            title = trimmedText
-        )
+            is TextEntryMode.NewJournal ->
+                textEntryUseCase.createJournal(
+                    userId = mode.userId,
+                    title = trimmedText
+                )
 
-        is TextEntryMode.EditPark -> textEntryUseCase.editParkComment(
-            mode.editInfo.parentObjectId,
-            mode.editInfo.entryId,
-            trimmedText
-        )
+            is TextEntryMode.EditPark ->
+                textEntryUseCase.editParkComment(
+                    mode.editInfo.parentObjectId,
+                    mode.editInfo.entryId,
+                    trimmedText
+                )
 
-        is TextEntryMode.EditEvent -> textEntryUseCase.editEventComment(
-            mode.editInfo.parentObjectId,
-            mode.editInfo.entryId,
-            trimmedText
-        )
+            is TextEntryMode.EditEvent ->
+                textEntryUseCase.editEventComment(
+                    mode.editInfo.parentObjectId,
+                    mode.editInfo.entryId,
+                    trimmedText
+                )
 
-        is TextEntryMode.EditJournalEntry -> textEntryUseCase.editJournalEntry(
-            mode.ownerId,
-            mode.editInfo.parentObjectId,
-            mode.editInfo.entryId,
-            trimmedText
-        )
+            is TextEntryMode.EditJournalEntry ->
+                textEntryUseCase.editJournalEntry(
+                    mode.ownerId,
+                    mode.editInfo.parentObjectId,
+                    mode.editInfo.entryId,
+                    trimmedText
+                )
 
-        is TextEntryMode.Message -> textEntryUseCase.sendMessageTo(
-            userId = mode.userId,
-            message = trimmedText
-        )
-    }
+            is TextEntryMode.Message ->
+                textEntryUseCase.sendMessageTo(
+                    userId = mode.userId,
+                    message = trimmedText
+                )
+        }
 
     private fun handleResult(result: Result<Unit>) {
         result.fold(
@@ -128,15 +138,17 @@ class TextEntryViewModel(
                 _events.trySend(TextEntryEvent.Success)
             },
             onFailure = { exception ->
-                val errorMessage = context.getString(
-                    R.string.text_entry_error,
-                    exception.message ?: ""
-                )
+                val errorMessage =
+                    context.getString(
+                        R.string.text_entry_error,
+                        exception.message ?: ""
+                    )
                 _events.trySend(TextEntryEvent.Error(errorMessage))
-                val appError = AppError.Generic(
-                    message = errorMessage,
-                    throwable = exception
-                )
+                val appError =
+                    AppError.Generic(
+                        message = errorMessage,
+                        throwable = exception
+                    )
                 userNotifier.handleError(appError)
             }
         )
@@ -152,24 +164,26 @@ class TextEntryViewModel(
         val emptyError = context.getString(R.string.text_entry_empty_error)
 
         // Проверка изменения текста при редактировании
-        val isTextChanged = when (mode) {
-            is TextEntryMode.EditPark,
-            is TextEntryMode.EditEvent,
-            is TextEntryMode.EditJournalEntry -> {
-                val oldEntry = when (mode) {
-                    is TextEntryMode.EditPark -> mode.editInfo.oldEntry
-                    is TextEntryMode.EditEvent -> mode.editInfo.oldEntry
-                    is TextEntryMode.EditJournalEntry -> mode.editInfo.oldEntry
+        val isTextChanged =
+            when (mode) {
+                is TextEntryMode.EditPark,
+                is TextEntryMode.EditEvent,
+                is TextEntryMode.EditJournalEntry -> {
+                    val oldEntry =
+                        when (mode) {
+                            is TextEntryMode.EditPark -> mode.editInfo.oldEntry
+                            is TextEntryMode.EditEvent -> mode.editInfo.oldEntry
+                            is TextEntryMode.EditJournalEntry -> mode.editInfo.oldEntry
+                        }
+                    trimmedText.isNotEmpty() && trimmedText != oldEntry.trim()
                 }
-                trimmedText.isNotEmpty() && trimmedText != oldEntry.trim()
-            }
 
-            is TextEntryMode.NewForPark,
-            is TextEntryMode.NewForEvent,
-            is TextEntryMode.NewForJournal,
-            is TextEntryMode.NewJournal,
-            is TextEntryMode.Message -> trimmedText.isNotEmpty()
-        }
+                is TextEntryMode.NewForPark,
+                is TextEntryMode.NewForEvent,
+                is TextEntryMode.NewForJournal,
+                is TextEntryMode.NewJournal,
+                is TextEntryMode.Message -> trimmedText.isNotEmpty()
+            }
 
         // Объединённый результат валидации
         return when {
@@ -198,20 +212,22 @@ class TextEntryViewModel(
      *
      * @return Текст для предзаполнения поля при редактировании, пустая строка для создания
      */
-    private fun getInitialText(mode: TextEntryMode): String = when (mode) {
-        is TextEntryMode.EditPark,
-        is TextEntryMode.EditEvent,
-        is TextEntryMode.EditJournalEntry -> {
-            val editInfo = when (mode) {
-                is TextEntryMode.EditPark -> mode.editInfo
-                is TextEntryMode.EditEvent -> mode.editInfo
-                is TextEntryMode.EditJournalEntry -> mode.editInfo
+    private fun getInitialText(mode: TextEntryMode): String =
+        when (mode) {
+            is TextEntryMode.EditPark,
+            is TextEntryMode.EditEvent,
+            is TextEntryMode.EditJournalEntry -> {
+                val editInfo =
+                    when (mode) {
+                        is TextEntryMode.EditPark -> mode.editInfo
+                        is TextEntryMode.EditEvent -> mode.editInfo
+                        is TextEntryMode.EditJournalEntry -> mode.editInfo
+                    }
+                editInfo.oldEntry
             }
-            editInfo.oldEntry
-        }
 
-        else -> ""
-    }
+            else -> ""
+        }
 
     /**
      * Проверяет, можно ли отправить текст на основе режима и текущего текста.
@@ -229,11 +245,12 @@ class TextEntryViewModel(
             is TextEntryMode.EditPark,
             is TextEntryMode.EditEvent,
             is TextEntryMode.EditJournalEntry -> {
-                val editInfo = when (mode) {
-                    is TextEntryMode.EditPark -> mode.editInfo
-                    is TextEntryMode.EditEvent -> mode.editInfo
-                    is TextEntryMode.EditJournalEntry -> mode.editInfo
-                }
+                val editInfo =
+                    when (mode) {
+                        is TextEntryMode.EditPark -> mode.editInfo
+                        is TextEntryMode.EditEvent -> mode.editInfo
+                        is TextEntryMode.EditJournalEntry -> mode.editInfo
+                    }
                 trimmedText.isNotEmpty() && trimmedText != editInfo.oldEntry.trim()
             }
         }
@@ -245,11 +262,12 @@ class TextEntryViewModel(
     private fun isNetworkAvailable(): Boolean {
         val connectivityManager =
             context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        return connectivityManager.activeNetwork?.let { network ->
-            connectivityManager.getNetworkCapabilities(network)
-        }?.let { capabilities ->
-            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-        } ?: false
+        return connectivityManager.activeNetwork
+            ?.let { network ->
+                connectivityManager.getNetworkCapabilities(network)
+            }?.let { capabilities ->
+                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                    capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+            } ?: false
     }
 }

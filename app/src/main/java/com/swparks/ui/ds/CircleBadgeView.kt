@@ -35,8 +35,9 @@ fun CircleBadgeView(
             text = if (value > 99) "99+" else "$value",
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier
-                .circleBackground(badgeColor, dimensionResource(id = R.dimen.spacing_micro))
+            modifier =
+                Modifier
+                    .circleBackground(badgeColor, dimensionResource(id = R.dimen.spacing_micro))
         )
     }
 }

@@ -13,7 +13,7 @@ interface Logger {
      */
     fun d(
         tag: String,
-        message: String,
+        message: String
     )
 
     /**
@@ -26,7 +26,7 @@ interface Logger {
     fun w(
         tag: String,
         message: String,
-        throwable: Throwable? = null,
+        throwable: Throwable? = null
     )
 
     /**
@@ -39,7 +39,7 @@ interface Logger {
     fun e(
         tag: String,
         message: String,
-        throwable: Throwable? = null,
+        throwable: Throwable? = null
     )
 
     /**
@@ -50,6 +50,6 @@ interface Logger {
      */
     fun i(
         tag: String,
-        message: String,
+        message: String
     )
 }

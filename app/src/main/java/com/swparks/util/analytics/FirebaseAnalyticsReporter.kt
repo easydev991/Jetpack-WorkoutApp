@@ -13,12 +13,15 @@ import com.swparks.util.Logger
 class FirebaseAnalyticsReporter(
     context: Context,
     private val logger: Logger,
-    private val crashReporter: CrashReporter,
+    private val crashReporter: CrashReporter
 ) : AnalyticsReporter {
     private val appContext = context.applicationContext
 
     @Suppress("TooGenericExceptionCaught")
-    override fun logScreenView(screenName: String, screenClass: String?) {
+    override fun logScreenView(
+        screenName: String,
+        screenClass: String?
+    ) {
         try {
             val firebaseAnalytics = FirebaseAnalytics.getInstance(appContext)
             val params =

@@ -79,11 +79,12 @@ fun LoginScreen(
         Box(modifier = Modifier.fillMaxSize()) {
             LoginContent(
                 viewModel = viewModel,
-                state = LoginContentState(
-                    loginError = loginError,
-                    resetError = resetError,
-                    isLoading = uiState.isBusy
-                ),
+                state =
+                    LoginContentState(
+                        loginError = loginError,
+                        resetError = resetError,
+                        isLoading = uiState.isBusy
+                    ),
                 focusRequester = screenState.focusRequester,
                 onResetPasswordClick = { showForgotPasswordAlertIfNeeded(viewModel, screenState) },
                 modifier = Modifier.padding(paddingValues)
@@ -102,7 +103,6 @@ fun LoginScreen(
         onResetSuccess = onResetSuccess
     )
 }
-
 
 @Composable
 private fun HandleLoginEvents(
@@ -126,11 +126,12 @@ private fun HandleLoginEvents(
     HandleLoginErrorsOnly(viewModel.uiState.collectAsState().value, screenState)
 
     LoginScreenAlerts(
-        state = LoginAlertsState(
-            showNoInternet = screenState.showNoInternetAlert,
-            showForgotPassword = screenState.showForgotPasswordAlert,
-            showResetSuccess = screenState.showResetSuccessAlert
-        ),
+        state =
+            LoginAlertsState(
+                showNoInternet = screenState.showNoInternetAlert,
+                showForgotPassword = screenState.showForgotPasswordAlert,
+                showResetSuccess = screenState.showResetSuccessAlert
+            ),
         onAction = { action ->
             when (action) {
                 LoginAlertAction.DismissNoInternet -> screenState.setShowNoInternetAlert(false)
@@ -187,7 +188,7 @@ private data class LoginScreenState(
 @Composable
 private fun LoginModalAppBar(
     onDismiss: () -> Unit,
-    isLoading: Boolean,
+    isLoading: Boolean
 ) {
     CenterAlignedTopAppBar(
         title = {
@@ -207,9 +208,10 @@ private fun LoginModalAppBar(
                 )
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+        colors =
+            TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
     )
 }
 
@@ -272,13 +274,14 @@ private fun LoginFieldsColumn(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))) {
         LoginField(
-            config = LoginFieldConfig(
-                value = viewModel.credentials.login,
-                isError = resetError != null,
-                supportingText = resetError ?: "",
-                enabled = !isLoading,
-                focusRequester = focusRequester
-            ),
+            config =
+                LoginFieldConfig(
+                    value = viewModel.credentials.login,
+                    isError = resetError != null,
+                    supportingText = resetError ?: "",
+                    enabled = !isLoading,
+                    focusRequester = focusRequester
+                ),
             onValueChange = if (!isLoading) viewModel::onLoginChange else { _ -> }
         )
 
@@ -399,13 +402,18 @@ private fun PasswordField(config: PasswordFieldConfig) {
 
 /** Кнопка "Войти". */
 @Composable
-private fun LoginButton(enabled: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun LoginButton(
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     SWButton(
         config =
             ButtonConfig(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .testTag(ScreenshotTestTags.LOGIN_BUTTON),
+                modifier =
+                    modifier
+                        .fillMaxWidth()
+                        .testTag(ScreenshotTestTags.LOGIN_BUTTON),
                 size = SWButtonSize.LARGE,
                 mode = SWButtonMode.FILLED,
                 text = stringResource(id = R.string.sign_in),
@@ -466,7 +474,9 @@ data class LoginAlertsState(
 
 sealed class LoginAlertAction {
     object DismissNoInternet : LoginAlertAction()
+
     object DismissForgotPassword : LoginAlertAction()
+
     object DismissResetSuccess : LoginAlertAction()
 }
 

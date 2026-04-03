@@ -130,16 +130,17 @@ class MainUserFormTest {
     @Test
     fun form_whenAllFieldsArePresent_thenCreatesCorrectly() {
         // Given
-        val form = createTestForm(
-            name = "johndoe",
-            fullname = "John Doe",
-            email = "john.doe@example.com",
-            password = "mypass123",
-            birthDate = "1990-11-25",
-            genderCode = 0,
-            countryId = 1,
-            cityId = 2
-        )
+        val form =
+            createTestForm(
+                name = "johndoe",
+                fullname = "John Doe",
+                email = "john.doe@example.com",
+                password = "mypass123",
+                birthDate = "1990-11-25",
+                genderCode = 0,
+                countryId = 1,
+                cityId = 2
+            )
 
         // When & Then
         assertEquals("johndoe", form.name)
@@ -155,16 +156,17 @@ class MainUserFormTest {
     @Test
     fun form_whenOptionalFieldsAreNull_thenCreatesCorrectly() {
         // Given
-        val form = createTestForm(
-            name = "johndoe",
-            fullname = "John Doe",
-            email = "john.doe@example.com",
-            password = "mypass123",
-            birthDate = "1990-11-25",
-            genderCode = 0,
-            countryId = null,
-            cityId = null
-        )
+        val form =
+            createTestForm(
+                name = "johndoe",
+                fullname = "John Doe",
+                email = "john.doe@example.com",
+                password = "mypass123",
+                birthDate = "1990-11-25",
+                genderCode = 0,
+                countryId = null,
+                cityId = null
+            )
 
         // When & Then
         assertEquals("johndoe", form.name)

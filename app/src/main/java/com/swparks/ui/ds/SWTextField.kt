@@ -62,43 +62,47 @@ data class TextFieldConfig(
 @Composable
 fun SWTextField(config: TextFieldConfig) {
     OutlinedTextField(
-        modifier = config.modifier
-            .fillMaxWidth()
-            .then(
-                if (config.focusRequester != null) {
-                    Modifier.focusRequester(config.focusRequester)
-                } else {
-                    Modifier
-                }
-            ),
+        modifier =
+            config.modifier
+                .fillMaxWidth()
+                .then(
+                    if (config.focusRequester != null) {
+                        Modifier.focusRequester(config.focusRequester)
+                    } else {
+                        Modifier
+                    }
+                ),
         value = config.text,
         onValueChange = config.onTextChange,
         singleLine = config.singleLine,
-        label = if (config.labelID != null) {
-            { Text(text = stringResource(id = config.labelID)) }
-        } else {
-            null
-        },
+        label =
+            if (config.labelID != null) {
+                { Text(text = stringResource(id = config.labelID)) }
+            } else {
+                null
+            },
         supportingText = {
             if (config.supportingText.isNotBlank()) {
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = config.supportingText,
-                    textAlign = TextAlign.Start,
+                    textAlign = TextAlign.Start
                 )
             }
         },
         shape = RoundedCornerShape(dimensionResource(R.dimen.spacing_xsmall)),
-        visualTransformation = if (config.secure)
-            PasswordVisualTransformation()
-        else VisualTransformation.None,
+        visualTransformation =
+            if (config.secure) {
+                PasswordVisualTransformation()
+            } else {
+                VisualTransformation.None
+            },
         isError = config.isError,
         enabled = config.enabled,
         keyboardOptions = config.keyboardOptions,
         keyboardActions = config.keyboardActions
     )
 }
-
 
 @Preview(showBackground = true, locale = "ru")
 @Preview(
@@ -115,36 +119,40 @@ fun SWTextFieldPreview() {
                 modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
             ) {
                 SWTextField(
-                    config = TextFieldConfig(
-                        text = "",
-                        labelID = R.string.login,
-                        onTextChange = {}
-                    )
+                    config =
+                        TextFieldConfig(
+                            text = "",
+                            labelID = R.string.login,
+                            onTextChange = {}
+                        )
                 )
                 SWTextField(
-                    config = TextFieldConfig(
-                        text = "NineNineOne",
-                        labelID = R.string.login,
-                        onTextChange = {}
-                    )
+                    config =
+                        TextFieldConfig(
+                            text = "NineNineOne",
+                            labelID = R.string.login,
+                            onTextChange = {}
+                        )
                 )
                 SWTextField(
-                    config = TextFieldConfig(
-                        text = "123123123",
-                        secure = true,
-                        labelID = R.string.new_password,
-                        onTextChange = {}
-                    )
+                    config =
+                        TextFieldConfig(
+                            text = "123123123",
+                            secure = true,
+                            labelID = R.string.new_password,
+                            onTextChange = {}
+                        )
                 )
                 SWTextField(
-                    config = TextFieldConfig(
-                        text = "123",
-                        secure = true,
-                        isError = true,
-                        supportingText = stringResource(id = R.string.password_short),
-                        labelID = R.string.new_password,
-                        onTextChange = {}
-                    )
+                    config =
+                        TextFieldConfig(
+                            text = "123",
+                            secure = true,
+                            isError = true,
+                            supportingText = stringResource(id = R.string.password_short),
+                            labelID = R.string.new_password,
+                            onTextChange = {}
+                        )
                 )
             }
         }

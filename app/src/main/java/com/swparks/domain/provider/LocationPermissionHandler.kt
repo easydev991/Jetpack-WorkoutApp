@@ -7,7 +7,6 @@ package com.swparks.domain.provider
  * без прямой зависимости от Android Activity.
  */
 interface LocationPermissionHandler {
-
     /**
      * Проверяет, предоставлено ли разрешение на геолокацию.
      *

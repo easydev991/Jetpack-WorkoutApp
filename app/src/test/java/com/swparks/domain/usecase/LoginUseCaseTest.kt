@@ -24,7 +24,6 @@ import org.junit.Test
 
 /** Unit тесты для LoginUseCase */
 class LoginUseCaseTest {
-
     private lateinit var tokenEncoder: TokenEncoder
     private lateinit var secureTokenRepository: SecureTokenRepository
     private lateinit var swRepository: SWRepository
@@ -63,65 +62,68 @@ class LoginUseCaseTest {
     }
 
     @Test
-    fun invoke_whenValidCredentials_thenSavesTokenAndCallsLogin() = runTest {
-        // Given
-        coEvery {
-            swRepository.login(any())
-        } returns Result.success(LoginSuccess(testUserId))
+    fun invoke_whenValidCredentials_thenSavesTokenAndCallsLogin() =
+        runTest {
+            // Given
+            coEvery {
+                swRepository.login(any())
+            } returns Result.success(LoginSuccess(testUserId))
 
-        coEvery { tokenEncoder.encode(testCredentials) } returns testToken
+            coEvery { tokenEncoder.encode(testCredentials) } returns testToken
 
-        // When
-        val result = loginUseCase(testCredentials)
+            // When
+            val result = loginUseCase(testCredentials)
 
-        // Then
-        assertTrue(result.isSuccess)
-        assertEquals(testUserId, result.getOrNull()?.userId)
-        coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(testToken) }
-        coVerify(exactly = 1) { swRepository.login(testToken) }
-        coVerify(exactly = 1) { tokenEncoder.encode(testCredentials) }
-        coVerify(exactly = 1) { preferencesRepository.saveCurrentUserId(testUserId) }
-    }
-
-    @Test
-    fun invoke_whenEmptyCredentials_thenSavesEmptyToken() = runTest {
-        // Given
-        val emptyCredentials = LoginCredentials(login = "", password = "")
-        coEvery {
-            swRepository.login(any())
-        } returns Result.success(LoginSuccess(testUserId))
-
-        coEvery { tokenEncoder.encode(emptyCredentials) } returns null
-
-        // When
-        val result = loginUseCase(emptyCredentials)
-
-        // Then
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(null) }
-        coVerify(exactly = 1) { swRepository.login(null) }
-        coVerify(exactly = 1) { tokenEncoder.encode(emptyCredentials) }
-        coVerify(exactly = 1) { preferencesRepository.saveCurrentUserId(testUserId) }
-    }
+            // Then
+            assertTrue(result.isSuccess)
+            assertEquals(testUserId, result.getOrNull()?.userId)
+            coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(testToken) }
+            coVerify(exactly = 1) { swRepository.login(testToken) }
+            coVerify(exactly = 1) { tokenEncoder.encode(testCredentials) }
+            coVerify(exactly = 1) { preferencesRepository.saveCurrentUserId(testUserId) }
+        }
 
     @Test
-    fun invoke_whenCredentialsIsNullToken_thenSavesNullToken() = runTest {
-        // Given
-        val nullTokenCredentials = LoginCredentials(login = "test", password = " ")
-        coEvery {
-            swRepository.login(any())
-        } returns Result.success(LoginSuccess(testUserId))
+    fun invoke_whenEmptyCredentials_thenSavesEmptyToken() =
+        runTest {
+            // Given
+            val emptyCredentials = LoginCredentials(login = "", password = "")
+            coEvery {
+                swRepository.login(any())
+            } returns Result.success(LoginSuccess(testUserId))
 
-        coEvery { tokenEncoder.encode(nullTokenCredentials) } returns null
+            coEvery { tokenEncoder.encode(emptyCredentials) } returns null
 
-        // When
-        val result = loginUseCase(nullTokenCredentials)
+            // When
+            val result = loginUseCase(emptyCredentials)
 
-        // Then
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(null) }
-        coVerify(exactly = 1) { swRepository.login(null) }
-        coVerify(exactly = 1) { tokenEncoder.encode(nullTokenCredentials) }
-        coVerify(exactly = 1) { preferencesRepository.saveCurrentUserId(testUserId) }
-    }
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(null) }
+            coVerify(exactly = 1) { swRepository.login(null) }
+            coVerify(exactly = 1) { tokenEncoder.encode(emptyCredentials) }
+            coVerify(exactly = 1) { preferencesRepository.saveCurrentUserId(testUserId) }
+        }
+
+    @Test
+    fun invoke_whenCredentialsIsNullToken_thenSavesNullToken() =
+        runTest {
+            // Given
+            val nullTokenCredentials = LoginCredentials(login = "test", password = " ")
+            coEvery {
+                swRepository.login(any())
+            } returns Result.success(LoginSuccess(testUserId))
+
+            coEvery { tokenEncoder.encode(nullTokenCredentials) } returns null
+
+            // When
+            val result = loginUseCase(nullTokenCredentials)
+
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(null) }
+            coVerify(exactly = 1) { swRepository.login(null) }
+            coVerify(exactly = 1) { tokenEncoder.encode(nullTokenCredentials) }
+            coVerify(exactly = 1) { preferencesRepository.saveCurrentUserId(testUserId) }
+        }
 }

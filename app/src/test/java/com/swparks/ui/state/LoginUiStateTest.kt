@@ -9,7 +9,6 @@ import org.junit.Test
  * Тесты для LoginUiState.
  */
 class LoginUiStateTest {
-
     @Test
     fun isBusy_whenIdle_returnsFalse() {
         val state = LoginUiState.Idle
@@ -55,5 +54,4 @@ class LoginUiStateTest {
 
         assertEquals(message, state.message)
     }
-
 }

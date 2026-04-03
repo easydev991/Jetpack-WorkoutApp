@@ -57,20 +57,22 @@ class EditProfileViewModel(
     private val logger: Logger,
     private val userNotifier: UserNotifier,
     private val resources: ResourcesProvider
-) : ViewModel(), IEditProfileViewModel {
-
+) : ViewModel(),
+    IEditProfileViewModel {
     private companion object {
         private const val TAG = "EditProfileViewModel"
         private const val STATE_TIMEOUT_MS = 5000L
     }
 
     // Текущий пользователь из репозитория
-    private val currentUser: StateFlow<User?> = swRepository.getCurrentUserFlow()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(STATE_TIMEOUT_MS),
-            initialValue = null
-        )
+    private val currentUser: StateFlow<User?> =
+        swRepository
+            .getCurrentUserFlow()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(STATE_TIMEOUT_MS),
+                initialValue = null
+            )
 
     // UI State
     private val _uiState = MutableStateFlow(EditProfileUiState())
@@ -99,31 +101,35 @@ class EditProfileViewModel(
         val countries = countriesRepository.getCountriesFlow().first()
 
         // Определяем выбранную страну и город
-        val selectedCountry = user.countryID?.let { countryId ->
-            countries.find { it.id == countryId.toString() }
-        }
+        val selectedCountry =
+            user.countryID?.let { countryId ->
+                countries.find { it.id == countryId.toString() }
+            }
 
-        val cities = if (selectedCountry != null) {
-            countriesRepository.getCitiesByCountry(selectedCountry.id)
-        } else {
-            emptyList()
-        }
+        val cities =
+            if (selectedCountry != null) {
+                countriesRepository.getCitiesByCountry(selectedCountry.id)
+            } else {
+                emptyList()
+            }
 
-        val selectedCity = user.cityID?.let { cityId ->
-            cities.find { it.id == cityId.toString() }
-        }
+        val selectedCity =
+            user.cityID?.let { cityId ->
+                cities.find { it.id == cityId.toString() }
+            }
 
         // Создаем форму из данных пользователя
-        val userForm = MainUserForm(
-            name = user.name,
-            fullname = user.fullName ?: "",
-            email = user.email ?: "",
-            password = "",
-            birthDate = user.birthDate ?: "",
-            genderCode = user.genderCode ?: 0,
-            countryId = user.countryID,
-            cityId = user.cityID
-        )
+        val userForm =
+            MainUserForm(
+                name = user.name,
+                fullname = user.fullName ?: "",
+                email = user.email ?: "",
+                password = "",
+                birthDate = user.birthDate ?: "",
+                genderCode = user.genderCode ?: 0,
+                countryId = user.countryID,
+                cityId = user.cityID
+            )
 
         _uiState.update {
             it.copy(
@@ -147,11 +153,12 @@ class EditProfileViewModel(
     }
 
     override fun onEmailChange(value: String) {
-        val emailError = if (value.isNotEmpty() && !isValidEmail(value)) {
-            resources.getString(R.string.email_invalid)
-        } else {
-            null
-        }
+        val emailError =
+            if (value.isNotEmpty() && !isValidEmail(value)) {
+                resources.getString(R.string.email_invalid)
+            } else {
+                null
+            }
         _uiState.update {
             it.copy(
                 userForm = it.userForm.copy(email = value),
@@ -170,17 +177,20 @@ class EditProfileViewModel(
     }
 
     override fun onBirthDateChange(timestamp: Long) {
-        val localDate = Instant.ofEpochMilli(timestamp)
-            .atZone(ZoneId.systemDefault())
-            .toLocalDate()
+        val localDate =
+            Instant
+                .ofEpochMilli(timestamp)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate()
         val formatted = localDate.format(DateTimeFormatter.ISO_DATE)
 
         // Валидация: дата не должна быть в будущем
-        val birthDateError = if (localDate.isInFuture()) {
-            resources.getString(R.string.birth_date_in_future)
-        } else {
-            null
-        }
+        val birthDateError =
+            if (localDate.isInFuture()) {
+                resources.getString(R.string.birth_date_in_future)
+            } else {
+                null
+            }
 
         _uiState.update {
             it.copy(
@@ -324,11 +334,12 @@ class EditProfileViewModel(
         currentState: EditProfileUiState,
         imageBytes: ByteArray?
     ) {
-        val result = swRepository.editUser(
-            userId = userId,
-            form = currentState.userForm,
-            image = imageBytes
-        )
+        val result =
+            swRepository.editUser(
+                userId = userId,
+                form = currentState.userForm,
+                image = imageBytes
+            )
 
         result.fold(
             onSuccess = { updatedUser ->
@@ -372,10 +383,11 @@ class EditProfileViewModel(
                 selectedCountry = result.newCountry,
                 selectedCity = result.newCity,
                 cities = result.newCities,
-                userForm = it.userForm.copy(
-                    countryId = result.newCountry?.id?.toIntOrNull(),
-                    cityId = result.newCity?.id?.toIntOrNull()
-                )
+                userForm =
+                    it.userForm.copy(
+                        countryId = result.newCountry?.id?.toIntOrNull(),
+                        cityId = result.newCity?.id?.toIntOrNull()
+                    )
             )
         }
 
@@ -399,10 +411,11 @@ class EditProfileViewModel(
                     selectedCountry = countryResult.newCountry,
                     selectedCity = result.newCity,
                     cities = countryResult.newCities,
-                    userForm = it.userForm.copy(
-                        countryId = countryResult.newCountry?.id?.toIntOrNull(),
-                        cityId = result.newCity?.id?.toIntOrNull()
-                    )
+                    userForm =
+                        it.userForm.copy(
+                            countryId = countryResult.newCountry?.id?.toIntOrNull(),
+                            cityId = result.newCity?.id?.toIntOrNull()
+                        )
                 )
             }
             logger.d(
@@ -413,9 +426,10 @@ class EditProfileViewModel(
             _uiState.update {
                 it.copy(
                     selectedCity = result.newCity,
-                    userForm = it.userForm.copy(
-                        cityId = result.newCity?.id?.toIntOrNull()
-                    )
+                    userForm =
+                        it.userForm.copy(
+                            cityId = result.newCity?.id?.toIntOrNull()
+                        )
                 )
             }
             logger.d(TAG, "Выбран город: $cityName")
@@ -443,11 +457,12 @@ class EditProfileViewModel(
 
         // Запускаем корутину для получения списка городов
         viewModelScope.launch {
-            val cities = if (initialCountry != null) {
-                countriesRepository.getCitiesByCountry(initialCountry.id)
-            } else {
-                emptyList()
-            }
+            val cities =
+                if (initialCountry != null) {
+                    countriesRepository.getCitiesByCountry(initialCountry.id)
+                } else {
+                    emptyList()
+                }
 
             _uiState.update {
                 it.copy(

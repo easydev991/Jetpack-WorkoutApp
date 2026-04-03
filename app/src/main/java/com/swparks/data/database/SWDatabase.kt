@@ -39,7 +39,7 @@ import com.swparks.data.database.entity.UserTrainingParkEntity
         UserTrainingParkEntity::class,
         UserTrainingParkCacheStateEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(AppConverters::class)

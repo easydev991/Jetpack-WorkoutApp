@@ -21,9 +21,10 @@ fun LabeledValueRow(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(
-            dimensionResource(R.dimen.spacing_xxsmall)
-        )
+        horizontalArrangement =
+            Arrangement.spacedBy(
+                dimensionResource(R.dimen.spacing_xxsmall)
+            )
     ) {
         Text(
             text = label,

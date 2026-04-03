@@ -27,10 +27,12 @@ material = "1.7.8"
 turbine = "1.2.1"
 tink = "1.21.0"
 playServicesLocation = "21.3.0"
-maplibre = "13.0.1"
+maplibre = "13.0.2"
 firebaseBom = "34.11.0"
 googleServices = "4.4.4"
 firebaseCrashlyticsGradle = "3.0.6"
+detekt = "1.23.8"
+ktlint = "14.2.0"
 
 [libraries]
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
@@ -83,3 +85,5 @@ kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization"
 ksp = { id = "com.google.devtools.ksp", version = "2.3.4" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsGradle" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }

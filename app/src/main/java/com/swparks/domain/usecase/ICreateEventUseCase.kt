@@ -4,5 +4,8 @@ import com.swparks.data.model.Event
 import com.swparks.ui.model.EventForm
 
 interface ICreateEventUseCase {
-    suspend operator fun invoke(form: EventForm, photos: List<ByteArray>? = null): Result<Event>
+    suspend operator fun invoke(
+        form: EventForm,
+        photos: List<ByteArray>? = null
+    ): Result<Event>
 }

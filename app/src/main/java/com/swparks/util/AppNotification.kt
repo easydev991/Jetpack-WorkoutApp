@@ -26,5 +26,7 @@ sealed class AppNotification {
      *
      * @property message Сообщение для пользователя
      */
-    data class Info(override val message: String) : AppNotification()
+    data class Info(
+        override val message: String
+    ) : AppNotification()
 }

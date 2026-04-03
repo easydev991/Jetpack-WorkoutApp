@@ -23,9 +23,8 @@ import com.swparks.data.crypto.CryptoManager
 class EncryptedStringSerializer(
     private val cryptoManager: CryptoManager
 ) {
-
     private companion object {
-        private const val tag = "EncryptedStringSerializer"
+        private const val TAG = "EncryptedStringSerializer"
     }
 
     /**
@@ -37,7 +36,7 @@ class EncryptedStringSerializer(
     fun deserialize(encryptedData: ByteArray?): String? {
         return try {
             if (encryptedData == null || encryptedData.isEmpty()) {
-                Log.d(tag, "Входные данные пустые, возвращаем null")
+                Log.d(TAG, "Входные данные пустые, возвращаем null")
                 return null
             }
 
@@ -47,10 +46,10 @@ class EncryptedStringSerializer(
             // Конвертируем в строку
             String(decryptedData, Charsets.UTF_8)
         } catch (e: SecurityException) {
-            Log.e(tag, "Ошибка дешифрования данных", e)
+            Log.e(TAG, "Ошибка дешифрования данных", e)
             null
         } catch (e: IllegalArgumentException) {
-            Log.e(tag, "Ошибка дешифрования данных", e)
+            Log.e(TAG, "Ошибка дешифрования данных", e)
             null
         }
     }
@@ -64,7 +63,7 @@ class EncryptedStringSerializer(
     fun serialize(value: String?): ByteArray {
         return try {
             if (value.isNullOrEmpty()) {
-                Log.d(tag, "Входное значение пустое, возвращаем пустой массив байтов")
+                Log.d(TAG, "Входное значение пустое, возвращаем пустой массив байтов")
                 return byteArrayOf()
             }
 
@@ -74,10 +73,10 @@ class EncryptedStringSerializer(
             // Шифруем данные
             cryptoManager.encrypt(data)
         } catch (e: SecurityException) {
-            Log.e(tag, "Ошибка шифрования данных", e)
+            Log.e(TAG, "Ошибка шифрования данных", e)
             byteArrayOf()
         } catch (e: IllegalArgumentException) {
-            Log.e(tag, "Ошибка шифрования данных", e)
+            Log.e(TAG, "Ошибка шифрования данных", e)
             byteArrayOf()
         }
     }

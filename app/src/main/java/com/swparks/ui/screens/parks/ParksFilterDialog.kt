@@ -50,9 +50,10 @@ fun ParksFilterDialog(
 
     AlertDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
-        modifier = Modifier
-            .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
-            .fillMaxWidth(),
+        modifier =
+            Modifier
+                .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
+                .fillMaxWidth(),
         onDismissRequest = onDismiss,
         title = { DialogTitle(onDismiss) },
         text = {
@@ -60,15 +61,16 @@ fun ParksFilterDialog(
         },
         confirmButton = {
             SWButton(
-                config = ButtonConfig(
-                    size = SWButtonSize.SMALL,
-                    text = stringResource(R.string.apply_button),
-                    enabled = state.canApply,
-                    onClick = {
-                        onFilterChange(state.toParkFilter())
-                        onApply()
-                    }
-                )
+                config =
+                    ButtonConfig(
+                        size = SWButtonSize.SMALL,
+                        text = stringResource(R.string.apply_button),
+                        enabled = state.canApply,
+                        onClick = {
+                            onFilterChange(state.toParkFilter())
+                            onApply()
+                        }
+                    )
             )
         },
         dismissButton = {
@@ -85,38 +87,39 @@ fun ParksFilterDialog(
 }
 
 @Composable
-private fun FilterDialogContent(
-    state: ParksFilterDialogState
-) {
+private fun FilterDialogContent(state: ParksFilterDialogState) {
     Column(
-        modifier = Modifier
-            .verticalScroll(rememberScrollState())
-            .padding(bottom = dimensionResource(R.dimen.spacing_xsmall)),
+        modifier =
+            Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = dimensionResource(R.dimen.spacing_xsmall)),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium))
     ) {
         FilterSection(
             titleID = R.string.size,
-            items = ParkSize.entries.map { size ->
-                FilterItem(
-                    text = stringResource(size.description),
-                    isChecked = state.isSizeSelected(size),
-                    onToggle = {
-                        state.toggleSize(size)
-                    }
-                )
-            }
+            items =
+                ParkSize.entries.map { size ->
+                    FilterItem(
+                        text = stringResource(size.description),
+                        isChecked = state.isSizeSelected(size),
+                        onToggle = {
+                            state.toggleSize(size)
+                        }
+                    )
+                }
         )
         FilterSection(
             titleID = R.string.type,
-            items = ParkType.entries.map { type ->
-                FilterItem(
-                    text = stringResource(type.description),
-                    isChecked = state.isTypeSelected(type),
-                    onToggle = {
-                        state.toggleType(type)
-                    }
-                )
-            }
+            items =
+                ParkType.entries.map { type ->
+                    FilterItem(
+                        text = stringResource(type.description),
+                        isChecked = state.isTypeSelected(type),
+                        onToggle = {
+                            state.toggleType(type)
+                        }
+                    )
+                }
         )
     }
 }
@@ -130,56 +133,56 @@ private data class FilterItem(
 private class ParksFilterDialogState(
     initialFilter: ParkFilter
 ) {
-    private val _sizes = mutableStateListOf<ParkSize>().apply { addAll(initialFilter.sizes) }
-    private val _types = mutableStateListOf<ParkType>().apply { addAll(initialFilter.types) }
-    private val _initialSizes = initialFilter.sizes.toSet()
-    private val _initialTypes = initialFilter.types.toSet()
-    private val _defaultSizes = ParkSize.entries.toSet()
-    private val _defaultTypes = ParkType.entries.toSet()
+    private val selectedSizes = mutableStateListOf<ParkSize>().apply { addAll(initialFilter.sizes) }
+    private val selectedTypes = mutableStateListOf<ParkType>().apply { addAll(initialFilter.types) }
+    private val initialSizes = initialFilter.sizes.toSet()
+    private val initialTypes = initialFilter.types.toSet()
+    private val defaultSizes = ParkSize.entries.toSet()
+    private val defaultTypes = ParkType.entries.toSet()
 
     val isEdited: Boolean
-        get() = _sizes.toSet() != _defaultSizes || _types.toSet() != _defaultTypes
+        get() = selectedSizes.toSet() != defaultSizes || selectedTypes.toSet() != defaultTypes
 
     val canApply: Boolean
-        get() = _sizes.toSet() != _initialSizes || _types.toSet() != _initialTypes
+        get() = selectedSizes.toSet() != initialSizes || selectedTypes.toSet() != initialTypes
 
-    fun isSizeSelected(size: ParkSize): Boolean = _sizes.contains(size)
+    fun isSizeSelected(size: ParkSize): Boolean = selectedSizes.contains(size)
 
-    fun isTypeSelected(type: ParkType): Boolean = _types.contains(type)
+    fun isTypeSelected(type: ParkType): Boolean = selectedTypes.contains(type)
 
     fun toggleSize(size: ParkSize) {
-        if (_sizes.contains(size) && _sizes.size > 1) {
-            _sizes.remove(size)
-        } else if (!_sizes.contains(size)) {
-            _sizes.add(size)
+        if (selectedSizes.contains(size) && selectedSizes.size > 1) {
+            selectedSizes.remove(size)
+        } else if (!selectedSizes.contains(size)) {
+            selectedSizes.add(size)
         }
     }
 
     fun toggleType(type: ParkType) {
-        if (_types.contains(type) && _types.size > 1) {
-            _types.remove(type)
-        } else if (!_types.contains(type)) {
-            _types.add(type)
+        if (selectedTypes.contains(type) && selectedTypes.size > 1) {
+            selectedTypes.remove(type)
+        } else if (!selectedTypes.contains(type)) {
+            selectedTypes.add(type)
         }
     }
 
     fun reset() {
-        _sizes.clear()
-        _sizes.addAll(_defaultSizes)
-        _types.clear()
-        _types.addAll(_defaultTypes)
+        selectedSizes.clear()
+        selectedSizes.addAll(defaultSizes)
+        selectedTypes.clear()
+        selectedTypes.addAll(defaultTypes)
     }
 
-    fun toParkFilter(): ParkFilter = ParkFilter(
-        sizes = _sizes.toSet(),
-        types = _types.toSet()
-    )
+    fun toParkFilter(): ParkFilter =
+        ParkFilter(
+            sizes = selectedSizes.toSet(),
+            types = selectedTypes.toSet()
+        )
 }
 
 @Composable
-private fun rememberParksFilterDialogState(filter: ParkFilter): ParksFilterDialogState {
-    return remember(filter) { ParksFilterDialogState(filter) }
-}
+private fun rememberParksFilterDialogState(filter: ParkFilter): ParksFilterDialogState =
+    remember(filter) { ParksFilterDialogState(filter) }
 
 @Composable
 private fun DialogTitle(onDismiss: () -> Unit) {
@@ -255,10 +258,11 @@ private fun ParksFilterDialogPreviewDark() {
 private fun ParksFilterDialogPreviewCustomFilter() {
     JetpackWorkoutAppTheme {
         ParksFilterDialog(
-            filter = ParkFilter(
-                sizes = setOf(ParkSize.SMALL, ParkSize.LARGE),
-                types = setOf(ParkType.SOVIET, ParkType.MODERN)
-            ),
+            filter =
+                ParkFilter(
+                    sizes = setOf(ParkSize.SMALL, ParkSize.LARGE),
+                    types = setOf(ParkType.SOVIET, ParkType.MODERN)
+                ),
             onFilterChange = {},
             onApply = {},
             onDismiss = {}

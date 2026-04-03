@@ -12,8 +12,8 @@ import java.io.IOException
  * @param context Контекст для доступа к строковым ресурсам
  * @return Локализованное сообщение об ошибке
  */
-fun AppError.toUiText(context: Context): String {
-    return when (this) {
+fun AppError.toUiText(context: Context): String =
+    when (this) {
         is AppError.Network -> toNetworkUiText(context)
         is AppError.Validation -> toValidationUiText(context)
         is AppError.Server -> toServerUiText(context)
@@ -23,23 +23,21 @@ fun AppError.toUiText(context: Context): String {
         is AppError.GeocodingFailed -> toGeocodingUiText(context)
         is AppError.ResourceNotFound -> message
     }
-}
 
 /**
  * Преобразует сетевую ошибку в локализованное сообщение.
  */
-private fun AppError.Network.toNetworkUiText(context: Context): String {
-    return when {
+private fun AppError.Network.toNetworkUiText(context: Context): String =
+    when {
         throwable is IOException -> context.getString(R.string.error_network_io)
         else -> context.getString(R.string.error_network_general)
     }
-}
 
 /**
  * Преобразует ошибку валидации в локализованное сообщение.
  */
-private fun AppError.Validation.toValidationUiText(context: Context): String {
-    return when (field) {
+private fun AppError.Validation.toValidationUiText(context: Context): String =
+    when (field) {
         "email" -> context.getString(R.string.error_validation_email)
         "password" -> context.getString(R.string.error_validation_password)
         else -> {
@@ -50,13 +48,12 @@ private fun AppError.Validation.toValidationUiText(context: Context): String {
             }
         }
     }
-}
 
 /**
  * Преобразует ошибку сервера в локализованное сообщение.
  */
-private fun AppError.Server.toServerUiText(context: Context): String {
-    return when (code) {
+private fun AppError.Server.toServerUiText(context: Context): String =
+    when (code) {
         HTTP_UNAUTHORIZED -> context.getString(R.string.error_server_unauthorized)
         HTTP_FORBIDDEN -> context.getString(R.string.error_server_forbidden)
         HTTP_NOT_FOUND -> context.getString(R.string.error_server_not_found)
@@ -64,32 +61,28 @@ private fun AppError.Server.toServerUiText(context: Context): String {
         HTTP_SERVICE_UNAVAILABLE -> context.getString(R.string.error_server_unavailable)
         else -> context.getString(R.string.error_server_general)
     }
-}
 
 /**
  * Преобразует ошибку геокодирования в локализованное сообщение.
  */
-private fun AppError.GeocodingFailed.toGeocodingUiText(context: Context): String {
-    return when (kind) {
+private fun AppError.GeocodingFailed.toGeocodingUiText(context: Context): String =
+    when (kind) {
         AppError.GeocodingFailureKind.ADDRESS_BUILD_FAIL -> context.getString(R.string.geocoding_address_build_fail)
         AppError.GeocodingFailureKind.IO_ERROR -> context.getString(R.string.error_network_io)
     }
-}
 
 /**
  * Преобразует ошибку геолокации в локализованное сообщение.
  */
-private fun AppError.LocationFailed.toLocationFailedUiText(context: Context): String {
-    return if (cause is SecurityException) {
+private fun AppError.LocationFailed.toLocationFailedUiText(context: Context): String =
+    if (cause is SecurityException) {
         context.getString(R.string.location_permission_need_in_settings)
     } else {
         context.getString(R.string.location_fetch_failed)
     }
-}
 
-private fun AppError.LocationDisabled.toLocationDisabledUiText(context: Context): String {
-    return context.getString(R.string.location_settings_disabled)
-}
+private fun AppError.LocationDisabled.toLocationDisabledUiText(context: Context): String =
+    context.getString(R.string.location_settings_disabled)
 
 /**
  * HTTP коды ошибок.

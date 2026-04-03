@@ -39,8 +39,8 @@ class DialogsViewModel(
     private val logger: Logger,
     private val resources: ResourcesProvider,
     private val messageSentNotifier: MessageSentNotifier
-) : ViewModel(), IDialogsViewModel {
-
+) : ViewModel(),
+    IDialogsViewModel {
     private companion object {
         private const val TAG = "DialogsViewModel"
         private const val FLOW_SUBSCRIPTION_TIMEOUT_MS = 5000L
@@ -69,8 +69,7 @@ class DialogsViewModel(
                 .catch { error ->
                     logger.e(TAG, "Ошибка при загрузке диалогов: ${error.message}")
                     _uiState.value = DialogsUiState.Error("Ошибка загрузки диалогов")
-                }
-                .collect { dialogs ->
+                }.collect { dialogs ->
                     logger.d(
                         TAG,
                         "Collect получил ${dialogs.size} диалогов, hasSuccessfullyLoaded=$hasSuccessfullyLoaded"
@@ -101,7 +100,7 @@ class DialogsViewModel(
 
         viewModelScope.launch {
             _isRefreshing.value = true
-            _syncError.value = null  // Сбрасываем предыдущую ошибку
+            _syncError.value = null // Сбрасываем предыдущую ошибку
 
             // Если это первая загрузка после сброса - устанавливаем isLoadingDialogs
             if (_uiState.value is DialogsUiState.Loading) {
@@ -171,7 +170,10 @@ class DialogsViewModel(
         }
     }
 
-    override fun onDialogClick(dialogId: Long, userId: Int?) {
+    override fun onDialogClick(
+        dialogId: Long,
+        userId: Int?
+    ) {
         if (userId == null) {
             logger.w(TAG, "Нажат диалог без userId: dialogId=$dialogId")
             return
@@ -192,15 +194,16 @@ class DialogsViewModel(
     override val isMarkingAsRead: StateFlow<Boolean> = _isMarkingAsRead.asStateFlow()
 
     // Общий индикатор любой операции обновления
-    override val isUpdating: StateFlow<Boolean> = combine(
-        _isDeleting,
-        _isMarkingAsRead
-    ) { deleting, marking -> deleting || marking }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(FLOW_SUBSCRIPTION_TIMEOUT_MS),
-            false
-        )
+    override val isUpdating: StateFlow<Boolean> =
+        combine(
+            _isDeleting,
+            _isMarkingAsRead
+        ) { deleting, marking -> deleting || marking }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(FLOW_SUBSCRIPTION_TIMEOUT_MS),
+                false
+            )
 
     override fun deleteDialog(dialogId: Long) {
         viewModelScope.launch {
@@ -216,7 +219,10 @@ class DialogsViewModel(
         }
     }
 
-    override fun markDialogAsRead(dialogId: Long, userId: Int) {
+    override fun markDialogAsRead(
+        dialogId: Long,
+        userId: Int
+    ) {
         viewModelScope.launch {
             _isMarkingAsRead.value = true
             _syncError.value = null

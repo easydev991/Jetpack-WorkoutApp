@@ -15,10 +15,8 @@ import androidx.room.Index
 data class UserTrainingParkEntity(
     @ColumnInfo(name = "user_id")
     val userId: Long,
-
     @ColumnInfo(name = "park_id")
     val parkId: Long,
-
     @ColumnInfo(name = "position")
     val position: Int = 0
 )

@@ -37,8 +37,8 @@ class OtherUserProfileViewModel(
     private val logger: Logger,
     private val userNotifier: UserNotifier,
     private val resources: ResourcesProvider
-) : ViewModel(), IOtherUserProfileViewModel {
-
+) : ViewModel(),
+    IOtherUserProfileViewModel {
     companion object {
         private const val TAG = "OtherUserProfileViewModel"
         const val CURRENT_USER_LOAD_TIMEOUT_MS = 10_000L // Доступна в тестах
@@ -48,22 +48,28 @@ class OtherUserProfileViewModel(
     private val _viewedUser = MutableStateFlow<User?>(null)
     override val viewedUser: StateFlow<User?> = _viewedUser.asStateFlow()
 
-    override val currentUser: StateFlow<User?> = swRepository.getCurrentUserFlow()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(SUBSCRIPTION_TIMEOUT_MS), null)
+    override val currentUser: StateFlow<User?> =
+        swRepository
+            .getCurrentUserFlow()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(SUBSCRIPTION_TIMEOUT_MS), null)
 
-    override val friends: StateFlow<List<User>> = swRepository.getFriendsFlow()
-        .stateIn(
-            viewModelScope,
-            SharingStarted.Lazily,
-            emptyList()
-        )
+    override val friends: StateFlow<List<User>> =
+        swRepository
+            .getFriendsFlow()
+            .stateIn(
+                viewModelScope,
+                SharingStarted.Lazily,
+                emptyList()
+            )
 
-    override val blacklist: StateFlow<List<User>> = swRepository.getBlacklistFlow()
-        .stateIn(
-            viewModelScope,
-            SharingStarted.Lazily,
-            emptyList()
-        )
+    override val blacklist: StateFlow<List<User>> =
+        swRepository
+            .getBlacklistFlow()
+            .stateIn(
+                viewModelScope,
+                SharingStarted.Lazily,
+                emptyList()
+            )
 
     private val _uiState =
         MutableStateFlow<OtherUserProfileUiState>(OtherUserProfileUiState.Loading)
@@ -132,22 +138,23 @@ class OtherUserProfileViewModel(
             _uiState.update { OtherUserProfileUiState.Loading }
             logger.i(TAG, "Загрузка профиля пользователя: $userId")
 
-            swRepository.getUser(userId)
+            swRepository
+                .getUser(userId)
                 .onSuccess { viewedUser ->
                     _viewedUser.update { viewedUser }
                     loadProfileAddress(viewedUser)
                     logger.i(TAG, "Профиль загружен: ${viewedUser.id}")
-                }
-                .onFailure { error ->
-                    val (message, canRetry) = when {
-                        error is HttpException && error.code() == HttpCodes.NOT_FOUND ->
-                            "Пользователь не найден" to false
+                }.onFailure { error ->
+                    val (message, canRetry) =
+                        when {
+                            error is HttpException && error.code() == HttpCodes.NOT_FOUND ->
+                                "Пользователь не найден" to false
 
-                        error is HttpException && error.code() == HttpCodes.FORBIDDEN ->
-                            "Доступ запрещен" to false
+                            error is HttpException && error.code() == HttpCodes.FORBIDDEN ->
+                                "Доступ запрещен" to false
 
-                        else -> "Ошибка загрузки профиля: ${error.message}" to true
-                    }
+                            else -> "Ошибка загрузки профиля: ${error.message}" to true
+                        }
                     userNotifier.handleError(AppError.Generic(message, error))
                     if (!canRetry) {
                         _uiState.update { OtherUserProfileUiState.UserNotFound }
@@ -164,12 +171,12 @@ class OtherUserProfileViewModel(
             _isRefreshing.update { true }
             logger.i(TAG, "Обновление профиля: $userId")
 
-            swRepository.getUser(userId)
+            swRepository
+                .getUser(userId)
                 .onSuccess { viewedUser ->
                     _viewedUser.update { viewedUser }
                     loadProfileAddress(viewedUser)
-                }
-                .onFailure { error ->
+                }.onFailure { error ->
                     val message = "Ошибка обновления профиля: ${error.message}"
                     userNotifier.handleError(AppError.Generic(message, error))
                     logger.e(TAG, message)
@@ -214,15 +221,22 @@ class OtherUserProfileViewModel(
         }
     }
 
-    private fun updateUiStateWithAddress(country: Country?, city: City?) {
+    private fun updateUiStateWithAddress(
+        country: Country?,
+        city: City?
+    ) {
         val currentState = _uiState.value
         _uiState.update {
             when (currentState) {
                 is OtherUserProfileUiState.Loading -> OtherUserProfileUiState.Success(country, city)
                 is OtherUserProfileUiState.Success -> OtherUserProfileUiState.Success(country, city)
-                is OtherUserProfileUiState.Error -> OtherUserProfileUiState.Error(
-                    currentState.message, currentState.canRetry, country, city
-                )
+                is OtherUserProfileUiState.Error ->
+                    OtherUserProfileUiState.Error(
+                        currentState.message,
+                        currentState.canRetry,
+                        country,
+                        city
+                    )
 
                 is OtherUserProfileUiState.UserNotFound -> OtherUserProfileUiState.UserNotFound
                 is OtherUserProfileUiState.BlockedByUser -> OtherUserProfileUiState.BlockedByUser
@@ -238,17 +252,18 @@ class OtherUserProfileViewModel(
         viewModelScope.launch {
             _isFriendActionLoading.update { true }
             logger.i(TAG, "Действие с друзьями: $action для $viewedUserId")
-            swRepository.friendAction(viewedUserId, action)
+            swRepository
+                .friendAction(viewedUserId, action)
                 .onSuccess {
                     logger.i(TAG, "Действие с друзьями выполнено успешно")
-                    val message = if (action == ApiFriendAction.ADD) {
-                        resources.getString(R.string.friend_request_sent)
-                    } else {
-                        resources.getString(R.string.friends_list_updated)
-                    }
+                    val message =
+                        if (action == ApiFriendAction.ADD) {
+                            resources.getString(R.string.friend_request_sent)
+                        } else {
+                            resources.getString(R.string.friends_list_updated)
+                        }
                     userNotifier.showInfo(message)
-                }
-                .onFailure { error ->
+                }.onFailure { error ->
                     val message = "Ошибка действия с друзьями: ${error.message}"
                     userNotifier.handleError(AppError.Generic(message, error))
                     logger.e(TAG, message)
@@ -264,15 +279,15 @@ class OtherUserProfileViewModel(
 
         viewModelScope.launch {
             logger.i(TAG, "Действие с черным списком: $action для ${viewedUser.id}")
-            swRepository.blacklistAction(viewedUser, action.toApiOption())
+            swRepository
+                .blacklistAction(viewedUser, action.toApiOption())
                 .onSuccess {
                     logger.i(TAG, "Действие с черным списком выполнено успешно: $action")
                     // После блокировки возвращаемся назад
                     if (action == BlacklistAction.BLOCK) {
                         onBlocked()
                     }
-                }
-                .onFailure { error ->
+                }.onFailure { error ->
                     val message = "Ошибка действия с черным списком: ${error.message}"
                     userNotifier.handleError(AppError.Generic(message, error))
                     logger.e(TAG, message)

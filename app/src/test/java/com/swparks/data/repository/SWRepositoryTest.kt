@@ -71,8 +71,8 @@ class SWRepositoryTest {
         unmockkAll()
     }
 
-    private fun createMockEvent(id: Long = 1L): Event {
-        return Event(
+    private fun createMockEvent(id: Long = 1L): Event =
+        Event(
             id = id,
             title = "Test Event",
             description = "Test Description",
@@ -87,14 +87,11 @@ class SWRepositoryTest {
             author = createMockUser(),
             name = "Test Event"
         )
-    }
 
-    private fun createMockUser(id: Long = 1L): User {
-        return User(id = id, name = "testuser", image = "")
-    }
+    private fun createMockUser(id: Long = 1L): User = User(id = id, name = "testuser", image = "")
 
-    private fun createMockPark(id: Long = 1L): Park {
-        return Park(
+    private fun createMockPark(id: Long = 1L): Park =
+        Park(
             id = id,
             name = "Test Park",
             sizeID = 1,
@@ -106,320 +103,339 @@ class SWRepositoryTest {
             countryID = 1,
             preview = ""
         )
-    }
 
     @Test
-    fun getPastEvents_whenApiReturnsData_thenReturnsEvents() = runTest {
-        // Given
-        val mockEventsList = listOf(createMockEvent(1L), createMockEvent(2L))
-        val mockApi = mockk<SWApi>()
-        coEvery { mockApi.getPastEvents() } returns mockEventsList
+    fun getPastEvents_whenApiReturnsData_thenReturnsEvents() =
+        runTest {
+            // Given
+            val mockEventsList = listOf(createMockEvent(1L), createMockEvent(2L))
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.getPastEvents() } returns mockEventsList
 
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
 
-        // When
-        val result = repository.getPastEvents()
+            // When
+            val result = repository.getPastEvents()
 
-        // Then
-        assertEquals(mockEventsList, result)
-        coVerify { mockApi.getPastEvents() }
-    }
-
-    @Test
-    fun getPastEvents_whenApiThrowsIOException_thenThrowsIOException() = runTest {
-        // Given
-        val mockApi = mockk<SWApi>()
-        coEvery { mockApi.getPastEvents() } throws IOException("Network error")
-
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
-
-        // When & Then
-        try {
-            repository.getPastEvents()
-            throw AssertionError("Expected IOException was not thrown")
-        } catch (e: IOException) {
-            assertEquals("Network error", e.message)
+            // Then
+            assertEquals(mockEventsList, result)
+            coVerify { mockApi.getPastEvents() }
         }
-    }
 
     @Test
-    fun getPastEvents_whenApiThrowsHttpException_thenThrowsHttpException() = runTest {
-        // Given
-        val mockApi = mockk<SWApi>()
-        val mockResponse = mockk<Response<*>>(relaxed = true)
-        every { mockResponse.code() } returns 404
-        every { mockResponse.message() } returns "HTTP 404"
-        coEvery { mockApi.getPastEvents() } throws HttpException(mockResponse)
+    fun getPastEvents_whenApiThrowsIOException_thenThrowsIOException() =
+        runTest {
+            // Given
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.getPastEvents() } throws IOException("Network error")
 
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
 
-        // When & Then
-        try {
-            repository.getPastEvents()
-            throw AssertionError("Expected HttpException was not thrown")
-        } catch (e: HttpException) {
-            assertEquals("HTTP 404", e.message())
+            // When & Then
+            try {
+                repository.getPastEvents()
+                throw AssertionError("Expected IOException was not thrown")
+            } catch (e: IOException) {
+                assertEquals("Network error", e.message)
+            }
         }
-    }
 
     @Test
-    fun isAuthorized_whenUserIdExists_thenReturnsTrue() = runTest {
-        // Given
-        val mockApi = mockk<SWApi>()
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        val preferences = mutablePreferencesOf(currentUserIdKey to 123L)
-        every { mockDataStore.data } returns flowOf(preferences)
+    fun getPastEvents_whenApiThrowsHttpException_thenThrowsHttpException() =
+        runTest {
+            // Given
+            val mockApi = mockk<SWApi>()
+            val mockResponse = mockk<Response<*>>(relaxed = true)
+            every { mockResponse.code() } returns 404
+            every { mockResponse.message() } returns "HTTP 404"
+            coEvery { mockApi.getPastEvents() } throws HttpException(mockResponse)
 
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        // When & Then
-        repository.isAuthorized.test {
-            assertEquals(true, awaitItem())
-            cancelAndIgnoreRemainingEvents()
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
+
+            // When & Then
+            try {
+                repository.getPastEvents()
+                throw AssertionError("Expected HttpException was not thrown")
+            } catch (e: HttpException) {
+                assertEquals("HTTP 404", e.message())
+            }
         }
-    }
 
     @Test
-    fun isAuthorized_whenUserIdNotExists_thenReturnsFalse() = runTest {
-        // Given
-        val mockApi = mockk<SWApi>()
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        val preferences = mutablePreferencesOf()
-        every { mockDataStore.data } returns flowOf(preferences)
+    fun isAuthorized_whenUserIdExists_thenReturnsTrue() =
+        runTest {
+            // Given
+            val mockApi = mockk<SWApi>()
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            val preferences = mutablePreferencesOf(currentUserIdKey to 123L)
+            every { mockDataStore.data } returns flowOf(preferences)
 
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
 
-        // When & Then
-        repository.isAuthorized.test {
-            assertEquals(false, awaitItem())
-            cancelAndIgnoreRemainingEvents()
+            // When & Then
+            repository.isAuthorized.test {
+                assertEquals(true, awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
         }
-    }
 
     @Test
-    fun login_whenApiReturnsSuccess_thenReturnsSuccess() = runTest {
-        // Given
-        val mockSuccess = LoginSuccess(userId = 123L)
-        val mockApi = mockk<SWApi>()
-        coEvery { mockApi.login() } returns mockSuccess
+    fun isAuthorized_whenUserIdNotExists_thenReturnsFalse() =
+        runTest {
+            // Given
+            val mockApi = mockk<SWApi>()
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            val preferences = mutablePreferencesOf()
+            every { mockDataStore.data } returns flowOf(preferences)
 
-        val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
 
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
-
-        // When
-        val result = repository.login("test_token")
-
-        // Then
-        assertTrue(result.isSuccess)
-        assertEquals(mockSuccess, result.getOrNull())
-        coVerify { mockApi.login() }
-    }
+            // When & Then
+            repository.isAuthorized.test {
+                assertEquals(false, awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 
     @Test
-    fun getUser_whenApiReturnsUser_thenReturnsUser() = runTest {
-        // Given
-        val mockUser = createMockUser(123L)
-        val mockApi = mockk<SWApi>()
-        coEvery { mockApi.getUser(123L) } returns mockUser
+    fun login_whenApiReturnsSuccess_thenReturnsSuccess() =
+        runTest {
+            // Given
+            val mockSuccess = LoginSuccess(userId = 123L)
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.login() } returns mockSuccess
 
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        // Mock userDao to return null (no existing cached user)
-        every { mockUserDao.getUserByIdFlow(any()) } returns flowOf(null)
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
 
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
+            // When
+            val result = repository.login("test_token")
 
-        // When
-        val result = repository.getUser(123L)
-
-        // Then
-        assertTrue(result.isSuccess)
-        assertEquals(mockUser, result.getOrNull())
-        coVerify { mockApi.getUser(123L) }
-    }
-
-    @Test
-    fun getAllParks_whenApiReturnsParks_thenReturnsParks() = runTest {
-        // Given
-        val mockParksList = listOf(createMockPark(1L), createMockPark(2L))
-        val mockApi = mockk<SWApi>()
-        coEvery { mockApi.getAllParks() } returns mockParksList
-
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
-
-        // When
-        val result = repository.getAllParks()
-
-        // Then
-        assertTrue(result.isSuccess)
-        assertEquals(mockParksList, result.getOrNull())
-        coVerify { mockApi.getAllParks() }
-    }
+            // Then
+            assertTrue(result.isSuccess)
+            assertEquals(mockSuccess, result.getOrNull())
+            coVerify { mockApi.login() }
+        }
 
     @Test
-    fun getEvents_whenTypeIsPast_thenReturnsPastEvents() = runTest {
-        // Given
-        val mockEventsList = listOf(createMockEvent(1L))
-        val mockApi = mockk<SWApi>()
-        coEvery { mockApi.getPastEvents() } returns mockEventsList
+    fun getUser_whenApiReturnsUser_thenReturnsUser() =
+        runTest {
+            // Given
+            val mockUser = createMockUser(123L)
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.getUser(123L) } returns mockUser
 
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
+            // Mock userDao to return null (no existing cached user)
+            every { mockUserDao.getUserByIdFlow(any()) } returns flowOf(null)
 
-        // When
-        val result = repository.getEvents(EventType.PAST)
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
 
-        // Then
-        assertTrue(result.isSuccess)
-        assertEquals(mockEventsList, result.getOrNull())
-        coVerify { mockApi.getPastEvents() }
-    }
+            // When
+            val result = repository.getUser(123L)
+
+            // Then
+            assertTrue(result.isSuccess)
+            assertEquals(mockUser, result.getOrNull())
+            coVerify { mockApi.getUser(123L) }
+        }
 
     @Test
-    fun getEvents_whenTypeIsFuture_thenReturnsFutureEvents() = runTest {
-        // Given
-        val mockEventsList = listOf(createMockEvent(2L))
-        val mockApi = mockk<SWApi>()
-        coEvery { mockApi.getFutureEvents() } returns mockEventsList
+    fun getAllParks_whenApiReturnsParks_thenReturnsParks() =
+        runTest {
+            // Given
+            val mockParksList = listOf(createMockPark(1L), createMockPark(2L))
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.getAllParks() } returns mockParksList
 
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
 
-        // When
-        val result = repository.getEvents(EventType.FUTURE)
+            // When
+            val result = repository.getAllParks()
 
-        // Then
-        assertTrue(result.isSuccess)
-        assertEquals(mockEventsList, result.getOrNull())
-        coVerify { mockApi.getFutureEvents() }
-    }
+            // Then
+            assertTrue(result.isSuccess)
+            assertEquals(mockParksList, result.getOrNull())
+            coVerify { mockApi.getAllParks() }
+        }
+
+    @Test
+    fun getEvents_whenTypeIsPast_thenReturnsPastEvents() =
+        runTest {
+            // Given
+            val mockEventsList = listOf(createMockEvent(1L))
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.getPastEvents() } returns mockEventsList
+
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
+
+            // When
+            val result = repository.getEvents(EventType.PAST)
+
+            // Then
+            assertTrue(result.isSuccess)
+            assertEquals(mockEventsList, result.getOrNull())
+            coVerify { mockApi.getPastEvents() }
+        }
+
+    @Test
+    fun getEvents_whenTypeIsFuture_thenReturnsFutureEvents() =
+        runTest {
+            // Given
+            val mockEventsList = listOf(createMockEvent(2L))
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.getFutureEvents() } returns mockEventsList
+
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
+
+            // When
+            val result = repository.getEvents(EventType.FUTURE)
+
+            // Then
+            assertTrue(result.isSuccess)
+            assertEquals(mockEventsList, result.getOrNull())
+            coVerify { mockApi.getFutureEvents() }
+        }
 }

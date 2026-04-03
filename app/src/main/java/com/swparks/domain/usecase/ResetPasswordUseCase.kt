@@ -30,7 +30,6 @@ class ResetPasswordUseCase(
      * @param login Логин или email пользователя
      * @return Result<Unit> успешность операции или ошибка
      */
-    override suspend operator fun invoke(login: String): Result<Unit> {
-        return swRepository.resetPassword(login)
-    }
+    override suspend operator fun invoke(login: String): Result<Unit> =
+        swRepository.resetPassword(login)
 }

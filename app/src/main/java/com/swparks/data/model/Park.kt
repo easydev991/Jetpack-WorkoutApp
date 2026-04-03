@@ -59,20 +59,23 @@ data class Park(
     @SerialName("users_train_here")
     val trainingUsers: List<User>? = null
 ) {
-    val size: ParkSize? = ParkSize.entries.firstOrNull {
-        it.rawValue == sizeID
-    }
-    val type: ParkType? = ParkType.entries.firstOrNull {
-        it.rawValue == typeID
-    }
+    val size: ParkSize? =
+        ParkSize.entries.firstOrNull {
+            it.rawValue == sizeID
+        }
+    val type: ParkType? =
+        ParkType.entries.firstOrNull {
+            it.rawValue == typeID
+        }
 
     /**
      * Есть ли комментарии
      */
     val hasComments = !comments.isNullOrEmpty()
-    private val needUpdateComments = commentsCount?.let {
-        it > 0 && comments.isNullOrEmpty()
-    } ?: false
+    private val needUpdateComments =
+        commentsCount?.let {
+            it > 0 && comments.isNullOrEmpty()
+        } ?: false
 
     /**
      * Есть ли фотографии
@@ -83,9 +86,10 @@ data class Park(
      * Есть ли участники
      */
     val hasParticipants = !trainingUsers.isNullOrEmpty()
-    private val needUpdateParticipants = trainingUsersCount?.let {
-        it > 0 && trainingUsers.isNullOrEmpty()
-    } ?: false
+    private val needUpdateParticipants =
+        trainingUsersCount?.let {
+            it > 0 && trainingUsers.isNullOrEmpty()
+        } ?: false
 
     /**
      * Ссылка на мероприятие, которой можно поделиться
@@ -96,10 +100,10 @@ data class Park(
      * `true` - сервер прислал всю информацию о площадке, `false` - не всю
      */
     val isFull = (
-        createDate != null
-            && author != null
-            && hasPhotos
-            && !needUpdateParticipants
-            && !needUpdateComments
+        createDate != null &&
+            author != null &&
+            hasPhotos &&
+            !needUpdateParticipants &&
+            !needUpdateComments
         )
 }

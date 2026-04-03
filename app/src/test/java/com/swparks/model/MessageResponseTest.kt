@@ -105,13 +105,14 @@ class MessageResponseTest {
     @Test
     fun message_whenAllFieldsArePresent_thenCreatesCorrectly() {
         // Given
-        val message = createTestMessage(
-            id = 1L,
-            userId = 2,
-            message = "Hello world",
-            name = "User",
-            created = "2024-01-01"
-        )
+        val message =
+            createTestMessage(
+                id = 1L,
+                userId = 2,
+                message = "Hello world",
+                name = "User",
+                created = "2024-01-01"
+            )
 
         // When & Then
         assertEquals(1L, message.id)

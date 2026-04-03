@@ -109,12 +109,13 @@ fun ParkMapView(
 
     val mapViewBundle = rememberSaveable { Bundle() }
 
-    val mapView = remember {
-        MapLibre.getInstance(appContext)
-        MapView(context).apply {
-            onCreate(mapViewBundle)
+    val mapView =
+        remember {
+            MapLibre.getInstance(appContext)
+            MapView(context).apply {
+                onCreate(mapViewBundle)
+            }
         }
-    }
 
     var mapLibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
     var isStyleLoaded by remember { mutableStateOf(false) }
@@ -125,20 +126,21 @@ fun ParkMapView(
     var lastAppliedCameraSignature by remember { mutableStateOf<String?>(null) }
 
     DisposableEffect(mapView, lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_START -> mapView.onStart()
-                Lifecycle.Event.ON_RESUME -> mapView.onResume()
-                Lifecycle.Event.ON_PAUSE -> mapView.onPause()
-                Lifecycle.Event.ON_STOP -> mapView.onStop()
-                Lifecycle.Event.ON_DESTROY -> {
-                    mapView.onSaveInstanceState(mapViewBundle)
-                    mapView.onDestroy()
-                }
+        val observer =
+            LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_START -> mapView.onStart()
+                    Lifecycle.Event.ON_RESUME -> mapView.onResume()
+                    Lifecycle.Event.ON_PAUSE -> mapView.onPause()
+                    Lifecycle.Event.ON_STOP -> mapView.onStop()
+                    Lifecycle.Event.ON_DESTROY -> {
+                        mapView.onSaveInstanceState(mapViewBundle)
+                        mapView.onDestroy()
+                    }
 
-                else -> Unit
+                    else -> Unit
+                }
             }
-        }
 
         lifecycleOwner.lifecycle.addObserver(observer)
 
@@ -175,11 +177,12 @@ fun ParkMapView(
 
                 map.addOnMapClickListener { latLng ->
                     val screenPoint = map.projection.toScreenLocation(latLng)
-                    val features = map.queryRenderedFeatures(
-                        screenPoint,
-                        CLUSTERS_LAYER_ID,
-                        UNCLUSTERED_LAYER_ID
-                    )
+                    val features =
+                        map.queryRenderedFeatures(
+                            screenPoint,
+                            CLUSTERS_LAYER_ID,
+                            UNCLUSTERED_LAYER_ID
+                        )
 
                     val clusterFeature = features.firstOrNull { it.hasProperty("point_count") }
 
@@ -191,10 +194,11 @@ fun ParkMapView(
 
                             latestOnMapEvent(
                                 MapEvent.ClusterClick(
-                                    target = UiCoordinates(
-                                        latitude = point.latitude(),
-                                        longitude = point.longitude()
-                                    ),
+                                    target =
+                                        UiCoordinates(
+                                            latitude = point.latitude(),
+                                            longitude = point.longitude()
+                                        ),
                                     expansionZoom = expansionZoom
                                 )
                             )
@@ -224,10 +228,11 @@ fun ParkMapView(
                     latestOnMapEvent(
                         MapEvent.OnCameraIdle(
                             MapCameraPosition(
-                                target = UiCoordinates(
-                                    latitude = target.latitude,
-                                    longitude = target.longitude
-                                ),
+                                target =
+                                    UiCoordinates(
+                                        latitude = target.latitude,
+                                        longitude = target.longitude
+                                    ),
                                 zoom = camPos.zoom,
                                 bearing = camPos.bearing,
                                 tilt = camPos.tilt
@@ -265,12 +270,13 @@ fun ParkMapView(
         val map = mapLibreMap ?: return@LaunchedEffect
         if (!isStyleLoaded) return@LaunchedEffect
 
-        val newCameraSignature = cameraSignature(
-            parks = parks,
-            selectedCityCenter = selectedCityCenter,
-            cameraPosition = cameraPosition,
-            hasResolvedInitialCamera = hasResolvedInitialCamera
-        )
+        val newCameraSignature =
+            cameraSignature(
+                parks = parks,
+                selectedCityCenter = selectedCityCenter,
+                cameraPosition = cameraPosition,
+                hasResolvedInitialCamera = hasResolvedInitialCamera
+            )
 
         if (lastAppliedCameraSignature == newCameraSignature) return@LaunchedEffect
 
@@ -279,13 +285,14 @@ fun ParkMapView(
 
         when {
             restorableCameraPosition != null -> {
-                val cityBounds = selectedCityCenter?.let { cityCenter ->
-                    selectedCityBoundsCameraUpdate(
-                        parks = validCoordinates,
-                        selectedCityCenter = cityCenter,
-                        requestedCamera = restorableCameraPosition
-                    )
-                }
+                val cityBounds =
+                    selectedCityCenter?.let { cityCenter ->
+                        selectedCityBoundsCameraUpdate(
+                            parks = validCoordinates,
+                            selectedCityCenter = cityCenter,
+                            requestedCamera = restorableCameraPosition
+                        )
+                    }
 
                 if (cityBounds != null) {
                     map.animateCamera(
@@ -295,10 +302,11 @@ fun ParkMapView(
                         )
                     )
                 } else {
-                    val target = LatLng(
-                        restorableCameraPosition.target.latitude,
-                        restorableCameraPosition.target.longitude
-                    )
+                    val target =
+                        LatLng(
+                            restorableCameraPosition.target.latitude,
+                            restorableCameraPosition.target.longitude
+                        )
                     if (!cameraMatches(map, target, restorableCameraPosition.zoom)) {
                         map.animateCamera(
                             CameraUpdateFactory.newLatLngZoom(
@@ -329,74 +337,85 @@ private fun setupMap(
     ensureMarkerImages(style, parks.size)
 
     if (style.getSource(SOURCE_ID) == null) {
-        val source = GeoJsonSource(
-            SOURCE_ID,
-            parks.toFeatureCollection(),
-            GeoJsonOptions()
-                .withCluster(true)
-                .withClusterMaxZoom(CLUSTER_MAX_ZOOM)
-                .withClusterRadius(CLUSTER_RADIUS)
-        )
+        val source =
+            GeoJsonSource(
+                SOURCE_ID,
+                parks.toFeatureCollection(),
+                GeoJsonOptions()
+                    .withCluster(true)
+                    .withClusterMaxZoom(CLUSTER_MAX_ZOOM)
+                    .withClusterRadius(CLUSTER_RADIUS)
+            )
         style.addSource(source)
     }
 
     if (style.getLayer(CLUSTERS_LAYER_ID) == null) {
-        val clustersLayer = SymbolLayer(CLUSTERS_LAYER_ID, SOURCE_ID).apply {
-            setProperties(
-                PropertyFactory.iconImage(clusterIconExpression()),
-                PropertyFactory.iconAllowOverlap(true),
-                PropertyFactory.iconIgnorePlacement(true),
-                PropertyFactory.iconAnchor(Property.ICON_ANCHOR_CENTER)
-            )
-            setFilter(Expression.has("point_count"))
-        }
+        val clustersLayer =
+            SymbolLayer(CLUSTERS_LAYER_ID, SOURCE_ID).apply {
+                setProperties(
+                    PropertyFactory.iconImage(clusterIconExpression()),
+                    PropertyFactory.iconAllowOverlap(true),
+                    PropertyFactory.iconIgnorePlacement(true),
+                    PropertyFactory.iconAnchor(Property.ICON_ANCHOR_CENTER)
+                )
+                setFilter(Expression.has("point_count"))
+            }
         style.addLayer(clustersLayer)
     }
 
     if (style.getLayer(UNCLUSTERED_LAYER_ID) == null) {
-        val unclusteredLayer = SymbolLayer(UNCLUSTERED_LAYER_ID, SOURCE_ID).apply {
-            setProperties(
-                PropertyFactory.iconImage(PARK_ICON_ID),
-                PropertyFactory.iconAllowOverlap(true),
-                PropertyFactory.iconIgnorePlacement(true),
-                PropertyFactory.iconAnchor(Property.ICON_ANCHOR_CENTER)
-            )
-            setFilter(Expression.not(Expression.has("point_count")))
-        }
+        val unclusteredLayer =
+            SymbolLayer(UNCLUSTERED_LAYER_ID, SOURCE_ID).apply {
+                setProperties(
+                    PropertyFactory.iconImage(PARK_ICON_ID),
+                    PropertyFactory.iconAllowOverlap(true),
+                    PropertyFactory.iconIgnorePlacement(true),
+                    PropertyFactory.iconAnchor(Property.ICON_ANCHOR_CENTER)
+                )
+                setFilter(Expression.not(Expression.has("point_count")))
+            }
         style.addLayer(unclusteredLayer)
     }
 
     if (style.getLayer(SELECTED_UNCLUSTERED_LAYER_ID) == null) {
-        val selectedLayer = SymbolLayer(SELECTED_UNCLUSTERED_LAYER_ID, SOURCE_ID).apply {
-            setProperties(
-                PropertyFactory.iconImage(SELECTED_PARK_ICON_ID),
-                PropertyFactory.iconAllowOverlap(true),
-                PropertyFactory.iconIgnorePlacement(true),
-                PropertyFactory.iconAnchor(Property.ICON_ANCHOR_CENTER)
-            )
-        }
+        val selectedLayer =
+            SymbolLayer(SELECTED_UNCLUSTERED_LAYER_ID, SOURCE_ID).apply {
+                setProperties(
+                    PropertyFactory.iconImage(SELECTED_PARK_ICON_ID),
+                    PropertyFactory.iconAllowOverlap(true),
+                    PropertyFactory.iconIgnorePlacement(true),
+                    PropertyFactory.iconAnchor(Property.ICON_ANCHOR_CENTER)
+                )
+            }
         style.addLayer(selectedLayer)
     }
 
     updateSelectedPark(style, selectedParkId)
 }
 
-private fun updateParksSource(style: Style, parks: List<Park>) {
+private fun updateParksSource(
+    style: Style,
+    parks: List<Park>
+) {
     val source = style.getSourceAs<GeoJsonSource>(SOURCE_ID) ?: return
     source.setGeoJson(parks.toFeatureCollection())
 }
 
-private fun updateSelectedPark(style: Style, selectedParkId: Long?) {
+private fun updateSelectedPark(
+    style: Style,
+    selectedParkId: Long?
+) {
     val selectedLayer = style.getLayer(SELECTED_UNCLUSTERED_LAYER_ID) as? SymbolLayer ?: return
 
-    val filter = if (selectedParkId != null) {
-        Expression.all(
-            Expression.not(Expression.has("point_count")),
-            Expression.eq(Expression.get("id"), Expression.literal(selectedParkId.toDouble()))
-        )
-    } else {
-        Expression.eq(Expression.get("id"), Expression.literal(-1))
-    }
+    val filter =
+        if (selectedParkId != null) {
+            Expression.all(
+                Expression.not(Expression.has("point_count")),
+                Expression.eq(Expression.get("id"), Expression.literal(selectedParkId.toDouble()))
+            )
+        } else {
+            Expression.eq(Expression.get("id"), Expression.literal(-1))
+        }
 
     selectedLayer.setFilter(filter)
 }
@@ -445,7 +464,10 @@ private fun applyInitialCamera(
     }
 }
 
-private fun ensureMarkerImages(style: Style, parksCount: Int) {
+private fun ensureMarkerImages(
+    style: Style,
+    parksCount: Int
+) {
     style.addImage(
         PARK_ICON_ID,
         cachedParkBitmap ?: createCircleBitmap(
@@ -480,8 +502,8 @@ private fun ensureMarkerImages(style: Style, parksCount: Int) {
     )
 }
 
-private fun clusterIconExpression(): Expression {
-    return Expression.switchCase(
+private fun clusterIconExpression(): Expression =
+    Expression.switchCase(
         Expression.lte(
             Expression.get("point_count"),
             Expression.literal(MAX_EXACT_CLUSTER_ICON_COUNT)
@@ -492,7 +514,6 @@ private fun clusterIconExpression(): Expression {
         ),
         Expression.literal(CLUSTER_ICON_OVERFLOW_ID)
     )
-}
 
 private fun createCircleBitmap(
     diameterPx: Int,
@@ -503,16 +524,18 @@ private fun createCircleBitmap(
     val radius = diameterPx / 2f
     val strokeWidth = diameterPx / CIRCLE_STROKE_WIDTH_DIVISOR
 
-    val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = fillColor
-        style = Paint.Style.FILL
-    }
+    val fillPaint =
+        Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = fillColor
+            style = Paint.Style.FILL
+        }
 
-    val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = MARKER_STROKE_COLOR
-        style = Paint.Style.STROKE
-        this.strokeWidth = strokeWidth
-    }
+    val strokePaint =
+        Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = MARKER_STROKE_COLOR
+            style = Paint.Style.STROKE
+            this.strokeWidth = strokeWidth
+        }
 
     canvas.drawCircle(radius, radius, radius - strokeWidth, fillPaint)
     canvas.drawCircle(radius, radius, radius - strokeWidth, strokePaint)
@@ -520,18 +543,20 @@ private fun createCircleBitmap(
 }
 
 private fun createClusterBitmap(label: String): Bitmap {
-    val bitmap = createCircleBitmap(
-        diameterPx = CLUSTER_MARKER_DIAMETER_PX,
-        fillColor = CLUSTER_COLOR
-    )
+    val bitmap =
+        createCircleBitmap(
+            diameterPx = CLUSTER_MARKER_DIAMETER_PX,
+            fillColor = CLUSTER_COLOR
+        )
 
     val canvas = Canvas(bitmap)
-    val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.WHITE
-        textAlign = Paint.Align.CENTER
-        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        textSize = clusterTextSize(label)
-    }
+    val textPaint =
+        Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            textAlign = Paint.Align.CENTER
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textSize = clusterTextSize(label)
+        }
 
     val x = bitmap.width / 2f
     val y = bitmap.height / 2f - (textPaint.descent() + textPaint.ascent()) / 2f
@@ -562,8 +587,8 @@ private fun cameraMatches(
         kotlin.math.abs(current.zoom - zoom) < ZOOM_EPSILON
 }
 
-private fun parksSignature(parks: List<Park>): String {
-    return buildString(parks.size * PARK_SIGNATURE_ENTRY_SIZE) {
+private fun parksSignature(parks: List<Park>): String =
+    buildString(parks.size * PARK_SIGNATURE_ENTRY_SIZE) {
         parks.forEach { park ->
             append(park.id)
             append(':')
@@ -573,15 +598,14 @@ private fun parksSignature(parks: List<Park>): String {
             append(';')
         }
     }
-}
 
 private fun cameraSignature(
     parks: List<Park>,
     selectedCityCenter: UiCoordinates?,
     cameraPosition: MapCameraPosition?,
     hasResolvedInitialCamera: Boolean
-): String {
-    return buildString {
+): String =
+    buildString {
         append("resolved=")
         append(hasResolvedInitialCamera)
         append("|parks=")
@@ -601,4 +625,3 @@ private fun cameraSignature(
         append(':')
         append(cameraPosition?.tilt)
     }
-}

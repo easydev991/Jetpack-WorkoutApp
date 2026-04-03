@@ -15,7 +15,6 @@ import org.junit.Before
 import org.junit.Test
 
 class CreateParkLocationHandlerTest {
-
     private lateinit var locationService: LocationService
     private lateinit var userNotifier: UserNotifier
     private lateinit var handler: DefaultCreateParkLocationHandler
@@ -28,65 +27,71 @@ class CreateParkLocationHandlerTest {
     }
 
     @Test
-    fun invoke_whenLocationSucceeds_returnsSuccessResult() = runTest {
-        val coordinates = LocationCoordinates(latitude = 55.7558, longitude = 37.6173)
-        coEvery { locationService.getCurrentLocation() } returns Result.success(coordinates)
+    fun invoke_whenLocationSucceeds_returnsSuccessResult() =
+        runTest {
+            val coordinates = LocationCoordinates(latitude = 55.7558, longitude = 37.6173)
+            coEvery { locationService.getCurrentLocation() } returns Result.success(coordinates)
 
-        val result = handler()
+            val result = handler()
 
-        assertTrue(result.isSuccess)
-        val draft = result.getOrThrow()
-        assertEquals(55.7558, draft.latitude, 0.0001)
-        assertEquals(37.6173, draft.longitude, 0.0001)
-        assertTrue(draft.lastLocationRequestDate != null)
-    }
-
-    @Test
-    fun invoke_whenLocationSucceeds_draftHasEmptyAddressAndNullCityId() = runTest {
-        val coordinates = LocationCoordinates(latitude = 55.7558, longitude = 37.6173)
-        coEvery { locationService.getCurrentLocation() } returns Result.success(coordinates)
-
-        val result = handler()
-
-        val draft = result.getOrThrow()
-        assertEquals("", draft.address)
-        assertEquals(null, draft.cityId)
-    }
+            assertTrue(result.isSuccess)
+            val draft = result.getOrThrow()
+            assertEquals(55.7558, draft.latitude, 0.0001)
+            assertEquals(37.6173, draft.longitude, 0.0001)
+            assertTrue(draft.lastLocationRequestDate != null)
+        }
 
     @Test
-    fun invoke_whenLocationFails_returnsFailureResult() = runTest {
-        coEvery { locationService.getCurrentLocation() } returns Result.failure(Exception("Location unavailable"))
+    fun invoke_whenLocationSucceeds_draftHasEmptyAddressAndNullCityId() =
+        runTest {
+            val coordinates = LocationCoordinates(latitude = 55.7558, longitude = 37.6173)
+            coEvery { locationService.getCurrentLocation() } returns Result.success(coordinates)
 
-        val result = handler()
+            val result = handler()
 
-        assertTrue(result.isFailure)
-    }
-
-    @Test
-    fun invoke_whenLocationFails_doesNotShowInfoNotification() = runTest {
-        coEvery { locationService.getCurrentLocation() } returns Result.failure(Exception("Location unavailable"))
-
-        handler()
-
-        verify(inverse = true) { userNotifier.showInfo(any()) }
-    }
+            val draft = result.getOrThrow()
+            assertEquals("", draft.address)
+            assertEquals(null, draft.cityId)
+        }
 
     @Test
-    fun invoke_whenLocationFails_callsHandleErrorWithLocationFailed() = runTest {
-        coEvery { locationService.getCurrentLocation() } returns Result.failure(Exception("Location unavailable"))
+    fun invoke_whenLocationFails_returnsFailureResult() =
+        runTest {
+            coEvery { locationService.getCurrentLocation() } returns Result.failure(Exception("Location unavailable"))
 
-        handler()
+            val result = handler()
 
-        coVerify { userNotifier.handleError(match<AppError.LocationFailed> { true }) }
-    }
+            assertTrue(result.isFailure)
+        }
 
     @Test
-    fun invoke_whenLocationSucceeds_doesNotCallHandleError() = runTest {
-        val coordinates = LocationCoordinates(latitude = 55.7558, longitude = 37.6173)
-        coEvery { locationService.getCurrentLocation() } returns Result.success(coordinates)
+    fun invoke_whenLocationFails_doesNotShowInfoNotification() =
+        runTest {
+            coEvery { locationService.getCurrentLocation() } returns Result.failure(Exception("Location unavailable"))
 
-        handler()
+            handler()
 
-        verify(inverse = true) { userNotifier.handleError(any<AppError>()) }
-    }
+            verify(inverse = true) { userNotifier.showInfo(any()) }
+        }
+
+    @Test
+    fun invoke_whenLocationFails_callsHandleErrorWithLocationFailed() =
+        runTest {
+            coEvery { locationService.getCurrentLocation() } returns Result.failure(Exception("Location unavailable"))
+
+            handler()
+
+            coVerify { userNotifier.handleError(match<AppError.LocationFailed> { true }) }
+        }
+
+    @Test
+    fun invoke_whenLocationSucceeds_doesNotCallHandleError() =
+        runTest {
+            val coordinates = LocationCoordinates(latitude = 55.7558, longitude = 37.6173)
+            coEvery { locationService.getCurrentLocation() } returns Result.success(coordinates)
+
+            handler()
+
+            verify(inverse = true) { userNotifier.handleError(any<AppError>()) }
+        }
 }

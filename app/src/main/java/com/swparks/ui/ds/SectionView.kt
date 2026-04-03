@@ -43,9 +43,10 @@ fun SectionView(
                 text = stringResource(id = titleID).uppercase(),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(
-                    start = if (addPaddingToTitle) dimensionResource(id = R.dimen.spacing_small) else 0.dp
-                )
+                modifier =
+                    Modifier.padding(
+                        start = if (addPaddingToTitle) dimensionResource(id = R.dimen.spacing_small) else 0.dp
+                    )
             )
         }
         content()
@@ -71,11 +72,12 @@ fun SectionViewPreview() {
                 titleBottomPadding = dimensionResource(R.dimen.spacing_xxsmall)
             ) {
                 UserRowView(
-                    data = UserRowData(
-                        imageStringURL = null,
-                        name = "Alica",
-                        address = "Россия, Арзамас"
-                    )
+                    data =
+                        UserRowData(
+                            imageStringURL = null,
+                            name = "Alica",
+                            address = "Россия, Арзамас"
+                        )
                 )
             }
             HorizontalDivider()
@@ -84,13 +86,14 @@ fun SectionViewPreview() {
                 titleBottomPadding = dimensionResource(R.dimen.spacing_xxsmall)
             ) {
                 FriendRequestRowView(
-                    data = FriendRequestData(
-                        imageStringURL = null,
-                        name = "Alica",
-                        address = "Россия, Арзамас",
-                        onClickAccept = {},
-                        onClickDecline = {}
-                    )
+                    data =
+                        FriendRequestData(
+                            imageStringURL = null,
+                            name = "Alica",
+                            address = "Россия, Арзамас",
+                            onClickAccept = {},
+                            onClickDecline = {}
+                        )
                 )
             }
         }

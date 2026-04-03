@@ -38,8 +38,15 @@ data class PickedImagesGridConfig(
 
 sealed class PickedImagesGridAction {
     data object AddImage : PickedImagesGridAction()
-    data class RemoveImage(val index: Int) : PickedImagesGridAction()
-    data class ViewImage(val uri: Uri, val index: Int) : PickedImagesGridAction()
+
+    data class RemoveImage(
+        val index: Int
+    ) : PickedImagesGridAction()
+
+    data class ViewImage(
+        val uri: Uri,
+        val index: Int
+    ) : PickedImagesGridAction()
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -61,11 +68,12 @@ fun PickedImagesGrid(
     ) {
         if (config.showTitle) {
             Text(
-                text = if (images.isEmpty()) {
-                    stringResource(R.string.photos_title)
-                } else {
-                    pluralStringResource(R.plurals.photoSectionHeader, images.size, images.size)
-                },
+                text =
+                    if (images.isEmpty()) {
+                        stringResource(R.string.photos_title)
+                    } else {
+                        pluralStringResource(R.plurals.photoSectionHeader, images.size, images.size)
+                    },
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -108,9 +116,10 @@ fun PickedImagesGrid(
                                         )
                                 }
                             },
-                            modifier = Modifier
-                                .width(itemWidthDp)
-                                .aspectRatio(1f)
+                            modifier =
+                                Modifier
+                                    .width(itemWidthDp)
+                                    .aspectRatio(1f)
                         )
                     }
                 }
@@ -121,15 +130,17 @@ fun PickedImagesGrid(
 
 @Composable
 private fun SubtitleText(state: PickedImagesState) {
-    val subtitle = when {
-        state.remainingSlots == 0 -> stringResource(R.string.photos_max_reached)
-        state.images.isEmpty() -> stringResource(
-            R.string.photos_add_subtitle_empty,
-            state.selectionLimit
-        )
+    val subtitle =
+        when {
+            state.remainingSlots == 0 -> stringResource(R.string.photos_max_reached)
+            state.images.isEmpty() ->
+                stringResource(
+                    R.string.photos_add_subtitle_empty,
+                    state.selectionLimit
+                )
 
-        else -> stringResource(R.string.photos_add_subtitle_more, state.remainingSlots)
-    }
+            else -> stringResource(R.string.photos_add_subtitle_more, state.remainingSlots)
+        }
 
     Text(
         text = subtitle,
@@ -165,11 +176,12 @@ private fun PickedImagesGridWithImagesPreview() {
     JetpackWorkoutAppTheme {
         PaddedPreview {
             PickedImagesGrid(
-                images = listOf(
-                    "content://media/1".toUri(),
-                    "content://media/2".toUri(),
-                    "content://media/3".toUri()
-                ),
+                images =
+                    listOf(
+                        "content://media/1".toUri(),
+                        "content://media/2".toUri(),
+                        "content://media/3".toUri()
+                    ),
                 selectionLimit = PREVIEW_SELECTION_LIMIT,
                 onAction = {}
             )

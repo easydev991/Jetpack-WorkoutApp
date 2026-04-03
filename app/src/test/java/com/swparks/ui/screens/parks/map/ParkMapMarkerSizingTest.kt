@@ -4,7 +4,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ParkMapMarkerSizingTest {
-
     @Test
     fun clusterTextSize_whenOneOrTwoDigits_thenReturnsShortSize() {
         assertEquals(38f, clusterTextSize("7"))

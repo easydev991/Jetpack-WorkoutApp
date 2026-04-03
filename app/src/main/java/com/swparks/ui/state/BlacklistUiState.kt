@@ -19,14 +19,24 @@ sealed class BlacklistUiState {
     ) : BlacklistUiState()
 
     /** Состояние ошибки с сообщением */
-    data class Error(val message: String) : BlacklistUiState()
+    data class Error(
+        val message: String
+    ) : BlacklistUiState()
 }
 
 /** Actions для экрана черного списка */
 sealed class BlacklistAction {
     object Back : BlacklistAction()
-    data class ShowRemoveDialog(val user: User) : BlacklistAction()
-    data class Remove(val user: User) : BlacklistAction()
+
+    data class ShowRemoveDialog(
+        val user: User
+    ) : BlacklistAction()
+
+    data class Remove(
+        val user: User
+    ) : BlacklistAction()
+
     object CancelRemove : BlacklistAction()
+
     object DismissSuccessAlert : BlacklistAction()
 }

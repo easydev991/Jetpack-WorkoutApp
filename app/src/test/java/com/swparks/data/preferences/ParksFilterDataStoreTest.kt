@@ -14,7 +14,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ParksFilterDataStoreTest {
-
     private fun createDataStoreWithPreferences(
         sizesStr: String? = null,
         typesStr: String? = null,
@@ -32,108 +31,123 @@ class ParksFilterDataStoreTest {
     }
 
     @Test
-    fun filter_withEmptyPreferences_returnsDefaultFilter() = runTest {
-        val dataStore = createDataStoreWithPreferences()
-        val parksFilterDataStore = ParksFilterDataStore(dataStore)
+    fun filter_withEmptyPreferences_returnsDefaultFilter() =
+        runTest {
+            val dataStore = createDataStoreWithPreferences()
+            val parksFilterDataStore = ParksFilterDataStore(dataStore)
 
-        val filter = parksFilterDataStore.filter.first()
+            val filter = parksFilterDataStore.filter.first()
 
-        assertEquals(ParkSize.entries.toSet(), filter.sizes)
-        assertEquals(ParkType.entries.toSet(), filter.types)
-        assertTrue(filter.isDefault)
-    }
-
-    @Test
-    fun filter_withCustomSizesAndTypes_returnsCustomFilter() = runTest {
-        val dataStore = createDataStoreWithPreferences(
-            sizesStr = "1,2",
-            typesStr = "1,6"
-        )
-        val parksFilterDataStore = ParksFilterDataStore(dataStore)
-
-        val filter = parksFilterDataStore.filter.first()
-
-        assertEquals(setOf(ParkSize.SMALL, ParkSize.MEDIUM), filter.sizes)
-        assertEquals(setOf(ParkType.SOVIET, ParkType.LEGENDARY), filter.types)
-    }
+            assertEquals(ParkSize.entries.toSet(), filter.sizes)
+            assertEquals(ParkType.entries.toSet(), filter.types)
+            assertTrue(filter.isDefault)
+        }
 
     @Test
-    fun filter_withInvalidRawValues_fallsBackToDefaults() = runTest {
-        val dataStore = createDataStoreWithPreferences(
-            sizesStr = "999,1",
-            typesStr = "999,1"
-        )
-        val parksFilterDataStore = ParksFilterDataStore(dataStore)
+    fun filter_withCustomSizesAndTypes_returnsCustomFilter() =
+        runTest {
+            val dataStore =
+                createDataStoreWithPreferences(
+                    sizesStr = "1,2",
+                    typesStr = "1,6"
+                )
+            val parksFilterDataStore = ParksFilterDataStore(dataStore)
 
-        val filter = parksFilterDataStore.filter.first()
+            val filter = parksFilterDataStore.filter.first()
 
-        assertEquals(setOf(ParkSize.SMALL), filter.sizes)
-        assertEquals(setOf(ParkType.SOVIET), filter.types)
-    }
-
-    @Test
-    fun filter_withEmptyString_fallsBackToDefaults() = runTest {
-        val dataStore = createDataStoreWithPreferences(
-            sizesStr = "",
-            typesStr = ""
-        )
-        val parksFilterDataStore = ParksFilterDataStore(dataStore)
-
-        val filter = parksFilterDataStore.filter.first()
-
-        assertEquals(ParkSize.entries.toSet(), filter.sizes)
-        assertEquals(ParkType.entries.toSet(), filter.types)
-    }
+            assertEquals(setOf(ParkSize.SMALL, ParkSize.MEDIUM), filter.sizes)
+            assertEquals(setOf(ParkType.SOVIET, ParkType.LEGENDARY), filter.types)
+        }
 
     @Test
-    fun filter_withCityId_returnsFilterWithCity() = runTest {
-        val dataStore = createDataStoreWithPreferences(
-            cityIdStr = "5"
-        )
-        val parksFilterDataStore = ParksFilterDataStore(dataStore)
+    fun filter_withInvalidRawValues_fallsBackToDefaults() =
+        runTest {
+            val dataStore =
+                createDataStoreWithPreferences(
+                    sizesStr = "999,1",
+                    typesStr = "999,1"
+                )
+            val parksFilterDataStore = ParksFilterDataStore(dataStore)
 
-        val filter = parksFilterDataStore.filter.first()
+            val filter = parksFilterDataStore.filter.first()
 
-        assertEquals(5, filter.selectedCityId)
-    }
-
-    @Test
-    fun filter_withEmptyCityId_returnsNullCity() = runTest {
-        val dataStore = createDataStoreWithPreferences(
-            cityIdStr = ""
-        )
-        val parksFilterDataStore = ParksFilterDataStore(dataStore)
-
-        val filter = parksFilterDataStore.filter.first()
-
-        assertEquals(null, filter.selectedCityId)
-    }
+            assertEquals(setOf(ParkSize.SMALL), filter.sizes)
+            assertEquals(setOf(ParkType.SOVIET), filter.types)
+        }
 
     @Test
-    fun filter_withInvalidCityId_returnsNullCity() = runTest {
-        val dataStore = createDataStoreWithPreferences(
-            cityIdStr = "invalid"
-        )
-        val parksFilterDataStore = ParksFilterDataStore(dataStore)
+    fun filter_withEmptyString_fallsBackToDefaults() =
+        runTest {
+            val dataStore =
+                createDataStoreWithPreferences(
+                    sizesStr = "",
+                    typesStr = ""
+                )
+            val parksFilterDataStore = ParksFilterDataStore(dataStore)
 
-        val filter = parksFilterDataStore.filter.first()
+            val filter = parksFilterDataStore.filter.first()
 
-        assertEquals(null, filter.selectedCityId)
-    }
+            assertEquals(ParkSize.entries.toSet(), filter.sizes)
+            assertEquals(ParkType.entries.toSet(), filter.types)
+        }
 
     @Test
-    fun filter_withAllFilters_returnsCompleteFilter() = runTest {
-        val dataStore = createDataStoreWithPreferences(
-            sizesStr = "1,2",
-            typesStr = "1,6",
-            cityIdStr = "3"
-        )
-        val parksFilterDataStore = ParksFilterDataStore(dataStore)
+    fun filter_withCityId_returnsFilterWithCity() =
+        runTest {
+            val dataStore =
+                createDataStoreWithPreferences(
+                    cityIdStr = "5"
+                )
+            val parksFilterDataStore = ParksFilterDataStore(dataStore)
 
-        val filter = parksFilterDataStore.filter.first()
+            val filter = parksFilterDataStore.filter.first()
 
-        assertEquals(setOf(ParkSize.SMALL, ParkSize.MEDIUM), filter.sizes)
-        assertEquals(setOf(ParkType.SOVIET, ParkType.LEGENDARY), filter.types)
-        assertEquals(3, filter.selectedCityId)
-    }
+            assertEquals(5, filter.selectedCityId)
+        }
+
+    @Test
+    fun filter_withEmptyCityId_returnsNullCity() =
+        runTest {
+            val dataStore =
+                createDataStoreWithPreferences(
+                    cityIdStr = ""
+                )
+            val parksFilterDataStore = ParksFilterDataStore(dataStore)
+
+            val filter = parksFilterDataStore.filter.first()
+
+            assertEquals(null, filter.selectedCityId)
+        }
+
+    @Test
+    fun filter_withInvalidCityId_returnsNullCity() =
+        runTest {
+            val dataStore =
+                createDataStoreWithPreferences(
+                    cityIdStr = "invalid"
+                )
+            val parksFilterDataStore = ParksFilterDataStore(dataStore)
+
+            val filter = parksFilterDataStore.filter.first()
+
+            assertEquals(null, filter.selectedCityId)
+        }
+
+    @Test
+    fun filter_withAllFilters_returnsCompleteFilter() =
+        runTest {
+            val dataStore =
+                createDataStoreWithPreferences(
+                    sizesStr = "1,2",
+                    typesStr = "1,6",
+                    cityIdStr = "3"
+                )
+            val parksFilterDataStore = ParksFilterDataStore(dataStore)
+
+            val filter = parksFilterDataStore.filter.first()
+
+            assertEquals(setOf(ParkSize.SMALL, ParkSize.MEDIUM), filter.sizes)
+            assertEquals(setOf(ParkType.SOVIET, ParkType.LEGENDARY), filter.types)
+            assertEquals(3, filter.selectedCityId)
+        }
 }

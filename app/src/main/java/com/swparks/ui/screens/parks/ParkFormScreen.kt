@@ -60,14 +60,22 @@ import androidx.compose.material.icons.Icons.AutoMirrored.Filled as AutoMirrored
 
 sealed class ParkFormNavigationAction {
     data object Back : ParkFormNavigationAction()
-    data class BackWithSavedPark(val park: Park) : ParkFormNavigationAction()
+
+    data class BackWithSavedPark(
+        val park: Park
+    ) : ParkFormNavigationAction()
 }
 
 private sealed class ParkFormDialogAction {
     data object OnDismissConfirmDialog : ParkFormDialogAction()
+
     data object OnConfirmClose : ParkFormDialogAction()
+
     data object OnDismissPreview : ParkFormDialogAction()
-    data class OnDeletePhoto(val uri: Uri) : ParkFormDialogAction()
+
+    data class OnDeletePhoto(
+        val uri: Uri
+    ) : ParkFormDialogAction()
 }
 
 private data class ParkFormContentParams(
@@ -93,11 +101,12 @@ fun ParkFormScreen(
     var showConfirmDialog by remember { mutableStateOf(false) }
     var previewUri by remember { mutableStateOf<Uri?>(null) }
 
-    val photoPickerController = rememberPickedImagesController(
-        currentImageCount = uiState.selectedPhotos.size,
-        selectionLimit = uiState.maxNewPhotos,
-        onImagesSelected = viewModel::onPhotoSelected
-    )
+    val photoPickerController =
+        rememberPickedImagesController(
+            currentImageCount = uiState.selectedPhotos.size,
+            selectionLimit = uiState.maxNewPhotos,
+            onImagesSelected = viewModel::onPhotoSelected
+        )
 
     HandleParkFormEvents(
         viewModel = viewModel,
@@ -132,16 +141,17 @@ fun ParkFormScreen(
             ParkFormContent(
                 paddingValues = paddingValues,
                 scrollState = scrollState,
-                params = ParkFormContentParams(
-                    form = uiState.form,
-                    isEnabled = !uiState.isSaving,
-                    selectedPhotos = uiState.selectedPhotos,
-                    maxNewPhotos = uiState.maxNewPhotos,
-                    onAction = viewModel::onAction,
-                    onAddPhotoClick = viewModel::onAddPhotoClick,
-                    onPhotoRemove = viewModel::onPhotoRemove,
-                    onPhotoPreview = { uri -> previewUri = uri }
-                )
+                params =
+                    ParkFormContentParams(
+                        form = uiState.form,
+                        isEnabled = !uiState.isSaving,
+                        selectedPhotos = uiState.selectedPhotos,
+                        maxNewPhotos = uiState.maxNewPhotos,
+                        onAction = viewModel::onAction,
+                        onAddPhotoClick = viewModel::onAddPhotoClick,
+                        onPhotoRemove = viewModel::onPhotoRemove,
+                        onPhotoPreview = { uri -> previewUri = uri }
+                    )
             )
 
             if (uiState.isSaving || uiState.isGeocoding) {
@@ -172,10 +182,11 @@ fun ParkFormScreen(
 }
 
 private val ParkFormMode.navigationTitle: Int
-    get() = when (this) {
-        is ParkFormMode.Create -> R.string.new_park_title
-        is ParkFormMode.Edit -> R.string.park_title
-    }
+    get() =
+        when (this) {
+            is ParkFormMode.Create -> R.string.new_park_title
+            is ParkFormMode.Edit -> R.string.park_title
+        }
 
 @Composable
 private fun HandleParkFormEvents(
@@ -223,14 +234,15 @@ private fun ParkFormContent(
     params: ParkFormContentParams
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-            .verticalScroll(scrollState)
-            .padding(
-                horizontal = dimensionResource(R.dimen.spacing_regular),
-                vertical = dimensionResource(R.dimen.spacing_regular)
-            ),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(scrollState)
+                .padding(
+                    horizontal = dimensionResource(R.dimen.spacing_regular),
+                    vertical = dimensionResource(R.dimen.spacing_regular)
+                ),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
     ) {
         AddressField(
@@ -275,13 +287,14 @@ private fun AddressField(
     onValueChange: (String) -> Unit
 ) {
     SWTextField(
-        config = TextFieldConfig(
-            text = value,
-            labelID = R.string.park_address,
-            enabled = enabled,
-            singleLine = true,
-            onTextChange = onValueChange
-        )
+        config =
+            TextFieldConfig(
+                text = value,
+                labelID = R.string.park_address,
+                enabled = enabled,
+                singleLine = true,
+                onTextChange = onValueChange
+            )
     )
 }
 
@@ -312,8 +325,12 @@ private fun ParkTypeRadioButtons(
         Text(
             text = stringResource(R.string.park_type),
             style = MaterialTheme.typography.bodyMedium,
-            color = if (enabled) MaterialTheme.colorScheme.onSurface
-            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+            color =
+                if (enabled) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                },
             modifier = Modifier.padding(bottom = dimensionResource(R.dimen.spacing_xsmall))
         )
         Column(modifier = Modifier.selectableGroup()) {
@@ -356,8 +373,12 @@ private fun ParkSizeRadioButtons(
         Text(
             text = stringResource(R.string.park_size),
             style = MaterialTheme.typography.bodyMedium,
-            color = if (enabled) MaterialTheme.colorScheme.onSurface
-            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+            color =
+                if (enabled) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                },
             modifier = Modifier.padding(bottom = dimensionResource(R.dimen.spacing_xsmall))
         )
         Column(modifier = Modifier.selectableGroup()) {
@@ -379,13 +400,14 @@ private fun SaveButton(
     onClick: () -> Unit
 ) {
     SWButton(
-        config = ButtonConfig(
-            mode = SWButtonMode.FILLED,
-            size = SWButtonSize.LARGE,
-            text = stringResource(R.string.save),
-            enabled = enabled,
-            onClick = onClick
-        )
+        config =
+            ButtonConfig(
+                mode = SWButtonMode.FILLED,
+                size = SWButtonSize.LARGE,
+                text = stringResource(R.string.save),
+                enabled = enabled,
+                onClick = onClick
+            )
     )
 }
 

@@ -14,5 +14,8 @@ interface ICanDeleteJournalEntryUseCase {
      * @param journalId Идентификатор дневника
      * @return true если удаление разрешено, false если это первая запись
      */
-    suspend operator fun invoke(entryId: Long, journalId: Long): Boolean
+    suspend operator fun invoke(
+        entryId: Long,
+        journalId: Long
+    ): Boolean
 }

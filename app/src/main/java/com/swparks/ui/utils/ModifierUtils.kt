@@ -20,9 +20,10 @@ const val DISABLED_ALPHA = 0.5f
 fun Modifier.disabledIf(
     disabled: Boolean,
     onClick: () -> Unit
-): Modifier = this
-    .disabledAlpha(disabled)
-    .clickable(enabled = !disabled, onClick = onClick)
+): Modifier =
+    this
+        .disabledAlpha(disabled)
+        .clickable(enabled = !disabled, onClick = onClick)
 
 /**
  * Применяет только визуальную прозрачность для заблокированного элемента.
@@ -30,7 +31,8 @@ fun Modifier.disabledIf(
  *
  * @param disabled Условие блокировки (true = элемент заблокирован)
  */
-fun Modifier.disabledAlpha(disabled: Boolean): Modifier = this
-    .graphicsLayer {
-        alpha = if (disabled) DISABLED_ALPHA else 1f
-    }
+fun Modifier.disabledAlpha(disabled: Boolean): Modifier =
+    this
+        .graphicsLayer {
+            alpha = if (disabled) DISABLED_ALPHA else 1f
+        }

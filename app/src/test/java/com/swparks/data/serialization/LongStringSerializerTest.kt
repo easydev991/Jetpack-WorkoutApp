@@ -10,17 +10,18 @@ import org.junit.Test
  * Тесты для [LongStringSerializer] - десериализации чисел Long из строк и чисел
  */
 class LongStringSerializerTest {
-
-    private val json = Json {
-        ignoreUnknownKeys = true
-    }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+        }
 
     @Test
     fun deserialize_whenLong_thenReturnsLong() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {"value": 1234567890}
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<LongTestModel>(jsonString)
@@ -32,9 +33,10 @@ class LongStringSerializerTest {
     @Test
     fun deserialize_whenStringLong_thenReturnsLong() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {"value": "9876543210"}
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<LongTestModel>(jsonString)
@@ -46,9 +48,10 @@ class LongStringSerializerTest {
     @Test
     fun deserialize_whenZero_thenReturnsZero() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {"value": 0}
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<LongTestModel>(jsonString)
@@ -60,9 +63,10 @@ class LongStringSerializerTest {
     @Test
     fun deserialize_whenStringZero_thenReturnsZero() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {"value": "0"}
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<LongTestModel>(jsonString)
@@ -74,9 +78,10 @@ class LongStringSerializerTest {
     @Test
     fun deserialize_whenNegativeLong_thenReturnsNegativeLong() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {"value": -1234567890}
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<LongTestModel>(jsonString)
@@ -88,9 +93,10 @@ class LongStringSerializerTest {
     @Test
     fun deserialize_whenNegativeStringLong_thenReturnsNegativeLong() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {"value": "-9876543210"}
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<LongTestModel>(jsonString)
@@ -102,9 +108,10 @@ class LongStringSerializerTest {
     @Test
     fun deserialize_whenInvalidString_thenThrowsSerializationException() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {"value": "invalid"}
-        """.trimIndent()
+            """.trimIndent()
 
         // When/Then
         assertThrows(kotlinx.serialization.SerializationException::class.java) {
@@ -127,9 +134,10 @@ class LongStringSerializerTest {
     @Test
     fun multipleFields_whenMixedLongAndString_thenAllDeserializedCorrectly() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {"value1": 10000000000, "value2": "20000000000", "value3": 30000000000}
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<MultipleLongTestModel>(jsonString)

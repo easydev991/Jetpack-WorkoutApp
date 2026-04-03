@@ -50,50 +50,56 @@ data class EventRowData(
 @Composable
 fun EventRowView(data: EventRowData) {
     FormCardContainer(
-        params = FormCardContainerParams(
-            modifier = data.modifier,
-            onClick = data.onClick,
-            enabled = data.enabled
-        )
+        params =
+            FormCardContainerParams(
+                modifier = data.modifier,
+                onClick = data.onClick,
+                enabled = data.enabled
+            )
     ) {
         FormRowContainer(
-            config = FormRowConfig(
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
-                verticalPadding = dimensionResource(R.dimen.spacing_small),
-                content = {
-                    SWAsyncImage(
-                        config = AsyncImageConfig(
-                            imageStringURL = data.imageStringURL,
-                            size = 74.dp,
-                            showBorder = false
-                        )
-                    )
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall))
-                    ) {
-                        Text(
-                            text = data.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+            config =
+                FormRowConfig(
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
+                    verticalPadding = dimensionResource(R.dimen.spacing_small),
+                    content = {
+                        SWAsyncImage(
+                            config =
+                                AsyncImageConfig(
+                                    imageStringURL = data.imageStringURL,
+                                    size = 74.dp,
+                                    showBorder = false
+                                )
                         )
                         Column(
-                            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall_plus))
+                            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall))
                         ) {
-                            AdditionalInfoRow(
-                                imageID = R.drawable.round_access_time_16,
-                                text = data.dateString
+                            Text(
+                                text = data.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
-                            AdditionalInfoRow(
-                                imageID = R.drawable.outline_assistant_navigation_16,
-                                text = data.address
-                            )
+                            Column(
+                                verticalArrangement =
+                                    Arrangement.spacedBy(
+                                        dimensionResource(R.dimen.spacing_xxsmall_plus)
+                                    )
+                            ) {
+                                AdditionalInfoRow(
+                                    imageID = R.drawable.round_access_time_16,
+                                    text = data.dateString
+                                )
+                                AdditionalInfoRow(
+                                    imageID = R.drawable.outline_assistant_navigation_16,
+                                    text = data.address
+                                )
+                            }
                         }
                     }
-                }
-            )
+                )
         )
     }
 }
@@ -137,12 +143,13 @@ fun EventRowViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             EventRowView(
-                data = EventRowData(
-                    imageStringURL = null,
-                    name = "Открытая воскресная тренировка #3 в 2023 году",
-                    dateString = "22 янв, 12:00",
-                    address = "Москва"
-                )
+                data =
+                    EventRowData(
+                        imageStringURL = null,
+                        name = "Открытая воскресная тренировка #3 в 2023 году",
+                        dateString = "22 янв, 12:00",
+                        address = "Москва"
+                    )
             )
         }
     }

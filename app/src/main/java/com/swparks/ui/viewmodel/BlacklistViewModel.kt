@@ -31,8 +31,8 @@ class BlacklistViewModel(
     private val swRepository: SWRepository,
     private val logger: Logger,
     private val userNotifier: UserNotifier
-) : ViewModel(), IBlacklistViewModel {
-
+) : ViewModel(),
+    IBlacklistViewModel {
     private companion object {
         private const val TAG = "BlacklistViewModel"
     }
@@ -42,20 +42,21 @@ class BlacklistViewModel(
 
     init {
         viewModelScope.launch {
-            swRepository.getBlacklistFlow()
+            swRepository
+                .getBlacklistFlow()
                 .catch { error ->
                     val message = "Ошибка при загрузке черного списка: ${error.message}"
                     logger.e(TAG, message)
                     _uiState.value = BlacklistUiState.Error("Ошибка загрузки черного списка")
                     userNotifier.handleError(AppError.Generic(message, error))
-                }
-                .collect { blacklist ->
+                }.collect { blacklist ->
                     val currentState = _uiState.value
-                    _uiState.value = if (currentState is BlacklistUiState.Success) {
-                        currentState.copy(blacklist = blacklist)
-                    } else {
-                        BlacklistUiState.Success(blacklist = blacklist)
-                    }
+                    _uiState.value =
+                        if (currentState is BlacklistUiState.Success) {
+                            currentState.copy(blacklist = blacklist)
+                        } else {
+                            BlacklistUiState.Success(blacklist = blacklist)
+                        }
                 }
         }
     }
@@ -66,7 +67,7 @@ class BlacklistViewModel(
             is BlacklistAction.Remove -> removeFromBlacklist(action.user)
             BlacklistAction.CancelRemove -> cancelRemove()
             BlacklistAction.DismissSuccessAlert -> dismissSuccessAlert()
-            BlacklistAction.Back -> { /* Обрабатывается в UI */
+            BlacklistAction.Back -> { // Обрабатывается в UI
             }
         }
     }
@@ -74,10 +75,11 @@ class BlacklistViewModel(
     private fun showRemoveDialog(user: com.swparks.data.model.User) {
         val currentState = _uiState.value
         if (currentState is BlacklistUiState.Success) {
-            _uiState.value = currentState.copy(
-                itemToRemove = user,
-                showRemoveDialog = true
-            )
+            _uiState.value =
+                currentState.copy(
+                    itemToRemove = user,
+                    showRemoveDialog = true
+                )
         }
     }
 
@@ -87,36 +89,39 @@ class BlacklistViewModel(
                 val currentState = _uiState.value
                 if (currentState !is BlacklistUiState.Success) return@launch
 
-                _uiState.value = currentState.copy(
-                    showRemoveDialog = false,
-                    isRemoving = true,
-                    isLoading = true
-                )
+                _uiState.value =
+                    currentState.copy(
+                        showRemoveDialog = false,
+                        isRemoving = true,
+                        isLoading = true
+                    )
 
                 val result =
                     swRepository.blacklistAction(user, ApiBlacklistAction.UNBLOCK.toApiOption())
                 result.fold(
                     onSuccess = {
                         logger.i(TAG, "Пользователь удален из черного списка: userId=${user.id}")
-                        _uiState.value = currentState.copy(
-                            showRemoveDialog = false,
-                            isLoading = false,
-                            itemToRemove = null,
-                            isRemoving = false,
-                            showSuccessAlert = true,
-                            unblockedUserName = user.name
-                        )
+                        _uiState.value =
+                            currentState.copy(
+                                showRemoveDialog = false,
+                                isLoading = false,
+                                itemToRemove = null,
+                                isRemoving = false,
+                                showSuccessAlert = true,
+                                unblockedUserName = user.name
+                            )
                     },
                     onFailure = { error ->
                         val message = "Ошибка при удалении из черного списка: ${error.message}"
                         logger.e(TAG, message)
                         userNotifier.handleError(AppError.Generic(message, error))
-                        _uiState.value = currentState.copy(
-                            showRemoveDialog = false,
-                            isLoading = false,
-                            itemToRemove = null,
-                            isRemoving = false
-                        )
+                        _uiState.value =
+                            currentState.copy(
+                                showRemoveDialog = false,
+                                isLoading = false,
+                                itemToRemove = null,
+                                isRemoving = false
+                            )
                     }
                 )
             } catch (e: Exception) {
@@ -126,12 +131,13 @@ class BlacklistViewModel(
                 userNotifier.handleError(AppError.Generic(message, e))
                 val currentState = _uiState.value
                 if (currentState is BlacklistUiState.Success) {
-                    _uiState.value = currentState.copy(
-                        showRemoveDialog = false,
-                        isLoading = false,
-                        itemToRemove = null,
-                        isRemoving = false
-                    )
+                    _uiState.value =
+                        currentState.copy(
+                            showRemoveDialog = false,
+                            isLoading = false,
+                            itemToRemove = null,
+                            isRemoving = false
+                        )
                 }
             }
         }
@@ -140,20 +146,22 @@ class BlacklistViewModel(
     private fun cancelRemove() {
         val currentState = _uiState.value
         if (currentState is BlacklistUiState.Success) {
-            _uiState.value = currentState.copy(
-                showRemoveDialog = false,
-                itemToRemove = null
-            )
+            _uiState.value =
+                currentState.copy(
+                    showRemoveDialog = false,
+                    itemToRemove = null
+                )
         }
     }
 
     private fun dismissSuccessAlert() {
         val currentState = _uiState.value
         if (currentState is BlacklistUiState.Success) {
-            _uiState.value = currentState.copy(
-                showSuccessAlert = false,
-                unblockedUserName = null
-            )
+            _uiState.value =
+                currentState.copy(
+                    showSuccessAlert = false,
+                    unblockedUserName = null
+                )
         }
     }
 }

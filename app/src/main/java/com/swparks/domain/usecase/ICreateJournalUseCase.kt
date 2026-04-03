@@ -11,5 +11,8 @@ interface ICreateJournalUseCase {
      * @param title Название дневника
      * @return Result<Unit> результат операции
      */
-    suspend operator fun invoke(userId: Long, title: String): Result<Unit>
+    suspend operator fun invoke(
+        userId: Long,
+        title: String
+    ): Result<Unit>
 }

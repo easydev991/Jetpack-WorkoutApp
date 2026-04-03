@@ -11,7 +11,6 @@ import org.junit.Before
 import org.junit.Test
 
 class DeleteEventUseCaseTest {
-
     private lateinit var mockRepository: SWRepository
     private lateinit var deleteEventUseCase: DeleteEventUseCase
 
@@ -24,46 +23,49 @@ class DeleteEventUseCaseTest {
     }
 
     @Test
-    fun invoke_success_callsRemoveEventLocally() = runTest {
-        coEvery {
-            mockRepository.removeEventLocally(testEventId)
-        } returns Result.success(Unit)
+    fun invoke_success_callsRemoveEventLocally() =
+        runTest {
+            coEvery {
+                mockRepository.removeEventLocally(testEventId)
+            } returns Result.success(Unit)
 
-        val result = deleteEventUseCase(testEventId)
+            val result = deleteEventUseCase(testEventId)
 
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) {
-            mockRepository.removeEventLocally(testEventId)
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) {
+                mockRepository.removeEventLocally(testEventId)
+            }
         }
-    }
 
     @Test
-    fun invoke_failure_returnsFailure() = runTest {
-        val exception = RuntimeException("Ошибка удаления")
-        coEvery {
-            mockRepository.removeEventLocally(testEventId)
-        } returns Result.failure(exception)
+    fun invoke_failure_returnsFailure() =
+        runTest {
+            val exception = RuntimeException("Ошибка удаления")
+            coEvery {
+                mockRepository.removeEventLocally(testEventId)
+            } returns Result.failure(exception)
 
-        val result = deleteEventUseCase(testEventId)
+            val result = deleteEventUseCase(testEventId)
 
-        assertTrue(result.isFailure)
-        assertEquals(exception, result.exceptionOrNull())
-        coVerify(exactly = 1) {
-            mockRepository.removeEventLocally(testEventId)
+            assertTrue(result.isFailure)
+            assertEquals(exception, result.exceptionOrNull())
+            coVerify(exactly = 1) {
+                mockRepository.removeEventLocally(testEventId)
+            }
         }
-    }
 
     @Test
-    fun invoke_passesCorrectEventId() = runTest {
-        val eventId = 456L
-        coEvery {
-            mockRepository.removeEventLocally(eventId)
-        } returns Result.success(Unit)
+    fun invoke_passesCorrectEventId() =
+        runTest {
+            val eventId = 456L
+            coEvery {
+                mockRepository.removeEventLocally(eventId)
+            } returns Result.success(Unit)
 
-        deleteEventUseCase(eventId)
+            deleteEventUseCase(eventId)
 
-        coVerify(exactly = 1) {
-            mockRepository.removeEventLocally(eventId = eventId)
+            coVerify(exactly = 1) {
+                mockRepository.removeEventLocally(eventId = eventId)
+            }
         }
-    }
 }

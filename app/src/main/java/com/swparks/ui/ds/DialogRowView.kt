@@ -76,42 +76,46 @@ fun DialogRowView(
     var itemPosition by remember { mutableStateOf(Offset.Zero) }
 
     Box(
-        modifier = Modifier.onGloballyPositioned { coordinates ->
-            itemPosition = coordinates.positionInRoot()
-        }
+        modifier =
+            Modifier.onGloballyPositioned { coordinates ->
+                itemPosition = coordinates.positionInRoot()
+            }
     ) {
         FormCardContainer(
-            params = FormCardContainerParams(
-                modifier = data.modifier,
-                enabled = data.enabled,
-                onClick = onClick,
-                onLongClickWithOffset = if (data.onLongClick != null) {
-                    { offsetX, offsetY ->
-                        val localOffset = Offset(offsetX, offsetY)
-                        data.onLongClick.invoke(localOffset, itemPosition)
-                    }
-                } else {
-                    null
-                }
-            )
+            params =
+                FormCardContainerParams(
+                    modifier = data.modifier,
+                    enabled = data.enabled,
+                    onClick = onClick,
+                    onLongClickWithOffset =
+                        if (data.onLongClick != null) {
+                            { offsetX, offsetY ->
+                                val localOffset = Offset(offsetX, offsetY)
+                                data.onLongClick.invoke(localOffset, itemPosition)
+                            }
+                        } else {
+                            null
+                        }
+                )
         ) {
             FormRowContainer(
-                config = FormRowConfig(
-                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
-                    verticalPadding = dimensionResource(R.dimen.spacing_small),
-                    content = {
-                        DialogRowAvatar(
-                            imageStringURL = data.imageStringURL
-                        )
-                        DialogRowContent(
-                            authorName = data.authorName,
-                            dateString = data.dateString,
-                            bodyText = data.bodyText,
-                            unreadCount = data.unreadCount,
-                            enabled = data.enabled
-                        )
-                    }
-                )
+                config =
+                    FormRowConfig(
+                        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
+                        verticalPadding = dimensionResource(R.dimen.spacing_small),
+                        content = {
+                            DialogRowAvatar(
+                                imageStringURL = data.imageStringURL
+                            )
+                            DialogRowContent(
+                                authorName = data.authorName,
+                                dateString = data.dateString,
+                                bodyText = data.bodyText,
+                                unreadCount = data.unreadCount,
+                                enabled = data.enabled
+                            )
+                        }
+                    )
             )
         }
     }
@@ -120,13 +124,14 @@ fun DialogRowView(
 @Composable
 private fun DialogRowAvatar(imageStringURL: String?) {
     SWAsyncImage(
-        config = AsyncImageConfig(
-            imageStringURL = imageStringURL,
-            size = 42.dp,
-            contentScale = ContentScale.Crop,
-            shape = CircleShape,
-            showBorder = true
-        )
+        config =
+            AsyncImageConfig(
+                imageStringURL = imageStringURL,
+                size = 42.dp,
+                contentScale = ContentScale.Crop,
+                shape = CircleShape,
+                showBorder = true
+            )
     )
 }
 
@@ -210,9 +215,10 @@ private fun DialogRowBody(
         ) {
             Image(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                colorFilter = ColorFilter.tint(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                ),
+                colorFilter =
+                    ColorFilter.tint(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
                 contentDescription = "Chevron"
             )
         }
@@ -236,21 +242,23 @@ fun DialogRowViewPreview() {
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
             ) {
                 DialogRowView(
-                    data = DialogRowData(
-                        imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
-                        authorName = "angryswan732",
-                        dateString = "12:30",
-                        bodyText = "Встретимся с ребятами в субботу, там и обсудим тренировку"
-                    )
+                    data =
+                        DialogRowData(
+                            imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
+                            authorName = "angryswan732",
+                            dateString = "12:30",
+                            bodyText = "Встретимся с ребятами в субботу, там и обсудим тренировку"
+                        )
                 )
                 DialogRowView(
-                    data = DialogRowData(
-                        imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
-                        authorName = "angryswan732",
-                        dateString = "12:30",
-                        bodyText = "Встретимся с ребятами в субботу, там и обсудим тренировку",
-                        unreadCount = 9
-                    )
+                    data =
+                        DialogRowData(
+                            imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
+                            authorName = "angryswan732",
+                            dateString = "12:30",
+                            bodyText = "Встретимся с ребятами в субботу, там и обсудим тренировку",
+                            unreadCount = 9
+                        )
                 )
             }
         }

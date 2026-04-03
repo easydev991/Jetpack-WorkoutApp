@@ -58,7 +58,7 @@ fun MoreTopAppBar() {
     CenterAlignedTopAppBar(
         title = {
             Text(text = stringResource(id = R.string.more))
-        },
+        }
     )
 }
 
@@ -71,9 +71,10 @@ private fun ScreenContent(
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_small_plus)),
-        modifier = modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
     ) {
         SettingsSection(navController = navController)
         HorizontalDivider()
@@ -89,9 +90,7 @@ private fun ScreenContent(
 }
 
 @Composable
-private fun SettingsSection(
-    navController: NavHostController?
-) {
+private fun SettingsSection(navController: NavHostController?) {
     SectionView(
         titleID = R.string.settings,
         addPaddingToTitle = false,
@@ -142,17 +141,17 @@ private fun AboutAppSection(
 }
 
 @Composable
-private fun SendFeedbackRow(
-    context: Context
-) {
+private fun SendFeedbackRow(context: Context) {
     ListRowView(
-        data = ListRowData(
-            leadingText = stringResource(id = R.string.send_feedback),
-            showChevron = true,
-            modifier = Modifier.clickable {
-                sendFeedback(context)
-            }
-        )
+        data =
+            ListRowData(
+                leadingText = stringResource(id = R.string.send_feedback),
+                showChevron = true,
+                modifier =
+                    Modifier.clickable {
+                        sendFeedback(context)
+                    }
+            )
     )
 }
 
@@ -163,30 +162,31 @@ private fun ExternalLinkRow(
     uriHandler: UriHandler
 ) {
     ListRowView(
-        data = ListRowData(
-            leadingText = stringResource(id = textResId),
-            showChevron = true,
-            modifier = Modifier.clickable {
-                uriHandler.openUri(url)
-            }
-        )
+        data =
+            ListRowData(
+                leadingText = stringResource(id = textResId),
+                showChevron = true,
+                modifier =
+                    Modifier.clickable {
+                        uriHandler.openUri(url)
+                    }
+            )
     )
 }
 
 @Composable
 private fun AppVersionRow() {
     ListRowView(
-        data = ListRowData(
-            leadingText = stringResource(id = R.string.app_version),
-            trailingText = BuildConfig.VERSION_NAME
-        )
+        data =
+            ListRowData(
+                leadingText = stringResource(id = R.string.app_version),
+                trailingText = BuildConfig.VERSION_NAME
+            )
     )
 }
 
 @Composable
-private fun SupportProjectSection(
-    uriHandler: UriHandler
-) {
+private fun SupportProjectSection(uriHandler: UriHandler) {
     SectionView(
         titleID = R.string.support_project,
         addPaddingToTitle = false,
@@ -205,9 +205,7 @@ private fun SupportProjectSection(
 }
 
 @Composable
-private fun OtherAppsSection(
-    uriHandler: UriHandler
-) {
+private fun OtherAppsSection(uriHandler: UriHandler) {
     SectionView(
         titleID = R.string.other_apps,
         addPaddingToTitle = false,
@@ -226,32 +224,32 @@ private fun OtherAppsSection(
 }
 
 @Composable
-private fun ThemeAndIconRow(
-    navController: NavHostController?
-) {
+private fun ThemeAndIconRow(navController: NavHostController?) {
     ListRowView(
-        data = ListRowData(
-            leadingText = stringResource(id = R.string.appearance),
-            showChevron = true,
-            modifier = Modifier.clickable {
-                navController?.navigate(Screen.ThemeIcon.route)
-            }
-        )
+        data =
+            ListRowData(
+                leadingText = stringResource(id = R.string.appearance),
+                showChevron = true,
+                modifier =
+                    Modifier.clickable {
+                        navController?.navigate(Screen.ThemeIcon.route)
+                    }
+            )
     )
 }
 
 @Composable
-private fun ShareAppRow(
-    context: Context
-) {
+private fun ShareAppRow(context: Context) {
     ListRowView(
-        data = ListRowData(
-            leadingText = stringResource(id = R.string.share_the_app),
-            showChevron = true,
-            modifier = Modifier.clickable {
-                shareApp(context)
-            }
-        )
+        data =
+            ListRowData(
+                leadingText = stringResource(id = R.string.share_the_app),
+                showChevron = true,
+                modifier =
+                    Modifier.clickable {
+                        shareApp(context)
+                    }
+            )
     )
 }
 

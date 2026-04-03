@@ -22,7 +22,9 @@ sealed class ParkDetailEvent {
      *
      * @param photo Фотография для удаления
      */
-    data class ShowDeletePhotoConfirmDialog(val photo: Photo) : ParkDetailEvent()
+    data class ShowDeletePhotoConfirmDialog(
+        val photo: Photo
+    ) : ParkDetailEvent()
 
     /**
      * Показать диалог подтверждения удаления комментария.
@@ -34,7 +36,9 @@ sealed class ParkDetailEvent {
      *
      * @param parkId Идентификатор удаленной площадки
      */
-    data class ParkDeleted(val parkId: Long) : ParkDetailEvent()
+    data class ParkDeleted(
+        val parkId: Long
+    ) : ParkDetailEvent()
 
     /**
      * Навигация назад при ошибке 404 (ресурс не найден).
@@ -47,19 +51,25 @@ sealed class ParkDetailEvent {
      *
      * @param parkId Идентификатор обновленной площадки
      */
-    data class ParkUpdated(val parkId: Long) : ParkDetailEvent()
+    data class ParkUpdated(
+        val parkId: Long
+    ) : ParkDetailEvent()
 
     /**
      * Навигация к экрану редактирования площадки.
      *
      * @param park Площадка для редактирования
      */
-    data class NavigateToEditPark(val park: com.swparks.data.model.Park) : ParkDetailEvent()
+    data class NavigateToEditPark(
+        val park: com.swparks.data.model.Park
+    ) : ParkDetailEvent()
 
     /**
      * Фото успешно удалено.
      */
-    data class PhotoDeleted(val photoId: Long) : ParkDetailEvent()
+    data class PhotoDeleted(
+        val photoId: Long
+    ) : ParkDetailEvent()
 
     /**
      * Открыть карту по координатам площадки.

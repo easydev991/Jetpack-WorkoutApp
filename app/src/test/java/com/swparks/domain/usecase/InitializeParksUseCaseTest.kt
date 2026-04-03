@@ -14,7 +14,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class InitializeParksUseCaseTest {
-
     private lateinit var swRepository: SWRepository
     private lateinit var logger: Logger
     private lateinit var useCase: InitializeParksUseCase
@@ -27,22 +26,24 @@ class InitializeParksUseCaseTest {
     }
 
     @Test
-    fun invoke_callsImportSeedParks() = runTest {
-        coEvery { swRepository.importSeedParks(any()) } returns Unit
+    fun invoke_callsImportSeedParks() =
+        runTest {
+            coEvery { swRepository.importSeedParks(any()) } returns Unit
 
-        val result = useCase()
+            val result = useCase()
 
-        coVerify(exactly = 1) { swRepository.importSeedParks(any()) }
-        assertTrue(result.isSuccess)
-    }
+            coVerify(exactly = 1) { swRepository.importSeedParks(any()) }
+            assertTrue(result.isSuccess)
+        }
 
     @Test
-    fun invoke_whenRepositoryThrows_returnsFailure() = runTest {
-        val error = RuntimeException("Import failed")
-        coEvery { swRepository.importSeedParks(any()) } throws error
+    fun invoke_whenRepositoryThrows_returnsFailure() =
+        runTest {
+            val error = RuntimeException("Import failed")
+            coEvery { swRepository.importSeedParks(any()) } throws error
 
-        val result = useCase()
+            val result = useCase()
 
-        assertEquals(Result.failure<Unit>(error), result)
-    }
+            assertEquals(Result.failure<Unit>(error), result)
+        }
 }

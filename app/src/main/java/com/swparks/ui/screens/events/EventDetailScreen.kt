@@ -56,14 +56,23 @@ import com.swparks.util.DateFormatter
 
 sealed class EventDetailAction {
     object OnBack : EventDetailAction()
-    data class OnEventDeleted(val eventId: Long) : EventDetailAction()
-    data class OnNavigateToUserProfile(val userId: Long) : EventDetailAction()
+
+    data class OnEventDeleted(
+        val eventId: Long
+    ) : EventDetailAction()
+
+    data class OnNavigateToUserProfile(
+        val userId: Long
+    ) : EventDetailAction()
+
     data class OnNavigateToParticipants(
         val eventId: Long,
         val users: List<User>
     ) : EventDetailAction()
 
-    data class OnNavigateToEditEvent(val event: Event) : EventDetailAction()
+    data class OnNavigateToEditEvent(
+        val event: Event
+    ) : EventDetailAction()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,26 +103,29 @@ fun EventDetailScreen(
                 EventDetailEvent.ShowDeleteConfirmDialog -> showDeleteEventDialog = true
                 is EventDetailEvent.ShowDeletePhotoConfirmDialog -> showDeletePhotoDialog = true
                 EventDetailEvent.ShowDeleteCommentConfirmDialog -> showDeleteCommentDialog = true
-                is EventDetailEvent.EventDeleted -> onAction(
-                    EventDetailAction.OnEventDeleted(event.eventId)
-                )
+                is EventDetailEvent.EventDeleted ->
+                    onAction(
+                        EventDetailAction.OnEventDeleted(event.eventId)
+                    )
 
-                is EventDetailEvent.NavigateToEditEvent -> onAction(
-                    EventDetailAction.OnNavigateToEditEvent(event.event)
-                )
+                is EventDetailEvent.NavigateToEditEvent ->
+                    onAction(
+                        EventDetailAction.OnNavigateToEditEvent(event.event)
+                    )
 
                 is EventDetailEvent.PhotoDeleted -> Unit
                 EventDetailEvent.NavigateBack -> onAction(EventDetailAction.OnBack)
                 is EventDetailEvent.OpenCalendar -> {
                     val beginTime = DateFormatter.parseIsoDateToMillis(event.beginDate)
-                    val intent = Intent(Intent.ACTION_INSERT).apply {
-                        data = CalendarContract.Events.CONTENT_URI
-                        putExtra(CalendarContract.Events.TITLE, event.title)
-                        putExtra(CalendarContract.Events.EVENT_LOCATION, event.address)
-                        if (beginTime != null) {
-                            putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, beginTime)
+                    val intent =
+                        Intent(Intent.ACTION_INSERT).apply {
+                            data = CalendarContract.Events.CONTENT_URI
+                            putExtra(CalendarContract.Events.TITLE, event.title)
+                            putExtra(CalendarContract.Events.EVENT_LOCATION, event.address)
+                            if (beginTime != null) {
+                                putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, beginTime)
+                            }
                         }
-                    }
                     try {
                         context.startActivity(intent)
                     } catch (_: ActivityNotFoundException) {
@@ -162,14 +174,15 @@ fun EventDetailScreen(
                 }
 
                 is EventDetailEvent.NavigateToPhotoDetail -> {
-                    photoDetailConfig = PhotoDetailConfig(
-                        photoId = event.photo.id,
-                        parentId = event.eventId,
-                        parentTitle = event.eventTitle,
-                        isAuthor = event.isEventAuthor,
-                        photoUrl = event.photo.photo,
-                        ownerType = PhotoOwner.Event
-                    )
+                    photoDetailConfig =
+                        PhotoDetailConfig(
+                            photoId = event.photo.id,
+                            parentId = event.eventId,
+                            parentTitle = event.eventTitle,
+                            isAuthor = event.isEventAuthor,
+                            photoUrl = event.photo.photo,
+                            ownerType = PhotoOwner.Event
+                        )
                     showPhotoDetailSheet = true
                 }
             }
@@ -177,9 +190,10 @@ fun EventDetailScreen(
     }
 
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag(ScreenshotTestTags.EVENT_DETAIL_SCREEN),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .testTag(ScreenshotTestTags.EVENT_DETAIL_SCREEN),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             CenterAlignedTopAppBar(
@@ -198,11 +212,12 @@ fun EventDetailScreen(
                         EventShareButton(
                             isRefreshing = isRefreshing,
                             onShareClick = {
-                                val sendIntent = Intent().apply {
-                                    action = Intent.ACTION_SEND
-                                    putExtra(Intent.EXTRA_TEXT, state.event.shareLinkStringURL)
-                                    type = "text/plain"
-                                }
+                                val sendIntent =
+                                    Intent().apply {
+                                        action = Intent.ACTION_SEND
+                                        putExtra(Intent.EXTRA_TEXT, state.event.shareLinkStringURL)
+                                        type = "text/plain"
+                                    }
                                 context.startActivity(Intent.createChooser(sendIntent, null))
                             }
                         )
@@ -219,34 +234,40 @@ fun EventDetailScreen(
         }
     ) { paddingValues ->
         when (val state = uiState) {
-            EventDetailUIState.InitialLoading -> LoadingOverlayView(
-                modifier = Modifier
-                    .padding(parentPaddingValues)
-                    .padding(paddingValues)
-            )
+            EventDetailUIState.InitialLoading ->
+                LoadingOverlayView(
+                    modifier =
+                        Modifier
+                            .padding(parentPaddingValues)
+                            .padding(paddingValues)
+                )
 
-            is EventDetailUIState.Error -> ErrorContentView(
-                modifier = Modifier
-                    .padding(parentPaddingValues)
-                    .padding(paddingValues),
-                message = state.message,
-                retryAction = viewModel::refresh
-            )
+            is EventDetailUIState.Error ->
+                ErrorContentView(
+                    modifier =
+                        Modifier
+                            .padding(parentPaddingValues)
+                            .padding(paddingValues),
+                    message = state.message,
+                    retryAction = viewModel::refresh
+                )
 
             is EventDetailUIState.Content -> {
                 PullToRefreshBox(
                     isRefreshing = isRefreshing,
                     onRefresh = viewModel::refresh,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(parentPaddingValues)
-                        .padding(paddingValues)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(parentPaddingValues)
+                            .padding(paddingValues)
                 ) {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(
-                            dimensionResource(R.dimen.spacing_regular)
-                        )
+                        verticalArrangement =
+                            Arrangement.spacedBy(
+                                dimensionResource(R.dimen.spacing_regular)
+                            )
                     ) {
                         item {
                             EventHeaderMapCalendarSection(
@@ -293,11 +314,12 @@ fun EventDetailScreen(
                             EventAuthorSection(
                                 event = state.event,
                                 address = state.authorAddress,
-                                config = EventAuthorConfig(
-                                    isAuthorized = isAuthorized,
-                                    isRefreshing = isRefreshing,
-                                    isEventAuthor = isEventAuthor
-                                ),
+                                config =
+                                    EventAuthorConfig(
+                                        isAuthorized = isAuthorized,
+                                        isRefreshing = isRefreshing,
+                                        isEventAuthor = isEventAuthor
+                                    ),
                                 onAuthorClick = { userId ->
                                     onAction(EventDetailAction.OnNavigateToUserProfile(userId))
                                 }
@@ -310,24 +332,28 @@ fun EventDetailScreen(
                         ) { index, comment ->
                             EventCommentItem(
                                 comment = comment,
-                                config = CommentItemConfig(
-                                    enabled = isAuthorized && !isRefreshing,
-                                    currentUserId = currentUserId,
-                                    showSectionHeader = index == 0
-                                ),
-                                modifier = Modifier.padding(
-                                    horizontal = dimensionResource(R.dimen.spacing_regular)
-                                ),
+                                config =
+                                    CommentItemConfig(
+                                        enabled = isAuthorized && !isRefreshing,
+                                        currentUserId = currentUserId,
+                                        showSectionHeader = index == 0
+                                    ),
+                                modifier =
+                                    Modifier.padding(
+                                        horizontal = dimensionResource(R.dimen.spacing_regular)
+                                    ),
                                 onAction = { action ->
                                     when (action) {
-                                        is CommentItemAction.AuthorClick -> onAction(
-                                            EventDetailAction.OnNavigateToUserProfile(action.userId)
-                                        )
+                                        is CommentItemAction.AuthorClick ->
+                                            onAction(
+                                                EventDetailAction.OnNavigateToUserProfile(action.userId)
+                                            )
 
-                                        is CommentItemAction.CommentAction -> viewModel.onCommentActionClick(
-                                            action.commentId,
-                                            action.action
-                                        )
+                                        is CommentItemAction.CommentAction ->
+                                            viewModel.onCommentActionClick(
+                                                action.commentId,
+                                                action.action
+                                            )
                                     }
                                 }
                             )
@@ -355,9 +381,10 @@ fun EventDetailScreen(
             title = { Text(text = stringResource(R.string.event_delete_confirm_title)) },
             confirmButton = {
                 TextButton(
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    ),
+                    colors =
+                        ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
                     onClick = {
                         showDeleteEventDialog = false
                         viewModel.onDeleteConfirm()
@@ -388,9 +415,10 @@ fun EventDetailScreen(
             title = { Text(text = stringResource(R.string.event_delete_photo_confirm_title)) },
             confirmButton = {
                 TextButton(
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    ),
+                    colors =
+                        ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
                     onClick = {
                         showDeletePhotoDialog = false
                         viewModel.onPhotoDeleteConfirm()
@@ -422,9 +450,10 @@ fun EventDetailScreen(
             text = { Text(text = stringResource(R.string.event_delete_comment_confirm_message)) },
             confirmButton = {
                 TextButton(
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    ),
+                    colors =
+                        ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
                     onClick = {
                         showDeleteCommentDialog = false
                         viewModel.onCommentDeleteConfirm()

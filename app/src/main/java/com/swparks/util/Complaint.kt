@@ -12,7 +12,9 @@ sealed class Complaint {
     /**
      * Жалоба на фото к мероприятию
      */
-    data class EventPhoto(val eventTitle: String) : Complaint() {
+    data class EventPhoto(
+        val eventTitle: String
+    ) : Complaint() {
         override val subject: String = "$APP_NAME: Жалоба на фото к мероприятию"
         override val body: String = "Наименование мероприятия: $eventTitle"
     }
@@ -26,17 +28,20 @@ sealed class Complaint {
         val commentText: String
     ) : Complaint() {
         override val subject: String = "$APP_NAME: Жалоба на комментарий к мероприятию"
-        override val body: String = """
+        override val body: String =
+            """
             |- Наименование мероприятия: $eventTitle
             |- Автор комментария: $author
             |- Текст комментария: $commentText
-        """.trimMargin()
+            """.trimMargin()
     }
 
     /**
      * Жалоба на фото к площадке
      */
-    data class ParkPhoto(val parkTitle: String) : Complaint() {
+    data class ParkPhoto(
+        val parkTitle: String
+    ) : Complaint() {
         override val subject: String = "$APP_NAME: Жалоба на фото к площадке"
         override val body: String = "Наименование площадки: $parkTitle"
     }
@@ -50,11 +55,12 @@ sealed class Complaint {
         val commentText: String
     ) : Complaint() {
         override val subject: String = "$APP_NAME: Жалоба на комментарий к площадке"
-        override val body: String = """
+        override val body: String =
+            """
             |- Наименование площадки: $parkTitle
             |- Автор комментария: $author
             |- Текст комментария: $commentText
-        """.trimMargin()
+            """.trimMargin()
     }
 
     /**
@@ -65,10 +71,11 @@ sealed class Complaint {
         val entryText: String
     ) : Complaint() {
         override val subject: String = "$APP_NAME: Жалоба на запись в дневнике"
-        override val body: String = """
+        override val body: String =
+            """
             |Автор записи: $author
             |Текст записи: $entryText
-        """.trimMargin()
+            """.trimMargin()
     }
 
     companion object {

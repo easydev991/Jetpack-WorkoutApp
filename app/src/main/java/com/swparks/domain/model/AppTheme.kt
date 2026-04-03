@@ -1,6 +1,5 @@
 package com.swparks.domain.model
 
-
 /**
  * Перечисление доступных тем приложения.
  *
@@ -11,5 +10,5 @@ package com.swparks.domain.model
 enum class AppTheme {
     LIGHT,
     DARK,
-    SYSTEM,
+    SYSTEM
 }

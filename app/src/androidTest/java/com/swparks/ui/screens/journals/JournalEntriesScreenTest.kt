@@ -24,6 +24,9 @@ import com.swparks.ui.state.JournalEntriesUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.FakeJournalEntriesViewModel
 import com.swparks.ui.viewmodel.IJournalEntriesViewModel
+import com.swparks.ui.viewmodel.JournalEntriesEvent
+import com.swparks.util.FakeAnalyticsReporter
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
 import org.junit.Test
@@ -49,20 +52,33 @@ class JournalEntriesScreenTest {
         private const val TEST_JOURNAL_OWNER_ID = 1L
     }
 
+    private fun createTestEntry(id: Long = 1L): JournalEntry =
+        JournalEntry(
+            id = id,
+            journalId = TEST_JOURNAL_ID,
+            authorId = TEST_JOURNAL_OWNER_ID,
+            authorName = "Иван Иванов",
+            message = "Отличная тренировка сегодня!",
+            createDate = "2024-01-15T12:00:00",
+            modifyDate = "2024-01-15T12:00:00",
+            authorImage = null
+        )
+
     private fun setContent(
         journalId: Long = TEST_JOURNAL_ID,
         journalTitle: String = TEST_JOURNAL_TITLE,
         journalOwnerId: Long = TEST_JOURNAL_OWNER_ID,
-        viewModel: IJournalEntriesViewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = emptyList())),
-            isRefreshing = MutableStateFlow(false),
-            canCreateEntry = MutableStateFlow(false)
-        ),
+        viewModel: IJournalEntriesViewModel =
+            FakeJournalEntriesViewModel(
+                uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = emptyList())),
+                isRefreshing = MutableStateFlow(false),
+                canCreateEntry = MutableStateFlow(false)
+            ),
         onBackClick: () -> Unit = {}
     ) {
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -74,13 +90,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = journalId,
-                        journalTitle = journalTitle,
-                        journalOwnerId = journalOwnerId,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = journalId,
+                            journalTitle = journalTitle,
+                            journalOwnerId = journalOwnerId,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = onBackClick,
@@ -129,18 +146,134 @@ class JournalEntriesScreenTest {
     }
 
     @Test
+    fun errorState_retryClick_showsLoadingThenContent() {
+        val uiState = MutableStateFlow<JournalEntriesUiState>(JournalEntriesUiState.Error("Ошибка"))
+        val viewModel =
+            object : IJournalEntriesViewModel {
+                override val uiState = uiState
+                override val isRefreshing = MutableStateFlow(false)
+                override val isDeleting = MutableStateFlow(false)
+                override val events = MutableSharedFlow<JournalEntriesEvent>()
+                override val canCreateEntry = MutableStateFlow(false)
+                override val isSavingSettings = MutableStateFlow(false)
+
+                override fun loadEntries() = Unit
+
+                override fun retry() {
+                    uiState.value = JournalEntriesUiState.InitialLoading
+                }
+
+                override fun deleteEntry(entryId: Long) = Unit
+
+                override suspend fun canDeleteEntry(entryId: Long): Boolean = true
+
+                override fun refresh() = Unit
+
+                override fun canEditEntry(entry: JournalEntry): Boolean = true
+
+                override fun canDeleteEntry(entry: JournalEntry): Boolean = true
+
+                override fun editJournalSettings(
+                    journalId: Long,
+                    title: String,
+                    viewAccess: com.swparks.ui.model.JournalAccess,
+                    commentAccess: com.swparks.ui.model.JournalAccess
+                ) = Unit
+            }
+
+        setContent(viewModel = viewModel)
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.try_again_button))
+            .performClick()
+
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.loading_content_description))
+            .assertIsDisplayed()
+
+        composeTestRule.runOnIdle {
+            uiState.value =
+                JournalEntriesUiState.Content(
+                    entries = listOf(createTestEntry()),
+                    firstEntryId = 1L
+                )
+        }
+
+        composeTestRule
+            .onNodeWithText(createTestEntry().authorName ?: "")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun errorState_retryClick_showsLoadingThenError() {
+        val retryError = "Повторная ошибка"
+        val uiState = MutableStateFlow<JournalEntriesUiState>(JournalEntriesUiState.Error("Ошибка"))
+        val viewModel =
+            object : IJournalEntriesViewModel {
+                override val uiState = uiState
+                override val isRefreshing = MutableStateFlow(false)
+                override val isDeleting = MutableStateFlow(false)
+                override val events = MutableSharedFlow<JournalEntriesEvent>()
+                override val canCreateEntry = MutableStateFlow(false)
+                override val isSavingSettings = MutableStateFlow(false)
+
+                override fun loadEntries() = Unit
+
+                override fun retry() {
+                    uiState.value = JournalEntriesUiState.InitialLoading
+                }
+
+                override fun deleteEntry(entryId: Long) = Unit
+
+                override suspend fun canDeleteEntry(entryId: Long): Boolean = true
+
+                override fun refresh() = Unit
+
+                override fun canEditEntry(entry: JournalEntry): Boolean = true
+
+                override fun canDeleteEntry(entry: JournalEntry): Boolean = true
+
+                override fun editJournalSettings(
+                    journalId: Long,
+                    title: String,
+                    viewAccess: com.swparks.ui.model.JournalAccess,
+                    commentAccess: com.swparks.ui.model.JournalAccess
+                ) = Unit
+            }
+
+        setContent(viewModel = viewModel)
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.try_again_button))
+            .performClick()
+
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.loading_content_description))
+            .assertIsDisplayed()
+
+        composeTestRule.runOnIdle {
+            uiState.value = JournalEntriesUiState.Error(retryError)
+        }
+
+        composeTestRule
+            .onNodeWithText(retryError)
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun journalEntriesScreen_whenJournalTitleChanges_updatesTopBarTitle() {
         val uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = emptyList()))
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = uiState,
-            isRefreshing = MutableStateFlow(false),
-            canCreateEntry = MutableStateFlow(false)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState = uiState,
+                isRefreshing = MutableStateFlow(false),
+                canCreateEntry = MutableStateFlow(false)
+            )
         val journalTitleState = mutableStateOf("Title A")
 
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -152,13 +285,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = journalTitleState.value,
-                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = journalTitleState.value,
+                            journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -178,17 +312,18 @@ class JournalEntriesScreenTest {
     @Test
     fun journalEntriesScreen_whenCurrentUserChangesFromOwner_hidesSettingsButton() {
         val uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = emptyList()))
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = uiState,
-            isRefreshing = MutableStateFlow(false),
-            canCreateEntry = MutableStateFlow(false)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState = uiState,
+                isRefreshing = MutableStateFlow(false),
+                canCreateEntry = MutableStateFlow(false)
+            )
         val foreignUserId = TEST_JOURNAL_OWNER_ID + 100
 
         lateinit var appState: AppState
         composeTestRule.setContent {
             val navController = rememberNavController()
-            appState = AppState(navController)
+            appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -200,13 +335,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -223,22 +359,24 @@ class JournalEntriesScreenTest {
         }
         composeTestRule.waitForIdle()
 
-        composeTestRule.onAllNodesWithContentDescription(settingsContentDescription)
+        composeTestRule
+            .onAllNodesWithContentDescription(settingsContentDescription)
             .assertCountEquals(0)
     }
 
     @Test
     fun testInitialState_showsLoadingOverlay() {
         // Given
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(JournalEntriesUiState.InitialLoading),
-            isRefreshing = MutableStateFlow(false)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState = MutableStateFlow(JournalEntriesUiState.InitialLoading),
+                isRefreshing = MutableStateFlow(false)
+            )
 
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -250,13 +388,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -275,15 +414,16 @@ class JournalEntriesScreenTest {
     fun testErrorState_showsErrorView() {
         // Given
         val errorMessage = "Ошибка загрузки записей"
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(JournalEntriesUiState.Error(message = errorMessage)),
-            isRefreshing = MutableStateFlow(false)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState = MutableStateFlow(JournalEntriesUiState.Error(message = errorMessage)),
+                isRefreshing = MutableStateFlow(false)
+            )
 
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -295,13 +435,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -320,15 +461,16 @@ class JournalEntriesScreenTest {
     fun testErrorState_retryButton_clicks() {
         // Given
         val errorMessage = "Ошибка загрузки записей"
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(JournalEntriesUiState.Error(message = errorMessage)),
-            isRefreshing = MutableStateFlow(false)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState = MutableStateFlow(JournalEntriesUiState.Error(message = errorMessage)),
+                isRefreshing = MutableStateFlow(false)
+            )
 
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -340,13 +482,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -364,26 +507,28 @@ class JournalEntriesScreenTest {
     @Test
     fun testContentState_showsEntriesList() {
         // Given
-        val testEntry = JournalEntry(
-            id = 1L,
-            journalId = TEST_JOURNAL_ID,
-            authorId = 1L,
-            authorName = "Иван Иванов",
-            message = "Отличная тренировка сегодня!",
-            createDate = "2024-01-15T12:00:00",
-            modifyDate = "2024-01-15T12:00:00",
-            authorImage = null
-        )
+        val testEntry =
+            JournalEntry(
+                id = 1L,
+                journalId = TEST_JOURNAL_ID,
+                authorId = 1L,
+                authorName = "Иван Иванов",
+                message = "Отличная тренировка сегодня!",
+                createDate = "2024-01-15T12:00:00",
+                modifyDate = "2024-01-15T12:00:00",
+                authorImage = null
+            )
 
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = listOf(testEntry))),
-            isRefreshing = MutableStateFlow(false)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = listOf(testEntry))),
+                isRefreshing = MutableStateFlow(false)
+            )
 
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -395,13 +540,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -441,43 +587,45 @@ class JournalEntriesScreenTest {
     @Test
     fun testContentState_displaysMultipleEntries() {
         // Given
-        val entries = listOf(
-            JournalEntry(
-                id = 1L,
-                journalId = TEST_JOURNAL_ID,
-                authorId = 1L,
-                authorName = "Иван Иванов",
-                message = "Тренировка 1",
-                createDate = "2024-01-15T12:00:00",
-                modifyDate = "2024-01-15T12:00:00",
-                authorImage = null
-            ),
-            JournalEntry(
-                id = 2L,
-                journalId = TEST_JOURNAL_ID,
-                authorId = 2L,
-                authorName = "Петр Петров",
-                message = "Тренировка 2",
-                createDate = "2024-01-16T12:00:00",
-                modifyDate = "2024-01-16T12:00:00",
-                authorImage = null
-            ),
-            JournalEntry(
-                id = 3L,
-                journalId = TEST_JOURNAL_ID,
-                authorId = 3L,
-                authorName = "Сергей Сидоров",
-                message = "Тренировка 3",
-                createDate = "2024-01-17T12:00:00",
-                modifyDate = "2024-01-17T12:00:00",
-                authorImage = null
+        val entries =
+            listOf(
+                JournalEntry(
+                    id = 1L,
+                    journalId = TEST_JOURNAL_ID,
+                    authorId = 1L,
+                    authorName = "Иван Иванов",
+                    message = "Тренировка 1",
+                    createDate = "2024-01-15T12:00:00",
+                    modifyDate = "2024-01-15T12:00:00",
+                    authorImage = null
+                ),
+                JournalEntry(
+                    id = 2L,
+                    journalId = TEST_JOURNAL_ID,
+                    authorId = 2L,
+                    authorName = "Петр Петров",
+                    message = "Тренировка 2",
+                    createDate = "2024-01-16T12:00:00",
+                    modifyDate = "2024-01-16T12:00:00",
+                    authorImage = null
+                ),
+                JournalEntry(
+                    id = 3L,
+                    journalId = TEST_JOURNAL_ID,
+                    authorId = 3L,
+                    authorName = "Сергей Сидоров",
+                    message = "Тренировка 3",
+                    createDate = "2024-01-17T12:00:00",
+                    modifyDate = "2024-01-17T12:00:00",
+                    authorImage = null
+                )
             )
-        )
 
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = entries)),
-            isRefreshing = MutableStateFlow(false)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = entries)),
+                isRefreshing = MutableStateFlow(false)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -496,26 +644,28 @@ class JournalEntriesScreenTest {
     @Test
     fun testEntryItem_menuButton_clickable() {
         // Given
-        val testEntry = JournalEntry(
-            id = 1L,
-            journalId = TEST_JOURNAL_ID,
-            authorId = 1L,
-            authorName = "Иван Иванов",
-            message = "Отличная тренировка сегодня!",
-            createDate = "2024-01-15T12:00:00",
-            modifyDate = "2024-01-15T12:00:00",
-            authorImage = null
-        )
+        val testEntry =
+            JournalEntry(
+                id = 1L,
+                journalId = TEST_JOURNAL_ID,
+                authorId = 1L,
+                authorName = "Иван Иванов",
+                message = "Отличная тренировка сегодня!",
+                createDate = "2024-01-15T12:00:00",
+                modifyDate = "2024-01-15T12:00:00",
+                authorImage = null
+            )
 
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = listOf(testEntry))),
-            isRefreshing = MutableStateFlow(false)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = listOf(testEntry))),
+                isRefreshing = MutableStateFlow(false)
+            )
 
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -527,13 +677,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -552,26 +703,28 @@ class JournalEntriesScreenTest {
     @Test
     fun testPullToRefresh_blocksUI() {
         // Given
-        val testEntry = JournalEntry(
-            id = 1L,
-            journalId = TEST_JOURNAL_ID,
-            authorId = 1L,
-            authorName = "Иван Иванов",
-            message = "Отличная тренировка сегодня!",
-            createDate = "2024-01-15T12:00:00",
-            modifyDate = "2024-01-15T12:00:00",
-            authorImage = null
-        )
+        val testEntry =
+            JournalEntry(
+                id = 1L,
+                journalId = TEST_JOURNAL_ID,
+                authorId = 1L,
+                authorName = "Иван Иванов",
+                message = "Отличная тренировка сегодня!",
+                createDate = "2024-01-15T12:00:00",
+                modifyDate = "2024-01-15T12:00:00",
+                authorImage = null
+            )
 
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = listOf(testEntry))),
-            isRefreshing = MutableStateFlow(true)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = listOf(testEntry))),
+                isRefreshing = MutableStateFlow(true)
+            )
 
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -583,13 +736,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -611,28 +765,34 @@ class JournalEntriesScreenTest {
     @Test
     fun testContentState_withRefreshingIndicator() {
         // Given
-        val testEntry = JournalEntry(
-            id = 1L,
-            journalId = TEST_JOURNAL_ID,
-            authorId = 1L,
-            authorName = "Иван Иванов",
-            message = "Отличная тренировка сегодня!",
-            createDate = "2024-01-15T12:00:00",
-            modifyDate = "2024-01-15T12:00:00",
-            authorImage = null
-        )
+        val testEntry =
+            JournalEntry(
+                id = 1L,
+                journalId = TEST_JOURNAL_ID,
+                authorId = 1L,
+                authorName = "Иван Иванов",
+                message = "Отличная тренировка сегодня!",
+                createDate = "2024-01-15T12:00:00",
+                modifyDate = "2024-01-15T12:00:00",
+                authorImage = null
+            )
 
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(entries = listOf(testEntry), isRefreshing = true)
-            ),
-            isRefreshing = MutableStateFlow(true)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = listOf(testEntry),
+                            isRefreshing = true
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(true)
+            )
 
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -644,13 +804,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -671,32 +832,35 @@ class JournalEntriesScreenTest {
     @Test
     fun testContentState_clickDeleteAction_showsDeleteDialog() {
         // Given - Запись с id = 2L не является первой (firstEntryId = 1L)
-        val testEntry = JournalEntry(
-            id = 2L,
-            journalId = TEST_JOURNAL_ID,
-            authorId = 1L,
-            authorName = "Иван Иванов",
-            message = "Отличная тренировка сегодня!",
-            createDate = "2024-01-15T12:00:00",
-            modifyDate = "2024-01-15T12:00:00",
-            authorImage = null
-        )
+        val testEntry =
+            JournalEntry(
+                id = 2L,
+                journalId = TEST_JOURNAL_ID,
+                authorId = 1L,
+                authorName = "Иван Иванов",
+                message = "Отличная тренировка сегодня!",
+                createDate = "2024-01-15T12:00:00",
+                modifyDate = "2024-01-15T12:00:00",
+                authorImage = null
+            )
 
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = listOf(testEntry),
-                    firstEntryId = 1L, // Первая запись имеет id = 1L
-                    isRefreshing = false
-                )
-            ),
-            isRefreshing = MutableStateFlow(false)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = listOf(testEntry),
+                            firstEntryId = 1L, // Первая запись имеет id = 1L
+                            isRefreshing = false
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(false)
+            )
 
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -708,13 +872,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -754,21 +919,23 @@ class JournalEntriesScreenTest {
     @Test
     fun testEmptyState_displaysEmptyStateView() {
         // Given
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = emptyList(),
-                    canCreateEntry = true
-                )
-            ),
-            isRefreshing = MutableStateFlow(false),
-            canCreateEntry = MutableStateFlow(true)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = emptyList(),
+                            canCreateEntry = true
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(false),
+                canCreateEntry = MutableStateFlow(true)
+            )
 
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -780,13 +947,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -813,16 +981,18 @@ class JournalEntriesScreenTest {
     @Test
     fun testEmptyState_buttonIsEnabled_whenNotRefreshing() {
         // Given
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = emptyList(),
-                    canCreateEntry = true
-                )
-            ),
-            isRefreshing = MutableStateFlow(false),
-            canCreateEntry = MutableStateFlow(true)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = emptyList(),
+                            canCreateEntry = true
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(false),
+                canCreateEntry = MutableStateFlow(true)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -840,16 +1010,18 @@ class JournalEntriesScreenTest {
     @Test
     fun testEmptyState_notShown_whenRefreshing() {
         // Given
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = emptyList(),
-                    canCreateEntry = true
-                )
-            ),
-            isRefreshing = MutableStateFlow(true),
-            canCreateEntry = MutableStateFlow(true)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = emptyList(),
+                            canCreateEntry = true
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(true),
+                canCreateEntry = MutableStateFlow(true)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -869,17 +1041,19 @@ class JournalEntriesScreenTest {
     @Test
     fun testEmptyState_buttonIsDisabled_whenDeleting() {
         // Given
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = emptyList(),
-                    canCreateEntry = true
-                )
-            ),
-            isRefreshing = MutableStateFlow(false),
-            isDeleting = MutableStateFlow(true),
-            canCreateEntry = MutableStateFlow(true)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = emptyList(),
+                            canCreateEntry = true
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(false),
+                isDeleting = MutableStateFlow(true),
+                canCreateEntry = MutableStateFlow(true)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -898,44 +1072,47 @@ class JournalEntriesScreenTest {
     fun testContentState_firstEntry_deleteButtonNotVisible() {
         // Given
         val firstEntryId = 1L
-        val entries = listOf(
-            JournalEntry(
-                id = firstEntryId,
-                journalId = TEST_JOURNAL_ID,
-                authorId = 1L,
-                authorName = "Иван Иванов",
-                message = "Первая запись (нельзя удалить)",
-                createDate = "2024-01-15T12:00:00",
-                modifyDate = "2024-01-15T12:00:00",
-                authorImage = null
-            ),
-            JournalEntry(
-                id = 2L,
-                journalId = TEST_JOURNAL_ID,
-                authorId = 2L,
-                authorName = "Петр Петров",
-                message = "Вторая запись (можно удалить)",
-                createDate = "2024-01-16T12:00:00",
-                modifyDate = "2024-01-16T12:00:00",
-                authorImage = null
-            )
-        )
-
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = entries,
-                    isRefreshing = false,
-                    firstEntryId = firstEntryId
+        val entries =
+            listOf(
+                JournalEntry(
+                    id = firstEntryId,
+                    journalId = TEST_JOURNAL_ID,
+                    authorId = 1L,
+                    authorName = "Иван Иванов",
+                    message = "Первая запись (нельзя удалить)",
+                    createDate = "2024-01-15T12:00:00",
+                    modifyDate = "2024-01-15T12:00:00",
+                    authorImage = null
+                ),
+                JournalEntry(
+                    id = 2L,
+                    journalId = TEST_JOURNAL_ID,
+                    authorId = 2L,
+                    authorName = "Петр Петров",
+                    message = "Вторая запись (можно удалить)",
+                    createDate = "2024-01-16T12:00:00",
+                    modifyDate = "2024-01-16T12:00:00",
+                    authorImage = null
                 )
-            ),
-            isRefreshing = MutableStateFlow(false)
-        )
+            )
+
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = entries,
+                            isRefreshing = false,
+                            firstEntryId = firstEntryId
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(false)
+            )
 
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -947,13 +1124,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -996,16 +1174,18 @@ class JournalEntriesScreenTest {
     @Test
     fun testFab_shown_whenCanCreateEntryTrue() {
         // Given
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = emptyList(),
-                    canCreateEntry = true
-                )
-            ),
-            isRefreshing = MutableStateFlow(false),
-            canCreateEntry = MutableStateFlow(true)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = emptyList(),
+                            canCreateEntry = true
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(false),
+                canCreateEntry = MutableStateFlow(true)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -1023,16 +1203,18 @@ class JournalEntriesScreenTest {
     @Test
     fun testFab_hidden_whenCanCreateEntryFalse() {
         // Given
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = emptyList(),
-                    canCreateEntry = false
-                )
-            ),
-            isRefreshing = MutableStateFlow(false),
-            canCreateEntry = MutableStateFlow(false)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = emptyList(),
+                            canCreateEntry = false
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(false),
+                canCreateEntry = MutableStateFlow(false)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -1049,17 +1231,19 @@ class JournalEntriesScreenTest {
     @Test
     fun testFab_hidden_whenDeleting() {
         // Given
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = emptyList(),
-                    canCreateEntry = true
-                )
-            ),
-            isRefreshing = MutableStateFlow(false),
-            isDeleting = MutableStateFlow(true),
-            canCreateEntry = MutableStateFlow(true)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = emptyList(),
+                            canCreateEntry = true
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(false),
+                isDeleting = MutableStateFlow(true),
+                canCreateEntry = MutableStateFlow(true)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -1076,16 +1260,18 @@ class JournalEntriesScreenTest {
     @Test
     fun testEmptyState_buttonDisabled_whenCannotCreateEntry() {
         // Given
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = emptyList(),
-                    canCreateEntry = false
-                )
-            ),
-            isRefreshing = MutableStateFlow(false),
-            canCreateEntry = MutableStateFlow(false)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = emptyList(),
+                            canCreateEntry = false
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(false),
+                canCreateEntry = MutableStateFlow(false)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -1102,27 +1288,29 @@ class JournalEntriesScreenTest {
     @Test
     fun testContentEntry_editActionVisible_whenEntryHasAuthor() {
         // Given
-        val testEntry = JournalEntry(
-            id = 1L,
-            journalId = TEST_JOURNAL_ID,
-            authorId = 1L,
-            authorName = "Иван Иванов",
-            message = "Отличная тренировка!",
-            createDate = "2024-01-15T12:00:00",
-            modifyDate = "2024-01-15T12:00:00",
-            authorImage = null
-        )
+        val testEntry =
+            JournalEntry(
+                id = 1L,
+                journalId = TEST_JOURNAL_ID,
+                authorId = 1L,
+                authorName = "Иван Иванов",
+                message = "Отличная тренировка!",
+                createDate = "2024-01-15T12:00:00",
+                modifyDate = "2024-01-15T12:00:00",
+                authorImage = null
+            )
 
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = listOf(testEntry))),
-            isRefreshing = MutableStateFlow(false),
-            canCreateEntry = MutableStateFlow(false)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = listOf(testEntry))),
+                isRefreshing = MutableStateFlow(false),
+                canCreateEntry = MutableStateFlow(false)
+            )
 
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -1134,13 +1322,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -1166,27 +1355,29 @@ class JournalEntriesScreenTest {
     @Test
     fun testContentEntry_editActionNotVisible_whenEntryNoAuthor() {
         // Given
-        val testEntry = JournalEntry(
-            id = 1L,
-            journalId = TEST_JOURNAL_ID,
-            authorId = null,
-            authorName = "Аноним",
-            message = "Отличная тренировка!",
-            createDate = "2024-01-15T12:00:00",
-            modifyDate = "2024-01-15T12:00:00",
-            authorImage = null
-        )
+        val testEntry =
+            JournalEntry(
+                id = 1L,
+                journalId = TEST_JOURNAL_ID,
+                authorId = null,
+                authorName = "Аноним",
+                message = "Отличная тренировка!",
+                createDate = "2024-01-15T12:00:00",
+                modifyDate = "2024-01-15T12:00:00",
+                authorImage = null
+            )
 
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = listOf(testEntry))),
-            isRefreshing = MutableStateFlow(false),
-            canCreateEntry = MutableStateFlow(false)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = listOf(testEntry))),
+                isRefreshing = MutableStateFlow(false),
+                canCreateEntry = MutableStateFlow(false)
+            )
 
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -1198,13 +1389,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -1239,21 +1431,23 @@ class JournalEntriesScreenTest {
         var showSheet = false
         var sheetMode: TextEntryMode? = null
 
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = emptyList(),
-                    canCreateEntry = true
-                )
-            ),
-            isRefreshing = MutableStateFlow(false),
-            canCreateEntry = MutableStateFlow(true)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = emptyList(),
+                            canCreateEntry = true
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(false),
+                canCreateEntry = MutableStateFlow(true)
+            )
 
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -1265,13 +1459,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -1309,27 +1504,29 @@ class JournalEntriesScreenTest {
         var showSheet = false
         var sheetMode: TextEntryMode? = null
 
-        val testEntry = JournalEntry(
-            id = 1L,
-            journalId = TEST_JOURNAL_ID,
-            authorId = 1L,
-            authorName = "Иван Иванов",
-            message = "Отличная тренировка!",
-            createDate = "2024-01-15T12:00:00",
-            modifyDate = "2024-01-15T12:00:00",
-            authorImage = null
-        )
+        val testEntry =
+            JournalEntry(
+                id = 1L,
+                journalId = TEST_JOURNAL_ID,
+                authorId = 1L,
+                authorName = "Иван Иванов",
+                message = "Отличная тренировка!",
+                createDate = "2024-01-15T12:00:00",
+                modifyDate = "2024-01-15T12:00:00",
+                authorImage = null
+            )
 
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = listOf(testEntry))),
-            isRefreshing = MutableStateFlow(false),
-            canCreateEntry = MutableStateFlow(false)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState = MutableStateFlow(JournalEntriesUiState.Content(entries = listOf(testEntry))),
+                isRefreshing = MutableStateFlow(false),
+                canCreateEntry = MutableStateFlow(false)
+            )
 
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -1341,13 +1538,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -1385,21 +1583,23 @@ class JournalEntriesScreenTest {
         var showSheet = false
         var sheetMode: TextEntryMode? = null
 
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = emptyList(),
-                    canCreateEntry = true
-                )
-            ),
-            isRefreshing = MutableStateFlow(false),
-            canCreateEntry = MutableStateFlow(true)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = emptyList(),
+                            canCreateEntry = true
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(false),
+                canCreateEntry = MutableStateFlow(true)
+            )
 
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -1411,13 +1611,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = TEST_JOURNAL_OWNER_ID,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = TEST_JOURNAL_OWNER_ID,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -1453,16 +1654,18 @@ class JournalEntriesScreenTest {
     @Test
     fun testFab_shown_whenCurrentUserIdEqualsJournalOwnerId() {
         // Given - Создаем ViewModel, где currentUserId == journalOwnerId (владелец дневника)
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = emptyList(),
-                    canCreateEntry = true // Владелец может создавать записи
-                )
-            ),
-            isRefreshing = MutableStateFlow(false),
-            canCreateEntry = MutableStateFlow(true)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = emptyList(),
+                            canCreateEntry = true // Владелец может создавать записи
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(false),
+                canCreateEntry = MutableStateFlow(true)
+            )
 
         // When
         setContent(
@@ -1484,16 +1687,18 @@ class JournalEntriesScreenTest {
     @Test
     fun testFab_hidden_whenCurrentUserIdNotEqualsJournalOwnerId() {
         // Given - Создаем ViewModel, где currentUserId != journalOwnerId (не владелец)
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = emptyList(),
-                    canCreateEntry = false // Не владелец не может создавать записи при NOBODY
-                )
-            ),
-            isRefreshing = MutableStateFlow(false),
-            canCreateEntry = MutableStateFlow(false)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = emptyList(),
+                            canCreateEntry = false // Не владелец не может создавать записи при NOBODY
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(false),
+                canCreateEntry = MutableStateFlow(false)
+            )
 
         // When
         setContent(
@@ -1513,27 +1718,30 @@ class JournalEntriesScreenTest {
     @Test
     fun testFirstEntryIdNull_allEntriesCanBeDeleted() {
         // Given - Одна запись без установленного firstEntryId
-        val testEntry = JournalEntry(
-            id = 1L,
-            journalId = TEST_JOURNAL_ID,
-            authorId = 1L,
-            authorName = "Тестовая запись",
-            message = "Это тестовая запись",
-            createDate = "2024-01-15T12:00:00",
-            modifyDate = "2024-01-15T12:00:00",
-            authorImage = null
-        )
+        val testEntry =
+            JournalEntry(
+                id = 1L,
+                journalId = TEST_JOURNAL_ID,
+                authorId = 1L,
+                authorName = "Тестовая запись",
+                message = "Это тестовая запись",
+                createDate = "2024-01-15T12:00:00",
+                modifyDate = "2024-01-15T12:00:00",
+                authorImage = null
+            )
 
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = listOf(testEntry),
-                    firstEntryId = null, // Первая запись не установлена
-                    isRefreshing = false
-                )
-            ),
-            isRefreshing = MutableStateFlow(false)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = listOf(testEntry),
+                            firstEntryId = null, // Первая запись не установлена
+                            isRefreshing = false
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(false)
+            )
 
         // When
         setContent(viewModel = viewModel)
@@ -1559,21 +1767,23 @@ class JournalEntriesScreenTest {
     fun testEmptyState_shown_forForeignJournalWithAllAccess() {
         // Given - Чужой дневник с ALL-доступом (canCreateEntry = true)
         val foreignOwnerId = 999L // Другой ID владельца
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = emptyList(),
-                    canCreateEntry = true // ALL-доступ разрешает создавать записи
-                )
-            ),
-            isRefreshing = MutableStateFlow(false),
-            canCreateEntry = MutableStateFlow(true)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = emptyList(),
+                            canCreateEntry = true // ALL-доступ разрешает создавать записи
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(false),
+                canCreateEntry = MutableStateFlow(true)
+            )
 
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID, // Текущий пользователь != foreignOwnerId
@@ -1585,13 +1795,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = foreignOwnerId,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = foreignOwnerId,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -1618,21 +1829,23 @@ class JournalEntriesScreenTest {
     fun testEmptyState_notShown_forForeignJournalWithNobodyAccess() {
         // Given - Чужой дневник с NOBODY-доступом (canCreateEntry = false)
         val foreignOwnerId = 999L // Другой ID владельца
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = emptyList(),
-                    canCreateEntry = false // NOBODY-доступ запрещает создавать записи
-                )
-            ),
-            isRefreshing = MutableStateFlow(false),
-            canCreateEntry = MutableStateFlow(false)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = emptyList(),
+                            canCreateEntry = false // NOBODY-доступ запрещает создавать записи
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(false),
+                canCreateEntry = MutableStateFlow(false)
+            )
 
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID, // Текущий пользователь != foreignOwnerId
@@ -1644,13 +1857,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = foreignOwnerId,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = foreignOwnerId,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},
@@ -1676,21 +1890,23 @@ class JournalEntriesScreenTest {
     fun testEmptyState_notShown_forForeignJournalWithFriendsAccessNotFriend() {
         // Given - Чужой дневник с FRIENDS-доступом, текущий пользователь не в друзьях
         val foreignOwnerId = 999L // Другой ID владельца
-        val viewModel = FakeJournalEntriesViewModel(
-            uiState = MutableStateFlow(
-                JournalEntriesUiState.Content(
-                    entries = emptyList(),
-                    canCreateEntry = false // FRIENDS-доступ, но пользователь не в друзьях
-                )
-            ),
-            isRefreshing = MutableStateFlow(false),
-            canCreateEntry = MutableStateFlow(false)
-        )
+        val viewModel =
+            FakeJournalEntriesViewModel(
+                uiState =
+                    MutableStateFlow(
+                        JournalEntriesUiState.Content(
+                            entries = emptyList(),
+                            canCreateEntry = false // FRIENDS-доступ, но пользователь не в друзьях
+                        )
+                    ),
+                isRefreshing = MutableStateFlow(false),
+                canCreateEntry = MutableStateFlow(false)
+            )
 
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID, // Текущий пользователь != foreignOwnerId
@@ -1702,13 +1918,14 @@ class JournalEntriesScreenTest {
             JetpackWorkoutAppTheme {
                 JournalEntriesScreen(
                     modifier = androidx.compose.ui.Modifier,
-                    params = JournalParams(
-                        journalId = TEST_JOURNAL_ID,
-                        journalTitle = TEST_JOURNAL_TITLE,
-                        journalOwnerId = foreignOwnerId,
-                        journalViewAccess = null,
-                        journalCommentAccess = null
-                    ),
+                    params =
+                        JournalParams(
+                            journalId = TEST_JOURNAL_ID,
+                            journalTitle = TEST_JOURNAL_TITLE,
+                            journalOwnerId = foreignOwnerId,
+                            journalViewAccess = null,
+                            journalCommentAccess = null
+                        ),
                     viewModel = viewModel,
                     appState = appState,
                     onBackClick = {},

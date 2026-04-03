@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -17,15 +18,6 @@ import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.ui.ds.CommentAction
 import com.swparks.ui.model.MapUriSet
-import com.swparks.ui.screens.parks.sections.CommentItemConfig
-import com.swparks.ui.screens.parks.sections.ParkAddCommentButton
-import com.swparks.ui.screens.parks.sections.ParkAuthorConfig
-import com.swparks.ui.screens.parks.sections.ParkAuthorSection
-import com.swparks.ui.screens.parks.sections.ParkCommentItem
-import com.swparks.ui.screens.parks.sections.ParkHeaderAction
-import com.swparks.ui.screens.parks.sections.ParkHeaderMapSection
-import com.swparks.ui.screens.parks.sections.ParkParticipantsSection
-import com.swparks.ui.screens.parks.sections.ParkPhotosSection
 import com.swparks.ui.state.ParkDetailUIState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.IParkDetailViewModel
@@ -48,17 +40,19 @@ class ParkDetailScreenTest {
 
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
-    private val testUser = User(
-        id = 1L,
-        name = "Test User",
-        image = null
-    )
+    private val testUser =
+        User(
+            id = 1L,
+            name = "Test User",
+            image = null
+        )
 
-    private val testAuthor = User(
-        id = 2L,
-        name = "Park Author",
-        image = null
-    )
+    private val testAuthor =
+        User(
+            id = 2L,
+            name = "Park Author",
+            image = null
+        )
 
     private fun createTestPark(
         id: Long = 1L,
@@ -70,8 +64,8 @@ class ParkDetailScreenTest {
         photos: List<Photo> = emptyList(),
         comments: List<Comment> = emptyList(),
         author: User = testAuthor
-    ): Park {
-        return Park(
+    ): Park =
+        Park(
             id = id,
             name = name,
             sizeID = 1,
@@ -89,7 +83,6 @@ class ParkDetailScreenTest {
             comments = comments,
             author = author
         )
-    }
 
     @Test
     fun parkHeaderMapSection_showsTitleAndAddress() {
@@ -304,6 +297,32 @@ class ParkDetailScreenTest {
     }
 
     @Test
+    fun parkParticipantsSection_whenCountKnownButUsersListEmpty_isVisibleButDisabled() {
+        val park = createTestPark(trainingUsersCount = 5, trainingUsers = emptyList())
+        val traineesTitle = context.getString(R.string.park_trainees_title)
+
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                ParkParticipantsSection(
+                    park = park,
+                    isAuthorized = true,
+                    isRefreshing = false,
+                    onParticipantToggle = {},
+                    onClickParticipants = {}
+                )
+            }
+        }
+
+        composeTestRule
+            .onNodeWithText(traineesTitle, ignoreCase = true)
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onAllNodesWithContentDescription("Chevron")
+            .assertCountEquals(0)
+    }
+
+    @Test
     fun parkAuthorSection_showsCorrectTitle() {
         val park = createTestPark()
         val addedByTitle = context.getString(R.string.added_by)
@@ -313,11 +332,12 @@ class ParkDetailScreenTest {
                 ParkAuthorSection(
                     park = park,
                     address = "Москва, Россия",
-                    config = ParkAuthorConfig(
-                        isAuthorized = true,
-                        isRefreshing = false,
-                        isParkAuthor = false
-                    ),
+                    config =
+                        ParkAuthorConfig(
+                            isAuthorized = true,
+                            isRefreshing = false,
+                            isParkAuthor = false
+                        ),
                     onAuthorClick = {}
                 )
             }
@@ -337,11 +357,12 @@ class ParkDetailScreenTest {
                 ParkAuthorSection(
                     park = park,
                     address = "Москва, Россия",
-                    config = ParkAuthorConfig(
-                        isAuthorized = true,
-                        isRefreshing = false,
-                        isParkAuthor = false
-                    ),
+                    config =
+                        ParkAuthorConfig(
+                            isAuthorized = true,
+                            isRefreshing = false,
+                            isParkAuthor = false
+                        ),
                     onAuthorClick = {}
                 )
             }
@@ -354,10 +375,11 @@ class ParkDetailScreenTest {
 
     @Test
     fun parkPhotosSection_displaysWithoutError() {
-        val photos = listOf(
-            Photo(id = 1L, photo = "https://example.com/photo1.jpg"),
-            Photo(id = 2L, photo = "https://example.com/photo2.jpg")
-        )
+        val photos =
+            listOf(
+                Photo(id = 1L, photo = "https://example.com/photo1.jpg"),
+                Photo(id = 2L, photo = "https://example.com/photo2.jpg")
+            )
         var clickedPhotoId: Long? = null
 
         composeTestRule.setContent {
@@ -392,17 +414,19 @@ class ParkDetailScreenTest {
 
     @Test
     fun parkCommentItem_showsCommentContent() {
-        val comment = Comment(
-            id = 1L,
-            body = "Отличная площадка!",
-            date = "2026-03-20",
-            user = testUser.copy(name = "Комментатор")
-        )
-        val config = CommentItemConfig(
-            enabled = true,
-            currentUserId = 99L,
-            showSectionHeader = false
-        )
+        val comment =
+            Comment(
+                id = 1L,
+                body = "Отличная площадка!",
+                date = "2026-03-20",
+                user = testUser.copy(name = "Комментатор")
+            )
+        val config =
+            CommentItemConfig(
+                enabled = true,
+                currentUserId = 99L,
+                showSectionHeader = false
+            )
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -476,11 +500,12 @@ class ParkDetailScreenTest {
 
     @Test
     fun parkAuthorConfig_isEnabled_whenAuthorizedAndNotAuthor() {
-        val config = ParkAuthorConfig(
-            isAuthorized = true,
-            isRefreshing = false,
-            isParkAuthor = false
-        )
+        val config =
+            ParkAuthorConfig(
+                isAuthorized = true,
+                isRefreshing = false,
+                isParkAuthor = false
+            )
 
         assertTrue(
             "Should be enabled when authorized, not refreshing, and not author",
@@ -490,52 +515,57 @@ class ParkDetailScreenTest {
 
     @Test
     fun parkAuthorConfig_isDisabled_whenNotAuthorized() {
-        val config = ParkAuthorConfig(
-            isAuthorized = false,
-            isRefreshing = false,
-            isParkAuthor = false
-        )
+        val config =
+            ParkAuthorConfig(
+                isAuthorized = false,
+                isRefreshing = false,
+                isParkAuthor = false
+            )
 
         assertFalse("Should be disabled when not authorized", config.isEnabled)
     }
 
     @Test
     fun parkAuthorConfig_isDisabled_whenIsAuthor() {
-        val config = ParkAuthorConfig(
-            isAuthorized = true,
-            isRefreshing = false,
-            isParkAuthor = true
-        )
+        val config =
+            ParkAuthorConfig(
+                isAuthorized = true,
+                isRefreshing = false,
+                isParkAuthor = true
+            )
 
         assertFalse("Should be disabled when current user is author", config.isEnabled)
     }
 
     @Test
     fun parkAuthorConfig_isDisabled_whenRefreshing() {
-        val config = ParkAuthorConfig(
-            isAuthorized = true,
-            isRefreshing = true,
-            isParkAuthor = false
-        )
+        val config =
+            ParkAuthorConfig(
+                isAuthorized = true,
+                isRefreshing = true,
+                isParkAuthor = false
+            )
 
         assertFalse("Should be disabled when refreshing", config.isEnabled)
     }
 
     @Test
     fun commentItemConfig_hasCorrectDefaults() {
-        val config = CommentItemConfig(
-            enabled = true,
-            currentUserId = 1L
-        )
+        val config =
+            CommentItemConfig(
+                enabled = true,
+                currentUserId = 1L
+            )
 
         assertFalse("showSectionHeader should default to false", config.showSectionHeader)
     }
 
     @Test
     fun parkDetailScreen_showsInitialLoading() {
-        val viewModel = FakeParkDetailViewModel(
-            initialState = ParkDetailUIState.InitialLoading
-        )
+        val viewModel =
+            FakeParkDetailViewModel(
+                initialState = ParkDetailUIState.InitialLoading
+            )
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -553,9 +583,10 @@ class ParkDetailScreenTest {
 
     @Test
     fun parkDetailScreen_showsError() {
-        val viewModel = FakeParkDetailViewModel(
-            initialState = ParkDetailUIState.Error("Test error")
-        )
+        val viewModel =
+            FakeParkDetailViewModel(
+                initialState = ParkDetailUIState.Error("Test error")
+            )
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -573,15 +604,99 @@ class ParkDetailScreenTest {
     }
 
     @Test
+    fun parkDetailScreen_retryClick_showsLoadingThenContent() {
+        val uiState = MutableStateFlow<ParkDetailUIState>(ParkDetailUIState.Error("Ошибка"))
+        val viewModel =
+            FakeParkDetailViewModel(
+                uiState = uiState,
+                refreshAction = {
+                    uiState.value = ParkDetailUIState.InitialLoading
+                }
+            )
+
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                ParkDetailScreen(
+                    viewModel = viewModel,
+                    parentPaddingValues = PaddingValues(),
+                    onAction = {}
+                )
+            }
+        }
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.try_again_button))
+            .performClick()
+
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.loading_content_description))
+            .assertIsDisplayed()
+
+        composeTestRule.runOnIdle {
+            uiState.value =
+                ParkDetailUIState.Content(
+                    park = createTestPark(name = "Загруженная площадка"),
+                    address = "Москва, Россия",
+                    authorAddress = "Москва, Россия"
+                )
+        }
+
+        composeTestRule
+            .onNodeWithText("Загруженная площадка")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun parkDetailScreen_retryClick_showsLoadingThenError() {
+        val retryError = "Повторная ошибка"
+        val uiState = MutableStateFlow<ParkDetailUIState>(ParkDetailUIState.Error("Ошибка"))
+        val viewModel =
+            FakeParkDetailViewModel(
+                uiState = uiState,
+                refreshAction = {
+                    uiState.value = ParkDetailUIState.InitialLoading
+                }
+            )
+
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                ParkDetailScreen(
+                    viewModel = viewModel,
+                    parentPaddingValues = PaddingValues(),
+                    onAction = {}
+                )
+            }
+        }
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.try_again_button))
+            .performClick()
+
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.loading_content_description))
+            .assertIsDisplayed()
+
+        composeTestRule.runOnIdle {
+            uiState.value = ParkDetailUIState.Error(retryError)
+        }
+
+        composeTestRule
+            .onNodeWithText(retryError)
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun parkDetailScreen_showsContent() {
         val park = createTestPark(name = "Тестовая площадка")
-        val viewModel = FakeParkDetailViewModel(
-            initialState = ParkDetailUIState.Content(
-                park = park,
-                address = "Москва, Россия",
-                authorAddress = "Москва, Россия"
+        val viewModel =
+            FakeParkDetailViewModel(
+                initialState =
+                    ParkDetailUIState.Content(
+                        park = park,
+                        address = "Москва, Россия",
+                        authorAddress = "Москва, Россия"
+                    )
             )
-        )
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -601,13 +716,15 @@ class ParkDetailScreenTest {
     @Test
     fun parkDetailScreen_doesNotShowDescriptionSection() {
         val park = createTestPark()
-        val viewModel = FakeParkDetailViewModel(
-            initialState = ParkDetailUIState.Content(
-                park = park,
-                address = "Москва, Россия",
-                authorAddress = "Москва, Россия"
+        val viewModel =
+            FakeParkDetailViewModel(
+                initialState =
+                    ParkDetailUIState.Content(
+                        park = park,
+                        address = "Москва, Россия",
+                        authorAddress = "Москва, Россия"
+                    )
             )
-        )
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -628,13 +745,15 @@ class ParkDetailScreenTest {
     @Test
     fun parkDetailScreen_showsParkTitleInAppBar() {
         val park = createTestPark()
-        val viewModel = FakeParkDetailViewModel(
-            initialState = ParkDetailUIState.Content(
-                park = park,
-                address = "Москва, Россия",
-                authorAddress = "Москва, Россия"
+        val viewModel =
+            FakeParkDetailViewModel(
+                initialState =
+                    ParkDetailUIState.Content(
+                        park = park,
+                        address = "Москва, Россия",
+                        authorAddress = "Москва, Россия"
+                    )
             )
-        )
         val parkTitleLabel = context.getString(R.string.park_title)
 
         composeTestRule.setContent {
@@ -655,13 +774,15 @@ class ParkDetailScreenTest {
     @Test
     fun parkDetailScreen_showsAddedByTitle() {
         val park = createTestPark()
-        val viewModel = FakeParkDetailViewModel(
-            initialState = ParkDetailUIState.Content(
-                park = park,
-                address = "Москва, Россия",
-                authorAddress = "Москва, Россия"
+        val viewModel =
+            FakeParkDetailViewModel(
+                initialState =
+                    ParkDetailUIState.Content(
+                        park = park,
+                        address = "Москва, Россия",
+                        authorAddress = "Москва, Россия"
+                    )
             )
-        )
         val addedByLabel = context.getString(R.string.added_by)
 
         composeTestRule.setContent {
@@ -681,22 +802,25 @@ class ParkDetailScreenTest {
 
     @Test
     fun parkDetailScreen_showsComments() {
-        val comments = listOf(
-            Comment(
-                id = 1L,
-                body = "Отличная площадка!",
-                date = "2026-03-20",
-                user = testUser.copy(name = "Комментатор")
+        val comments =
+            listOf(
+                Comment(
+                    id = 1L,
+                    body = "Отличная площадка!",
+                    date = "2026-03-20",
+                    user = testUser.copy(name = "Комментатор")
+                )
             )
-        )
         val park = createTestPark(comments = comments)
-        val viewModel = FakeParkDetailViewModel(
-            initialState = ParkDetailUIState.Content(
-                park = park,
-                address = "Москва, Россия",
-                authorAddress = "Москва, Россия"
+        val viewModel =
+            FakeParkDetailViewModel(
+                initialState =
+                    ParkDetailUIState.Content(
+                        park = park,
+                        address = "Москва, Россия",
+                        authorAddress = "Москва, Россия"
+                    )
             )
-        )
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -715,17 +839,20 @@ class ParkDetailScreenTest {
 
     @Test
     fun parkDetailScreen_showsPhotos() {
-        val photos = listOf(
-            Photo(id = 1L, photo = "https://example.com/photo1.jpg")
-        )
-        val park = createTestPark(photos = photos)
-        val viewModel = FakeParkDetailViewModel(
-            initialState = ParkDetailUIState.Content(
-                park = park,
-                address = "Москва, Россия",
-                authorAddress = "Москва, Россия"
+        val photos =
+            listOf(
+                Photo(id = 1L, photo = "https://example.com/photo1.jpg")
             )
-        )
+        val park = createTestPark(photos = photos)
+        val viewModel =
+            FakeParkDetailViewModel(
+                initialState =
+                    ParkDetailUIState.Content(
+                        park = park,
+                        address = "Москва, Россия",
+                        authorAddress = "Москва, Россия"
+                    )
+            )
         val photosLabel = context.getString(R.string.photos)
 
         composeTestRule.setContent {
@@ -747,13 +874,15 @@ class ParkDetailScreenTest {
     fun parkDetailScreen_whenNavigateToTraineesEvent_thenEmitsAction() {
         val park = createTestPark()
         val users = listOf(testUser)
-        val viewModel = FakeParkDetailViewModel(
-            initialState = ParkDetailUIState.Content(
-                park = park,
-                address = "Москва, Россия",
-                authorAddress = "Москва, Россия"
+        val viewModel =
+            FakeParkDetailViewModel(
+                initialState =
+                    ParkDetailUIState.Content(
+                        park = park,
+                        address = "Москва, Россия",
+                        authorAddress = "Москва, Россия"
+                    )
             )
-        )
         var capturedAction: ParkDetailAction? = null
 
         composeTestRule.setContent {
@@ -786,13 +915,15 @@ class ParkDetailScreenTest {
     fun parkDetailScreen_backButton_callsOnBack() {
         var backClicked = false
         val park = createTestPark()
-        val viewModel = FakeParkDetailViewModel(
-            initialState = ParkDetailUIState.Content(
-                park = park,
-                address = "Москва, Россия",
-                authorAddress = "Москва, Россия"
+        val viewModel =
+            FakeParkDetailViewModel(
+                initialState =
+                    ParkDetailUIState.Content(
+                        park = park,
+                        address = "Москва, Россия",
+                        authorAddress = "Москва, Россия"
+                    )
             )
-        )
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -816,9 +947,11 @@ class ParkDetailScreenTest {
 }
 
 private class FakeParkDetailViewModel(
-    initialState: ParkDetailUIState
+    initialState: ParkDetailUIState = ParkDetailUIState.InitialLoading,
+    uiState: MutableStateFlow<ParkDetailUIState> = MutableStateFlow(initialState),
+    private val refreshAction: () -> Unit = {}
 ) : IParkDetailViewModel {
-    override val uiState: StateFlow<ParkDetailUIState> = MutableStateFlow(initialState)
+    override val uiState: StateFlow<ParkDetailUIState> = uiState
     private val mutableEvents = MutableSharedFlow<ParkDetailEvent>()
     override val events: SharedFlow<ParkDetailEvent> = mutableEvents
     override val isRefreshing: StateFlow<Boolean> = MutableStateFlow(false)
@@ -828,26 +961,50 @@ private class FakeParkDetailViewModel(
     override val mapUriSet: MapUriSet? = null
 
     override fun onEditClick() {}
+
     override fun onDeleteClick() {}
+
     override fun onDeleteConfirm() {}
+
     override fun onDeleteDismiss() {}
+
     override fun onShareClick() {}
+
     override fun onTrainHereToggle() {}
+
     override fun onTraineesCountClick() {}
+
     override fun onOpenMapClick() {}
+
     override fun onRouteClick() {}
+
     override fun onCreateEventClick() {}
+
     override fun onPhotoClick(photo: Photo) {}
+
     override fun onPhotoDeleteClick(photo: Photo) {}
+
     override fun onPhotoDeleteConfirm() {}
+
     override fun onPhotoDeleteDismiss() {}
+
     override fun onAddCommentClick() {}
-    override fun onCommentActionClick(commentId: Long, action: CommentAction) {}
+
+    override fun onCommentActionClick(
+        commentId: Long,
+        action: CommentAction
+    ) {
+    }
+
     override fun onCommentDeleteConfirm() {}
+
     override fun onCommentDeleteDismiss() {}
+
     override fun onPhotoDeleted(photoId: Long) {}
+
     override fun onParkUpdated(parkId: Long) {}
-    override fun refresh() {}
+
+    override fun refresh() = refreshAction()
 
     suspend fun emitEvent(event: ParkDetailEvent) {
         mutableEvents.emit(event)

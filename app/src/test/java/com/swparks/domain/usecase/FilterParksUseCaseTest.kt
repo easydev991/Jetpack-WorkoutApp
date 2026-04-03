@@ -9,10 +9,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FilterParksUseCaseTest {
-
     private val filterParksUseCase: IFilterParksUseCase = FilterParksUseCase()
 
-    private fun createPark(sizeID: Int, typeID: Int, cityID: Int = 1) = Park(
+    private fun createPark(
+        sizeID: Int,
+        typeID: Int,
+        cityID: Int = 1
+    ) = Park(
         id = 1L,
         name = "Test Park",
         sizeID = sizeID,
@@ -27,11 +30,12 @@ class FilterParksUseCaseTest {
 
     @Test
     fun filterParks_whenNoFilter_returnsAllParks() {
-        val parks = listOf(
-            createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue),
-            createPark(ParkSize.MEDIUM.rawValue, ParkType.MODERN.rawValue),
-            createPark(ParkSize.LARGE.rawValue, ParkType.COLLARS.rawValue)
-        )
+        val parks =
+            listOf(
+                createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue),
+                createPark(ParkSize.MEDIUM.rawValue, ParkType.MODERN.rawValue),
+                createPark(ParkSize.LARGE.rawValue, ParkType.COLLARS.rawValue)
+            )
         val filter = ParkFilter()
 
         val result = filterParksUseCase(parks, filter)
@@ -41,11 +45,12 @@ class FilterParksUseCaseTest {
 
     @Test
     fun filterParks_whenSizeFilter_filtersBySize() {
-        val parks = listOf(
-            createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue),
-            createPark(ParkSize.MEDIUM.rawValue, ParkType.SOVIET.rawValue),
-            createPark(ParkSize.LARGE.rawValue, ParkType.SOVIET.rawValue)
-        )
+        val parks =
+            listOf(
+                createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue),
+                createPark(ParkSize.MEDIUM.rawValue, ParkType.SOVIET.rawValue),
+                createPark(ParkSize.LARGE.rawValue, ParkType.SOVIET.rawValue)
+            )
         val filter = ParkFilter(sizes = setOf(ParkSize.SMALL, ParkSize.MEDIUM))
 
         val result = filterParksUseCase(parks, filter)
@@ -56,11 +61,12 @@ class FilterParksUseCaseTest {
 
     @Test
     fun filterParks_whenTypeFilter_filtersByType() {
-        val parks = listOf(
-            createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue),
-            createPark(ParkSize.SMALL.rawValue, ParkType.MODERN.rawValue),
-            createPark(ParkSize.SMALL.rawValue, ParkType.COLLARS.rawValue)
-        )
+        val parks =
+            listOf(
+                createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue),
+                createPark(ParkSize.SMALL.rawValue, ParkType.MODERN.rawValue),
+                createPark(ParkSize.SMALL.rawValue, ParkType.COLLARS.rawValue)
+            )
         val filter = ParkFilter(types = setOf(ParkType.SOVIET, ParkType.MODERN))
 
         val result = filterParksUseCase(parks, filter)
@@ -71,16 +77,18 @@ class FilterParksUseCaseTest {
 
     @Test
     fun filterParks_whenBothFilters_usesAndLogic() {
-        val parks = listOf(
-            createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue),
-            createPark(ParkSize.MEDIUM.rawValue, ParkType.SOVIET.rawValue),
-            createPark(ParkSize.SMALL.rawValue, ParkType.MODERN.rawValue),
-            createPark(ParkSize.MEDIUM.rawValue, ParkType.MODERN.rawValue)
-        )
-        val filter = ParkFilter(
-            sizes = setOf(ParkSize.SMALL),
-            types = setOf(ParkType.SOVIET)
-        )
+        val parks =
+            listOf(
+                createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue),
+                createPark(ParkSize.MEDIUM.rawValue, ParkType.SOVIET.rawValue),
+                createPark(ParkSize.SMALL.rawValue, ParkType.MODERN.rawValue),
+                createPark(ParkSize.MEDIUM.rawValue, ParkType.MODERN.rawValue)
+            )
+        val filter =
+            ParkFilter(
+                sizes = setOf(ParkSize.SMALL),
+                types = setOf(ParkType.SOVIET)
+            )
 
         val result = filterParksUseCase(parks, filter)
 
@@ -91,13 +99,15 @@ class FilterParksUseCaseTest {
 
     @Test
     fun filterParks_whenNoMatch_returnsEmptyList() {
-        val parks = listOf(
-            createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue)
-        )
-        val filter = ParkFilter(
-            sizes = setOf(ParkSize.LARGE),
-            types = setOf(ParkType.LEGENDARY)
-        )
+        val parks =
+            listOf(
+                createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue)
+            )
+        val filter =
+            ParkFilter(
+                sizes = setOf(ParkSize.LARGE),
+                types = setOf(ParkType.LEGENDARY)
+            )
 
         val result = filterParksUseCase(parks, filter)
 
@@ -106,21 +116,24 @@ class FilterParksUseCaseTest {
 
     @Test
     fun filterParks_with9000Parks_completesQuickly() {
-        val parks = List(9000) { index ->
-            createPark(
-                sizeID = (index % 3) + 1,
-                typeID = when (index % 4) {
-                    0 -> ParkType.SOVIET.rawValue
-                    1 -> ParkType.MODERN.rawValue
-                    2 -> ParkType.COLLARS.rawValue
-                    else -> ParkType.LEGENDARY.rawValue
-                }
+        val parks =
+            List(9000) { index ->
+                createPark(
+                    sizeID = (index % 3) + 1,
+                    typeID =
+                        when (index % 4) {
+                            0 -> ParkType.SOVIET.rawValue
+                            1 -> ParkType.MODERN.rawValue
+                            2 -> ParkType.COLLARS.rawValue
+                            else -> ParkType.LEGENDARY.rawValue
+                        }
+                )
+            }
+        val filter =
+            ParkFilter(
+                sizes = setOf(ParkSize.SMALL, ParkSize.MEDIUM),
+                types = setOf(ParkType.SOVIET, ParkType.MODERN)
             )
-        }
-        val filter = ParkFilter(
-            sizes = setOf(ParkSize.SMALL, ParkSize.MEDIUM),
-            types = setOf(ParkType.SOVIET, ParkType.MODERN)
-        )
 
         val startTime = System.currentTimeMillis()
         val result = filterParksUseCase(parks, filter)
@@ -132,11 +145,12 @@ class FilterParksUseCaseTest {
 
     @Test
     fun filterParks_whenCityFilter_filtersByCity() {
-        val parks = listOf(
-            createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue, cityID = 1),
-            createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue, cityID = 2),
-            createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue, cityID = 3)
-        )
+        val parks =
+            listOf(
+                createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue, cityID = 1),
+                createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue, cityID = 2),
+                createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue, cityID = 3)
+            )
         val filter = ParkFilter(selectedCityId = 2)
 
         val result = filterParksUseCase(parks, filter)
@@ -147,15 +161,17 @@ class FilterParksUseCaseTest {
 
     @Test
     fun filterParks_whenCityAndSizeFilters_usesAndLogic() {
-        val parks = listOf(
-            createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue, cityID = 1),
-            createPark(ParkSize.MEDIUM.rawValue, ParkType.SOVIET.rawValue, cityID = 1),
-            createPark(ParkSize.SMALL.rawValue, ParkType.MODERN.rawValue, cityID = 2)
-        )
-        val filter = ParkFilter(
-            sizes = setOf(ParkSize.SMALL),
-            selectedCityId = 1
-        )
+        val parks =
+            listOf(
+                createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue, cityID = 1),
+                createPark(ParkSize.MEDIUM.rawValue, ParkType.SOVIET.rawValue, cityID = 1),
+                createPark(ParkSize.SMALL.rawValue, ParkType.MODERN.rawValue, cityID = 2)
+            )
+        val filter =
+            ParkFilter(
+                sizes = setOf(ParkSize.SMALL),
+                selectedCityId = 1
+            )
 
         val result = filterParksUseCase(parks, filter)
 
@@ -166,10 +182,11 @@ class FilterParksUseCaseTest {
 
     @Test
     fun filterParks_whenNoCityFilter_ignoresCity() {
-        val parks = listOf(
-            createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue, cityID = 1),
-            createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue, cityID = 2)
-        )
+        val parks =
+            listOf(
+                createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue, cityID = 1),
+                createPark(ParkSize.SMALL.rawValue, ParkType.SOVIET.rawValue, cityID = 2)
+            )
         val filter = ParkFilter()
 
         val result = filterParksUseCase(parks, filter)

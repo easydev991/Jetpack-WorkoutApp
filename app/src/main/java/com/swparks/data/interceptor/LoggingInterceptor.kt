@@ -17,22 +17,22 @@ import java.io.IOException
  * - Тело ответа (если есть)
  */
 class LoggingInterceptor : Interceptor {
-
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
 
         // Логируем запрос
-        val requestLog = buildString {
-            append("📤 REQUEST: ${request.method} ${request.url}")
-            append("\n📋 Headers: ${request.headers}")
+        val requestLog =
+            buildString {
+                append("📤 REQUEST: ${request.method} ${request.url}")
+                append("\n📋 Headers: ${request.headers}")
 
-            request.body?.let { body ->
-                val buffer = Buffer()
-                body.writeTo(buffer)
-                val charset = body.contentType()?.charset(Charsets.UTF_8) ?: Charsets.UTF_8
-                append("\n📦 Body: ${buffer.readString(charset)}")
+                request.body?.let { body ->
+                    val buffer = Buffer()
+                    body.writeTo(buffer)
+                    val charset = body.contentType()?.charset(Charsets.UTF_8) ?: Charsets.UTF_8
+                    append("\n📦 Body: ${buffer.readString(charset)}")
+                }
             }
-        }
         Log.d(TAG, requestLog)
 
         val startTime = System.nanoTime()
@@ -42,25 +42,26 @@ class LoggingInterceptor : Interceptor {
             val durationMs = (System.nanoTime() - startTime) / NANOS_IN_MILLIS
 
             // Логируем ответ
-            val responseLog = buildString {
-                append("📥 RESPONSE: ${response.code} ${request.url}")
-                append("\n⏱ Duration: ${durationMs}ms")
-                append("\n📋 Headers: ${response.headers}")
+            val responseLog =
+                buildString {
+                    append("📥 RESPONSE: ${response.code} ${request.url}")
+                    append("\n⏱ Duration: ${durationMs}ms")
+                    append("\n📋 Headers: ${response.headers}")
 
-                response.body?.let { body ->
-                    val source = body.source()
-                    source.request(Long.MAX_VALUE)
-                    val buffer = source.buffer
-                    val charset = body.contentType()?.charset(Charsets.UTF_8) ?: Charsets.UTF_8
+                    response.body?.let { body ->
+                        val source = body.source()
+                        source.request(Long.MAX_VALUE)
+                        val buffer = source.buffer
+                        val charset = body.contentType()?.charset(Charsets.UTF_8) ?: Charsets.UTF_8
 
-                    // Проверяем, что тело не слишком большое для логирования
-                    if (buffer.size > MAX_LOG_SIZE) {
-                        append("\n📦 Body: [too large to log, ${buffer.size} bytes]")
-                    } else {
-                        append("\n📦 Body: ${buffer.clone().readString(charset)}")
+                        // Проверяем, что тело не слишком большое для логирования
+                        if (buffer.size > MAX_LOG_SIZE) {
+                            append("\n📦 Body: [too large to log, ${buffer.size} bytes]")
+                        } else {
+                            append("\n📦 Body: ${buffer.clone().readString(charset)}")
+                        }
                     }
                 }
-            }
             Log.d(TAG, responseLog)
 
             response

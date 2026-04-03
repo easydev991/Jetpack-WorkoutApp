@@ -14,11 +14,12 @@ import org.junit.Test
 
 class ParkTest {
     // Вспомогательные методы для создания тестовых данных
-    private fun createTestUser(id: Long = 1L) = User(
-        id = id,
-        name = "testuser",
-        image = "https://example.com/image.jpg"
-    )
+    private fun createTestUser(id: Long = 1L) =
+        User(
+            id = id,
+            name = "testuser",
+            image = "https://example.com/image.jpg"
+        )
 
     @Suppress("LongParameterList")
     private fun createTestPark(
@@ -143,12 +144,13 @@ class ParkTest {
     @Test
     fun hasComments_whenCommentsListIsNotEmpty_thenReturnsTrue() {
         // Given
-        val comment = Comment(
-            id = 1L,
-            body = "Test comment",
-            date = "2024-01-01",
-            user = createTestUser()
-        )
+        val comment =
+            Comment(
+                id = 1L,
+                body = "Test comment",
+                date = "2024-01-01",
+                user = createTestUser()
+            )
         val park = createTestPark(comments = listOf(comment))
 
         // When & Then
@@ -250,23 +252,25 @@ class ParkTest {
     @Test
     fun isFull_whenAllDataIsPresent_thenReturnsTrue() {
         // Given
-        val comment = Comment(
-            id = 1L,
-            body = "Test comment",
-            date = "2024-01-01",
-            user = createTestUser()
-        )
+        val comment =
+            Comment(
+                id = 1L,
+                body = "Test comment",
+                date = "2024-01-01",
+                user = createTestUser()
+            )
         val photo = Photo(id = 1L, photo = "https://example.com/photo.jpg")
         val user = createTestUser()
-        val park = createTestPark(
-            createDate = "2024-01-01",
-            author = createTestUser(),
-            photos = listOf(photo),
-            comments = listOf(comment),
-            commentsCount = 1,
-            trainingUsers = listOf(user),
-            trainingUsersCount = 1
-        )
+        val park =
+            createTestPark(
+                createDate = "2024-01-01",
+                author = createTestUser(),
+                photos = listOf(photo),
+                comments = listOf(comment),
+                commentsCount = 1,
+                trainingUsers = listOf(user),
+                trainingUsersCount = 1
+            )
 
         // When & Then
         assertTrue(park.isFull)
@@ -275,11 +279,12 @@ class ParkTest {
     @Test
     fun isFull_whenCreateDateIsNull_thenReturnsFalse() {
         // Given
-        val park = createTestPark(
-            createDate = null,
-            author = createTestUser(),
-            photos = listOf(Photo(id = 1L, photo = "https://example.com/photo.jpg"))
-        )
+        val park =
+            createTestPark(
+                createDate = null,
+                author = createTestUser(),
+                photos = listOf(Photo(id = 1L, photo = "https://example.com/photo.jpg"))
+            )
 
         // When & Then
         assertFalse(park.isFull)
@@ -288,11 +293,12 @@ class ParkTest {
     @Test
     fun isFull_whenAuthorIsNull_thenReturnsFalse() {
         // Given
-        val park = createTestPark(
-            createDate = "2024-01-01",
-            author = null,
-            photos = listOf(Photo(id = 1L, photo = "https://example.com/photo.jpg"))
-        )
+        val park =
+            createTestPark(
+                createDate = "2024-01-01",
+                author = null,
+                photos = listOf(Photo(id = 1L, photo = "https://example.com/photo.jpg"))
+            )
 
         // When & Then
         assertFalse(park.isFull)
@@ -301,11 +307,12 @@ class ParkTest {
     @Test
     fun isFull_whenHasNoPhotos_thenReturnsFalse() {
         // Given
-        val park = createTestPark(
-            createDate = "2024-01-01",
-            author = createTestUser(),
-            photos = null
-        )
+        val park =
+            createTestPark(
+                createDate = "2024-01-01",
+                author = createTestUser(),
+                photos = null
+            )
 
         // When & Then
         assertFalse(park.isFull)
@@ -314,13 +321,14 @@ class ParkTest {
     @Test
     fun isFull_whenCommentsNeedUpdate_thenReturnsFalse() {
         // Given
-        val park = createTestPark(
-            createDate = "2024-01-01",
-            author = createTestUser(),
-            photos = listOf(Photo(id = 1L, photo = "https://example.com/photo.jpg")),
-            comments = null,
-            commentsCount = 5
-        )
+        val park =
+            createTestPark(
+                createDate = "2024-01-01",
+                author = createTestUser(),
+                photos = listOf(Photo(id = 1L, photo = "https://example.com/photo.jpg")),
+                comments = null,
+                commentsCount = 5
+            )
 
         // When & Then
         assertFalse(park.isFull)
@@ -329,13 +337,14 @@ class ParkTest {
     @Test
     fun isFull_whenParticipantsNeedUpdate_thenReturnsFalse() {
         // Given
-        val park = createTestPark(
-            createDate = "2024-01-01",
-            author = createTestUser(),
-            photos = listOf(Photo(id = 1L, photo = "https://example.com/photo.jpg")),
-            trainingUsers = null,
-            trainingUsersCount = 3
-        )
+        val park =
+            createTestPark(
+                createDate = "2024-01-01",
+                author = createTestUser(),
+                photos = listOf(Photo(id = 1L, photo = "https://example.com/photo.jpg")),
+                trainingUsers = null,
+                trainingUsersCount = 3
+            )
 
         // When & Then
         assertFalse(park.isFull)
@@ -344,11 +353,12 @@ class ParkTest {
     @Test
     fun isFull_whenMultipleConditionsFail_thenReturnsFalse() {
         // Given
-        val park = createTestPark(
-            createDate = null,
-            author = null,
-            photos = listOf(Photo(id = 1L, photo = "https://example.com/photo.jpg"))
-        )
+        val park =
+            createTestPark(
+                createDate = null,
+                author = null,
+                photos = listOf(Photo(id = 1L, photo = "https://example.com/photo.jpg"))
+            )
 
         // When & Then
         assertFalse(park.isFull)

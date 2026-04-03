@@ -7,7 +7,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MockSWApiTest {
-
     private val mockApi = MockSWApi()
 
     // ==================== Тесты вспомогательных методов создания фиктивных данных
@@ -146,464 +145,508 @@ class MockSWApiTest {
     // ==================== Тесты API методов ====================
 
     @Test
-    fun login_whenCalled_thenReturnsMockLoginSuccess() = runTest {
-        // When
-        val result = mockApi.login()
+    fun login_whenCalled_thenReturnsMockLoginSuccess() =
+        runTest {
+            // When
+            val result = mockApi.login()
 
-        // Then
-        assertNotNull(result)
-        assertEquals(123L, result.userId)
-    }
-
-    @Test
-    fun resetPassword_whenCalled_thenReturnsMockLoginSuccess() = runTest {
-        // Given
-        val usernameOrEmail = "test_login"
-
-        // When
-        val result = mockApi.resetPassword(usernameOrEmail)
-
-        // Then
-        assertNotNull(result)
-        assertEquals(123L, result.userId)
-    }
+            // Then
+            assertNotNull(result)
+            assertEquals(123L, result.userId)
+        }
 
     @Test
-    fun changePassword_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // Given
-        val password = "old"
-        val newPassword = "new"
+    fun resetPassword_whenCalled_thenReturnsMockLoginSuccess() =
+        runTest {
+            // Given
+            val usernameOrEmail = "test_login"
 
-        // When
-        val result = mockApi.changePassword(password, newPassword)
+            // When
+            val result = mockApi.resetPassword(usernameOrEmail)
 
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
-
-    @Test
-    fun getUser_whenCalled_thenReturnsMockUser() = runTest {
-        // When
-        val result = mockApi.getUser(123L)
-
-        // Then
-        assertNotNull(result)
-        assertEquals(123L, result.id)
-    }
+            // Then
+            assertNotNull(result)
+            assertEquals(123L, result.userId)
+        }
 
     @Test
-    fun deleteUser_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.deleteUser()
+    fun changePassword_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // Given
+            val password = "old"
+            val newPassword = "new"
 
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
+            // When
+            val result = mockApi.changePassword(password, newPassword)
 
-    @Test
-    fun getFriendsForUser_whenCalled_thenReturnsMockFriends() = runTest {
-        // When
-        val result = mockApi.getFriendsForUser(1L)
-
-        // Then
-        assertNotNull(result)
-        assertEquals(2, result.size)
-        assertEquals("friend1", result[0].name)
-    }
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
 
     @Test
-    fun getFriendRequests_whenCalled_thenReturnsMockRequests() = runTest {
-        // When
-        val result = mockApi.getFriendRequests()
+    fun getUser_whenCalled_thenReturnsMockUser() =
+        runTest {
+            // When
+            val result = mockApi.getUser(123L)
 
-        // Then
-        assertNotNull(result)
-        assertEquals(1, result.size)
-        assertEquals("request1", result[0].name)
-    }
-
-    @Test
-    fun acceptFriendRequest_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.acceptFriendRequest(2L)
-
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
+            // Then
+            assertNotNull(result)
+            assertEquals(123L, result.id)
+        }
 
     @Test
-    fun declineFriendRequest_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.declineFriendRequest(2L)
+    fun deleteUser_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.deleteUser()
 
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
-
-    @Test
-    fun sendFriendRequest_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.sendFriendRequest(2L)
-
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
 
     @Test
-    fun deleteFriend_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.deleteFriend(2L)
+    fun getFriendsForUser_whenCalled_thenReturnsMockFriends() =
+        runTest {
+            // When
+            val result = mockApi.getFriendsForUser(1L)
 
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
-
-    @Test
-    fun getBlacklist_whenCalled_thenReturnsMockBlacklist() = runTest {
-        // When
-        val result = mockApi.getBlacklist()
-
-        // Then
-        assertNotNull(result)
-        assertEquals(1, result.size)
-        assertEquals("blocked1", result[0].name)
-    }
+            // Then
+            assertNotNull(result)
+            assertEquals(2, result.size)
+            assertEquals("friend1", result[0].name)
+        }
 
     @Test
-    fun addToBlacklist_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.addToBlacklist(2L)
+    fun getFriendRequests_whenCalled_thenReturnsMockRequests() =
+        runTest {
+            // When
+            val result = mockApi.getFriendRequests()
 
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
-
-    @Test
-    fun deleteFromBlacklist_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.deleteFromBlacklist(2L)
-
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
+            // Then
+            assertNotNull(result)
+            assertEquals(1, result.size)
+            assertEquals("request1", result[0].name)
+        }
 
     @Test
-    fun findUsers_whenCalled_thenReturnsMockUsers() = runTest {
-        // When
-        val result = mockApi.findUsers("search_term")
+    fun acceptFriendRequest_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.acceptFriendRequest(2L)
 
-        // Then
-        assertNotNull(result)
-        assertEquals(1, result.size)
-        assertEquals("Found User", result[0].fullName)
-    }
-
-    @Test
-    fun getCountries_whenCalled_thenReturnsMockCountries() = runTest {
-        // When
-        val result = mockApi.getCountries()
-
-        // Then
-        assertNotNull(result)
-        assertEquals(3, result.size)
-        assertEquals("Russia", result[0].name)
-        assertEquals("USA", result[1].name)
-        assertEquals("Germany", result[2].name)
-    }
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
 
     @Test
-    fun getAllParks_whenCalled_thenReturnsMockParks() = runTest {
-        // When
-        val result = mockApi.getAllParks()
+    fun declineFriendRequest_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.declineFriendRequest(2L)
 
-        // Then
-        assertNotNull(result)
-        assertEquals(3, result.size)
-        assertEquals("Park 1", result[0].name)
-    }
-
-    @Test
-    fun getUpdatedParks_whenCalled_thenReturnsMockParks() = runTest {
-        // When
-        val result = mockApi.getUpdatedParks("2024-01-01")
-
-        // Then
-        assertNotNull(result)
-        assertEquals(1, result.size)
-        assertEquals("Updated Park", result[0].name)
-    }
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
 
     @Test
-    fun getPark_whenCalled_thenReturnsMockPark() = runTest {
-        // When
-        val result = mockApi.getPark(123L)
+    fun sendFriendRequest_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.sendFriendRequest(2L)
 
-        // Then
-        assertNotNull(result)
-        assertEquals(123L, result.id)
-    }
-
-    @Test
-    fun deletePark_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.deletePark(1L)
-
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
 
     @Test
-    fun getParksForUser_whenCalled_thenReturnsMockParks() = runTest {
-        // When
-        val result = mockApi.getParksForUser(1L)
+    fun deleteFriend_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.deleteFriend(2L)
 
-        // Then
-        assertNotNull(result)
-        assertEquals(2, result.size)
-        assertEquals("User Park 1", result[0].name)
-    }
-
-    @Test
-    fun postTrainHere_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.postTrainHere(1L)
-
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
 
     @Test
-    fun deleteTrainHere_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.deleteTrainHere(1L)
+    fun getBlacklist_whenCalled_thenReturnsMockBlacklist() =
+        runTest {
+            // When
+            val result = mockApi.getBlacklist()
 
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
-
-    @Test
-    fun getFutureEvents_whenCalled_thenReturnsMockFutureEvents() = runTest {
-        // When
-        val result = mockApi.getFutureEvents()
-
-        // Then
-        assertNotNull(result)
-        assertEquals(2, result.size)
-        assertEquals("Future Event 1", result[0].title)
-    }
+            // Then
+            assertNotNull(result)
+            assertEquals(1, result.size)
+            assertEquals("blocked1", result[0].name)
+        }
 
     @Test
-    fun getPastEvents_whenCalled_thenReturnsMockPastEvents() = runTest {
-        // When
-        val result = mockApi.getPastEvents()
+    fun addToBlacklist_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.addToBlacklist(2L)
 
-        // Then
-        assertNotNull(result)
-        assertEquals(2, result.size)
-        assertEquals("Past Event 1", result[0].title)
-    }
-
-    @Test
-    fun getEvent_whenCalled_thenReturnsMockEvent() = runTest {
-        // When
-        val result = mockApi.getEvent(123L)
-
-        // Then
-        assertNotNull(result)
-        assertEquals(123L, result.id)
-    }
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
 
     @Test
-    fun deleteEvent_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.deleteEvent(1L)
+    fun deleteFromBlacklist_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.deleteFromBlacklist(2L)
 
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
-
-    @Test
-    fun postGoToEvent_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.postGoToEvent(1L)
-
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
 
     @Test
-    fun deleteGoToEvent_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.deleteGoToEvent(1L)
+    fun findUsers_whenCalled_thenReturnsMockUsers() =
+        runTest {
+            // When
+            val result = mockApi.findUsers("search_term")
 
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
-
-    @Test
-    fun getDialogs_whenCalled_thenReturnsMockDialogs() = runTest {
-        // When
-        val result = mockApi.getDialogs()
-
-        // Then
-        assertNotNull(result)
-        assertEquals(3, result.size)
-        assertEquals("Dialog 1", result[0].name)
-    }
+            // Then
+            assertNotNull(result)
+            assertEquals(1, result.size)
+            assertEquals("Found User", result[0].fullName)
+        }
 
     @Test
-    fun getMessages_whenCalled_thenReturnsMockMessages() = runTest {
-        // When
-        val result = mockApi.getMessages(1L)
+    fun getCountries_whenCalled_thenReturnsMockCountries() =
+        runTest {
+            // When
+            val result = mockApi.getCountries()
 
-        // Then
-        assertNotNull(result)
-        assertEquals(2, result.size)
-        assertEquals("Hello!", result[0].message)
-    }
-
-    @Test
-    fun sendMessageTo_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.sendMessageTo(2L, "Hello")
-
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
+            // Then
+            assertNotNull(result)
+            assertEquals(3, result.size)
+            assertEquals("Russia", result[0].name)
+            assertEquals("USA", result[1].name)
+            assertEquals("Germany", result[2].name)
+        }
 
     @Test
-    fun markAsRead_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // Given
-        val fromUserId = 1L
+    fun getAllParks_whenCalled_thenReturnsMockParks() =
+        runTest {
+            // When
+            val result = mockApi.getAllParks()
 
-        // When
-        val result = mockApi.markAsRead(fromUserId)
-
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
-
-    @Test
-    fun deleteDialog_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.deleteDialog(1L)
-
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
+            // Then
+            assertNotNull(result)
+            assertEquals(3, result.size)
+            assertEquals("Park 1", result[0].name)
+        }
 
     @Test
-    fun getJournals_whenCalled_thenReturnsMockJournals() = runTest {
-        // When
-        val result = mockApi.getJournals(1L)
+    fun getUpdatedParks_whenCalled_thenReturnsMockParks() =
+        runTest {
+            // When
+            val result = mockApi.getUpdatedParks("2024-01-01")
 
-        // Then
-        assertNotNull(result)
-        assertEquals(3, result.size)
-        assertEquals("Journal 1", result[0].title)
-    }
-
-    @Test
-    fun getJournal_whenCalled_thenReturnsMockJournal() = runTest {
-        // When
-        val result = mockApi.getJournal(1L, 123L)
-
-        // Then
-        assertNotNull(result)
-        assertEquals(123L, result.id)
-    }
+            // Then
+            assertNotNull(result)
+            assertEquals(1, result.size)
+            assertEquals("Updated Park", result[0].name)
+        }
 
     @Test
-    fun editJournalSettings_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.editJournalSettings(
-            userId = 1L,
-            journalId = 123L,
-            title = "New Title",
-            viewAccess = "0",
-            commentAccess = "0"
-        )
+    fun getPark_whenCalled_thenReturnsMockPark() =
+        runTest {
+            // When
+            val result = mockApi.getPark(123L)
 
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
+            // Then
+            assertNotNull(result)
+            assertEquals(123L, result.id)
+        }
 
     @Test
-    fun createJournal_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.createJournal(1L, "New Journal")
+    fun deletePark_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.deletePark(1L)
 
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
-
-    @Test
-    fun getJournalEntries_whenCalled_thenReturnsMockEntries() = runTest {
-        // When
-        val result = mockApi.getJournalEntries(1L, 123L)
-
-        // Then
-        assertNotNull(result)
-        assertEquals(3, result.size)
-        assertEquals("Entry 1", result[0].message)
-    }
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
 
     @Test
-    fun saveJournalEntry_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.saveJournalEntry(1L, 123L, "New entry")
+    fun getParksForUser_whenCalled_thenReturnsMockParks() =
+        runTest {
+            // When
+            val result = mockApi.getParksForUser(1L)
 
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
-
-    @Test
-    fun editJournalEntry_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.editJournalEntry(1L, 123L, 456L, "Updated entry")
-
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
+            // Then
+            assertNotNull(result)
+            assertEquals(2, result.size)
+            assertEquals("User Park 1", result[0].name)
+        }
 
     @Test
-    fun deleteJournalEntry_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.deleteJournalEntry(1L, 123L, 456L)
+    fun postTrainHere_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.postTrainHere(1L)
 
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
 
     @Test
-    fun deleteJournal_whenCalled_thenReturnsSuccessResponse() = runTest {
-        // When
-        val result = mockApi.deleteJournal(1L, 123L)
+    fun deleteTrainHere_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.deleteTrainHere(1L)
 
-        // Then
-        assertTrue(result.isSuccessful)
-        assertEquals(200, result.code())
-    }
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
+
+    @Test
+    fun getFutureEvents_whenCalled_thenReturnsMockFutureEvents() =
+        runTest {
+            // When
+            val result = mockApi.getFutureEvents()
+
+            // Then
+            assertNotNull(result)
+            assertEquals(2, result.size)
+            assertEquals("Future Event 1", result[0].title)
+        }
+
+    @Test
+    fun getPastEvents_whenCalled_thenReturnsMockPastEvents() =
+        runTest {
+            // When
+            val result = mockApi.getPastEvents()
+
+            // Then
+            assertNotNull(result)
+            assertEquals(2, result.size)
+            assertEquals("Past Event 1", result[0].title)
+        }
+
+    @Test
+    fun getEvent_whenCalled_thenReturnsMockEvent() =
+        runTest {
+            // When
+            val result = mockApi.getEvent(123L)
+
+            // Then
+            assertNotNull(result)
+            assertEquals(123L, result.id)
+        }
+
+    @Test
+    fun deleteEvent_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.deleteEvent(1L)
+
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
+
+    @Test
+    fun postGoToEvent_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.postGoToEvent(1L)
+
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
+
+    @Test
+    fun deleteGoToEvent_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.deleteGoToEvent(1L)
+
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
+
+    @Test
+    fun getDialogs_whenCalled_thenReturnsMockDialogs() =
+        runTest {
+            // When
+            val result = mockApi.getDialogs()
+
+            // Then
+            assertNotNull(result)
+            assertEquals(3, result.size)
+            assertEquals("Dialog 1", result[0].name)
+        }
+
+    @Test
+    fun getMessages_whenCalled_thenReturnsMockMessages() =
+        runTest {
+            // When
+            val result = mockApi.getMessages(1L)
+
+            // Then
+            assertNotNull(result)
+            assertEquals(2, result.size)
+            assertEquals("Hello!", result[0].message)
+        }
+
+    @Test
+    fun sendMessageTo_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.sendMessageTo(2L, "Hello")
+
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
+
+    @Test
+    fun markAsRead_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // Given
+            val fromUserId = 1L
+
+            // When
+            val result = mockApi.markAsRead(fromUserId)
+
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
+
+    @Test
+    fun deleteDialog_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.deleteDialog(1L)
+
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
+
+    @Test
+    fun getJournals_whenCalled_thenReturnsMockJournals() =
+        runTest {
+            // When
+            val result = mockApi.getJournals(1L)
+
+            // Then
+            assertNotNull(result)
+            assertEquals(3, result.size)
+            assertEquals("Journal 1", result[0].title)
+        }
+
+    @Test
+    fun getJournal_whenCalled_thenReturnsMockJournal() =
+        runTest {
+            // When
+            val result = mockApi.getJournal(1L, 123L)
+
+            // Then
+            assertNotNull(result)
+            assertEquals(123L, result.id)
+        }
+
+    @Test
+    fun editJournalSettings_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result =
+                mockApi.editJournalSettings(
+                    userId = 1L,
+                    journalId = 123L,
+                    title = "New Title",
+                    viewAccess = "0",
+                    commentAccess = "0"
+                )
+
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
+
+    @Test
+    fun createJournal_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.createJournal(1L, "New Journal")
+
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
+
+    @Test
+    fun getJournalEntries_whenCalled_thenReturnsMockEntries() =
+        runTest {
+            // When
+            val result = mockApi.getJournalEntries(1L, 123L)
+
+            // Then
+            assertNotNull(result)
+            assertEquals(3, result.size)
+            assertEquals("Entry 1", result[0].message)
+        }
+
+    @Test
+    fun saveJournalEntry_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.saveJournalEntry(1L, 123L, "New entry")
+
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
+
+    @Test
+    fun editJournalEntry_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.editJournalEntry(1L, 123L, 456L, "Updated entry")
+
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
+
+    @Test
+    fun deleteJournalEntry_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.deleteJournalEntry(1L, 123L, 456L)
+
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
+
+    @Test
+    fun deleteJournal_whenCalled_thenReturnsSuccessResponse() =
+        runTest {
+            // When
+            val result = mockApi.deleteJournal(1L, 123L)
+
+            // Then
+            assertTrue(result.isSuccessful)
+            assertEquals(200, result.code())
+        }
 }

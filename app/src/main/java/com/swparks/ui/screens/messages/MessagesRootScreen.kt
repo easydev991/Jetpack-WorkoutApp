@@ -64,9 +64,13 @@ import com.swparks.util.parseHtmlOrNull
 
 sealed class MessagesNavigationAction {
     object ShowLoginSheet : MessagesNavigationAction()
+
     object ShowRegisterSheet : MessagesNavigationAction()
+
     object NavigateToFriends : MessagesNavigationAction()
+
     object NavigateToSearchUsers : MessagesNavigationAction()
+
     data class NavigateToChat(
         val dialogId: Long,
         val userId: Int,
@@ -105,7 +109,9 @@ data class DialogsStateParams(
 
 sealed class DialogsAction {
     object NavigateToFriends : DialogsAction()
+
     object NavigateToSearchUsers : DialogsAction()
+
     data class NavigateToChat(
         val dialogId: Long,
         val userId: Int,
@@ -134,33 +140,37 @@ fun MessagesRootScreen(
         LoadingOverlayView(modifier = modifier.fillMaxSize())
     } else if (!appState.isAuthorized) {
         IncognitoProfileView(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(
-                    start = dimensionResource(R.dimen.spacing_regular),
-                    end = dimensionResource(R.dimen.spacing_regular)
-                ),
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = dimensionResource(R.dimen.spacing_regular),
+                        end = dimensionResource(R.dimen.spacing_regular)
+                    ),
             onClickAuth = { onAction(MessagesNavigationAction.ShowLoginSheet) },
             onClickRegister = { onAction(MessagesNavigationAction.ShowRegisterSheet) }
         )
     } else {
-        val params = createDialogsContentParams(
-            uiState = uiState,
-            loadingState = DialogsLoadingState(
-                isRefreshing = isRefreshing,
-                isUpdating = isUpdating,
-                syncError = syncError
-            ),
-            currentUser = appState.currentUser,
-            viewModel = viewModel,
-            callbacks = DialogsCallbacks(
-                onAction = onAction,
-                onDeleteClick = { dialog ->
-                    dialogToDelete = dialog
-                    showDeleteDialog = true
-                }
+        val params =
+            createDialogsContentParams(
+                uiState = uiState,
+                loadingState =
+                    DialogsLoadingState(
+                        isRefreshing = isRefreshing,
+                        isUpdating = isUpdating,
+                        syncError = syncError
+                    ),
+                currentUser = appState.currentUser,
+                viewModel = viewModel,
+                callbacks =
+                    DialogsCallbacks(
+                        onAction = onAction,
+                        onDeleteClick = { dialog ->
+                            dialogToDelete = dialog
+                            showDeleteDialog = true
+                        }
+                    )
             )
-        )
         DialogsContent(modifier = modifier, params = params)
     }
 
@@ -180,7 +190,6 @@ fun MessagesRootScreen(
     }
 }
 
-
 internal data class DialogsLoadingState(
     val isRefreshing: Boolean,
     val isUpdating: Boolean,
@@ -198,8 +207,8 @@ internal fun createDialogsContentParams(
     currentUser: com.swparks.data.model.User?,
     viewModel: IDialogsViewModel,
     callbacks: DialogsCallbacks
-): DialogsContentParams {
-    return DialogsContentParams(
+): DialogsContentParams =
+    DialogsContentParams(
         uiState = uiState,
         isRefreshing = loadingState.isRefreshing,
         isUpdating = loadingState.isUpdating,
@@ -225,7 +234,6 @@ internal fun createDialogsContentParams(
         onNavigateToFriends = { callbacks.onAction(MessagesNavigationAction.NavigateToFriends) },
         onNavigateToSearchUsers = { callbacks.onAction(MessagesNavigationAction.NavigateToSearchUsers) }
     )
-}
 
 @Composable
 private fun DeleteDialogConfirmation(
@@ -240,9 +248,10 @@ private fun DeleteDialogConfirmation(
             text = { Text(stringResource(R.string.delete_dialog_message)) },
             confirmButton = {
                 TextButton(
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    ),
+                    colors =
+                        ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
                     onClick = onConfirm
                 ) {
                     Text(stringResource(R.string.delete))
@@ -253,10 +262,11 @@ private fun DeleteDialogConfirmation(
                     Text(stringResource(R.string.cancel))
                 }
             },
-            properties = DialogProperties(
-                dismissOnBackPress = true,
-                dismissOnClickOutside = true
-            )
+            properties =
+                DialogProperties(
+                    dismissOnBackPress = true,
+                    dismissOnClickOutside = true
+                )
         )
     }
 }
@@ -274,23 +284,25 @@ fun DialogsContent(
 
     Box(modifier = modifier.fillMaxSize()) {
         DialogsStateContent(
-            params = DialogsStateParams(
-                uiState = params.uiState,
-                isRefreshing = params.isRefreshing,
-                isUpdating = params.isUpdating,
-                currentUser = params.currentUser,
-                onRefresh = params.onRefresh,
-                onDialogClick = params.onDialogClick,
-                onLongClick = { dialog, localOffset, itemPosition ->
-                    contextMenuItem = dialog
-                    menuOffset = with(density) {
-                        DpOffset(
-                            (itemPosition.x + localOffset.x).toDp(),
-                            (itemPosition.y + localOffset.y).toDp()
-                        )
+            params =
+                DialogsStateParams(
+                    uiState = params.uiState,
+                    isRefreshing = params.isRefreshing,
+                    isUpdating = params.isUpdating,
+                    currentUser = params.currentUser,
+                    onRefresh = params.onRefresh,
+                    onDialogClick = params.onDialogClick,
+                    onLongClick = { dialog, localOffset, itemPosition ->
+                        contextMenuItem = dialog
+                        menuOffset =
+                            with(density) {
+                                DpOffset(
+                                    (itemPosition.x + localOffset.x).toDp(),
+                                    (itemPosition.y + localOffset.y).toDp()
+                                )
+                            }
                     }
-                }
-            ),
+                ),
             onNavigateToFriends = params.onNavigateToFriends,
             onNavigateToSearchUsers = params.onNavigateToSearchUsers
         )
@@ -300,12 +312,12 @@ fun DialogsContent(
             modifier = Modifier.align(Alignment.BottomCenter)
         )
 
-        val hasFriends = (params.uiState as? DialogsUiState.Success)
-            ?.dialogs?.isNotEmpty() == true && params.currentUser?.hasFriends == true
-        if (hasFriends) {
+        val dialogsLoaded =
+            (params.uiState as? DialogsUiState.Success)?.dialogs?.isNotEmpty() == true
+        if (dialogsLoaded) {
             NewDialogFab(
                 enabled = !params.isRefreshing,
-                hasFriends = true,
+                hasFriends = params.currentUser?.hasFriends == true,
                 onNavigateToFriends = params.onNavigateToFriends,
                 onNavigateToSearchUsers = params.onNavigateToSearchUsers
             )
@@ -335,7 +347,6 @@ fun DialogsContent(
     )
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DialogsStateContent(
@@ -363,17 +374,19 @@ private fun DialogsStateContent(
                     PullToRefreshDefaults.Indicator(
                         state = pullRefreshState,
                         isRefreshing = isRefreshing,
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .padding(top = dimensionResource(R.dimen.spacing_regular))
+                        modifier =
+                            Modifier
+                                .align(Alignment.TopCenter)
+                                .padding(top = dimensionResource(R.dimen.spacing_regular))
                     )
                 }
             ) {
                 if (uiState.dialogs.isEmpty()) {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState()),
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState()),
                         contentAlignment = Alignment.Center
                     ) {
                         EmptyStateViewForDialogs(
@@ -479,16 +492,18 @@ private fun EmptyStateViewForDialogs(
 
     EmptyStateView(
         text = stringResource(R.string.dialogs_empty),
-        buttonTitle = if (hasFriends) {
-            stringResource(R.string.dialogs_open_friends)
-        } else {
-            stringResource(R.string.dialogs_find_user)
-        },
-        onButtonClick = if (hasFriends) {
-            onNavigateToFriends
-        } else {
-            onNavigateToSearchUsers
-        }
+        buttonTitle =
+            if (hasFriends) {
+                stringResource(R.string.dialogs_open_friends)
+            } else {
+                stringResource(R.string.dialogs_find_user)
+            },
+        onButtonClick =
+            if (hasFriends) {
+                onNavigateToFriends
+            } else {
+                onNavigateToSearchUsers
+            }
     )
 }
 
@@ -502,36 +517,40 @@ fun DialogsList(
     val context = LocalContext.current
 
     LazyColumn(
-        contentPadding = PaddingValues(
-            start = dimensionResource(R.dimen.spacing_regular),
-            end = dimensionResource(R.dimen.spacing_regular),
-            top = dimensionResource(R.dimen.spacing_small),
-            bottom = dimensionResource(R.dimen.spacing_regular)
-        ),
+        contentPadding =
+            PaddingValues(
+                start = dimensionResource(R.dimen.spacing_regular),
+                end = dimensionResource(R.dimen.spacing_regular),
+                top = dimensionResource(R.dimen.spacing_small),
+                bottom = dimensionResource(R.dimen.spacing_regular)
+            ),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
     ) {
         items(dialogs) { dialog ->
             // Форматируем дату в читаемый вид
-            val formattedDate = DateFormatter.formatDate(
-                context = context,
-                dateString = dialog.lastMessageDate,
-                showTimeInThisYear = true
-            )
+            val formattedDate =
+                DateFormatter.formatDate(
+                    context = context,
+                    dateString = dialog.lastMessageDate,
+                    showTimeInThisYear = true
+                )
 
             DialogRowView(
-                data = DialogRowData(
-                    imageStringURL = dialog.image,
-                    // Fallback для пустого имени - показываем "Пользователь"
-                    authorName = dialog.name?.takeIf { it.isNotBlank() }
-                        ?: stringResource(R.string.default_user_name),
-                    dateString = formattedDate,
-                    bodyText = dialog.lastMessageText.parseHtmlOrNull(compactMode = true) ?: "",
-                    unreadCount = dialog.unreadCount,
-                    enabled = !isRefreshing,
-                    onLongClick = { localOffset, itemPosition ->
-                        onLongClick(dialog, localOffset, itemPosition)
-                    }
-                ),
+                data =
+                    DialogRowData(
+                        imageStringURL = dialog.image,
+                        // Fallback для пустого имени - показываем "Пользователь"
+                        authorName =
+                            dialog.name?.takeIf { it.isNotBlank() }
+                                ?: stringResource(R.string.default_user_name),
+                        dateString = formattedDate,
+                        bodyText = dialog.lastMessageText.parseHtmlOrNull(compactMode = true) ?: "",
+                        unreadCount = dialog.unreadCount,
+                        enabled = !isRefreshing,
+                        onLongClick = { localOffset, itemPosition ->
+                            onLongClick(dialog, localOffset, itemPosition)
+                        }
+                    ),
                 onClick = {
                     onDialogClick(dialog)
                 }
@@ -557,13 +576,14 @@ private fun BoxScope.NewDialogFab(
                 }
             }
         },
-        modifier = Modifier
-            .align(Alignment.BottomEnd)
-            .padding(
-                end = dimensionResource(R.dimen.spacing_regular),
-                bottom = dimensionResource(R.dimen.spacing_regular)
-            )
-            .testTag("NewDialogFAB")
+        modifier =
+            Modifier
+                .align(Alignment.BottomEnd)
+                .padding(
+                    end = dimensionResource(R.dimen.spacing_regular),
+                    bottom = dimensionResource(R.dimen.spacing_regular)
+                )
+                .testTag("NewDialogFAB")
     ) {
         Icon(
             imageVector = Icons.Filled.Add,

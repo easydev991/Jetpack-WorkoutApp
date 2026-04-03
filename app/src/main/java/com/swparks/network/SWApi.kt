@@ -50,7 +50,9 @@ interface SWApi {
     // Сброс пароля
     @FormUrlEncoded
     @POST("auth/reset")
-    suspend fun resetPassword(@Field("username_or_email") usernameOrEmail: String): LoginSuccess
+    suspend fun resetPassword(
+        @Field("username_or_email") usernameOrEmail: String
+    ): LoginSuccess
 
     // Смена пароля
     @FormUrlEncoded
@@ -62,7 +64,9 @@ interface SWApi {
 
     // Получить профиль пользователя
     @GET("users/{userId}")
-    suspend fun getUser(@Path("userId") userId: Long): User
+    suspend fun getUser(
+        @Path("userId") userId: Long
+    ): User
 
     // Изменить данные пользователя
     @POST("users/{userId}")
@@ -88,7 +92,9 @@ interface SWApi {
 
     // Получить список друзей пользователя
     @GET("users/{userId}/friends")
-    suspend fun getFriendsForUser(@Path("userId") userId: Long): List<User>
+    suspend fun getFriendsForUser(
+        @Path("userId") userId: Long
+    ): List<User>
 
     // Получить список заявок на добавление в друзья
     @GET("friends/requests")
@@ -96,19 +102,27 @@ interface SWApi {
 
     // Принять заявку на добавление в друзья
     @POST("friends/{userId}/accept")
-    suspend fun acceptFriendRequest(@Path("userId") userId: Long): Response<Unit>
+    suspend fun acceptFriendRequest(
+        @Path("userId") userId: Long
+    ): Response<Unit>
 
     // Отклонить заявку на добавление в друзья
     @DELETE("friends/{userId}/accept")
-    suspend fun declineFriendRequest(@Path("userId") userId: Long): Response<Unit>
+    suspend fun declineFriendRequest(
+        @Path("userId") userId: Long
+    ): Response<Unit>
 
     // Отправить запрос на добавление в друзья
     @POST("friends/{userId}")
-    suspend fun sendFriendRequest(@Path("userId") userId: Long): Response<Unit>
+    suspend fun sendFriendRequest(
+        @Path("userId") userId: Long
+    ): Response<Unit>
 
     // Удалить пользователя из списка друзей
     @DELETE("friends/{userId}")
-    suspend fun deleteFriend(@Path("userId") friendId: Long): Response<Unit>
+    suspend fun deleteFriend(
+        @Path("userId") friendId: Long
+    ): Response<Unit>
 
     // Получить черный список пользователей
     @GET("blacklist")
@@ -116,15 +130,21 @@ interface SWApi {
 
     // Добавить пользователя в черный список
     @POST("blacklist/{userId}")
-    suspend fun addToBlacklist(@Path("userId") userId: Long): Response<Unit>
+    suspend fun addToBlacklist(
+        @Path("userId") userId: Long
+    ): Response<Unit>
 
     // Удалить пользователя из черного списка
     @DELETE("blacklist/{userId}")
-    suspend fun deleteFromBlacklist(@Path("userId") userId: Long): Response<Unit>
+    suspend fun deleteFromBlacklist(
+        @Path("userId") userId: Long
+    ): Response<Unit>
 
     // Найти пользователей по логину
     @GET("users/search")
-    suspend fun findUsers(@Query("name") name: String): List<User>
+    suspend fun findUsers(
+        @Query("name") name: String
+    ): List<User>
 
     // ==================== СТРАНЫ И ГОРОДА ====================
 
@@ -136,15 +156,21 @@ interface SWApi {
 
     // Получить список всех площадок (краткий)
     @GET("areas")
-    suspend fun getAllParks(@Query("fields") fields: String = "short"): List<Park>
+    suspend fun getAllParks(
+        @Query("fields") fields: String = "short"
+    ): List<Park>
 
     // Получить список площадок, обновленных после указанной даты
     @GET("areas/last/{date}")
-    suspend fun getUpdatedParks(@Path("date") date: String): List<Park>
+    suspend fun getUpdatedParks(
+        @Path("date") date: String
+    ): List<Park>
 
     // Получить выбранную площадку
     @GET("areas/{parkId}")
-    suspend fun getPark(@Path("parkId") parkId: Long): Park
+    suspend fun getPark(
+        @Path("parkId") parkId: Long
+    ): Park
 
     // Добавить новую площадку
     @POST("areas")
@@ -177,19 +203,27 @@ interface SWApi {
 
     // Удалить площадку
     @DELETE("areas/{parkId}")
-    suspend fun deletePark(@Path("parkId") parkId: Long): Response<Unit>
+    suspend fun deletePark(
+        @Path("parkId") parkId: Long
+    ): Response<Unit>
 
     // Получить список площадок, где тренируется пользователь
     @GET("users/{userId}/areas")
-    suspend fun getParksForUser(@Path("userId") userId: Long): List<Park>
+    suspend fun getParksForUser(
+        @Path("userId") userId: Long
+    ): List<Park>
 
     // Сообщить, что пользователь тренируется на площадке
     @POST("areas/{parkId}/train")
-    suspend fun postTrainHere(@Path("parkId") parkId: Long): Response<Unit>
+    suspend fun postTrainHere(
+        @Path("parkId") parkId: Long
+    ): Response<Unit>
 
     // Сообщить, что пользователь не тренируется на площадке
     @DELETE("areas/{parkId}/train")
-    suspend fun deleteTrainHere(@Path("parkId") parkId: Long): Response<Unit>
+    suspend fun deleteTrainHere(
+        @Path("parkId") parkId: Long
+    ): Response<Unit>
 
     // Добавить комментарий для площадки
     @FormUrlEncoded
@@ -234,7 +268,9 @@ interface SWApi {
 
     // Получить всю информацию о мероприятии
     @GET("trainings/{eventId}")
-    suspend fun getEvent(@Path("eventId") eventId: Long): Event
+    suspend fun getEvent(
+        @Path("eventId") eventId: Long
+    ): Event
 
     // Создать новое мероприятие
     @POST("trainings")
@@ -262,11 +298,15 @@ interface SWApi {
 
     // Сообщить, что пользователь пойдет на мероприятие
     @POST("trainings/{eventId}/go")
-    suspend fun postGoToEvent(@Path("eventId") eventId: Long): Response<Unit>
+    suspend fun postGoToEvent(
+        @Path("eventId") eventId: Long
+    ): Response<Unit>
 
     // Сообщить, что пользователь не пойдет на мероприятие
     @DELETE("trainings/{eventId}/go")
-    suspend fun deleteGoToEvent(@Path("eventId") eventId: Long): Response<Unit>
+    suspend fun deleteGoToEvent(
+        @Path("eventId") eventId: Long
+    ): Response<Unit>
 
     // Добавить комментарий для мероприятия
     @FormUrlEncoded
@@ -294,7 +334,9 @@ interface SWApi {
 
     // Удалить мероприятие
     @DELETE("trainings/{eventId}")
-    suspend fun deleteEvent(@Path("eventId") eventId: Long): Response<Unit>
+    suspend fun deleteEvent(
+        @Path("eventId") eventId: Long
+    ): Response<Unit>
 
     // Удалить фото мероприятия
     @DELETE("trainings/{eventId}/photos/{photoId}")
@@ -311,7 +353,9 @@ interface SWApi {
 
     // Получить сообщения в диалоге
     @GET("dialogs/{dialogId}/messages")
-    suspend fun getMessages(@Path("dialogId") dialogId: Long): List<MessageResponse>
+    suspend fun getMessages(
+        @Path("dialogId") dialogId: Long
+    ): List<MessageResponse>
 
     // Отправить сообщение пользователю
     @FormUrlEncoded
@@ -324,17 +368,23 @@ interface SWApi {
     // Отметить сообщения как прочитанные
     @FormUrlEncoded
     @POST("messages/mark_as_read")
-    suspend fun markAsRead(@Field("from_user_id") fromUserId: Long): Response<Unit>
+    suspend fun markAsRead(
+        @Field("from_user_id") fromUserId: Long
+    ): Response<Unit>
 
     // Удалить выбранный диалог
     @DELETE("dialogs/{dialogId}")
-    suspend fun deleteDialog(@Path("dialogId") dialogId: Long): Response<Unit>
+    suspend fun deleteDialog(
+        @Path("dialogId") dialogId: Long
+    ): Response<Unit>
 
     // ==================== ДНЕВНИКИ ====================
 
     // Получить список дневников пользователя
     @GET("users/{userId}/journals")
-    suspend fun getJournals(@Path("userId") userId: Long): List<JournalResponse>
+    suspend fun getJournals(
+        @Path("userId") userId: Long
+    ): List<JournalResponse>
 
     // Получить дневник пользователя
     @GET("users/{userId}/journals/{journalId}")

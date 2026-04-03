@@ -12,12 +12,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class EventFormViewModelFactoryTest {
-
     @Test
     fun create_whenExpectedModelClass_thenReturnsEventFormViewModel() {
-        val appContainer = mockk<AppContainer>(relaxed = true) {
-            every { eventFormViewModelFactory(any()) } returns mockk<EventFormViewModel>(relaxed = true)
-        }
+        val appContainer =
+            mockk<AppContainer>(relaxed = true) {
+                every { eventFormViewModelFactory(any()) } returns mockk<EventFormViewModel>(relaxed = true)
+            }
         val mode = EventFormMode.RegularCreate
         val factory = EventFormViewModel.factory(mode, appContainer)
 
@@ -29,15 +29,17 @@ class EventFormViewModelFactoryTest {
 
     @Test
     fun create_whenUnexpectedModelClass_thenThrowsIllegalArgumentException() {
-        val appContainer = mockk<AppContainer>(relaxed = true) {
-            every { eventFormViewModelFactory(any()) } returns mockk<EventFormViewModel>(relaxed = true)
-        }
+        val appContainer =
+            mockk<AppContainer>(relaxed = true) {
+                every { eventFormViewModelFactory(any()) } returns mockk<EventFormViewModel>(relaxed = true)
+            }
         val mode = EventFormMode.RegularCreate
         val factory = EventFormViewModel.factory(mode, appContainer)
 
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            factory.create(UnexpectedViewModel::class.java)
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                factory.create(UnexpectedViewModel::class.java)
+            }
 
         val message = exception.message.orEmpty()
         assertTrue(message.contains("Неизвестный класс ViewModel"))

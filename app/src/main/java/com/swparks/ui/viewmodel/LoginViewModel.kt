@@ -38,30 +38,30 @@ class LoginViewModel(
     private val logger: Logger,
     private val loginUseCase: ILoginUseCase,
     private val resetPasswordUseCase: IResetPasswordUseCase
-) : ViewModel(), ILoginViewModel {
-
+) : ViewModel(),
+    ILoginViewModel {
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     override val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    private val _loginError = MutableStateFlow<String?>(null)
-    override val loginErrorState: StateFlow<String?> = _loginError.asStateFlow()
+    private val _loginErrorState = MutableStateFlow<String?>(null)
+    override val loginErrorState: StateFlow<String?> = _loginErrorState.asStateFlow()
 
-
-    private val _resetError = MutableStateFlow<String?>(null)
-    override val resetErrorState: StateFlow<String?> = _resetError.asStateFlow()
+    private val _resetErrorState = MutableStateFlow<String?>(null)
+    override val resetErrorState: StateFlow<String?> = _resetErrorState.asStateFlow()
 
     // Добавляем канал для одноразовых событий
-    private val _loginEvents = Channel<LoginEvent>(Channel.BUFFERED)
-    override val loginEvents = _loginEvents.receiveAsFlow()
+    private val loginEventsChannel = Channel<LoginEvent>(Channel.BUFFERED)
+    override val loginEvents = loginEventsChannel.receiveAsFlow()
 
-    private val _login = mutableStateOf("")
-    private val _password = mutableStateOf("")
+    private val loginState = mutableStateOf("")
+    private val passwordState = mutableStateOf("")
 
     override val credentials: LoginCredentials
-        get() = LoginCredentials(
-            login = _login.value,
-            password = _password.value
-        )
+        get() =
+            LoginCredentials(
+                login = loginState.value,
+                password = passwordState.value
+            )
 
     /**
      * Обновляет логин пользователя.
@@ -70,7 +70,7 @@ class LoginViewModel(
      * @param value Новый логин пользователя
      */
     override fun onLoginChange(value: String) {
-        _login.value = value
+        loginState.value = value
         clearErrors()
     }
 
@@ -81,7 +81,7 @@ class LoginViewModel(
      * @param value Новый пароль пользователя
      */
     override fun onPasswordChange(value: String) {
-        _password.value = value
+        passwordState.value = value
         clearErrors()
     }
 
@@ -102,15 +102,14 @@ class LoginViewModel(
             loginUseCase(credentials)
                 .onSuccess { result ->
                     // ОТПРАВЛЯЕМ СОБЫТИЕ и сбрасываем UI в Idle
-                    _loginEvents.send(LoginEvent.Success(userId = result.userId))
+                    loginEventsChannel.send(LoginEvent.Success(userId = result.userId))
 
                     _uiState.value = LoginUiState.Idle
-                    _loginError.value = null
-                }
-                .onFailure { exception ->
+                    _loginErrorState.value = null
+                }.onFailure { exception ->
                     val errorMessage = exception.message ?: "Неизвестная ошибка авторизации"
                     _uiState.value = LoginUiState.LoginError(errorMessage, exception)
-                    _loginError.value = errorMessage
+                    _loginErrorState.value = errorMessage
 
                     // Не отправляем в userNotifier - ошибка отображается под полем пароля
                 }
@@ -136,16 +135,15 @@ class LoginViewModel(
             resetPasswordUseCase(credentials.login)
                 .onSuccess {
                     // ОТПРАВЛЯЕМ СОБЫТИЕ и сбрасываем UI в Idle
-                    _loginEvents.send(LoginEvent.ResetSuccess(email = credentials.login))
+                    loginEventsChannel.send(LoginEvent.ResetSuccess(email = credentials.login))
 
                     _uiState.value = LoginUiState.Idle
-                    _resetError.value = null
-                }
-                .onFailure { exception ->
+                    _resetErrorState.value = null
+                }.onFailure { exception ->
                     val errorMessage =
                         exception.message ?: "Неизвестная ошибка восстановления пароля"
                     _uiState.value = LoginUiState.ResetError(errorMessage, exception)
-                    _resetError.value = errorMessage
+                    _resetErrorState.value = errorMessage
 
                     // Не отправляем в userNotifier - ошибка отображается под полем логина
                 }
@@ -157,8 +155,8 @@ class LoginViewModel(
      * Возвращает состояние UI в Idle.
      */
     override fun clearErrors() {
-        _loginError.value = null
-        _resetError.value = null
+        _loginErrorState.value = null
+        _resetErrorState.value = null
     }
 
     /**
@@ -173,8 +171,8 @@ class LoginViewModel(
      */
     override fun resetForNewSession() {
         // Сбросить учетные данные
-        _login.value = ""
-        _password.value = ""
+        loginState.value = ""
+        passwordState.value = ""
 
         // Сбросить состояние UI в Idle
         _uiState.value = LoginUiState.Idle
@@ -184,17 +182,18 @@ class LoginViewModel(
     }
 
     companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val application =
-                    this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as
-                        JetpackWorkoutApplication
-                LoginViewModel(
-                    logger = application.container.logger,
-                    loginUseCase = application.container.loginUseCase,
-                    resetPasswordUseCase = application.container.resetPasswordUseCase
-                )
+        val Factory: ViewModelProvider.Factory =
+            viewModelFactory {
+                initializer {
+                    val application =
+                        this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as
+                            JetpackWorkoutApplication
+                    LoginViewModel(
+                        logger = application.container.logger,
+                        loginUseCase = application.container.loginUseCase,
+                        resetPasswordUseCase = application.container.resetPasswordUseCase
+                    )
+                }
             }
-        }
     }
 }

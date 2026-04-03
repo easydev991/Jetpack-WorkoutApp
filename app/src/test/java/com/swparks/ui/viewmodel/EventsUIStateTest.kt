@@ -9,9 +9,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class EventsUIStateTest {
-
-    private fun createTestEvent(id: Long = 1L): Event {
-        return Event(
+    private fun createTestEvent(id: Long = 1L): Event =
+        Event(
             id = id,
             title = "Test Event $id",
             description = "Test Description",
@@ -26,20 +25,21 @@ class EventsUIStateTest {
             author = User(id = 1L, name = "testuser", image = ""),
             name = "Test Event $id"
         )
-    }
 
     @Test
     fun Content_withAddresses_shouldStoreThem() {
-        val addresses = mapOf(
-            (1 to 1) to "Россия, Москва",
-            (2 to 3) to "США, Нью-Йорк"
-        )
+        val addresses =
+            mapOf(
+                (1 to 1) to "Россия, Москва",
+                (2 to 3) to "США, Нью-Йорк"
+            )
 
-        val state = EventsUIState.Content(
-            events = listOf(createTestEvent()),
-            selectedTab = EventKind.FUTURE,
-            addresses = addresses
-        )
+        val state =
+            EventsUIState.Content(
+                events = listOf(createTestEvent()),
+                selectedTab = EventKind.FUTURE,
+                addresses = addresses
+            )
 
         assertEquals(addresses, state.addresses)
         assertEquals("Россия, Москва", state.addresses[1 to 1])
@@ -48,24 +48,27 @@ class EventsUIStateTest {
 
     @Test
     fun Content_defaultAddresses_shouldBeEmpty() {
-        val state = EventsUIState.Content(
-            events = listOf(createTestEvent()),
-            selectedTab = EventKind.FUTURE
-        )
+        val state =
+            EventsUIState.Content(
+                events = listOf(createTestEvent()),
+                selectedTab = EventKind.FUTURE
+            )
 
         assertTrue(state.addresses.isEmpty())
     }
 
     @Test
     fun Error_withAddresses_shouldStoreThem() {
-        val addresses = mapOf(
-            (1 to 1) to "Россия, Москва"
-        )
+        val addresses =
+            mapOf(
+                (1 to 1) to "Россия, Москва"
+            )
 
-        val state = EventsUIState.Error(
-            message = "Ошибка загрузки",
-            addresses = addresses
-        )
+        val state =
+            EventsUIState.Error(
+                message = "Ошибка загрузки",
+                addresses = addresses
+            )
 
         assertEquals(addresses, state.addresses)
         assertEquals("Россия, Москва", state.addresses[1 to 1])

@@ -19,7 +19,6 @@ import java.io.IOException
  * Тесты для UriUtils.
  */
 class UriUtilsTest {
-
     private lateinit var context: Context
     private lateinit var contentResolver: ContentResolver
 

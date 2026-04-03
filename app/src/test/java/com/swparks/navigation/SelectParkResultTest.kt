@@ -16,7 +16,6 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P])
 class SelectParkResultTest {
-
     private lateinit var savedStateHandle: SavedStateHandle
 
     @Before
@@ -94,11 +93,8 @@ class SelectParkResultTest {
         assertNull(secondResult)
     }
 
-    private fun createNavBackStackEntry(
-        savedStateHandle: SavedStateHandle
-    ): androidx.navigation.NavBackStackEntry {
-        return mockk {
+    private fun createNavBackStackEntry(savedStateHandle: SavedStateHandle): androidx.navigation.NavBackStackEntry =
+        mockk {
             every { this@mockk.savedStateHandle } returns savedStateHandle
         }
-    }
 }

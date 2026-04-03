@@ -24,7 +24,6 @@ import java.util.Locale
  * @see FlexibleDateSerializer для сериализации
  */
 object FlexibleDateDeserializer : KSerializer<String> {
-
     private const val MONTH_MIN = 1
     private const val MONTH_MAX = 12
     private const val DAY_MIN = 1
@@ -143,7 +142,6 @@ object FlexibleDateDeserializer : KSerializer<String> {
             val minuteInt = groups.getOrNull(GROUP_INDEX_MINUTE)?.toIntOrNull() ?: MINUTE_MIN
             val secondInt = groups.getOrNull(GROUP_INDEX_SECOND)?.toIntOrNull() ?: SECOND_MIN
 
-
             validateMonthRange(monthInt)
             validateDayRange(dayInt)
             validateHourRange(hourInt)
@@ -236,7 +234,10 @@ object FlexibleDateDeserializer : KSerializer<String> {
      * @param encoder Энкодер kotlinx.serialization
      * @param value Строка даты
      */
-    override fun serialize(encoder: Encoder, value: String) {
+    override fun serialize(
+        encoder: Encoder,
+        value: String
+    ) {
         encoder.encodeString(value)
     }
 }

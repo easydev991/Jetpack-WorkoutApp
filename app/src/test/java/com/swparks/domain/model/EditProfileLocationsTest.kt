@@ -10,7 +10,6 @@ import org.junit.Test
  * Аналог iOS: EditProfileLocationsTests.swift (11 тестов)
  */
 class EditProfileLocationsTest {
-
     // MARK: - isEmpty tests
 
     @Test
@@ -144,41 +143,62 @@ class EditProfileLocationsTest {
     // MARK: - Helper methods
 
     private fun makeLocations(countries: List<Country>? = null): EditProfileLocations {
-        val defaultCountries = listOf(
-            makeCountry(
-                id = "1",
-                name = "Россия",
-                cities = listOf(
-                    makeCity(id = "1", name = "Москва", lat = "55.75", lon = "37.61"),
-                    makeCity(id = "2", name = "Санкт-Петербург", lat = "59.93", lon = "30.33")
-                )
-            ),
-            makeCountry(
-                id = "2",
-                name = "США",
-                cities = listOf(
-                    makeCity(id = "3", name = "Нью-Йорк", lat = "40.71", lon = "-74.00"),
-                    makeCity(id = "4", name = "Лос-Анджелес", lat = "34.05", lon = "-118.24")
-                )
-            ),
-            makeCountry(
-                id = "3",
-                name = "Франция",
-                cities = listOf(
-                    makeCity(id = "5", name = "Париж", lat = "48.85", lon = "2.35"),
-                    makeCity(id = "6", name = "Лион", lat = "45.75", lon = "4.85")
+        val defaultCountries =
+            listOf(
+                makeCountry(
+                    id = "1",
+                    name = "Россия",
+                    cities =
+                        listOf(
+                            makeCity(id = "1", name = "Москва", lat = "55.75", lon = "37.61"),
+                            makeCity(
+                                id = "2",
+                                name = "Санкт-Петербург",
+                                lat = "59.93",
+                                lon = "30.33"
+                            )
+                        )
+                ),
+                makeCountry(
+                    id = "2",
+                    name = "США",
+                    cities =
+                        listOf(
+                            makeCity(id = "3", name = "Нью-Йорк", lat = "40.71", lon = "-74.00"),
+                            makeCity(
+                                id = "4",
+                                name = "Лос-Анджелес",
+                                lat = "34.05",
+                                lon = "-118.24"
+                            )
+                        )
+                ),
+                makeCountry(
+                    id = "3",
+                    name = "Франция",
+                    cities =
+                        listOf(
+                            makeCity(id = "5", name = "Париж", lat = "48.85", lon = "2.35"),
+                            makeCity(id = "6", name = "Лион", lat = "45.75", lon = "4.85")
+                        )
                 )
             )
-        )
 
         return EditProfileLocations.fromCountries(countries ?: defaultCountries)
     }
 
-    private fun makeCountry(id: String, name: String, cities: List<City> = emptyList()): Country =
-        Country(id = id, name = name, cities = cities)
+    private fun makeCountry(
+        id: String,
+        name: String,
+        cities: List<City> = emptyList()
+    ): Country = Country(id = id, name = name, cities = cities)
 
-    private fun makeCity(id: String, name: String, lat: String, lon: String): City =
-        City(id = id, name = name, lat = lat, lon = lon)
+    private fun makeCity(
+        id: String,
+        name: String,
+        lat: String,
+        lon: String
+    ): City = City(id = id, name = name, lat = lat, lon = lon)
 
     // MARK: - Helper Assertions
 
@@ -200,19 +220,28 @@ class EditProfileLocationsTest {
         }
     }
 
-    private fun assertStringsEqual(actual: String?, expected: String?) {
+    private fun assertStringsEqual(
+        actual: String?,
+        expected: String?
+    ) {
         if (actual != expected) {
             throw AssertionError("Ожидалась строка: $expected\nПолучена строка: $actual")
         }
     }
 
-    private fun assertIntsEqual(actual: Int, expected: Int) {
+    private fun assertIntsEqual(
+        actual: Int,
+        expected: Int
+    ) {
         if (actual != expected) {
             throw AssertionError("Ожидалось число: $expected\nПолучено число: $actual")
         }
     }
 
-    private fun assertCitiesEqual(actual: City?, expected: City?) {
+    private fun assertCitiesEqual(
+        actual: City?,
+        expected: City?
+    ) {
         if (actual != expected) {
             throw AssertionError("Ожидался город: $expected\nПолучен город: $actual")
         }

@@ -15,7 +15,6 @@ import org.junit.Rule
 import org.junit.Test
 
 class AppViewModelNavigationReuseTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -30,10 +29,11 @@ class AppViewModelNavigationReuseTest {
                 startDestination = "screen_a"
             ) {
                 composable("screen_a") {
-                    val viewModel: TestViewModel = appViewModel {
-                        createdCount++
-                        TestViewModel()
-                    }
+                    val viewModel: TestViewModel =
+                        appViewModel {
+                            createdCount++
+                            TestViewModel()
+                        }
 
                     ScreenA(
                         viewModel = viewModel,

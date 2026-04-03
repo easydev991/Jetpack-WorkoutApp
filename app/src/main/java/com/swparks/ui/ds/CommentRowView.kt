@@ -116,16 +116,17 @@ data class CommentRowData(
 @Composable
 fun CommentRowView(data: CommentRowData) {
     var showMenu by remember { mutableStateOf(false) }
-    val menuActions = if (!data.enabled) {
-        emptyList()
-    } else if (data.byMainUser) {
-        listOf(
-            CommentAction.EDIT,
-            CommentAction.DELETE
-        )
-    } else {
-        listOf(CommentAction.REPORT)
-    }
+    val menuActions =
+        if (!data.enabled) {
+            emptyList()
+        } else if (data.byMainUser) {
+            listOf(
+                CommentAction.EDIT,
+                CommentAction.DELETE
+            )
+        } else {
+            listOf(CommentAction.REPORT)
+        }
     Column(
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall)),
         modifier = data.modifier.padding(dimensionResource(R.dimen.spacing_small))
@@ -143,13 +144,14 @@ fun CommentRowView(data: CommentRowData) {
             )
             if (menuActions.isNotEmpty()) {
                 CommentActionsMenu(
-                    config = CommentActionsMenuConfig(
-                        showMenu = showMenu,
-                        menuActions = menuActions,
-                        onMenuDismiss = { showMenu = false },
-                        onMenuShow = { showMenu = true },
-                        onClickAction = data.onClickAction
-                    )
+                    config =
+                        CommentActionsMenuConfig(
+                            showMenu = showMenu,
+                            menuActions = menuActions,
+                            onMenuDismiss = { showMenu = false },
+                            onMenuShow = { showMenu = true },
+                            onClickAction = data.onClickAction
+                        )
                 )
             }
         }
@@ -175,12 +177,13 @@ private fun CommentHeader(
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
     ) {
         SWAsyncImage(
-            config = AsyncImageConfig(
-                imageStringURL = imageStringURL,
-                size = dimensionResource(R.dimen.size_small_plus),
-                contentScale = ContentScale.Crop,
-                shape = CircleShape
-            )
+            config =
+                AsyncImageConfig(
+                    imageStringURL = imageStringURL,
+                    size = dimensionResource(R.dimen.size_small_plus),
+                    contentScale = ContentScale.Crop,
+                    shape = CircleShape
+                )
         )
         Column(
             verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall_plus))
@@ -256,12 +259,13 @@ private fun CommentDropdownMenuItem(
 }
 
 @Composable
-private fun getCommentActionColor(action: CommentAction) = when (action) {
-    CommentAction.DELETE,
-    CommentAction.REPORT -> MaterialTheme.colorScheme.error
+private fun getCommentActionColor(action: CommentAction) =
+    when (action) {
+        CommentAction.DELETE,
+        CommentAction.REPORT -> MaterialTheme.colorScheme.error
 
-    else -> MaterialTheme.colorScheme.onPrimaryContainer
-}
+        else -> MaterialTheme.colorScheme.onPrimaryContainer
+    }
 
 @Preview(
     showBackground = true,
@@ -283,35 +287,40 @@ fun CommentRowViewPreview() {
                     verticalArrangement = Arrangement.Center
                 ) {
                     CommentRowView(
-                        data = CommentRowData(
-                            imageStringURL = "https://workout.su/img/avatar_default.jpg",
-                            authorName = "SomeUser",
-                            dateString = "21 мая 2023",
-                            bodyText = "Лучшая площадка в моей жизни!",
-                            onClickAction = {}
-                        )
+                        data =
+                            CommentRowData(
+                                imageStringURL = "https://workout.su/img/avatar_default.jpg",
+                                authorName = "SomeUser",
+                                dateString = "21 мая 2023",
+                                bodyText = "Лучшая площадка в моей жизни!",
+                                onClickAction = {}
+                            )
                     )
                     HorizontalDivider()
                     CommentRowView(
-                        data = CommentRowData(
-                            imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
-                            authorName = "NineNineOne",
-                            dateString = "21 мая 2023",
-                            bodyText = "Классная площадка, часто тренируюсь здесь с друзьями",
-                            byMainUser = true,
-                            onClickAction = {}
-                        )
+                        data =
+                            CommentRowData(
+                                imageStringURL =
+                                    "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
+                                authorName = "NineNineOne",
+                                dateString = "21 мая 2023",
+                                bodyText =
+                                    "Классная площадка, часто тренируюсь здесь с друзьями",
+                                byMainUser = true,
+                                onClickAction = {}
+                            )
                     )
                     HorizontalDivider()
                     CommentRowView(
-                        data = CommentRowData(
-                            imageStringURL = "https://workout.su/img/avatar_default.jpg",
-                            authorName = "DisabledUser",
-                            dateString = "21 мая 2023",
-                            bodyText = "Комментарий с отключенными действиями",
-                            enabled = false,
-                            onClickAction = {}
-                        )
+                        data =
+                            CommentRowData(
+                                imageStringURL = "https://workout.su/img/avatar_default.jpg",
+                                authorName = "DisabledUser",
+                                dateString = "21 мая 2023",
+                                bodyText = "Комментарий с отключенными действиями",
+                                enabled = false,
+                                onClickAction = {}
+                            )
                     )
                 }
             }

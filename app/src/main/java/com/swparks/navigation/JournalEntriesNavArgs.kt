@@ -13,9 +13,7 @@ internal data class JournalEntriesNavArgs(
     val source: String
 )
 
-internal fun NavBackStackEntry.consumeJournalEntriesArgs(
-    defaultSource: String = "profile"
-): JournalEntriesNavArgs? {
+internal fun NavBackStackEntry.consumeJournalEntriesArgs(defaultSource: String = "profile"): JournalEntriesNavArgs? {
     val journalId = arguments?.getString("journalId")?.toLongOrNull()
     val journalOwnerId = arguments?.getString("userId")?.toLongOrNull()
 

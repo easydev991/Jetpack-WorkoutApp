@@ -18,16 +18,18 @@ fun LocationPermissionAlertDialog(
 ) {
     if (!visible) return
 
-    val messageRes = if (isDeniedForever) {
-        R.string.location_permission_need_in_settings
-    } else {
-        R.string.location_permission_alert_message
-    }
-    val confirmTextRes = if (isDeniedForever) {
-        R.string.open_settings
-    } else {
-        R.string.allow_location_access
-    }
+    val messageRes =
+        if (isDeniedForever) {
+            R.string.location_permission_need_in_settings
+        } else {
+            R.string.location_permission_alert_message
+        }
+    val confirmTextRes =
+        if (isDeniedForever) {
+            R.string.open_settings
+        } else {
+            R.string.allow_location_access
+        }
     val onConfirmClick = if (isDeniedForever) onOpenSettings else onConfirm
 
     AlertDialog(

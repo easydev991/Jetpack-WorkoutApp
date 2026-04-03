@@ -45,7 +45,6 @@ import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ParkDetailViewModelTest {
-
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -79,468 +78,589 @@ class ParkDetailViewModelTest {
     }
 
     @Test
-    fun init_whenParkLoaded_thenUiStateContent() = runTest {
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+    fun init_whenParkLoaded_thenUiStateContent() =
+        runTest {
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
 
-        val viewModel = createViewModel()
-        advanceUntilIdle()
+            val viewModel = createViewModel()
+            advanceUntilIdle()
 
-        val state = viewModel.uiState.value
-        assertTrue(state is ParkDetailUIState.Content)
-        val content = state as ParkDetailUIState.Content
-        assertEquals(TEST_PARK_ID, content.park.id)
-        assertEquals(TEST_PARK_NAME, content.park.name)
-    }
-
-    @Test
-    fun init_whenCacheExists_thenShowsCachedContentBeforeNetworkResult() = runTest {
-        val cachedPark = createPark().copy(name = "Кэш")
-        val freshPark = createPark().copy(name = "Сервер")
-        coEvery { swRepository.getParkFromCache(TEST_PARK_ID) } returns cachedPark
-        coEvery { swRepository.getPark(TEST_PARK_ID) } coAnswers {
-            delay(1_000)
-            Result.success(freshPark)
+            val state = viewModel.uiState.value
+            assertTrue(state is ParkDetailUIState.Content)
+            val content = state as ParkDetailUIState.Content
+            assertEquals(TEST_PARK_ID, content.park.id)
+            assertEquals(TEST_PARK_NAME, content.park.name)
         }
 
-        val viewModel = createViewModel()
-        runCurrent()
-
-        val intermediateState = viewModel.uiState.value
-        assertTrue(intermediateState is ParkDetailUIState.Content)
-        assertEquals("Кэш", (intermediateState as ParkDetailUIState.Content).park.name)
-
-        advanceTimeBy(1_000)
-        advanceUntilIdle()
-
-        val finalState = viewModel.uiState.value
-        assertTrue(finalState is ParkDetailUIState.Content)
-        assertEquals("Сервер", (finalState as ParkDetailUIState.Content).park.name)
-    }
-
     @Test
-    fun init_whenPartialCacheExistsAndNetworkFails_thenKeepsCachedContent() = runTest {
-        val cachedPark = createPark(photos = emptyList()).copy(
-            name = "Частичный кэш",
-            createDate = null,
-            author = null
-        )
-        coEvery { swRepository.getParkFromCache(TEST_PARK_ID) } returns cachedPark
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.failure(IOException("offline"))
+    fun init_whenCacheExists_thenShowsCachedContentBeforeNetworkResult() =
+        runTest {
+            val cachedPark = createPark().copy(name = "Кэш")
+            val freshPark = createPark().copy(name = "Сервер")
+            coEvery { swRepository.getParkFromCache(TEST_PARK_ID) } returns cachedPark
+            coEvery { swRepository.getPark(TEST_PARK_ID) } coAnswers {
+                delay(1_000)
+                Result.success(freshPark)
+            }
 
-        val viewModel = createViewModel()
-        advanceUntilIdle()
+            val viewModel = createViewModel()
+            runCurrent()
 
-        val state = viewModel.uiState.value
-        assertTrue(state is ParkDetailUIState.Content)
-        assertEquals("Частичный кэш", (state as ParkDetailUIState.Content).park.name)
-        verify { userNotifier.handleError(any()) }
-    }
+            val intermediateState = viewModel.uiState.value
+            assertTrue(intermediateState is ParkDetailUIState.Content)
+            assertEquals("Кэш", (intermediateState as ParkDetailUIState.Content).park.name)
 
-    @Test
-    fun init_whenLoadFails_thenUiStateError() = runTest {
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.failure(
-            RuntimeException("Network error")
-        )
+            advanceTimeBy(1_000)
+            advanceUntilIdle()
 
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        val state = viewModel.uiState.value
-        assertTrue(state is ParkDetailUIState.Error)
-    }
-
-    @Test
-    fun refresh_whenCalled_thenReloadsPark() = runTest {
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        viewModel.refresh()
-        advanceUntilIdle()
-
-        coVerify(exactly = 2) { swRepository.getPark(TEST_PARK_ID) }
-        assertTrue(viewModel.uiState.value is ParkDetailUIState.Content)
-    }
-
-    @Test
-    fun refresh_whenContentAlreadyShownAndNetworkFails_thenKeepsCurrentContent() = runTest {
-        val cachedPark = createPark().copy(name = "Кэш")
-        coEvery { swRepository.getParkFromCache(TEST_PARK_ID) } returns cachedPark
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returnsMany listOf(
-            Result.success(createPark().copy(name = "Сервер")),
-            Result.failure(IOException("offline"))
-        )
-
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        viewModel.refresh()
-        advanceUntilIdle()
-
-        val state = viewModel.uiState.value
-        assertTrue(state is ParkDetailUIState.Content)
-        assertEquals("Сервер", (state as ParkDetailUIState.Content).park.name)
-        verify(atLeast = 1) { userNotifier.handleError(any()) }
-    }
-
-    @Test
-    fun onTrainHereToggle_whenSuccess_thenUpdatesTrainHereAndUsers() = runTest {
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(
-            createPark(trainHere = false)
-        )
-        coEvery { swRepository.changeTrainHereStatus(true, TEST_PARK_ID) } returns Result.success(
-            Unit
-        )
-        val currentUser = User(id = 1L, name = "Текущий пользователь", image = null)
-        coEvery { swRepository.getCurrentUserFlow() } returns flowOf(currentUser)
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        viewModel.onTrainHereToggle()
-        advanceUntilIdle()
-
-        val state = viewModel.uiState.value as ParkDetailUIState.Content
-        assertTrue(state.park.trainHere == true)
-        assertTrue(state.park.trainingUsers?.any { it.id == 1L } == true)
-    }
-
-    @Test
-    fun onTrainHereToggle_whenFailure_thenRevertsOptimisticState() = runTest {
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(
-            createPark(trainHere = false)
-        )
-        coEvery { swRepository.changeTrainHereStatus(true, TEST_PARK_ID) } returns Result.failure(
-            RuntimeException("Network error")
-        )
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        viewModel.onTrainHereToggle()
-        advanceUntilIdle()
-
-        val state = viewModel.uiState.value as ParkDetailUIState.Content
-        assertTrue(state.park.trainHere == false)
-    }
-
-    @Test
-    fun onTraineesCountClick_thenEmitsNavigateToTrainees() = runTest {
-        val user1 = User(id = 1L, name = "User 1", image = null)
-        val user2 = User(id = 2L, name = "User 2", image = null)
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(
-            createPark(trainingUsers = listOf(user1, user2))
-        )
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        viewModel.events.test {
-            viewModel.onTraineesCountClick()
-
-            val event = awaitItem()
-            assertTrue(event is ParkDetailEvent.NavigateToTrainees)
-            val navEvent = event as ParkDetailEvent.NavigateToTrainees
-            assertEquals(TEST_PARK_ID, navEvent.parkId)
-            assertEquals(2, navEvent.users.size)
-            cancelAndIgnoreRemainingEvents()
+            val finalState = viewModel.uiState.value
+            assertTrue(finalState is ParkDetailUIState.Content)
+            assertEquals("Сервер", (finalState as ParkDetailUIState.Content).park.name)
         }
-    }
 
     @Test
-    fun onCreateEventClick_thenEmitsNavigateToCreateEvent() = runTest {
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
-        val viewModel = createViewModel()
-        advanceUntilIdle()
+    fun init_whenPartialCacheExistsAndNetworkFails_thenKeepsCachedContent() =
+        runTest {
+            val cachedPark =
+                createPark(photos = emptyList()).copy(
+                    name = "Частичный кэш",
+                    createDate = null,
+                    author = null
+                )
+            coEvery { swRepository.getParkFromCache(TEST_PARK_ID) } returns cachedPark
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.failure(IOException("offline"))
 
-        viewModel.events.test {
-            viewModel.onCreateEventClick()
+            val viewModel = createViewModel()
+            advanceUntilIdle()
 
-            val event = awaitItem()
-            assertTrue(event is ParkDetailEvent.NavigateToCreateEvent)
-            val navEvent = event as ParkDetailEvent.NavigateToCreateEvent
-            assertEquals(TEST_PARK_ID, navEvent.parkId)
-            assertEquals(TEST_PARK_NAME, navEvent.parkName)
-            cancelAndIgnoreRemainingEvents()
+            val state = viewModel.uiState.value
+            assertTrue(state is ParkDetailUIState.Content)
+            assertEquals("Частичный кэш", (state as ParkDetailUIState.Content).park.name)
+            verify { userNotifier.handleError(any()) }
         }
-    }
 
     @Test
-    fun onDeleteConfirm_whenSuccess_thenEmitsParkDeleted() = runTest {
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
-        coEvery { swRepository.deletePark(TEST_PARK_ID) } returns Result.success(Unit)
-        val viewModel = createViewModel()
-        advanceUntilIdle()
+    fun init_whenLoadFails_thenUiStateError() =
+        runTest {
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+                Result.failure(
+                    RuntimeException("Network error")
+                )
 
-        viewModel.onDeleteClick()
-        advanceUntilIdle()
+            val viewModel = createViewModel()
+            advanceUntilIdle()
 
-        viewModel.events.test {
+            val state = viewModel.uiState.value
+            assertTrue(state is ParkDetailUIState.Error)
+        }
+
+    @Test
+    fun refresh_whenCalled_thenReloadsPark() =
+        runTest {
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.refresh()
+            advanceUntilIdle()
+
+            coVerify(exactly = 2) { swRepository.getPark(TEST_PARK_ID) }
+            assertTrue(viewModel.uiState.value is ParkDetailUIState.Content)
+        }
+
+    @Test
+    fun refresh_whenRetryStartsFromError_thenShowsInitialLoadingBeforeSuccess() =
+        runTest {
+            var callCount = 0
+            coEvery { swRepository.getPark(TEST_PARK_ID) } coAnswers {
+                callCount++
+                if (callCount == 1) {
+                    Result.failure(Exception("Первичная ошибка"))
+                } else {
+                    delay(1_000)
+                    Result.success(createPark())
+                }
+            }
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+            assertTrue(viewModel.uiState.value is ParkDetailUIState.Error)
+
+            viewModel.refresh()
+            runCurrent()
+
+            assertEquals(ParkDetailUIState.InitialLoading, viewModel.uiState.value)
+
+            advanceTimeBy(1_000)
+            advanceUntilIdle()
+            assertTrue(viewModel.uiState.value is ParkDetailUIState.Content)
+        }
+
+    @Test
+    fun refresh_whenRetryStartsFromErrorAndFails_thenReturnsToError() =
+        runTest {
+            val retryError = "Повторная ошибка"
+            var callCount = 0
+            coEvery { swRepository.getPark(TEST_PARK_ID) } coAnswers {
+                callCount++
+                if (callCount == 1) {
+                    Result.failure(Exception("Первичная ошибка"))
+                } else {
+                    delay(1_000)
+                    Result.failure(Exception(retryError))
+                }
+            }
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+            assertTrue(viewModel.uiState.value is ParkDetailUIState.Error)
+
+            viewModel.refresh()
+            runCurrent()
+
+            assertEquals(ParkDetailUIState.InitialLoading, viewModel.uiState.value)
+
+            advanceTimeBy(1_000)
+            advanceUntilIdle()
+            val state = viewModel.uiState.value
+            assertTrue(state is ParkDetailUIState.Error)
+            assertEquals(retryError, (state as ParkDetailUIState.Error).message)
+        }
+
+    @Test
+    fun refresh_whenContentAlreadyShownAndNetworkFails_thenKeepsCurrentContent() =
+        runTest {
+            val cachedPark = createPark().copy(name = "Кэш")
+            coEvery { swRepository.getParkFromCache(TEST_PARK_ID) } returns cachedPark
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returnsMany
+                listOf(
+                    Result.success(createPark().copy(name = "Сервер")),
+                    Result.failure(IOException("offline"))
+                )
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.refresh()
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertTrue(state is ParkDetailUIState.Content)
+            assertEquals("Сервер", (state as ParkDetailUIState.Content).park.name)
+            verify(atLeast = 1) { userNotifier.handleError(any()) }
+        }
+
+    @Test
+    fun refresh_whenFailureHappensAfterContent_thenKeepsExistingContent() =
+        runTest {
+            val existingPark = createPark().copy(name = "Уже загруженная площадка")
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+                Result.success(existingPark) andThen
+                Result.failure(IOException("offline"))
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.refresh()
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertTrue(state is ParkDetailUIState.Content)
+            assertEquals("Уже загруженная площадка", (state as ParkDetailUIState.Content).park.name)
+        }
+
+    @Test
+    fun onTrainHereToggle_whenSuccess_thenUpdatesTrainHereAndUsers() =
+        runTest {
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+                Result.success(
+                    createPark(trainHere = false)
+                )
+            coEvery { swRepository.changeTrainHereStatus(true, TEST_PARK_ID) } returns
+                Result.success(
+                    Unit
+                )
+            val currentUser = User(id = 1L, name = "Текущий пользователь", image = null)
+            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(currentUser)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onTrainHereToggle()
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value as ParkDetailUIState.Content
+            assertTrue(state.park.trainHere == true)
+            assertTrue(state.park.trainingUsers?.any { it.id == 1L } == true)
+        }
+
+    @Test
+    fun onTrainHereToggle_whenFailure_thenRevertsOptimisticState() =
+        runTest {
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+                Result.success(
+                    createPark(trainHere = false)
+                )
+            coEvery { swRepository.changeTrainHereStatus(true, TEST_PARK_ID) } returns
+                Result.failure(
+                    RuntimeException("Network error")
+                )
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onTrainHereToggle()
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value as ParkDetailUIState.Content
+            assertTrue(state.park.trainHere == false)
+        }
+
+    @Test
+    fun onTraineesCountClick_thenEmitsNavigateToTrainees() =
+        runTest {
+            val user1 = User(id = 1L, name = "User 1", image = null)
+            val user2 = User(id = 2L, name = "User 2", image = null)
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+                Result.success(
+                    createPark(trainingUsers = listOf(user1, user2))
+                )
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.events.test {
+                viewModel.onTraineesCountClick()
+
+                val event = awaitItem()
+                assertTrue(event is ParkDetailEvent.NavigateToTrainees)
+                val navEvent = event as ParkDetailEvent.NavigateToTrainees
+                assertEquals(TEST_PARK_ID, navEvent.parkId)
+                assertEquals(2, navEvent.users.size)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun onCreateEventClick_thenEmitsNavigateToCreateEvent() =
+        runTest {
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.events.test {
+                viewModel.onCreateEventClick()
+
+                val event = awaitItem()
+                assertTrue(event is ParkDetailEvent.NavigateToCreateEvent)
+                val navEvent = event as ParkDetailEvent.NavigateToCreateEvent
+                assertEquals(TEST_PARK_ID, navEvent.parkId)
+                assertEquals(TEST_PARK_NAME, navEvent.parkName)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun onDeleteConfirm_whenSuccess_thenEmitsParkDeleted() =
+        runTest {
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            coEvery { swRepository.deletePark(TEST_PARK_ID) } returns Result.success(Unit)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onDeleteClick()
+            advanceUntilIdle()
+
+            viewModel.events.test {
+                viewModel.onDeleteConfirm()
+                advanceUntilIdle()
+
+                assertEquals(ParkDetailEvent.ParkDeleted(TEST_PARK_ID), awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
+            coVerify { swRepository.deletePark(TEST_PARK_ID) }
+        }
+
+    @Test
+    fun onOpenMapClick_thenEmitsOpenMap() =
+        runTest {
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.events.test {
+                viewModel.onOpenMapClick()
+
+                assertEquals(ParkDetailEvent.OpenMap, awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun onRouteClick_thenEmitsBuildRoute() =
+        runTest {
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.events.test {
+                viewModel.onRouteClick()
+
+                assertEquals(ParkDetailEvent.BuildRoute, awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun onEditClick_thenEmitsNavigateToEditPark() =
+        runTest {
+            val park = createPark()
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(park)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.events.test {
+                viewModel.onEditClick()
+
+                val event = awaitItem()
+                assert(event is ParkDetailEvent.NavigateToEditPark)
+                assert((event as ParkDetailEvent.NavigateToEditPark).park == park)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun onParkUpdated_whenCalled_thenReloadsPark() =
+        runTest {
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            val updatedPark = createPark().copy(name = "Обновленное название")
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(updatedPark)
+
+            viewModel.onParkUpdated(TEST_PARK_ID)
+            advanceUntilIdle()
+
+            coVerify(exactly = 2) { swRepository.getPark(TEST_PARK_ID) }
+            val state = viewModel.uiState.value as ParkDetailUIState.Content
+            assertEquals("Обновленное название", state.park.name)
+        }
+
+    @Test
+    fun onDeleteClick_whenNotAuthor_thenDoesNotShowDialog() =
+        runTest {
+            val otherUserPark =
+                createPark().copy(
+                    author = User(id = 999L, name = "Другой автор", image = null)
+                )
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(otherUserPark)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.events.test {
+                viewModel.onDeleteClick()
+
+                expectNoEvents()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun onPhotoClick_thenEmitsNavigateToPhotoDetail() =
+        runTest {
+            val photo = Photo(id = 1L, photo = "http://example.com/photo.jpg")
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+                Result.success(
+                    createPark(photos = listOf(photo))
+                )
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.events.test {
+                viewModel.onPhotoClick(photo)
+
+                val event = awaitItem()
+                assertTrue(event is ParkDetailEvent.NavigateToPhotoDetail)
+                val photoEvent = event as ParkDetailEvent.NavigateToPhotoDetail
+                assertEquals(photo, photoEvent.photo)
+                assertEquals(TEST_PARK_ID, photoEvent.parkId)
+                assertEquals(TEST_PARK_NAME, photoEvent.parkTitle)
+                assertTrue(photoEvent.isParkAuthor)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun onPhotoDeleteConfirm_whenSuccess_thenEmitsPhotoDeleted() =
+        runTest {
+            val photo = Photo(id = 1L, photo = "http://example.com/photo.jpg")
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+                Result.success(
+                    createPark(photos = listOf(photo))
+                )
+            coEvery { swRepository.deleteParkPhoto(TEST_PARK_ID, 1L) } returns Result.success(Unit)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onPhotoDeleteClick(photo)
+            advanceUntilIdle()
+
+            viewModel.events.test {
+                viewModel.onPhotoDeleteConfirm()
+                advanceUntilIdle()
+
+                assertEquals(ParkDetailEvent.PhotoDeleted(1L), awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
+            coVerify { swRepository.deleteParkPhoto(TEST_PARK_ID, 1L) }
+        }
+
+    @Test
+    fun init_whenRuntimeException_thenShowsError() =
+        runTest {
+            coEvery { swRepository.getPark(TEST_PARK_ID) } throws RuntimeException("Unexpected error")
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            assertTrue(viewModel.uiState.value is ParkDetailUIState.Error)
+        }
+
+    @Test
+    fun onDeleteConfirm_whenRuntimeException_thenHandlesError() =
+        runTest {
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            coEvery { swRepository.deletePark(TEST_PARK_ID) } throws RuntimeException("Unexpected error")
+
+            viewModel.onDeleteClick()
+            advanceUntilIdle()
             viewModel.onDeleteConfirm()
             advanceUntilIdle()
 
-            assertEquals(ParkDetailEvent.ParkDeleted(TEST_PARK_ID), awaitItem())
-            cancelAndIgnoreRemainingEvents()
+            assertTrue(viewModel.uiState.value is ParkDetailUIState.Content)
         }
-        coVerify { swRepository.deletePark(TEST_PARK_ID) }
-    }
 
     @Test
-    fun onOpenMapClick_thenEmitsOpenMap() = runTest {
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
-        val viewModel = createViewModel()
-        advanceUntilIdle()
+    fun onPhotoDeleteConfirm_whenRuntimeException_thenHandlesError() =
+        runTest {
+            val photo = Photo(id = 1L, photo = "http://example.com/photo.jpg")
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+                Result.success(
+                    createPark(photos = listOf(photo))
+                )
+            val viewModel = createViewModel()
+            advanceUntilIdle()
 
-        viewModel.events.test {
-            viewModel.onOpenMapClick()
+            coEvery { swRepository.deleteParkPhoto(TEST_PARK_ID, 1L) } throws
+                RuntimeException(
+                    "Unexpected error"
+                )
 
-            assertEquals(ParkDetailEvent.OpenMap, awaitItem())
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun onRouteClick_thenEmitsBuildRoute() = runTest {
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        viewModel.events.test {
-            viewModel.onRouteClick()
-
-            assertEquals(ParkDetailEvent.BuildRoute, awaitItem())
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun onEditClick_thenEmitsNavigateToEditPark() = runTest {
-        val park = createPark()
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(park)
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        viewModel.events.test {
-            viewModel.onEditClick()
-
-            val event = awaitItem()
-            assert(event is ParkDetailEvent.NavigateToEditPark)
-            assert((event as ParkDetailEvent.NavigateToEditPark).park == park)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun onParkUpdated_whenCalled_thenReloadsPark() = runTest {
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        val updatedPark = createPark().copy(name = "Обновленное название")
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(updatedPark)
-
-        viewModel.onParkUpdated(TEST_PARK_ID)
-        advanceUntilIdle()
-
-        coVerify(exactly = 2) { swRepository.getPark(TEST_PARK_ID) }
-        val state = viewModel.uiState.value as ParkDetailUIState.Content
-        assertEquals("Обновленное название", state.park.name)
-    }
-
-    @Test
-    fun onDeleteClick_whenNotAuthor_thenDoesNotShowDialog() = runTest {
-        val otherUserPark = createPark().copy(
-            author = User(id = 999L, name = "Другой автор", image = null)
-        )
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(otherUserPark)
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        viewModel.events.test {
-            viewModel.onDeleteClick()
-
-            expectNoEvents()
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun onPhotoClick_thenEmitsNavigateToPhotoDetail() = runTest {
-        val photo = Photo(id = 1L, photo = "http://example.com/photo.jpg")
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(
-            createPark(photos = listOf(photo))
-        )
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        viewModel.events.test {
-            viewModel.onPhotoClick(photo)
-
-            val event = awaitItem()
-            assertTrue(event is ParkDetailEvent.NavigateToPhotoDetail)
-            val photoEvent = event as ParkDetailEvent.NavigateToPhotoDetail
-            assertEquals(photo, photoEvent.photo)
-            assertEquals(TEST_PARK_ID, photoEvent.parkId)
-            assertEquals(TEST_PARK_NAME, photoEvent.parkTitle)
-            assertTrue(photoEvent.isParkAuthor)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun onPhotoDeleteConfirm_whenSuccess_thenEmitsPhotoDeleted() = runTest {
-        val photo = Photo(id = 1L, photo = "http://example.com/photo.jpg")
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(
-            createPark(photos = listOf(photo))
-        )
-        coEvery { swRepository.deleteParkPhoto(TEST_PARK_ID, 1L) } returns Result.success(Unit)
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        viewModel.onPhotoDeleteClick(photo)
-        advanceUntilIdle()
-
-        viewModel.events.test {
+            viewModel.onPhotoDeleteClick(photo)
+            advanceUntilIdle()
             viewModel.onPhotoDeleteConfirm()
             advanceUntilIdle()
 
-            assertEquals(ParkDetailEvent.PhotoDeleted(1L), awaitItem())
-            cancelAndIgnoreRemainingEvents()
+            assertTrue(viewModel.uiState.value is ParkDetailUIState.Content)
         }
-        coVerify { swRepository.deleteParkPhoto(TEST_PARK_ID, 1L) }
-    }
 
     @Test
-    fun init_whenRuntimeException_thenShowsError() = runTest {
-        coEvery { swRepository.getPark(TEST_PARK_ID) } throws RuntimeException("Unexpected error")
+    fun onAddCommentClick_thenEmitsOpenCommentTextEntryNewForPark() =
+        runTest {
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            val viewModel = createViewModel()
+            advanceUntilIdle()
 
-        val viewModel = createViewModel()
-        advanceUntilIdle()
+            viewModel.events.test {
+                viewModel.onAddCommentClick()
 
-        assertTrue(viewModel.uiState.value is ParkDetailUIState.Error)
-    }
-
-    @Test
-    fun onDeleteConfirm_whenRuntimeException_thenHandlesError() = runTest {
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        coEvery { swRepository.deletePark(TEST_PARK_ID) } throws RuntimeException("Unexpected error")
-
-        viewModel.onDeleteClick()
-        advanceUntilIdle()
-        viewModel.onDeleteConfirm()
-        advanceUntilIdle()
-
-        assertTrue(viewModel.uiState.value is ParkDetailUIState.Content)
-    }
-
-    @Test
-    fun onPhotoDeleteConfirm_whenRuntimeException_thenHandlesError() = runTest {
-        val photo = Photo(id = 1L, photo = "http://example.com/photo.jpg")
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(
-            createPark(photos = listOf(photo))
-        )
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        coEvery { swRepository.deleteParkPhoto(TEST_PARK_ID, 1L) } throws RuntimeException(
-            "Unexpected error"
-        )
-
-        viewModel.onPhotoDeleteClick(photo)
-        advanceUntilIdle()
-        viewModel.onPhotoDeleteConfirm()
-        advanceUntilIdle()
-
-        assertTrue(viewModel.uiState.value is ParkDetailUIState.Content)
-    }
-
-    @Test
-    fun onAddCommentClick_thenEmitsOpenCommentTextEntryNewForPark() = runTest {
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        viewModel.events.test {
-            viewModel.onAddCommentClick()
-
-            val event = awaitItem()
-            assertTrue(event is ParkDetailEvent.OpenCommentTextEntry)
-            val openEvent = event as ParkDetailEvent.OpenCommentTextEntry
-            assertTrue(openEvent.mode is TextEntryMode.NewForPark)
-            assertEquals(TEST_PARK_ID, (openEvent.mode as TextEntryMode.NewForPark).parkId)
-            cancelAndIgnoreRemainingEvents()
+                val event = awaitItem()
+                assertTrue(event is ParkDetailEvent.OpenCommentTextEntry)
+                val openEvent = event as ParkDetailEvent.OpenCommentTextEntry
+                assertTrue(openEvent.mode is TextEntryMode.NewForPark)
+                assertEquals(TEST_PARK_ID, (openEvent.mode as TextEntryMode.NewForPark).parkId)
+                cancelAndIgnoreRemainingEvents()
+            }
         }
-    }
 
     @Test
-    fun onCommentActionClick_whenEdit_thenEmitsOpenCommentTextEntryEditPark() = runTest {
-        val comment = Comment(
-            id = TEST_COMMENT_ID,
-            body = "<b>Исходный текст</b>",
-            date = "2026-03-13 12:00:00",
-            user = User(id = 1L, name = "Автор", image = null)
-        )
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(
-            createPark(comments = listOf(comment))
-        )
-        val viewModel = createViewModel()
-        advanceUntilIdle()
+    fun onCommentActionClick_whenEdit_thenEmitsOpenCommentTextEntryEditPark() =
+        runTest {
+            val comment =
+                Comment(
+                    id = TEST_COMMENT_ID,
+                    body = "<b>Исходный текст</b>",
+                    date = "2026-03-13 12:00:00",
+                    user = User(id = 1L, name = "Автор", image = null)
+                )
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+                Result.success(
+                    createPark(comments = listOf(comment))
+                )
+            val viewModel = createViewModel()
+            advanceUntilIdle()
 
-        viewModel.events.test {
-            viewModel.onCommentActionClick(TEST_COMMENT_ID, CommentAction.EDIT)
+            viewModel.events.test {
+                viewModel.onCommentActionClick(TEST_COMMENT_ID, CommentAction.EDIT)
 
-            val event = awaitItem()
-            assertTrue(event is ParkDetailEvent.OpenCommentTextEntry)
-            val openEvent = event as ParkDetailEvent.OpenCommentTextEntry
-            assertTrue(openEvent.mode is TextEntryMode.EditPark)
-            val editMode = openEvent.mode as TextEntryMode.EditPark
-            assertEquals(TEST_PARK_ID, editMode.editInfo.parentObjectId)
-            assertEquals(TEST_COMMENT_ID, editMode.editInfo.entryId)
-            assertEquals("Исходный текст", editMode.editInfo.oldEntry)
-            cancelAndIgnoreRemainingEvents()
+                val event = awaitItem()
+                assertTrue(event is ParkDetailEvent.OpenCommentTextEntry)
+                val openEvent = event as ParkDetailEvent.OpenCommentTextEntry
+                assertTrue(openEvent.mode is TextEntryMode.EditPark)
+                val editMode = openEvent.mode as TextEntryMode.EditPark
+                assertEquals(TEST_PARK_ID, editMode.editInfo.parentObjectId)
+                assertEquals(TEST_COMMENT_ID, editMode.editInfo.entryId)
+                assertEquals("Исходный текст", editMode.editInfo.oldEntry)
+                cancelAndIgnoreRemainingEvents()
+            }
         }
-    }
 
     @Test
-    fun onCommentActionClick_whenReport_thenEmitsSendCommentComplaintPark() = runTest {
-        val comment = Comment(
-            id = TEST_COMMENT_ID,
-            body = "<b>Текст жалобы</b>",
-            date = "2026-03-13 12:00:00",
-            user = User(id = 7L, name = "Автор", image = null)
-        )
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(
-            createPark(comments = listOf(comment))
-        )
-        val viewModel = createViewModel()
-        advanceUntilIdle()
+    fun onCommentActionClick_whenReport_thenEmitsSendCommentComplaintPark() =
+        runTest {
+            val comment =
+                Comment(
+                    id = TEST_COMMENT_ID,
+                    body = "<b>Текст жалобы</b>",
+                    date = "2026-03-13 12:00:00",
+                    user = User(id = 7L, name = "Автор", image = null)
+                )
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+                Result.success(
+                    createPark(comments = listOf(comment))
+                )
+            val viewModel = createViewModel()
+            advanceUntilIdle()
 
-        viewModel.events.test {
-            viewModel.onCommentActionClick(TEST_COMMENT_ID, CommentAction.REPORT)
+            viewModel.events.test {
+                viewModel.onCommentActionClick(TEST_COMMENT_ID, CommentAction.REPORT)
 
-            val event = awaitItem()
-            assertTrue(event is ParkDetailEvent.SendCommentComplaint)
-            val complaintEvent = event as ParkDetailEvent.SendCommentComplaint
-            val parkComment = complaintEvent.complaint
-            assertEquals(TEST_PARK_NAME, parkComment.parkTitle)
-            assertEquals("Автор", parkComment.author)
-            assertEquals("Текст жалобы", parkComment.commentText)
-            cancelAndIgnoreRemainingEvents()
+                val event = awaitItem()
+                assertTrue(event is ParkDetailEvent.SendCommentComplaint)
+                val complaintEvent = event as ParkDetailEvent.SendCommentComplaint
+                val parkComment = complaintEvent.complaint
+                assertEquals(TEST_PARK_NAME, parkComment.parkTitle)
+                assertEquals("Автор", parkComment.author)
+                assertEquals("Текст жалобы", parkComment.commentText)
+                cancelAndIgnoreRemainingEvents()
+            }
         }
-    }
 
     @Test
     fun onCommentDeleteConfirm_whenSuccess_thenCallsDeleteCommentWithTextEntryOptionPark() =
         runTest {
-            val comment = Comment(
-                id = TEST_COMMENT_ID,
-                body = "Комментарий",
-                date = "2026-03-13 12:00:00",
-                user = User(id = 1L, name = "Автор", image = null)
-            )
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(
-                createPark(comments = listOf(comment))
-            )
+            val comment =
+                Comment(
+                    id = TEST_COMMENT_ID,
+                    body = "Комментарий",
+                    date = "2026-03-13 12:00:00",
+                    user = User(id = 1L, name = "Автор", image = null)
+                )
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+                Result.success(
+                    createPark(comments = listOf(comment))
+                )
             coEvery {
                 swRepository.deleteComment(
                     option = TextEntryOption.Park(TEST_PARK_ID),
@@ -567,51 +687,55 @@ class ParkDetailViewModelTest {
     // === 404 NotFound handling tests ===
 
     @Test
-    fun loadPark_whenParkNotFound_thenDeletesLocallyNotifiesAndNavigatesBack() = runTest {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        Dispatchers.setMain(testDispatcher)
+    fun loadPark_whenParkNotFound_thenDeletesLocallyNotifiesAndNavigatesBack() =
+        runTest {
+            val testDispatcher = StandardTestDispatcher(testScheduler)
+            Dispatchers.setMain(testDispatcher)
 
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.failure(
-            NotFoundException.ParkNotFound(TEST_PARK_ID)
-        )
-        coEvery { deleteParkUseCase.invoke(TEST_PARK_ID) } returns Result.success(Unit)
-
-        val viewModel = createViewModel()
-
-        viewModel.events.test {
-            runCurrent()
-            val event = awaitItem()
-            assertTrue(event is ParkDetailEvent.NavigateBack)
-            cancelAndIgnoreRemainingEvents()
-        }
-
-        coVerify { deleteParkUseCase.invoke(TEST_PARK_ID) }
-        verify {
-            userNotifier.handleError(
-                AppError.ResourceNotFound(
-                    message = "Ресурс не найден на сервере",
-                    resourceType = AppError.ResourceType.PARK
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+                Result.failure(
+                    NotFoundException.ParkNotFound(TEST_PARK_ID)
                 )
-            )
+            coEvery { deleteParkUseCase.invoke(TEST_PARK_ID) } returns Result.success(Unit)
+
+            val viewModel = createViewModel()
+
+            viewModel.events.test {
+                runCurrent()
+                val event = awaitItem()
+                assertTrue(event is ParkDetailEvent.NavigateBack)
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            coVerify { deleteParkUseCase.invoke(TEST_PARK_ID) }
+            verify {
+                userNotifier.handleError(
+                    AppError.ResourceNotFound(
+                        message = "Ресурс не найден на сервере",
+                        resourceType = AppError.ResourceType.PARK
+                    )
+                )
+            }
         }
-    }
 
     @Test
-    fun loadPark_whenParkNotFound_thenUiStateShowsError() = runTest {
-        coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.failure(
-            NotFoundException.ParkNotFound(TEST_PARK_ID)
-        )
-        coEvery { deleteParkUseCase.invoke(TEST_PARK_ID) } returns Result.success(Unit)
+    fun loadPark_whenParkNotFound_thenUiStateShowsError() =
+        runTest {
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+                Result.failure(
+                    NotFoundException.ParkNotFound(TEST_PARK_ID)
+                )
+            coEvery { deleteParkUseCase.invoke(TEST_PARK_ID) } returns Result.success(Unit)
 
-        val viewModel = createViewModel()
-        advanceUntilIdle()
+            val viewModel = createViewModel()
+            advanceUntilIdle()
 
-        val state = viewModel.uiState.value
-        assertTrue(state is ParkDetailUIState.Error)
-    }
+            val state = viewModel.uiState.value
+            assertTrue(state is ParkDetailUIState.Error)
+        }
 
-    private fun createViewModel(): ParkDetailViewModel {
-        return ParkDetailViewModel(
+    private fun createViewModel(): ParkDetailViewModel =
+        ParkDetailViewModel(
             swRepository = swRepository,
             countriesRepository = countriesRepository,
             userPreferencesRepository = userPreferencesRepository,
@@ -621,15 +745,14 @@ class ParkDetailViewModelTest {
             deleteParkUseCase = deleteParkUseCase,
             resourcesProvider = resourcesProvider
         )
-    }
 
     private fun createPark(
         trainHere: Boolean = false,
         trainingUsers: List<User> = emptyList(),
         photos: List<Photo> = emptyList(),
         comments: List<Comment> = emptyList()
-    ): Park {
-        return Park(
+    ): Park =
+        Park(
             id = TEST_PARK_ID,
             name = TEST_PARK_NAME,
             sizeID = 1,
@@ -653,7 +776,6 @@ class ParkDetailViewModelTest {
             canEdit = true,
             trainingUsers = trainingUsers
         )
-    }
 
     private companion object {
         const val TEST_PARK_ID = 100L

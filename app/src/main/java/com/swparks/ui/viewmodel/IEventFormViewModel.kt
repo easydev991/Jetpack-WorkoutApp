@@ -16,11 +16,18 @@ interface IEventFormViewModel {
     fun onDescriptionChange(value: String)
 
     fun onDateChange(timestamp: Long)
-    fun onTimeChange(hour: Int, minute: Int)
+
+    fun onTimeChange(
+        hour: Int,
+        minute: Int
+    )
 
     fun onParkClick()
 
-    fun onParkSelected(parkId: Long, parkName: String)
+    fun onParkSelected(
+        parkId: Long,
+        parkName: String
+    )
 
     fun onAddPhotoClick()
 

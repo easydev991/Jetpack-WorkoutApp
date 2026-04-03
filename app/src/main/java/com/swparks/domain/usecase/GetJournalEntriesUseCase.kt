@@ -27,7 +27,10 @@ class GetJournalEntriesUseCase(
      * @param journalId Идентификатор дневника
      * @return Flow со списком записей, отсортированным по дате изменения
      */
-    override operator fun invoke(userId: Long, journalId: Long): Flow<List<JournalEntry>> {
+    override operator fun invoke(
+        userId: Long,
+        journalId: Long
+    ): Flow<List<JournalEntry>> {
         Log.i(TAG, "Наблюдение за записями дневника: userId=$userId, journalId=$journalId")
         return journalEntriesRepository.observeJournalEntries(userId, journalId)
     }

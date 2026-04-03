@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 class FakeEventFormViewModel(
     initialState: EventFormUiState = EventFormUiState()
 ) : IEventFormViewModel {
-
     private val _uiState = MutableStateFlow(initialState)
     override val uiState: StateFlow<EventFormUiState> = _uiState
 
@@ -39,14 +38,20 @@ class FakeEventFormViewModel(
         form = form.copy(date = timestamp.toString())
     }
 
-    override fun onTimeChange(hour: Int, minute: Int) {
+    override fun onTimeChange(
+        hour: Int,
+        minute: Int
+    ) {
         form = form.copy(date = "${form.date}|$hour:$minute")
     }
 
     override fun onParkClick() {
     }
 
-    override fun onParkSelected(parkId: Long, parkName: String) {
+    override fun onParkSelected(
+        parkId: Long,
+        parkName: String
+    ) {
         form = form.copy(parkId = parkId, parkName = parkName)
     }
 
@@ -54,15 +59,17 @@ class FakeEventFormViewModel(
     }
 
     override fun onPhotoSelected(uris: List<Uri>) {
-        _uiState.value = _uiState.value.copy(
-            selectedPhotos = _uiState.value.selectedPhotos + uris
-        )
+        _uiState.value =
+            _uiState.value.copy(
+                selectedPhotos = _uiState.value.selectedPhotos + uris
+            )
     }
 
     override fun onPhotoRemove(uri: Uri) {
-        _uiState.value = _uiState.value.copy(
-            selectedPhotos = _uiState.value.selectedPhotos - uri
-        )
+        _uiState.value =
+            _uiState.value.copy(
+                selectedPhotos = _uiState.value.selectedPhotos - uri
+            )
     }
 
     override fun onSaveClick() {

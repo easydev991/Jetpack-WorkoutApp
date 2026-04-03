@@ -19,9 +19,10 @@ internal fun NavBackStackEntry.consumeEditParkArgs(): EditParkNavArgs? {
     val parkId = arguments?.getLong("parkId") ?: return null
     val source = arguments?.getString("source") ?: "parks"
     val parkJson = savedStateHandle.get<String>(EDIT_PARK_JSON_KEY)
-    val park = parkJson?.let { json ->
-        runCatching { WorkoutAppJson.decodeFromString<Park>(json) }.getOrNull()
-    }
+    val park =
+        parkJson?.let { json ->
+            runCatching { WorkoutAppJson.decodeFromString<Park>(json) }.getOrNull()
+        }
 
     savedStateHandle.remove<String>(EDIT_PARK_JSON_KEY)
 
@@ -42,9 +43,11 @@ internal fun NavBackStackEntry.consumeParkTraineesArgs(): ParkTraineesNavArgs? {
     val parkId = arguments?.getLong("parkId") ?: return null
     val source = arguments?.getString("source") ?: "parks"
     val usersJson = savedStateHandle.get<String>(PARK_TRAINEES_USERS_JSON_KEY)
-    val users = usersJson?.let { json ->
-        runCatching { WorkoutAppJson.decodeFromString<List<User>>(json) }.getOrNull()
-    }.orEmpty()
+    val users =
+        usersJson
+            ?.let { json ->
+                runCatching { WorkoutAppJson.decodeFromString<List<User>>(json) }.getOrNull()
+            }.orEmpty()
 
     savedStateHandle.remove<String>(PARK_TRAINEES_USERS_JSON_KEY)
 
@@ -63,9 +66,10 @@ internal data class CreateParkNavArgs(
 internal fun NavBackStackEntry.consumeCreateParkArgs(): CreateParkNavArgs {
     val source = arguments?.getString("source") ?: "parks"
     val draftJson = savedStateHandle.get<String>(CREATE_PARK_DRAFT_JSON_KEY)
-    val draft = draftJson?.let { json ->
-        runCatching { WorkoutAppJson.decodeFromString<NewParkDraft>(json) }.getOrNull()
-    }
+    val draft =
+        draftJson?.let { json ->
+            runCatching { WorkoutAppJson.decodeFromString<NewParkDraft>(json) }.getOrNull()
+        }
 
     savedStateHandle.remove<String>(CREATE_PARK_DRAFT_JSON_KEY)
 

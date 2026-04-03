@@ -5,7 +5,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 class TestClockTest {
-
     @Test
     fun now_whenFixedInstantSet_thenReturnsFixedTime() {
         val fixedInstant = java.time.Instant.parse("2025-10-25T10:00:00Z")

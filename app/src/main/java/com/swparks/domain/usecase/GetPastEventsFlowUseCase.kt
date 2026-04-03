@@ -7,7 +7,5 @@ import kotlinx.coroutines.flow.Flow
 class GetPastEventsFlowUseCase(
     private val swRepository: SWRepository
 ) : IGetPastEventsFlowUseCase {
-    override operator fun invoke(): Flow<List<Event>> {
-        return swRepository.getPastEventsFlow()
-    }
+    override operator fun invoke(): Flow<List<Event>> = swRepository.getPastEventsFlow()
 }

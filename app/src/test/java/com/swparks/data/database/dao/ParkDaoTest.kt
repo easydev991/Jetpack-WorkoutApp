@@ -20,34 +20,38 @@ import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class ParkDaoTest {
-
     private lateinit var database: SWDatabase
     private lateinit var parkDao: ParkDao
 
-    private val testUser = User(
-        id = 1L,
-        name = "testuser",
-        image = "https://example.com/avatar.jpg"
-    )
+    private val testUser =
+        User(
+            id = 1L,
+            name = "testuser",
+            image = "https://example.com/avatar.jpg"
+        )
 
-    private val testPhoto = Photo(
-        id = 10L,
-        photo = "https://example.com/photo.jpg"
-    )
+    private val testPhoto =
+        Photo(
+            id = 10L,
+            photo = "https://example.com/photo.jpg"
+        )
 
-    private val testComment = Comment(
-        id = 100L,
-        body = "Test comment",
-        date = "2024-01-15",
-        user = testUser
-    )
+    private val testComment =
+        Comment(
+            id = 100L,
+            body = "Test comment",
+            date = "2024-01-15",
+            user = testUser
+        )
 
     @Before
     fun setUp() {
         val context = RuntimeEnvironment.getApplication().applicationContext as Context
-        database = Room.inMemoryDatabaseBuilder(context, SWDatabase::class.java)
-            .allowMainThreadQueries()
-            .build()
+        database =
+            Room
+                .inMemoryDatabaseBuilder(context, SWDatabase::class.java)
+                .allowMainThreadQueries()
+                .build()
         parkDao = database.parkDao()
     }
 
@@ -57,80 +61,86 @@ class ParkDaoTest {
     }
 
     @Test
-    fun getParkById_whenEntityExists_shouldReturnEntity() = runTest {
-        val entity = createParkEntity()
-        parkDao.upsertPark(entity)
+    fun getParkById_whenEntityExists_shouldReturnEntity() =
+        runTest {
+            val entity = createParkEntity()
+            parkDao.upsertPark(entity)
 
-        val result = parkDao.getParkById(entity.id)
+            val result = parkDao.getParkById(entity.id)
 
-        assertNotNull(result)
-        assertEquals(entity.id, result?.id)
-        assertEquals(entity.name, result?.name)
-    }
-
-    @Test
-    fun getParkById_whenEntityMissing_shouldReturnNull() = runTest {
-        val result = parkDao.getParkById(999L)
-
-        assertNull(result)
-    }
+            assertNotNull(result)
+            assertEquals(entity.id, result?.id)
+            assertEquals(entity.name, result?.name)
+        }
 
     @Test
-    fun upsertPark_shouldInsertNewEntity() = runTest {
-        val entity = createParkEntity()
+    fun getParkById_whenEntityMissing_shouldReturnNull() =
+        runTest {
+            val result = parkDao.getParkById(999L)
 
-        parkDao.upsertPark(entity)
-
-        val stored = parkDao.getParkById(entity.id)
-        assertNotNull(stored)
-        assertEquals(entity.name, stored?.name)
-        assertEquals(entity.preview, stored?.preview)
-    }
+            assertNull(result)
+        }
 
     @Test
-    fun upsertPark_shouldReplaceExistingEntity() = runTest {
-        val original = createParkEntity(name = "Original Park", commentsCount = 1)
-        val updated = createParkEntity(name = "Updated Park", commentsCount = 5)
+    fun upsertPark_shouldInsertNewEntity() =
+        runTest {
+            val entity = createParkEntity()
 
-        parkDao.upsertPark(original)
-        parkDao.upsertPark(updated)
+            parkDao.upsertPark(entity)
 
-        val stored = parkDao.getParkById(updated.id)
-        assertNotNull(stored)
-        assertEquals("Updated Park", stored?.name)
-        assertEquals(5, stored?.commentsCount)
-    }
-
-    @Test
-    fun storedEntity_shouldPreserveDetailFieldsViaRoom() = runTest {
-        val entity = createParkEntity()
-
-        parkDao.upsertPark(entity)
-
-        val stored = parkDao.getParkById(entity.id)
-        assertNotNull(stored)
-        assertEquals(entity.author, stored?.author)
-        assertEquals(entity.photos, stored?.photos)
-        assertEquals(entity.comments, stored?.comments)
-        assertEquals(entity.trainingUsers, stored?.trainingUsers)
-        assertEquals(entity.trainHere, stored?.trainHere)
-        assertEquals(entity.mine, stored?.mine)
-        assertEquals(entity.canEdit, stored?.canEdit)
-        assertEquals(entity.equipmentIDS, stored?.equipmentIDS)
-        assertEquals(entity.createDate, stored?.createDate)
-        assertEquals(entity.modifyDate, stored?.modifyDate)
-    }
+            val stored = parkDao.getParkById(entity.id)
+            assertNotNull(stored)
+            assertEquals(entity.name, stored?.name)
+            assertEquals(entity.preview, stored?.preview)
+        }
 
     @Test
-    fun deleteById_whenEntityExists_shouldRemoveEntity() = runTest {
-        val entity = createParkEntity()
-        parkDao.upsertPark(entity)
+    fun upsertPark_shouldReplaceExistingEntity() =
+        runTest {
+            val original = createParkEntity(name = "Original Park", commentsCount = 1)
+            val updated = createParkEntity(name = "Updated Park", commentsCount = 5)
 
-        parkDao.deleteById(entity.id)
+            parkDao.upsertPark(original)
+            parkDao.upsertPark(updated)
 
-        val stored = parkDao.getParkById(entity.id)
-        assertNull(stored)
-    }
+            val stored = parkDao.getParkById(updated.id)
+            assertNotNull(stored)
+            assertEquals("Updated Park", stored?.name)
+            assertEquals(5, stored?.commentsCount)
+        }
+
+    @Test
+    fun storedEntity_shouldPreserveDetailFieldsViaRoom() =
+        runTest {
+            val entity = createParkEntity()
+
+            parkDao.upsertPark(entity)
+
+            val stored = parkDao.getParkById(entity.id)
+            assertNotNull(stored)
+            assertEquals(entity.author, stored?.author)
+            assertEquals(entity.photos, stored?.photos)
+            assertEquals(entity.comments, stored?.comments)
+            assertEquals(entity.trainingUsers, stored?.trainingUsers)
+            assertEquals(entity.trainHere, stored?.trainHere)
+            assertEquals(entity.mine, stored?.mine)
+            assertEquals(entity.canEdit, stored?.canEdit)
+            assertEquals(entity.equipmentIDS, stored?.equipmentIDS)
+            assertEquals(entity.createDate, stored?.createDate)
+            assertEquals(entity.modifyDate, stored?.modifyDate)
+        }
+
+    @Test
+    fun deleteById_whenEntityExists_shouldRemoveEntity() =
+        runTest {
+            val entity = createParkEntity()
+            parkDao.upsertPark(entity)
+
+            parkDao.deleteById(entity.id)
+
+            val stored = parkDao.getParkById(entity.id)
+            assertNull(stored)
+        }
 
     private fun createParkEntity(
         id: Long = 1L,

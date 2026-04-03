@@ -12,7 +12,8 @@ import com.swparks.data.model.Country
  */
 data class EditProfileLocations(
     val countries: List<Country>,
-    val cities: List<City> // все города из всех стран (плоский список)
+    // все города из всех стран (плоский список)
+    val cities: List<City>
 ) {
     val isEmpty: Boolean
         get() = countries.isEmpty() && cities.isEmpty()
@@ -44,7 +45,10 @@ data class EditProfileLocations(
      * @param currentCity Текущий выбранный город
      * @return SelectCountryResult с новой страной, новым городом и списком городов
      */
-    fun selectCountry(countryName: String, currentCity: City?): SelectCountryResult {
+    fun selectCountry(
+        countryName: String,
+        currentCity: City?
+    ): SelectCountryResult {
         val newCountry = countries.find { it.name == countryName }
         var newCity: City? = currentCity
         var newCities: List<City> = cities
@@ -69,7 +73,10 @@ data class EditProfileLocations(
      * @param currentCountry Текущая выбранная страна
      * @return SelectCityResult с новым городом и именем страны (если нужно выбрать другую страну)
      */
-    fun selectCity(cityName: String, currentCountry: Country?): SelectCityResult {
+    fun selectCity(
+        cityName: String,
+        currentCountry: Country?
+    ): SelectCityResult {
         val newCity = cities.find { it.name == cityName }
         var countryName: String? = null
 

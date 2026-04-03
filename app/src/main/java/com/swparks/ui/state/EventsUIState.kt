@@ -29,5 +29,8 @@ data class EventsListState(
 
 sealed class EventsListAction {
     object Refresh : EventsListAction()
-    data class EventClick(val event: Event) : EventsListAction()
+
+    data class EventClick(
+        val event: Event
+    ) : EventsListAction()
 }

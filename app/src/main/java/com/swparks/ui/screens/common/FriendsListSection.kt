@@ -37,14 +37,15 @@ fun FriendsListSection(config: FriendsListConfig) {
             config.friends.forEach { user ->
                 val isDisabled = user.id == config.currentUserId || !config.enabled
                 UserRowView(
-                    data = UserRowData(
-                        modifier = Modifier,
-                        enabled = !isDisabled,
-                        imageStringURL = user.image,
-                        name = user.name,
-                        address = null,
-                        onClick = { config.onFriendClick(user.id) }
-                    )
+                    data =
+                        UserRowData(
+                            modifier = Modifier,
+                            enabled = !isDisabled,
+                            imageStringURL = user.image,
+                            name = user.name,
+                            address = null,
+                            onClick = { config.onFriendClick(user.id) }
+                        )
                 )
             }
         }
@@ -68,14 +69,15 @@ fun FriendsListSectionWithUserData(
             friends.forEach { user ->
                 val isDisabled = user.id == currentUserId || !enabled
                 UserRowView(
-                    data = UserRowData(
-                        modifier = Modifier,
-                        enabled = !isDisabled,
-                        imageStringURL = user.image,
-                        name = user.name,
-                        address = null,
-                        onClick = { onFriendClick(user.id, user.name) }
-                    )
+                    data =
+                        UserRowData(
+                            modifier = Modifier,
+                            enabled = !isDisabled,
+                            imageStringURL = user.image,
+                            name = user.name,
+                            address = null,
+                            onClick = { onFriendClick(user.id, user.name) }
+                        )
                 )
             }
         }
@@ -83,9 +85,7 @@ fun FriendsListSectionWithUserData(
 }
 
 @Composable
-fun EmptyFriendsContent(
-    modifier: Modifier = Modifier
-) {
+fun EmptyFriendsContent(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.padding(dimensionResource(R.dimen.spacing_large)),
         contentAlignment = Alignment.Center

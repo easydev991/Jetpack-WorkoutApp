@@ -87,25 +87,28 @@ private fun PhotoCell(
 ) {
     Box(modifier = Modifier.size(size)) {
         SWAsyncImage(
-            config = AsyncImageConfig(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable(enabled = enabled) { onPhotoClick(photo) }
-                    .disabledAlpha(!enabled),
-                imageStringURL = photo.photo,
-                size = size,
-                contentScale = ContentScale.Crop,
-                showBorder = false
-            )
+            config =
+                AsyncImageConfig(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .clickable(enabled = enabled) { onPhotoClick(photo) }
+                            .disabledAlpha(!enabled),
+                    imageStringURL = photo.photo,
+                    size = size,
+                    contentScale = ContentScale.Crop,
+                    showBorder = false
+                )
         )
     }
 }
 
-private fun getColumnCount(size: Int): Int = when (size) {
-    ONE_COLUMN -> ONE_COLUMN
-    TWO_COLUMNS -> TWO_COLUMNS
-    else -> THREE_COLUMNS
-}
+private fun getColumnCount(size: Int): Int =
+    when (size) {
+        ONE_COLUMN -> ONE_COLUMN
+        TWO_COLUMNS -> TWO_COLUMNS
+        else -> THREE_COLUMNS
+    }
 
 @Preview(showBackground = true, locale = "ru")
 @Preview(
@@ -116,10 +119,11 @@ private fun getColumnCount(size: Int): Int = when (size) {
 @Composable
 internal fun PhotoSectionViewOnePhotoPreview() {
     PhotoSectionPreviewContent(
-        config = PhotoSectionConfig(
-            photos = previewPhotos.take(1),
-            onPhotoClick = {}
-        )
+        config =
+            PhotoSectionConfig(
+                photos = previewPhotos.take(1),
+                onPhotoClick = {}
+            )
     )
 }
 
@@ -132,10 +136,11 @@ internal fun PhotoSectionViewOnePhotoPreview() {
 @Composable
 internal fun PhotoSectionViewTwoPhotosPreview() {
     PhotoSectionPreviewContent(
-        config = PhotoSectionConfig(
-            photos = previewPhotos.take(2),
-            onPhotoClick = {}
-        )
+        config =
+            PhotoSectionConfig(
+                photos = previewPhotos.take(2),
+                onPhotoClick = {}
+            )
     )
 }
 
@@ -148,10 +153,11 @@ internal fun PhotoSectionViewTwoPhotosPreview() {
 @Composable
 internal fun PhotoSectionViewFourPhotosPreview() {
     PhotoSectionPreviewContent(
-        config = PhotoSectionConfig(
-            photos = previewPhotos,
-            onPhotoClick = {}
-        )
+        config =
+            PhotoSectionConfig(
+                photos = previewPhotos,
+                onPhotoClick = {}
+            )
     )
 }
 
@@ -168,9 +174,10 @@ private fun PhotoSectionPreviewContent(config: PhotoSectionConfig) {
     }
 }
 
-private val previewPhotos = listOf(
-    Photo(id = 1L, photo = "https://workout.su/files/trainings/photo1.jpg"),
-    Photo(id = 2L, photo = "https://workout.su/files/trainings/photo2.jpg"),
-    Photo(id = 3L, photo = "https://workout.su/files/trainings/photo3.jpg"),
-    Photo(id = 4L, photo = "https://workout.su/files/trainings/photo4.jpg")
-)
+private val previewPhotos =
+    listOf(
+        Photo(id = 1L, photo = "https://workout.su/files/trainings/photo1.jpg"),
+        Photo(id = 2L, photo = "https://workout.su/files/trainings/photo2.jpg"),
+        Photo(id = 3L, photo = "https://workout.su/files/trainings/photo3.jpg"),
+        Photo(id = 4L, photo = "https://workout.su/files/trainings/photo4.jpg")
+    )

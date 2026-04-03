@@ -6,7 +6,6 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class ChangePasswordUiStateTest {
-
     // Tests for newPasswordError
 
     @Test
@@ -62,10 +61,11 @@ class ChangePasswordUiStateTest {
     @Test
     fun confirmPasswordError_whenEmpty_thenIsNull() {
         // Given
-        val state = ChangePasswordUiState(
-            newPassword = "123456",
-            confirmPassword = ""
-        )
+        val state =
+            ChangePasswordUiState(
+                newPassword = "123456",
+                confirmPassword = ""
+            )
 
         // When
         val error = state.confirmPasswordError
@@ -77,10 +77,11 @@ class ChangePasswordUiStateTest {
     @Test
     fun confirmPasswordError_whenNotMatch_thenIsPasswordNotMatch() {
         // Given
-        val state = ChangePasswordUiState(
-            newPassword = "123456",
-            confirmPassword = "654321"
-        )
+        val state =
+            ChangePasswordUiState(
+                newPassword = "123456",
+                confirmPassword = "654321"
+            )
 
         // When
         val error = state.confirmPasswordError
@@ -92,10 +93,11 @@ class ChangePasswordUiStateTest {
     @Test
     fun confirmPasswordError_whenMatch_thenIsNull() {
         // Given
-        val state = ChangePasswordUiState(
-            newPassword = "123456",
-            confirmPassword = "123456"
-        )
+        val state =
+            ChangePasswordUiState(
+                newPassword = "123456",
+                confirmPassword = "123456"
+            )
 
         // When
         val error = state.confirmPasswordError
@@ -107,10 +109,11 @@ class ChangePasswordUiStateTest {
     @Test
     fun confirmPasswordError_whenBothEmpty_thenIsNull() {
         // Given
-        val state = ChangePasswordUiState(
-            newPassword = "",
-            confirmPassword = ""
-        )
+        val state =
+            ChangePasswordUiState(
+                newPassword = "",
+                confirmPassword = ""
+            )
 
         // When
         val error = state.confirmPasswordError

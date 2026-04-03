@@ -16,7 +16,6 @@ import org.junit.Test
  * Тесты для [EncryptedStringSerializer] - шифрования/дешифрования строк для Preferences DataStore
  */
 class EncryptedStringSerializerTest {
-
     @Before
     fun setup() {
         mockkStatic(Log::class)

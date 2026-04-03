@@ -12,7 +12,6 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class AppErrorExtTest {
-
     private lateinit var context: Context
 
     @Before
@@ -36,10 +35,11 @@ class AppErrorExtTest {
 
     @Test
     fun toUiText_whenGeocodingFailedWithAddressBuildFail_returnsGeocodingAddressBuildFailString() {
-        val error = AppError.GeocodingFailed(
-            message = "Failed to build address",
-            kind = AppError.GeocodingFailureKind.ADDRESS_BUILD_FAIL
-        )
+        val error =
+            AppError.GeocodingFailed(
+                message = "Failed to build address",
+                kind = AppError.GeocodingFailureKind.ADDRESS_BUILD_FAIL
+            )
 
         val result = error.toUiText(context)
 
@@ -48,10 +48,11 @@ class AppErrorExtTest {
 
     @Test
     fun toUiText_whenGeocodingFailedWithIoError_returnsNetworkIoString() {
-        val error = AppError.GeocodingFailed(
-            message = "IO error during geocoding",
-            kind = AppError.GeocodingFailureKind.IO_ERROR
-        )
+        val error =
+            AppError.GeocodingFailed(
+                message = "IO error during geocoding",
+                kind = AppError.GeocodingFailureKind.IO_ERROR
+            )
 
         val result = error.toUiText(context)
 

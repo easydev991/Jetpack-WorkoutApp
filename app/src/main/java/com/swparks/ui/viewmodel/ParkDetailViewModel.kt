@@ -48,9 +48,9 @@ class ParkDetailViewModel(
     private val userNotifier: UserNotifier,
     private val logger: Logger,
     private val deleteParkUseCase: DeleteParkUseCase,
-    private val resourcesProvider: ResourcesProvider,
-) : ViewModel(), IParkDetailViewModel {
-
+    private val resourcesProvider: ResourcesProvider
+) : ViewModel(),
+    IParkDetailViewModel {
     companion object {
         private const val TAG = "ParkDetailViewModel"
         private const val PARK_ID_KEY = "parkId"
@@ -63,25 +63,28 @@ class ParkDetailViewModel(
             userNotifier: UserNotifier,
             logger: Logger,
             deleteParkUseCase: DeleteParkUseCase,
-            resourcesProvider: ResourcesProvider,
-        ): ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val savedStateHandle = createSavedStateHandle()
-                ParkDetailViewModel(
-                    swRepository = swRepository,
-                    countriesRepository = countriesRepository,
-                    userPreferencesRepository = userPreferencesRepository,
-                    savedStateHandle = savedStateHandle,
-                    userNotifier = userNotifier,
-                    logger = logger,
-                    deleteParkUseCase = deleteParkUseCase,
-                    resourcesProvider = resourcesProvider
-                )
+            resourcesProvider: ResourcesProvider
+        ): ViewModelProvider.Factory =
+            viewModelFactory {
+                initializer {
+                    val savedStateHandle = createSavedStateHandle()
+                    ParkDetailViewModel(
+                        swRepository = swRepository,
+                        countriesRepository = countriesRepository,
+                        userPreferencesRepository = userPreferencesRepository,
+                        savedStateHandle = savedStateHandle,
+                        userNotifier = userNotifier,
+                        logger = logger,
+                        deleteParkUseCase = deleteParkUseCase,
+                        resourcesProvider = resourcesProvider
+                    )
+                }
             }
-        }
     }
 
-    private enum class ManageParkAction(val logName: String) {
+    private enum class ManageParkAction(
+        val logName: String
+    ) {
         DeleteParkClick("delete_park_click"),
         DeleteParkConfirm("delete_park_confirm"),
         DeletePhotoClick("delete_photo_click"),
@@ -156,7 +159,8 @@ class ParkDetailViewModel(
         if (currentState is ParkDetailUIState.Content) {
             val parkAuthorId = currentState.park.author?.id
             _isParkAuthor.value =
-                _currentUserId.value != null && _currentUserId.value == parkAuthorId
+                _currentUserId.value != null &&
+                    _currentUserId.value == parkAuthorId
             logger.d(
                 TAG,
                 "isParkAuthor: ${_isParkAuthor.value} " +
@@ -165,11 +169,10 @@ class ParkDetailViewModel(
         }
     }
 
-    private fun getParkId(): Long? {
-        return savedStateHandle.get<Long>(PARK_ID_KEY)
+    private fun getParkId(): Long? =
+        savedStateHandle.get<Long>(PARK_ID_KEY)
             ?: savedStateHandle.get<Int>(PARK_ID_KEY)?.toLong()
             ?: savedStateHandle.get<String>(PARK_ID_KEY)?.toLongOrNull()
-    }
 
     private fun canManagePark(action: ManageParkAction): Boolean {
         val canManage = _isAuthorized.value && _isParkAuthor.value
@@ -201,17 +204,19 @@ class ParkDetailViewModel(
                 val cachedPark = swRepository.getParkFromCache(parkId)
                 if (cachedPark != null) {
                     logger.d(TAG, "Кэш найден для площадки id=$parkId, показываем контент")
-                    val address = buildAddress(
-                        cachedPark.countryID,
-                        cachedPark.cityID,
-                        cachedPark.address
-                    )
+                    val address =
+                        buildAddress(
+                            cachedPark.countryID,
+                            cachedPark.cityID,
+                            cachedPark.address
+                        )
                     val authorAddress = buildAuthorAddress(cachedPark.author)
-                    _uiState.value = ParkDetailUIState.Content(
-                        park = cachedPark,
-                        address = address,
-                        authorAddress = authorAddress
-                    )
+                    _uiState.value =
+                        ParkDetailUIState.Content(
+                            park = cachedPark,
+                            address = address,
+                            authorAddress = authorAddress
+                        )
                     updateIsParkAuthor()
                     if (!cachedPark.isFull) {
                         logger.d(TAG, "Кэш площадки id=$parkId частичный, обновляем с сервера")
@@ -226,11 +231,12 @@ class ParkDetailViewModel(
                             logger.i(TAG, "Площадка загружена с сервера: ${park.name}")
                             val address = buildAddress(park.countryID, park.cityID, park.address)
                             val authorAddress = buildAuthorAddress(park.author)
-                            _uiState.value = ParkDetailUIState.Content(
-                                park = park,
-                                address = address,
-                                authorAddress = authorAddress
-                            )
+                            _uiState.value =
+                                ParkDetailUIState.Content(
+                                    park = park,
+                                    address = address,
+                                    authorAddress = authorAddress
+                                )
                             updateIsParkAuthor()
                         },
                         onFailure = { exception ->
@@ -253,14 +259,21 @@ class ParkDetailViewModel(
         }
     }
 
-    private suspend fun buildAddress(countryId: Int, cityId: Int, serverAddress: String): String {
+    private suspend fun buildAddress(
+        countryId: Int,
+        cityId: Int,
+        serverAddress: String
+    ): String {
         val address = buildAddressNullable(countryId, cityId, serverAddress)
         return address ?: "$countryId, $cityId"
     }
 
-    private suspend fun buildAuthorAddress(user: User?): String {
-        return buildAddressNullable(user?.countryID, user?.cityID, null) ?: ""
-    }
+    private suspend fun buildAuthorAddress(user: User?): String =
+        buildAddressNullable(
+            user?.countryID,
+            user?.cityID,
+            null
+        ) ?: ""
 
     private suspend fun buildAddressNullable(
         countryId: Int?,
@@ -292,43 +305,74 @@ class ParkDetailViewModel(
     override fun refresh() {
         logger.d(TAG, "Pull-to-refresh: обновление площадки")
         viewModelScope.launch {
+            val previousState = _uiState.value
+            val parkId = getParkId()
+
+            if (parkId == null) {
+                logger.e(TAG, "parkId отсутствует при refresh")
+                if (previousState !is ParkDetailUIState.Content) {
+                    _uiState.value = ParkDetailUIState.Error("Неверный идентификатор площадки")
+                }
+                return@launch
+            }
+
+            if (previousState is ParkDetailUIState.Error) {
+                _uiState.value = ParkDetailUIState.InitialLoading
+            }
+
             _isRefreshing.value = true
             try {
-                val parkId = getParkId()
-                if (parkId == null) {
-                    logger.e(TAG, "parkId отсутствует при refresh")
-                    return@launch
-                }
-                refreshParkContent(parkId)
+                refreshParkContent(parkId, previousState)
             } finally {
                 _isRefreshing.value = false
             }
         }
     }
 
-    private suspend fun refreshParkContent(parkId: Long) {
-        val result = swRepository.getPark(parkId)
-        result.fold(
-            onSuccess = { park ->
-                logger.i(TAG, "Площадка обновлена: ${park.name}")
-                val address = buildAddress(park.countryID, park.cityID, park.address)
-                val authorAddress = buildAuthorAddress(park.author)
-                _uiState.value = ParkDetailUIState.Content(
-                    park = park,
-                    address = address,
-                    authorAddress = authorAddress
-                )
-                updateIsParkAuthor()
-            },
-            onFailure = { exception ->
-                logger.e(
-                    TAG,
-                    "Ошибка обновления площадки: ${exception.message}",
-                    exception
-                )
-                handleError(exception, "обновлении площадки")
-            }
-        )
+    private suspend fun refreshParkContent(
+        parkId: Long,
+        previousState: ParkDetailUIState
+    ) {
+        try {
+            val result = swRepository.getPark(parkId)
+            result.fold(
+                onSuccess = { park ->
+                    logger.i(TAG, "Площадка обновлена: ${park.name}")
+                    val address = buildAddress(park.countryID, park.cityID, park.address)
+                    val authorAddress = buildAuthorAddress(park.author)
+                    _uiState.value =
+                        ParkDetailUIState.Content(
+                            park = park,
+                            address = address,
+                            authorAddress = authorAddress
+                        )
+                    updateIsParkAuthor()
+                },
+                onFailure = { exception ->
+                    logger.e(
+                        TAG,
+                        "Ошибка обновления площадки: ${exception.message}",
+                        exception
+                    )
+                    handleError(exception, "обновлении площадки")
+                    applyRefreshFailureState(previousState, exception.message)
+                }
+            )
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            logger.e(TAG, "Исключение при обновлении площадки: ${e.message}", e)
+            handleError(e, "обновлении площадки")
+            applyRefreshFailureState(previousState, e.message)
+        }
+    }
+
+    private fun applyRefreshFailureState(
+        previousState: ParkDetailUIState,
+        message: String?
+    ) {
+        if (previousState !is ParkDetailUIState.Content) {
+            _uiState.value = ParkDetailUIState.Error(message)
+        }
     }
 
     private suspend fun refreshParkContentInBackground(parkId: Long) {
@@ -340,11 +384,12 @@ class ParkDetailViewModel(
                 if (currentState is ParkDetailUIState.Content) {
                     val address = buildAddress(park.countryID, park.cityID, park.address)
                     val authorAddress = buildAuthorAddress(park.author)
-                    _uiState.value = currentState.copy(
-                        park = park,
-                        address = address,
-                        authorAddress = authorAddress
-                    )
+                    _uiState.value =
+                        currentState.copy(
+                            park = park,
+                            address = address,
+                            authorAddress = authorAddress
+                        )
                     updateIsParkAuthor()
                 }
             },
@@ -469,7 +514,9 @@ class ParkDetailViewModel(
                         onSuccess = {
                             logger.i(TAG, "Фото id=$photoId успешно удалено")
                             val updatedPhotos =
-                                currentState.park.photos.orEmpty().removePhotoById(photoId)
+                                currentState.park.photos
+                                    .orEmpty()
+                                    .removePhotoById(photoId)
                             logger.d(
                                 TAG,
                                 "Перенумерация фото: было ${currentState.park.photos?.size ?: 0}, " +
@@ -533,17 +580,20 @@ class ParkDetailViewModel(
 
                 if (result.isSuccess) {
                     val currentUser = swRepository.getCurrentUserFlow().first()
-                    val updatedUsers = if (newValue && currentUser != null) {
-                        (currentState.park.trainingUsers.orEmpty() + currentUser)
-                            .distinctBy { it.id }
-                    } else {
-                        currentState.park.trainingUsers.orEmpty()
-                            .filterNot { it.id == _currentUserId.value }
-                    }
-                    val finalPark = optimisticPark.copy(
-                        trainingUsers = updatedUsers,
-                        trainingUsersCount = updatedUsers.size
-                    )
+                    val updatedUsers =
+                        if (newValue && currentUser != null) {
+                            (currentState.park.trainingUsers.orEmpty() + currentUser)
+                                .distinctBy { it.id }
+                        } else {
+                            currentState.park.trainingUsers
+                                .orEmpty()
+                                .filterNot { it.id == _currentUserId.value }
+                        }
+                    val finalPark =
+                        optimisticPark.copy(
+                            trainingUsers = updatedUsers,
+                            trainingUsersCount = updatedUsers.size
+                        )
                     _uiState.value = currentState.copy(park = finalPark)
                     logger.i(
                         TAG,
@@ -645,13 +695,19 @@ class ParkDetailViewModel(
         }
     }
 
-    override fun onCommentActionClick(commentId: Long, action: CommentAction) {
+    override fun onCommentActionClick(
+        commentId: Long,
+        action: CommentAction
+    ) {
         val currentState = _uiState.value
         if (currentState !is ParkDetailUIState.Content) return
 
         logger.d(TAG, "Нажато действие $action для комментария id=$commentId")
 
-        val comment = currentState.park.comments.orEmpty().firstOrNull { it.id == commentId }
+        val comment =
+            currentState.park.comments
+                .orEmpty()
+                .firstOrNull { it.id == commentId }
         if (comment == null) {
             logger.w(TAG, "Комментарий не найден: id=$commentId")
             return
@@ -664,41 +720,54 @@ class ParkDetailViewModel(
         }
     }
 
-    private fun handleEditComment(comment: Comment, parkId: Long) {
+    private fun handleEditComment(
+        comment: Comment,
+        parkId: Long
+    ) {
         viewModelScope.launch {
             _events.emit(
                 ParkDetailEvent.OpenCommentTextEntry(
-                    mode = TextEntryMode.EditPark(
-                        editInfo = EditInfo(
-                            parentObjectId = parkId,
-                            entryId = comment.id,
-                            oldEntry = comment.parsedBody.orEmpty()
+                    mode =
+                        TextEntryMode.EditPark(
+                            editInfo =
+                                EditInfo(
+                                    parentObjectId = parkId,
+                                    entryId = comment.id,
+                                    oldEntry = comment.parsedBody.orEmpty()
+                                )
                         )
-                    )
                 )
             )
         }
     }
 
-    private fun handleReportComment(comment: Comment, parkName: String) {
-        val complaintAuthor = comment.user?.name?.ifBlank { UNKNOWN_COMMENT_AUTHOR }
-            ?: UNKNOWN_COMMENT_AUTHOR
+    private fun handleReportComment(
+        comment: Comment,
+        parkName: String
+    ) {
+        val complaintAuthor =
+            comment.user?.name?.ifBlank { UNKNOWN_COMMENT_AUTHOR }
+                ?: UNKNOWN_COMMENT_AUTHOR
         val complaintText = comment.parsedBody ?: comment.body.orEmpty()
 
         viewModelScope.launch {
             _events.emit(
                 ParkDetailEvent.SendCommentComplaint(
-                    complaint = Complaint.ParkComment(
-                        parkTitle = parkName,
-                        author = complaintAuthor,
-                        commentText = complaintText
-                    )
+                    complaint =
+                        Complaint.ParkComment(
+                            parkTitle = parkName,
+                            author = complaintAuthor,
+                            commentText = complaintText
+                        )
                 )
             )
         }
     }
 
-    private fun handleDeleteComment(comment: Comment, commentId: Long) {
+    private fun handleDeleteComment(
+        comment: Comment,
+        commentId: Long
+    ) {
         val isOwnComment = comment.user?.id != null && comment.user.id == _currentUserId.value
         if (!isOwnComment) {
             logger.w(TAG, "Отклонено удаление комментария id=$commentId: не автор")
@@ -720,14 +789,17 @@ class ParkDetailViewModel(
         viewModelScope.launch {
             _isRefreshing.value = true
             try {
-                val result = swRepository.deleteComment(
-                    option = com.swparks.ui.model.TextEntryOption.Park(currentState.park.id),
-                    commentId = commentId
-                )
+                val result =
+                    swRepository.deleteComment(
+                        option =
+                            com.swparks.ui.model.TextEntryOption
+                                .Park(currentState.park.id),
+                        commentId = commentId
+                    )
                 result.fold(
                     onSuccess = {
                         logger.i(TAG, "Комментарий id=$commentId успешно удален")
-                        refreshParkContent(currentState.park.id)
+                        refreshParkContent(currentState.park.id, currentState)
                     },
                     onFailure = { exception ->
                         logger.e(
@@ -758,10 +830,14 @@ class ParkDetailViewModel(
         val currentState = _uiState.value
         if (currentState is ParkDetailUIState.Content) {
             logger.d(TAG, "Локальное удаление фото id=$photoId из UI с перенумерацией")
-            val updatedPhotos = currentState.park.photos.orEmpty().removePhotoById(photoId)
-            _uiState.value = currentState.copy(
-                park = currentState.park.copy(photos = updatedPhotos)
-            )
+            val updatedPhotos =
+                currentState.park.photos
+                    .orEmpty()
+                    .removePhotoById(photoId)
+            _uiState.value =
+                currentState.copy(
+                    park = currentState.park.copy(photos = updatedPhotos)
+                )
         }
     }
 
@@ -770,7 +846,10 @@ class ParkDetailViewModel(
         loadPark()
     }
 
-    private fun handleError(exception: Throwable, operation: String) {
+    private fun handleError(
+        exception: Throwable,
+        operation: String
+    ) {
         when (exception) {
             is NotFoundException.ParkNotFound -> {
                 viewModelScope.launch {

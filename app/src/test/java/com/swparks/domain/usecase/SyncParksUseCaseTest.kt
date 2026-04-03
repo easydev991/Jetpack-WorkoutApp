@@ -18,7 +18,6 @@ import org.junit.Before
 import org.junit.Test
 
 class SyncParksUseCaseTest {
-
     private lateinit var clock: Clock
     private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var swRepository: SWRepository
@@ -46,66 +45,71 @@ class SyncParksUseCaseTest {
     }
 
     @Test
-    fun invoke_whenNeedUpdateIsFalse_thenDoesNotCallGetUpdatedParks() = runTest {
-        every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-27T10:00:00Z")
+    fun invoke_whenNeedUpdateIsFalse_thenDoesNotCallGetUpdatedParks() =
+        runTest {
+            every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-27T10:00:00Z")
 
-        syncParksUseCase()
+            syncParksUseCase()
 
-        coVerify(exactly = 0) { swRepository.getUpdatedParks(any()) }
-    }
-
-    @Test
-    fun invoke_whenForceTrue_thenCallsGetUpdatedParks() = runTest {
-        every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-27T10:00:00Z")
-        coEvery { swRepository.getUpdatedParks(any()) } returns Result.success(emptyList())
-        coEvery { swRepository.upsertParks(any()) } returns Unit
-
-        syncParksUseCase(force = true)
-
-        coVerify { swRepository.getUpdatedParks("2025-10-27") }
-    }
+            coVerify(exactly = 0) { swRepository.getUpdatedParks(any()) }
+        }
 
     @Test
-    fun invoke_whenSuccessfulUpdateWithNonEmptyList_thenSavesDate() = runTest {
-        every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
-        coEvery { swRepository.getUpdatedParks(any()) } returns Result.success(emptyList())
-        coEvery { swRepository.upsertParks(any()) } returns Unit
+    fun invoke_whenForceTrue_thenCallsGetUpdatedParks() =
+        runTest {
+            every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-27T10:00:00Z")
+            coEvery { swRepository.getUpdatedParks(any()) } returns Result.success(emptyList())
+            coEvery { swRepository.upsertParks(any()) } returns Unit
 
-        syncParksUseCase()
+            syncParksUseCase(force = true)
 
-        coVerify { userPreferencesRepository.setLastParksUpdateDate(clock.nowIsoString()) }
-    }
-
-    @Test
-    fun invoke_whenSuccessfulUpdateWithEmptyList_thenSavesDate() = runTest {
-        every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
-        coEvery { swRepository.getUpdatedParks(any()) } returns Result.success(emptyList())
-        coEvery { swRepository.upsertParks(any()) } returns Unit
-
-        syncParksUseCase()
-
-        coVerify { userPreferencesRepository.setLastParksUpdateDate(clock.nowIsoString()) }
-    }
+            coVerify { swRepository.getUpdatedParks("2025-10-27") }
+        }
 
     @Test
-    fun invoke_whenNetworkError_thenDoesNotSaveDate() = runTest {
-        every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
-        coEvery { swRepository.getUpdatedParks(any()) } returns Result.failure(Exception("Network error"))
+    fun invoke_whenSuccessfulUpdateWithNonEmptyList_thenSavesDate() =
+        runTest {
+            every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
+            coEvery { swRepository.getUpdatedParks(any()) } returns Result.success(emptyList())
+            coEvery { swRepository.upsertParks(any()) } returns Unit
 
-        syncParksUseCase()
+            syncParksUseCase()
 
-        coVerify(exactly = 0) { userPreferencesRepository.setLastParksUpdateDate(any()) }
-    }
+            coVerify { userPreferencesRepository.setLastParksUpdateDate(clock.nowIsoString()) }
+        }
 
     @Test
-    fun invoke_whenForceTrue_withDateTimeFormat_thenExtractsDateOnly() = runTest {
-        every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-27T15:30:45Z")
-        coEvery { swRepository.getUpdatedParks(any()) } returns Result.success(emptyList())
-        coEvery { swRepository.upsertParks(any()) } returns Unit
+    fun invoke_whenSuccessfulUpdateWithEmptyList_thenSavesDate() =
+        runTest {
+            every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
+            coEvery { swRepository.getUpdatedParks(any()) } returns Result.success(emptyList())
+            coEvery { swRepository.upsertParks(any()) } returns Unit
 
-        syncParksUseCase(force = true)
+            syncParksUseCase()
 
-        coVerify { swRepository.getUpdatedParks("2025-10-27") }
-    }
+            coVerify { userPreferencesRepository.setLastParksUpdateDate(clock.nowIsoString()) }
+        }
 
+    @Test
+    fun invoke_whenNetworkError_thenDoesNotSaveDate() =
+        runTest {
+            every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
+            coEvery { swRepository.getUpdatedParks(any()) } returns Result.failure(Exception("Network error"))
+
+            syncParksUseCase()
+
+            coVerify(exactly = 0) { userPreferencesRepository.setLastParksUpdateDate(any()) }
+        }
+
+    @Test
+    fun invoke_whenForceTrue_withDateTimeFormat_thenExtractsDateOnly() =
+        runTest {
+            every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-27T15:30:45Z")
+            coEvery { swRepository.getUpdatedParks(any()) } returns Result.success(emptyList())
+            coEvery { swRepository.upsertParks(any()) } returns Unit
+
+            syncParksUseCase(force = true)
+
+            coVerify { swRepository.getUpdatedParks("2025-10-27") }
+        }
 }

@@ -18,7 +18,7 @@ import com.swparks.domain.model.AppIcon
  * @property context Контекст приложения
  */
 class IconManager(
-    private val context: Context,
+    private val context: Context
 ) {
     companion object {
         private const val TAG = "IconManager"
@@ -43,7 +43,7 @@ class IconManager(
             context.packageManager.setComponentEnabledSetting(
                 targetComponentName,
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                PackageManager.DONT_KILL_APP,
+                PackageManager.DONT_KILL_APP
             )
             Log.d(TAG, "Иконка $targetComponentClassName АКТИВИРОВАНА")
         } catch (e: SecurityException) {
@@ -78,7 +78,7 @@ class IconManager(
             context.packageManager.setComponentEnabledSetting(
                 componentName,
                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                PackageManager.DONT_KILL_APP,
+                PackageManager.DONT_KILL_APP
             )
             Log.d(TAG, "Иконка ${componentName.className} ДЕАКТИВИРОВАНА")
         } catch (e: SecurityException) {
@@ -109,7 +109,7 @@ class IconManager(
  */
 private fun getIconComponentName(
     icon: AppIcon,
-    packageName: String,
+    packageName: String
 ): ComponentName {
     val className = icon.getComponentName()
     return ComponentName(packageName, className)

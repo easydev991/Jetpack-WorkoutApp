@@ -28,12 +28,29 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 sealed class RegisterContentAction {
-    data class LoginChange(val value: String) : RegisterContentAction()
-    data class EmailChange(val value: String) : RegisterContentAction()
-    data class PasswordChange(val value: String) : RegisterContentAction()
-    data class FullNameChange(val value: String) : RegisterContentAction()
-    data class GenderChange(val value: Int) : RegisterContentAction()
-    data class BirthDateChange(val value: LocalDate?) : RegisterContentAction()
+    data class LoginChange(
+        val value: String
+    ) : RegisterContentAction()
+
+    data class EmailChange(
+        val value: String
+    ) : RegisterContentAction()
+
+    data class PasswordChange(
+        val value: String
+    ) : RegisterContentAction()
+
+    data class FullNameChange(
+        val value: String
+    ) : RegisterContentAction()
+
+    data class GenderChange(
+        val value: Int
+    ) : RegisterContentAction()
+
+    data class BirthDateChange(
+        val value: LocalDate?
+    ) : RegisterContentAction()
 }
 
 /**
@@ -61,8 +78,8 @@ class RegisterViewModel(
     private val countriesRepository: CountriesRepository,
     private val resources: ResourcesProvider,
     private val userNotifier: UserNotifier
-) : ViewModel(), IRegisterViewModel {
-
+) : ViewModel(),
+    IRegisterViewModel {
     private val _uiState = MutableStateFlow<RegisterUiState>(RegisterUiState.Idle)
     override val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
@@ -135,11 +152,12 @@ class RegisterViewModel(
 
     override fun onEmailChange(value: String) {
         _form.value = _form.value.copy(email = value)
-        _emailFormatError.value = if (value.isNotEmpty() && !isValidEmail(value)) {
-            resources.getString(R.string.email_invalid)
-        } else {
-            null
-        }
+        _emailFormatError.value =
+            if (value.isNotEmpty() && !isValidEmail(value)) {
+                resources.getString(R.string.email_invalid)
+            } else {
+                null
+            }
     }
 
     override fun onPasswordChange(value: String) {
@@ -163,11 +181,12 @@ class RegisterViewModel(
 
     override fun onBirthDateChange(date: LocalDate?) {
         _form.value = _form.value.copy(birthDate = date)
-        _birthDateError.value = if (date != null && date > LocalDate.now()) {
-            resources.getString(R.string.birth_date_in_future)
-        } else {
-            null
-        }
+        _birthDateError.value =
+            if (date != null && date > LocalDate.now()) {
+                resources.getString(R.string.birth_date_in_future)
+            } else {
+                null
+            }
     }
 
     override fun onAction(action: RegisterContentAction) {
@@ -236,26 +255,27 @@ class RegisterViewModel(
             _uiState.value = RegisterUiState.Loading
 
             val currentForm = _form.value
-            swRepository.register(
-                RegistrationParams(
-                    name = currentForm.login,
-                    fullName = currentForm.fullName,
-                    email = currentForm.email,
-                    password = currentForm.password,
-                    birthDate = currentForm.birthDate!!.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                    genderCode = currentForm.genderCode!!,
-                    countryId = currentForm.countryId?.toIntOrNull(),
-                    cityId = currentForm.cityId?.toIntOrNull()
-                )
-            )
-                .onSuccess { user ->
-                    // Генерируем токен из логина и пароля (как при обычной авторизации)
-                    val token = tokenEncoder.encode(
-                        com.swparks.ui.model.LoginCredentials(
-                            login = currentForm.login,
-                            password = currentForm.password
-                        )
+            swRepository
+                .register(
+                    RegistrationParams(
+                        name = currentForm.login,
+                        fullName = currentForm.fullName,
+                        email = currentForm.email,
+                        password = currentForm.password,
+                        birthDate = currentForm.birthDate!!.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                        genderCode = currentForm.genderCode!!,
+                        countryId = currentForm.countryId?.toIntOrNull(),
+                        cityId = currentForm.cityId?.toIntOrNull()
                     )
+                ).onSuccess { user ->
+                    // Генерируем токен из логина и пароля (как при обычной авторизации)
+                    val token =
+                        tokenEncoder.encode(
+                            com.swparks.ui.model.LoginCredentials(
+                                login = currentForm.login,
+                                password = currentForm.password
+                            )
+                        )
                     secureTokenRepository.saveAuthToken(token)
 
                     // Сохраняем userId
@@ -264,8 +284,7 @@ class RegisterViewModel(
                     // Отправляем событие успеха
                     _registerEvents.send(RegisterEvent.Success(user.id))
                     _uiState.value = RegisterUiState.Idle
-                }
-                .onFailure { exception ->
+                }.onFailure { exception ->
                     val errorMessage = "Ошибка регистрации: ${exception.message}"
                     _uiState.value = RegisterUiState.Error(errorMessage, exception)
                     logger.e("RegisterViewModel", errorMessage, exception)

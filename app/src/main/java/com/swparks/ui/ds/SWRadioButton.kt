@@ -37,34 +37,35 @@ fun SWRadioButton(
     text: String,
     selected: Boolean,
     onClick: () -> Unit,
-    onClickable: Boolean = true,
+    onClickable: Boolean = true
 ) {
     val rowModifier =
         if (onClickable && !selected) {
             modifier.selectable(
                 selected = false,
                 onClick = onClick,
-                role = Role.RadioButton,
+                role = Role.RadioButton
             )
         } else {
             modifier
         }
 
     Row(
-        modifier = rowModifier
-            .fillMaxWidth()
-            .disabledAlpha(!onClickable),
+        modifier =
+            rowModifier
+                .fillMaxWidth()
+                .disabledAlpha(!onClickable),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
     ) {
         RadioButton(
             selected = selected,
-            onClick = null, // null recommended for accessibility with screen readers
+            onClick = null // null recommended for accessibility with screen readers
         )
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Start,
+            textAlign = TextAlign.Start
         )
     }
 }
@@ -85,7 +86,7 @@ private fun SWRadioButtonPreviewSelectedClickable() {
                     text = "Option 1",
                     selected = true,
                     onClick = {},
-                    onClickable = true,
+                    onClickable = true
                 )
             }
         }
@@ -108,7 +109,7 @@ private fun SWRadioButtonPreviewUnselectedClickable() {
                     text = "Option 1",
                     selected = false,
                     onClick = {},
-                    onClickable = true,
+                    onClickable = true
                 )
             }
         }
@@ -131,7 +132,7 @@ private fun SWRadioButtonPreviewSelectedDisabled() {
                     text = "Option 1",
                     selected = true,
                     onClick = {},
-                    onClickable = false,
+                    onClickable = false
                 )
             }
         }
@@ -154,7 +155,7 @@ private fun SWRadioButtonPreviewUnselectedDisabled() {
                     text = "Option 1",
                     selected = false,
                     onClick = {},
-                    onClickable = false,
+                    onClickable = false
                 )
             }
         }

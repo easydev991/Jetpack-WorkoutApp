@@ -103,5 +103,7 @@ sealed interface JournalEntriesEvent {
      *
      * @property journal Обновленный дневник
      */
-    data class JournalSettingsSaved(val journal: Journal) : JournalEntriesEvent
+    data class JournalSettingsSaved(
+        val journal: Journal
+    ) : JournalEntriesEvent
 }

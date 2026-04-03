@@ -14,7 +14,6 @@ import java.io.IOException
  * Проверяет создание разных типов ошибок и их свойства.
  */
 class AppErrorTest {
-
     @Test
     fun testNetworkError() {
         val error = AppError.Network("Нет подключения")

@@ -13,7 +13,10 @@ interface CrashReporter {
      * @param exception Исключение для записи
      * @param message Дополнительное сообщение (опционально)
      */
-    fun logException(exception: Throwable, message: String? = null)
+    fun logException(
+        exception: Throwable,
+        message: String? = null
+    )
 
     /**
      * Установить идентификатор пользователя для Crashlytics.
@@ -28,7 +31,10 @@ interface CrashReporter {
      * @param key Ключ
      * @param value Значение (поддерживает String, Int, Boolean, Long, Double, Float)
      */
-    fun setCustomKey(key: String, value: Any)
+    fun setCustomKey(
+        key: String,
+        value: Any
+    )
 
     /**
      * Записать лог-сообщение в Crashlytics.

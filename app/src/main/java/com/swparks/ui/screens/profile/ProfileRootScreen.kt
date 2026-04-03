@@ -75,6 +75,7 @@ private data class AuthorizedProfileState(
 
 sealed class ProfileAuthAction {
     data object ShowLoginSheet : ProfileAuthAction()
+
     data object ShowRegisterSheet : ProfileAuthAction()
 }
 
@@ -104,12 +105,13 @@ fun ProfileRootScreen(
 
         user == null -> {
             IncognitoProfileView(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = dimensionResource(R.dimen.spacing_regular),
-                        end = dimensionResource(R.dimen.spacing_regular)
-                    ),
+                modifier =
+                    modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = dimensionResource(R.dimen.spacing_regular),
+                            end = dimensionResource(R.dimen.spacing_regular)
+                        ),
                 authButtonModifier = Modifier.testTag(ScreenshotTestTags.PROFILE_AUTH_BUTTON),
                 onClickAuth = { onAuthAction(ProfileAuthAction.ShowLoginSheet) },
                 onClickRegister = { onAuthAction(ProfileAuthAction.ShowRegisterSheet) }
@@ -119,12 +121,13 @@ fun ProfileRootScreen(
         else -> {
             AuthorizedProfileContent(
                 modifier = modifier,
-                state = AuthorizedProfileState(
-                    user = user,
-                    uiState = uiState,
-                    isRefreshing = isRefreshing,
-                    blacklist = blacklist
-                ),
+                state =
+                    AuthorizedProfileState(
+                        user = user,
+                        uiState = uiState,
+                        isRefreshing = isRefreshing,
+                        blacklist = blacklist
+                    ),
                 onRefresh = { viewModel.refreshProfile() },
                 onShowLogoutDialog = { showLogoutDialog = true },
                 config = config
@@ -155,9 +158,10 @@ private fun AuthorizedProfileContent(
     config: ProfileRootConfig
 ) {
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .testTag(ScreenshotTestTags.PROFILE_SCREEN)
+        modifier =
+            modifier
+                .fillMaxSize()
+                .testTag(ScreenshotTestTags.PROFILE_SCREEN)
     ) {
         val pullRefreshState = rememberPullToRefreshState()
         PullToRefreshBox(
@@ -169,17 +173,19 @@ private fun AuthorizedProfileContent(
                 PullToRefreshDefaults.Indicator(
                     state = pullRefreshState,
                     isRefreshing = state.isRefreshing,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = dimensionResource(R.dimen.spacing_regular))
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = dimensionResource(R.dimen.spacing_regular))
                 )
             }
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(dimensionResource(R.dimen.spacing_regular)),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(dimensionResource(R.dimen.spacing_regular)),
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
             ) {
                 ProfileCardSection(user = state.user, uiState = state.uiState)
@@ -211,27 +217,30 @@ private fun ProfileCardSection(
     user: User,
     uiState: ProfileUiState
 ) {
-    val (country, city) = when (val state = uiState) {
-        is ProfileUiState.Success -> state.country to state.city
-        is ProfileUiState.Error -> state.country to state.city
-        ProfileUiState.Loading -> null to null
-    }
+    val (country, city) =
+        when (val state = uiState) {
+            is ProfileUiState.Success -> state.country to state.city
+            is ProfileUiState.Error -> state.country to state.city
+            ProfileUiState.Loading -> null to null
+        }
 
-    val shortAddress = if (uiState is ProfileUiState.Loading) {
-        stringResource(R.string.loading)
-    } else {
-        "${country?.name ?: ""}, " + (city?.name ?: "")
-    }
+    val shortAddress =
+        if (uiState is ProfileUiState.Loading) {
+            stringResource(R.string.loading)
+        } else {
+            "${country?.name ?: ""}, " + (city?.name ?: "")
+        }
 
     UserProfileCardView(
-        data = UserProfileData(
-            modifier = Modifier,
-            imageStringURL = user.image,
-            userName = user.fullName?.takeIf { it.isNotBlank() } ?: user.name,
-            gender = user.genderOption?.let { stringResource(id = it.description) } ?: "",
-            age = user.age,
-            shortAddress = shortAddress
-        )
+        data =
+            UserProfileData(
+                modifier = Modifier,
+                imageStringURL = user.image,
+                userName = user.fullName?.takeIf { it.isNotBlank() } ?: user.name,
+                gender = user.genderOption?.let { stringResource(id = it.description) } ?: "",
+                age = user.age,
+                shortAddress = shortAddress
+            )
     )
 }
 
@@ -319,9 +328,10 @@ private fun LogoutDialog(
         confirmButton = {
             TextButton(
                 onClick = onConfirm,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
+                colors =
+                    ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
             ) {
                 Text(text = stringResource(id = R.string.logout))
             }
@@ -370,14 +380,15 @@ private fun EditProfileButton(
     enabled: Boolean = true
 ) {
     SWButton(
-        config = ButtonConfig(
-            modifier = modifier.fillMaxWidth(),
-            size = SWButtonSize.LARGE,
-            mode = SWButtonMode.TINTED,
-            text = stringResource(id = R.string.edit_profile),
-            enabled = enabled,
-            onClick = onClick
-        )
+        config =
+            ButtonConfig(
+                modifier = modifier.fillMaxWidth(),
+                size = SWButtonSize.LARGE,
+                mode = SWButtonMode.TINTED,
+                text = stringResource(id = R.string.edit_profile),
+                enabled = enabled,
+                onClick = onClick
+            )
     )
 }
 
@@ -425,14 +436,15 @@ fun ProfileRootScreenLoggedInPreview() {
     JetpackWorkoutAppTheme {
         // Для простоты показываем статический вид
         UserProfileCardView(
-            data = UserProfileData(
-                modifier = Modifier,
-                imageStringURL = "",
-                userName = "Test User",
-                gender = "Мужской",
-                age = 34,
-                shortAddress = "Россия, Москва"
-            )
+            data =
+                UserProfileData(
+                    modifier = Modifier,
+                    imageStringURL = "",
+                    userName = "Test User",
+                    gender = "Мужской",
+                    age = 34,
+                    shortAddress = "Россия, Москва"
+                )
         )
     }
 }

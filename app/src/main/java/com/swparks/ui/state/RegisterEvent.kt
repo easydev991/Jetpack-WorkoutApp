@@ -9,5 +9,7 @@ sealed class RegisterEvent {
      *
      * @param userId ID зарегистрированного пользователя
      */
-    data class Success(val userId: Long) : RegisterEvent()
+    data class Success(
+        val userId: Long
+    ) : RegisterEvent()
 }

@@ -11,7 +11,6 @@ import org.robolectric.RobolectricTestRunner
  */
 @RunWith(RobolectricTestRunner::class)
 class MapUriSetTest {
-
     // ==================== Тесты geoUri ====================
 
     @Test

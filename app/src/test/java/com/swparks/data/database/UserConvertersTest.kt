@@ -17,7 +17,6 @@ import org.junit.Test
  * Unit тесты для [UserConverters]
  */
 class UserConvertersTest {
-
     @Before
     fun setup() {
         mockkStatic(Log::class)
@@ -32,10 +31,11 @@ class UserConvertersTest {
     @Test
     fun fromParksList_whenNonNullParks_returnsJsonString() {
         // Given
-        val parks = listOf(
-            createTestPark(id = 1, name = "Park 1"),
-            createTestPark(id = 2, name = "Park 2")
-        )
+        val parks =
+            listOf(
+                createTestPark(id = 1, name = "Park 1"),
+                createTestPark(id = 2, name = "Park 2")
+            )
 
         // When
         val result = UserConverters.fromParksList(parks)
@@ -121,9 +121,10 @@ class UserConvertersTest {
     @Suppress("MaxLineLength")
     fun toParksList_whenJsonWithUnknownKeys_returnsParkList() {
         // Given - JSON с неизвестными полями, которые должны игнорироваться благодаря ignoreUnknownKeys = true
-        val jsonWithUnknownKeys = """[{"id":"1","name":"Park 1","class_id":1,"type_id":1,""" +
-            """"longitude":"1.0","latitude":"1.0","address":"Address","city_id":1,"country_id":1,""" +
-            """"preview":"preview.jpg","unknownField":"value","anotherUnknown":123}]"""
+        val jsonWithUnknownKeys =
+            """[{"id":"1","name":"Park 1","class_id":1,"type_id":1,""" +
+                """"longitude":"1.0","latitude":"1.0","address":"Address","city_id":1,"country_id":1,""" +
+                """"preview":"preview.jpg","unknownField":"value","anotherUnknown":123}]"""
 
         // When
         val result = UserConverters.toParksList(jsonWithUnknownKeys)
@@ -139,10 +140,11 @@ class UserConvertersTest {
     @Suppress("MaxLineLength")
     fun roundTrip_conversionReturnsSameParks() {
         // Given
-        val originalParks = listOf(
-            createTestPark(id = 1, name = "Park 1"),
-            createTestPark(id = 2, name = "Park 2")
-        )
+        val originalParks =
+            listOf(
+                createTestPark(id = 1, name = "Park 1"),
+                createTestPark(id = 2, name = "Park 2")
+            )
 
         // When
         val jsonString = UserConverters.fromParksList(originalParks)
@@ -160,8 +162,11 @@ class UserConvertersTest {
     /**
      * Вспомогательный метод для создания тестовой площадки
      */
-    private fun createTestPark(id: Long, name: String): Park {
-        return Park(
+    private fun createTestPark(
+        id: Long,
+        name: String
+    ): Park =
+        Park(
             id = id,
             name = name,
             sizeID = 1,
@@ -173,5 +178,4 @@ class UserConvertersTest {
             countryID = 1,
             preview = "preview.jpg"
         )
-    }
 }

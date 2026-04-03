@@ -49,25 +49,26 @@ class ChatScreenTest {
             JetpackWorkoutAppTheme {
                 ChatContent(
                     modifier = androidx.compose.ui.Modifier,
-                    params = ChatContentParams(
-                        uiState = uiState,
-                        isLoading = isLoading,
-                        messageText = messageText,
-                        userName = userName,
-                        userImage = userImage,
-                        currentUserId = currentUserId,
-                        otherUserId = otherUserId,
-                        onMessageTextChange = onMessageTextChange,
-                        onSendClick = onSendClick,
-                        onRefresh = onRefresh,
-                        onAction = { action ->
-                            when (action) {
-                                is ChatAction.Back -> onBackClick()
-                                is ChatAction.AvatarClick -> onAvatarClick()
-                                is ChatAction.MessageSent -> onMessageSent()
+                    params =
+                        ChatContentParams(
+                            uiState = uiState,
+                            isLoading = isLoading,
+                            messageText = messageText,
+                            userName = userName,
+                            userImage = userImage,
+                            currentUserId = currentUserId,
+                            otherUserId = otherUserId,
+                            onMessageTextChange = onMessageTextChange,
+                            onSendClick = onSendClick,
+                            onRefresh = onRefresh,
+                            onAction = { action ->
+                                when (action) {
+                                    is ChatAction.Back -> onBackClick()
+                                    is ChatAction.AvatarClick -> onAvatarClick()
+                                    is ChatAction.MessageSent -> onMessageSent()
+                                }
                             }
-                        }
-                    )
+                        )
                 )
             }
         }
@@ -137,10 +138,11 @@ class ChatScreenTest {
     @Test
     fun chatContent_whenMessagesLoaded_displaysMessages() {
         // Given
-        val messages = listOf(
-            createTestMessage(id = 1, message = "Привет!"),
-            createTestMessage(id = 2, userId = 1, message = "Привет, как дела?")
-        )
+        val messages =
+            listOf(
+                createTestMessage(id = 1, message = "Привет!"),
+                createTestMessage(id = 2, userId = 1, message = "Привет, как дела?")
+            )
         val uiState = ChatUiState.Success(messages)
 
         // When
@@ -287,13 +289,12 @@ class ChatScreenTest {
         message: String = "Test message",
         name: String? = "Test User",
         created: String? = "2024-01-15T10:30:00Z"
-    ): MessageResponse {
-        return MessageResponse(
+    ): MessageResponse =
+        MessageResponse(
             id = id,
             userId = userId,
             message = message,
             name = name,
             created = created
         )
-    }
 }

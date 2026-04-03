@@ -10,24 +10,24 @@ import org.junit.Test
  * - AppTheme enum - проверка всех значений тем
  */
 class SettingsModelsTest {
-
     // ========== AppIcon Tests ==========
 
     @Test
     fun appIcon_shouldContainAllElevenValues() {
-        val expectedIcons = listOf(
-            AppIcon.DEFAULT,
-            AppIcon.ICON_2,
-            AppIcon.ICON_3,
-            AppIcon.ICON_4,
-            AppIcon.ICON_5,
-            AppIcon.ICON_6,
-            AppIcon.ICON_7,
-            AppIcon.ICON_8,
-            AppIcon.ICON_9,
-            AppIcon.ICON_10,
-            AppIcon.ICON_11,
-        )
+        val expectedIcons =
+            listOf(
+                AppIcon.DEFAULT,
+                AppIcon.ICON_2,
+                AppIcon.ICON_3,
+                AppIcon.ICON_4,
+                AppIcon.ICON_5,
+                AppIcon.ICON_6,
+                AppIcon.ICON_7,
+                AppIcon.ICON_8,
+                AppIcon.ICON_9,
+                AppIcon.ICON_10,
+                AppIcon.ICON_11
+            )
 
         val actualIcons = AppIcon.entries
 
@@ -66,11 +66,12 @@ class SettingsModelsTest {
 
     @Test
     fun appTheme_shouldContainAllThreeValues() {
-        val expectedThemes = listOf(
-            AppTheme.LIGHT,
-            AppTheme.DARK,
-            AppTheme.SYSTEM,
-        )
+        val expectedThemes =
+            listOf(
+                AppTheme.LIGHT,
+                AppTheme.DARK,
+                AppTheme.SYSTEM
+            )
 
         val actualThemes = AppTheme.entries
 
@@ -105,7 +106,10 @@ class SettingsModelsTest {
 /**
  * Вспомогательная функция для проверки равенства списков.
  */
-private fun <T> assertListsEqual(actual: List<T>, expected: List<T>) {
+private fun <T> assertListsEqual(
+    actual: List<T>,
+    expected: List<T>
+) {
     if (actual != expected) {
         throw AssertionError(
             "Ожидался список: $expected\n" +
@@ -117,7 +121,10 @@ private fun <T> assertListsEqual(actual: List<T>, expected: List<T>) {
 /**
  * Вспомогательная функция для проверки равенства строк.
  */
-private fun assertStringsEqual(actual: String, expected: String) {
+private fun assertStringsEqual(
+    actual: String,
+    expected: String
+) {
     if (actual != expected) {
         throw AssertionError(
             "Ожидалась строка: $expected\n" +
@@ -129,7 +136,10 @@ private fun assertStringsEqual(actual: String, expected: String) {
 /**
  * Вспомогательная функция для проверки равенства тем.
  */
-private fun assertThemesEqual(actual: AppTheme, expected: AppTheme) {
+private fun assertThemesEqual(
+    actual: AppTheme,
+    expected: AppTheme
+) {
     if (actual != expected) {
         throw AssertionError(
             "Ожидалась тема: $expected\n" +

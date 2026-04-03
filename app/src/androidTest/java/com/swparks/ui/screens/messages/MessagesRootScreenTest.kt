@@ -20,6 +20,7 @@ import com.swparks.ui.model.Gender
 import com.swparks.ui.state.DialogsUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.IDialogsViewModel
+import com.swparks.util.FakeAnalyticsReporter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.junit.Rule
@@ -57,20 +58,21 @@ class MessagesRootScreenTest {
             JetpackWorkoutAppTheme {
                 DialogsContent(
                     modifier = androidx.compose.ui.Modifier,
-                    params = DialogsContentParams(
-                        uiState = uiState,
-                        isRefreshing = isRefreshing,
-                        isUpdating = isUpdating,
-                        syncError = syncError,
-                        currentUser = currentUser,
-                        onRefresh = onRefresh,
-                        onDismissSyncError = onDismissSyncError,
-                        onDialogClick = onDialogClick,
-                        onMarkAsRead = onMarkAsRead,
-                        onDeleteClick = onDeleteClick,
-                        onNavigateToFriends = onNavigateToFriends,
-                        onNavigateToSearchUsers = onNavigateToSearchUsers
-                    )
+                    params =
+                        DialogsContentParams(
+                            uiState = uiState,
+                            isRefreshing = isRefreshing,
+                            isUpdating = isUpdating,
+                            syncError = syncError,
+                            currentUser = currentUser,
+                            onRefresh = onRefresh,
+                            onDismissSyncError = onDismissSyncError,
+                            onDialogClick = onDialogClick,
+                            onMarkAsRead = onMarkAsRead,
+                            onDeleteClick = onDeleteClick,
+                            onNavigateToFriends = onNavigateToFriends,
+                            onNavigateToSearchUsers = onNavigateToSearchUsers
+                        )
                 )
             }
         }
@@ -239,11 +241,12 @@ class MessagesRootScreenTest {
     @Test
     fun dialogsContent_displaysMultipleDialogs() {
         // Given
-        val dialogs = listOf(
-            createTestDialog(id = 1, name = "User One", message = "Message 1"),
-            createTestDialog(id = 2, name = "User Two", message = "Message 2"),
-            createTestDialog(id = 3, name = "User Three", message = "Message 3")
-        )
+        val dialogs =
+            listOf(
+                createTestDialog(id = 1, name = "User One", message = "Message 1"),
+                createTestDialog(id = 2, name = "User Two", message = "Message 2"),
+                createTestDialog(id = 3, name = "User Three", message = "Message 3")
+            )
         val uiState = DialogsUiState.Success(dialogs)
 
         // When
@@ -263,9 +266,14 @@ class MessagesRootScreenTest {
         // Given
         val testDialogId = 42L
         val testUserId = 99
-        val dialogs = listOf(
-            createTestDialog(id = testDialogId, name = "Clickable User", anotherUserId = testUserId)
-        )
+        val dialogs =
+            listOf(
+                createTestDialog(
+                    id = testDialogId,
+                    name = "Clickable User",
+                    anotherUserId = testUserId
+                )
+            )
         var clickedDialogId: Long? = null
         var clickedUserId: Int? = null
 
@@ -290,9 +298,10 @@ class MessagesRootScreenTest {
 
     @Test
     fun messagesRootScreen_afterRecomposition_usesLatestOnActionCallback() {
-        val viewModel = FakeDialogsViewModel(
-            uiState = MutableStateFlow(DialogsUiState.Success(emptyList()))
-        )
+        val viewModel =
+            FakeDialogsViewModel(
+                uiState = MutableStateFlow(DialogsUiState.Success(emptyList()))
+            )
         val actionVersionState = mutableStateOf(1)
         var invokedActionVersion = 0
         val currentUser = createTestUser(friendsCount = 0)
@@ -300,7 +309,7 @@ class MessagesRootScreenTest {
 
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController)
+            val appState = AppState(navController, FakeAnalyticsReporter())
             appState.updateCurrentUser(currentUser)
             val currentVersion = actionVersionState.value
 
@@ -444,8 +453,8 @@ class MessagesRootScreenTest {
 
     // ========== Helper methods ==========
 
-    private fun createTestUser(friendsCount: Int = 0): User {
-        return User(
+    private fun createTestUser(friendsCount: Int = 0): User =
+        User(
             id = 1L,
             name = "Current User",
             fullName = "Current User",
@@ -458,15 +467,14 @@ class MessagesRootScreenTest {
             addedParks = emptyList(),
             journalCount = 0
         )
-    }
 
     private fun createTestDialog(
         id: Long = 1L,
         name: String = "Test User",
         message: String = "Hello!",
         anotherUserId: Int = 2
-    ): DialogEntity {
-        return DialogEntity(
+    ): DialogEntity =
+        DialogEntity(
             id = id,
             name = name,
             image = "https://example.com/avatar.jpg",
@@ -475,14 +483,14 @@ class MessagesRootScreenTest {
             unreadCount = 2,
             anotherUserId = anotherUserId
         )
-    }
 
     private class FakeDialogsViewModel(
-        override val uiState: StateFlow<DialogsUiState> = MutableStateFlow(
-            DialogsUiState.Success(
-                emptyList()
-            )
-        ),
+        override val uiState: StateFlow<DialogsUiState> =
+            MutableStateFlow(
+                DialogsUiState.Success(
+                    emptyList()
+                )
+            ),
         override val isRefreshing: StateFlow<Boolean> = MutableStateFlow(false),
         override val isLoadingDialogs: StateFlow<Boolean> = MutableStateFlow(false),
         override val syncError: StateFlow<String?> = MutableStateFlow(null),
@@ -491,10 +499,23 @@ class MessagesRootScreenTest {
         override val isUpdating: StateFlow<Boolean> = MutableStateFlow(false)
     ) : IDialogsViewModel {
         override fun refresh() {}
+
         override fun loadDialogsAfterAuth() {}
-        override fun onDialogClick(dialogId: Long, userId: Int?) {}
+
+        override fun onDialogClick(
+            dialogId: Long,
+            userId: Int?
+        ) {
+        }
+
         override fun dismissSyncError() {}
+
         override fun deleteDialog(dialogId: Long) {}
-        override fun markDialogAsRead(dialogId: Long, userId: Int) {}
+
+        override fun markDialogAsRead(
+            dialogId: Long,
+            userId: Int
+        ) {
+        }
     }
 }

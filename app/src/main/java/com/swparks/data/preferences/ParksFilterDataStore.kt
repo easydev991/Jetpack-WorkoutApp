@@ -21,7 +21,7 @@ internal object ParksFilterPreferencesKeys {
 }
 
 class ParksFilterDataStore(
-    private val dataStore: DataStore<Preferences>,
+    private val dataStore: DataStore<Preferences>
 ) {
     constructor(context: Context) : this(context.parksFilterDataStore)
 
@@ -57,8 +57,7 @@ class ParksFilterDataStore(
                 rawValue.toIntOrNull()?.let { value ->
                     ParkSize.entries.firstOrNull { it.rawValue == value }
                 }
-            }
-            .toSet()
+            }.toSet()
             .takeIf { it.isNotEmpty() }
             ?: ParkSize.entries.toSet()
     }
@@ -70,8 +69,7 @@ class ParksFilterDataStore(
                 rawValue.toIntOrNull()?.let { value ->
                     ParkType.entries.firstOrNull { it.rawValue == value }
                 }
-            }
-            .toSet()
+            }.toSet()
             .takeIf { it.isNotEmpty() }
             ?: ParkType.entries.toSet()
     }

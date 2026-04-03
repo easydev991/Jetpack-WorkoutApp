@@ -20,7 +20,6 @@ class DeleteUserUseCase(
     private val secureTokenRepository: SecureTokenRepository,
     private val swRepository: SWRepository
 ) : IDeleteUserUseCase {
-
     private companion object {
         const val TAG = "DeleteUserUseCase"
     }

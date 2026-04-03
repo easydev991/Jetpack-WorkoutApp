@@ -1,5 +1,6 @@
-package com.swparks.ui.screens.parks.sections
+package com.swparks.ui.screens.parks
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -43,7 +44,9 @@ import com.swparks.util.DateFormatter
 
 internal sealed class ParkHeaderAction {
     data object OpenMap : ParkHeaderAction()
+
     data object Route : ParkHeaderAction()
+
     data object CreateEvent : ParkHeaderAction()
 }
 
@@ -63,9 +66,14 @@ internal data class CommentItemConfig(
 )
 
 internal sealed class CommentItemAction {
-    data class AuthorClick(val userId: Long) : CommentItemAction()
-    data class CommentAction(val commentId: Long, val action: com.swparks.ui.ds.CommentAction) :
-        CommentItemAction()
+    data class AuthorClick(
+        val userId: Long
+    ) : CommentItemAction()
+
+    data class CommentAction(
+        val commentId: Long,
+        val action: com.swparks.ui.ds.CommentAction
+    ) : CommentItemAction()
 }
 
 @Composable
@@ -77,9 +85,10 @@ internal fun ParkHeaderMapSection(
     onAction: (ParkHeaderAction) -> Unit
 ) {
     FormCardContainer(
-        params = FormCardContainerParams(
-            Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
-        )
+        params =
+            FormCardContainerParams(
+                Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
+            )
     ) {
         ParkHeaderContent(
             park = park,
@@ -100,12 +109,14 @@ private fun ParkHeaderContent(
     onAction: (ParkHeaderAction) -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(dimensionResource(R.dimen.spacing_regular)),
-        verticalArrangement = Arrangement.spacedBy(
-            dimensionResource(R.dimen.spacing_small)
-        )
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(dimensionResource(R.dimen.spacing_regular)),
+        verticalArrangement =
+            Arrangement.spacedBy(
+                dimensionResource(R.dimen.spacing_small)
+            )
     ) {
         Text(
             text = park.name,
@@ -122,26 +133,28 @@ private fun ParkHeaderContent(
 
         val hasValidCoordinates = isValidCoordinates(park.latitude, park.longitude)
         LocationInfoView(
-            config = LocationInfoConfig(
-                latitude = park.latitude,
-                longitude = park.longitude,
-                address = address,
-                enabled = !isRefreshing && hasValidCoordinates,
-                onOpenMapClick = { onAction(ParkHeaderAction.OpenMap) },
-                onRouteClick = { onAction(ParkHeaderAction.Route) }
-            )
+            config =
+                LocationInfoConfig(
+                    latitude = park.latitude,
+                    longitude = park.longitude,
+                    address = address,
+                    enabled = !isRefreshing && hasValidCoordinates,
+                    onOpenMapClick = { onAction(ParkHeaderAction.OpenMap) },
+                    onRouteClick = { onAction(ParkHeaderAction.Route) }
+                )
         )
 
         if (isAuthorized) {
             SWButton(
-                config = ButtonConfig(
-                    modifier = Modifier.fillMaxWidth(),
-                    size = SWButtonSize.LARGE,
-                    mode = SWButtonMode.FILLED,
-                    text = stringResource(R.string.create_event),
-                    enabled = !isRefreshing,
-                    onClick = { onAction(ParkHeaderAction.CreateEvent) }
-                )
+                config =
+                    ButtonConfig(
+                        modifier = Modifier.fillMaxWidth(),
+                        size = SWButtonSize.LARGE,
+                        mode = SWButtonMode.FILLED,
+                        text = stringResource(R.string.create_event),
+                        enabled = !isRefreshing,
+                        onClick = { onAction(ParkHeaderAction.CreateEvent) }
+                    )
             )
         }
     }
@@ -158,22 +171,26 @@ internal fun ParkParticipantsSection(
     if (!isAuthorized) return
 
     Column(
-        modifier = Modifier.padding(
-            horizontal = dimensionResource(R.dimen.spacing_regular)
-        ),
+        modifier =
+            Modifier.padding(
+                horizontal = dimensionResource(R.dimen.spacing_regular)
+            ),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
     ) {
         val participantsCount = park.trainingUsersCount ?: 0
+        val hasParticipantsList = park.trainingUsers.orEmpty().isNotEmpty()
+        val participantsEnabled = !isRefreshing && hasParticipantsList
         if (participantsCount > 0) {
             FormRowView(
                 modifier = Modifier.fillMaxWidth(),
                 leadingText = stringResource(R.string.park_trainees_title),
-                trailingText = pluralStringResource(
-                    id = R.plurals.peopleCount,
-                    count = participantsCount,
-                    participantsCount
-                ),
-                enabled = !isRefreshing,
+                trailingText =
+                    pluralStringResource(
+                        id = R.plurals.peopleCount,
+                        count = participantsCount,
+                        participantsCount
+                    ),
+                enabled = participantsEnabled,
                 onClick = onClickParticipants
             )
         }
@@ -202,13 +219,14 @@ internal fun ParkAuthorSection(
         modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
     ) {
         UserRowView(
-            data = UserRowData(
-                enabled = config.isEnabled,
-                imageStringURL = author.image,
-                name = author.name,
-                address = address,
-                onClick = { onAuthorClick(author.id) }
-            )
+            data =
+                UserRowData(
+                    enabled = config.isEnabled,
+                    imageStringURL = author.image,
+                    name = author.name,
+                    address = address,
+                    onClick = { onAuthorClick(author.id) }
+                )
         )
     }
 }
@@ -220,11 +238,12 @@ internal fun ParkPhotosSection(
     onPhotoClick: (Photo) -> Unit
 ) {
     PhotoSectionView(
-        config = PhotoSectionConfig(
-            photos = photos,
-            enabled = !isRefreshing,
-            onPhotoClick = onPhotoClick
-        ),
+        config =
+            PhotoSectionConfig(
+                photos = photos,
+                enabled = !isRefreshing,
+                onPhotoClick = onPhotoClick
+            ),
         modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
     )
 }
@@ -243,26 +262,36 @@ internal fun ParkCommentItem(
             params = FormCardContainerParams(modifier)
         ) {
             CommentRowView(
-                data = CommentRowData(
-                    imageStringURL = author?.image,
-                    authorName = author?.name ?: "",
-                    dateString = DateFormatter.formatDate(
-                        context = LocalContext.current,
-                        dateString = comment.date
-                    ),
-                    bodyText = comment.parsedBody.orEmpty(),
-                    enabled = config.enabled,
-                    byMainUser = byMainUser,
-                    onAuthorClick = { author?.id?.let { onAction(CommentItemAction.AuthorClick(it)) } },
-                    onClickAction = { action ->
-                        onAction(
-                            CommentItemAction.CommentAction(
-                                comment.id,
-                                action
+                data =
+                    CommentRowData(
+                        imageStringURL = author?.image,
+                        authorName = author?.name ?: "",
+                        dateString =
+                            DateFormatter.formatDate(
+                                context = LocalContext.current,
+                                dateString = comment.date
+                            ),
+                        bodyText = comment.parsedBody.orEmpty(),
+                        enabled = config.enabled,
+                        byMainUser = byMainUser,
+                        onAuthorClick = {
+                            author?.id?.let {
+                                onAction(
+                                    CommentItemAction.AuthorClick(
+                                        it
+                                    )
+                                )
+                            }
+                        },
+                        onClickAction = { action ->
+                            onAction(
+                                CommentItemAction.CommentAction(
+                                    comment.id,
+                                    action
+                                )
                             )
-                        )
-                    }
-                )
+                        }
+                    )
             )
         }
     }
@@ -273,11 +302,14 @@ internal fun ParkCommentItem(
                 text = stringResource(id = R.string.comments).uppercase(),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(
-                    start = dimensionResource(id = R.dimen.spacing_small) + dimensionResource(
-                        R.dimen.spacing_regular
+                modifier =
+                    Modifier.padding(
+                        start =
+                            dimensionResource(id = R.dimen.spacing_small) +
+                                dimensionResource(
+                                    R.dimen.spacing_regular
+                                )
                     )
-                )
             )
             commentContent()
         }
@@ -293,23 +325,25 @@ internal fun ParkAddCommentButton(
     onAddCommentClick: () -> Unit
 ) {
     SWButton(
-        config = ButtonConfig(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
-                .padding(bottom = dimensionResource(R.dimen.spacing_regular)),
-            size = SWButtonSize.LARGE,
-            mode = SWButtonMode.FILLED,
-            text = stringResource(R.string.add_comment),
-            enabled = isAuthorized && !isRefreshing,
-            onClick = onAddCommentClick
-        )
+        config =
+            ButtonConfig(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
+                        .padding(bottom = dimensionResource(R.dimen.spacing_regular)),
+                size = SWButtonSize.LARGE,
+                mode = SWButtonMode.FILLED,
+                text = stringResource(R.string.add_comment),
+                enabled = isAuthorized && !isRefreshing,
+                onClick = onAddCommentClick
+            )
     )
 }
 
 @Preview(showBackground = true, locale = "ru")
 @Preview(
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
     showBackground = true,
     locale = "ru"
 )
@@ -330,7 +364,7 @@ internal fun ParkHeaderMapSectionPreview() {
 
 @Preview(showBackground = true, locale = "ru")
 @Preview(
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
     showBackground = true,
     locale = "ru"
 )
@@ -340,10 +374,11 @@ internal fun ParkParticipantsSectionPreview() {
         Surface {
             Column {
                 ParkParticipantsSection(
-                    park = previewPark.copy(
-                        trainingUsersCount = 15,
-                        trainHere = false
-                    ),
+                    park =
+                        previewPark.copy(
+                            trainingUsersCount = 15,
+                            trainHere = false
+                        ),
                     isAuthorized = true,
                     isRefreshing = false,
                     onParticipantToggle = {},
@@ -356,7 +391,7 @@ internal fun ParkParticipantsSectionPreview() {
 
 @Preview(showBackground = true, locale = "ru")
 @Preview(
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
     showBackground = true,
     locale = "ru"
 )
@@ -367,11 +402,12 @@ internal fun ParkAuthorSectionPreview() {
             ParkAuthorSection(
                 park = previewPark,
                 address = "Москва",
-                config = ParkAuthorConfig(
-                    isAuthorized = true,
-                    isRefreshing = false,
-                    isParkAuthor = false
-                ),
+                config =
+                    ParkAuthorConfig(
+                        isAuthorized = true,
+                        isRefreshing = false,
+                        isParkAuthor = false
+                    ),
                 onAuthorClick = {}
             )
         }
@@ -380,7 +416,7 @@ internal fun ParkAuthorSectionPreview() {
 
 @Preview(showBackground = true, locale = "ru")
 @Preview(
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
     showBackground = true,
     locale = "ru"
 )
@@ -393,21 +429,24 @@ internal fun ParkCommentItemPreview() {
             ) {
                 ParkCommentItem(
                     comment = previewComment,
-                    config = CommentItemConfig(
-                        enabled = true,
-                        currentUserId = 999L
-                    ),
+                    config =
+                        CommentItemConfig(
+                            enabled = true,
+                            currentUserId = 999L
+                        ),
                     modifier = Modifier.fillMaxWidth(),
                     onAction = {}
                 )
                 ParkCommentItem(
-                    comment = previewComment.copy(
-                        user = previewComment.user?.copy(id = 999L)
-                    ),
-                    config = CommentItemConfig(
-                        enabled = true,
-                        currentUserId = 999L
-                    ),
+                    comment =
+                        previewComment.copy(
+                            user = previewComment.user?.copy(id = 999L)
+                        ),
+                    config =
+                        CommentItemConfig(
+                            enabled = true,
+                            currentUserId = 999L
+                        ),
                     modifier = Modifier.fillMaxWidth(),
                     onAction = {}
                 )
@@ -432,37 +471,41 @@ internal fun ParkAddCommentButtonPreview() {
     }
 }
 
-private val previewUser = User(
-    id = 123L,
-    name = "ivan_petrov",
-    image = "https://workout.su/img/avatar_default.jpg",
-    cityID = 1,
-    countryID = 1,
-    fullName = "Иван Петров"
-)
+private val previewUser =
+    User(
+        id = 123L,
+        name = "ivan_petrov",
+        image = "https://workout.su/img/avatar_default.jpg",
+        cityID = 1,
+        countryID = 1,
+        fullName = "Иван Петров"
+    )
 
-private val previewPark = Park(
-    id = 1L,
-    name = "Воркаут площадка в Парке Горького",
-    sizeID = 2,
-    typeID = 1,
-    longitude = "37.6173",
-    latitude = "55.7558",
-    address = "Москва, Парк Горького, недалеко от главного входа",
-    cityID = 1,
-    countryID = 1,
-    preview = "",
-    photos = listOf(
-        Photo(id = 1L, photo = "https://workout.su/files/areas/photo1.jpg")
-    ),
-    author = previewUser,
-    trainingUsersCount = 10,
-    trainHere = true
-)
+private val previewPark =
+    Park(
+        id = 1L,
+        name = "Воркаут площадка в Парке Горького",
+        sizeID = 2,
+        typeID = 1,
+        longitude = "37.6173",
+        latitude = "55.7558",
+        address = "Москва, Парк Горького, недалеко от главного входа",
+        cityID = 1,
+        countryID = 1,
+        preview = "",
+        photos =
+            listOf(
+                Photo(id = 1L, photo = "https://workout.su/files/areas/photo1.jpg")
+            ),
+        author = previewUser,
+        trainingUsersCount = 10,
+        trainHere = true
+    )
 
-private val previewComment = Comment(
-    id = 1L,
-    body = "Отличная площадка! Хорошее оборудование.",
-    date = "2024-06-10 14:30:00",
-    user = previewUser
-)
+private val previewComment =
+    Comment(
+        id = 1L,
+        body = "Отличная площадка! Хорошее оборудование.",
+        date = "2024-06-10 14:30:00",
+        user = previewUser
+    )

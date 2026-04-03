@@ -7,7 +7,10 @@ import com.swparks.ui.model.LoginCredentials
 import kotlinx.coroutines.flow.first
 
 interface IChangePasswordUseCase {
-    suspend operator fun invoke(current: String, new: String): Result<Unit>
+    suspend operator fun invoke(
+        current: String,
+        new: String
+    ): Result<Unit>
 }
 
 class ChangePasswordUseCase(
@@ -15,7 +18,10 @@ class ChangePasswordUseCase(
     private val secureTokenRepository: SecureTokenRepository,
     private val tokenEncoder: TokenEncoder
 ) : IChangePasswordUseCase {
-    override suspend operator fun invoke(current: String, new: String): Result<Unit> {
+    override suspend operator fun invoke(
+        current: String,
+        new: String
+    ): Result<Unit> {
         val result = swRepository.changePassword(current, new)
 
         result.onSuccess {

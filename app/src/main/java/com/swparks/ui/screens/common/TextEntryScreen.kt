@@ -94,7 +94,6 @@ fun TextEntryScreen(
     }
 }
 
-
 @Composable
 private fun TextEntryContent(
     uiState: TextEntryUiState,
@@ -103,10 +102,11 @@ private fun TextEntryContent(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
-            .padding(bottom = dimensionResource(R.dimen.spacing_regular))
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
+                .padding(bottom = dimensionResource(R.dimen.spacing_regular))
     ) {
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_regular)))
 
@@ -114,36 +114,39 @@ private fun TextEntryContent(
             text = uiState.text,
             onTextChange = onTextChanged,
             labelID = uiState.mode.getPlaceholder(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = 200.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = 200.dp),
             enabled = !uiState.isLoading
         )
 
         Spacer(modifier = Modifier.weight(1f))
 
         SWButton(
-            config = ButtonConfig(
-                modifier = Modifier.fillMaxWidth(),
-                size = SWButtonSize.LARGE,
-                mode = SWButtonMode.FILLED,
-                text = stringResource(R.string.send_button_text),
-                enabled = uiState.isSendEnabled && !uiState.isLoading,
-                onClick = onSend
-            )
+            config =
+                ButtonConfig(
+                    modifier = Modifier.fillMaxWidth(),
+                    size = SWButtonSize.LARGE,
+                    mode = SWButtonMode.FILLED,
+                    text = stringResource(R.string.send_button_text),
+                    enabled = uiState.isSendEnabled && !uiState.isLoading,
+                    onClick = onSend
+                )
         )
     }
 }
 
 /** Mock ViewModel для превью */
 private class PreviewTextEntryViewModel : ITextEntryViewModel {
-    private val _uiState = MutableStateFlow(
-        TextEntryUiState(
-            mode = TextEntryMode.NewForPark(parkId = 1L),
-            text = "Это пример текста для превью экрана ввода комментария",
-            isLoading = false
+    private val _uiState =
+        MutableStateFlow(
+            TextEntryUiState(
+                mode = TextEntryMode.NewForPark(parkId = 1L),
+                text = "Это пример текста для превью экрана ввода комментария",
+                isLoading = false
+            )
         )
-    )
     override val uiState: StateFlow<TextEntryUiState> = _uiState
 
     override val events: Flow<TextEntryEvent> = emptyFlow()
@@ -185,28 +188,30 @@ private fun TextEntryScreenPreview() {
 )
 @Composable
 private fun TextEntryScreenJournalPreview() {
-    val viewModel = object : ITextEntryViewModel {
-        private val _uiState = MutableStateFlow(
-            TextEntryUiState(
-                mode = TextEntryMode.NewForJournal(ownerId = 1L, journalId = 1L),
-                text = "Это пример текста для превью экрана ввода записи в дневник",
-                isLoading = false
-            )
-        )
-        override val uiState: StateFlow<TextEntryUiState> = _uiState
+    val viewModel =
+        object : ITextEntryViewModel {
+            private val _uiState =
+                MutableStateFlow(
+                    TextEntryUiState(
+                        mode = TextEntryMode.NewForJournal(ownerId = 1L, journalId = 1L),
+                        text = "Это пример текста для превью экрана ввода записи в дневник",
+                        isLoading = false
+                    )
+                )
+            override val uiState: StateFlow<TextEntryUiState> = _uiState
 
-        override val events: Flow<TextEntryEvent> = emptyFlow()
+            override val events: Flow<TextEntryEvent> = emptyFlow()
 
-        override fun onTextChanged(text: String) {
-            _uiState.value = _uiState.value.copy(text = text)
+            override fun onTextChanged(text: String) {
+                _uiState.value = _uiState.value.copy(text = text)
+            }
+
+            override fun onSend() = Unit
+
+            override fun onDismissError() = Unit
+
+            override fun resetState() = Unit
         }
-
-        override fun onSend() = Unit
-
-        override fun onDismissError() = Unit
-
-        override fun resetState() = Unit
-    }
     JetpackWorkoutAppTheme {
         Surface {
             TextEntryScreen(
@@ -216,4 +221,3 @@ private fun TextEntryScreenJournalPreview() {
         }
     }
 }
-

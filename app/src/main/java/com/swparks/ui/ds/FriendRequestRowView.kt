@@ -51,21 +51,22 @@ fun FriendRequestRowView(data: FriendRequestData) {
         params = FormCardContainerParams(modifier = data.modifier)
     ) {
         FormRowContainer(
-            config = FormRowConfig(
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
-                verticalPadding = dimensionResource(R.dimen.spacing_small),
-                content = {
-                    FriendRequestAvatar(imageStringURL = data.imageStringURL)
-                    FriendRequestContent(
-                        name = data.name,
-                        address = data.address,
-                        onClickAccept = data.onClickAccept,
-                        onClickDecline = data.onClickDecline,
-                        enabled = data.enabled
-                    )
-                }
-            )
+            config =
+                FormRowConfig(
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
+                    verticalPadding = dimensionResource(R.dimen.spacing_small),
+                    content = {
+                        FriendRequestAvatar(imageStringURL = data.imageStringURL)
+                        FriendRequestContent(
+                            name = data.name,
+                            address = data.address,
+                            onClickAccept = data.onClickAccept,
+                            onClickDecline = data.onClickDecline,
+                            enabled = data.enabled
+                        )
+                    }
+                )
         )
     }
 }
@@ -73,11 +74,12 @@ fun FriendRequestRowView(data: FriendRequestData) {
 @Composable
 private fun FriendRequestAvatar(imageStringURL: String?) {
     SWAsyncImage(
-        config = AsyncImageConfig(
-            imageStringURL = imageStringURL,
-            size = 42.dp,
-            shape = CircleShape
-        )
+        config =
+            AsyncImageConfig(
+                imageStringURL = imageStringURL,
+                size = 42.dp,
+                shape = CircleShape
+            )
     )
 }
 
@@ -137,23 +139,25 @@ private fun FriendRequestButtons(
         modifier = Modifier.fillMaxWidth()
     ) {
         SWButton(
-            config = ButtonConfig(
-                modifier = Modifier.weight(1f),
-                size = SWButtonSize.SMALL,
-                text = stringResource(id = R.string.accept_friend_request),
-                enabled = enabled,
-                onClick = onClickAccept
-            )
+            config =
+                ButtonConfig(
+                    modifier = Modifier.weight(1f),
+                    size = SWButtonSize.SMALL,
+                    text = stringResource(id = R.string.accept_friend_request),
+                    enabled = enabled,
+                    onClick = onClickAccept
+                )
         )
         SWButton(
-            config = ButtonConfig(
-                modifier = Modifier.weight(1f),
-                size = SWButtonSize.SMALL,
-                mode = SWButtonMode.TINTED,
-                text = stringResource(id = R.string.decline_friend_request),
-                enabled = enabled,
-                onClick = onClickDecline
-            )
+            config =
+                ButtonConfig(
+                    modifier = Modifier.weight(1f),
+                    size = SWButtonSize.SMALL,
+                    mode = SWButtonMode.TINTED,
+                    text = stringResource(id = R.string.decline_friend_request),
+                    enabled = enabled,
+                    onClick = onClickDecline
+                )
         )
     }
 }
@@ -169,13 +173,14 @@ fun FriendRequestRowViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             FriendRequestRowView(
-                data = FriendRequestData(
-                    imageStringURL = null,
-                    name = "Silverfrog19",
-                    address = "Россия, Архангельск",
-                    onClickAccept = {},
-                    onClickDecline = {}
-                )
+                data =
+                    FriendRequestData(
+                        imageStringURL = null,
+                        name = "Silverfrog19",
+                        address = "Россия, Архангельск",
+                        onClickAccept = {},
+                        onClickDecline = {}
+                    )
             )
         }
     }

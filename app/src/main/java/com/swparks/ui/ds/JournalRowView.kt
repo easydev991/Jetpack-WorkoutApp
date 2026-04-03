@@ -74,7 +74,9 @@ enum class JournalAction(
  *
  * @property messageMaxLines Лимит строк для основного текста вьюшки
  */
-enum class JournalRowMode(val messageMaxLines: Int) {
+enum class JournalRowMode(
+    val messageMaxLines: Int
+) {
     /**
      * Дневник
      */
@@ -158,14 +160,15 @@ fun JournalRowView(data: JournalRowData) {
                     modifier = Modifier.weight(1f)
                 )
                 JournalActionsMenu(
-                    config = JournalActionsMenuConfig(
-                        showMenu = showMenu,
-                        enabled = data.enabled,
-                        actions = data.actions,
-                        onMenuDismiss = { showMenu = false },
-                        onMenuShow = { showMenu = true },
-                        onClickAction = data.onClickAction
-                    )
+                    config =
+                        JournalActionsMenuConfig(
+                            showMenu = showMenu,
+                            enabled = data.enabled,
+                            actions = data.actions,
+                            onMenuDismiss = { showMenu = false },
+                            onMenuShow = { showMenu = true },
+                            onClickAction = data.onClickAction
+                        )
                 )
             }
             Text(
@@ -192,12 +195,13 @@ private fun JournalHeader(
         modifier = modifier
     ) {
         SWAsyncImage(
-            config = AsyncImageConfig(
-                imageStringURL = imageStringURL,
-                size = dimensionResource(id = R.dimen.icon_size_medium),
-                contentScale = ContentScale.Crop,
-                showBorder = false
-            )
+            config =
+                AsyncImageConfig(
+                    imageStringURL = imageStringURL,
+                    size = dimensionResource(id = R.dimen.icon_size_medium),
+                    contentScale = ContentScale.Crop,
+                    showBorder = false
+                )
         )
         Column(
             verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_xxsmall)),
@@ -230,9 +234,10 @@ private fun JournalActionsMenu(config: JournalActionsMenuConfig) {
 
     Box {
         IconButton(
-            modifier = Modifier
-                .size(dimensionResource(id = R.dimen.icon_size_menu))
-                .testTag("MenuButton"),
+            modifier =
+                Modifier
+                    .size(dimensionResource(id = R.dimen.icon_size_menu))
+                    .testTag("MenuButton"),
             enabled = config.enabled,
             onClick = config.onMenuShow
         ) {
@@ -284,12 +289,13 @@ private fun JournalDropdownMenuItem(
 }
 
 @Composable
-private fun getActionColor(action: JournalAction) = when (action) {
-    JournalAction.DELETE,
-    JournalAction.REPORT -> MaterialTheme.colorScheme.error
+private fun getActionColor(action: JournalAction) =
+    when (action) {
+        JournalAction.DELETE,
+        JournalAction.REPORT -> MaterialTheme.colorScheme.error
 
-    else -> MaterialTheme.colorScheme.onPrimaryContainer
-}
+        else -> MaterialTheme.colorScheme.onPrimaryContainer
+    }
 
 @Preview(
     showBackground = true,
@@ -308,49 +314,57 @@ fun JournalRowViewPreview() {
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
             ) {
                 JournalRowView(
-                    data = JournalRowData(
-                        imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
-                        title = "Дневник №1",
-                        dateString = "17 февраля, 10:56",
-                        bodyText = "Сегодня была тренировка на стадионе. Для начала небольшая " +
-                            "пробежка для разминки, затем пара подходов подтягиваний турнике, " +
-                            "и несколько подходов отжиманий",
-                        mode = JournalRowMode.ROOT,
-                        actions = listOf(
-                            JournalAction.SETUP,
-                            JournalAction.DELETE
-                        ),
-                        onClickAction = {}
-                    )
+                    data =
+                        JournalRowData(
+                            imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
+                            title = "Дневник №1",
+                            dateString = "17 февраля, 10:56",
+                            bodyText =
+                                "Сегодня была тренировка на стадионе. Для начала небольшая " +
+                                    "пробежка для разминки, затем пара подходов подтягиваний турнике, " +
+                                    "и несколько подходов отжиманий",
+                            mode = JournalRowMode.ROOT,
+                            actions =
+                                listOf(
+                                    JournalAction.SETUP,
+                                    JournalAction.DELETE
+                                ),
+                            onClickAction = {}
+                        )
                 )
                 JournalRowView(
-                    data = JournalRowData(
-                        imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
-                        title = "NineNineOne",
-                        dateString = "20 февраля, 10:00",
-                        bodyText = "Сегодня была тренировка на стадионе. Для начала небольшая " +
-                            "пробежка для разминки, затем пара подходов подтягиваний турнике, " +
-                            "и несколько подходов отжиманий",
-                        mode = JournalRowMode.ENTRY,
-                        actions = listOf(
-                            JournalAction.EDIT,
-                            JournalAction.DELETE
-                        ),
-                        onClickAction = {}
-                    )
+                    data =
+                        JournalRowData(
+                            imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
+                            title = "NineNineOne",
+                            dateString = "20 февраля, 10:00",
+                            bodyText =
+                                "Сегодня была тренировка на стадионе. Для начала небольшая " +
+                                    "пробежка для разминки, затем пара подходов подтягиваний турнике, " +
+                                    "и несколько подходов отжиманий",
+                            mode = JournalRowMode.ENTRY,
+                            actions =
+                                listOf(
+                                    JournalAction.EDIT,
+                                    JournalAction.DELETE
+                                ),
+                            onClickAction = {}
+                        )
                 )
                 JournalRowView(
-                    data = JournalRowData(
-                        imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
-                        title = "Тестирую дневники из мобильного приложения",
-                        dateString = "20 февраля, 10:00",
-                        bodyText = "Сегодня была тренировка на стадионе. Для начала небольшая " +
-                            "пробежка для разминки, затем пара подходов подтягиваний турнике, " +
-                            "и несколько подходов отжиманий",
-                        mode = JournalRowMode.ENTRY,
-                        actions = listOf(JournalAction.REPORT),
-                        onClickAction = {}
-                    )
+                    data =
+                        JournalRowData(
+                            imageStringURL = "https://workout.su/uploads/avatars/2023/01/2023-01-06-16-01-16-qyj.png",
+                            title = "Тестирую дневники из мобильного приложения",
+                            dateString = "20 февраля, 10:00",
+                            bodyText =
+                                "Сегодня была тренировка на стадионе. Для начала небольшая " +
+                                    "пробежка для разминки, затем пара подходов подтягиваний турнике, " +
+                                    "и несколько подходов отжиманий",
+                            mode = JournalRowMode.ENTRY,
+                            actions = listOf(JournalAction.REPORT),
+                            onClickAction = {}
+                        )
                 )
             }
         }

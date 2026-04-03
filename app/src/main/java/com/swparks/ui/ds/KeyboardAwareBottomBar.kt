@@ -21,13 +21,14 @@ fun KeyboardAwareBottomBar(
     content: @Composable () -> Unit
 ) {
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .imePadding()
-            .padding(
-                horizontal = dimensionResource(R.dimen.spacing_regular),
-                vertical = dimensionResource(R.dimen.spacing_regular)
-            )
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .imePadding()
+                .padding(
+                    horizontal = dimensionResource(R.dimen.spacing_regular),
+                    vertical = dimensionResource(R.dimen.spacing_regular)
+                )
     ) {
         content()
     }

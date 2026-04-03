@@ -12,8 +12,7 @@
     <string name="loading_content_description">Please wait, loading</string>
 
     <string name="auth_invitation">Log in to have access to all features</string>
-    <string name="authorization">Authorization</string>
-    <string name="registration_info">Registration is available on workout.su</string>
+    <string name="authorization">Log in</string>
 
     <string name="future_events">Planned</string>
     <string name="past_events">Past</string>

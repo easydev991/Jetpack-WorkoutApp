@@ -17,7 +17,9 @@ import com.swparks.data.database.entity.UserTrainingParkEntity
 import com.swparks.data.database.entity.toDomain
 import com.swparks.data.database.entity.toEntity
 import com.swparks.data.database.entity.toEvent
+import com.swparks.data.database.entity.toFullEntity
 import com.swparks.data.database.entity.toPark
+import com.swparks.data.database.entity.toPartialEntity
 import com.swparks.data.model.ApiBlacklistOption
 import com.swparks.data.model.ApiFriendAction
 import com.swparks.data.model.DialogResponse
@@ -72,6 +74,7 @@ import java.io.IOException
 interface SWRepository {
     // Существующие методы (для обратной совместимости)
     suspend fun getPastEvents(): List<Event>
+
     val isAuthorized: Flow<Boolean>
 
     // Flow методы для локального кэша
@@ -79,12 +82,19 @@ interface SWRepository {
 
     // Flow методы для мероприятий
     fun getFutureEventsFlow(): Flow<List<Event>>
+
     suspend fun syncFutureEvents(): Result<Unit>
+
     fun getPastEventsFlow(): Flow<List<Event>>
+
     suspend fun syncPastEvents(): Result<Unit>
+
     fun getFriendsFlow(): Flow<List<User>>
+
     fun getFriendRequestsFlow(): Flow<List<User>>
+
     fun getBlacklistFlow(): Flow<List<User>>
+
     fun getFriendsCountFlow(): Flow<Int>
 
     // Методы очистки данных пользователя
@@ -94,72 +104,161 @@ interface SWRepository {
     suspend fun register(params: RegistrationParams): Result<User>
 
     suspend fun login(token: String?): Result<LoginSuccess>
+
     suspend fun resetPassword(login: String): Result<Unit>
-    suspend fun changePassword(current: String, new: String): Result<Unit>
+
+    suspend fun changePassword(
+        current: String,
+        new: String
+    ): Result<Unit>
 
     // Принудительный логаут (при ошибке 401)
     suspend fun forceLogout()
 
     // 3.2. Профиль
     suspend fun getUser(userId: Long): Result<User>
-    suspend fun editUser(userId: Long, form: MainUserForm, image: ByteArray?): Result<User>
+
+    suspend fun editUser(
+        userId: Long,
+        form: MainUserForm,
+        image: ByteArray?
+    ): Result<User>
+
     suspend fun deleteUser(): Result<Unit>
+
     suspend fun getSocialUpdates(userId: Long): Result<SocialUpdates>
+
     suspend fun findUsers(name: String): Result<List<User>>
 
     // 3.3. Друзья
     suspend fun getFriendsForUser(userId: Long): Result<List<User>>
+
     suspend fun getFriendRequests(): Result<List<User>>
-    suspend fun respondToFriendRequest(userId: Long, accept: Boolean): Result<Unit>
-    suspend fun friendAction(userId: Long, action: ApiFriendAction): Result<Unit>
-    suspend fun blacklistAction(user: User, option: ApiBlacklistOption): Result<Unit>
+
+    suspend fun respondToFriendRequest(
+        userId: Long,
+        accept: Boolean
+    ): Result<Unit>
+
+    suspend fun friendAction(
+        userId: Long,
+        action: ApiFriendAction
+    ): Result<Unit>
+
+    suspend fun blacklistAction(
+        user: User,
+        option: ApiBlacklistOption
+    ): Result<Unit>
+
     suspend fun getBlacklist(): Result<List<User>>
 
     // 3.4. Площадки
     suspend fun getAllParks(): Result<List<Park>>
+
     suspend fun getPark(id: Long): Result<Park>
-    suspend fun savePark(id: Long?, form: ParkForm, photos: List<ByteArray>?): Result<Park>
+
+    suspend fun savePark(
+        id: Long?,
+        form: ParkForm,
+        photos: List<ByteArray>?
+    ): Result<Park>
+
     suspend fun deletePark(parkId: Long): Result<Unit>
+
     suspend fun getParksForUser(userId: Long): Result<List<Park>>
-    suspend fun changeTrainHereStatus(trainHere: Boolean, parkId: Long): Result<Unit>
+
+    suspend fun changeTrainHereStatus(
+        trainHere: Boolean,
+        parkId: Long
+    ): Result<Unit>
+
     suspend fun getUpdatedParks(date: String): Result<List<Park>>
-    suspend fun deleteParkPhoto(parkId: Long, photoId: Long): Result<Unit>
+
+    suspend fun deleteParkPhoto(
+        parkId: Long,
+        photoId: Long
+    ): Result<Unit>
+
     suspend fun removeParkLocally(parkId: Long): Result<Unit>
 
     // Локальное хранение площадок (Room)
     fun getParksFlow(): Flow<List<Park>>
+
     suspend fun importSeedParks(context: Context)
+
     suspend fun upsertParks(parks: List<Park>)
 
     // Cache API для ParkDetailScreen
     suspend fun getParkFromCache(parkId: Long): Park?
+
     suspend fun cachePark(park: Park)
+
+    // Cache API для past EventDetailScreen
+    suspend fun getEventFromCache(eventId: Long): Event?
+
+    suspend fun saveEventFull(event: Event)
 
     // Cache API для UserTrainingParksScreen
     suspend fun getCachedParksForUser(userId: Long): List<Park>?
+
     suspend fun hasCachedParksForUser(userId: Long): Boolean
 
     // 3.5. Мероприятия
     suspend fun getEvents(type: EventType): Result<List<Event>>
+
     suspend fun getEvent(id: Long): Result<Event>
-    suspend fun saveEvent(id: Long?, form: EventForm, photos: List<ByteArray>?): Result<Event>
-    suspend fun changeIsGoingToEvent(go: Boolean, eventId: Long): Result<Unit>
+
+    suspend fun saveEvent(
+        id: Long?,
+        form: EventForm,
+        photos: List<ByteArray>?
+    ): Result<Event>
+
+    suspend fun changeIsGoingToEvent(
+        go: Boolean,
+        eventId: Long
+    ): Result<Unit>
+
     suspend fun deleteEvent(eventId: Long): Result<Unit>
-    suspend fun deleteEventPhoto(eventId: Long, photoId: Long): Result<Unit>
+
+    suspend fun deleteEventPhoto(
+        eventId: Long,
+        photoId: Long
+    ): Result<Unit>
+
     suspend fun removeEventLocally(eventId: Long): Result<Unit>
 
     // 3.6. Сообщения
     suspend fun getDialogs(): Result<List<DialogResponse>>
+
     suspend fun getMessages(dialogId: Long): Result<List<MessageResponse>>
-    suspend fun sendMessage(message: String, userId: Long): Result<Unit>
+
+    suspend fun sendMessage(
+        message: String,
+        userId: Long
+    ): Result<Unit>
+
     suspend fun markAsRead(userId: Long): Result<Unit>
-    suspend fun markDialogAsRead(dialogId: Long, userId: Int): Result<Unit>
+
+    suspend fun markDialogAsRead(
+        dialogId: Long,
+        userId: Int
+    ): Result<Unit>
+
     suspend fun deleteDialog(dialogId: Long): Result<Unit>
 
     // 3.7. Дневники
     suspend fun getJournals(userId: Long): Result<List<JournalResponse>>
-    suspend fun getJournal(userId: Long, journalId: Long): Result<JournalResponse>
-    suspend fun getJournalEntries(userId: Long, journalId: Long): Result<List<JournalEntryResponse>>
+
+    suspend fun getJournal(
+        userId: Long,
+        journalId: Long
+    ): Result<JournalResponse>
+
+    suspend fun getJournalEntries(
+        userId: Long,
+        journalId: Long
+    ): Result<List<JournalEntryResponse>>
 
     suspend fun editJournalSettings(
         journalId: Long,
@@ -186,19 +285,32 @@ interface SWRepository {
      */
     suspend fun saveJournalToCache(journal: com.swparks.domain.model.Journal)
 
-    suspend fun createJournal(title: String, userId: Long?): Result<Unit>
+    suspend fun createJournal(
+        title: String,
+        userId: Long?
+    ): Result<Unit>
 
-    suspend fun deleteJournal(journalId: Long, userId: Long?): Result<Unit>
+    suspend fun deleteJournal(
+        journalId: Long,
+        userId: Long?
+    ): Result<Unit>
 
     // 3.8. Комментарии
-    suspend fun addComment(option: TextEntryOption, comment: String): Result<Unit>
+    suspend fun addComment(
+        option: TextEntryOption,
+        comment: String
+    ): Result<Unit>
+
     suspend fun editComment(
         option: TextEntryOption,
         commentId: Long,
         newComment: String
     ): Result<Unit>
 
-    suspend fun deleteComment(option: TextEntryOption, commentId: Long): Result<Unit>
+    suspend fun deleteComment(
+        option: TextEntryOption,
+        commentId: Long
+    ): Result<Unit>
 }
 
 /**
@@ -242,20 +354,24 @@ class SWRepositoryImp(
     /**
      * JSON-десериализатор для ErrorResponse
      */
-    private val json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-    }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+        }
 
     /**
      * In-memory StateFlow для будущих мероприятий
      */
-    private val _futureEvents = MutableStateFlow<List<Event>>(emptyList())
+    private val futureEventsFlow = MutableStateFlow<List<Event>>(emptyList())
 
     /**
      * Обрабатывает IOException и возвращает NetworkException с сообщением для пользователя
      */
-    private fun handleIOException(e: IOException, operation: String): NetworkException {
+    private fun handleIOException(
+        e: IOException,
+        operation: String
+    ): NetworkException {
         logger.e(TAG, "Ошибка сети при $operation: ${e.message}")
         crashReporter.logException(e, "Ошибка сети при $operation")
         return NetworkException(
@@ -267,7 +383,10 @@ class SWRepositoryImp(
     /**
      * Обрабатывает HttpException и пытается извлечь текст ошибки из тела ответа
      */
-    private fun handleHttpException(e: HttpException, operation: String): Exception {
+    private fun handleHttpException(
+        e: HttpException,
+        operation: String
+    ): Exception {
         val statusCode = e.code()
         logger.e(TAG, "Ошибка сервера $statusCode при $operation")
         crashReporter.logException(e, "Ошибка сервера $statusCode при $operation")
@@ -292,7 +411,10 @@ class SWRepositoryImp(
     /**
      * Обрабатывает неуспешный Response и извлекает сообщение об ошибке
      */
-    private fun handleResponseError(response: Response<*>, operation: String): ServerException {
+    private fun handleResponseError(
+        response: Response<*>,
+        operation: String
+    ): ServerException {
         val statusCode = response.code()
         logger.e(TAG, "Ошибка сервера $statusCode при $operation")
 
@@ -317,12 +439,12 @@ class SWRepositoryImp(
     override suspend fun getPastEvents(): List<Event> = swApi.getPastEvents()
 
     // Flow методы для будущих мероприятий
-    override fun getFutureEventsFlow(): Flow<List<Event>> = _futureEvents.asStateFlow()
+    override fun getFutureEventsFlow(): Flow<List<Event>> = futureEventsFlow.asStateFlow()
 
     override suspend fun syncFutureEvents(): Result<Unit> =
         try {
             val events = swApi.getFutureEvents()
-            _futureEvents.value = events
+            futureEventsFlow.value = events
             Result.success(Unit)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "синхронизации будущих мероприятий"))
@@ -339,8 +461,8 @@ class SWRepositoryImp(
     override suspend fun syncPastEvents(): Result<Unit> =
         try {
             val events = swApi.getPastEvents()
-            val entities = events.map { it.toEntity() }
-            eventDao.replaceAll(entities)
+            val entities = events.map { it.toPartialEntity() }
+            eventDao.insertEventsPartial(entities)
             Result.success(Unit)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "синхронизации прошедших мероприятий"))
@@ -355,16 +477,17 @@ class SWRepositoryImp(
 
     override suspend fun register(params: RegistrationParams): Result<User> =
         try {
-            val user = swApi.register(
-                name = params.name,
-                fullName = params.fullName,
-                email = params.email,
-                password = params.password,
-                birthDate = params.birthDate,
-                genderCode = params.genderCode,
-                countryId = params.countryId,
-                cityId = params.cityId
-            )
+            val user =
+                swApi.register(
+                    name = params.name,
+                    fullName = params.fullName,
+                    email = params.email,
+                    password = params.password,
+                    birthDate = params.birthDate,
+                    genderCode = params.genderCode,
+                    countryId = params.countryId,
+                    cityId = params.cityId
+                )
             // Сохраняем пользователя в локальный кэш для отображения профиля без запроса
             userDao.insert(user.toEntity(isCurrentUser = true))
             Result.success(user)
@@ -400,7 +523,10 @@ class SWRepositoryImp(
             Result.failure(e)
         }
 
-    override suspend fun changePassword(current: String, new: String): Result<Unit> =
+    override suspend fun changePassword(
+        current: String,
+        new: String
+    ): Result<Unit> =
         try {
             val response = swApi.changePassword(current, new)
             if (response.isSuccessful) {
@@ -460,26 +586,34 @@ class SWRepositoryImp(
         image: ByteArray?
     ): Result<User> =
         try {
-            val user = swApi.editUser(
-                userId = userId,
-                name = NetworkUtils.createPartWithName("name", form.name),
-                fullName = NetworkUtils.createPartWithName("fullname", form.fullname),
-                email = NetworkUtils.createPartWithName("email", form.email),
-                birthDate = NetworkUtils.createOptionalPartWithName("birth_date", form.birthDate),
-                gender = NetworkUtils.createOptionalPartWithName(
-                    "gender",
-                    form.genderCode.toString()
-                ),
-                countryId = NetworkUtils.createOptionalPartWithName(
-                    "country_id",
-                    form.countryId?.toString()
-                ),
-                cityId = NetworkUtils.createOptionalPartWithName(
-                    "city_id",
-                    form.cityId?.toString()
-                ),
-                image = NetworkUtils.createOptionalImagePart(image, "image")
-            )
+            val user =
+                swApi.editUser(
+                    userId = userId,
+                    name = NetworkUtils.createPartWithName("name", form.name),
+                    fullName = NetworkUtils.createPartWithName("fullname", form.fullname),
+                    email = NetworkUtils.createPartWithName("email", form.email),
+                    birthDate =
+                        NetworkUtils.createOptionalPartWithName(
+                            "birth_date",
+                            form.birthDate
+                        ),
+                    gender =
+                        NetworkUtils.createOptionalPartWithName(
+                            "gender",
+                            form.genderCode.toString()
+                        ),
+                    countryId =
+                        NetworkUtils.createOptionalPartWithName(
+                            "country_id",
+                            form.countryId?.toString()
+                        ),
+                    cityId =
+                        NetworkUtils.createOptionalPartWithName(
+                            "city_id",
+                            form.cityId?.toString()
+                        ),
+                    image = NetworkUtils.createOptionalImagePart(image, "image")
+                )
             // Сохраняем обновленного пользователя в локальный кэш для автообновления UI
             userDao.insert(user.toEntity(isCurrentUser = true))
             Result.success(user)
@@ -532,12 +666,13 @@ class SWRepositoryImp(
                 userDao.insertAll(requests.map { it.toEntity(isFriendRequest = true) })
                 userDao.insertAll(blacklist.map { it.toEntity(isBlacklisted = true) })
 
-                val socialUpdates = SocialUpdates(
-                    user = user,
-                    friends = friends,
-                    friendRequests = requests,
-                    blacklist = blacklist
-                )
+                val socialUpdates =
+                    SocialUpdates(
+                        user = user,
+                        friends = friends,
+                        friendRequests = requests,
+                        blacklist = blacklist
+                    )
                 Result.success(socialUpdates)
             } catch (e: IOException) {
                 // Ошибка сети - возвращаем кэшированные данные
@@ -596,13 +731,17 @@ class SWRepositoryImp(
             Result.failure(handleHttpException(e, "загрузке заявок в друзья"))
         }
 
-    override suspend fun respondToFriendRequest(userId: Long, accept: Boolean): Result<Unit> =
+    override suspend fun respondToFriendRequest(
+        userId: Long,
+        accept: Boolean
+    ): Result<Unit> =
         try {
-            val response = if (accept) {
-                swApi.acceptFriendRequest(userId)
-            } else {
-                swApi.declineFriendRequest(userId)
-            }
+            val response =
+                if (accept) {
+                    swApi.acceptFriendRequest(userId)
+                } else {
+                    swApi.declineFriendRequest(userId)
+                }
             if (response.isSuccessful) {
                 if (accept) {
                     userDao.markAsFriend(userId)
@@ -620,15 +759,19 @@ class SWRepositoryImp(
             Result.failure(handleHttpException(e, "обработке заявки в друзья"))
         }
 
-    override suspend fun friendAction(userId: Long, action: ApiFriendAction): Result<Unit> =
+    override suspend fun friendAction(
+        userId: Long,
+        action: ApiFriendAction
+    ): Result<Unit> =
         try {
-            val response = when (action) {
-                ApiFriendAction.ADD -> swApi.sendFriendRequest(userId)
-                ApiFriendAction.REMOVE -> swApi.deleteFriend(userId)
-            }
+            val response =
+                when (action) {
+                    ApiFriendAction.ADD -> swApi.sendFriendRequest(userId)
+                    ApiFriendAction.REMOVE -> swApi.deleteFriend(userId)
+                }
             if (response.isSuccessful) {
                 when (action) {
-                    ApiFriendAction.ADD -> { /* noop - заявка отправлена, ждём подтверждения */
+                    ApiFriendAction.ADD -> { // noop - заявка отправлена, ждём подтверждения
                     }
 
                     ApiFriendAction.REMOVE -> {
@@ -646,12 +789,16 @@ class SWRepositoryImp(
             Result.failure(handleHttpException(e, "действии с другом"))
         }
 
-    override suspend fun blacklistAction(user: User, option: ApiBlacklistOption): Result<Unit> =
+    override suspend fun blacklistAction(
+        user: User,
+        option: ApiBlacklistOption
+    ): Result<Unit> =
         try {
-            val response = when (option) {
-                ApiBlacklistOption.ADD -> swApi.addToBlacklist(user.id)
-                ApiBlacklistOption.REMOVE -> swApi.deleteFromBlacklist(user.id)
-            }
+            val response =
+                when (option) {
+                    ApiBlacklistOption.ADD -> swApi.addToBlacklist(user.id)
+                    ApiBlacklistOption.REMOVE -> swApi.deleteFromBlacklist(user.id)
+                }
             if (response.isSuccessful) {
                 when (option) {
                     ApiBlacklistOption.ADD -> userDao.addToBlacklist(user.id)
@@ -710,39 +857,51 @@ class SWRepositoryImp(
         photos: List<ByteArray>?
     ): Result<Park> =
         try {
-            val photoParts = photos?.mapIndexed { index, bytes ->
-                val partName = "photo${index + 1}"
-                NetworkUtils.createImagePart(bytes, partName)
-            }
+            val photoParts =
+                photos?.mapIndexed { index, bytes ->
+                    val partName = "photo${index + 1}"
+                    NetworkUtils.createImagePart(bytes, partName)
+                }
 
-            val park = if (id != null) {
-                swApi.editPark(
-                    parkId = id,
-                    address = NetworkUtils.createPartWithName("address", form.address),
-                    latitude = NetworkUtils.createPartWithName("latitude", form.latitude),
-                    longitude = NetworkUtils.createPartWithName("longitude", form.longitude),
-                    cityId = NetworkUtils.createOptionalPartWithName(
-                        "city_id",
-                        form.cityId?.toString()
-                    ),
-                    typeId = NetworkUtils.createPartWithName("type_id", form.typeId.toString()),
-                    sizeId = NetworkUtils.createPartWithName("class_id", form.sizeId.toString()),
-                    photos = photoParts
-                )
-            } else {
-                swApi.createPark(
-                    address = NetworkUtils.createPartWithName("address", form.address),
-                    latitude = NetworkUtils.createPartWithName("latitude", form.latitude),
-                    longitude = NetworkUtils.createPartWithName("longitude", form.longitude),
-                    cityId = NetworkUtils.createOptionalPartWithName(
-                        "city_id",
-                        form.cityId?.toString()
-                    ),
-                    typeId = NetworkUtils.createPartWithName("type_id", form.typeId.toString()),
-                    sizeId = NetworkUtils.createPartWithName("class_id", form.sizeId.toString()),
-                    photos = photoParts
-                )
-            }
+            val park =
+                if (id != null) {
+                    swApi.editPark(
+                        parkId = id,
+                        address = NetworkUtils.createPartWithName("address", form.address),
+                        latitude = NetworkUtils.createPartWithName("latitude", form.latitude),
+                        longitude = NetworkUtils.createPartWithName("longitude", form.longitude),
+                        cityId =
+                            NetworkUtils.createOptionalPartWithName(
+                                "city_id",
+                                form.cityId?.toString()
+                            ),
+                        typeId = NetworkUtils.createPartWithName("type_id", form.typeId.toString()),
+                        sizeId =
+                            NetworkUtils.createPartWithName(
+                                "class_id",
+                                form.sizeId.toString()
+                            ),
+                        photos = photoParts
+                    )
+                } else {
+                    swApi.createPark(
+                        address = NetworkUtils.createPartWithName("address", form.address),
+                        latitude = NetworkUtils.createPartWithName("latitude", form.latitude),
+                        longitude = NetworkUtils.createPartWithName("longitude", form.longitude),
+                        cityId =
+                            NetworkUtils.createOptionalPartWithName(
+                                "city_id",
+                                form.cityId?.toString()
+                            ),
+                        typeId = NetworkUtils.createPartWithName("type_id", form.typeId.toString()),
+                        sizeId =
+                            NetworkUtils.createPartWithName(
+                                "class_id",
+                                form.sizeId.toString()
+                            ),
+                        photos = photoParts
+                    )
+                }
             val currentUserId = preferencesRepository.getCurrentUserIdSync()
             if (currentUserId != null) {
                 updateUserAddedParksCache(currentUserId, id, park)
@@ -797,7 +956,10 @@ class SWRepositoryImp(
             Result.failure(handleHttpException(e, "загрузке площадок пользователя"))
         }
 
-    private suspend fun cacheParksAndUserRelations(userId: Long, parks: List<Park>) {
+    private suspend fun cacheParksAndUserRelations(
+        userId: Long,
+        parks: List<Park>
+    ) {
         withContext(Dispatchers.IO) {
             if (userTrainingParkDao == null) {
                 logger.d(TAG, "userTrainingParkDao не доступен, пропускаем кэширование связей")
@@ -809,41 +971,44 @@ class SWRepositoryImp(
                 logger.d(TAG, "Upsert ${parkEntities.size} parks в общую таблицу parks")
             }
 
-            val relations = parks.mapIndexed { index, park ->
-                UserTrainingParkEntity(
-                    userId = userId,
-                    parkId = park.id,
-                    position = index
-                )
-            }
+            val relations =
+                parks.mapIndexed { index, park ->
+                    UserTrainingParkEntity(
+                        userId = userId,
+                        parkId = park.id,
+                        position = index
+                    )
+                }
             userTrainingParkDao.replaceForUser(userId, relations)
             logger.d(TAG, "Сохранены связи пользователя $userId с ${relations.size} площадками")
         }
     }
 
-    override suspend fun getCachedParksForUser(userId: Long): List<Park>? {
-        return withContext(Dispatchers.IO) {
+    override suspend fun getCachedParksForUser(userId: Long): List<Park>? =
+        withContext(Dispatchers.IO) {
             if (userTrainingParkDao == null || !userTrainingParkDao.hasCachedParksForUser(userId)) {
                 null
             } else {
                 userTrainingParkDao.getParksForUserFromCache(userId).map { it.toPark() }
             }
         }
-    }
 
-    override suspend fun hasCachedParksForUser(userId: Long): Boolean {
-        return withContext(Dispatchers.IO) {
+    override suspend fun hasCachedParksForUser(userId: Long): Boolean =
+        withContext(Dispatchers.IO) {
             userTrainingParkDao?.hasCachedParksForUser(userId) ?: false
         }
-    }
 
-    override suspend fun changeTrainHereStatus(trainHere: Boolean, parkId: Long): Result<Unit> =
+    override suspend fun changeTrainHereStatus(
+        trainHere: Boolean,
+        parkId: Long
+    ): Result<Unit> =
         try {
-            val response = if (trainHere) {
-                swApi.postTrainHere(parkId)
-            } else {
-                swApi.deleteTrainHere(parkId)
-            }
+            val response =
+                if (trainHere) {
+                    swApi.postTrainHere(parkId)
+                } else {
+                    swApi.deleteTrainHere(parkId)
+                }
             if (response.isSuccessful) {
                 updateTrainHereCache(trainHere, parkId)
                 Result.success(Unit)
@@ -856,7 +1021,10 @@ class SWRepositoryImp(
             Result.failure(handleHttpException(e, "изменении статуса тренировки"))
         }
 
-    private suspend fun updateTrainHereCache(trainHere: Boolean, parkId: Long) {
+    private suspend fun updateTrainHereCache(
+        trainHere: Boolean,
+        parkId: Long
+    ) {
         val cachedPark = parkDao.getParkById(parkId) ?: return
         val currentUserId = preferencesRepository.getCurrentUserIdSync()
 
@@ -879,13 +1047,14 @@ class SWRepositoryImp(
             }
         }
 
-        val newCount = updatedCount?.let { count ->
-            if (trainHere) {
-                count + 1
-            } else {
-                maxOf(count - 1, 0)
+        val newCount =
+            updatedCount?.let { count ->
+                if (trainHere) {
+                    count + 1
+                } else {
+                    maxOf(count - 1, 0)
+                }
             }
-        }
 
         parkDao.upsertPark(
             cachedPark.copy(
@@ -899,11 +1068,12 @@ class SWRepositoryImp(
             val currentUserEntity = userDao.getUserByIdFlow(currentUserId).first()
             if (currentUserEntity != null) {
                 val currentParksCount = currentUserEntity.parksCount?.toIntOrNull() ?: 0
-                val updatedParksCount = if (trainHere) {
-                    currentParksCount + 1
-                } else {
-                    maxOf(currentParksCount - 1, 0)
-                }
+                val updatedParksCount =
+                    if (trainHere) {
+                        currentParksCount + 1
+                    } else {
+                        maxOf(currentParksCount - 1, 0)
+                    }
                 userDao.insert(currentUserEntity.copy(parksCount = updatedParksCount.toString()))
                 logger.d(
                     TAG,
@@ -925,7 +1095,10 @@ class SWRepositoryImp(
             Result.failure(handleHttpException(e, "загрузке обновленных площадок"))
         }
 
-    override suspend fun deleteParkPhoto(parkId: Long, photoId: Long): Result<Unit> =
+    override suspend fun deleteParkPhoto(
+        parkId: Long,
+        photoId: Long
+    ): Result<Unit> =
         try {
             val response = swApi.deleteParkPhoto(parkId, photoId)
             if (response.isSuccessful) {
@@ -941,18 +1114,22 @@ class SWRepositoryImp(
             Result.failure(handleHttpException(e, "удалении фото площадки"))
         }
 
-    private suspend fun updateDeletedPhotoCache(parkId: Long, photoId: Long) {
+    private suspend fun updateDeletedPhotoCache(
+        parkId: Long,
+        photoId: Long
+    ) {
         val cachedPark = parkDao.getParkById(parkId) ?: return
         val photos = cachedPark.photos ?: return
 
         val photoToDelete = photos.find { it.id == photoId } ?: return
         val updatedPhotos = photos.filter { it.id != photoId }
 
-        val newPreview = when {
-            cachedPark.preview != photoToDelete.photo -> cachedPark.preview
-            updatedPhotos.isNotEmpty() -> updatedPhotos.first().photo
-            else -> ""
-        }
+        val newPreview =
+            when {
+                cachedPark.preview != photoToDelete.photo -> cachedPark.preview
+                updatedPhotos.isNotEmpty() -> updatedPhotos.first().photo
+                else -> ""
+            }
 
         parkDao.upsertPark(
             cachedPark.copy(
@@ -963,16 +1140,20 @@ class SWRepositoryImp(
         logger.d(TAG, "Обновлён кэш фото для площадки $parkId, удалено фото $photoId")
     }
 
-    private suspend fun updateDeletedCommentCache(parkId: Long, commentId: Long) {
+    private suspend fun updateDeletedCommentCache(
+        parkId: Long,
+        commentId: Long
+    ) {
         val cachedPark = parkDao.getParkById(parkId) ?: return
         val comments = cachedPark.comments ?: return
 
         val updatedComments = comments.filter { it.id != commentId }
         if (updatedComments.size == comments.size) return
 
-        val newCommentsCount = cachedPark.commentsCount?.let { count ->
-            maxOf(count - 1, 0)
-        }
+        val newCommentsCount =
+            cachedPark.commentsCount?.let { count ->
+                maxOf(count - 1, 0)
+            }
 
         parkDao.upsertPark(
             cachedPark.copy(
@@ -986,7 +1167,10 @@ class SWRepositoryImp(
         )
     }
 
-    private suspend fun removeParkFromUser(userId: Long, parkId: Long) {
+    private suspend fun removeParkFromUser(
+        userId: Long,
+        parkId: Long
+    ) {
         val user = userDao.getUserByIdFlow(userId).first() ?: return
         val currentParks = user.addedParks.orEmpty().toMutableList()
         currentParks.removeAll { it.id == parkId }
@@ -1022,11 +1206,10 @@ class SWRepositoryImp(
 
     // Локальное хранение площадок (Room)
 
-    override fun getParksFlow(): Flow<List<Park>> {
-        return parkDao.getAllParks().map { entities ->
+    override fun getParksFlow(): Flow<List<Park>> =
+        parkDao.getAllParks().map { entities ->
             entities.map { it.toPark() }
         }
-    }
 
     override suspend fun importSeedParks(context: Context) {
         withContext(Dispatchers.IO) {
@@ -1051,11 +1234,10 @@ class SWRepositoryImp(
         }
     }
 
-    override suspend fun getParkFromCache(parkId: Long): Park? {
-        return withContext(Dispatchers.IO) {
+    override suspend fun getParkFromCache(parkId: Long): Park? =
+        withContext(Dispatchers.IO) {
             parkDao.getParkById(parkId)?.toPark()
         }
-    }
 
     override suspend fun cachePark(park: Park) {
         withContext(Dispatchers.IO) {
@@ -1064,14 +1246,27 @@ class SWRepositoryImp(
         }
     }
 
+    override suspend fun getEventFromCache(eventId: Long): Event? =
+        withContext(Dispatchers.IO) {
+            eventDao.getEventById(eventId)?.takeIf { it.isFull }?.toEvent()
+        }
+
+    override suspend fun saveEventFull(event: Event) {
+        withContext(Dispatchers.IO) {
+            eventDao.upsertEventFull(event.toFullEntity())
+            logger.d(TAG, "Мероприятие ${event.id} закэшировано в Room как full snapshot")
+        }
+    }
+
     // 3.5. Мероприятия
 
     override suspend fun getEvents(type: EventType): Result<List<Event>> =
         try {
-            val events = when (type) {
-                EventType.FUTURE -> swApi.getFutureEvents()
-                EventType.PAST -> swApi.getPastEvents()
-            }
+            val events =
+                when (type) {
+                    EventType.FUTURE -> swApi.getFutureEvents()
+                    EventType.PAST -> swApi.getPastEvents()
+                }
             Result.success(events)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "загрузке мероприятий"))
@@ -1099,29 +1294,39 @@ class SWRepositoryImp(
         photos: List<ByteArray>?
     ): Result<Event> =
         try {
-            val photoParts = photos?.mapIndexed { index, bytes ->
-                val partName = "photo${index + 1}"
-                NetworkUtils.createImagePart(bytes, partName)
-            }
+            val photoParts =
+                photos?.mapIndexed { index, bytes ->
+                    val partName = "photo${index + 1}"
+                    NetworkUtils.createImagePart(bytes, partName)
+                }
 
-            val event = if (id != null) {
-                swApi.editEvent(
-                    eventId = id,
-                    title = NetworkUtils.createPartWithName("title", form.title),
-                    description = NetworkUtils.createPartWithName("description", form.description),
-                    date = NetworkUtils.createPartWithName("date", form.date),
-                    parkId = NetworkUtils.createPartWithName("area_id", form.parkId.toString()),
-                    photos = photoParts
-                )
-            } else {
-                swApi.createEvent(
-                    title = NetworkUtils.createPartWithName("title", form.title),
-                    description = NetworkUtils.createPartWithName("description", form.description),
-                    date = NetworkUtils.createPartWithName("date", form.date),
-                    parkId = NetworkUtils.createPartWithName("area_id", form.parkId.toString()),
-                    photos = photoParts
-                )
-            }
+            val event =
+                if (id != null) {
+                    swApi.editEvent(
+                        eventId = id,
+                        title = NetworkUtils.createPartWithName("title", form.title),
+                        description =
+                            NetworkUtils.createPartWithName(
+                                "description",
+                                form.description
+                            ),
+                        date = NetworkUtils.createPartWithName("date", form.date),
+                        parkId = NetworkUtils.createPartWithName("area_id", form.parkId.toString()),
+                        photos = photoParts
+                    )
+                } else {
+                    swApi.createEvent(
+                        title = NetworkUtils.createPartWithName("title", form.title),
+                        description =
+                            NetworkUtils.createPartWithName(
+                                "description",
+                                form.description
+                            ),
+                        date = NetworkUtils.createPartWithName("date", form.date),
+                        parkId = NetworkUtils.createPartWithName("area_id", form.parkId.toString()),
+                        photos = photoParts
+                    )
+                }
             Result.success(event)
         } catch (e: IOException) {
             Result.failure(handleIOException(e, "сохранении мероприятия"))
@@ -1129,13 +1334,17 @@ class SWRepositoryImp(
             Result.failure(handleHttpException(e, "сохранении мероприятия"))
         }
 
-    override suspend fun changeIsGoingToEvent(go: Boolean, eventId: Long): Result<Unit> =
+    override suspend fun changeIsGoingToEvent(
+        go: Boolean,
+        eventId: Long
+    ): Result<Unit> =
         try {
-            val response = if (go) {
-                swApi.postGoToEvent(eventId)
-            } else {
-                swApi.deleteGoToEvent(eventId)
-            }
+            val response =
+                if (go) {
+                    swApi.postGoToEvent(eventId)
+                } else {
+                    swApi.deleteGoToEvent(eventId)
+                }
             if (response.isSuccessful) {
                 Result.success(Unit)
             } else {
@@ -1151,7 +1360,7 @@ class SWRepositoryImp(
         try {
             val response = swApi.deleteEvent(eventId)
             if (response.isSuccessful) {
-                _futureEvents.value = _futureEvents.value.filter { it.id != eventId }
+                futureEventsFlow.value = futureEventsFlow.value.filter { it.id != eventId }
                 eventDao.deleteById(eventId)
                 Result.success(Unit)
             } else {
@@ -1163,7 +1372,10 @@ class SWRepositoryImp(
             Result.failure(handleHttpException(e, "удалении мероприятия"))
         }
 
-    override suspend fun deleteEventPhoto(eventId: Long, photoId: Long): Result<Unit> =
+    override suspend fun deleteEventPhoto(
+        eventId: Long,
+        photoId: Long
+    ): Result<Unit> =
         try {
             val response = swApi.deleteEventPhoto(eventId, photoId)
             if (response.isSuccessful) {
@@ -1180,7 +1392,7 @@ class SWRepositoryImp(
 
     override suspend fun removeEventLocally(eventId: Long): Result<Unit> =
         try {
-            _futureEvents.value = _futureEvents.value.filter { it.id != eventId }
+            futureEventsFlow.value = futureEventsFlow.value.filter { it.id != eventId }
             eventDao.deleteById(eventId)
             Result.success(Unit)
         } catch (e: Exception) {
@@ -1210,7 +1422,10 @@ class SWRepositoryImp(
             Result.failure(handleHttpException(e, "загрузке сообщений"))
         }
 
-    override suspend fun sendMessage(message: String, userId: Long): Result<Unit> =
+    override suspend fun sendMessage(
+        message: String,
+        userId: Long
+    ): Result<Unit> =
         try {
             val response = swApi.sendMessageTo(userId, message)
             if (response.isSuccessful) {
@@ -1238,7 +1453,10 @@ class SWRepositoryImp(
             Result.failure(handleHttpException(e, "отметке сообщений прочитанными"))
         }
 
-    override suspend fun markDialogAsRead(dialogId: Long, userId: Int): Result<Unit> =
+    override suspend fun markDialogAsRead(
+        dialogId: Long,
+        userId: Int
+    ): Result<Unit> =
         try {
             val response = swApi.markAsRead(userId.toLong())
             if (response.isSuccessful) {
@@ -1284,7 +1502,10 @@ class SWRepositoryImp(
             Result.failure(handleHttpException(e, "загрузке дневников"))
         }
 
-    override suspend fun getJournal(userId: Long, journalId: Long): Result<JournalResponse> =
+    override suspend fun getJournal(
+        userId: Long,
+        journalId: Long
+    ): Result<JournalResponse> =
         try {
             val journal = swApi.getJournal(userId, journalId)
             Result.success(journal)
@@ -1302,11 +1523,12 @@ class SWRepositoryImp(
         commentAccess: JournalAccess
     ): Result<Unit> =
         try {
-            val request = EditJournalSettingsRequest.create(
-                title = title,
-                viewAccess = viewAccess,
-                commentAccess = commentAccess
-            )
+            val request =
+                EditJournalSettingsRequest.create(
+                    title = title,
+                    viewAccess = viewAccess,
+                    commentAccess = commentAccess
+                )
 
             logger.i(
                 TAG,
@@ -1314,13 +1536,14 @@ class SWRepositoryImp(
                     "title=$title, viewAccess=${request.viewAccess}, commentAccess=${request.commentAccess}"
             )
 
-            val response = swApi.editJournalSettings(
-                userId = userId ?: 1L,
-                journalId = journalId,
-                title = title,
-                viewAccess = request.viewAccess,
-                commentAccess = request.commentAccess
-            )
+            val response =
+                swApi.editJournalSettings(
+                    userId = userId ?: 1L,
+                    journalId = journalId,
+                    title = title,
+                    viewAccess = request.viewAccess,
+                    commentAccess = request.commentAccess
+                )
 
             if (response.isSuccessful) {
                 logger.i(
@@ -1360,14 +1583,18 @@ class SWRepositoryImp(
             Result.failure(handleHttpException(e, "загрузке записей дневника"))
         }
 
-    override suspend fun createJournal(title: String, userId: Long?): Result<Unit> =
+    override suspend fun createJournal(
+        title: String,
+        userId: Long?
+    ): Result<Unit> =
         try {
             val finalUserId = userId ?: 1L
             logger.i(TAG, "Создание дневника: userId=$finalUserId, title=$title")
-            val response = swApi.createJournal(
-                userId = finalUserId,
-                title = title
-            )
+            val response =
+                swApi.createJournal(
+                    userId = finalUserId,
+                    title = title
+                )
             logger.i(
                 TAG,
                 "Ответ сервера при создании дневника: код=${response.code()}, успешно=${response.isSuccessful}"
@@ -1384,12 +1611,16 @@ class SWRepositoryImp(
             Result.failure(handleHttpException(e, "создании дневника"))
         }
 
-    override suspend fun deleteJournal(journalId: Long, userId: Long?): Result<Unit> =
+    override suspend fun deleteJournal(
+        journalId: Long,
+        userId: Long?
+    ): Result<Unit> =
         try {
-            val response = swApi.deleteJournal(
-                userId = userId ?: 1L, // Note: передавать реальный userId
-                journalId = journalId
-            )
+            val response =
+                swApi.deleteJournal(
+                    userId = userId ?: 1L, // Note: передавать реальный userId
+                    journalId = journalId
+                )
 
             when {
                 response.isSuccessful -> {
@@ -1429,52 +1660,58 @@ class SWRepositoryImp(
 
     // 3.8. Комментарии
 
-    override suspend fun addComment(option: TextEntryOption, comment: String): Result<Unit> =
+    override suspend fun addComment(
+        option: TextEntryOption,
+        comment: String
+    ): Result<Unit> =
         when (option) {
-            is TextEntryOption.Park -> try {
-                val response = swApi.addCommentToPark(option.id, comment)
-                if (response.isSuccessful) {
-                    Result.success(Unit)
-                } else {
-                    Result.failure(
-                        handleHttpException(
-                            HttpException(response),
-                            "добавлении комментария"
+            is TextEntryOption.Park ->
+                try {
+                    val response = swApi.addCommentToPark(option.id, comment)
+                    if (response.isSuccessful) {
+                        Result.success(Unit)
+                    } else {
+                        Result.failure(
+                            handleHttpException(
+                                HttpException(response),
+                                "добавлении комментария"
+                            )
                         )
-                    )
+                    }
+                } catch (e: IOException) {
+                    Result.failure(handleIOException(e, "добавлении комментария"))
+                } catch (e: HttpException) {
+                    Result.failure(handleHttpException(e, "добавлении комментария"))
                 }
-            } catch (e: IOException) {
-                Result.failure(handleIOException(e, "добавлении комментария"))
-            } catch (e: HttpException) {
-                Result.failure(handleHttpException(e, "добавлении комментария"))
-            }
 
-            is TextEntryOption.Event -> try {
-                val response = swApi.addCommentToEvent(option.id, comment)
-                if (response.isSuccessful) {
-                    Result.success(Unit)
-                } else {
-                    Result.failure(
-                        handleHttpException(
-                            HttpException(response),
-                            "добавлении комментария"
+            is TextEntryOption.Event ->
+                try {
+                    val response = swApi.addCommentToEvent(option.id, comment)
+                    if (response.isSuccessful) {
+                        Result.success(Unit)
+                    } else {
+                        Result.failure(
+                            handleHttpException(
+                                HttpException(response),
+                                "добавлении комментария"
+                            )
                         )
-                    )
+                    }
+                } catch (e: IOException) {
+                    Result.failure(handleIOException(e, "добавлении комментария"))
+                } catch (e: HttpException) {
+                    Result.failure(handleHttpException(e, "добавлении комментария"))
                 }
-            } catch (e: IOException) {
-                Result.failure(handleIOException(e, "добавлении комментария"))
-            } catch (e: HttpException) {
-                Result.failure(handleHttpException(e, "добавлении комментария"))
-            }
 
             is TextEntryOption.Journal -> {
 // Для дневников создаются новые записи (сообщения)
                 try {
-                    val response = swApi.saveJournalEntry(
-                        option.ownerId,
-                        option.journalId,
-                        comment
-                    )
+                    val response =
+                        swApi.saveJournalEntry(
+                            option.ownerId,
+                            option.journalId,
+                            comment
+                        )
                     if (response.isSuccessful) {
                         Result.success(Unit)
                     } else {
@@ -1490,7 +1727,6 @@ class SWRepositoryImp(
                 } catch (e: HttpException) {
                     Result.failure(handleHttpException(e, "создании записи в дневнике"))
                 }
-
             }
         }
 
@@ -1498,132 +1734,147 @@ class SWRepositoryImp(
         option: TextEntryOption,
         commentId: Long,
         newComment: String
-    ): Result<Unit> = when (option) {
-        is TextEntryOption.Park -> try {
-            val response = swApi.editParkComment(option.id, commentId, newComment)
-            if (response.isSuccessful) {
-                Result.success(Unit)
-            } else {
-                Result.failure(
-                    handleHttpException(
-                        HttpException(response),
-                        "редактировании комментария"
-                    )
-                )
-            }
-        } catch (e: IOException) {
-            Result.failure(handleIOException(e, "редактировании комментария"))
-        } catch (e: HttpException) {
-            Result.failure(handleHttpException(e, "редактировании комментария"))
-        }
+    ): Result<Unit> =
+        when (option) {
+            is TextEntryOption.Park ->
+                try {
+                    val response = swApi.editParkComment(option.id, commentId, newComment)
+                    if (response.isSuccessful) {
+                        Result.success(Unit)
+                    } else {
+                        Result.failure(
+                            handleHttpException(
+                                HttpException(response),
+                                "редактировании комментария"
+                            )
+                        )
+                    }
+                } catch (e: IOException) {
+                    Result.failure(handleIOException(e, "редактировании комментария"))
+                } catch (e: HttpException) {
+                    Result.failure(handleHttpException(e, "редактировании комментария"))
+                }
 
-        is TextEntryOption.Event -> try {
-            val response = swApi.editEventComment(option.id, commentId, newComment)
-            if (response.isSuccessful) {
-                Result.success(Unit)
-            } else {
-                Result.failure(
-                    handleHttpException(
-                        HttpException(response),
-                        "редактировании комментария"
-                    )
-                )
-            }
-        } catch (e: IOException) {
-            Result.failure(handleIOException(e, "редактировании комментария"))
-        } catch (e: HttpException) {
-            Result.failure(handleHttpException(e, "редактировании комментария"))
-        }
+            is TextEntryOption.Event ->
+                try {
+                    val response = swApi.editEventComment(option.id, commentId, newComment)
+                    if (response.isSuccessful) {
+                        Result.success(Unit)
+                    } else {
+                        Result.failure(
+                            handleHttpException(
+                                HttpException(response),
+                                "редактировании комментария"
+                            )
+                        )
+                    }
+                } catch (e: IOException) {
+                    Result.failure(handleIOException(e, "редактировании комментария"))
+                } catch (e: HttpException) {
+                    Result.failure(handleHttpException(e, "редактировании комментария"))
+                }
 
-        is TextEntryOption.Journal -> editJournalEntry(
-            option.ownerId,
-            option.journalId,
-            commentId,
-            newComment
-        )
-    }
+            is TextEntryOption.Journal ->
+                editJournalEntry(
+                    option.ownerId,
+                    option.journalId,
+                    commentId,
+                    newComment
+                )
+        }
 
     private suspend fun editJournalEntry(
         ownerId: Long,
         journalId: Long,
         entryId: Long,
         newMessage: String
-    ): Result<Unit> = try {
-        val response = swApi.editJournalEntry(ownerId, journalId, entryId, newMessage)
+    ): Result<Unit> =
+        try {
+            val response = swApi.editJournalEntry(ownerId, journalId, entryId, newMessage)
 
-        if (response.isSuccessful) {
-            updateLocalJournalEntry(entryId, newMessage)
-            Result.success(Unit)
-        } else {
-            Result.failure(
-                handleHttpException(
-                    HttpException(response),
-                    "редактировании записи в дневнике"
+            if (response.isSuccessful) {
+                updateLocalJournalEntry(entryId, newMessage)
+                Result.success(Unit)
+            } else {
+                Result.failure(
+                    handleHttpException(
+                        HttpException(response),
+                        "редактировании записи в дневнике"
+                    )
                 )
-            )
+            }
+        } catch (e: IOException) {
+            Result.failure(handleIOException(e, "редактировании записи в дневнике"))
+        } catch (e: HttpException) {
+            Result.failure(handleHttpException(e, "редактировании записи в дневнике"))
         }
-    } catch (e: IOException) {
-        Result.failure(handleIOException(e, "редактировании записи в дневнике"))
-    } catch (e: HttpException) {
-        Result.failure(handleHttpException(e, "редактировании записи в дневнике"))
-    }
 
-    private suspend fun updateLocalJournalEntry(entryId: Long, newMessage: String) {
+    private suspend fun updateLocalJournalEntry(
+        entryId: Long,
+        newMessage: String
+    ) {
         val existingEntry = journalEntryDao.getById(entryId) ?: return
-        val updatedEntry = existingEntry.copy(
-            message = newMessage,
-            modifyDate = System.currentTimeMillis()
-        )
+        val updatedEntry =
+            existingEntry.copy(
+                message = newMessage,
+                modifyDate = System.currentTimeMillis()
+            )
         journalEntryDao.insert(updatedEntry)
     }
 
-    override suspend fun deleteComment(option: TextEntryOption, commentId: Long): Result<Unit> =
+    override suspend fun deleteComment(
+        option: TextEntryOption,
+        commentId: Long
+    ): Result<Unit> =
         when (option) {
-            is TextEntryOption.Park -> try {
-                val response = swApi.deleteParkComment(option.id, commentId)
-                if (response.isSuccessful) {
-                    updateDeletedCommentCache(option.id, commentId)
-                    Result.success(Unit)
-                } else {
-                    Result.failure(
-                        handleHttpException(
-                            HttpException(response),
-                            "удалении комментария"
+            is TextEntryOption.Park ->
+                try {
+                    val response = swApi.deleteParkComment(option.id, commentId)
+                    if (response.isSuccessful) {
+                        updateDeletedCommentCache(option.id, commentId)
+                        Result.success(Unit)
+                    } else {
+                        Result.failure(
+                            handleHttpException(
+                                HttpException(response),
+                                "удалении комментария"
+                            )
                         )
-                    )
+                    }
+                } catch (e: IOException) {
+                    Result.failure(handleIOException(e, "удалении комментария"))
+                } catch (e: HttpException) {
+                    Result.failure(handleHttpException(e, "удалении комментария"))
                 }
-            } catch (e: IOException) {
-                Result.failure(handleIOException(e, "удалении комментария"))
-            } catch (e: HttpException) {
-                Result.failure(handleHttpException(e, "удалении комментария"))
-            }
 
-            is TextEntryOption.Event -> try {
-                val response = swApi.deleteEventComment(option.id, commentId)
-                if (response.isSuccessful) {
-                    Result.success(Unit)
-                } else {
-                    Result.failure(
-                        handleHttpException(
-                            HttpException(response),
-                            "удалении комментария"
+            is TextEntryOption.Event ->
+                try {
+                    val response = swApi.deleteEventComment(option.id, commentId)
+                    if (response.isSuccessful) {
+                        Result.success(Unit)
+                    } else {
+                        Result.failure(
+                            handleHttpException(
+                                HttpException(response),
+                                "удалении комментария"
+                            )
                         )
-                    )
+                    }
+                } catch (e: IOException) {
+                    Result.failure(handleIOException(e, "удалении комментария"))
+                } catch (e: HttpException) {
+                    Result.failure(handleHttpException(e, "удалении комментария"))
                 }
-            } catch (e: IOException) {
-                Result.failure(handleIOException(e, "удалении комментария"))
-            } catch (e: HttpException) {
-                Result.failure(handleHttpException(e, "удалении комментария"))
-            }
 
             is TextEntryOption.Journal -> {
 // Для дневников удаляются сами записи (сообщения)
                 try {
-                    val response = swApi.deleteJournalEntry(
-                        option.ownerId,
-                        option.journalId,
-                        commentId
-                    )
+                    val response =
+                        swApi.deleteJournalEntry(
+                            option.ownerId,
+                            option.journalId,
+                            commentId
+                        )
                     if (response.isSuccessful) {
                         Result.success(Unit)
                     } else {
@@ -1639,7 +1890,6 @@ class SWRepositoryImp(
                 } catch (e: HttpException) {
                     Result.failure(handleHttpException(e, "удалении записи из дневника"))
                 }
-
             }
         }
 
@@ -1656,17 +1906,22 @@ class SWRepositoryImp(
                     logger.d(TAG, "Текущий пользователь отсутствует")
                     flowOf(null)
                 }
-            }
-            .flowOn(Dispatchers.IO)
+            }.flowOn(Dispatchers.IO)
 
-    override fun getFriendsFlow(): Flow<List<User>> = userDao.getFriendsFlow()
-        .map { users -> users.map { it.toDomain() } }
+    override fun getFriendsFlow(): Flow<List<User>> =
+        userDao
+            .getFriendsFlow()
+            .map { users -> users.map { it.toDomain() } }
 
-    override fun getFriendRequestsFlow(): Flow<List<User>> = userDao.getFriendRequestsFlow()
-        .map { users -> users.map { it.toDomain() } }
+    override fun getFriendRequestsFlow(): Flow<List<User>> =
+        userDao
+            .getFriendRequestsFlow()
+            .map { users -> users.map { it.toDomain() } }
 
-    override fun getBlacklistFlow(): Flow<List<User>> = userDao.getBlacklistFlow()
-        .map { users -> users.map { it.toDomain() } }
+    override fun getBlacklistFlow(): Flow<List<User>> =
+        userDao
+            .getBlacklistFlow()
+            .map { users -> users.map { it.toDomain() } }
 
     override fun getFriendsCountFlow(): Flow<Int> = userDao.getFriendsCountFlow()
 
@@ -1680,11 +1935,11 @@ class SWRepositoryImp(
         preferencesRepository.clearCurrentUserId()
     }
 
-    override fun observeJournalById(journalId: Long): Flow<com.swparks.domain.model.Journal?> {
-        return journalDao.observeById(journalId)
+    override fun observeJournalById(journalId: Long): Flow<com.swparks.domain.model.Journal?> =
+        journalDao
+            .observeById(journalId)
             .map { entity -> entity?.toDomain() }
             .flowOn(Dispatchers.IO)
-    }
 
     override suspend fun saveJournalToCache(journal: com.swparks.domain.model.Journal) {
         try {
@@ -1697,7 +1952,10 @@ class SWRepositoryImp(
         }
     }
 
-    private fun parseErrorResponse(response: Response<*>, context: String): String {
+    private fun parseErrorResponse(
+        response: Response<*>,
+        context: String
+    ): String {
         val errorBody = response.errorBody()?.string()
         return if (errorBody != null) {
             try {

@@ -49,9 +49,17 @@ data class FriendsContentState(
 )
 
 sealed class FriendAction {
-    data class Accept(val userId: Long) : FriendAction()
-    data class Decline(val userId: Long) : FriendAction()
-    data class Click(val userId: Long) : FriendAction()
+    data class Accept(
+        val userId: Long
+    ) : FriendAction()
+
+    data class Decline(
+        val userId: Long
+    ) : FriendAction()
+
+    data class Click(
+        val userId: Long
+    ) : FriendAction()
 }
 
 /**
@@ -121,10 +129,11 @@ fun MyFriendsScreenContent(
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(config.parentPaddingValues)
-                .padding(innerPadding)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(config.parentPaddingValues)
+                    .padding(innerPadding)
         ) {
             when (uiState) {
                 is FriendsListUiState.Loading -> {
@@ -141,12 +150,13 @@ fun MyFriendsScreenContent(
                 is FriendsListUiState.Success -> {
                     Box(modifier = Modifier.fillMaxSize()) {
                         SuccessContent(
-                            state = FriendsContentState(
-                                friendRequests = uiState.friendRequests,
-                                friends = uiState.friends,
-                                enabled = !uiState.isProcessing,
-                                currentUserId = config.currentUserId
-                            ),
+                            state =
+                                FriendsContentState(
+                                    friendRequests = uiState.friendRequests,
+                                    friends = uiState.friends,
+                                    enabled = !uiState.isProcessing,
+                                    currentUserId = config.currentUserId
+                                ),
                             onFriendClick = onFriendClick,
                             onAction = onAction,
                             modifier = Modifier.fillMaxSize()
@@ -178,12 +188,13 @@ private fun SuccessContent(
 ) {
     LazyColumn(
         modifier = modifier,
-        contentPadding = PaddingValues(
-            start = dimensionResource(R.dimen.spacing_regular),
-            top = dimensionResource(R.dimen.spacing_small),
-            end = dimensionResource(R.dimen.spacing_regular),
-            bottom = dimensionResource(R.dimen.spacing_regular)
-        ),
+        contentPadding =
+            PaddingValues(
+                start = dimensionResource(R.dimen.spacing_regular),
+                top = dimensionResource(R.dimen.spacing_small),
+                end = dimensionResource(R.dimen.spacing_regular),
+                bottom = dimensionResource(R.dimen.spacing_regular)
+            ),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
     ) {
         val hasFriendRequests = state.friendRequests.isNotEmpty()
@@ -208,13 +219,14 @@ private fun SuccessContent(
         if (hasFriends) {
             item {
                 FriendsListSection(
-                    config = FriendsListConfig(
-                        friends = state.friends,
-                        currentUserId = state.currentUserId,
-                        enabled = state.enabled,
-                        showTitle = !singleSection,
-                        onFriendClick = onFriendClick
-                    )
+                    config =
+                        FriendsListConfig(
+                            friends = state.friends,
+                            currentUserId = state.currentUserId,
+                            enabled = state.enabled,
+                            showTitle = !singleSection,
+                            onFriendClick = onFriendClick
+                        )
                 )
             }
         }
@@ -226,7 +238,6 @@ private fun SuccessContent(
         }
     }
 }
-
 
 @Composable
 private fun FriendRequestsSection(
@@ -242,21 +253,21 @@ private fun FriendRequestsSection(
         Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))) {
             friendRequests.forEach { user ->
                 FriendRequestRowView(
-                    data = FriendRequestData(
-                        modifier = Modifier,
-                        imageStringURL = user.image,
-                        name = user.name,
-                        address = null,
-                        onClickAccept = { onAction(FriendAction.Accept(user.id)) },
-                        onClickDecline = { onAction(FriendAction.Decline(user.id)) },
-                        enabled = enabled
-                    )
+                    data =
+                        FriendRequestData(
+                            modifier = Modifier,
+                            imageStringURL = user.image,
+                            name = user.name,
+                            address = null,
+                            onClickAccept = { onAction(FriendAction.Accept(user.id)) },
+                            onClickDecline = { onAction(FriendAction.Decline(user.id)) },
+                            enabled = enabled
+                        )
                 )
             }
         }
     }
 }
-
 
 @Composable
 private fun EmptyFriendsContentLegacy(modifier: Modifier = Modifier) {

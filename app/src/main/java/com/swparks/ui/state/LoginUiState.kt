@@ -27,7 +27,9 @@ sealed class LoginUiState {
      *
      * @param userId ID авторизованного пользователя
      */
-    data class LoginSuccess(val userId: Long) : LoginUiState()
+    data class LoginSuccess(
+        val userId: Long
+    ) : LoginUiState()
 
     /**
      * Успешное восстановление пароля.

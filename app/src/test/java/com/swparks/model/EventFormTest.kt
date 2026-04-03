@@ -70,12 +70,13 @@ class EventFormTest {
     @Test
     fun form_whenAllFieldsArePresent_thenCreatesCorrectly() {
         // Given
-        val form = createTestForm(
-            title = "Workout Competition",
-            description = "Annual workout competition",
-            date = "2024-06-15",
-            parkId = 456L
-        )
+        val form =
+            createTestForm(
+                title = "Workout Competition",
+                description = "Annual workout competition",
+                date = "2024-06-15",
+                parkId = 456L
+            )
 
         // When & Then
         assertEquals("Workout Competition", form.title)
@@ -87,12 +88,13 @@ class EventFormTest {
     @Test
     fun form_whenTitleIsRussian_thenCreatesCorrectly() {
         // Given
-        val form = createTestForm(
-            title = "Соревнования по воркауту",
-            description = "Ежегодные соревнования",
-            date = "2024-07-01",
-            parkId = 789L
-        )
+        val form =
+            createTestForm(
+                title = "Соревнования по воркауту",
+                description = "Ежегодные соревнования",
+                date = "2024-07-01",
+                parkId = 789L
+            )
 
         // When & Then
         assertEquals("Соревнования по воркауту", form.title)

@@ -22,57 +22,59 @@ import kotlinx.coroutines.launch
 class SearchUserViewModel(
     private val swRepository: SWRepository,
     private val logger: Logger
-) : ViewModel(), ISearchUserViewModel {
-
+) : ViewModel(),
+    ISearchUserViewModel {
     private val _uiState = MutableStateFlow<SearchUserUiState>(SearchUserUiState.Initial)
     override val uiState: StateFlow<SearchUserUiState> = _uiState.asStateFlow()
 
     override val searchQuery = MutableStateFlow("")
 
-    private var _lastSearchedQuery: String? = null
+    private var lastSearchedQuery: String? = null
 
     override fun onSearch() {
         val query = searchQuery.value.trim()
 
         // Проверяем условия для игнорирования поиска
-        val shouldIgnore = when {
-            query.length < MIN_SEARCH_LENGTH -> {
-                logger.d(TAG, "Search query too short: '$query' (${query.length} chars)")
-                true
-            }
+        val shouldIgnore =
+            when {
+                query.length < MIN_SEARCH_LENGTH -> {
+                    logger.d(TAG, "Search query too short: '$query' (${query.length} chars)")
+                    true
+                }
 
-            uiState.value is SearchUserUiState.Loading -> {
-                logger.d(TAG, "Search ignored: already loading")
-                true
-            }
+                uiState.value is SearchUserUiState.Loading -> {
+                    logger.d(TAG, "Search ignored: already loading")
+                    true
+                }
 
-            query == _lastSearchedQuery && uiState.value is SearchUserUiState.Success -> {
-                logger.d(TAG, "Search ignored: same query with existing results")
-                true
-            }
+                query == lastSearchedQuery && uiState.value is SearchUserUiState.Success -> {
+                    logger.d(TAG, "Search ignored: same query with existing results")
+                    true
+                }
 
-            else -> false
-        }
+                else -> false
+            }
 
         if (shouldIgnore) return
 
         viewModelScope.launch {
             _uiState.value = SearchUserUiState.Loading
 
-            swRepository.findUsers(query)
+            swRepository
+                .findUsers(query)
                 .onSuccess { users ->
                     // Устанавливаем последний запрос ТОЛЬКО после успешного завершения
                     // Это предотвращает race condition при быстром переключении запросов
-                    _lastSearchedQuery = query
+                    lastSearchedQuery = query
 
-                    _uiState.value = if (users.isEmpty()) {
-                        SearchUserUiState.Empty
-                    } else {
-                        SearchUserUiState.Success(users)
-                    }
+                    _uiState.value =
+                        if (users.isEmpty()) {
+                            SearchUserUiState.Empty
+                        } else {
+                            SearchUserUiState.Success(users)
+                        }
                     logger.i(TAG, "Search completed: found ${users.size} users for '$query'")
-                }
-                .onFailure { error ->
+                }.onFailure { error ->
                     _uiState.value = SearchUserUiState.NetworkError
                     logger.e(TAG, "Search failed for '$query': ${error.message}", error)
                 }

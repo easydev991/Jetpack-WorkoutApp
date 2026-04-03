@@ -72,9 +72,14 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 sealed class RegisterNavigationAction {
-    data class RegisterSuccess(val userId: Long) : RegisterNavigationAction()
+    data class RegisterSuccess(
+        val userId: Long
+    ) : RegisterNavigationAction()
+
     data object Close : RegisterNavigationAction()
+
     data object SelectCountry : RegisterNavigationAction()
+
     data object SelectCity : RegisterNavigationAction()
 }
 
@@ -131,13 +136,14 @@ fun RegisterUserScreen(
         RegisterScreenContent(
             paddingValues = paddingValues,
             scrollState = scrollState,
-            params = RegisterContentParams(
-                form = form,
-                errors = errors,
-                selectedCountry = selectedCountry,
-                selectedCity = selectedCity,
-                isLoading = isLoading
-            ),
+            params =
+                RegisterContentParams(
+                    form = form,
+                    errors = errors,
+                    selectedCountry = selectedCountry,
+                    selectedCity = selectedCity,
+                    isLoading = isLoading
+                ),
             onNavigationAction = onNavigationAction,
             onAction = viewModel::onAction
         )
@@ -163,9 +169,10 @@ private fun HandleRegisterEvents(
     LaunchedEffect(Unit) {
         viewModel.registerEvents.collectLatest { event ->
             when (event) {
-                is RegisterEvent.Success -> onNavigationAction(
-                    RegisterNavigationAction.RegisterSuccess(event.userId)
-                )
+                is RegisterEvent.Success ->
+                    onNavigationAction(
+                        RegisterNavigationAction.RegisterSuccess(event.userId)
+                    )
             }
         }
     }
@@ -181,14 +188,15 @@ private fun RegisterScreenContent(
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(scrollState)
-                .padding(
-                    horizontal = dimensionResource(R.dimen.spacing_regular),
-                    vertical = dimensionResource(R.dimen.spacing_regular)
-                ),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .verticalScroll(scrollState)
+                    .padding(
+                        horizontal = dimensionResource(R.dimen.spacing_regular),
+                        vertical = dimensionResource(R.dimen.spacing_regular)
+                    ),
             verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
         ) {
             RegisterFormFieldsSection(
@@ -299,12 +307,13 @@ private fun RegisterBirthdaySection(
             error = birthDateError,
             enabled = !isLoading,
             onBirthDateChange = { timestamp ->
-                val date = if (timestamp != 0L) {
-                    val millisPerDay = 24L * 60L * 60L * 1000L
-                    LocalDate.ofEpochDay(timestamp / millisPerDay)
-                } else {
-                    null
-                }
+                val date =
+                    if (timestamp != 0L) {
+                        val millisPerDay = 24L * 60L * 60L * 1000L
+                        LocalDate.ofEpochDay(timestamp / millisPerDay)
+                    } else {
+                        null
+                    }
                 onAction(RegisterContentAction.BirthDateChange(date))
             }
         )
@@ -361,9 +370,10 @@ private fun RegisterTopAppBar(
                 )
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+        colors =
+            TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
     )
 }
 
@@ -376,9 +386,10 @@ private fun RegisterBottomBar(
     onRegisterClick: () -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(dimensionResource(R.dimen.spacing_regular)),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(dimensionResource(R.dimen.spacing_regular)),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
     ) {
         PolicyToggle(
@@ -402,14 +413,15 @@ private fun LoginField(
 ) {
     val hint = stringResource(R.string.login_hint)
     SWTextField(
-        config = TextFieldConfig(
-            text = value,
-            labelID = R.string.login,
-            enabled = enabled,
-            isError = error != null,
-            supportingText = error ?: hint,
-            onTextChange = onValueChange
-        )
+        config =
+            TextFieldConfig(
+                text = value,
+                labelID = R.string.login,
+                enabled = enabled,
+                isError = error != null,
+                supportingText = error ?: hint,
+                onTextChange = onValueChange
+            )
     )
 }
 
@@ -421,15 +433,16 @@ private fun EmailField(
     onValueChange: (String) -> Unit
 ) {
     SWTextField(
-        config = TextFieldConfig(
-            text = value,
-            labelID = R.string.email,
-            enabled = enabled,
-            isError = error != null,
-            supportingText = error ?: "",
-            onTextChange = onValueChange,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-        )
+        config =
+            TextFieldConfig(
+                text = value,
+                labelID = R.string.email,
+                enabled = enabled,
+                isError = error != null,
+                supportingText = error ?: "",
+                onTextChange = onValueChange,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+            )
     )
 }
 
@@ -441,15 +454,16 @@ private fun PasswordField(
     onValueChange: (String) -> Unit
 ) {
     SWTextField(
-        config = TextFieldConfig(
-            text = value,
-            labelID = R.string.password,
-            secure = true,
-            enabled = enabled,
-            isError = error != null,
-            supportingText = error ?: "",
-            onTextChange = onValueChange
-        )
+        config =
+            TextFieldConfig(
+                text = value,
+                labelID = R.string.password,
+                secure = true,
+                enabled = enabled,
+                isError = error != null,
+                supportingText = error ?: "",
+                onTextChange = onValueChange
+            )
     )
 }
 
@@ -460,12 +474,13 @@ private fun FullNameField(
     onValueChange: (String) -> Unit
 ) {
     SWTextField(
-        config = TextFieldConfig(
-            text = value,
-            labelID = R.string.full_name,
-            enabled = enabled,
-            onTextChange = onValueChange
-        )
+        config =
+            TextFieldConfig(
+                text = value,
+                labelID = R.string.full_name,
+                enabled = enabled,
+                onTextChange = onValueChange
+            )
     )
 }
 
@@ -482,8 +497,12 @@ private fun GenderRadioButtons(
         Text(
             text = stringResource(R.string.gender),
             style = MaterialTheme.typography.bodyMedium,
-            color = if (enabled) MaterialTheme.colorScheme.onSurface
-            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+            color =
+                if (enabled) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                },
             modifier = Modifier.padding(bottom = dimensionResource(R.dimen.spacing_xsmall))
         )
         Column(
@@ -509,25 +528,27 @@ private fun BirthdayPicker(
     enabled: Boolean,
     onBirthDateChange: (Long) -> Unit
 ) {
-    val initialTimestamp = remember(birthDate) {
-        if (birthDate != null) {
-            birthDate.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
-        } else {
-            System.currentTimeMillis()
+    val initialTimestamp =
+        remember(birthDate) {
+            if (birthDate != null) {
+                birthDate.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
+            } else {
+                System.currentTimeMillis()
+            }
         }
-    }
 
     val currentYear = LocalDate.now().year
 
     Column(modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small))) {
         SWDateTimePicker(
-            config = DateTimePickerConfig(
-                mode = SWDatePickerMode.BIRTHDAY,
-                initialSelectedDateMillis = initialTimestamp,
-                yearRange = 1900..currentYear,
-                enabled = enabled,
-                onClickSaveDate = onBirthDateChange
-            )
+            config =
+                DateTimePickerConfig(
+                    mode = SWDatePickerMode.BIRTHDAY,
+                    initialSelectedDateMillis = initialTimestamp,
+                    yearRange = 1900..currentYear,
+                    enabled = enabled,
+                    onClickSaveDate = onBirthDateChange
+                )
         )
         if (!error.isNullOrEmpty()) {
             Text(
@@ -547,20 +568,22 @@ private fun CountryPicker(
     onClick: () -> Unit
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                enabled = enabled,
-                onClick = onClick
-            )
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(
+                    enabled = enabled,
+                    onClick = onClick
+                )
     ) {
         ListRowView(
-            data = ListRowData(
-                leadingText = stringResource(R.string.country),
-                trailingText = countryName ?: stringResource(R.string.select_country),
-                showChevron = true,
-                enabled = enabled
-            )
+            data =
+                ListRowData(
+                    leadingText = stringResource(R.string.country),
+                    trailingText = countryName ?: stringResource(R.string.select_country),
+                    showChevron = true,
+                    enabled = enabled
+                )
         )
     }
 }
@@ -572,20 +595,22 @@ private fun CityPicker(
     onClick: () -> Unit
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                enabled = enabled,
-                onClick = onClick
-            )
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(
+                    enabled = enabled,
+                    onClick = onClick
+                )
     ) {
         ListRowView(
-            data = ListRowData(
-                leadingText = stringResource(R.string.city),
-                trailingText = cityName ?: stringResource(R.string.select_city),
-                showChevron = true,
-                enabled = enabled
-            )
+            data =
+                ListRowData(
+                    leadingText = stringResource(R.string.city),
+                    trailingText = cityName ?: stringResource(R.string.select_city),
+                    showChevron = true,
+                    enabled = enabled
+                )
         )
     }
 }
@@ -599,36 +624,40 @@ private fun PolicyToggle(
     val context = LocalContext.current
     val agreementUrl = stringResource(R.string.user_agreement_url)
 
-    val annotatedText: AnnotatedString = buildAnnotatedString {
-        append(stringResource(R.string.i_accept_terms))
-        pushStringAnnotation(tag = "agreement", annotation = agreementUrl)
-        withStyle(
-            style = SpanStyle(
-                color = MaterialTheme.colorScheme.primary,
-                textDecoration = TextDecoration.Underline
-            )
-        ) {
-            append(stringResource(R.string.user_agreement))
+    val annotatedText: AnnotatedString =
+        buildAnnotatedString {
+            append(stringResource(R.string.i_accept_terms))
+            pushStringAnnotation(tag = "agreement", annotation = agreementUrl)
+            withStyle(
+                style =
+                    SpanStyle(
+                        color = MaterialTheme.colorScheme.primary,
+                        textDecoration = TextDecoration.Underline
+                    )
+            ) {
+                append(stringResource(R.string.user_agreement))
+            }
+            pop()
         }
-        pop()
-    }
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .disabledAlpha(!enabled),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .disabledAlpha(!enabled),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
     ) {
         Text(
             text = annotatedText,
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier
-                .weight(1f)
-                .clickable(enabled = enabled) {
-                    val intent = Intent(Intent.ACTION_VIEW, agreementUrl.toUri())
-                    context.startActivity(intent)
-                }
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .clickable(enabled = enabled) {
+                        val intent = Intent(Intent.ACTION_VIEW, agreementUrl.toUri())
+                        context.startActivity(intent)
+                    }
         )
         Switch(
             checked = isAccepted,
@@ -644,13 +673,14 @@ private fun RegisterButton(
     onClick: () -> Unit
 ) {
     SWButton(
-        config = ButtonConfig(
-            modifier = Modifier.fillMaxWidth(),
-            size = SWButtonSize.LARGE,
-            mode = SWButtonMode.FILLED,
-            text = stringResource(id = R.string.register),
-            enabled = enabled,
-            onClick = onClick
-        )
+        config =
+            ButtonConfig(
+                modifier = Modifier.fillMaxWidth(),
+                size = SWButtonSize.LARGE,
+                mode = SWButtonMode.FILLED,
+                text = stringResource(id = R.string.register),
+                enabled = enabled,
+                onClick = onClick
+            )
     )
 }

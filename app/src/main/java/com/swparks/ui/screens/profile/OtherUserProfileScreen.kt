@@ -76,6 +76,7 @@ import com.swparks.ui.viewmodel.OtherUserProfileUiState
 
 sealed class ProfileNavigationAction {
     object Back : ProfileNavigationAction()
+
     object NavigateToOwnProfile : ProfileNavigationAction()
 }
 
@@ -119,7 +120,10 @@ private fun rememberProfileRelations(
 }
 
 sealed class ProfileContentAction {
-    data class SendMessage(val user: User) : ProfileContentAction()
+    data class SendMessage(
+        val user: User
+    ) : ProfileContentAction()
+
     object ShowRemoveFriendDialog : ProfileContentAction()
 }
 
@@ -152,20 +156,22 @@ fun OtherUserProfileScreen(
 
     OtherUserProfileScaffold(
         modifier = modifier,
-        params = OtherUserProfileScaffoldParams(
-            isLoadingCurrentUser = isLoadingCurrentUser,
-            isRefreshing = isRefreshing,
-            isFriendActionLoading = isFriendActionLoading,
-            uiState = uiState,
-            viewedUser = viewedUser,
-            isFriend = relations.isFriend,
-            isInBlacklist = relations.isInBlacklist
-        ),
-        config = ProfileContentConfig(
-            viewModel = viewModel,
-            appState = appState,
-            source = source
-        ),
+        params =
+            OtherUserProfileScaffoldParams(
+                isLoadingCurrentUser = isLoadingCurrentUser,
+                isRefreshing = isRefreshing,
+                isFriendActionLoading = isFriendActionLoading,
+                uiState = uiState,
+                viewedUser = viewedUser,
+                isFriend = relations.isFriend,
+                isInBlacklist = relations.isInBlacklist
+            ),
+        config =
+            ProfileContentConfig(
+                viewModel = viewModel,
+                appState = appState,
+                source = source
+            ),
         relations = relations,
         onAction = onAction
     )
@@ -198,45 +204,50 @@ private fun OtherUserProfileScaffold(
             paddingValues = paddingValues,
             params = params,
             config = config,
-            handlers = ProfileActionHandlers(
-                onProfileAction = onAction,
-                onTextEntryAction = { mode ->
-                    dialogState = dialogState.copy(showTextEntrySheet = true, textEntryMode = mode)
-                },
-                onShowRemoveFriendDialog = {
-                    dialogState = dialogState.copy(showRemoveFriendDialog = true)
-                }
-            )
+            handlers =
+                ProfileActionHandlers(
+                    onProfileAction = onAction,
+                    onTextEntryAction = { mode ->
+                        dialogState =
+                            dialogState.copy(showTextEntrySheet = true, textEntryMode = mode)
+                    },
+                    onShowRemoveFriendDialog = {
+                        dialogState = dialogState.copy(showRemoveFriendDialog = true)
+                    }
+                )
         )
     }
 
     OtherUserProfileDialogs(
         state = dialogState,
         blacklistAction = blacklistAction,
-        handlers = ProfileDialogHandlers(
-            onBlacklistConfirm = {
-                config.viewModel.performBlacklistAction(onBlocked = {
-                    onAction(
-                        ProfileNavigationAction.Back
-                    )
-                })
-                dialogState = dialogState.copy(showBlacklistDialog = false)
-            },
-            onBlacklistDismiss = { dialogState = dialogState.copy(showBlacklistDialog = false) },
-            onRemoveFriendConfirm = {
-                config.viewModel.performFriendAction()
-                dialogState = dialogState.copy(showRemoveFriendDialog = false)
-            },
-            onRemoveFriendDismiss = {
-                dialogState = dialogState.copy(showRemoveFriendDialog = false)
-            },
-            onTextEntryDismiss = {
-                dialogState = dialogState.copy(showTextEntrySheet = false, textEntryMode = null)
-            },
-            onTextEntrySuccess = {
-                dialogState = dialogState.copy(showTextEntrySheet = false, textEntryMode = null)
-            }
-        )
+        handlers =
+            ProfileDialogHandlers(
+                onBlacklistConfirm = {
+                    config.viewModel.performBlacklistAction(onBlocked = {
+                        onAction(
+                            ProfileNavigationAction.Back
+                        )
+                    })
+                    dialogState = dialogState.copy(showBlacklistDialog = false)
+                },
+                onBlacklistDismiss = {
+                    dialogState = dialogState.copy(showBlacklistDialog = false)
+                },
+                onRemoveFriendConfirm = {
+                    config.viewModel.performFriendAction()
+                    dialogState = dialogState.copy(showRemoveFriendDialog = false)
+                },
+                onRemoveFriendDismiss = {
+                    dialogState = dialogState.copy(showRemoveFriendDialog = false)
+                },
+                onTextEntryDismiss = {
+                    dialogState = dialogState.copy(showTextEntrySheet = false, textEntryMode = null)
+                },
+                onTextEntrySuccess = {
+                    dialogState = dialogState.copy(showTextEntrySheet = false, textEntryMode = null)
+                }
+            )
     )
 }
 
@@ -270,7 +281,9 @@ private data class ProfileActionHandlers(
 )
 
 private sealed class TextEntryAction {
-    data class Show(val mode: TextEntryMode) : TextEntryAction()
+    data class Show(
+        val mode: TextEntryMode
+    ) : TextEntryAction()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -283,10 +296,11 @@ private fun OtherUserProfileScaffoldContent(
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-            .testTag(ScreenshotTestTags.OTHER_USER_PROFILE_SCREEN)
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .testTag(ScreenshotTestTags.OTHER_USER_PROFILE_SCREEN)
     ) {
         if (params.isLoadingCurrentUser) {
             LoadingOverlayView(modifier = Modifier.fillMaxSize())
@@ -318,9 +332,10 @@ private fun ProfilePullToRefreshContent(
             PullToRefreshDefaults.Indicator(
                 state = pullRefreshState,
                 isRefreshing = params.isRefreshing,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = dimensionResource(R.dimen.spacing_regular))
+                modifier =
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = dimensionResource(R.dimen.spacing_regular))
             )
         }
     ) {
@@ -349,28 +364,31 @@ private fun ProfileUiStateContent(
     handlers: ProfileActionHandlers
 ) {
     when (val state = uiState) {
-        is OtherUserProfileUiState.Loading -> { /* Контент скрыт */
+        is OtherUserProfileUiState.Loading -> { // Контент скрыт
         }
 
-        is OtherUserProfileUiState.UserNotFound -> UserNotFoundContent(
-            onBack = { handlers.onProfileAction(ProfileNavigationAction.Back) }
-        )
+        is OtherUserProfileUiState.UserNotFound ->
+            UserNotFoundContent(
+                onBack = { handlers.onProfileAction(ProfileNavigationAction.Back) }
+            )
 
-        is OtherUserProfileUiState.BlockedByUser -> BlockedByUserContent(
-            onBack = { handlers.onProfileAction(ProfileNavigationAction.Back) }
-        )
+        is OtherUserProfileUiState.BlockedByUser ->
+            BlockedByUserContent(
+                onBack = { handlers.onProfileAction(ProfileNavigationAction.Back) }
+            )
 
         is OtherUserProfileUiState.Success -> {
             ProfileContent(
-                state = ProfileContentState(
-                    viewedUser = params.viewedUser,
-                    country = state.country,
-                    city = state.city,
-                    isFriend = params.isFriend,
-                    isInBlacklist = params.isInBlacklist,
-                    isRefreshing = params.isRefreshing,
-                    isFriendActionLoading = params.isFriendActionLoading
-                ),
+                state =
+                    ProfileContentState(
+                        viewedUser = params.viewedUser,
+                        country = state.country,
+                        city = state.city,
+                        isFriend = params.isFriend,
+                        isInBlacklist = params.isInBlacklist,
+                        isRefreshing = params.isRefreshing,
+                        isFriendActionLoading = params.isFriendActionLoading
+                    ),
                 viewModel = config.viewModel,
                 appState = config.appState,
                 source = config.source,
@@ -485,13 +503,15 @@ internal fun BlacklistActionDialog(
         confirmButton = {
             TextButton(
                 onClick = onConfirm,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = if (action == BlacklistAction.BLOCK) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.primary
-                    }
-                )
+                colors =
+                    ButtonDefaults.textButtonColors(
+                        contentColor =
+                            if (action == BlacklistAction.BLOCK) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.primary
+                            }
+                    )
             ) { Text(stringResource(action.description)) }
         },
         dismissButton = {
@@ -512,9 +532,10 @@ internal fun RemoveFriendDialog(
         confirmButton = {
             TextButton(
                 onClick = onConfirm,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
+                colors =
+                    ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
             ) { Text(stringResource(R.string.remove_friend_alert_confirm)) }
         },
         dismissButton = {
@@ -536,10 +557,11 @@ private fun ProfileContent(
     val buttonsEnabled = !state.isRefreshing && !state.isInBlacklist && !state.isFriendActionLoading
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(dimensionResource(R.dimen.spacing_regular)),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(dimensionResource(R.dimen.spacing_regular)),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
     ) {
         ProfileHeaderSection(
@@ -557,12 +579,13 @@ private fun ProfileContent(
         )
 
         ProfileNavigationButtons(
-            params = ProfileNavigationParams(
-                viewedUser = viewedUser,
-                appState = appState,
-                source = source,
-                buttonsEnabled = buttonsEnabled
-            )
+            params =
+                ProfileNavigationParams(
+                    viewedUser = viewedUser,
+                    appState = appState,
+                    source = source,
+                    buttonsEnabled = buttonsEnabled
+                )
         )
     }
 }
@@ -575,13 +598,14 @@ private fun ProfileHeaderSection(
 ) {
     val shortAddress = listOfNotNull(country?.name, city?.name).joinToString(", ")
     UserProfileCardView(
-        data = UserProfileData(
-            imageStringURL = viewedUser.image,
-            userName = viewedUser.fullName?.takeIf { it.isNotBlank() } ?: viewedUser.name,
-            gender = viewedUser.genderOption?.let { stringResource(it.description) } ?: "",
-            age = viewedUser.age,
-            shortAddress = shortAddress
-        )
+        data =
+            UserProfileData(
+                imageStringURL = viewedUser.image,
+                userName = viewedUser.fullName?.takeIf { it.isNotBlank() } ?: viewedUser.name,
+                gender = viewedUser.genderOption?.let { stringResource(it.description) } ?: "",
+                age = viewedUser.age,
+                shortAddress = shortAddress
+            )
     )
 }
 
@@ -616,9 +640,7 @@ private fun ProfileActionButtons(
 }
 
 @Composable
-private fun ProfileNavigationButtons(
-    params: ProfileNavigationParams
-) {
+private fun ProfileNavigationButtons(params: ProfileNavigationParams) {
     with(params) {
         Column(
             verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
@@ -678,43 +700,54 @@ private fun ProfileNavigationButtons(
 }
 
 @Composable
-internal fun SendMessageButton(onClick: () -> Unit, enabled: Boolean) {
+internal fun SendMessageButton(
+    onClick: () -> Unit,
+    enabled: Boolean
+) {
     SWButton(
-        config = ButtonConfig(
-            modifier = Modifier.fillMaxWidth(),
-            mode = SWButtonMode.FILLED,
-            imageVector = Icons.AutoMirrored.Filled.Send,
-            text = stringResource(R.string.message),
-            enabled = enabled,
-            onClick = onClick
-        )
+        config =
+            ButtonConfig(
+                modifier = Modifier.fillMaxWidth(),
+                mode = SWButtonMode.FILLED,
+                imageVector = Icons.AutoMirrored.Filled.Send,
+                text = stringResource(R.string.message),
+                enabled = enabled,
+                onClick = onClick
+            )
     )
 }
 
 @Composable
-internal fun FriendActionButton(action: FriendAction, onClick: () -> Unit, enabled: Boolean) {
-    val icon = when (action) {
-        FriendAction.SEND_FRIEND_REQUEST -> Icons.Outlined.PersonAdd
-        FriendAction.REMOVE_FRIEND -> Icons.Outlined.PersonRemove
-    }
+internal fun FriendActionButton(
+    action: FriendAction,
+    onClick: () -> Unit,
+    enabled: Boolean
+) {
+    val icon =
+        when (action) {
+            FriendAction.SEND_FRIEND_REQUEST -> Icons.Outlined.PersonAdd
+            FriendAction.REMOVE_FRIEND -> Icons.Outlined.PersonRemove
+        }
     SWButton(
-        config = ButtonConfig(
-            modifier = Modifier.fillMaxWidth(),
-            mode = SWButtonMode.TINTED,
-            imageVector = icon,
-            text = stringResource(action.description),
-            enabled = enabled,
-            onClick = onClick
-        )
+        config =
+            ButtonConfig(
+                modifier = Modifier.fillMaxWidth(),
+                mode = SWButtonMode.TINTED,
+                imageVector = icon,
+                text = stringResource(action.description),
+                enabled = enabled,
+                onClick = onClick
+            )
     )
 }
 
 @Composable
 internal fun UserNotFoundContent(onBack: () -> Unit) {
     EmptyStateView(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(dimensionResource(R.dimen.spacing_regular)),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(dimensionResource(R.dimen.spacing_regular)),
         text = stringResource(R.string.user_not_found),
         buttonTitle = stringResource(R.string.go_back),
         onButtonClick = onBack
@@ -724,9 +757,10 @@ internal fun UserNotFoundContent(onBack: () -> Unit) {
 @Composable
 internal fun BlockedByUserContent(onBack: () -> Unit) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(dimensionResource(R.dimen.spacing_regular)),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(dimensionResource(R.dimen.spacing_regular)),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -737,21 +771,27 @@ internal fun BlockedByUserContent(onBack: () -> Unit) {
         )
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_regular)))
         SWButton(
-            config = ButtonConfig(
-                size = SWButtonSize.SMALL,
-                text = stringResource(R.string.go_back),
-                onClick = onBack
-            )
+            config =
+                ButtonConfig(
+                    size = SWButtonSize.SMALL,
+                    text = stringResource(R.string.go_back),
+                    onClick = onBack
+                )
         )
     }
 }
 
 @Composable
-internal fun ErrorContent(message: String, canRetry: Boolean, onRetry: () -> Unit) {
+internal fun ErrorContent(
+    message: String,
+    canRetry: Boolean,
+    onRetry: () -> Unit
+) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(dimensionResource(R.dimen.spacing_regular)),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(dimensionResource(R.dimen.spacing_regular)),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -763,11 +803,12 @@ internal fun ErrorContent(message: String, canRetry: Boolean, onRetry: () -> Uni
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_regular)))
         if (canRetry) {
             SWButton(
-                config = ButtonConfig(
-                    size = SWButtonSize.SMALL,
-                    text = stringResource(R.string.try_again_button),
-                    onClick = onRetry
-                )
+                config =
+                    ButtonConfig(
+                        size = SWButtonSize.SMALL,
+                        text = stringResource(R.string.try_again_button),
+                        onClick = onRetry
+                    )
             )
         }
     }

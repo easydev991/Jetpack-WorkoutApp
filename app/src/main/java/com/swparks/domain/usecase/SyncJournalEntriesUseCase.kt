@@ -11,8 +11,9 @@ import com.swparks.domain.repository.JournalEntriesRepository
  *
  * @param journalEntriesRepository Репозиторий для работы с записями в дневнике
  */
-class SyncJournalEntriesUseCase(private val journalEntriesRepository: JournalEntriesRepository) :
-    ISyncJournalEntriesUseCase {
+class SyncJournalEntriesUseCase(
+    private val journalEntriesRepository: JournalEntriesRepository
+) : ISyncJournalEntriesUseCase {
     /**
      * Обновить записи дневника с сервера.
      *
@@ -20,9 +21,13 @@ class SyncJournalEntriesUseCase(private val journalEntriesRepository: JournalEnt
      * @param journalId Идентификатор дневника
      * @return Result успеха или ошибки операции
      */
-    override suspend operator fun invoke(userId: Long, journalId: Long): Result<Unit> {
+    override suspend operator fun invoke(
+        userId: Long,
+        journalId: Long
+    ): Result<Unit> {
         Log.i(TAG, "Синхронизация записей дневника: userId=$userId, journalId=$journalId")
-        return journalEntriesRepository.refreshJournalEntries(userId, journalId)
+        return journalEntriesRepository
+            .refreshJournalEntries(userId, journalId)
             .onFailure { error ->
                 Log.e(TAG, "Ошибка при синхронизации записей: ${error.message}")
             }

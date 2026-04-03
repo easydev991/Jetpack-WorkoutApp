@@ -11,7 +11,6 @@ import org.junit.Before
 import org.junit.Test
 
 class FindCityByCoordinatesUseCaseTest {
-
     private lateinit var countriesRepository: CountriesRepository
     private lateinit var useCase: FindCityByCoordinatesUseCase
 
@@ -22,78 +21,94 @@ class FindCityByCoordinatesUseCaseTest {
     }
 
     @Test
-    fun invoke_whenLocalityMatches_returnsCityId() = runTest {
-        coEvery { countriesRepository.getAllCities() } returns listOf(
-            City(id = "1", name = "Moscow", lat = "55.7558", lon = "37.6173"),
-            City(id = "2", name = "London", lat = "51.5074", lon = "-0.1278")
-        )
+    fun invoke_whenLocalityMatches_returnsCityId() =
+        runTest {
+            coEvery { countriesRepository.getAllCities() } returns
+                listOf(
+                    City(id = "1", name = "Moscow", lat = "55.7558", lon = "37.6173"),
+                    City(id = "2", name = "London", lat = "51.5074", lon = "-0.1278")
+                )
 
-        val result = useCase.invoke(locality = "Moscow", latitude = 55.7558, longitude = 37.6173)
+            val result =
+                useCase.invoke(locality = "Moscow", latitude = 55.7558, longitude = 37.6173)
 
-        assertEquals(1, result)
-    }
-
-    @Test
-    fun invoke_whenLocalityMatches_caseInsensitive_returnsCityId() = runTest {
-        coEvery { countriesRepository.getAllCities() } returns listOf(
-            City(id = "3", name = "Berlin", lat = "52.5200", lon = "13.4050")
-        )
-
-        val result = useCase.invoke(locality = "BERLIN", latitude = 52.5200, longitude = 13.4050)
-
-        assertEquals(3, result)
-    }
+            assertEquals(1, result)
+        }
 
     @Test
-    fun invoke_whenLocalityNull_returnsNull() = runTest {
-        val result = useCase.invoke(locality = null, latitude = 55.7558, longitude = 37.6173)
+    fun invoke_whenLocalityMatches_caseInsensitive_returnsCityId() =
+        runTest {
+            coEvery { countriesRepository.getAllCities() } returns
+                listOf(
+                    City(id = "3", name = "Berlin", lat = "52.5200", lon = "13.4050")
+                )
 
-        assertNull(result)
-    }
+            val result =
+                useCase.invoke(locality = "BERLIN", latitude = 52.5200, longitude = 13.4050)
 
-    @Test
-    fun invoke_whenCityIdIsNotInt_returnsNull() = runTest {
-        coEvery { countriesRepository.getAllCities() } returns listOf(
-            City(id = "not_an_int", name = "Paris", lat = "48.8566", lon = "2.3522")
-        )
-
-        val result = useCase.invoke(locality = "Paris", latitude = 48.8566, longitude = 2.3522)
-
-        assertNull(result)
-    }
+            assertEquals(3, result)
+        }
 
     @Test
-    fun invoke_whenNoMatch_returnsNull() = runTest {
-        coEvery { countriesRepository.getAllCities() } returns listOf(
-            City(id = "1", name = "Moscow", lat = "55.7558", lon = "37.6173")
-        )
+    fun invoke_whenLocalityNull_returnsNull() =
+        runTest {
+            val result = useCase.invoke(locality = null, latitude = 55.7558, longitude = 37.6173)
 
-        val result = useCase.invoke(locality = "UnknownCity", latitude = 0.0, longitude = 0.0)
-
-        assertNull(result)
-    }
+            assertNull(result)
+        }
 
     @Test
-    fun invoke_whenMultipleMatches_returnsFirstMatch() = runTest {
-        coEvery { countriesRepository.getAllCities() } returns listOf(
-            City(id = "1", name = "Moscow", lat = "55.7558", lon = "37.6173"),
-            City(id = "5", name = "Moscow", lat = "55.7558", lon = "37.6173")
-        )
+    fun invoke_whenCityIdIsNotInt_returnsNull() =
+        runTest {
+            coEvery { countriesRepository.getAllCities() } returns
+                listOf(
+                    City(id = "not_an_int", name = "Paris", lat = "48.8566", lon = "2.3522")
+                )
 
-        val result = useCase.invoke(locality = "Moscow", latitude = 55.7558, longitude = 37.6173)
+            val result = useCase.invoke(locality = "Paris", latitude = 48.8566, longitude = 2.3522)
 
-        assertEquals(1, result)
-    }
+            assertNull(result)
+        }
 
     @Test
-    fun invoke_whenLocalityHasWhitespace_returnsTrimmedMatch() = runTest {
-        coEvery { countriesRepository.getAllCities() } returns listOf(
-            City(id = "7", name = "Madrid", lat = "40.4168", lon = "-3.7038")
-        )
+    fun invoke_whenNoMatch_returnsNull() =
+        runTest {
+            coEvery { countriesRepository.getAllCities() } returns
+                listOf(
+                    City(id = "1", name = "Moscow", lat = "55.7558", lon = "37.6173")
+                )
 
-        val result =
-            useCase.invoke(locality = "  Madrid  ", latitude = 40.4168, longitude = -3.7038)
+            val result = useCase.invoke(locality = "UnknownCity", latitude = 0.0, longitude = 0.0)
 
-        assertEquals(7, result)
-    }
+            assertNull(result)
+        }
+
+    @Test
+    fun invoke_whenMultipleMatches_returnsFirstMatch() =
+        runTest {
+            coEvery { countriesRepository.getAllCities() } returns
+                listOf(
+                    City(id = "1", name = "Moscow", lat = "55.7558", lon = "37.6173"),
+                    City(id = "5", name = "Moscow", lat = "55.7558", lon = "37.6173")
+                )
+
+            val result =
+                useCase.invoke(locality = "Moscow", latitude = 55.7558, longitude = 37.6173)
+
+            assertEquals(1, result)
+        }
+
+    @Test
+    fun invoke_whenLocalityHasWhitespace_returnsTrimmedMatch() =
+        runTest {
+            coEvery { countriesRepository.getAllCities() } returns
+                listOf(
+                    City(id = "7", name = "Madrid", lat = "40.4168", lon = "-3.7038")
+                )
+
+            val result =
+                useCase.invoke(locality = "  Madrid  ", latitude = 40.4168, longitude = -3.7038)
+
+            assertEquals(7, result)
+        }
 }

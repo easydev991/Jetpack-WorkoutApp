@@ -10,7 +10,6 @@ import org.junit.Test
  * Модульные тесты для TokenEncoder.
  */
 class TokenEncoderTest {
-
     private val tokenEncoder = TokenEncoder()
 
     @Test

@@ -45,12 +45,13 @@ fun EmptyStateView(
             )
             if (buttonTitle != null) {
                 SWButton(
-                    config = ButtonConfig(
-                        size = SWButtonSize.SMALL,
-                        text = buttonTitle,
-                        enabled = enabled,
-                        onClick = onButtonClick
-                    )
+                    config =
+                        ButtonConfig(
+                            size = SWButtonSize.SMALL,
+                            text = buttonTitle,
+                            enabled = enabled,
+                            onClick = onButtonClick
+                        )
                 )
             }
         }

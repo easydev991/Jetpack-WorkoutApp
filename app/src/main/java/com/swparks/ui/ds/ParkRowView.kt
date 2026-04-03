@@ -68,15 +68,16 @@ private fun ParkRowViewContent(data: ParkRowData) {
             }
             AdditionalInfoRow(
                 imageID = R.drawable.outline_account_circle_16,
-                text = if (data.peopleTrainCount > 0) {
-                    pluralStringResource(
-                        id = R.plurals.peopleTrainHere,
-                        count = data.peopleTrainCount,
-                        data.peopleTrainCount
-                    )
-                } else {
-                    stringResource(id = R.string.nobody_trains_here)
-                }
+                text =
+                    if (data.peopleTrainCount > 0) {
+                        pluralStringResource(
+                            id = R.plurals.peopleTrainHere,
+                            count = data.peopleTrainCount,
+                            data.peopleTrainCount
+                        )
+                    } else {
+                        stringResource(id = R.string.nobody_trains_here)
+                    }
             )
         }
     }
@@ -85,29 +86,32 @@ private fun ParkRowViewContent(data: ParkRowData) {
 @Composable
 fun ParkRowView(data: ParkRowData) {
     FormCardContainer(
-        params = FormCardContainerParams(
-            modifier = data.modifier,
-            enabled = data.enabled,
-            onClick = data.onClick
-        )
+        params =
+            FormCardContainerParams(
+                modifier = data.modifier,
+                enabled = data.enabled,
+                onClick = data.onClick
+            )
     ) {
         FormRowContainer(
-            config = FormRowConfig(
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
-                verticalPadding = dimensionResource(R.dimen.spacing_small),
-                content = {
-                    SWAsyncImage(
-                        config = AsyncImageConfig(
-                            imageStringURL = data.imageStringURL,
-                            size = 84.dp,
-                            contentScale = ContentScale.Crop,
-                            showBorder = false
+            config =
+                FormRowConfig(
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
+                    verticalPadding = dimensionResource(R.dimen.spacing_small),
+                    content = {
+                        SWAsyncImage(
+                            config =
+                                AsyncImageConfig(
+                                    imageStringURL = data.imageStringURL,
+                                    size = 84.dp,
+                                    contentScale = ContentScale.Crop,
+                                    showBorder = false
+                                )
                         )
-                    )
-                    ParkRowViewContent(data)
-                }
-            )
+                        ParkRowViewContent(data)
+                    }
+                )
         )
     }
 }
@@ -145,12 +149,13 @@ fun ParkRowViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             ParkRowView(
-                data = ParkRowData(
-                    imageStringURL = null,
-                    name = "N° 3 Легендарная / Средняя",
-                    address = "м. Партизанская, улица 2-я Советская",
-                    peopleTrainCount = 5
-                )
+                data =
+                    ParkRowData(
+                        imageStringURL = null,
+                        name = "N° 3 Легендарная / Средняя",
+                        address = "м. Партизанская, улица 2-я Советская",
+                        peopleTrainCount = 5
+                    )
             )
         }
     }

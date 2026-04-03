@@ -45,8 +45,8 @@ class JournalsViewModel(
     private val editJournalSettingsUseCase: IEditJournalSettingsUseCase,
     private val userNotifier: UserNotifier,
     private val resources: ResourcesProvider
-) : ViewModel(), IJournalsViewModel {
-
+) : ViewModel(),
+    IJournalsViewModel {
     private companion object {
         private const val TAG = "JournalsViewModel"
     }
@@ -71,10 +71,14 @@ class JournalsViewModel(
     private val _events = MutableSharedFlow<JournalsEvent>()
     override val events: SharedFlow<JournalsEvent> = _events.asSharedFlow()
 
+    private var latestObservedJournals = emptyList<com.swparks.domain.model.Journal>()
+    private var hasObservedJournals = false
+    private var hasCompletedSuccessfulLoad = false
+
     init {
         Log.i(TAG, "Инициализация JournalsViewModel для пользователя: $userId")
         observeJournals()
-        loadJournals()
+        loadJournals(LoadMode.INITIAL)
     }
 
     /**
@@ -84,14 +88,18 @@ class JournalsViewModel(
     private fun observeJournals() {
         viewModelScope.launch {
             getJournalsUseCase(userId).collect { journals ->
+                hasObservedJournals = true
+                latestObservedJournals = journals
                 Log.i(TAG, "Получены данные из Flow: ${journals.size} дневников")
-                _uiState.value =
-                    JournalsUiState.Content(
-                        journals = journals,
-                        isRefreshing = _isRefreshing.value,
-                        isSavingJournalSettings = (_uiState.value as? JournalsUiState.Content)
-                            ?.isSavingJournalSettings ?: false
-                    )
+                val currentState = _uiState.value
+                val shouldShowContent =
+                    journals.isNotEmpty() ||
+                        hasCompletedSuccessfulLoad ||
+                        currentState is JournalsUiState.Content
+
+                if (shouldShowContent) {
+                    _uiState.value = buildContentState(journals)
+                }
             }
         }
     }
@@ -102,37 +110,51 @@ class JournalsViewModel(
      */
     @Suppress("TooGenericExceptionCaught")
     override fun loadJournals() {
+        loadJournals(LoadMode.REFRESH)
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private fun loadJournals(mode: LoadMode) {
         viewModelScope.launch {
+            val previousState = _uiState.value
+
             try {
                 Log.i(TAG, "Запуск загрузки дневников для пользователя: $userId")
+
+                if (mode == LoadMode.RETRY) {
+                    _uiState.value = JournalsUiState.InitialLoading
+                }
+
                 _isRefreshing.value = true
 
                 val result = syncJournalsUseCase(userId)
                 result.fold(
                     onSuccess = {
                         Log.i(TAG, "Синхронизация дневников успешна")
-                        _isRefreshing.value = false
+                        hasCompletedSuccessfulLoad = true
+                        if (hasObservedJournals && _uiState.value !is JournalsUiState.Content) {
+                            _uiState.value = buildContentState(latestObservedJournals)
+                        }
                     },
                     onFailure = { error ->
                         Log.e(TAG, "Ошибка при синхронизации дневников: ${error.message}")
-                        _isRefreshing.value = false
-                        // Если это первая загрузка и список пустой - показываем ошибку
-                        val currentState = _uiState.value
-                        if (currentState is JournalsUiState.Content && currentState.journals.isEmpty()) {
-                            _uiState.value =
-                                JournalsUiState.Error(resources.getString(R.string.error_loading_journals))
+                        val message = resources.getString(R.string.error_loading_journals)
+                        if (mode == LoadMode.REFRESH) {
+                            userNotifier.handleError(AppError.Generic(message, error))
                         }
+                        applyLoadFailureState(previousState, message)
                     }
                 )
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Log.e(TAG, "Исключение при загрузке дневников: ${e.message}")
-                _isRefreshing.value = false
-                val currentState = _uiState.value
-                if (currentState is JournalsUiState.Content && currentState.journals.isEmpty()) {
-                    _uiState.value =
-                        JournalsUiState.Error(resources.getString(R.string.error_loading_journals))
+                val message = resources.getString(R.string.error_loading_journals)
+                if (mode == LoadMode.REFRESH) {
+                    userNotifier.handleError(AppError.Generic(message, e))
                 }
+                applyLoadFailureState(previousState, message)
+            } finally {
+                _isRefreshing.value = false
             }
         }
     }
@@ -143,8 +165,31 @@ class JournalsViewModel(
      */
     override fun retry() {
         Log.i(TAG, "Повтор загрузки дневников")
-        loadJournals()
+        loadJournals(LoadMode.RETRY)
     }
+
+    private fun applyLoadFailureState(
+        previousState: JournalsUiState,
+        message: String
+    ) {
+        val currentState = _uiState.value
+        val hasVisibleContent =
+            previousState is JournalsUiState.Content ||
+                (currentState is JournalsUiState.Content && currentState.journals.isNotEmpty())
+
+        if (!hasVisibleContent) {
+            _uiState.value = JournalsUiState.Error(message)
+        }
+    }
+
+    private fun buildContentState(journals: List<com.swparks.domain.model.Journal>): JournalsUiState.Content =
+        JournalsUiState.Content(
+            journals = journals,
+            isRefreshing = _isRefreshing.value,
+            isSavingJournalSettings =
+                (_uiState.value as? JournalsUiState.Content)
+                    ?.isSavingJournalSettings ?: false
+        )
 
     /**
      * Удалить дневник.
@@ -166,8 +211,7 @@ class JournalsViewModel(
                     .onSuccess {
                         Log.i(TAG, "Дневник успешно удален")
                         userNotifier.showInfo(resources.getString(R.string.journal_deleted))
-                    }
-                    .onFailure { error ->
+                    }.onFailure { error ->
                         Log.e(TAG, "Ошибка при удалении дневника: ${error.message}")
                         userNotifier.handleError(
                             AppError.Generic(
@@ -218,13 +262,14 @@ class JournalsViewModel(
             try {
                 Log.i(TAG, "Редактирование настроек дневника: journalId=$journalId, title=$title")
 
-                val result = editJournalSettingsUseCase(
-                    journalId = journalId,
-                    title = title,
-                    userId = userId,
-                    viewAccess = viewAccess,
-                    commentAccess = commentAccess
-                )
+                val result =
+                    editJournalSettingsUseCase(
+                        journalId = journalId,
+                        title = title,
+                        userId = userId,
+                        viewAccess = viewAccess,
+                        commentAccess = commentAccess
+                    )
 
                 result.fold(
                     onSuccess = {

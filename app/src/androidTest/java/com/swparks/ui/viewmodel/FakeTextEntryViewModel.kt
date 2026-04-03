@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 class FakeTextEntryViewModel(
     override val uiState: StateFlow<TextEntryUiState>
 ) : ITextEntryViewModel {
-
     // Поток событий для тестирования
     private val _events = MutableSharedFlow<TextEntryEvent>()
     override val events: SharedFlow<TextEntryEvent> = _events.asSharedFlow()

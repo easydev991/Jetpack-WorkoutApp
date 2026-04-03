@@ -17,8 +17,14 @@ import kotlinx.coroutines.launch
 /** UI State для экрана площадок пользователя */
 sealed class UserTrainingParksUiState {
     data object Loading : UserTrainingParksUiState()
-    data class Success(val parks: List<Park>) : UserTrainingParksUiState()
-    data class Error(val message: String) : UserTrainingParksUiState()
+
+    data class Success(
+        val parks: List<Park>
+    ) : UserTrainingParksUiState()
+
+    data class Error(
+        val message: String
+    ) : UserTrainingParksUiState()
 }
 
 /**
@@ -36,9 +42,9 @@ class UserTrainingParksViewModel(
     private val swRepository: SWRepository,
     private val userId: Long,
     private val logger: Logger,
-    private val userNotifier: UserNotifier,
-) : ViewModel(), IUserTrainingParksViewModel {
-
+    private val userNotifier: UserNotifier
+) : ViewModel(),
+    IUserTrainingParksViewModel {
     private companion object {
         private const val TAG = "UserTrainingParksViewModel"
     }
@@ -90,12 +96,12 @@ class UserTrainingParksViewModel(
     private fun refreshInBackground() {
         viewModelScope.launch {
             try {
-                swRepository.getParksForUser(userId)
+                swRepository
+                    .getParksForUser(userId)
                     .onSuccess { parks ->
                         _uiState.update { UserTrainingParksUiState.Success(parks) }
                         logger.i(TAG, "Фоновое обновление: получено площадок: ${parks.size}")
-                    }
-                    .onFailure { error ->
+                    }.onFailure { error ->
                         val errorMessage = "Ошибка фонового обновления: ${error.message}"
                         userNotifier.handleError(AppError.Generic(errorMessage, error))
                         logger.e(TAG, errorMessage)
@@ -113,12 +119,12 @@ class UserTrainingParksViewModel(
      * Загружает данные с сервера (используется при отсутствии кэша)
      */
     private suspend fun loadFromNetwork() {
-        swRepository.getParksForUser(userId)
+        swRepository
+            .getParksForUser(userId)
             .onSuccess { parks ->
                 _uiState.update { UserTrainingParksUiState.Success(parks) }
                 logger.i(TAG, "Успешно загружено площадок: ${parks.size}")
-            }
-            .onFailure { error ->
+            }.onFailure { error ->
                 val errorMessage = "Ошибка загрузки площадок пользователя: ${error.message}"
                 _uiState.update { UserTrainingParksUiState.Error(errorMessage) }
                 userNotifier.handleError(AppError.Generic(errorMessage, error))
@@ -135,12 +141,12 @@ class UserTrainingParksViewModel(
                 _isRefreshing.update { true }
                 logger.i(TAG, "Начало обновления площадок пользователя: $userId")
 
-                swRepository.getParksForUser(userId)
+                swRepository
+                    .getParksForUser(userId)
                     .onSuccess { parks ->
                         _uiState.update { UserTrainingParksUiState.Success(parks) }
                         logger.i(TAG, "Успешно обновлено площадок: ${parks.size}")
-                    }
-                    .onFailure { error ->
+                    }.onFailure { error ->
                         val errorMessage =
                             "Ошибка обновления площадок пользователя: ${error.message}"
                         val currentState = _uiState.value

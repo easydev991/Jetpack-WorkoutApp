@@ -30,9 +30,9 @@ class PhotoDetailViewModel(
     private val swRepository: SWRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val logger: Logger,
-    private val userNotifier: UserNotifier,
-) : ViewModel(), IPhotoDetailViewModel {
-
+    private val userNotifier: UserNotifier
+) : ViewModel(),
+    IPhotoDetailViewModel {
     companion object {
         private const val TAG = "PhotoDetailViewModel"
         private const val PHOTO_ID_KEY = "photoId"
@@ -47,49 +47,52 @@ class PhotoDetailViewModel(
             swRepository: SWRepository,
             userPreferencesRepository: UserPreferencesRepository,
             logger: Logger,
-            userNotifier: UserNotifier,
-        ): ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val savedStateHandle = createSavedStateHandle()
-                PhotoDetailViewModel(
-                    savedStateHandle = savedStateHandle,
-                    swRepository = swRepository,
-                    userPreferencesRepository = userPreferencesRepository,
-                    logger = logger,
-                    userNotifier = userNotifier
-                )
+            userNotifier: UserNotifier
+        ): ViewModelProvider.Factory =
+            viewModelFactory {
+                initializer {
+                    val savedStateHandle = createSavedStateHandle()
+                    PhotoDetailViewModel(
+                        savedStateHandle = savedStateHandle,
+                        swRepository = swRepository,
+                        userPreferencesRepository = userPreferencesRepository,
+                        logger = logger,
+                        userNotifier = userNotifier
+                    )
+                }
             }
-        }
 
         fun factoryWithConfig(
             config: PhotoDetailConfig,
             swRepository: SWRepository,
             userPreferencesRepository: UserPreferencesRepository,
             logger: Logger,
-            userNotifier: UserNotifier,
-        ): ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val savedStateHandle = createSavedStateHandle()
-                savedStateHandle[PHOTO_ID_KEY] = config.photoId
-                savedStateHandle[PARENT_ID_KEY] = config.parentId
-                savedStateHandle[PARENT_TITLE_KEY] = config.parentTitle
-                savedStateHandle[IS_AUTHOR_KEY] = config.isAuthor
-                savedStateHandle[PHOTO_URL_KEY] = config.photoUrl
-                savedStateHandle[OWNER_TYPE_KEY] = config.ownerType.name
-                PhotoDetailViewModel(
-                    savedStateHandle = savedStateHandle,
-                    swRepository = swRepository,
-                    userPreferencesRepository = userPreferencesRepository,
-                    logger = logger,
-                    userNotifier = userNotifier
-                )
+            userNotifier: UserNotifier
+        ): ViewModelProvider.Factory =
+            viewModelFactory {
+                initializer {
+                    val savedStateHandle = createSavedStateHandle()
+                    savedStateHandle[PHOTO_ID_KEY] = config.photoId
+                    savedStateHandle[PARENT_ID_KEY] = config.parentId
+                    savedStateHandle[PARENT_TITLE_KEY] = config.parentTitle
+                    savedStateHandle[IS_AUTHOR_KEY] = config.isAuthor
+                    savedStateHandle[PHOTO_URL_KEY] = config.photoUrl
+                    savedStateHandle[OWNER_TYPE_KEY] = config.ownerType.name
+                    PhotoDetailViewModel(
+                        savedStateHandle = savedStateHandle,
+                        swRepository = swRepository,
+                        userPreferencesRepository = userPreferencesRepository,
+                        logger = logger,
+                        userNotifier = userNotifier
+                    )
+                }
             }
-        }
     }
 
-    private val _uiState = MutableStateFlow<PhotoDetailUIState>(
-        PhotoDetailUIState.Error("Фото не найдено")
-    )
+    private val _uiState =
+        MutableStateFlow<PhotoDetailUIState>(
+            PhotoDetailUIState.Error("Фото не найдено")
+        )
     override val uiState: StateFlow<PhotoDetailUIState> = _uiState.asStateFlow()
 
     private val _events = Channel<PhotoDetailEvent>(Channel.BUFFERED)
@@ -124,12 +127,13 @@ class PhotoDetailViewModel(
         }
 
         val photo = Photo(id = photoId!!, photo = photoUrl!!)
-        _uiState.value = PhotoDetailUIState.Content(
-            photo = photo,
-            parentTitle = parentTitle!!,
-            isAuthor = isAuthor ?: false,
-            isLoading = false
-        )
+        _uiState.value =
+            PhotoDetailUIState.Content(
+                photo = photo,
+                parentTitle = parentTitle!!,
+                isAuthor = isAuthor ?: false,
+                isLoading = false
+            )
         logger.i(TAG, "Фото загружено: id=$photoId")
     }
 
@@ -138,9 +142,7 @@ class PhotoDetailViewModel(
         parentId: Long?,
         parentTitle: String?,
         photoUrl: String?
-    ): Boolean {
-        return photoId != null && parentId != null && parentTitle != null && photoUrl != null
-    }
+    ): Boolean = photoId != null && parentId != null && parentTitle != null && photoUrl != null
 
     private fun observeAuthorization() {
         viewModelScope.launch {
@@ -151,29 +153,21 @@ class PhotoDetailViewModel(
         }
     }
 
-    private fun getPhotoId(): Long? {
-        return savedStateHandle.get<Long>(PHOTO_ID_KEY)
+    private fun getPhotoId(): Long? =
+        savedStateHandle.get<Long>(PHOTO_ID_KEY)
             ?: savedStateHandle.get<Int>(PHOTO_ID_KEY)?.toLong()
             ?: savedStateHandle.get<String>(PHOTO_ID_KEY)?.toLongOrNull()
-    }
 
-    private fun getParentId(): Long? {
-        return savedStateHandle.get<Long>(PARENT_ID_KEY)
+    private fun getParentId(): Long? =
+        savedStateHandle.get<Long>(PARENT_ID_KEY)
             ?: savedStateHandle.get<Int>(PARENT_ID_KEY)?.toLong()
             ?: savedStateHandle.get<String>(PARENT_ID_KEY)?.toLongOrNull()
-    }
 
-    private fun getParentTitle(): String? {
-        return savedStateHandle.get<String>(PARENT_TITLE_KEY)
-    }
+    private fun getParentTitle(): String? = savedStateHandle.get<String>(PARENT_TITLE_KEY)
 
-    private fun getIsAuthor(): Boolean? {
-        return savedStateHandle.get<Boolean>(IS_AUTHOR_KEY)
-    }
+    private fun getIsAuthor(): Boolean? = savedStateHandle.get<Boolean>(IS_AUTHOR_KEY)
 
-    private fun getPhotoUrl(): String? {
-        return savedStateHandle.get<String>(PHOTO_URL_KEY)
-    }
+    private fun getPhotoUrl(): String? = savedStateHandle.get<String>(PHOTO_URL_KEY)
 
     private fun getOwnerType(): PhotoOwner {
         val ownerTypeName = savedStateHandle.get<String>(OWNER_TYPE_KEY)
@@ -228,11 +222,12 @@ class PhotoDetailViewModel(
         val parentId = getParentId()
         val canDelete = currentState.isAuthor && parentId != null
         if (!canDelete) {
-            val reason = if (!currentState.isAuthor) {
-                "пользователь не автор"
-            } else {
-                "parentId отсутствует"
-            }
+            val reason =
+                if (!currentState.isAuthor) {
+                    "пользователь не автор"
+                } else {
+                    "parentId отсутствует"
+                }
             logger.w(TAG, "Отклонено удаление фото: $reason")
             return
         }
@@ -241,7 +236,10 @@ class PhotoDetailViewModel(
     }
 
     @Suppress("TooGenericExceptionCaught")
-    private fun performDeletePhoto(currentState: PhotoDetailUIState.Content, parentId: Long) {
+    private fun performDeletePhoto(
+        currentState: PhotoDetailUIState.Content,
+        parentId: Long
+    ) {
         val photoId = currentState.photo.id
         val ownerType = getOwnerType()
         val entityName = if (ownerType == PhotoOwner.Park) "площадки" else "мероприятия"
@@ -250,10 +248,11 @@ class PhotoDetailViewModel(
 
         viewModelScope.launch {
             try {
-                val result = when (ownerType) {
-                    PhotoOwner.Park -> swRepository.deleteParkPhoto(parentId, photoId)
-                    PhotoOwner.Event -> swRepository.deleteEventPhoto(parentId, photoId)
-                }
+                val result =
+                    when (ownerType) {
+                        PhotoOwner.Park -> swRepository.deleteParkPhoto(parentId, photoId)
+                        PhotoOwner.Event -> swRepository.deleteEventPhoto(parentId, photoId)
+                    }
                 result.fold(
                     onSuccess = {
                         logger.i(TAG, "Фото id=$photoId успешно удалено")
@@ -307,11 +306,12 @@ class PhotoDetailViewModel(
         }
 
         if (!_isAuthorized.value || currentState.isAuthor) {
-            val reason = if (!_isAuthorized.value) {
-                "пользователь не авторизован"
-            } else {
-                "автор не может жаловаться на свое фото"
-            }
+            val reason =
+                if (!_isAuthorized.value) {
+                    "пользователь не авторизован"
+                } else {
+                    "автор не может жаловаться на свое фото"
+                }
             logger.w(TAG, "Отклонена жалоба: $reason")
             return
         }
@@ -324,10 +324,11 @@ class PhotoDetailViewModel(
             "Отправка жалобы на фото id=${currentState.photo.id} $entityName: $parentTitle"
         )
 
-        val complaint: Complaint = when (ownerType) {
-            PhotoOwner.Park -> Complaint.ParkPhoto(parkTitle = parentTitle)
-            PhotoOwner.Event -> Complaint.EventPhoto(eventTitle = parentTitle)
-        }
+        val complaint: Complaint =
+            when (ownerType) {
+                PhotoOwner.Park -> Complaint.ParkPhoto(parkTitle = parentTitle)
+                PhotoOwner.Event -> Complaint.EventPhoto(eventTitle = parentTitle)
+            }
         viewModelScope.launch {
             _events.send(PhotoDetailEvent.SendPhotoComplaint(complaint))
         }

@@ -21,12 +21,12 @@ data class EventForm(
     val isReadyToCreate: Boolean
         get() = title.isNotBlank() && parkId > 0 && date.isNotBlank()
 
-    fun isReadyToUpdate(old: EventForm): Boolean {
-        return isReadyToCreate && (
-            title != old.title ||
-                description != old.description ||
-                date != old.date ||
-                parkId != old.parkId
-            )
-    }
+    fun isReadyToUpdate(old: EventForm): Boolean =
+        isReadyToCreate &&
+            (
+                title != old.title ||
+                    description != old.description ||
+                    date != old.date ||
+                    parkId != old.parkId
+                )
 }

@@ -34,7 +34,6 @@ import org.junit.Test
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class TextEntryViewModelTest {
-
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -147,156 +146,164 @@ class TextEntryViewModelTest {
     }
 
     @Test
-    fun onSend_WhenNewForParkAndSuccess_ThenEmitsSuccessEvent() = runTest {
-        // Given
-        val mode = TextEntryMode.NewForPark(testParkId)
-        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
-        viewModel.onTextChanged(testText)
-        coEvery { textEntryUseCase.addParkComment(testParkId, testText) } returns Result.success(
-            Unit
-        )
+    fun onSend_WhenNewForParkAndSuccess_ThenEmitsSuccessEvent() =
+        runTest {
+            // Given
+            val mode = TextEntryMode.NewForPark(testParkId)
+            viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
+            viewModel.onTextChanged(testText)
+            coEvery { textEntryUseCase.addParkComment(testParkId, testText) } returns
+                Result.success(
+                    Unit
+                )
 
-        // When
-        viewModel.onSend()
-        advanceUntilIdle()
+            // When
+            viewModel.onSend()
+            advanceUntilIdle()
 
-        // Then
-        val event = viewModel.events.first()
-        assertTrue(event is TextEntryEvent.Success)
-        coVerify(exactly = 1) { textEntryUseCase.addParkComment(testParkId, testText) }
-    }
-
-    @Test
-    fun onSend_WhenNewForEventAndSuccess_ThenEmitsSuccessEvent() = runTest {
-        // Given
-        val mode = TextEntryMode.NewForEvent(testEventId)
-        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
-        viewModel.onTextChanged(testText)
-        coEvery { textEntryUseCase.addEventComment(testEventId, testText) } returns Result.success(
-            Unit
-        )
-
-        // When
-        viewModel.onSend()
-        advanceUntilIdle()
-
-        // Then
-        val event = viewModel.events.first()
-        assertTrue(event is TextEntryEvent.Success)
-        coVerify(exactly = 1) { textEntryUseCase.addEventComment(testEventId, testText) }
-    }
-
-    @Test
-    fun onSend_WhenNewForJournalAndSuccess_ThenEmitsSuccessEvent() = runTest {
-        // Given
-        val mode = TextEntryMode.NewForJournal(testOwnerId, testJournalId)
-        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
-        viewModel.onTextChanged(testText)
-        coEvery {
-            textEntryUseCase.addJournalEntry(
-                testOwnerId,
-                testJournalId,
-                testText
-            )
-        } returns Result.success(Unit)
-
-        // When
-        viewModel.onSend()
-        advanceUntilIdle()
-
-        // Then
-        val event = viewModel.events.first()
-        assertTrue(event is TextEntryEvent.Success)
-        coVerify(exactly = 1) {
-            textEntryUseCase.addJournalEntry(
-                testOwnerId,
-                testJournalId,
-                testText
-            )
+            // Then
+            val event = viewModel.events.first()
+            assertTrue(event is TextEntryEvent.Success)
+            coVerify(exactly = 1) { textEntryUseCase.addParkComment(testParkId, testText) }
         }
-    }
 
     @Test
-    fun onSend_WhenEditParkAndSuccess_ThenEmitsSuccessEvent() = runTest {
-        // Given
-        val editInfo = EditInfo(testParkId, testEntryId, testOldEntry)
-        val mode = TextEntryMode.EditPark(editInfo)
-        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
-        viewModel.onTextChanged(testText)
-        coEvery {
-            textEntryUseCase.editParkComment(testParkId, testEntryId, testText)
-        } returns Result.success(Unit)
+    fun onSend_WhenNewForEventAndSuccess_ThenEmitsSuccessEvent() =
+        runTest {
+            // Given
+            val mode = TextEntryMode.NewForEvent(testEventId)
+            viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
+            viewModel.onTextChanged(testText)
+            coEvery { textEntryUseCase.addEventComment(testEventId, testText) } returns
+                Result.success(
+                    Unit
+                )
 
-        // When
-        viewModel.onSend()
-        advanceUntilIdle()
+            // When
+            viewModel.onSend()
+            advanceUntilIdle()
 
-        // Then
-        val event = viewModel.events.first()
-        assertTrue(event is TextEntryEvent.Success)
-        coVerify(exactly = 1) {
-            textEntryUseCase.editParkComment(
-                testParkId,
-                testEntryId,
-                testText
-            )
+            // Then
+            val event = viewModel.events.first()
+            assertTrue(event is TextEntryEvent.Success)
+            coVerify(exactly = 1) { textEntryUseCase.addEventComment(testEventId, testText) }
         }
-    }
 
     @Test
-    fun onSend_WhenEditEventAndSuccess_ThenEmitsSuccessEvent() = runTest {
-        // Given
-        val editInfo = EditInfo(testEventId, testEntryId, testOldEntry)
-        val mode = TextEntryMode.EditEvent(editInfo)
-        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
-        viewModel.onTextChanged(testText)
-        coEvery {
-            textEntryUseCase.editEventComment(testEventId, testEntryId, testText)
-        } returns Result.success(Unit)
+    fun onSend_WhenNewForJournalAndSuccess_ThenEmitsSuccessEvent() =
+        runTest {
+            // Given
+            val mode = TextEntryMode.NewForJournal(testOwnerId, testJournalId)
+            viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
+            viewModel.onTextChanged(testText)
+            coEvery {
+                textEntryUseCase.addJournalEntry(
+                    testOwnerId,
+                    testJournalId,
+                    testText
+                )
+            } returns Result.success(Unit)
 
-        // When
-        viewModel.onSend()
-        advanceUntilIdle()
+            // When
+            viewModel.onSend()
+            advanceUntilIdle()
 
-        // Then
-        val event = viewModel.events.first()
-        assertTrue(event is TextEntryEvent.Success)
-        coVerify(exactly = 1) {
-            textEntryUseCase.editEventComment(
-                testEventId,
-                testEntryId,
-                testText
-            )
+            // Then
+            val event = viewModel.events.first()
+            assertTrue(event is TextEntryEvent.Success)
+            coVerify(exactly = 1) {
+                textEntryUseCase.addJournalEntry(
+                    testOwnerId,
+                    testJournalId,
+                    testText
+                )
+            }
         }
-    }
 
     @Test
-    fun onSend_WhenEditJournalEntryAndSuccess_ThenEmitsSuccessEvent() = runTest {
-        // Given
-        val editInfo = EditInfo(testJournalId, testEntryId, testOldEntry)
-        val mode = TextEntryMode.EditJournalEntry(testOwnerId, editInfo)
-        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
-        viewModel.onTextChanged(testText)
-        coEvery {
-            textEntryUseCase.editJournalEntry(testOwnerId, testJournalId, testEntryId, testText)
-        } returns Result.success(Unit)
+    fun onSend_WhenEditParkAndSuccess_ThenEmitsSuccessEvent() =
+        runTest {
+            // Given
+            val editInfo = EditInfo(testParkId, testEntryId, testOldEntry)
+            val mode = TextEntryMode.EditPark(editInfo)
+            viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
+            viewModel.onTextChanged(testText)
+            coEvery {
+                textEntryUseCase.editParkComment(testParkId, testEntryId, testText)
+            } returns Result.success(Unit)
 
-        // When
-        viewModel.onSend()
-        advanceUntilIdle()
+            // When
+            viewModel.onSend()
+            advanceUntilIdle()
 
-        // Then
-        val event = viewModel.events.first()
-        assertTrue(event is TextEntryEvent.Success)
-        coVerify(exactly = 1) {
-            textEntryUseCase.editJournalEntry(
-                testOwnerId,
-                testJournalId,
-                testEntryId,
-                testText
-            )
+            // Then
+            val event = viewModel.events.first()
+            assertTrue(event is TextEntryEvent.Success)
+            coVerify(exactly = 1) {
+                textEntryUseCase.editParkComment(
+                    testParkId,
+                    testEntryId,
+                    testText
+                )
+            }
         }
-    }
+
+    @Test
+    fun onSend_WhenEditEventAndSuccess_ThenEmitsSuccessEvent() =
+        runTest {
+            // Given
+            val editInfo = EditInfo(testEventId, testEntryId, testOldEntry)
+            val mode = TextEntryMode.EditEvent(editInfo)
+            viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
+            viewModel.onTextChanged(testText)
+            coEvery {
+                textEntryUseCase.editEventComment(testEventId, testEntryId, testText)
+            } returns Result.success(Unit)
+
+            // When
+            viewModel.onSend()
+            advanceUntilIdle()
+
+            // Then
+            val event = viewModel.events.first()
+            assertTrue(event is TextEntryEvent.Success)
+            coVerify(exactly = 1) {
+                textEntryUseCase.editEventComment(
+                    testEventId,
+                    testEntryId,
+                    testText
+                )
+            }
+        }
+
+    @Test
+    fun onSend_WhenEditJournalEntryAndSuccess_ThenEmitsSuccessEvent() =
+        runTest {
+            // Given
+            val editInfo = EditInfo(testJournalId, testEntryId, testOldEntry)
+            val mode = TextEntryMode.EditJournalEntry(testOwnerId, editInfo)
+            viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
+            viewModel.onTextChanged(testText)
+            coEvery {
+                textEntryUseCase.editJournalEntry(testOwnerId, testJournalId, testEntryId, testText)
+            } returns Result.success(Unit)
+
+            // When
+            viewModel.onSend()
+            advanceUntilIdle()
+
+            // Then
+            val event = viewModel.events.first()
+            assertTrue(event is TextEntryEvent.Success)
+            coVerify(exactly = 1) {
+                textEntryUseCase.editJournalEntry(
+                    testOwnerId,
+                    testJournalId,
+                    testEntryId,
+                    testText
+                )
+            }
+        }
 
     @Test
     fun onSend_WhenEmptyText_ThenShowsError() {
@@ -464,22 +471,28 @@ class TextEntryViewModelTest {
     }
 
     @Test
-    fun onSend_WhenMessageAndSuccess_ThenEmitsSuccessEvent() = runTest {
-        // Given
-        val userId = 123L
-        val userName = "Test User"
-        val mode = TextEntryMode.Message(userId, userName)
-        viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
-        viewModel.onTextChanged(testText)
-        coEvery { textEntryUseCase.sendMessageTo(userId, testText) } returns Result.success(Unit)
+    fun onSend_WhenMessageAndSuccess_ThenEmitsSuccessEvent() =
+        runTest {
+            // Given
+            val userId = 123L
+            val userName = "Test User"
+            val mode = TextEntryMode.Message(userId, userName)
+            viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
+            viewModel.onTextChanged(testText)
+            coEvery {
+                textEntryUseCase.sendMessageTo(
+                    userId,
+                    testText
+                )
+            } returns Result.success(Unit)
 
-        // When
-        viewModel.onSend()
-        advanceUntilIdle()
+            // When
+            viewModel.onSend()
+            advanceUntilIdle()
 
-        // Then
-        val event = viewModel.events.first()
-        assertTrue(event is TextEntryEvent.Success)
-        coVerify(exactly = 1) { textEntryUseCase.sendMessageTo(userId, testText) }
-    }
+            // Then
+            val event = viewModel.events.first()
+            assertTrue(event is TextEntryEvent.Success)
+            coVerify(exactly = 1) { textEntryUseCase.sendMessageTo(userId, testText) }
+        }
 }

@@ -78,9 +78,17 @@ data class EntryPermissions(
 )
 
 sealed class EntryAction {
-    data class Delete(val entryId: Long) : EntryAction()
-    data class Edit(val entry: JournalEntry) : EntryAction()
-    data class Report(val entry: JournalEntry) : EntryAction()
+    data class Delete(
+        val entryId: Long
+    ) : EntryAction()
+
+    data class Edit(
+        val entry: JournalEntry
+    ) : EntryAction()
+
+    data class Report(
+        val entry: JournalEntry
+    ) : EntryAction()
 }
 
 data class EntriesContentState(
@@ -93,10 +101,13 @@ data class EntriesContentState(
 
 sealed class EntriesAction {
     object Refresh : EntriesAction()
-    data class Entry(val action: EntryAction) : EntriesAction()
+
+    data class Entry(
+        val action: EntryAction
+    ) : EntriesAction()
+
     object AddEntry : EntriesAction()
 }
-
 
 @Composable
 private fun rememberEntryActionsHandler(
@@ -105,31 +116,35 @@ private fun rememberEntryActionsHandler(
     journalId: Long,
     onShowDeleteDialog: (Long) -> Unit,
     onShowEditSheet: (TextEntryMode) -> Unit
-): (EntriesAction) -> Unit {
-    return remember(context, journalOwnerId, journalId, onShowDeleteDialog, onShowEditSheet) {
+): (EntriesAction) -> Unit =
+    remember(context, journalOwnerId, journalId, onShowDeleteDialog, onShowEditSheet) {
         { action ->
             when (action) {
                 is EntriesAction.Refresh -> {}
                 is EntriesAction.Entry -> {
                     when (val entryAction = action.action) {
                         is EntryAction.Delete -> onShowDeleteDialog(entryAction.entryId)
-                        is EntryAction.Edit -> onShowEditSheet(
-                            TextEntryMode.EditJournalEntry(
-                                ownerId = journalOwnerId,
-                                editInfo = EditInfo(
-                                    parentObjectId = journalId,
-                                    entryId = entryAction.entry.id,
-                                    oldEntry = entryAction.entry.message ?: ""
+                        is EntryAction.Edit ->
+                            onShowEditSheet(
+                                TextEntryMode.EditJournalEntry(
+                                    ownerId = journalOwnerId,
+                                    editInfo =
+                                        EditInfo(
+                                            parentObjectId = journalId,
+                                            entryId = entryAction.entry.id,
+                                            oldEntry = entryAction.entry.message ?: ""
+                                        )
                                 )
                             )
-                        )
 
                         is EntryAction.Report -> {
-                            val complaint = com.swparks.util.Complaint.JournalEntry(
-                                author = entryAction.entry.authorName ?: "неизвестен",
-                                entryText = entryAction.entry.message ?: ""
-                            )
-                            com.swparks.ui.screens.more.sendComplaint(complaint, context)
+                            val complaint =
+                                com.swparks.util.Complaint.JournalEntry(
+                                    author = entryAction.entry.authorName ?: "неизвестен",
+                                    entryText = entryAction.entry.message ?: ""
+                                )
+                            com.swparks.ui.screens.more
+                                .sendComplaint(complaint, context)
                         }
                     }
                 }
@@ -138,7 +153,6 @@ private fun rememberEntryActionsHandler(
             }
         }
     }
-}
 
 data class JournalParams(
     val journalId: Long,
@@ -150,11 +164,19 @@ data class JournalParams(
 
 sealed class ScaffoldAction {
     object Back : ScaffoldAction()
+
     object Settings : ScaffoldAction()
+
     object FabClick : ScaffoldAction()
+
     object Retry : ScaffoldAction()
+
     object Refresh : ScaffoldAction()
-    data class Entry(val action: EntriesAction) : ScaffoldAction()
+
+    data class Entry(
+        val action: EntriesAction
+    ) : ScaffoldAction()
+
     object AddEntry : ScaffoldAction()
 }
 
@@ -187,21 +209,24 @@ private fun JournalSettingsDialogSection(
 ) {
     if (show) {
         val isSavingSettings by viewModel.isSavingSettings.collectAsState()
-        val journalForDialog = currentJournal ?: Journal(
-            id = params.journalId,
-            title = params.journalTitle,
-            ownerId = params.journalOwnerId,
-            viewAccess = params.journalViewAccess?.let { JournalAccess.valueOf(it) }
-                ?: JournalAccess.NOBODY,
-            commentAccess = params.journalCommentAccess?.let { JournalAccess.valueOf(it) }
-                ?: JournalAccess.NOBODY,
-            lastMessageImage = null,
-            createDate = null,
-            modifyDate = null,
-            lastMessageDate = null,
-            lastMessageText = null,
-            entriesCount = null
-        )
+        val journalForDialog =
+            currentJournal ?: Journal(
+                id = params.journalId,
+                title = params.journalTitle,
+                ownerId = params.journalOwnerId,
+                viewAccess =
+                    params.journalViewAccess?.let { JournalAccess.valueOf(it) }
+                        ?: JournalAccess.NOBODY,
+                commentAccess =
+                    params.journalCommentAccess?.let { JournalAccess.valueOf(it) }
+                        ?: JournalAccess.NOBODY,
+                lastMessageImage = null,
+                createDate = null,
+                modifyDate = null,
+                lastMessageDate = null,
+                lastMessageText = null,
+                entriesCount = null
+            )
         JournalSettingsDialog(
             journal = journalForDialog,
             onDismiss = onDismiss,
@@ -210,7 +235,6 @@ private fun JournalSettingsDialogSection(
         )
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -253,37 +277,41 @@ private fun ScaffoldContent(
     onAction: (ScaffoldAction) -> Unit
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                start = parentPaddingValues.calculateStartPadding(layoutDirection),
-                top = parentPaddingValues.calculateTopPadding(),
-                end = parentPaddingValues.calculateEndPadding(layoutDirection),
-                bottom = 0.dp
-            )
-            .padding(innerPadding)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(
+                    start = parentPaddingValues.calculateStartPadding(layoutDirection),
+                    top = parentPaddingValues.calculateTopPadding(),
+                    end = parentPaddingValues.calculateEndPadding(layoutDirection),
+                    bottom = 0.dp
+                )
+                .padding(innerPadding)
     ) {
         when (state.uiState) {
             is JournalEntriesUiState.InitialLoading -> LoadingOverlayView()
-            is JournalEntriesUiState.Error -> ErrorContentView(
-                retryAction = { onAction(ScaffoldAction.Retry) },
-                message = state.uiState.message
-            )
+            is JournalEntriesUiState.Error ->
+                ErrorContentView(
+                    retryAction = { onAction(ScaffoldAction.Retry) },
+                    message = state.uiState.message
+                )
 
             is JournalEntriesUiState.Content -> {
                 ContentScreen(
-                    state = EntriesContentState(
-                        state.uiState.entries,
-                        state.isRefreshing,
-                        state.isDeleting,
-                        state.uiState.canCreateEntry,
-                        state.uiState.firstEntryId
-                    ),
-                    permissions = EntryPermissions(
-                        state.canEditEntry,
-                        state.canDeleteEntry,
-                        false
-                    ),
+                    state =
+                        EntriesContentState(
+                            state.uiState.entries,
+                            state.isRefreshing,
+                            state.isDeleting,
+                            state.uiState.canCreateEntry,
+                            state.uiState.firstEntryId
+                        ),
+                    permissions =
+                        EntryPermissions(
+                            state.canEditEntry,
+                            state.canDeleteEntry,
+                            false
+                        ),
                     onAction = { action ->
                         when (action) {
                             is EntriesAction.Refresh -> onAction(ScaffoldAction.Refresh)
@@ -381,23 +409,32 @@ fun JournalEntriesScreen(
             if (it is JournalEntriesEvent.JournalSettingsSaved) showSettingsDialog = false
         }
     }
-    val entryActionHandler = rememberEntryActionsHandler(
-        context = context,
-        journalOwnerId = params.journalOwnerId,
-        journalId = params.journalId,
-        onShowDeleteDialog = { entryId -> showDeleteDialog = true; entryToDelete = entryId },
-        onShowEditSheet = { mode -> textEntryMode = mode; showTextEntrySheet = true }
-    )
-    val scaffoldState = buildScaffoldState(
-        params = ScaffoldParams(
-            uiState = uiState,
-            params = params,
-            appState = appState,
-            isRefreshing = isRefreshing,
-            isDeleting = isDeleting,
-            viewModel = viewModel
+    val entryActionHandler =
+        rememberEntryActionsHandler(
+            context = context,
+            journalOwnerId = params.journalOwnerId,
+            journalId = params.journalId,
+            onShowDeleteDialog = { entryId ->
+                showDeleteDialog = true
+                entryToDelete = entryId
+            },
+            onShowEditSheet = { mode ->
+                textEntryMode = mode
+                showTextEntrySheet = true
+            }
         )
-    )
+    val scaffoldState =
+        buildScaffoldState(
+            params =
+                ScaffoldParams(
+                    uiState = uiState,
+                    params = params,
+                    appState = appState,
+                    isRefreshing = isRefreshing,
+                    isDeleting = isDeleting,
+                    viewModel = viewModel
+                )
+        )
     JournalEntriesScaffold(
         modifier = modifier,
         parentPaddingValues = parentPaddingValues,
@@ -418,9 +455,11 @@ fun JournalEntriesScreen(
             }
         }
     )
-    if (showDeleteDialog) DeleteConfirmationDialog({ showDeleteDialog = false }) {
-        entryToDelete?.let { viewModel.deleteEntry(it) }
-        showDeleteDialog = false
+    if (showDeleteDialog) {
+        DeleteConfirmationDialog({ showDeleteDialog = false }) {
+            entryToDelete?.let { viewModel.deleteEntry(it) }
+            showDeleteDialog = false
+        }
     }
     textEntrySheetHostContent(showTextEntrySheet, textEntryMode, { showTextEntrySheet = false }) {
         showTextEntrySheet = false
@@ -470,9 +509,10 @@ private fun ContentScreen(
             PullToRefreshDefaults.Indicator(
                 state = pullRefreshState,
                 isRefreshing = state.isRefreshing,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = dimensionResource(R.dimen.spacing_regular))
+                modifier =
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = dimensionResource(R.dimen.spacing_regular))
             )
         }
     ) {
@@ -514,12 +554,13 @@ private fun EntriesList(
 ) {
     val context = LocalContext.current
     LazyColumn(
-        contentPadding = PaddingValues(
-            start = dimensionResource(R.dimen.spacing_regular),
-            top = dimensionResource(R.dimen.spacing_small),
-            end = dimensionResource(R.dimen.spacing_regular),
-            bottom = dimensionResource(R.dimen.spacing_regular)
-        ),
+        contentPadding =
+            PaddingValues(
+                start = dimensionResource(R.dimen.spacing_regular),
+                top = dimensionResource(R.dimen.spacing_small),
+                end = dimensionResource(R.dimen.spacing_regular),
+                bottom = dimensionResource(R.dimen.spacing_regular)
+            ),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
     ) {
         items(
@@ -538,32 +579,35 @@ private fun EntriesList(
             }
 
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("JournalEntry_${entry.id}")
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .testTag("JournalEntry_${entry.id}")
             ) {
                 JournalRowView(
-                    data = JournalRowData(
-                        modifier = Modifier.fillMaxWidth(),
-                        imageStringURL = entry.authorImage,
-                        title = entry.authorName ?: "",
-                        dateString = DateFormatter.formatDate(
-                            context = context,
-                            dateString = entry.createDate
-                        ),
-                        bodyText = entry.message ?: "",
-                        mode = JournalRowMode.ENTRY,
-                        enabled = enabled,
-                        actions = actions,
-                        onClickAction = { action ->
-                            when (action) {
-                                JournalAction.EDIT -> onAction(EntryAction.Edit(entry))
-                                JournalAction.DELETE -> onAction(EntryAction.Delete(entry.id))
-                                JournalAction.REPORT -> onAction(EntryAction.Report(entry))
-                                else -> {}
+                    data =
+                        JournalRowData(
+                            modifier = Modifier.fillMaxWidth(),
+                            imageStringURL = entry.authorImage,
+                            title = entry.authorName ?: "",
+                            dateString =
+                                DateFormatter.formatDate(
+                                    context = context,
+                                    dateString = entry.createDate
+                                ),
+                            bodyText = entry.message ?: "",
+                            mode = JournalRowMode.ENTRY,
+                            enabled = enabled,
+                            actions = actions,
+                            onClickAction = { action ->
+                                when (action) {
+                                    JournalAction.EDIT -> onAction(EntryAction.Edit(entry))
+                                    JournalAction.DELETE -> onAction(EntryAction.Delete(entry.id))
+                                    JournalAction.REPORT -> onAction(EntryAction.Report(entry))
+                                    else -> {}
+                                }
                             }
-                        }
-                    )
+                        )
                 )
             }
         }
@@ -589,9 +633,10 @@ private fun DeleteConfirmationDialog(
         confirmButton = {
             TextButton(
                 onClick = onConfirm,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
+                colors =
+                    ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
             ) {
                 Text(stringResource(R.string.delete))
             }
@@ -601,10 +646,11 @@ private fun DeleteConfirmationDialog(
                 Text(stringResource(R.string.cancel))
             }
         },
-        properties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true
-        )
+        properties =
+            DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true
+            )
     )
 }
 
@@ -616,13 +662,14 @@ private fun DeleteConfirmationDialog(
 private fun JournalEntriesScreenEmptyPreview() {
     JetpackWorkoutAppTheme {
         ContentScreen(
-            state = EntriesContentState(
-                entries = emptyList(),
-                isRefreshing = false,
-                isDeleting = false,
-                canCreateEntry = true,
-                firstEntryId = null
-            ),
+            state =
+                EntriesContentState(
+                    entries = emptyList(),
+                    isRefreshing = false,
+                    isDeleting = false,
+                    canCreateEntry = true,
+                    firstEntryId = null
+                ),
             onAction = {}
         )
     }
@@ -632,48 +679,50 @@ private fun JournalEntriesScreenEmptyPreview() {
 @Preview(showBackground = true, locale = "ru", name = "Journal Entries with Items")
 @Composable
 private fun JournalEntriesScreenWithItemsPreview() {
-    val sampleEntries = listOf(
-        JournalEntry(
-            id = 1,
-            journalId = 1,
-            message = "Сегодня была отличная тренировка! Пробежал 5 км.",
-            createDate = "2024-01-15T10:30:00",
-            modifyDate = "2024-01-15T10:30:00",
-            authorId = 1,
-            authorName = "Иван",
-            authorImage = null
-        ),
-        JournalEntry(
-            id = 2,
-            journalId = 1,
-            message = "Настроение отличное, погода хорошая.",
-            createDate = "2024-01-14T08:00:00",
-            modifyDate = "2024-01-14T08:00:00",
-            authorId = 1,
-            authorName = "Иван",
-            authorImage = null
-        ),
-        JournalEntry(
-            id = 3,
-            journalId = 1,
-            message = "Завтра планирую тренировку в зале.",
-            createDate = "2024-01-13T18:45:00",
-            modifyDate = "2024-01-13T18:45:00",
-            authorId = 1,
-            authorName = "Иван",
-            authorImage = null
+    val sampleEntries =
+        listOf(
+            JournalEntry(
+                id = 1,
+                journalId = 1,
+                message = "Сегодня была отличная тренировка! Пробежал 5 км.",
+                createDate = "2024-01-15T10:30:00",
+                modifyDate = "2024-01-15T10:30:00",
+                authorId = 1,
+                authorName = "Иван",
+                authorImage = null
+            ),
+            JournalEntry(
+                id = 2,
+                journalId = 1,
+                message = "Настроение отличное, погода хорошая.",
+                createDate = "2024-01-14T08:00:00",
+                modifyDate = "2024-01-14T08:00:00",
+                authorId = 1,
+                authorName = "Иван",
+                authorImage = null
+            ),
+            JournalEntry(
+                id = 3,
+                journalId = 1,
+                message = "Завтра планирую тренировку в зале.",
+                createDate = "2024-01-13T18:45:00",
+                modifyDate = "2024-01-13T18:45:00",
+                authorId = 1,
+                authorName = "Иван",
+                authorImage = null
+            )
         )
-    )
 
     JetpackWorkoutAppTheme {
         ContentScreen(
-            state = EntriesContentState(
-                entries = sampleEntries,
-                isRefreshing = false,
-                isDeleting = false,
-                canCreateEntry = true,
-                firstEntryId = 1
-            ),
+            state =
+                EntriesContentState(
+                    entries = sampleEntries,
+                    isRefreshing = false,
+                    isDeleting = false,
+                    canCreateEntry = true,
+                    firstEntryId = 1
+                ),
             onAction = {}
         )
     }

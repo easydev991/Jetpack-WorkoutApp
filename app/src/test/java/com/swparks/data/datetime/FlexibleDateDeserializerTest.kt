@@ -10,11 +10,11 @@ import org.junit.Test
  * Unit-тесты для FlexibleDateDeserializer
  */
 class FlexibleDateDeserializerTest {
-
-    private val json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-    }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+        }
 
     /**
      * Тестовая модель для проверки десериализации дат

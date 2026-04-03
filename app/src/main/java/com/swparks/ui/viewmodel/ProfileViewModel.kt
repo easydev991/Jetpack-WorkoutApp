@@ -23,9 +23,10 @@ import kotlinx.coroutines.launch
 /** UI State для экрана профиля */
 sealed class ProfileUiState {
     data object Loading : ProfileUiState()
+
     data class Success(
         val country: Country? = null,
-        val city: City? = null,
+        val city: City? = null
     ) : ProfileUiState()
 
     data class Error(
@@ -55,21 +56,23 @@ class ProfileViewModel(
     private val countriesRepository: CountriesRepository,
     private val swRepository: SWRepository,
     private val logger: Logger,
-    private val userNotifier: UserNotifier,
-) : ViewModel(), IProfileViewModel {
-
+    private val userNotifier: UserNotifier
+) : ViewModel(),
+    IProfileViewModel {
     private companion object {
         private const val STATE_TIMEOUT_MS = 5000L
         private const val TAG = "ProfileViewModel"
     }
 
     // Подписываемся на текущего пользователя из кэша
-    override val currentUser: StateFlow<User?> = swRepository.getCurrentUserFlow()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(STATE_TIMEOUT_MS),
-            initialValue = null
-        )
+    override val currentUser: StateFlow<User?> =
+        swRepository
+            .getCurrentUserFlow()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(STATE_TIMEOUT_MS),
+                initialValue = null
+            )
 
     // UI State
     private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
@@ -84,12 +87,14 @@ class ProfileViewModel(
     override val isLoadingProfile: StateFlow<Boolean> = _isLoadingProfile.asStateFlow()
 
     // Черный список пользователя
-    override val blacklist: StateFlow<List<User>> = swRepository.getBlacklistFlow()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(STATE_TIMEOUT_MS),
-            initialValue = emptyList()
-        )
+    override val blacklist: StateFlow<List<User>> =
+        swRepository
+            .getBlacklistFlow()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(STATE_TIMEOUT_MS),
+                initialValue = emptyList()
+            )
 
     init {
         viewModelScope.launch {
@@ -129,10 +134,11 @@ class ProfileViewModel(
      * Использует текущего пользователя из репозитория.
      */
     override fun refreshProfile() {
-        val user = currentUser.value ?: run {
-            logger.w(TAG, "Пропускаем обновление профиля: пользователь не авторизован")
-            return
-        }
+        val user =
+            currentUser.value ?: run {
+                logger.w(TAG, "Пропускаем обновление профиля: пользователь не авторизован")
+                return
+            }
 
         viewModelScope.launch {
             try {
@@ -157,16 +163,19 @@ class ProfileViewModel(
      * @param userId ID пользователя
      * @param updateUiState Если true, обновляет UI State при ошибке (для loadProfileFromServer)
      */
-    private suspend fun loadSocialUpdates(userId: Long, updateUiState: Boolean) {
-        swRepository.getSocialUpdates(userId)
+    private suspend fun loadSocialUpdates(
+        userId: Long,
+        updateUiState: Boolean
+    ) {
+        swRepository
+            .getSocialUpdates(userId)
             .onSuccess { socialUpdates ->
                 // Данные сохранены в кэше через SWRepository.getSocialUpdates()
                 // Черный список обновляется автоматически через Flow
                 // Теперь загружаем страну и город
                 loadProfileAddress(socialUpdates.user)
                 logger.i(TAG, "Профиль успешно загружен: ${socialUpdates.user.id}")
-            }
-            .onFailure { error ->
+            }.onFailure { error ->
                 val errorMessage = "Ошибка загрузки профиля и социальных данных: ${error.message}"
                 userNotifier.handleError(AppError.Generic(errorMessage, error))
                 if (updateUiState) {
@@ -212,11 +221,12 @@ class ProfileViewModel(
 
                 // Сохраняем предыдущие данные из текущего состояния, если они есть
                 val currentState = _uiState.value
-                val (previousCountry, previousCity) = when (currentState) {
-                    is ProfileUiState.Success -> currentState.country to currentState.city
-                    is ProfileUiState.Error -> currentState.country to currentState.city
-                    else -> null to null
-                }
+                val (previousCountry, previousCity) =
+                    when (currentState) {
+                        is ProfileUiState.Success -> currentState.country to currentState.city
+                        is ProfileUiState.Error -> currentState.country to currentState.city
+                        else -> null to null
+                    }
 
                 _uiState.update { ProfileUiState.Error(message, previousCountry, previousCity) }
                 logger.e(TAG, message)

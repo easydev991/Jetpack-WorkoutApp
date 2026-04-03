@@ -44,17 +44,19 @@ class MyBlacklistScreenTest {
         showSuccessAlert: Boolean = false,
         unblockedUserName: String? = null
     ) {
-        val testState = when (uiState) {
-            is BlacklistUiState.Success -> uiState.copy(
-                itemToRemove = itemToRemove,
-                showRemoveDialog = showRemoveDialog,
-                isRemoving = isRemoving,
-                showSuccessAlert = showSuccessAlert,
-                unblockedUserName = unblockedUserName
-            )
+        val testState =
+            when (uiState) {
+                is BlacklistUiState.Success ->
+                    uiState.copy(
+                        itemToRemove = itemToRemove,
+                        showRemoveDialog = showRemoveDialog,
+                        isRemoving = isRemoving,
+                        showSuccessAlert = showSuccessAlert,
+                        unblockedUserName = unblockedUserName
+                    )
 
-            else -> uiState
-        }
+                else -> uiState
+            }
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -89,14 +91,16 @@ class MyBlacklistScreenTest {
     @Test
     fun myBlacklistScreen_displaysBlacklist_whenHasUsers() {
         // Given
-        val testUser = User(
-            id = 1L,
-            name = "BlockedUser",
-            image = null
-        )
-        val state = BlacklistUiState.Success(
-            blacklist = listOf(testUser)
-        )
+        val testUser =
+            User(
+                id = 1L,
+                name = "BlockedUser",
+                image = null
+            )
+        val state =
+            BlacklistUiState.Success(
+                blacklist = listOf(testUser)
+            )
 
         // When
         setContent(uiState = state)
@@ -110,14 +114,16 @@ class MyBlacklistScreenTest {
     @Test
     fun myBlacklistScreen_displaysMultipleUsers() {
         // Given
-        val users = listOf(
-            User(id = 1L, name = "BlockedUser1", image = null),
-            User(id = 2L, name = "BlockedUser2", image = null),
-            User(id = 3L, name = "BlockedUser3", image = null)
-        )
-        val state = BlacklistUiState.Success(
-            blacklist = users
-        )
+        val users =
+            listOf(
+                User(id = 1L, name = "BlockedUser1", image = null),
+                User(id = 2L, name = "BlockedUser2", image = null),
+                User(id = 3L, name = "BlockedUser3", image = null)
+            )
+        val state =
+            BlacklistUiState.Success(
+                blacklist = users
+            )
 
         // When
         setContent(uiState = state)
@@ -133,9 +139,10 @@ class MyBlacklistScreenTest {
     @Test
     fun myBlacklistScreen_displaysEmptyState_whenNoUsers() {
         // Given
-        val state = BlacklistUiState.Success(
-            blacklist = emptyList()
-        )
+        val state =
+            BlacklistUiState.Success(
+                blacklist = emptyList()
+            )
 
         // When
         setContent(uiState = state)
@@ -150,16 +157,18 @@ class MyBlacklistScreenTest {
     fun myBlacklistScreen_clicksUser_callsOnShowRemoveDialog() {
         // Given
         val testUserId = 1L
-        val testUser = User(
-            id = testUserId,
-            name = "BlockedUser",
-            image = null
-        )
+        val testUser =
+            User(
+                id = testUserId,
+                name = "BlockedUser",
+                image = null
+            )
         var clickedUser: User? = null
 
-        val state = BlacklistUiState.Success(
-            blacklist = listOf(testUser)
-        )
+        val state =
+            BlacklistUiState.Success(
+                blacklist = listOf(testUser)
+            )
 
         setContent(
             uiState = state,
@@ -179,14 +188,16 @@ class MyBlacklistScreenTest {
     fun myBlacklistScreen_userRowIsClickable() {
         // Given
         val testUserId = 1L
-        val testUser = User(
-            id = testUserId,
-            name = "BlockedUser",
-            image = null
-        )
-        val state = BlacklistUiState.Success(
-            blacklist = listOf(testUser)
-        )
+        val testUser =
+            User(
+                id = testUserId,
+                name = "BlockedUser",
+                image = null
+            )
+        val state =
+            BlacklistUiState.Success(
+                blacklist = listOf(testUser)
+            )
 
         setContent(uiState = state)
 
@@ -228,15 +239,17 @@ class MyBlacklistScreenTest {
     @Test
     fun myBlacklistScreen_displaysBusyStateWithLastSuccessState() {
         // Given
-        val testUser = User(
-            id = 1L,
-            name = "BlockedUser",
-            image = null
-        )
-        val state = BlacklistUiState.Success(
-            blacklist = listOf(testUser),
-            isLoading = true
-        )
+        val testUser =
+            User(
+                id = 1L,
+                name = "BlockedUser",
+                image = null
+            )
+        val state =
+            BlacklistUiState.Success(
+                blacklist = listOf(testUser),
+                isLoading = true
+            )
 
         // When
         setContent(

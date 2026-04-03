@@ -4,7 +4,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class PickedImagesControllerTest {
-
     @Test
     fun resolvePickerLaunchMode_whenNoSlots_returnsDisabled() {
         assertEquals(PickerLaunchMode.Disabled, resolvePickerLaunchMode(0))

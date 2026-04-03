@@ -34,8 +34,15 @@ import com.swparks.ui.model.PickedImageItem
 
 sealed class PickedImageCellAction {
     data object AddImage : PickedImageCellAction()
-    data class DeleteImage(val index: Int) : PickedImageCellAction()
-    data class ViewFullscreen(val uri: Uri, val index: Int) : PickedImageCellAction()
+
+    data class DeleteImage(
+        val index: Int
+    ) : PickedImageCellAction()
+
+    data class ViewFullscreen(
+        val uri: Uri,
+        val index: Int
+    ) : PickedImageCellAction()
 }
 
 @Composable
@@ -47,19 +54,21 @@ fun PickedImageCell(
     modifier: Modifier = Modifier
 ) {
     when (item) {
-        is PickedImageItem.Image -> ImageCell(
-            uri = item.uri,
-            index = index,
-            enabled = enabled,
-            onAction = onAction,
-            modifier = modifier
-        )
+        is PickedImageItem.Image ->
+            ImageCell(
+                uri = item.uri,
+                index = index,
+                enabled = enabled,
+                onAction = onAction,
+                modifier = modifier
+            )
 
-        PickedImageItem.AddButton -> AddButtonCell(
-            enabled = enabled,
-            onClick = { onAction(PickedImageCellAction.AddImage) },
-            modifier = modifier
-        )
+        PickedImageItem.AddButton ->
+            AddButtonCell(
+                enabled = enabled,
+                onClick = { onAction(PickedImageCellAction.AddImage) },
+                modifier = modifier
+            )
     }
 }
 
@@ -75,9 +84,10 @@ private fun ImageCell(
     val cornerRadius = dimensionResource(R.dimen.corner_radius_small)
 
     Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(cornerRadius))
-            .clickable(enabled = enabled) { menuExpanded = true }
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(cornerRadius))
+                .clickable(enabled = enabled) { menuExpanded = true }
     ) {
         AsyncImage(
             model = uri,
@@ -158,10 +168,11 @@ private fun AddButtonCell(
     val cornerRadius = dimensionResource(R.dimen.corner_radius_small)
 
     Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(cornerRadius))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .clickable(enabled = enabled, onClick = onClick),
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(cornerRadius))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = androidx.compose.ui.Alignment.Center
     ) {
         Icon(

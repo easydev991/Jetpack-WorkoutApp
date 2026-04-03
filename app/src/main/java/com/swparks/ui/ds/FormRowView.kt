@@ -42,19 +42,21 @@ private fun FormRowViewContainer(
     content: @Composable () -> Unit
 ) {
     FormCardContainer(
-        params = FormCardContainerParams(
-            enabled = enabled,
-            onClick = onClick
-        )
+        params =
+            FormCardContainerParams(
+                enabled = enabled,
+                onClick = onClick
+            )
     ) {
         FormRowContainer(
-            config = FormRowConfig(
-                modifier = modifier,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                content = {
-                    content()
-                }
-            )
+            config =
+                FormRowConfig(
+                    modifier = modifier,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    content = {
+                        content()
+                    }
+                )
         )
     }
 }
@@ -104,10 +106,11 @@ fun FormRowView(
             if (badgeValue != null) {
                 CircleBadgeView(
                     value = badgeValue,
-                    modifier = Modifier.padding(
-                        start = dimensionResource(id = R.dimen.spacing_small),
-                        end = dimensionResource(id = R.dimen.spacing_micro)
-                    )
+                    modifier =
+                        Modifier.padding(
+                            start = dimensionResource(id = R.dimen.spacing_small),
+                            end = dimensionResource(id = R.dimen.spacing_micro)
+                        )
                 )
             }
             AnimatedVisibility(
@@ -117,9 +120,10 @@ fun FormRowView(
             ) {
                 Image(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    colorFilter = ColorFilter.tint(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
+                    colorFilter =
+                        ColorFilter.tint(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
                     contentDescription = "Chevron"
                 )
             }
@@ -170,27 +174,30 @@ fun FormRowViewPreview() {
             ) {
                 FormRowView(
                     leadingText = stringResource(id = R.string.where_trains),
-                    trailingText = pluralStringResource(
-                        id = R.plurals.parksCount,
-                        count = FormRowViewPreviewConstants.PARKS_COUNT,
-                        FormRowViewPreviewConstants.PARKS_COUNT
-                    )
+                    trailingText =
+                        pluralStringResource(
+                            id = R.plurals.parksCount,
+                            count = FormRowViewPreviewConstants.PARKS_COUNT,
+                            FormRowViewPreviewConstants.PARKS_COUNT
+                        )
                 )
                 FormRowView(
                     leadingText = stringResource(id = R.string.friends),
-                    trailingText = pluralStringResource(
-                        id = R.plurals.friendsCount,
-                        count = FormRowViewPreviewConstants.FRIENDS_COUNT,
-                        FormRowViewPreviewConstants.FRIENDS_COUNT
-                    )
+                    trailingText =
+                        pluralStringResource(
+                            id = R.plurals.friendsCount,
+                            count = FormRowViewPreviewConstants.FRIENDS_COUNT,
+                            FormRowViewPreviewConstants.FRIENDS_COUNT
+                        )
                 )
                 FormRowView(
                     leadingText = stringResource(id = R.string.friends),
-                    trailingText = pluralStringResource(
-                        id = R.plurals.friendsCount,
-                        count = FormRowViewPreviewConstants.FRIENDS_COUNT,
-                        FormRowViewPreviewConstants.FRIENDS_COUNT
-                    ),
+                    trailingText =
+                        pluralStringResource(
+                            id = R.plurals.friendsCount,
+                            count = FormRowViewPreviewConstants.FRIENDS_COUNT,
+                            FormRowViewPreviewConstants.FRIENDS_COUNT
+                        ),
                     badgeValue = FormRowViewPreviewConstants.BADGE_VALUE
                 )
                 SwitchFormRowView(

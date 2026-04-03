@@ -8,7 +8,11 @@ interface ITextEntryUseCase {
     /**
      * Добавить запись в дневник
      */
-    suspend fun addJournalEntry(ownerId: Long, journalId: Long, text: String): Result<Unit>
+    suspend fun addJournalEntry(
+        ownerId: Long,
+        journalId: Long,
+        text: String
+    ): Result<Unit>
 
     /**
      * Редактировать запись в дневнике
@@ -23,30 +27,50 @@ interface ITextEntryUseCase {
     /**
      * Создать новый дневник
      */
-    suspend fun createJournal(userId: Long, title: String): Result<Unit>
+    suspend fun createJournal(
+        userId: Long,
+        title: String
+    ): Result<Unit>
 
     /**
      * Добавить комментарий к площадке
      */
-    suspend fun addParkComment(parkId: Long, text: String): Result<Unit>
+    suspend fun addParkComment(
+        parkId: Long,
+        text: String
+    ): Result<Unit>
 
     /**
      * Редактировать комментарий к площадке
      */
-    suspend fun editParkComment(parkId: Long, commentId: Long, text: String): Result<Unit>
+    suspend fun editParkComment(
+        parkId: Long,
+        commentId: Long,
+        text: String
+    ): Result<Unit>
 
     /**
      * Добавить комментарий к мероприятию
      */
-    suspend fun addEventComment(eventId: Long, text: String): Result<Unit>
+    suspend fun addEventComment(
+        eventId: Long,
+        text: String
+    ): Result<Unit>
 
     /**
      * Редактировать комментарий к мероприятию
      */
-    suspend fun editEventComment(eventId: Long, commentId: Long, text: String): Result<Unit>
+    suspend fun editEventComment(
+        eventId: Long,
+        commentId: Long,
+        text: String
+    ): Result<Unit>
 
     /**
      * Отправить сообщение пользователю
      */
-    suspend fun sendMessageTo(userId: Long, message: String): Result<Unit>
+    suspend fun sendMessageTo(
+        userId: Long,
+        message: String
+    ): Result<Unit>
 }

@@ -23,16 +23,17 @@ import com.swparks.ui.model.MainUserForm
  * @param isLoading Индикатор загрузки (начальная загрузка, сохранение, удаление)
  */
 data class EditProfileUiState(
-    val userForm: MainUserForm = MainUserForm(
-        name = "",
-        fullname = "",
-        email = "",
-        password = "",
-        birthDate = "",
-        genderCode = 0,
-        countryId = null,
-        cityId = null
-    ),
+    val userForm: MainUserForm =
+        MainUserForm(
+            name = "",
+            fullname = "",
+            email = "",
+            password = "",
+            birthDate = "",
+            genderCode = 0,
+            countryId = null,
+            cityId = null
+        ),
     val initialForm: MainUserForm = userForm,
     val countries: List<Country> = emptyList(),
     val cities: List<City> = emptyList(),
@@ -78,15 +79,22 @@ sealed interface EditProfileEvent {
     /**
      * Навигация на экран смены пароля.
      */
-    data class NavigateToChangePassword(val userId: Long) : EditProfileEvent
+    data class NavigateToChangePassword(
+        val userId: Long
+    ) : EditProfileEvent
 
     /**
      * Навигация на экран выбора страны.
      */
-    data class NavigateToSelectCountry(val currentCountryId: Int?) : EditProfileEvent
+    data class NavigateToSelectCountry(
+        val currentCountryId: Int?
+    ) : EditProfileEvent
 
     /**
      * Навигация на экран выбора города.
      */
-    data class NavigateToSelectCity(val currentCityId: Int?, val countryId: Int) : EditProfileEvent
+    data class NavigateToSelectCity(
+        val currentCityId: Int?,
+        val countryId: Int
+    ) : EditProfileEvent
 }

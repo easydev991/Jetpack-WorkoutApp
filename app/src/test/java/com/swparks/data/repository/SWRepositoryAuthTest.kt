@@ -74,410 +74,436 @@ class SWRepositoryAuthTest {
     }
 
     @Test
-    fun login_whenApiReturnsSuccess_thenReturnsSuccessAndSavesToken() = runTest {
-        // Given
-        val mockSuccess = LoginSuccess(userId = 123L)
-        val mockApi = mockk<SWApi>()
-        coEvery { mockApi.login() } returns mockSuccess
+    fun login_whenApiReturnsSuccess_thenReturnsSuccessAndSavesToken() =
+        runTest {
+            // Given
+            val mockSuccess = LoginSuccess(userId = 123L)
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.login() } returns mockSuccess
 
-        val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
 
-        // When
-        val result = repository.login("test_token")
+            // When
+            val result = repository.login("test_token")
 
-        // Then
-        assertTrue(result.isSuccess)
-        assertEquals(mockSuccess, result.getOrNull())
-        coVerify { mockApi.login() }
-    }
-
-    @Test
-    fun login_whenApiThrowsIOException_thenReturnsFailure() = runTest {
-        // Given
-        val mockApi = mockk<SWApi>()
-        coEvery { mockApi.login() } throws IOException("Network error")
-
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
-
-        // When
-        val result = repository.login("test_token")
-
-        // Then
-        assertTrue(result.isFailure)
-        assertTrue(result.exceptionOrNull() is NetworkException)
-    }
-
-    @Test
-    fun login_whenTokenIsNull_thenSavesPreference() = runTest {
-        // Given
-        val mockSuccess = LoginSuccess(userId = 123L)
-        val mockApi = mockk<SWApi>()
-        coEvery { mockApi.login() } returns mockSuccess
-
-        val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
-
-        // When
-        val result = repository.login(null)
-
-        // Then
-        assertTrue(result.isSuccess)
-        coVerify { mockApi.login() }
-    }
-
-    @Test
-    fun resetPassword_whenApiReturnsSuccess_thenReturnsSuccess() = runTest {
-        // Given
-        val mockSuccess = LoginSuccess(userId = 123L)
-        val mockApi = mockk<SWApi>()
-        coEvery { mockApi.resetPassword(any()) } returns mockSuccess
-
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
-
-        // When
-        val result = repository.resetPassword("test_login")
-
-        // Then
-        assertTrue(result.isSuccess)
-        coVerify { mockApi.resetPassword(any()) }
-    }
-
-    @Test
-    fun resetPassword_whenApiThrowsException_thenReturnsFailure() = runTest {
-        // Given
-        val mockApi = mockk<SWApi>()
-        coEvery { mockApi.resetPassword(any()) } throws IOException("Network error")
-
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
-
-        // When
-        val result = repository.resetPassword("test_login")
-
-        // Then
-        assertTrue(result.isFailure)
-        assertTrue(result.exceptionOrNull() is NetworkException)
-    }
-
-    @Test
-    fun changePassword_whenApiReturnsSuccess_thenReturnsSuccess() = runTest {
-        // Given
-        val mockResponse = mockk<Response<Unit>>(relaxed = true)
-        every { mockResponse.isSuccessful } returns true
-
-        val mockApi = mockk<SWApi>()
-        coEvery {
-            mockApi.changePassword(any(), any())
-        } returns mockResponse
-
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
-
-        // When
-        val result = repository.changePassword("current", "new")
-
-        // Then
-        assertTrue(result.isSuccess)
-        coVerify { mockApi.changePassword("current", "new") }
-    }
-
-    @Test
-    fun changePassword_whenApiThrowsException_thenReturnsFailure() = runTest {
-        // Given
-        val mockApi = mockk<SWApi>()
-        coEvery {
-            mockApi.changePassword(any(), any())
-        } throws IOException("Network error")
-
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
-
-        // When
-        val result = repository.changePassword("current", "new")
-
-        // Then
-        assertTrue(result.isFailure)
-        assertTrue(result.exceptionOrNull() is NetworkException)
-    }
-
-    @Test
-    fun changePassword_whenApiReturnsError400_thenReturnsFailure() = runTest {
-        // Given
-        val errorBody = """{"errors":["Некорректный текущий пароль"]}""".trimIndent()
-            .toResponseBody("application/json".toMediaType())
-
-        val mockResponse = mockk<Response<Unit>>(relaxed = true)
-        every { mockResponse.isSuccessful } returns false
-        every { mockResponse.code() } returns 400
-        every { mockResponse.errorBody() } returns errorBody
-
-        val mockApi = mockk<SWApi>()
-        coEvery {
-            mockApi.changePassword(any(), any())
-        } returns mockResponse
-
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
-
-        // When
-        val result = repository.changePassword("current", "new")
-
-        // Then
-        assertTrue(result.isFailure)
-        assertTrue(result.exceptionOrNull() is ServerException)
-    }
-
-    @Test
-    fun register_whenApiReturnsSuccess_thenReturnsSuccessAndSavesToken() = runTest {
-        // Given
-        val mockSuccess = User(id = 456L, name = "testuser", image = null)
-        val mockApi = mockk<SWApi>()
-        coEvery {
-            mockApi.register(
-                name = any(),
-                fullName = any(),
-                email = any(),
-                password = any(),
-                birthDate = any(),
-                genderCode = any(),
-                countryId = any(),
-                cityId = any()
-            )
-        } returns mockSuccess
-
-        val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter = crashReporter,
-            logger = logger
-        )
-
-        // When
-        val result = repository.register(
-            RegistrationParams(
-                name = "testuser",
-                fullName = "Test User",
-                email = "test@example.com",
-                password = "password123",
-                birthDate = "1990-01-01",
-                genderCode = 1,
-                countryId = null,
-                cityId = null
-            )
-        )
-
-        // Then
-        assertTrue(result.isSuccess)
-        assertEquals(mockSuccess, result.getOrNull())
-        coVerify {
-            mockApi.register(
-                name = any(),
-                fullName = any(),
-                email = any(),
-                password = any(),
-                birthDate = any(),
-                genderCode = any(),
-                countryId = any(),
-                cityId = any()
-            )
+            // Then
+            assertTrue(result.isSuccess)
+            assertEquals(mockSuccess, result.getOrNull())
+            coVerify { mockApi.login() }
         }
-        coVerify { mockUserDao.insert(any()) }
-    }
 
     @Test
-    fun register_whenApiThrowsException_thenReturnsFailure() = runTest {
-        // Given
-        val mockApi = mockk<SWApi>()
-        coEvery {
-            mockApi.register(
-                name = any(),
-                fullName = any(),
-                email = any(),
-                password = any(),
-                birthDate = any(),
-                genderCode = any(),
-                countryId = any(),
-                cityId = any()
-            )
-        } throws IOException("Network error")
+    fun login_whenApiThrowsIOException_thenReturnsFailure() =
+        runTest {
+            // Given
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.login() } throws IOException("Network error")
 
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
-        )
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
 
-        // When
-        val result = repository.register(
-            RegistrationParams(
-                name = "testuser",
-                fullName = "Test User",
-                email = "test@example.com",
-                password = "password123",
-                birthDate = "1990-01-01",
-                genderCode = 1,
-                countryId = null,
-                cityId = null
-            )
-        )
+            // When
+            val result = repository.login("test_token")
 
-        // Then
-        assertTrue(result.isFailure)
-        assertTrue(result.exceptionOrNull() is NetworkException)
-    }
+            // Then
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is NetworkException)
+        }
+
+    @Test
+    fun login_whenTokenIsNull_thenSavesPreference() =
+        runTest {
+            // Given
+            val mockSuccess = LoginSuccess(userId = 123L)
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.login() } returns mockSuccess
+
+            val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
+
+            // When
+            val result = repository.login(null)
+
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify { mockApi.login() }
+        }
+
+    @Test
+    fun resetPassword_whenApiReturnsSuccess_thenReturnsSuccess() =
+        runTest {
+            // Given
+            val mockSuccess = LoginSuccess(userId = 123L)
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.resetPassword(any()) } returns mockSuccess
+
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
+
+            // When
+            val result = repository.resetPassword("test_login")
+
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify { mockApi.resetPassword(any()) }
+        }
+
+    @Test
+    fun resetPassword_whenApiThrowsException_thenReturnsFailure() =
+        runTest {
+            // Given
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.resetPassword(any()) } throws IOException("Network error")
+
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
+
+            // When
+            val result = repository.resetPassword("test_login")
+
+            // Then
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is NetworkException)
+        }
+
+    @Test
+    fun changePassword_whenApiReturnsSuccess_thenReturnsSuccess() =
+        runTest {
+            // Given
+            val mockResponse = mockk<Response<Unit>>(relaxed = true)
+            every { mockResponse.isSuccessful } returns true
+
+            val mockApi = mockk<SWApi>()
+            coEvery {
+                mockApi.changePassword(any(), any())
+            } returns mockResponse
+
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
+
+            // When
+            val result = repository.changePassword("current", "new")
+
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify { mockApi.changePassword("current", "new") }
+        }
+
+    @Test
+    fun changePassword_whenApiThrowsException_thenReturnsFailure() =
+        runTest {
+            // Given
+            val mockApi = mockk<SWApi>()
+            coEvery {
+                mockApi.changePassword(any(), any())
+            } throws IOException("Network error")
+
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
+
+            // When
+            val result = repository.changePassword("current", "new")
+
+            // Then
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is NetworkException)
+        }
+
+    @Test
+    fun changePassword_whenApiReturnsError400_thenReturnsFailure() =
+        runTest {
+            // Given
+            val errorBody =
+                """{"errors":["Некорректный текущий пароль"]}"""
+                    .trimIndent()
+                    .toResponseBody("application/json".toMediaType())
+
+            val mockResponse = mockk<Response<Unit>>(relaxed = true)
+            every { mockResponse.isSuccessful } returns false
+            every { mockResponse.code() } returns 400
+            every { mockResponse.errorBody() } returns errorBody
+
+            val mockApi = mockk<SWApi>()
+            coEvery {
+                mockApi.changePassword(any(), any())
+            } returns mockResponse
+
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
+
+            // When
+            val result = repository.changePassword("current", "new")
+
+            // Then
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is ServerException)
+        }
+
+    @Test
+    fun register_whenApiReturnsSuccess_thenReturnsSuccessAndSavesToken() =
+        runTest {
+            // Given
+            val mockSuccess = User(id = 456L, name = "testuser", image = null)
+            val mockApi = mockk<SWApi>()
+            coEvery {
+                mockApi.register(
+                    name = any(),
+                    fullName = any(),
+                    email = any(),
+                    password = any(),
+                    birthDate = any(),
+                    genderCode = any(),
+                    countryId = any(),
+                    cityId = any()
+                )
+            } returns mockSuccess
+
+            val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter = crashReporter,
+                    logger = logger
+                )
+
+            // When
+            val result =
+                repository.register(
+                    RegistrationParams(
+                        name = "testuser",
+                        fullName = "Test User",
+                        email = "test@example.com",
+                        password = "password123",
+                        birthDate = "1990-01-01",
+                        genderCode = 1,
+                        countryId = null,
+                        cityId = null
+                    )
+                )
+
+            // Then
+            assertTrue(result.isSuccess)
+            assertEquals(mockSuccess, result.getOrNull())
+            coVerify {
+                mockApi.register(
+                    name = any(),
+                    fullName = any(),
+                    email = any(),
+                    password = any(),
+                    birthDate = any(),
+                    genderCode = any(),
+                    countryId = any(),
+                    cityId = any()
+                )
+            }
+            coVerify { mockUserDao.insert(any()) }
+        }
+
+    @Test
+    fun register_whenApiThrowsException_thenReturnsFailure() =
+        runTest {
+            // Given
+            val mockApi = mockk<SWApi>()
+            coEvery {
+                mockApi.register(
+                    name = any(),
+                    fullName = any(),
+                    email = any(),
+                    password = any(),
+                    birthDate = any(),
+                    genderCode = any(),
+                    countryId = any(),
+                    cityId = any()
+                )
+            } throws IOException("Network error")
+
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
+
+            // When
+            val result =
+                repository.register(
+                    RegistrationParams(
+                        name = "testuser",
+                        fullName = "Test User",
+                        email = "test@example.com",
+                        password = "password123",
+                        birthDate = "1990-01-01",
+                        genderCode = 1,
+                        countryId = null,
+                        cityId = null
+                    )
+                )
+
+            // Then
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is NetworkException)
+        }
 
     @Test
     fun resetPassword_whenServerErrorWithErrorsField_thenReturnsServerExceptionWithErrorsMessage() =
         runTest {
             val mockApi = mockk<SWApi>()
             val errorJson = """{"errors":["Не найден пользователь с таким логином или e-mail"]}"""
-            val errorResponse = Response.error<Any>(
-                400,
-                errorJson.toResponseBody(null)
-            )
+            val errorResponse =
+                Response.error<Any>(
+                    400,
+                    errorJson.toResponseBody(null)
+                )
             coEvery { mockApi.resetPassword(any()) } throws HttpException(errorResponse)
 
             val mockDataStore = mockk<DataStore<Preferences>>()
             every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-            val repository = SWRepositoryImp(
-                mockApi,
-                mockDataStore,
-                mockUserDao,
-                mockJournalDao,
-                mockJournalEntryDao,
-                mockDialogDao,
-                mockEventDao,
-                mockParkDao,
-                crashReporter = crashReporter,
-                logger = logger
-            )
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter = crashReporter,
+                    logger = logger
+                )
 
             // When
             val result = repository.resetPassword("1")
@@ -494,27 +520,29 @@ class SWRepositoryAuthTest {
         runTest {
             val mockApi = mockk<SWApi>()
             val errorJson = """{"message":"Неверный пароль","code":401}"""
-            val errorResponse = Response.error<Any>(
-                401,
-                errorJson.toResponseBody(null)
-            )
+            val errorResponse =
+                Response.error<Any>(
+                    401,
+                    errorJson.toResponseBody(null)
+                )
             coEvery { mockApi.resetPassword(any()) } throws HttpException(errorResponse)
 
             val mockDataStore = mockk<DataStore<Preferences>>()
             every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-            val repository = SWRepositoryImp(
-                mockApi,
-                mockDataStore,
-                mockUserDao,
-                mockJournalDao,
-                mockJournalEntryDao,
-                mockDialogDao,
-                mockEventDao,
-                mockParkDao,
-                crashReporter = crashReporter,
-                logger = logger
-            )
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter = crashReporter,
+                    logger = logger
+                )
 
             // When
             val result = repository.resetPassword("test")
@@ -527,138 +555,150 @@ class SWRepositoryAuthTest {
         }
 
     @Test
-    fun resetPassword_whenServerErrorWithBothFields_thenReturnsMessageFieldPriority() = runTest {
-        val mockApi = mockk<SWApi>()
-        val errorJson = """{"message":"Приоритетное сообщение","errors":["Ошибка 1","Ошибка 2"]}"""
-        val errorResponse = Response.error<Any>(
-            400,
-            errorJson.toResponseBody(null)
-        )
-        coEvery { mockApi.resetPassword(any()) } throws HttpException(errorResponse)
+    fun resetPassword_whenServerErrorWithBothFields_thenReturnsMessageFieldPriority() =
+        runTest {
+            val mockApi = mockk<SWApi>()
+            val errorJson =
+                """{"message":"Приоритетное сообщение","errors":["Ошибка 1","Ошибка 2"]}"""
+            val errorResponse =
+                Response.error<Any>(
+                    400,
+                    errorJson.toResponseBody(null)
+                )
+            coEvery { mockApi.resetPassword(any()) } throws HttpException(errorResponse)
 
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter = crashReporter,
-            logger = logger
-        )
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter = crashReporter,
+                    logger = logger
+                )
 
-        // When
-        val result = repository.resetPassword("test")
+            // When
+            val result = repository.resetPassword("test")
 
-        // Then
-        assertTrue(result.isFailure)
-        val exception = result.exceptionOrNull()
-        assertTrue(exception is ServerException)
-        assertEquals("Приоритетное сообщение", exception?.message)
-    }
-
-    @Test
-    fun resetPassword_whenServerErrorWithMultipleErrors_thenReturnsJoinedErrors() = runTest {
-        val mockApi = mockk<SWApi>()
-        val errorJson = """{"errors":["Ошибка 1","Ошибка 2","Ошибка 3"]}"""
-        val errorResponse = Response.error<Any>(
-            400,
-            errorJson.toResponseBody(null)
-        )
-        coEvery { mockApi.resetPassword(any()) } throws HttpException(errorResponse)
-
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter = crashReporter,
-            logger = logger
-        )
-
-        // When
-        val result = repository.resetPassword("test")
-
-        // Then
-        assertTrue(result.isFailure)
-        val exception = result.exceptionOrNull()
-        assertTrue(exception is ServerException)
-        assertEquals("Ошибка 1, Ошибка 2, Ошибка 3", exception?.message)
-    }
+            // Then
+            assertTrue(result.isFailure)
+            val exception = result.exceptionOrNull()
+            assertTrue(exception is ServerException)
+            assertEquals("Приоритетное сообщение", exception?.message)
+        }
 
     @Test
-    fun resetPassword_whenServerErrorWithoutBody_thenReturnsStandardErrorMessage() = runTest {
-        val mockApi = mockk<SWApi>()
-        val errorResponse = Response.error<Any>(
-            500,
-            "".toResponseBody(null)
-        )
-        coEvery { mockApi.resetPassword(any()) } throws HttpException(errorResponse)
+    fun resetPassword_whenServerErrorWithMultipleErrors_thenReturnsJoinedErrors() =
+        runTest {
+            val mockApi = mockk<SWApi>()
+            val errorJson = """{"errors":["Ошибка 1","Ошибка 2","Ошибка 3"]}"""
+            val errorResponse =
+                Response.error<Any>(
+                    400,
+                    errorJson.toResponseBody(null)
+                )
+            coEvery { mockApi.resetPassword(any()) } throws HttpException(errorResponse)
 
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter = crashReporter,
-            logger = logger
-        )
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter = crashReporter,
+                    logger = logger
+                )
 
-        // When
-        val result = repository.resetPassword("test")
+            // When
+            val result = repository.resetPassword("test")
 
-        // Then
-        assertTrue(result.isFailure)
-        val exception = result.exceptionOrNull()
-        assertTrue(exception is ServerException)
-        assertNotNull(exception?.message)
-    }
+            // Then
+            assertTrue(result.isFailure)
+            val exception = result.exceptionOrNull()
+            assertTrue(exception is ServerException)
+            assertEquals("Ошибка 1, Ошибка 2, Ошибка 3", exception?.message)
+        }
+
+    @Test
+    fun resetPassword_whenServerErrorWithoutBody_thenReturnsStandardErrorMessage() =
+        runTest {
+            val mockApi = mockk<SWApi>()
+            val errorResponse =
+                Response.error<Any>(
+                    500,
+                    "".toResponseBody(null)
+                )
+            coEvery { mockApi.resetPassword(any()) } throws HttpException(errorResponse)
+
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
+
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter = crashReporter,
+                    logger = logger
+                )
+
+            // When
+            val result = repository.resetPassword("test")
+
+            // Then
+            assertTrue(result.isFailure)
+            val exception = result.exceptionOrNull()
+            assertTrue(exception is ServerException)
+            assertNotNull(exception?.message)
+        }
 
     @Test
     fun login_whenServerErrorWithErrorsField_thenReturnsServerExceptionWithErrorsMessage() =
         runTest {
             val mockApi = mockk<SWApi>()
             val errorJson = """{"errors":["Неверные учетные данные"]}"""
-            val errorResponse = Response.error<Any>(
-                401,
-                errorJson.toResponseBody(null)
-            )
+            val errorResponse =
+                Response.error<Any>(
+                    401,
+                    errorJson.toResponseBody(null)
+                )
             coEvery { mockApi.login() } throws HttpException(errorResponse)
 
             val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
             every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-            val repository = SWRepositoryImp(
-                mockApi,
-                mockDataStore,
-                mockUserDao,
-                mockJournalDao,
-                mockJournalEntryDao,
-                mockDialogDao,
-                mockEventDao,
-                mockParkDao,
-                crashReporter = crashReporter,
-                logger = logger
-            )
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter = crashReporter,
+                    logger = logger
+                )
 
             // When
             val result = repository.login("test_token")
@@ -675,10 +715,11 @@ class SWRepositoryAuthTest {
         runTest {
             val mockApi = mockk<SWApi>()
             val errorJson = """{"errors":["Email уже занят"]}"""
-            val errorResponse = Response.error<Any>(
-                400,
-                errorJson.toResponseBody(null)
-            )
+            val errorResponse =
+                Response.error<Any>(
+                    400,
+                    errorJson.toResponseBody(null)
+                )
             coEvery {
                 mockApi.register(
                     name = any(),
@@ -695,32 +736,34 @@ class SWRepositoryAuthTest {
             val mockDataStore = mockk<DataStore<Preferences>>()
             every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-            val repository = SWRepositoryImp(
-                mockApi,
-                mockDataStore,
-                mockUserDao,
-                mockJournalDao,
-                mockJournalEntryDao,
-                mockDialogDao,
-                mockEventDao,
-                mockParkDao,
-                crashReporter,
-                logger
-            )
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter,
+                    logger
+                )
 
             // When
-            val result = repository.register(
-                RegistrationParams(
-                    name = "testuser",
-                    fullName = "Test User",
-                    email = "test@example.com",
-                    password = "password123",
-                    birthDate = "1990-01-01",
-                    genderCode = 1,
-                    countryId = null,
-                    cityId = null
+            val result =
+                repository.register(
+                    RegistrationParams(
+                        name = "testuser",
+                        fullName = "Test User",
+                        email = "test@example.com",
+                        password = "password123",
+                        birthDate = "1990-01-01",
+                        genderCode = 1,
+                        countryId = null,
+                        cityId = null
+                    )
                 )
-            )
 
             // Then
             assertTrue(result.isFailure)
@@ -730,38 +773,41 @@ class SWRepositoryAuthTest {
         }
 
     @Test
-    fun resetPassword_whenEmptyErrorsArray_thenUsesDefaultMessage() = runTest {
-        val mockApi = mockk<SWApi>()
-        val errorJson = """{"errors":[],"code":400}"""
-        val errorResponse = Response.error<Any>(
-            400,
-            errorJson.toResponseBody(null)
-        )
-        coEvery { mockApi.resetPassword(any()) } throws HttpException(errorResponse)
+    fun resetPassword_whenEmptyErrorsArray_thenUsesDefaultMessage() =
+        runTest {
+            val mockApi = mockk<SWApi>()
+            val errorJson = """{"errors":[],"code":400}"""
+            val errorResponse =
+                Response.error<Any>(
+                    400,
+                    errorJson.toResponseBody(null)
+                )
+            coEvery { mockApi.resetPassword(any()) } throws HttpException(errorResponse)
 
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockDataStore = mockk<DataStore<Preferences>>()
+            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-        val repository = SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter = crashReporter,
-            logger = logger
-        )
+            val repository =
+                SWRepositoryImp(
+                    mockApi,
+                    mockDataStore,
+                    mockUserDao,
+                    mockJournalDao,
+                    mockJournalEntryDao,
+                    mockDialogDao,
+                    mockEventDao,
+                    mockParkDao,
+                    crashReporter = crashReporter,
+                    logger = logger
+                )
 
-        // When
-        val result = repository.resetPassword("test")
+            // When
+            val result = repository.resetPassword("test")
 
-        // Then
-        assertTrue(result.isFailure)
-        val exception = result.exceptionOrNull()
-        assertTrue(exception is ServerException)
-        assertEquals("Ошибка сервера: 400", exception?.message)
-    }
+            // Then
+            assertTrue(result.isFailure)
+            val exception = result.exceptionOrNull()
+            assertTrue(exception is ServerException)
+            assertEquals("Ошибка сервера: 400", exception?.message)
+        }
 }

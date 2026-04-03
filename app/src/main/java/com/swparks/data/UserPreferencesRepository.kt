@@ -19,33 +19,33 @@ class UserPreferencesRepository(
     private val dataStore: DataStore<Preferences>
 ) {
     private companion object {
-        val current_user_id = longPreferencesKey("currentUserId")
-        val last_parks_update_date = stringPreferencesKey("lastParksUpdateDate")
-        val last_countries_update_date = stringPreferencesKey("lastCountriesUpdateDate")
+        val CURRENT_USER_ID = longPreferencesKey("currentUserId")
+        val LAST_PARKS_UPDATE_DATE = stringPreferencesKey("lastParksUpdateDate")
+        val LAST_COUNTRIES_UPDATE_DATE = stringPreferencesKey("lastCountriesUpdateDate")
         const val DEFAULT_PARKS_DATE = "2025-10-25T00:00:00Z"
         const val DEFAULT_COUNTRIES_DATE = "2025-10-25T00:00:00Z"
-        const val tag = "UserPreferencesRepository"
+        const val TAG = "UserPreferencesRepository"
     }
 
     /**
      * ID текущего авторизованного пользователя.
      * Эмитит изменения при сохранении/очистке через saveCurrentUserId/clearCurrentUserId.
      */
-    val currentUserId: Flow<Long?> = dataStore.data
-        .catch {
-            if (it is IOException) {
-                Log.e(
-                    tag,
-                    "Ошибка при загрузке userId",
-                    it
-                )
-                emit(emptyPreferences())
-            } else {
-                throw it
-            }
-        }
-        .map { it[current_user_id] }
-        .distinctUntilChanged()
+    val currentUserId: Flow<Long?> =
+        dataStore.data
+            .catch {
+                if (it is IOException) {
+                    Log.e(
+                        TAG,
+                        "Ошибка при загрузке userId",
+                        it
+                    )
+                    emit(emptyPreferences())
+                } else {
+                    throw it
+                }
+            }.map { it[CURRENT_USER_ID] }
+            .distinctUntilChanged()
 
     /**
      * Состояние авторизации вычисляется на основе наличия currentUserId.
@@ -58,31 +58,32 @@ class UserPreferencesRepository(
      */
     suspend fun saveCurrentUserId(userId: Long) {
         dataStore.edit {
-            it[current_user_id] = userId
+            it[CURRENT_USER_ID] = userId
         }
-        Log.i(tag, "Сохранен текущий userId: $userId")
+        Log.i(TAG, "Сохранен текущий userId: $userId")
     }
 
     /**
      * Синхронно получает ID текущего пользователя
      */
-    fun getCurrentUserIdSync(): Long? = runBlocking {
-        try {
-            dataStore.data.first()[current_user_id]
-        } catch (e: IOException) {
-            Log.e(tag, "Ошибка при чтении userId синхронно", e)
-            null
+    fun getCurrentUserIdSync(): Long? =
+        runBlocking {
+            try {
+                dataStore.data.first()[CURRENT_USER_ID]
+            } catch (e: IOException) {
+                Log.e(TAG, "Ошибка при чтении userId синхронно", e)
+                null
+            }
         }
-    }
 
     /**
      * Очищает ID текущего пользователя (логаут)
      */
     suspend fun clearCurrentUserId() {
         dataStore.edit {
-            it.remove(current_user_id)
+            it.remove(CURRENT_USER_ID)
         }
-        Log.i(tag, "Очищен текущий userId (логаут)")
+        Log.i(TAG, "Очищен текущий userId (логаут)")
     }
 
     /**
@@ -92,47 +93,47 @@ class UserPreferencesRepository(
     fun clearAllUserData() {
         runBlocking {
             dataStore.edit {
-                it.remove(current_user_id)
+                it.remove(CURRENT_USER_ID)
             }
         }
-        Log.i(tag, "Все данные пользователя очищены")
+        Log.i(TAG, "Все данные пользователя очищены")
     }
 
-    val lastParksUpdateDate: Flow<String> = dataStore.data
-        .catch { e ->
-            if (e is IOException) {
-                Log.e(tag, "Ошибка при загрузке lastParksUpdateDate", e)
-                emit(emptyPreferences())
-            } else {
-                throw e
-            }
-        }
-        .map { it[last_parks_update_date] ?: DEFAULT_PARKS_DATE }
-        .distinctUntilChanged()
+    val lastParksUpdateDate: Flow<String> =
+        dataStore.data
+            .catch { e ->
+                if (e is IOException) {
+                    Log.e(TAG, "Ошибка при загрузке lastParksUpdateDate", e)
+                    emit(emptyPreferences())
+                } else {
+                    throw e
+                }
+            }.map { it[LAST_PARKS_UPDATE_DATE] ?: DEFAULT_PARKS_DATE }
+            .distinctUntilChanged()
 
-    val lastCountriesUpdateDate: Flow<String> = dataStore.data
-        .catch { e ->
-            if (e is IOException) {
-                Log.e(tag, "Ошибка при загрузке lastCountriesUpdateDate", e)
-                emit(emptyPreferences())
-            } else {
-                throw e
-            }
-        }
-        .map { it[last_countries_update_date] ?: DEFAULT_COUNTRIES_DATE }
-        .distinctUntilChanged()
+    val lastCountriesUpdateDate: Flow<String> =
+        dataStore.data
+            .catch { e ->
+                if (e is IOException) {
+                    Log.e(TAG, "Ошибка при загрузке lastCountriesUpdateDate", e)
+                    emit(emptyPreferences())
+                } else {
+                    throw e
+                }
+            }.map { it[LAST_COUNTRIES_UPDATE_DATE] ?: DEFAULT_COUNTRIES_DATE }
+            .distinctUntilChanged()
 
     suspend fun setLastParksUpdateDate(date: String) {
         dataStore.edit {
-            it[last_parks_update_date] = date
+            it[LAST_PARKS_UPDATE_DATE] = date
         }
-        Log.i(tag, "Сохранена дата последнего обновления площадок: $date")
+        Log.i(TAG, "Сохранена дата последнего обновления площадок: $date")
     }
 
     suspend fun setLastCountriesUpdateDate(date: String) {
         dataStore.edit {
-            it[last_countries_update_date] = date
+            it[LAST_COUNTRIES_UPDATE_DATE] = date
         }
-        Log.i(tag, "Сохранена дата последнего обновления стран: $date")
+        Log.i(TAG, "Сохранена дата последнего обновления стран: $date")
     }
 }

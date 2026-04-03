@@ -114,10 +114,11 @@ private fun ItemListContent(
     onContactUs: () -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-            .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
     ) {
         SearchBar(
             query = state.searchQuery,
@@ -161,12 +162,13 @@ private fun SearchBar(
                 contentDescription = null
             )
         },
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-            unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainerHighest
-        ),
+        colors =
+            TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceContainerHighest
+            ),
         singleLine = true
     )
 }
@@ -184,19 +186,20 @@ private fun ItemsList(
             CheckmarkRowView(
                 text = item,
                 isChecked = isSelected,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = dimensionResource(R.dimen.spacing_small),
-                        vertical = dimensionResource(R.dimen.spacing_xsmall)
-                    )
-                    .then(
-                        if (isSelected) {
-                            Modifier
-                        } else {
-                            Modifier.clickable { onItemSelected(item) }
-                        }
-                    )
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = dimensionResource(R.dimen.spacing_small),
+                            vertical = dimensionResource(R.dimen.spacing_xsmall)
+                        )
+                        .then(
+                            if (isSelected) {
+                                Modifier
+                            } else {
+                                Modifier.clickable { onItemSelected(item) }
+                            }
+                        )
             )
 
             if (index != items.lastIndex) {
@@ -215,9 +218,10 @@ private fun EmptyStateView(
     onContactUs: () -> Unit
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(dimensionResource(R.dimen.spacing_small)),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(dimensionResource(R.dimen.spacing_small)),
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -228,12 +232,13 @@ private fun EmptyStateView(
         )
 
         SWButton(
-            config = ButtonConfig(
-                size = SWButtonSize.SMALL,
-                mode = SWButtonMode.TINTED,
-                text = stringResource(R.string.contact_us),
-                onClick = onContactUs
-            )
+            config =
+                ButtonConfig(
+                    size = SWButtonSize.SMALL,
+                    mode = SWButtonMode.TINTED,
+                    text = stringResource(R.string.contact_us),
+                    onClick = onContactUs
+                )
         )
     }
 }
@@ -251,13 +256,14 @@ fun ItemListScreenCountryPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             ItemListScreen(
-                state = ItemListUiState(
-                    mode = ItemListMode.COUNTRY,
-                    items = listOf("Россия", "США", "Франция", "Германия"),
-                    selectedItem = "Россия",
-                    searchQuery = "",
-                    isEmpty = false
-                ),
+                state =
+                    ItemListUiState(
+                        mode = ItemListMode.COUNTRY,
+                        items = listOf("Россия", "США", "Франция", "Германия"),
+                        selectedItem = "Россия",
+                        searchQuery = "",
+                        isEmpty = false
+                    ),
                 onSearchQueryChange = {},
                 onItemSelected = {},
                 onContactUs = {},
@@ -278,13 +284,14 @@ fun ItemListScreenCityPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             ItemListScreen(
-                state = ItemListUiState(
-                    mode = ItemListMode.CITY,
-                    items = listOf("Москва", "Санкт-Петербург", "Казань"),
-                    selectedItem = "Москва",
-                    searchQuery = "",
-                    isEmpty = false
-                ),
+                state =
+                    ItemListUiState(
+                        mode = ItemListMode.CITY,
+                        items = listOf("Москва", "Санкт-Петербург", "Казань"),
+                        selectedItem = "Москва",
+                        searchQuery = "",
+                        isEmpty = false
+                    ),
                 onSearchQueryChange = {},
                 onItemSelected = {},
                 onContactUs = {},
@@ -300,13 +307,14 @@ fun ItemListScreenEmptyPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             ItemListScreen(
-                state = ItemListUiState(
-                    mode = ItemListMode.COUNTRY,
-                    items = emptyList(),
-                    selectedItem = null,
-                    searchQuery = "Несуществующая страна",
-                    isEmpty = true
-                ),
+                state =
+                    ItemListUiState(
+                        mode = ItemListMode.COUNTRY,
+                        items = emptyList(),
+                        selectedItem = null,
+                        searchQuery = "Несуществующая страна",
+                        isEmpty = true
+                    ),
                 onSearchQueryChange = {},
                 onItemSelected = {},
                 onContactUs = {},

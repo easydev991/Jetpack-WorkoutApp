@@ -10,7 +10,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MessagesRootScreenParamsFactoryTest {
-
     @Test
     fun createDialogsContentParams_whenDependenciesChange_usesLatestViewModelAndAction() {
         val dialog = createDialogEntity()
@@ -21,35 +20,40 @@ class MessagesRootScreenParamsFactoryTest {
         val vm1 = TrackingDialogsViewModel()
         val vm2 = TrackingDialogsViewModel()
 
-        val loadingState = DialogsLoadingState(
-            isRefreshing = false,
-            isUpdating = false,
-            syncError = null
-        )
+        val loadingState =
+            DialogsLoadingState(
+                isRefreshing = false,
+                isUpdating = false,
+                syncError = null
+            )
 
-        val callbacksV1 = DialogsCallbacks(
-            onAction = { actionV1Calls++ },
-            onDeleteClick = {}
-        )
-        val callbacksV2 = DialogsCallbacks(
-            onAction = { actionV2Calls++ },
-            onDeleteClick = {}
-        )
+        val callbacksV1 =
+            DialogsCallbacks(
+                onAction = { actionV1Calls++ },
+                onDeleteClick = {}
+            )
+        val callbacksV2 =
+            DialogsCallbacks(
+                onAction = { actionV2Calls++ },
+                onDeleteClick = {}
+            )
 
-        val paramsV1 = createDialogsContentParams(
-            uiState = DialogsUiState.Success(emptyList()),
-            loadingState = loadingState,
-            currentUser = null,
-            viewModel = vm1,
-            callbacks = callbacksV1
-        )
-        val paramsV2 = createDialogsContentParams(
-            uiState = DialogsUiState.Success(emptyList()),
-            loadingState = loadingState,
-            currentUser = null,
-            viewModel = vm2,
-            callbacks = callbacksV2
-        )
+        val paramsV1 =
+            createDialogsContentParams(
+                uiState = DialogsUiState.Success(emptyList()),
+                loadingState = loadingState,
+                currentUser = null,
+                viewModel = vm1,
+                callbacks = callbacksV1
+            )
+        val paramsV2 =
+            createDialogsContentParams(
+                uiState = DialogsUiState.Success(emptyList()),
+                loadingState = loadingState,
+                currentUser = null,
+                viewModel = vm2,
+                callbacks = callbacksV2
+            )
 
         paramsV1.onRefresh()
         paramsV1.onDialogClick(dialog)
@@ -65,15 +69,16 @@ class MessagesRootScreenParamsFactoryTest {
         assertTrue("Старый callback не должен вызываться повторно", actionV1Calls == 1)
     }
 
-    private fun createDialogEntity(): DialogEntity = DialogEntity(
-        id = 42L,
-        anotherUserId = 7,
-        name = "Test User",
-        image = "https://example.com/avatar.jpg",
-        lastMessageText = "Hi",
-        lastMessageDate = "2026-03-17T10:00:00",
-        unreadCount = 0
-    )
+    private fun createDialogEntity(): DialogEntity =
+        DialogEntity(
+            id = 42L,
+            anotherUserId = 7,
+            name = "Test User",
+            image = "https://example.com/avatar.jpg",
+            lastMessageText = "Hi",
+            lastMessageDate = "2026-03-17T10:00:00",
+            unreadCount = 0
+        )
 
     private class TrackingDialogsViewModel : IDialogsViewModel {
         override val uiState: StateFlow<DialogsUiState> =
@@ -94,7 +99,10 @@ class MessagesRootScreenParamsFactoryTest {
 
         override fun loadDialogsAfterAuth() = Unit
 
-        override fun onDialogClick(dialogId: Long, userId: Int?) {
+        override fun onDialogClick(
+            dialogId: Long,
+            userId: Int?
+        ) {
             dialogClickCalls++
         }
 
@@ -102,6 +110,9 @@ class MessagesRootScreenParamsFactoryTest {
 
         override fun deleteDialog(dialogId: Long) = Unit
 
-        override fun markDialogAsRead(dialogId: Long, userId: Int) = Unit
+        override fun markDialogAsRead(
+            dialogId: Long,
+            userId: Int
+        ) = Unit
     }
 }

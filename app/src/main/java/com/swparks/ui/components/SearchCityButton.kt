@@ -35,10 +35,11 @@ fun SearchCityButton(
     TextField(
         value = cityName ?: "",
         onValueChange = { },
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
-            .clickable { onClick() },
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
+                .clickable { onClick() },
         enabled = false,
         readOnly = true,
         placeholder = {
@@ -65,14 +66,15 @@ fun SearchCityButton(
                 }
             }
         },
-        colors = TextFieldDefaults.colors(
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-            disabledTextColor = MaterialTheme.colorScheme.onSurface,
-            disabledIndicatorColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
-        ),
+        colors =
+            TextFieldDefaults.colors(
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                disabledIndicatorColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
         singleLine = true,
         shape = RoundedCornerShape(dimensionResource(R.dimen.spacing_xsmall)),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)

@@ -191,19 +191,20 @@ class JournalResponseTest {
     @Test
     fun journal_whenAllFieldsArePresent_thenCreatesCorrectly() {
         // Given
-        val journal = createTestJournal(
-            id = 1L,
-            title = "My Journal",
-            lastMessageImage = "https://example.com/image.jpg",
-            createDate = "2024-01-01",
-            modifyDate = "2024-01-02",
-            lastMessageDate = "2024-01-03",
-            lastMessageText = "Last message",
-            count = 10,
-            ownerId = 2,
-            viewAccess = 1,
-            commentAccess = 1
-        )
+        val journal =
+            createTestJournal(
+                id = 1L,
+                title = "My Journal",
+                lastMessageImage = "https://example.com/image.jpg",
+                createDate = "2024-01-01",
+                modifyDate = "2024-01-02",
+                lastMessageDate = "2024-01-03",
+                lastMessageText = "Last message",
+                count = 10,
+                ownerId = 2,
+                viewAccess = 1,
+                commentAccess = 1
+            )
 
         // When & Then
         assertEquals(1L, journal.id)

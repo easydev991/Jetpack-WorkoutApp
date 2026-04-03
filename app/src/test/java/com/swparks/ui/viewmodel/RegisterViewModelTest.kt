@@ -44,7 +44,6 @@ import java.time.LocalDate
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class RegisterViewModelTest {
-
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -87,16 +86,17 @@ class RegisterViewModelTest {
             resourcesProvider.getString(R.string.birth_date_in_future)
         } returns "Дата рождения не может быть в будущем"
 
-        registerViewModel = RegisterViewModel(
-            logger = testLogger,
-            swRepository = swRepository,
-            secureTokenRepository = secureTokenRepository,
-            userPreferencesRepository = userPreferencesRepository,
-            tokenEncoder = tokenEncoder,
-            countriesRepository = countriesRepository,
-            resources = resourcesProvider,
-            userNotifier = userNotifier
-        )
+        registerViewModel =
+            RegisterViewModel(
+                logger = testLogger,
+                swRepository = swRepository,
+                secureTokenRepository = secureTokenRepository,
+                userPreferencesRepository = userPreferencesRepository,
+                tokenEncoder = tokenEncoder,
+                countriesRepository = countriesRepository,
+                resources = resourcesProvider,
+                userNotifier = userNotifier
+            )
     }
 
     @After
@@ -284,37 +284,39 @@ class RegisterViewModelTest {
     }
 
     @Test
-    fun onCountrySelectedByName_WhenCalled_thenUpdatesCountryAndClearsCity() = runTest {
-        // Given - first select city
-        registerViewModel.onCountrySelectedByName("Россия")
-        advanceUntilIdle()
-        registerViewModel.onCitySelectedByName("Москва")
-        advanceUntilIdle()
+    fun onCountrySelectedByName_WhenCalled_thenUpdatesCountryAndClearsCity() =
+        runTest {
+            // Given - first select city
+            registerViewModel.onCountrySelectedByName("Россия")
+            advanceUntilIdle()
+            registerViewModel.onCitySelectedByName("Москва")
+            advanceUntilIdle()
 
-        // When - select different country
-        registerViewModel.onCountrySelectedByName("Россия")
-        advanceUntilIdle()
+            // When - select different country
+            registerViewModel.onCountrySelectedByName("Россия")
+            advanceUntilIdle()
 
-        // Then
-        assertEquals("1", registerViewModel.form.value.countryId)
-        assertNull(registerViewModel.form.value.cityId)
-        assertEquals(testCountry, registerViewModel.selectedCountry.value)
-    }
+            // Then
+            assertEquals("1", registerViewModel.form.value.countryId)
+            assertNull(registerViewModel.form.value.cityId)
+            assertEquals(testCountry, registerViewModel.selectedCountry.value)
+        }
 
     @Test
-    fun onCitySelectedByName_WhenCalled_thenUpdatesCity() = runTest {
-        // Given
-        registerViewModel.onCountrySelectedByName("Россия")
-        advanceUntilIdle()
+    fun onCitySelectedByName_WhenCalled_thenUpdatesCity() =
+        runTest {
+            // Given
+            registerViewModel.onCountrySelectedByName("Россия")
+            advanceUntilIdle()
 
-        // When
-        registerViewModel.onCitySelectedByName("Москва")
-        advanceUntilIdle()
+            // When
+            registerViewModel.onCitySelectedByName("Москва")
+            advanceUntilIdle()
 
-        // Then
-        assertEquals("1", registerViewModel.form.value.cityId)
-        assertEquals(testCity, registerViewModel.selectedCity.value)
-    }
+            // Then
+            assertEquals("1", registerViewModel.form.value.cityId)
+            assertEquals(testCity, registerViewModel.selectedCity.value)
+        }
 
     @Test
     fun onPolicyAcceptedChange_WhenCalled_thenUpdatesPolicyAccepted() {
@@ -347,276 +349,289 @@ class RegisterViewModelTest {
     }
 
     @Test
-    fun formIsValid_WhenAllFieldsValid_thenReturnsTrue() = runTest {
-        // Given - fill all required fields
-        registerViewModel.onLoginChange("testuser")
-        registerViewModel.onEmailChange("test@example.com")
-        registerViewModel.onPasswordChange("password123")
-        registerViewModel.onFullNameChange("Ivan Ivanov")
-        registerViewModel.onGenderChange(0)
-        registerViewModel.onBirthDateChange(LocalDate.of(2000, 1, 15))
-        registerViewModel.onCountrySelectedByName("Россия")
-        advanceUntilIdle()
-        registerViewModel.onCitySelectedByName("Москва")
-        advanceUntilIdle()
-        registerViewModel.onPolicyAcceptedChange(true)
+    fun formIsValid_WhenAllFieldsValid_thenReturnsTrue() =
+        runTest {
+            // Given - fill all required fields
+            registerViewModel.onLoginChange("testuser")
+            registerViewModel.onEmailChange("test@example.com")
+            registerViewModel.onPasswordChange("password123")
+            registerViewModel.onFullNameChange("Ivan Ivanov")
+            registerViewModel.onGenderChange(0)
+            registerViewModel.onBirthDateChange(LocalDate.of(2000, 1, 15))
+            registerViewModel.onCountrySelectedByName("Россия")
+            advanceUntilIdle()
+            registerViewModel.onCitySelectedByName("Москва")
+            advanceUntilIdle()
+            registerViewModel.onPolicyAcceptedChange(true)
 
-        // When
-        val isValid = registerViewModel.form.value.isValid
+            // When
+            val isValid = registerViewModel.form.value.isValid
 
-        // Then
-        assertTrue(isValid)
-    }
-
-    @Test
-    fun formIsValid_WhenMissingLogin_thenReturnsFalse() = runTest {
-        // Given - don't fill login
-        registerViewModel.onEmailChange("test@example.com")
-        registerViewModel.onPasswordChange("password123")
-        registerViewModel.onFullNameChange("Ivan Ivanov")
-        registerViewModel.onGenderChange(0)
-        registerViewModel.onBirthDateChange(LocalDate.of(2000, 1, 15))
-        registerViewModel.onCountrySelectedByName("Россия")
-        advanceUntilIdle()
-        registerViewModel.onCitySelectedByName("Москва")
-        advanceUntilIdle()
-        registerViewModel.onPolicyAcceptedChange(true)
-
-        // When
-        val isValid = registerViewModel.form.value.isValid
-
-        // Then
-        assertFalse(isValid)
-    }
-
-    @Test
-    fun formIsValid_WhenInvalidEmail_thenReturnsFalse() = runTest {
-        // Given - invalid email
-        registerViewModel.onLoginChange("testuser")
-        registerViewModel.onEmailChange("invalid-email")
-        registerViewModel.onPasswordChange("password123")
-        registerViewModel.onFullNameChange("Ivan Ivanov")
-        registerViewModel.onGenderChange(0)
-        registerViewModel.onBirthDateChange(LocalDate.of(2000, 1, 15))
-        registerViewModel.onCountrySelectedByName("Россия")
-        advanceUntilIdle()
-        registerViewModel.onCitySelectedByName("Москва")
-        advanceUntilIdle()
-        registerViewModel.onPolicyAcceptedChange(true)
-
-        // When
-        val isValid = registerViewModel.form.value.isValid
-
-        // Then
-        assertFalse(isValid)
-    }
-
-    @Test
-    fun formIsValid_WhenShortPassword_thenReturnsFalse() = runTest {
-        // Given - short password
-        registerViewModel.onLoginChange("testuser")
-        registerViewModel.onEmailChange("test@example.com")
-        registerViewModel.onPasswordChange("123")
-        registerViewModel.onFullNameChange("Ivan Ivanov")
-        registerViewModel.onGenderChange(0)
-        registerViewModel.onBirthDateChange(LocalDate.of(2000, 1, 15))
-        registerViewModel.onCountrySelectedByName("Россия")
-        advanceUntilIdle()
-        registerViewModel.onCitySelectedByName("Москва")
-        advanceUntilIdle()
-        registerViewModel.onPolicyAcceptedChange(true)
-
-        // When
-        val isValid = registerViewModel.form.value.isValid
-
-        // Then
-        assertFalse(isValid)
-    }
-
-    @Test
-    fun formIsValid_WhenBirthDateInFuture_thenReturnsFalse() = runTest {
-        // Given - birth date in the future
-        val futureDate = LocalDate.now().plusDays(1)
-        registerViewModel.onLoginChange("testuser")
-        registerViewModel.onEmailChange("test@example.com")
-        registerViewModel.onPasswordChange("password123")
-        registerViewModel.onFullNameChange("Ivan Ivanov")
-        registerViewModel.onGenderChange(0)
-        registerViewModel.onBirthDateChange(futureDate)
-        registerViewModel.onCountrySelectedByName("Россия")
-        advanceUntilIdle()
-        registerViewModel.onCitySelectedByName("Москва")
-        advanceUntilIdle()
-        registerViewModel.onPolicyAcceptedChange(true)
-
-        // When
-        val isValid = registerViewModel.form.value.isValid
-
-        // Then
-        assertFalse(isValid)
-    }
-
-    @Test
-    fun formIsValid_WhenYoungUser_thenReturnsTrue() = runTest {
-        // Given - birth date less than 13 years ago (should be valid now)
-        val youngDate = LocalDate.now().minusYears(10)
-        registerViewModel.onLoginChange("testuser")
-        registerViewModel.onEmailChange("test@example.com")
-        registerViewModel.onPasswordChange("password123")
-        registerViewModel.onFullNameChange("Ivan Ivanov")
-        registerViewModel.onGenderChange(0)
-        registerViewModel.onBirthDateChange(youngDate)
-        registerViewModel.onCountrySelectedByName("Россия")
-        advanceUntilIdle()
-        registerViewModel.onCitySelectedByName("Москва")
-        advanceUntilIdle()
-        registerViewModel.onPolicyAcceptedChange(true)
-
-        // When
-        val isValid = registerViewModel.form.value.isValid
-
-        // Then
-        assertTrue(isValid)
-    }
-
-    @Test
-    fun formIsValid_WhenPolicyNotAccepted_thenReturnsFalse() = runTest {
-        // Given - policy not accepted
-        registerViewModel.onLoginChange("testuser")
-        registerViewModel.onEmailChange("test@example.com")
-        registerViewModel.onPasswordChange("password123")
-        registerViewModel.onFullNameChange("Ivan Ivanov")
-        registerViewModel.onGenderChange(0)
-        registerViewModel.onBirthDateChange(LocalDate.of(2000, 1, 15))
-        registerViewModel.onCountrySelectedByName("Россия")
-        advanceUntilIdle()
-        registerViewModel.onCitySelectedByName("Москва")
-        advanceUntilIdle()
-        registerViewModel.onPolicyAcceptedChange(false)
-
-        // When
-        val isValid = registerViewModel.form.value.isValid
-
-        // Then
-        assertFalse(isValid)
-    }
-
-    @Test
-    fun register_WhenValidForm_thenReturnsSuccess() = runTest {
-        // Given
-        fillValidForm()
-        coEvery {
-            swRepository.register(any<RegistrationParams>())
-        } returns Result.success(testUser)
-
-        // When
-        registerViewModel.register()
-        advanceUntilIdle()
-
-        // Then
-        val state = registerViewModel.uiState.value
-        assertTrue(state is RegisterUiState.Idle)
-
-        val event = registerViewModel.registerEvents.first()
-        assertTrue(event is RegisterEvent.Success)
-        assertEquals(testUser.id, (event as RegisterEvent.Success).userId)
-
-        coVerify(exactly = 1) {
-            swRepository.register(any<RegistrationParams>())
+            // Then
+            assertTrue(isValid)
         }
-        coVerify(exactly = 1) { secureTokenRepository.saveAuthToken("test-token") }
-        coVerify(exactly = 1) { userPreferencesRepository.saveCurrentUserId(testUser.id) }
-    }
 
     @Test
-    fun register_WhenApiError_thenReturnsError() = runTest {
-        // Given
-        fillValidForm()
-        val errorMessage = "Пользователь с таким email уже существует"
-        coEvery {
-            swRepository.register(any<RegistrationParams>())
-        } returns Result.failure(Exception(errorMessage))
+    fun formIsValid_WhenMissingLogin_thenReturnsFalse() =
+        runTest {
+            // Given - don't fill login
+            registerViewModel.onEmailChange("test@example.com")
+            registerViewModel.onPasswordChange("password123")
+            registerViewModel.onFullNameChange("Ivan Ivanov")
+            registerViewModel.onGenderChange(0)
+            registerViewModel.onBirthDateChange(LocalDate.of(2000, 1, 15))
+            registerViewModel.onCountrySelectedByName("Россия")
+            advanceUntilIdle()
+            registerViewModel.onCitySelectedByName("Москва")
+            advanceUntilIdle()
+            registerViewModel.onPolicyAcceptedChange(true)
 
-        // When
-        registerViewModel.register()
-        advanceUntilIdle()
+            // When
+            val isValid = registerViewModel.form.value.isValid
 
-        // Then
-        val state = registerViewModel.uiState.value
-        assertTrue(state is RegisterUiState.Error)
-        val errorState = state as RegisterUiState.Error
-        assertTrue(errorState.message.contains(errorMessage))
-
-        // Проверяем, что userNotifier.handleError был вызван
-        coVerify(exactly = 1) {
-            userNotifier.handleError(
-                match<AppError> { error ->
-                    error is AppError.Generic && error.message.contains(errorMessage)
-                }
-            )
+            // Then
+            assertFalse(isValid)
         }
-    }
 
     @Test
-    fun register_WhenInvalidForm_thenDoesNotCallApi() = runTest {
-        // Given - form is not valid (empty fields)
-        // When
-        registerViewModel.register()
-        advanceUntilIdle()
+    fun formIsValid_WhenInvalidEmail_thenReturnsFalse() =
+        runTest {
+            // Given - invalid email
+            registerViewModel.onLoginChange("testuser")
+            registerViewModel.onEmailChange("invalid-email")
+            registerViewModel.onPasswordChange("password123")
+            registerViewModel.onFullNameChange("Ivan Ivanov")
+            registerViewModel.onGenderChange(0)
+            registerViewModel.onBirthDateChange(LocalDate.of(2000, 1, 15))
+            registerViewModel.onCountrySelectedByName("Россия")
+            advanceUntilIdle()
+            registerViewModel.onCitySelectedByName("Москва")
+            advanceUntilIdle()
+            registerViewModel.onPolicyAcceptedChange(true)
 
-        // Then
-        coVerify(exactly = 0) {
-            swRepository.register(any<RegistrationParams>())
+            // When
+            val isValid = registerViewModel.form.value.isValid
+
+            // Then
+            assertFalse(isValid)
         }
-    }
 
     @Test
-    fun resetForNewSession_WhenCalled_thenClearsAllData() = runTest {
-        // Given - fill some data
-        fillValidForm()
+    fun formIsValid_WhenShortPassword_thenReturnsFalse() =
+        runTest {
+            // Given - short password
+            registerViewModel.onLoginChange("testuser")
+            registerViewModel.onEmailChange("test@example.com")
+            registerViewModel.onPasswordChange("123")
+            registerViewModel.onFullNameChange("Ivan Ivanov")
+            registerViewModel.onGenderChange(0)
+            registerViewModel.onBirthDateChange(LocalDate.of(2000, 1, 15))
+            registerViewModel.onCountrySelectedByName("Россия")
+            advanceUntilIdle()
+            registerViewModel.onCitySelectedByName("Москва")
+            advanceUntilIdle()
+            registerViewModel.onPolicyAcceptedChange(true)
 
-        // When
-        registerViewModel.resetForNewSession()
+            // When
+            val isValid = registerViewModel.form.value.isValid
 
-        // Then
-        val form = registerViewModel.form.value
-        assertEquals("", form.login)
-        assertEquals("", form.email)
-        assertEquals("", form.password)
-        assertEquals("", form.fullName)
-        assertNull(form.genderCode)
-        assertNotNull(form.birthDate)
-        assertFalse(form.birthDate!!.isAfter(LocalDate.now())) // not in future
-        assertNull(form.countryId)
-        assertNull(form.cityId)
-        assertFalse(form.isPolicyAccepted)
-        assertTrue(registerViewModel.uiState.value is RegisterUiState.Idle)
-    }
-
-    @Test
-    fun onCitySelectedByName_WhenCountryNotSelected_thenSelectsCountryAutomatically() = runTest {
-        // Given - country not selected
-        assertNull(registerViewModel.selectedCountry.value)
-
-        // When - select city without selecting country first
-        registerViewModel.onCitySelectedByName("Москва")
-        advanceUntilIdle()
-
-        // Then - city and country are selected
-        assertEquals("1", registerViewModel.form.value.cityId)
-        assertEquals(testCity, registerViewModel.selectedCity.value)
-        assertEquals(testCountry, registerViewModel.selectedCountry.value)
-        assertEquals("1", registerViewModel.form.value.countryId)
-    }
+            // Then
+            assertFalse(isValid)
+        }
 
     @Test
-    fun allCities_WhenViewModelCreated_thenLoadsAllCities() = runTest {
-        // When - ViewModel created (happens in setup)
+    fun formIsValid_WhenBirthDateInFuture_thenReturnsFalse() =
+        runTest {
+            // Given - birth date in the future
+            val futureDate = LocalDate.now().plusDays(1)
+            registerViewModel.onLoginChange("testuser")
+            registerViewModel.onEmailChange("test@example.com")
+            registerViewModel.onPasswordChange("password123")
+            registerViewModel.onFullNameChange("Ivan Ivanov")
+            registerViewModel.onGenderChange(0)
+            registerViewModel.onBirthDateChange(futureDate)
+            registerViewModel.onCountrySelectedByName("Россия")
+            advanceUntilIdle()
+            registerViewModel.onCitySelectedByName("Москва")
+            advanceUntilIdle()
+            registerViewModel.onPolicyAcceptedChange(true)
 
-        // Then - allCities is loaded
-        advanceUntilIdle()
-        assertEquals(listOf(testCity), registerViewModel.allCities.value)
-    }
+            // When
+            val isValid = registerViewModel.form.value.isValid
+
+            // Then
+            assertFalse(isValid)
+        }
+
+    @Test
+    fun formIsValid_WhenYoungUser_thenReturnsTrue() =
+        runTest {
+            // Given - birth date less than 13 years ago (should be valid now)
+            val youngDate = LocalDate.now().minusYears(10)
+            registerViewModel.onLoginChange("testuser")
+            registerViewModel.onEmailChange("test@example.com")
+            registerViewModel.onPasswordChange("password123")
+            registerViewModel.onFullNameChange("Ivan Ivanov")
+            registerViewModel.onGenderChange(0)
+            registerViewModel.onBirthDateChange(youngDate)
+            registerViewModel.onCountrySelectedByName("Россия")
+            advanceUntilIdle()
+            registerViewModel.onCitySelectedByName("Москва")
+            advanceUntilIdle()
+            registerViewModel.onPolicyAcceptedChange(true)
+
+            // When
+            val isValid = registerViewModel.form.value.isValid
+
+            // Then
+            assertTrue(isValid)
+        }
+
+    @Test
+    fun formIsValid_WhenPolicyNotAccepted_thenReturnsFalse() =
+        runTest {
+            // Given - policy not accepted
+            registerViewModel.onLoginChange("testuser")
+            registerViewModel.onEmailChange("test@example.com")
+            registerViewModel.onPasswordChange("password123")
+            registerViewModel.onFullNameChange("Ivan Ivanov")
+            registerViewModel.onGenderChange(0)
+            registerViewModel.onBirthDateChange(LocalDate.of(2000, 1, 15))
+            registerViewModel.onCountrySelectedByName("Россия")
+            advanceUntilIdle()
+            registerViewModel.onCitySelectedByName("Москва")
+            advanceUntilIdle()
+            registerViewModel.onPolicyAcceptedChange(false)
+
+            // When
+            val isValid = registerViewModel.form.value.isValid
+
+            // Then
+            assertFalse(isValid)
+        }
+
+    @Test
+    fun register_WhenValidForm_thenReturnsSuccess() =
+        runTest {
+            // Given
+            fillValidForm()
+            coEvery {
+                swRepository.register(any<RegistrationParams>())
+            } returns Result.success(testUser)
+
+            // When
+            registerViewModel.register()
+            advanceUntilIdle()
+
+            // Then
+            val state = registerViewModel.uiState.value
+            assertTrue(state is RegisterUiState.Idle)
+
+            val event = registerViewModel.registerEvents.first()
+            assertTrue(event is RegisterEvent.Success)
+            assertEquals(testUser.id, (event as RegisterEvent.Success).userId)
+
+            coVerify(exactly = 1) {
+                swRepository.register(any<RegistrationParams>())
+            }
+            coVerify(exactly = 1) { secureTokenRepository.saveAuthToken("test-token") }
+            coVerify(exactly = 1) { userPreferencesRepository.saveCurrentUserId(testUser.id) }
+        }
+
+    @Test
+    fun register_WhenApiError_thenReturnsError() =
+        runTest {
+            // Given
+            fillValidForm()
+            val errorMessage = "Пользователь с таким email уже существует"
+            coEvery {
+                swRepository.register(any<RegistrationParams>())
+            } returns Result.failure(Exception(errorMessage))
+
+            // When
+            registerViewModel.register()
+            advanceUntilIdle()
+
+            // Then
+            val state = registerViewModel.uiState.value
+            assertTrue(state is RegisterUiState.Error)
+            val errorState = state as RegisterUiState.Error
+            assertTrue(errorState.message.contains(errorMessage))
+
+            // Проверяем, что userNotifier.handleError был вызван
+            coVerify(exactly = 1) {
+                userNotifier.handleError(
+                    match<AppError> { error ->
+                        error is AppError.Generic && error.message.contains(errorMessage)
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun register_WhenInvalidForm_thenDoesNotCallApi() =
+        runTest {
+            // Given - form is not valid (empty fields)
+            // When
+            registerViewModel.register()
+            advanceUntilIdle()
+
+            // Then
+            coVerify(exactly = 0) {
+                swRepository.register(any<RegistrationParams>())
+            }
+        }
+
+    @Test
+    fun resetForNewSession_WhenCalled_thenClearsAllData() =
+        runTest {
+            // Given - fill some data
+            fillValidForm()
+
+            // When
+            registerViewModel.resetForNewSession()
+
+            // Then
+            val form = registerViewModel.form.value
+            assertEquals("", form.login)
+            assertEquals("", form.email)
+            assertEquals("", form.password)
+            assertEquals("", form.fullName)
+            assertNull(form.genderCode)
+            assertNotNull(form.birthDate)
+            assertFalse(form.birthDate!!.isAfter(LocalDate.now())) // not in future
+            assertNull(form.countryId)
+            assertNull(form.cityId)
+            assertFalse(form.isPolicyAccepted)
+            assertTrue(registerViewModel.uiState.value is RegisterUiState.Idle)
+        }
+
+    @Test
+    fun onCitySelectedByName_WhenCountryNotSelected_thenSelectsCountryAutomatically() =
+        runTest {
+            // Given - country not selected
+            assertNull(registerViewModel.selectedCountry.value)
+
+            // When - select city without selecting country first
+            registerViewModel.onCitySelectedByName("Москва")
+            advanceUntilIdle()
+
+            // Then - city and country are selected
+            assertEquals("1", registerViewModel.form.value.cityId)
+            assertEquals(testCity, registerViewModel.selectedCity.value)
+            assertEquals(testCountry, registerViewModel.selectedCountry.value)
+            assertEquals("1", registerViewModel.form.value.countryId)
+        }
+
+    @Test
+    fun allCities_WhenViewModelCreated_thenLoadsAllCities() =
+        runTest {
+            // When - ViewModel created (happens in setup)
+
+            // Then - allCities is loaded
+            advanceUntilIdle()
+            assertEquals(listOf(testCity), registerViewModel.allCities.value)
+        }
 
     private fun fillValidForm() {
         registerViewModel.onLoginChange("testuser")

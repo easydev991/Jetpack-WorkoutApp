@@ -46,7 +46,8 @@ fun LoginSheetHost(
     show: Boolean,
     onDismissed: () -> Unit,
     onLoginSuccess: (userId: Long) -> Unit,
-    onResetSuccess: (String) -> Unit = {} // Новый параметр (опционально)
+    // Новый параметр (опционально)
+    onResetSuccess: (String) -> Unit = {}
 ) {
     var allowHide by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -65,13 +66,14 @@ fun LoginSheetHost(
         }
     }
 
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-        confirmValueChange = { newValue ->
-            // Запрещаем скрытие всегда, кроме явного close/success
-            if (newValue == SheetValue.Hidden) allowHide else true
-        }
-    )
+    val sheetState =
+        rememberModalBottomSheetState(
+            skipPartiallyExpanded = true,
+            confirmValueChange = { newValue ->
+                // Запрещаем скрытие всегда, кроме явного close/success
+                if (newValue == SheetValue.Hidden) allowHide else true
+            }
+        )
 
     fun dismissSheet(onComplete: () -> Unit) {
         focusManager.clearFocus(force = true)
@@ -91,9 +93,10 @@ fun LoginSheetHost(
             },
             sheetState = sheetState,
             dragHandle = {}, // СКРЫВАЕМ визуальный drag handle (pin вверху)
-            properties = ModalBottomSheetProperties(
-                shouldDismissOnBackPress = false // ЗАПРЕЩАЕМ системную кнопку "назад"
-            ),
+            properties =
+                ModalBottomSheetProperties(
+                    shouldDismissOnBackPress = false // ЗАПРЕЩАЕМ системную кнопку "назад"
+                )
         ) {
             LoginScreen(
                 viewModel = loginViewModel,

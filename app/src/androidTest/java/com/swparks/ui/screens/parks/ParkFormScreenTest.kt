@@ -31,14 +31,16 @@ class ParkFormScreenTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     private fun setContent(
-        uiState: ParkFormUiState = ParkFormUiState(
-            mode = ParkFormMode.Create(
-                initialAddress = "",
-                initialLatitude = "",
-                initialLongitude = "",
-                initialCityId = null
-            )
-        ),
+        uiState: ParkFormUiState =
+            ParkFormUiState(
+                mode =
+                    ParkFormMode.Create(
+                        initialAddress = "",
+                        initialLatitude = "",
+                        initialLongitude = "",
+                        initialCityId = null
+                    )
+            ),
         onAction: (ParkFormNavigationAction) -> Unit = {}
     ) {
         val viewModel = FakeParkFormViewModel(initialState = uiState)
@@ -55,15 +57,17 @@ class ParkFormScreenTest {
     @Test
     fun whenCreateMode_showsNewParkTitle() {
         setContent(
-            uiState = ParkFormUiState(
-                mode = ParkFormMode.Create(
-                    initialAddress = "",
-                    initialLatitude = "",
-                    initialLongitude = "",
-                    initialCityId = null
-                ),
-                isLoading = false
-            )
+            uiState =
+                ParkFormUiState(
+                    mode =
+                        ParkFormMode.Create(
+                            initialAddress = "",
+                            initialLatitude = "",
+                            initialLongitude = "",
+                            initialCityId = null
+                        ),
+                    isLoading = false
+                )
         )
 
         composeTestRule
@@ -73,27 +77,29 @@ class ParkFormScreenTest {
 
     @Test
     fun whenEditMode_showsParkTitle() {
-        val park = Park(
-            id = 1L,
-            name = "Test Park",
-            sizeID = ParkSize.SMALL.rawValue,
-            typeID = ParkType.SOVIET.rawValue,
-            longitude = "37.6173",
-            latitude = "55.7558",
-            address = "Test Address",
-            cityID = 1,
-            countryID = 1,
-            preview = "",
-            photos = emptyList()
-        )
+        val park =
+            Park(
+                id = 1L,
+                name = "Test Park",
+                sizeID = ParkSize.SMALL.rawValue,
+                typeID = ParkType.SOVIET.rawValue,
+                longitude = "37.6173",
+                latitude = "55.7558",
+                address = "Test Address",
+                cityID = 1,
+                countryID = 1,
+                preview = "",
+                photos = emptyList()
+            )
 
         setContent(
-            uiState = ParkFormUiState(
-                mode = ParkFormMode.Edit(parkId = 1L, park = park),
-                form = ParkForm.fromPark(park),
-                initialForm = ParkForm.fromPark(park),
-                isLoading = false
-            )
+            uiState =
+                ParkFormUiState(
+                    mode = ParkFormMode.Edit(parkId = 1L, park = park),
+                    form = ParkForm.fromPark(park),
+                    initialForm = ParkForm.fromPark(park),
+                    isLoading = false
+                )
         )
 
         composeTestRule
@@ -168,17 +174,19 @@ class ParkFormScreenTest {
     @Test
     fun whenFormEmpty_saveButtonDisabled() {
         setContent(
-            uiState = ParkFormUiState(
-                mode = ParkFormMode.Create(
-                    initialAddress = "",
-                    initialLatitude = "",
-                    initialLongitude = "",
-                    initialCityId = null
-                ),
-                form = ParkForm(),
-                initialForm = ParkForm(),
-                isLoading = false
-            )
+            uiState =
+                ParkFormUiState(
+                    mode =
+                        ParkFormMode.Create(
+                            initialAddress = "",
+                            initialLatitude = "",
+                            initialLongitude = "",
+                            initialCityId = null
+                        ),
+                    form = ParkForm(),
+                    initialForm = ParkForm(),
+                    isLoading = false
+                )
         )
 
         composeTestRule
@@ -189,30 +197,34 @@ class ParkFormScreenTest {
     @Test
     fun whenFormValidForCreate_saveButtonEnabled() {
         setContent(
-            uiState = ParkFormUiState(
-                mode = ParkFormMode.Create(
-                    initialAddress = "123 Test St",
-                    initialLatitude = "55.7558",
-                    initialLongitude = "37.6173",
-                    initialCityId = 1
-                ),
-                form = ParkForm(
-                    address = "123 Test St",
-                    latitude = "55.7558",
-                    longitude = "37.6173",
-                    cityId = 1,
-                    typeId = ParkType.SOVIET.rawValue,
-                    sizeId = ParkSize.SMALL.rawValue,
-                    selectedPhotos = listOf("photo1.jpg")
-                ),
-                initialForm = ParkForm(
-                    address = "123 Test St",
-                    latitude = "55.7558",
-                    longitude = "37.6173",
-                    cityId = 1
-                ),
-                isLoading = false
-            )
+            uiState =
+                ParkFormUiState(
+                    mode =
+                        ParkFormMode.Create(
+                            initialAddress = "123 Test St",
+                            initialLatitude = "55.7558",
+                            initialLongitude = "37.6173",
+                            initialCityId = 1
+                        ),
+                    form =
+                        ParkForm(
+                            address = "123 Test St",
+                            latitude = "55.7558",
+                            longitude = "37.6173",
+                            cityId = 1,
+                            typeId = ParkType.SOVIET.rawValue,
+                            sizeId = ParkSize.SMALL.rawValue,
+                            selectedPhotos = listOf("photo1.jpg")
+                        ),
+                    initialForm =
+                        ParkForm(
+                            address = "123 Test St",
+                            latitude = "55.7558",
+                            longitude = "37.6173",
+                            cityId = 1
+                        ),
+                    isLoading = false
+                )
         )
 
         composeTestRule
@@ -223,23 +235,26 @@ class ParkFormScreenTest {
     @Test
     fun whenSaving_showsLoadingOverlay() {
         setContent(
-            uiState = ParkFormUiState(
-                mode = ParkFormMode.Create(
-                    initialAddress = "123 Test St",
-                    initialLatitude = "55.7558",
-                    initialLongitude = "37.6173",
-                    initialCityId = 1
-                ),
-                form = ParkForm(
-                    address = "123 Test St",
-                    latitude = "55.7558",
-                    longitude = "37.6173",
-                    cityId = 1,
-                    selectedPhotos = listOf("photo1.jpg")
-                ),
-                isSaving = true,
-                isLoading = false
-            )
+            uiState =
+                ParkFormUiState(
+                    mode =
+                        ParkFormMode.Create(
+                            initialAddress = "123 Test St",
+                            initialLatitude = "55.7558",
+                            initialLongitude = "37.6173",
+                            initialCityId = 1
+                        ),
+                    form =
+                        ParkForm(
+                            address = "123 Test St",
+                            latitude = "55.7558",
+                            longitude = "37.6173",
+                            cityId = 1,
+                            selectedPhotos = listOf("photo1.jpg")
+                        ),
+                    isSaving = true,
+                    isLoading = false
+                )
         )
 
         composeTestRule
@@ -250,23 +265,26 @@ class ParkFormScreenTest {
     @Test
     fun whenSaving_fieldsAreDisabled() {
         setContent(
-            uiState = ParkFormUiState(
-                mode = ParkFormMode.Create(
-                    initialAddress = "123 Test St",
-                    initialLatitude = "55.7558",
-                    initialLongitude = "37.6173",
-                    initialCityId = 1
-                ),
-                form = ParkForm(
-                    address = "123 Test St",
-                    latitude = "55.7558",
-                    longitude = "37.6173",
-                    cityId = 1,
-                    selectedPhotos = listOf("photo1.jpg")
-                ),
-                isSaving = true,
-                isLoading = false
-            )
+            uiState =
+                ParkFormUiState(
+                    mode =
+                        ParkFormMode.Create(
+                            initialAddress = "123 Test St",
+                            initialLatitude = "55.7558",
+                            initialLongitude = "37.6173",
+                            initialCityId = 1
+                        ),
+                    form =
+                        ParkForm(
+                            address = "123 Test St",
+                            latitude = "55.7558",
+                            longitude = "37.6173",
+                            cityId = 1,
+                            selectedPhotos = listOf("photo1.jpg")
+                        ),
+                    isSaving = true,
+                    isLoading = false
+                )
         )
 
         composeTestRule
@@ -277,27 +295,31 @@ class ParkFormScreenTest {
     @Test
     fun whenBackClickWithChanges_showsConfirmDialog() {
         setContent(
-            uiState = ParkFormUiState(
-                mode = ParkFormMode.Create(
-                    initialAddress = "123 Test St",
-                    initialLatitude = "55.7558",
-                    initialLongitude = "37.6173",
-                    initialCityId = 1
-                ),
-                form = ParkForm(
-                    address = "Changed Address",
-                    latitude = "55.7558",
-                    longitude = "37.6173",
-                    cityId = 1
-                ),
-                initialForm = ParkForm(
-                    address = "123 Test St",
-                    latitude = "55.7558",
-                    longitude = "37.6173",
-                    cityId = 1
-                ),
-                isLoading = false
-            )
+            uiState =
+                ParkFormUiState(
+                    mode =
+                        ParkFormMode.Create(
+                            initialAddress = "123 Test St",
+                            initialLatitude = "55.7558",
+                            initialLongitude = "37.6173",
+                            initialCityId = 1
+                        ),
+                    form =
+                        ParkForm(
+                            address = "Changed Address",
+                            latitude = "55.7558",
+                            longitude = "37.6173",
+                            cityId = 1
+                        ),
+                    initialForm =
+                        ParkForm(
+                            address = "123 Test St",
+                            latitude = "55.7558",
+                            longitude = "37.6173",
+                            cityId = 1
+                        ),
+                    isLoading = false
+                )
         )
 
         composeTestRule
@@ -316,27 +338,31 @@ class ParkFormScreenTest {
     @Test
     fun whenBackClickWithoutChanges_noDialog() {
         setContent(
-            uiState = ParkFormUiState(
-                mode = ParkFormMode.Create(
-                    initialAddress = "123 Test St",
-                    initialLatitude = "55.7558",
-                    initialLongitude = "37.6173",
-                    initialCityId = 1
-                ),
-                form = ParkForm(
-                    address = "123 Test St",
-                    latitude = "55.7558",
-                    longitude = "37.6173",
-                    cityId = 1
-                ),
-                initialForm = ParkForm(
-                    address = "123 Test St",
-                    latitude = "55.7558",
-                    longitude = "37.6173",
-                    cityId = 1
-                ),
-                isLoading = false
-            )
+            uiState =
+                ParkFormUiState(
+                    mode =
+                        ParkFormMode.Create(
+                            initialAddress = "123 Test St",
+                            initialLatitude = "55.7558",
+                            initialLongitude = "37.6173",
+                            initialCityId = 1
+                        ),
+                    form =
+                        ParkForm(
+                            address = "123 Test St",
+                            latitude = "55.7558",
+                            longitude = "37.6173",
+                            cityId = 1
+                        ),
+                    initialForm =
+                        ParkForm(
+                            address = "123 Test St",
+                            latitude = "55.7558",
+                            longitude = "37.6173",
+                            cityId = 1
+                        ),
+                    isLoading = false
+                )
         )
 
         composeTestRule
@@ -347,27 +373,31 @@ class ParkFormScreenTest {
     @Test
     fun confirmDialog_hasCloseAndCancelButtons() {
         setContent(
-            uiState = ParkFormUiState(
-                mode = ParkFormMode.Create(
-                    initialAddress = "123 Test St",
-                    initialLatitude = "55.7558",
-                    initialLongitude = "37.6173",
-                    initialCityId = 1
-                ),
-                form = ParkForm(
-                    address = "Changed Address",
-                    latitude = "55.7558",
-                    longitude = "37.6173",
-                    cityId = 1
-                ),
-                initialForm = ParkForm(
-                    address = "123 Test St",
-                    latitude = "55.7558",
-                    longitude = "37.6173",
-                    cityId = 1
-                ),
-                isLoading = false
-            )
+            uiState =
+                ParkFormUiState(
+                    mode =
+                        ParkFormMode.Create(
+                            initialAddress = "123 Test St",
+                            initialLatitude = "55.7558",
+                            initialLongitude = "37.6173",
+                            initialCityId = 1
+                        ),
+                    form =
+                        ParkForm(
+                            address = "Changed Address",
+                            latitude = "55.7558",
+                            longitude = "37.6173",
+                            cityId = 1
+                        ),
+                    initialForm =
+                        ParkForm(
+                            address = "123 Test St",
+                            latitude = "55.7558",
+                            longitude = "37.6173",
+                            cityId = 1
+                        ),
+                    isLoading = false
+                )
         )
 
         composeTestRule
@@ -388,27 +418,31 @@ class ParkFormScreenTest {
     @Test
     fun confirmDialog_cancelDismissesDialog() {
         setContent(
-            uiState = ParkFormUiState(
-                mode = ParkFormMode.Create(
-                    initialAddress = "123 Test St",
-                    initialLatitude = "55.7558",
-                    initialLongitude = "37.6173",
-                    initialCityId = 1
-                ),
-                form = ParkForm(
-                    address = "Changed Address",
-                    latitude = "55.7558",
-                    longitude = "37.6173",
-                    cityId = 1
-                ),
-                initialForm = ParkForm(
-                    address = "123 Test St",
-                    latitude = "55.7558",
-                    longitude = "37.6173",
-                    cityId = 1
-                ),
-                isLoading = false
-            )
+            uiState =
+                ParkFormUiState(
+                    mode =
+                        ParkFormMode.Create(
+                            initialAddress = "123 Test St",
+                            initialLatitude = "55.7558",
+                            initialLongitude = "37.6173",
+                            initialCityId = 1
+                        ),
+                    form =
+                        ParkForm(
+                            address = "Changed Address",
+                            latitude = "55.7558",
+                            longitude = "37.6173",
+                            cityId = 1
+                        ),
+                    initialForm =
+                        ParkForm(
+                            address = "123 Test St",
+                            latitude = "55.7558",
+                            longitude = "37.6173",
+                            cityId = 1
+                        ),
+                    isLoading = false
+                )
         )
 
         composeTestRule
@@ -426,24 +460,28 @@ class ParkFormScreenTest {
 
     @Test
     fun whenTypeRadioButtonClicked_callsOnTypeChange() {
-        val viewModel = FakeParkFormViewModel(
-            initialState = ParkFormUiState(
-                mode = ParkFormMode.Create(
-                    initialAddress = "123 Test St",
-                    initialLatitude = "55.7558",
-                    initialLongitude = "37.6173",
-                    initialCityId = 1
-                ),
-                form = ParkForm(
-                    address = "123 Test St",
-                    latitude = "55.7558",
-                    longitude = "37.6173",
-                    cityId = 1,
-                    typeId = ParkType.SOVIET.rawValue
-                ),
-                isLoading = false
+        val viewModel =
+            FakeParkFormViewModel(
+                initialState =
+                    ParkFormUiState(
+                        mode =
+                            ParkFormMode.Create(
+                                initialAddress = "123 Test St",
+                                initialLatitude = "55.7558",
+                                initialLongitude = "37.6173",
+                                initialCityId = 1
+                            ),
+                        form =
+                            ParkForm(
+                                address = "123 Test St",
+                                latitude = "55.7558",
+                                longitude = "37.6173",
+                                cityId = 1,
+                                typeId = ParkType.SOVIET.rawValue
+                            ),
+                        isLoading = false
+                    )
             )
-        )
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -461,24 +499,28 @@ class ParkFormScreenTest {
 
     @Test
     fun whenSizeRadioButtonClicked_callsOnSizeChange() {
-        val viewModel = FakeParkFormViewModel(
-            initialState = ParkFormUiState(
-                mode = ParkFormMode.Create(
-                    initialAddress = "123 Test St",
-                    initialLatitude = "55.7558",
-                    initialLongitude = "37.6173",
-                    initialCityId = 1
-                ),
-                form = ParkForm(
-                    address = "123 Test St",
-                    latitude = "55.7558",
-                    longitude = "37.6173",
-                    cityId = 1,
-                    sizeId = ParkSize.SMALL.rawValue
-                ),
-                isLoading = false
+        val viewModel =
+            FakeParkFormViewModel(
+                initialState =
+                    ParkFormUiState(
+                        mode =
+                            ParkFormMode.Create(
+                                initialAddress = "123 Test St",
+                                initialLatitude = "55.7558",
+                                initialLongitude = "37.6173",
+                                initialCityId = 1
+                            ),
+                        form =
+                            ParkForm(
+                                address = "123 Test St",
+                                latitude = "55.7558",
+                                longitude = "37.6173",
+                                cityId = 1,
+                                sizeId = ParkSize.SMALL.rawValue
+                            ),
+                        isLoading = false
+                    )
             )
-        )
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -496,29 +538,31 @@ class ParkFormScreenTest {
 
     @Test
     fun whenEditMode_existingDataDisplayed() {
-        val park = Park(
-            id = 1L,
-            name = "Test Park",
-            sizeID = ParkSize.LARGE.rawValue,
-            typeID = ParkType.MODERN.rawValue,
-            longitude = "37.6173",
-            latitude = "55.7558",
-            address = "Existing Address",
-            cityID = 1,
-            countryID = 1,
-            preview = "",
-            photos = emptyList()
-        )
+        val park =
+            Park(
+                id = 1L,
+                name = "Test Park",
+                sizeID = ParkSize.LARGE.rawValue,
+                typeID = ParkType.MODERN.rawValue,
+                longitude = "37.6173",
+                latitude = "55.7558",
+                address = "Existing Address",
+                cityID = 1,
+                countryID = 1,
+                preview = "",
+                photos = emptyList()
+            )
 
         val form = ParkForm.fromPark(park)
 
         setContent(
-            uiState = ParkFormUiState(
-                mode = ParkFormMode.Edit(parkId = 1L, park = park),
-                form = form,
-                initialForm = form,
-                isLoading = false
-            )
+            uiState =
+                ParkFormUiState(
+                    mode = ParkFormMode.Edit(parkId = 1L, park = park),
+                    form = form,
+                    initialForm = form,
+                    isLoading = false
+                )
         )
 
         composeTestRule
@@ -528,29 +572,31 @@ class ParkFormScreenTest {
 
     @Test
     fun whenEditModeNoChanges_saveButtonDisabled() {
-        val park = Park(
-            id = 1L,
-            name = "Test Park",
-            sizeID = ParkSize.SMALL.rawValue,
-            typeID = ParkType.SOVIET.rawValue,
-            longitude = "37.6173",
-            latitude = "55.7558",
-            address = "Test Address",
-            cityID = 1,
-            countryID = 1,
-            preview = "",
-            photos = emptyList()
-        )
+        val park =
+            Park(
+                id = 1L,
+                name = "Test Park",
+                sizeID = ParkSize.SMALL.rawValue,
+                typeID = ParkType.SOVIET.rawValue,
+                longitude = "37.6173",
+                latitude = "55.7558",
+                address = "Test Address",
+                cityID = 1,
+                countryID = 1,
+                preview = "",
+                photos = emptyList()
+            )
 
         val form = ParkForm.fromPark(park)
 
         setContent(
-            uiState = ParkFormUiState(
-                mode = ParkFormMode.Edit(parkId = 1L, park = park),
-                form = form,
-                initialForm = form,
-                isLoading = false
-            )
+            uiState =
+                ParkFormUiState(
+                    mode = ParkFormMode.Edit(parkId = 1L, park = park),
+                    form = form,
+                    initialForm = form,
+                    isLoading = false
+                )
         )
 
         composeTestRule

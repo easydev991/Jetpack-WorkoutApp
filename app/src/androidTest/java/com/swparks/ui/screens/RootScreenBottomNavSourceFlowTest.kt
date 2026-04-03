@@ -14,6 +14,7 @@ import com.swparks.R
 import com.swparks.navigation.AppState
 import com.swparks.navigation.BottomNavigationBar
 import com.swparks.navigation.Screen
+import com.swparks.util.FakeAnalyticsReporter
 import io.mockk.every
 import io.mockk.mockkStatic
 import org.junit.After
@@ -33,7 +34,6 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class RootScreenBottomNavSourceFlowTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -57,7 +57,7 @@ class RootScreenBottomNavSourceFlowTest {
     fun profileFlow_whenNavigatingToUserParks_thenProfileTabIsSelected() {
         composeTestRule.setContent {
             navController = rememberNavController()
-            appState = AppState(navController)
+            appState = AppState(navController, FakeAnalyticsReporter())
 
             androidx.compose.material3.Surface {
                 androidx.compose.foundation.layout.Column {
@@ -67,10 +67,11 @@ class RootScreenBottomNavSourceFlowTest {
             }
         }
 
-        val arguments = Bundle().apply {
-            putString("userId", "1")
-            putString("source", "profile")
-        }
+        val arguments =
+            Bundle().apply {
+                putString("userId", "1")
+                putString("source", "profile")
+            }
 
         composeTestRule.runOnIdle {
             appState.onDestinationChanged(Screen.UserParks.route, arguments)
@@ -90,7 +91,7 @@ class RootScreenBottomNavSourceFlowTest {
     fun profileFlow_whenNavigatingToParkDetail_thenProfileTabIsSelected() {
         composeTestRule.setContent {
             navController = rememberNavController()
-            appState = AppState(navController)
+            appState = AppState(navController, FakeAnalyticsReporter())
 
             androidx.compose.material3.Surface {
                 androidx.compose.foundation.layout.Column {
@@ -100,10 +101,11 @@ class RootScreenBottomNavSourceFlowTest {
             }
         }
 
-        val arguments = Bundle().apply {
-            putString("parkId", "1")
-            putString("source", "profile")
-        }
+        val arguments =
+            Bundle().apply {
+                putString("parkId", "1")
+                putString("source", "profile")
+            }
 
         composeTestRule.runOnIdle {
             appState.onDestinationChanged(Screen.ParkDetail.route, arguments)
@@ -123,7 +125,7 @@ class RootScreenBottomNavSourceFlowTest {
     fun profileFlow_whenNavigatingChain_thenProfileTabIsPreserved() {
         composeTestRule.setContent {
             navController = rememberNavController()
-            appState = AppState(navController)
+            appState = AppState(navController, FakeAnalyticsReporter())
 
             androidx.compose.material3.Surface {
                 androidx.compose.foundation.layout.Column {
@@ -133,10 +135,11 @@ class RootScreenBottomNavSourceFlowTest {
             }
         }
 
-        val userParksArgs = Bundle().apply {
-            putString("userId", "1")
-            putString("source", "profile")
-        }
+        val userParksArgs =
+            Bundle().apply {
+                putString("userId", "1")
+                putString("source", "profile")
+            }
 
         composeTestRule.runOnIdle {
             appState.onDestinationChanged(Screen.UserParks.route, userParksArgs)
@@ -146,10 +149,11 @@ class RootScreenBottomNavSourceFlowTest {
             appState.currentTopLevelDestination?.route == Screen.Profile.route
         }
 
-        val parkDetailArgs = Bundle().apply {
-            putString("parkId", "1")
-            putString("source", "profile")
-        }
+        val parkDetailArgs =
+            Bundle().apply {
+                putString("parkId", "1")
+                putString("source", "profile")
+            }
 
         composeTestRule.runOnIdle {
             appState.onDestinationChanged(Screen.ParkDetail.route, parkDetailArgs)
@@ -169,7 +173,7 @@ class RootScreenBottomNavSourceFlowTest {
     fun eventsFlow_whenNavigatingToJournalsList_thenEventsTabIsSelected() {
         composeTestRule.setContent {
             navController = rememberNavController()
-            appState = AppState(navController)
+            appState = AppState(navController, FakeAnalyticsReporter())
 
             androidx.compose.material3.Surface {
                 androidx.compose.foundation.layout.Column {
@@ -179,10 +183,11 @@ class RootScreenBottomNavSourceFlowTest {
             }
         }
 
-        val arguments = Bundle().apply {
-            putString("userId", "1")
-            putString("source", "events")
-        }
+        val arguments =
+            Bundle().apply {
+                putString("userId", "1")
+                putString("source", "events")
+            }
 
         composeTestRule.runOnIdle {
             appState.onDestinationChanged(Screen.JournalsList.route, arguments)
@@ -202,7 +207,7 @@ class RootScreenBottomNavSourceFlowTest {
     fun eventsFlow_whenNavigatingToJournalEntries_thenEventsTabIsSelected() {
         composeTestRule.setContent {
             navController = rememberNavController()
-            appState = AppState(navController)
+            appState = AppState(navController, FakeAnalyticsReporter())
 
             androidx.compose.material3.Surface {
                 androidx.compose.foundation.layout.Column {
@@ -212,14 +217,15 @@ class RootScreenBottomNavSourceFlowTest {
             }
         }
 
-        val arguments = Bundle().apply {
-            putString("journalId", "1")
-            putString("userId", "1")
-            putString("title", "Test Journal")
-            putString("viewAccess", "public")
-            putString("commentAccess", "public")
-            putString("source", "events")
-        }
+        val arguments =
+            Bundle().apply {
+                putString("journalId", "1")
+                putString("userId", "1")
+                putString("title", "Test Journal")
+                putString("viewAccess", "public")
+                putString("commentAccess", "public")
+                putString("source", "events")
+            }
 
         composeTestRule.runOnIdle {
             appState.onDestinationChanged(Screen.JournalEntries.route, arguments)
@@ -239,7 +245,7 @@ class RootScreenBottomNavSourceFlowTest {
     fun eventsFlow_whenNavigatingJournalsChain_thenEventsTabIsPreserved() {
         composeTestRule.setContent {
             navController = rememberNavController()
-            appState = AppState(navController)
+            appState = AppState(navController, FakeAnalyticsReporter())
 
             androidx.compose.material3.Surface {
                 androidx.compose.foundation.layout.Column {
@@ -249,10 +255,11 @@ class RootScreenBottomNavSourceFlowTest {
             }
         }
 
-        val journalsListArgs = Bundle().apply {
-            putString("userId", "1")
-            putString("source", "events")
-        }
+        val journalsListArgs =
+            Bundle().apply {
+                putString("userId", "1")
+                putString("source", "events")
+            }
 
         composeTestRule.runOnIdle {
             appState.onDestinationChanged(Screen.JournalsList.route, journalsListArgs)
@@ -262,14 +269,15 @@ class RootScreenBottomNavSourceFlowTest {
             appState.currentTopLevelDestination?.route == Screen.Events.route
         }
 
-        val journalEntriesArgs = Bundle().apply {
-            putString("journalId", "1")
-            putString("userId", "1")
-            putString("title", "Test Journal")
-            putString("viewAccess", "public")
-            putString("commentAccess", "public")
-            putString("source", "events")
-        }
+        val journalEntriesArgs =
+            Bundle().apply {
+                putString("journalId", "1")
+                putString("userId", "1")
+                putString("title", "Test Journal")
+                putString("viewAccess", "public")
+                putString("commentAccess", "public")
+                putString("source", "events")
+            }
 
         composeTestRule.runOnIdle {
             appState.onDestinationChanged(Screen.JournalEntries.route, journalEntriesArgs)
@@ -289,7 +297,7 @@ class RootScreenBottomNavSourceFlowTest {
     fun parksFlow_whenNavigatingToParkDetail_thenParksTabIsSelected() {
         composeTestRule.setContent {
             navController = rememberNavController()
-            appState = AppState(navController)
+            appState = AppState(navController, FakeAnalyticsReporter())
 
             androidx.compose.material3.Surface {
                 androidx.compose.foundation.layout.Column {
@@ -299,10 +307,11 @@ class RootScreenBottomNavSourceFlowTest {
             }
         }
 
-        val arguments = Bundle().apply {
-            putString("parkId", "1")
-            putString("source", "parks")
-        }
+        val arguments =
+            Bundle().apply {
+                putString("parkId", "1")
+                putString("source", "parks")
+            }
 
         composeTestRule.runOnIdle {
             appState.onDestinationChanged(Screen.ParkDetail.route, arguments)
@@ -322,7 +331,7 @@ class RootScreenBottomNavSourceFlowTest {
     fun messagesFlow_whenNavigatingToOtherUserProfile_thenMessagesTabIsSelected() {
         composeTestRule.setContent {
             navController = rememberNavController()
-            appState = AppState(navController)
+            appState = AppState(navController, FakeAnalyticsReporter())
 
             androidx.compose.material3.Surface {
                 androidx.compose.foundation.layout.Column {
@@ -332,10 +341,11 @@ class RootScreenBottomNavSourceFlowTest {
             }
         }
 
-        val arguments = Bundle().apply {
-            putString("userId", "1")
-            putString("source", "messages")
-        }
+        val arguments =
+            Bundle().apply {
+                putString("userId", "1")
+                putString("source", "messages")
+            }
 
         composeTestRule.runOnIdle {
             appState.onDestinationChanged(Screen.OtherUserProfile.route, arguments)
@@ -355,7 +365,7 @@ class RootScreenBottomNavSourceFlowTest {
     fun complexChain_profileToUserParksToParkDetailToOtherUserProfile_preservesProfileTab() {
         composeTestRule.setContent {
             navController = rememberNavController()
-            appState = AppState(navController)
+            appState = AppState(navController, FakeAnalyticsReporter())
 
             androidx.compose.material3.Surface {
                 androidx.compose.foundation.layout.Column {
@@ -365,10 +375,11 @@ class RootScreenBottomNavSourceFlowTest {
             }
         }
 
-        val userParksArgs = Bundle().apply {
-            putString("userId", "1")
-            putString("source", "profile")
-        }
+        val userParksArgs =
+            Bundle().apply {
+                putString("userId", "1")
+                putString("source", "profile")
+            }
 
         composeTestRule.runOnIdle {
             appState.onDestinationChanged(Screen.UserParks.route, userParksArgs)
@@ -378,10 +389,11 @@ class RootScreenBottomNavSourceFlowTest {
             appState.currentTopLevelDestination?.route == Screen.Profile.route
         }
 
-        val parkDetailArgs = Bundle().apply {
-            putString("parkId", "1")
-            putString("source", "profile")
-        }
+        val parkDetailArgs =
+            Bundle().apply {
+                putString("parkId", "1")
+                putString("source", "profile")
+            }
 
         composeTestRule.runOnIdle {
             appState.onDestinationChanged(Screen.ParkDetail.route, parkDetailArgs)
@@ -391,10 +403,11 @@ class RootScreenBottomNavSourceFlowTest {
             appState.currentTopLevelDestination?.route == Screen.Profile.route
         }
 
-        val otherUserProfileArgs = Bundle().apply {
-            putString("userId", "2")
-            putString("source", "profile")
-        }
+        val otherUserProfileArgs =
+            Bundle().apply {
+                putString("userId", "2")
+                putString("source", "profile")
+            }
 
         composeTestRule.runOnIdle {
             appState.onDestinationChanged(Screen.OtherUserProfile.route, otherUserProfileArgs)

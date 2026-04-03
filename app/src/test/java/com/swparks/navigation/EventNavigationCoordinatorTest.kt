@@ -7,16 +7,16 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class EventNavigationCoordinatorTest {
-
     @Test
     fun buildEventParticipantsNavigationData_whenUsersProvided_thenKeepsUsersJsonAndRoute() {
         val users = listOf(createUser(1L), createUser(2L))
 
-        val data = buildEventParticipantsNavigationData(
-            eventId = 42L,
-            source = "events",
-            users = users
-        )
+        val data =
+            buildEventParticipantsNavigationData(
+                eventId = 42L,
+                source = "events",
+                users = users
+            )
 
         assertEquals("event_participants/42?source=events", data.route)
         assertTrue(data.usersJson.isNotBlank())
@@ -26,11 +26,12 @@ class EventNavigationCoordinatorTest {
 
     @Test
     fun buildEventParticipantsNavigationData_whenEmptyUsers_thenEmptyJsonArray() {
-        val data = buildEventParticipantsNavigationData(
-            eventId = 100L,
-            source = "profile",
-            users = emptyList()
-        )
+        val data =
+            buildEventParticipantsNavigationData(
+                eventId = 100L,
+                source = "profile",
+                users = emptyList()
+            )
 
         assertEquals("event_participants/100?source=profile", data.route)
         assertEquals("[]", data.usersJson)
@@ -40,11 +41,12 @@ class EventNavigationCoordinatorTest {
     fun buildEditEventNavigationData_whenEventProvided_thenKeepsEventJsonAndRoute() {
         val event = createEvent(77L, "Test Event")
 
-        val data = buildEditEventNavigationData(
-            eventId = 77L,
-            source = "events",
-            event = event
-        )
+        val data =
+            buildEditEventNavigationData(
+                eventId = 77L,
+                source = "events",
+                event = event
+            )
 
         assertEquals("edit_event/77?source=events", data.route)
         assertTrue(data.eventJson.isNotBlank())
@@ -52,13 +54,17 @@ class EventNavigationCoordinatorTest {
         assertTrue(data.eventJson.contains("Test Event"))
     }
 
-    private fun createUser(id: Long) = User(
-        id = id,
-        name = "User $id",
-        image = "https://example.com/user$id.jpg"
-    )
+    private fun createUser(id: Long) =
+        User(
+            id = id,
+            name = "User $id",
+            image = "https://example.com/user$id.jpg"
+        )
 
-    private fun createEvent(id: Long, title: String) = Event(
+    private fun createEvent(
+        id: Long,
+        title: String
+    ) = Event(
         id = id,
         title = title,
         description = "Test description",

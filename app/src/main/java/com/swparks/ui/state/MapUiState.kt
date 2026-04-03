@@ -23,16 +23,30 @@ data class MapCameraPosition(
 )
 
 sealed interface MapEvent {
-    data class SelectPark(val parkId: Long) : MapEvent
+    data class SelectPark(
+        val parkId: Long
+    ) : MapEvent
+
     data object ClearSelection : MapEvent
+
     data class ClusterClick(
         val target: UiCoordinates,
         val expansionZoom: Int
     ) : MapEvent
 
     data object CenterOnUser : MapEvent
-    data class OnLocationPermissionResult(val granted: Boolean) : MapEvent
-    data class OnCameraIdle(val position: MapCameraPosition) : MapEvent
-    data class OnMapLoadFailed(val message: String) : MapEvent
+
+    data class OnLocationPermissionResult(
+        val granted: Boolean
+    ) : MapEvent
+
+    data class OnCameraIdle(
+        val position: MapCameraPosition
+    ) : MapEvent
+
+    data class OnMapLoadFailed(
+        val message: String
+    ) : MapEvent
+
     data object OnMapReady : MapEvent
 }

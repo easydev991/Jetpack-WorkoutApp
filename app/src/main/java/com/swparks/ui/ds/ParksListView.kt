@@ -38,7 +38,7 @@ fun ParksListView(
                 bottom = dimensionResource(R.dimen.spacing_regular)
             ),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
-        horizontalAlignment = Alignment.Start,
+        horizontalAlignment = Alignment.Start
     ) {
         items(parks, key = { it.id }) { park ->
             ParkRowView(

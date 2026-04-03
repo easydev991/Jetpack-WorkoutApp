@@ -17,7 +17,6 @@ import okhttp3.Response
 class TokenInterceptor(
     private val secureTokenRepository: SecureTokenRepository
 ) : Interceptor {
-
     private companion object {
         private const val AUTHORIZATION_HEADER = "Authorization"
         private const val AUTHORIZATION_PREFIX = "Basic"
@@ -36,13 +35,15 @@ class TokenInterceptor(
         val token = secureTokenRepository.getAuthTokenSync()?.trim()
 
         // Создаём новый запрос с токеном (если токен существует и не пустой)
-        val requestWithToken = if (!token.isNullOrEmpty()) {
-            originalRequest.newBuilder()
-                .header(AUTHORIZATION_HEADER, "$AUTHORIZATION_PREFIX $token")
-                .build()
-        } else {
-            originalRequest
-        }
+        val requestWithToken =
+            if (!token.isNullOrEmpty()) {
+                originalRequest
+                    .newBuilder()
+                    .header(AUTHORIZATION_HEADER, "$AUTHORIZATION_PREFIX $token")
+                    .build()
+            } else {
+                originalRequest
+            }
 
         // Продолжаем выполнение запроса
         return chain.proceed(requestWithToken)

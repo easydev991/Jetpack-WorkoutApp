@@ -25,6 +25,9 @@ interface EventDao {
     @Query("SELECT * FROM events ORDER BY begin_date DESC")
     fun getAllPastEvents(): Flow<List<EventEntity>>
 
+    @Query("SELECT * FROM events WHERE id = :id")
+    suspend fun getEventById(id: Long): EventEntity?
+
     /**
      * Вставить или обновить список мероприятий
      *
@@ -32,6 +35,12 @@ interface EventDao {
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEvents(events: List<EventEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertEventsPartial(events: List<EventEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertEventFull(event: EventEntity)
 
     /**
      * Удалить все мероприятия
@@ -58,5 +67,10 @@ interface EventDao {
     suspend fun replaceAll(events: List<EventEntity>) {
         deleteAll()
         insertEvents(events)
+    }
+
+    @Transaction
+    suspend fun syncPastEventsList(events: List<EventEntity>) {
+        insertEventsPartial(events)
     }
 }

@@ -10,17 +10,18 @@ import org.junit.Test
  * Тесты для [IntStringSerializer] - десериализации чисел из строк и чисел
  */
 class IntStringSerializerTest {
-
-    private val json = Json {
-        ignoreUnknownKeys = true
-    }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+        }
 
     @Test
     fun deserialize_whenInt_thenReturnsInt() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {"value": 123}
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<TestModel>(jsonString)
@@ -32,9 +33,10 @@ class IntStringSerializerTest {
     @Test
     fun deserialize_whenStringInt_thenReturnsInt() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {"value": "456"}
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<TestModel>(jsonString)
@@ -46,9 +48,10 @@ class IntStringSerializerTest {
     @Test
     fun deserialize_whenZero_thenReturnsZero() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {"value": 0}
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<TestModel>(jsonString)
@@ -60,9 +63,10 @@ class IntStringSerializerTest {
     @Test
     fun deserialize_whenStringZero_thenReturnsZero() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {"value": "0"}
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<TestModel>(jsonString)
@@ -74,9 +78,10 @@ class IntStringSerializerTest {
     @Test
     fun deserialize_whenNegativeInt_thenReturnsNegativeInt() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {"value": -789}
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<TestModel>(jsonString)
@@ -88,9 +93,10 @@ class IntStringSerializerTest {
     @Test
     fun deserialize_whenNegativeStringInt_thenReturnsNegativeInt() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {"value": "-789"}
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<TestModel>(jsonString)
@@ -102,9 +108,10 @@ class IntStringSerializerTest {
     @Test
     fun deserialize_whenInvalidString_thenThrowsSerializationException() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {"value": "invalid"}
-        """.trimIndent()
+            """.trimIndent()
 
         // When/Then
         assertThrows(kotlinx.serialization.SerializationException::class.java) {
@@ -127,9 +134,10 @@ class IntStringSerializerTest {
     @Test
     fun multipleFields_whenMixedIntAndString_thenAllDeserializedCorrectly() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {"value1": 100, "value2": "200", "value3": 300}
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<MultipleTestModel>(jsonString)

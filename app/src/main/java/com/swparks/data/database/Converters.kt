@@ -12,19 +12,18 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 
 object AppConverters {
-    private val json = Json {
-        ignoreUnknownKeys = true
-        encodeDefaults = false
-    }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            encodeDefaults = false
+        }
 
     @TypeConverter
-    fun fromParksList(parks: List<Park>?): String? {
-        return parks?.let { json.encodeToString(it) }
-    }
+    fun fromParksList(parks: List<Park>?): String? = parks?.let { json.encodeToString(it) }
 
     @TypeConverter
-    fun toParksList(data: String?): List<Park>? {
-        return data?.let {
+    fun toParksList(data: String?): List<Park>? =
+        data?.let {
             try {
                 json.decodeFromString<List<Park>>(it)
             } catch (e: SerializationException) {
@@ -32,16 +31,13 @@ object AppConverters {
                 null
             }
         }
-    }
 
     @TypeConverter
-    fun fromPhotoList(photos: List<Photo>?): String? {
-        return photos?.let { json.encodeToString(it) }
-    }
+    fun fromPhotoList(photos: List<Photo>?): String? = photos?.let { json.encodeToString(it) }
 
     @TypeConverter
-    fun toPhotoList(data: String?): List<Photo>? {
-        return data?.let {
+    fun toPhotoList(data: String?): List<Photo>? =
+        data?.let {
             try {
                 json.decodeFromString<List<Photo>>(it)
             } catch (e: SerializationException) {
@@ -49,16 +45,14 @@ object AppConverters {
                 null
             }
         }
-    }
 
     @TypeConverter
-    fun fromCommentList(comments: List<Comment>?): String? {
-        return comments?.let { json.encodeToString(it) }
-    }
+    fun fromCommentList(comments: List<Comment>?): String? =
+        comments?.let { json.encodeToString(it) }
 
     @TypeConverter
-    fun toCommentList(data: String?): List<Comment>? {
-        return data?.let {
+    fun toCommentList(data: String?): List<Comment>? =
+        data?.let {
             try {
                 json.decodeFromString<List<Comment>>(it)
             } catch (e: SerializationException) {
@@ -66,16 +60,13 @@ object AppConverters {
                 null
             }
         }
-    }
 
     @TypeConverter
-    fun fromUserList(users: List<User>?): String? {
-        return users?.let { json.encodeToString(it) }
-    }
+    fun fromUserList(users: List<User>?): String? = users?.let { json.encodeToString(it) }
 
     @TypeConverter
-    fun toUserList(data: String?): List<User>? {
-        return data?.let {
+    fun toUserList(data: String?): List<User>? =
+        data?.let {
             try {
                 json.decodeFromString<List<User>>(it)
             } catch (e: SerializationException) {
@@ -83,16 +74,13 @@ object AppConverters {
                 null
             }
         }
-    }
 
     @TypeConverter
-    fun fromUser(user: User?): String? {
-        return user?.let { json.encodeToString(it) }
-    }
+    fun fromUser(user: User?): String? = user?.let { json.encodeToString(it) }
 
     @TypeConverter
-    fun toUser(data: String?): User? {
-        return data?.let {
+    fun toUser(data: String?): User? =
+        data?.let {
             try {
                 json.decodeFromString<User>(it)
             } catch (e: SerializationException) {
@@ -100,16 +88,14 @@ object AppConverters {
                 null
             }
         }
-    }
 
     @TypeConverter
-    fun fromIntList(ints: List<Int>?): String? {
-        return ints?.let { json.encodeToString(ListSerializer(Int.serializer()), it) }
-    }
+    fun fromIntList(ints: List<Int>?): String? =
+        ints?.let { json.encodeToString(ListSerializer(Int.serializer()), it) }
 
     @TypeConverter
-    fun toIntList(data: String?): List<Int>? {
-        return data?.let {
+    fun toIntList(data: String?): List<Int>? =
+        data?.let {
             try {
                 json.decodeFromString<List<Int>>(it)
             } catch (e: SerializationException) {
@@ -117,7 +103,6 @@ object AppConverters {
                 null
             }
         }
-    }
 }
 
 @Deprecated("Используйте AppConverters", ReplaceWith("AppConverters"))

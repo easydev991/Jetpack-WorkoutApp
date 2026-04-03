@@ -11,11 +11,12 @@ import org.junit.Test
 
 class EventTest {
     // Вспомогательные методы для создания тестовых данных
-    private fun createTestUser(id: Long = 1L) = User(
-        id = id,
-        name = "testuser",
-        image = "https://example.com/image.jpg"
-    )
+    private fun createTestUser(id: Long = 1L) =
+        User(
+            id = id,
+            name = "testuser",
+            image = "https://example.com/image.jpg"
+        )
 
     @Suppress("LongParameterList")
     private fun createTestEvent(
@@ -83,12 +84,13 @@ class EventTest {
     @Test
     fun hasComments_whenCommentsListIsNotEmpty_thenReturnsTrue() {
         // Given
-        val comment = Comment(
-            id = 1L,
-            body = "Test comment",
-            date = "2024-01-01",
-            user = createTestUser()
-        )
+        val comment =
+            Comment(
+                id = 1L,
+                body = "Test comment",
+                date = "2024-01-01",
+                user = createTestUser()
+            )
         val event = createTestEvent(comments = listOf(comment))
 
         // When & Then
@@ -181,19 +183,21 @@ class EventTest {
     @Test
     fun isFull_whenAllDataIsPresent_thenReturnsTrue() {
         // Given
-        val comment = Comment(
-            id = 1L,
-            body = "Test comment",
-            date = "2024-01-01",
-            user = createTestUser()
-        )
+        val comment =
+            Comment(
+                id = 1L,
+                body = "Test comment",
+                date = "2024-01-01",
+                user = createTestUser()
+            )
         val user = createTestUser()
-        val event = createTestEvent(
-            comments = listOf(comment),
-            commentsCount = 1,
-            trainingUsers = listOf(user),
-            trainingUsersCount = 1
-        )
+        val event =
+            createTestEvent(
+                comments = listOf(comment),
+                commentsCount = 1,
+                trainingUsers = listOf(user),
+                trainingUsersCount = 1
+            )
 
         // When & Then
         assertTrue(event.isFull)
@@ -202,10 +206,11 @@ class EventTest {
     @Test
     fun isFull_whenCommentsNeedUpdate_thenReturnsFalse() {
         // Given
-        val event = createTestEvent(
-            comments = null,
-            commentsCount = 5
-        )
+        val event =
+            createTestEvent(
+                comments = null,
+                commentsCount = 5
+            )
 
         // When & Then
         assertFalse(event.isFull)
@@ -214,10 +219,11 @@ class EventTest {
     @Test
     fun isFull_whenParticipantsNeedUpdate_thenReturnsFalse() {
         // Given
-        val event = createTestEvent(
-            trainingUsers = null,
-            trainingUsersCount = 3
-        )
+        val event =
+            createTestEvent(
+                trainingUsers = null,
+                trainingUsersCount = 3
+            )
 
         // When & Then
         assertFalse(event.isFull)
@@ -226,12 +232,13 @@ class EventTest {
     @Test
     fun isFull_whenBothNeedUpdate_thenReturnsFalse() {
         // Given
-        val event = createTestEvent(
-            comments = null,
-            commentsCount = 5,
-            trainingUsers = null,
-            trainingUsersCount = 3
-        )
+        val event =
+            createTestEvent(
+                comments = null,
+                commentsCount = 5,
+                trainingUsers = null,
+                trainingUsersCount = 3
+            )
 
         // When & Then
         assertFalse(event.isFull)

@@ -149,14 +149,15 @@ class ParkFormTest {
     @Test
     fun form_whenAllFieldsArePresent_thenCreatesCorrectly() {
         // Given
-        val form = createTestForm(
-            address = "123 Fitness Street",
-            latitude = "55.7558",
-            longitude = "37.6173",
-            cityId = 1,
-            typeId = 2,
-            sizeId = 2
-        )
+        val form =
+            createTestForm(
+                address = "123 Fitness Street",
+                latitude = "55.7558",
+                longitude = "37.6173",
+                cityId = 1,
+                typeId = 2,
+                sizeId = 2
+            )
 
         // When & Then
         assertEquals("123 Fitness Street", form.address)
@@ -170,14 +171,15 @@ class ParkFormTest {
     @Test
     fun form_whenCityIdIsNull_thenCreatesCorrectly() {
         // Given
-        val form = createTestForm(
-            address = "123 Fitness Street",
-            latitude = "55.7558",
-            longitude = "37.6173",
-            cityId = null,
-            typeId = 1,
-            sizeId = 1
-        )
+        val form =
+            createTestForm(
+                address = "123 Fitness Street",
+                latitude = "55.7558",
+                longitude = "37.6173",
+                cityId = null,
+                typeId = 1,
+                sizeId = 1
+            )
 
         // When & Then
         assertEquals("123 Fitness Street", form.address)
@@ -348,16 +350,17 @@ class ParkFormTest {
 
     @Test
     fun fromPark_createsCorrectForm() {
-        val park = createTestPark(
-            id = 1,
-            typeId = 2,
-            sizeId = 3,
-            address = "Park Address",
-            cityId = 5,
-            latitude = "55.5",
-            longitude = "37.5",
-            photos = listOf(Photo(1, "photo1"), Photo(2, "photo2"))
-        )
+        val park =
+            createTestPark(
+                id = 1,
+                typeId = 2,
+                sizeId = 3,
+                address = "Park Address",
+                cityId = 5,
+                latitude = "55.5",
+                longitude = "37.5",
+                photos = listOf(Photo(1, "photo1"), Photo(2, "photo2"))
+            )
         val form = ParkForm.fromPark(park)
 
         assertEquals("Park Address", form.address)
@@ -372,12 +375,13 @@ class ParkFormTest {
 
     @Test
     fun create_createsCorrectForm() {
-        val form = ParkForm.create(
-            address = "New Address",
-            latitude = 55.5,
-            longitude = 37.5,
-            cityId = 3
-        )
+        val form =
+            ParkForm.create(
+                address = "New Address",
+                latitude = 55.5,
+                longitude = 37.5,
+                cityId = 3
+            )
 
         assertEquals("New Address", form.address)
         assertEquals("55.5", form.latitude)

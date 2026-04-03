@@ -61,19 +61,22 @@ fun PhotoDetailScreen(
                             onAction = onAction
                         )
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    )
+                    colors =
+                        TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent
+                        )
                 )
             }
         ) { paddingValues ->
             ZoomablePhotoView(
-                config = ZoomConfig(
-                    imageUrl = state.photo.photo,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                )
+                config =
+                    ZoomConfig(
+                        imageUrl = state.photo.photo,
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(paddingValues)
+                    )
             )
         }
 
@@ -89,7 +92,6 @@ fun PhotoDetailScreen(
         )
     }
 }
-
 
 @Composable
 private fun PhotoDetailTopAppBarActions(
@@ -131,9 +133,10 @@ private fun DeleteConfirmDialog(
         text = { Text(text = stringResource(R.string.event_delete_photo_confirm_message)) },
         confirmButton = {
             TextButton(
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                ),
+                colors =
+                    ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    ),
                 onClick = onConfirm
             ) {
                 Text(text = stringResource(R.string.delete))
@@ -147,10 +150,11 @@ private fun DeleteConfirmDialog(
     )
 }
 
-private val previewPhoto = Photo(
-    id = 1L,
-    photo = "https://example.com/photo.jpg"
-)
+private val previewPhoto =
+    Photo(
+        id = 1L,
+        photo = "https://example.com/photo.jpg"
+    )
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000, name = "Author - with delete button")
 @Composable
@@ -158,11 +162,12 @@ internal fun PhotoDetailScreenAuthorPreview() {
     JetpackWorkoutAppTheme {
         Surface(color = Color.Black) {
             PhotoDetailScreen(
-                state = PhotoDetailUIState.Content(
-                    photo = previewPhoto,
-                    parentTitle = "Тренировка",
-                    isAuthor = true
-                ),
+                state =
+                    PhotoDetailUIState.Content(
+                        photo = previewPhoto,
+                        parentTitle = "Тренировка",
+                        isAuthor = true
+                    ),
                 isAuthorized = true,
                 showDeleteDialog = false,
                 onAction = {}
@@ -181,11 +186,12 @@ internal fun PhotoDetailScreenAuthorizedPreview() {
     JetpackWorkoutAppTheme {
         Surface(color = Color.Black) {
             PhotoDetailScreen(
-                state = PhotoDetailUIState.Content(
-                    photo = previewPhoto,
-                    parentTitle = "Тренировка",
-                    isAuthor = false
-                ),
+                state =
+                    PhotoDetailUIState.Content(
+                        photo = previewPhoto,
+                        parentTitle = "Тренировка",
+                        isAuthor = false
+                    ),
                 isAuthorized = true,
                 showDeleteDialog = false,
                 onAction = {}
@@ -204,11 +210,12 @@ internal fun PhotoDetailScreenUnauthorizedPreview() {
     JetpackWorkoutAppTheme {
         Surface(color = Color.Black) {
             PhotoDetailScreen(
-                state = PhotoDetailUIState.Content(
-                    photo = previewPhoto,
-                    parentTitle = "Тренировка",
-                    isAuthor = false
-                ),
+                state =
+                    PhotoDetailUIState.Content(
+                        photo = previewPhoto,
+                        parentTitle = "Тренировка",
+                        isAuthor = false
+                    ),
                 isAuthorized = false,
                 showDeleteDialog = false,
                 onAction = {}
@@ -223,11 +230,12 @@ internal fun PhotoDetailScreenWithDialogPreview() {
     JetpackWorkoutAppTheme {
         Surface(color = Color.Black) {
             PhotoDetailScreen(
-                state = PhotoDetailUIState.Content(
-                    photo = previewPhoto,
-                    parentTitle = "Тренировка",
-                    isAuthor = true
-                ),
+                state =
+                    PhotoDetailUIState.Content(
+                        photo = previewPhoto,
+                        parentTitle = "Тренировка",
+                        isAuthor = true
+                    ),
                 isAuthorized = true,
                 showDeleteDialog = true,
                 onAction = {}

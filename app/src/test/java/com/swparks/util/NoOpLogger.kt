@@ -7,7 +7,7 @@ package com.swparks.util
 class NoOpLogger : Logger {
     override fun d(
         tag: String,
-        message: String,
+        message: String
     ) {
         // Ничего не делаем в тестах
     }
@@ -15,7 +15,7 @@ class NoOpLogger : Logger {
     override fun w(
         tag: String,
         message: String,
-        throwable: Throwable?,
+        throwable: Throwable?
     ) {
         // Ничего не делаем в тестах
     }
@@ -23,14 +23,14 @@ class NoOpLogger : Logger {
     override fun e(
         tag: String,
         message: String,
-        throwable: Throwable?,
+        throwable: Throwable?
     ) {
         // Ничего не делаем в тестах
     }
 
     override fun i(
         tag: String,
-        message: String,
+        message: String
     ) {
         // Ничего не делаем в тестах
     }

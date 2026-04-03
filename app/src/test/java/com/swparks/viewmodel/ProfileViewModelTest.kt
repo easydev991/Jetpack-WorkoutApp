@@ -36,7 +36,6 @@ import java.io.IOException
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileViewModelTest {
-
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -68,14 +67,13 @@ class ProfileViewModelTest {
     /**
      * Создает ViewModel для тестов
      */
-    private fun createViewModel(): ProfileViewModel {
-        return ProfileViewModel(
+    private fun createViewModel(): ProfileViewModel =
+        ProfileViewModel(
             countriesRepository,
             swRepository,
             logger,
             userNotifier
         )
-    }
 
     @Test
     fun isRefreshing_initial_shouldBeFalse() {
@@ -91,193 +89,218 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun refreshProfile_whenUserNull_shouldDoNothing() = runTest {
-        // Given
-        coEvery { swRepository.getCurrentUserFlow() } returns flowOf(null)
-        profileViewModel = createViewModel()
+    fun refreshProfile_whenUserNull_shouldDoNothing() =
+        runTest {
+            // Given
+            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(null)
+            profileViewModel = createViewModel()
 
-        // When
-        profileViewModel.refreshProfile()
-        advanceUntilIdle()
+            // When
+            profileViewModel.refreshProfile()
+            advanceUntilIdle()
 
-        // Then
-        assertFalse("isRefreshing должен остаться false", profileViewModel.isRefreshing.value)
-        coVerify(exactly = 0) { countriesRepository.getCountryById(any<String>()) }
-        coVerify(exactly = 0) { countriesRepository.getCityById(any<String>()) }
-    }
-
-    @Test
-    fun refreshProfile_whenSuccess_shouldUpdateData() = runTest {
-        // Given
-        val testUser = createTestUser()
-        val socialUpdates = SocialUpdates(
-            user = testUser,
-            friends = emptyList(),
-            friendRequests = emptyList(),
-            blacklist = emptyList()
-        )
-
-        coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
-        coEvery { swRepository.getSocialUpdates(testUser.id) } returns Result.success(socialUpdates)
-        coEvery { countriesRepository.getCountryById(testUser.countryID.toString()) } returns testCountry
-        coEvery { countriesRepository.getCityById(testUser.cityID.toString()) } returns testCity
-
-        profileViewModel = createViewModel()
-        advanceUntilIdle() // Ждем завершения инициализации
-
-        // When
-        profileViewModel.refreshProfile()
-        advanceUntilIdle()
-
-        // Then
-        assertFalse("isRefreshing должен стать false", profileViewModel.isRefreshing.value)
-        assertTrue(
-            "Состояние должно быть Success",
-            profileViewModel.uiState.value is ProfileUiState.Success
-        )
-        val state = profileViewModel.uiState.value as ProfileUiState.Success
-        assertEquals("Страна должна быть загружена", testCountry, state.country)
-        assertEquals("Город должен быть загружен", testCity, state.city)
-    }
-
-    @Test
-    fun refreshProfile_whenLoading_shouldBeTrue() = runTest {
-        // Given
-        val testUser = createTestUser()
-        val socialUpdates = SocialUpdates(
-            user = testUser,
-            friends = emptyList(),
-            friendRequests = emptyList(),
-            blacklist = emptyList()
-        )
-
-        coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
-        coEvery { swRepository.getSocialUpdates(testUser.id) } returns Result.success(socialUpdates)
-        coEvery { countriesRepository.getCountryById(testUser.countryID.toString()) } returns testCountry
-        coEvery { countriesRepository.getCityById(testUser.cityID.toString()) } returns testCity
-
-        profileViewModel = createViewModel()
-        advanceUntilIdle() // Ждем завершения инициализации
-
-        // When
-        profileViewModel.refreshProfile()
-
-        // Then - корутина может выполниться быстро, поэтому проверяем, что состояние обновляется корректно
-        // после завершения корутины
-        advanceUntilIdle()
-        assertFalse(
-            "isRefreshing должен стать false после завершения",
-            profileViewModel.isRefreshing.value
-        )
-    }
-
-    @Test
-    fun refreshProfile_whenRepositoryFailure_shouldLogError() = runTest {
-        // Given
-        val testUser = createTestUser()
-
-        coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
-        coEvery {
-            swRepository.getSocialUpdates(testUser.id)
-        } returns Result.failure(IOException("Нет подключения к сети"))
-
-        profileViewModel = createViewModel()
-        advanceUntilIdle() // Ждем завершения инициализации
-
-        // When
-        profileViewModel.refreshProfile()
-        advanceUntilIdle()
-
-        // Then
-        assertFalse("isRefreshing должен стать false", profileViewModel.isRefreshing.value)
-        coVerify(exactly = 1) {
-            logger.e(
-                any<String>(),
-                match<String> { it.contains("Ошибка загрузки профиля и социальных данных") })
+            // Then
+            assertFalse("isRefreshing должен остаться false", profileViewModel.isRefreshing.value)
+            coVerify(exactly = 0) { countriesRepository.getCountryById(any<String>()) }
+            coVerify(exactly = 0) { countriesRepository.getCityById(any<String>()) }
         }
-    }
 
     @Test
-    fun refreshProfile_whenRepositoryFailure_shouldNotCrash() = runTest {
-        // Given
-        val testUser = createTestUser()
+    fun refreshProfile_whenSuccess_shouldUpdateData() =
+        runTest {
+            // Given
+            val testUser = createTestUser()
+            val socialUpdates =
+                SocialUpdates(
+                    user = testUser,
+                    friends = emptyList(),
+                    friendRequests = emptyList(),
+                    blacklist = emptyList()
+                )
 
-        coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
-        coEvery {
-            swRepository.getSocialUpdates(testUser.id)
-        } returns Result.failure(IOException("Нет подключения к сети"))
+            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery { swRepository.getSocialUpdates(testUser.id) } returns
+                Result.success(
+                    socialUpdates
+                )
+            coEvery { countriesRepository.getCountryById(testUser.countryID.toString()) } returns testCountry
+            coEvery { countriesRepository.getCityById(testUser.cityID.toString()) } returns testCity
 
-        profileViewModel = createViewModel()
-        advanceUntilIdle() // Ждем завершения инициализации
+            profileViewModel = createViewModel()
+            advanceUntilIdle() // Ждем завершения инициализации
 
-        // When - не должно быть исключения
-        profileViewModel.refreshProfile()
-        advanceUntilIdle()
+            // When
+            profileViewModel.refreshProfile()
+            advanceUntilIdle()
 
-        // Then - проверяем, что состояние обновления стало false без краша
-        assertFalse("isRefreshing должен стать false", profileViewModel.isRefreshing.value)
-    }
-
-    @Test
-    fun refreshProfile_whenCountriesRepositoryThrows_shouldLogError() = runTest {
-        // Given
-        val testUser = createTestUser()
-        val socialUpdates = SocialUpdates(
-            user = testUser,
-            friends = emptyList(),
-            friendRequests = emptyList(),
-            blacklist = emptyList()
-        )
-
-        coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
-        coEvery { swRepository.getSocialUpdates(testUser.id) } returns Result.success(socialUpdates)
-        coEvery {
-            countriesRepository.getCountryById(testUser.countryID.toString())
-        } throws IllegalStateException("Ошибка базы данных")
-
-        profileViewModel = createViewModel()
-        advanceUntilIdle() // Ждем завершения инициализации
-
-        // When
-        profileViewModel.refreshProfile()
-        advanceUntilIdle()
-
-        // Then - исключение перехватывается в loadProfileAddress и логируется там
-        assertFalse("isRefreshing должен стать false", profileViewModel.isRefreshing.value)
-        coVerify(atLeast = 1) {
-            logger.e(
-                any<String>(),
-                match<String> { it.contains("Ошибка загрузки адреса для профиля") })
+            // Then
+            assertFalse("isRefreshing должен стать false", profileViewModel.isRefreshing.value)
+            assertTrue(
+                "Состояние должно быть Success",
+                profileViewModel.uiState.value is ProfileUiState.Success
+            )
+            val state = profileViewModel.uiState.value as ProfileUiState.Success
+            assertEquals("Страна должна быть загружена", testCountry, state.country)
+            assertEquals("Город должен быть загружен", testCity, state.city)
         }
-    }
 
     @Test
-    fun refreshProfile_whenCountriesRepositoryThrows_shouldNotCrash() = runTest {
-        // Given
-        val testUser = createTestUser()
-        val socialUpdates = SocialUpdates(
-            user = testUser,
-            friends = emptyList(),
-            friendRequests = emptyList(),
-            blacklist = emptyList()
-        )
+    fun refreshProfile_whenLoading_shouldBeTrue() =
+        runTest {
+            // Given
+            val testUser = createTestUser()
+            val socialUpdates =
+                SocialUpdates(
+                    user = testUser,
+                    friends = emptyList(),
+                    friendRequests = emptyList(),
+                    blacklist = emptyList()
+                )
 
-        coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
-        coEvery { swRepository.getSocialUpdates(testUser.id) } returns Result.success(socialUpdates)
-        coEvery {
-            countriesRepository.getCountryById(testUser.countryID.toString())
-        } throws IllegalStateException("Ошибка базы данных")
+            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery { swRepository.getSocialUpdates(testUser.id) } returns
+                Result.success(
+                    socialUpdates
+                )
+            coEvery { countriesRepository.getCountryById(testUser.countryID.toString()) } returns testCountry
+            coEvery { countriesRepository.getCityById(testUser.cityID.toString()) } returns testCity
 
-        profileViewModel = createViewModel()
-        advanceUntilIdle() // Ждем завершения инициализации
+            profileViewModel = createViewModel()
+            advanceUntilIdle() // Ждем завершения инициализации
 
-        // When - не должно быть исключения
-        profileViewModel.refreshProfile()
-        advanceUntilIdle()
+            // When
+            profileViewModel.refreshProfile()
 
-        // Then - проверяем, что состояние обновления стало false без краша
-        assertFalse("isRefreshing должен стать false", profileViewModel.isRefreshing.value)
-    }
+            // Then - корутина может выполниться быстро, поэтому проверяем, что состояние обновляется корректно
+            // после завершения корутины
+            advanceUntilIdle()
+            assertFalse(
+                "isRefreshing должен стать false после завершения",
+                profileViewModel.isRefreshing.value
+            )
+        }
+
+    @Test
+    fun refreshProfile_whenRepositoryFailure_shouldLogError() =
+        runTest {
+            // Given
+            val testUser = createTestUser()
+
+            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery {
+                swRepository.getSocialUpdates(testUser.id)
+            } returns Result.failure(IOException("Нет подключения к сети"))
+
+            profileViewModel = createViewModel()
+            advanceUntilIdle() // Ждем завершения инициализации
+
+            // When
+            profileViewModel.refreshProfile()
+            advanceUntilIdle()
+
+            // Then
+            assertFalse("isRefreshing должен стать false", profileViewModel.isRefreshing.value)
+            coVerify(exactly = 1) {
+                logger.e(
+                    any<String>(),
+                    match<String> { it.contains("Ошибка загрузки профиля и социальных данных") }
+                )
+            }
+        }
+
+    @Test
+    fun refreshProfile_whenRepositoryFailure_shouldNotCrash() =
+        runTest {
+            // Given
+            val testUser = createTestUser()
+
+            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery {
+                swRepository.getSocialUpdates(testUser.id)
+            } returns Result.failure(IOException("Нет подключения к сети"))
+
+            profileViewModel = createViewModel()
+            advanceUntilIdle() // Ждем завершения инициализации
+
+            // When - не должно быть исключения
+            profileViewModel.refreshProfile()
+            advanceUntilIdle()
+
+            // Then - проверяем, что состояние обновления стало false без краша
+            assertFalse("isRefreshing должен стать false", profileViewModel.isRefreshing.value)
+        }
+
+    @Test
+    fun refreshProfile_whenCountriesRepositoryThrows_shouldLogError() =
+        runTest {
+            // Given
+            val testUser = createTestUser()
+            val socialUpdates =
+                SocialUpdates(
+                    user = testUser,
+                    friends = emptyList(),
+                    friendRequests = emptyList(),
+                    blacklist = emptyList()
+                )
+
+            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery { swRepository.getSocialUpdates(testUser.id) } returns
+                Result.success(
+                    socialUpdates
+                )
+            coEvery {
+                countriesRepository.getCountryById(testUser.countryID.toString())
+            } throws IllegalStateException("Ошибка базы данных")
+
+            profileViewModel = createViewModel()
+            advanceUntilIdle() // Ждем завершения инициализации
+
+            // When
+            profileViewModel.refreshProfile()
+            advanceUntilIdle()
+
+            // Then - исключение перехватывается в loadProfileAddress и логируется там
+            assertFalse("isRefreshing должен стать false", profileViewModel.isRefreshing.value)
+            coVerify(atLeast = 1) {
+                logger.e(
+                    any<String>(),
+                    match<String> { it.contains("Ошибка загрузки адреса для профиля") }
+                )
+            }
+        }
+
+    @Test
+    fun refreshProfile_whenCountriesRepositoryThrows_shouldNotCrash() =
+        runTest {
+            // Given
+            val testUser = createTestUser()
+            val socialUpdates =
+                SocialUpdates(
+                    user = testUser,
+                    friends = emptyList(),
+                    friendRequests = emptyList(),
+                    blacklist = emptyList()
+                )
+
+            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery { swRepository.getSocialUpdates(testUser.id) } returns
+                Result.success(
+                    socialUpdates
+                )
+            coEvery {
+                countriesRepository.getCountryById(testUser.countryID.toString())
+            } throws IllegalStateException("Ошибка базы данных")
+
+            profileViewModel = createViewModel()
+            advanceUntilIdle() // Ждем завершения инициализации
+
+            // When - не должно быть исключения
+            profileViewModel.refreshProfile()
+            advanceUntilIdle()
+
+            // Then - проверяем, что состояние обновления стало false без краша
+            assertFalse("isRefreshing должен стать false", profileViewModel.isRefreshing.value)
+        }
 
     @Test
     fun uiState_initial_shouldBeLoading() {
@@ -294,65 +317,69 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun blacklist_whenCacheUpdates_shouldUpdateAutomatically() = runTest {
-        // Given
-        val testUser = createTestUser()
-        val initialBlacklist = listOf(
-            User(id = 2, name = "Blacklisted User 1", image = null, fullName = "User 1")
-        )
-        val updatedBlacklist = listOf(
-            User(id = 2, name = "Blacklisted User 1", image = null, fullName = "User 1"),
-            User(id = 3, name = "Blacklisted User 2", image = null, fullName = "User 2")
-        )
+    fun blacklist_whenCacheUpdates_shouldUpdateAutomatically() =
+        runTest {
+            // Given
+            val testUser = createTestUser()
+            val initialBlacklist =
+                listOf(
+                    User(id = 2, name = "Blacklisted User 1", image = null, fullName = "User 1")
+                )
+            val updatedBlacklist =
+                listOf(
+                    User(id = 2, name = "Blacklisted User 1", image = null, fullName = "User 1"),
+                    User(id = 3, name = "Blacklisted User 2", image = null, fullName = "User 2")
+                )
 
-        // Используем MutableStateFlow для эмуляции обновлений
-        val blacklistFlow = kotlinx.coroutines.flow.MutableStateFlow(initialBlacklist)
-        coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
-        coEvery { swRepository.getBlacklistFlow() } returns blacklistFlow
+            // Используем MutableStateFlow для эмуляции обновлений
+            val blacklistFlow = kotlinx.coroutines.flow.MutableStateFlow(initialBlacklist)
+            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery { swRepository.getBlacklistFlow() } returns blacklistFlow
 
-        profileViewModel = createViewModel()
+            profileViewModel = createViewModel()
 
-        // Then - проверяем через Turbine для корректной работы с Flow
-        profileViewModel.blacklist.test {
-            awaitItem() // Получаем значение (может быть initialValue или initialBlacklist)
+            // Then - проверяем через Turbine для корректной работы с Flow
+            profileViewModel.blacklist.test {
+                awaitItem() // Получаем значение (может быть initialValue или initialBlacklist)
 
-            // When - эмулируем обновление данных в базе
-            blacklistFlow.value = updatedBlacklist
+                // When - эмулируем обновление данных в базе
+                blacklistFlow.value = updatedBlacklist
 
-            // Then - черный список должен обновиться автоматически
-            assertEquals(
-                "Черный список должен обновиться автоматически",
-                updatedBlacklist,
-                awaitItem()
-            )
+                // Then - черный список должен обновиться автоматически
+                assertEquals(
+                    "Черный список должен обновиться автоматически",
+                    updatedBlacklist,
+                    awaitItem()
+                )
+            }
         }
-    }
 
     @Test
-    fun blacklist_whenEmpty_shouldBeEmpty() = runTest {
-        // Given
-        val testUser = createTestUser()
-        coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
-        coEvery { swRepository.getBlacklistFlow() } returns flowOf(emptyList())
+    fun blacklist_whenEmpty_shouldBeEmpty() =
+        runTest {
+            // Given
+            val testUser = createTestUser()
+            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery { swRepository.getBlacklistFlow() } returns flowOf(emptyList())
 
-        // When
-        profileViewModel = createViewModel()
-        advanceUntilIdle()
+            // When
+            profileViewModel = createViewModel()
+            advanceUntilIdle()
 
-        // Then
-        profileViewModel.blacklist.test {
-            // Получаем хотя бы одно значение
-            val value = awaitItem()
-            // Проверяем что это пустой список или initialValue тоже пустой
-            assertTrue("Blacklist должен быть пустым", value.isEmpty())
+            // Then
+            profileViewModel.blacklist.test {
+                // Получаем хотя бы одно значение
+                val value = awaitItem()
+                // Проверяем что это пустой список или initialValue тоже пустой
+                assertTrue("Blacklist должен быть пустым", value.isEmpty())
+            }
         }
-    }
 
     /**
      * Создает тестового пользователя
      */
-    private fun createTestUser(): User {
-        return User(
+    private fun createTestUser(): User =
+        User(
             id = 1,
             name = "Test User",
             fullName = "Test User",
@@ -367,5 +394,4 @@ class ProfileViewModelTest {
             addedParks = emptyList(),
             journalCount = 2
         )
-    }
 }

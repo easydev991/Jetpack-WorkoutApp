@@ -8,7 +8,6 @@ import com.swparks.domain.model.GeocodingResult
  * Преобразует координаты в адрес и информацию о местоположении.
  */
 interface GeocodingService {
-
     /**
      * Выполняет обратное геокодирование по координатам.
      *
@@ -16,5 +15,8 @@ interface GeocodingService {
      * @param longitude Долгота
      * @return Result с [GeocodingResult] в случае успеха
      */
-    suspend fun reverseGeocode(latitude: Double, longitude: Double): Result<GeocodingResult>
+    suspend fun reverseGeocode(
+        latitude: Double,
+        longitude: Double
+    ): Result<GeocodingResult>
 }

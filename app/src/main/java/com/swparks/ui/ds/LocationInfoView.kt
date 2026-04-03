@@ -57,26 +57,28 @@ fun LocationInfoView(
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall))
     ) {
         SWButton(
-            config = ButtonConfig(
-                modifier = Modifier.weight(1f),
-                size = SWButtonSize.SMALL,
-                imageVector = Icons.Default.Map,
-                text = stringResource(R.string.event_open_map),
-                enabled = config.enabled,
-                onClick = config.onOpenMapClick
-            )
+            config =
+                ButtonConfig(
+                    modifier = Modifier.weight(1f),
+                    size = SWButtonSize.SMALL,
+                    imageVector = Icons.Default.Map,
+                    text = stringResource(R.string.event_open_map),
+                    enabled = config.enabled,
+                    onClick = config.onOpenMapClick
+                )
         )
 
         SWButton(
-            config = ButtonConfig(
-                modifier = Modifier.weight(1f),
-                size = SWButtonSize.SMALL,
-                mode = SWButtonMode.TINTED,
-                imageVector = Icons.Default.Navigation,
-                text = stringResource(R.string.event_build_route),
-                enabled = config.enabled,
-                onClick = config.onRouteClick
-            )
+            config =
+                ButtonConfig(
+                    modifier = Modifier.weight(1f),
+                    size = SWButtonSize.SMALL,
+                    mode = SWButtonMode.TINTED,
+                    imageVector = Icons.Default.Navigation,
+                    text = stringResource(R.string.event_build_route),
+                    enabled = config.enabled,
+                    onClick = config.onRouteClick
+                )
         )
     }
 }
@@ -95,14 +97,15 @@ fun LocationInfoViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             LocationInfoView(
-                config = LocationInfoConfig(
-                    latitude = "55.7558",
-                    longitude = "37.6173",
-                    address = "Россия, Москва, Парк Горького",
-                    enabled = true,
-                    onOpenMapClick = {},
-                    onRouteClick = {}
-                ),
+                config =
+                    LocationInfoConfig(
+                        latitude = "55.7558",
+                        longitude = "37.6173",
+                        address = "Россия, Москва, Парк Горького",
+                        enabled = true,
+                        onOpenMapClick = {},
+                        onRouteClick = {}
+                    ),
                 modifier = Modifier.padding(dimensionResource(R.dimen.spacing_regular))
             )
         }

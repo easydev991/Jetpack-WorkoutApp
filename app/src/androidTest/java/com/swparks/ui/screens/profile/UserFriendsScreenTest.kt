@@ -38,9 +38,10 @@ class UserFriendsScreenTest {
             JetpackWorkoutAppTheme {
                 UserFriendsScreenContent(
                     uiState = uiState,
-                    config = FriendsScreenConfig(
-                        parentPaddingValues = PaddingValues()
-                    ),
+                    config =
+                        FriendsScreenConfig(
+                            parentPaddingValues = PaddingValues()
+                        ),
                     onAction = { action ->
                         when (action) {
                             is UserFriendsAction.Back -> onBackClick()
@@ -155,11 +156,12 @@ class UserFriendsScreenTest {
     @Test
     fun userFriendsScreen_displaysFriend_whenHasFriends() {
         // Given
-        val testUser = User(
-            id = 1L,
-            name = "TestUser",
-            image = null
-        )
+        val testUser =
+            User(
+                id = 1L,
+                name = "TestUser",
+                image = null
+            )
         val state = UserFriendsUiState.Success(friends = listOf(testUser))
 
         // When
@@ -174,11 +176,12 @@ class UserFriendsScreenTest {
     @Test
     fun userFriendsScreen_displaysMultipleFriends() {
         // Given
-        val friends = listOf(
-            User(id = 1L, name = "Friend1", image = null),
-            User(id = 2L, name = "Friend2", image = null),
-            User(id = 3L, name = "Friend3", image = null)
-        )
+        val friends =
+            listOf(
+                User(id = 1L, name = "Friend1", image = null),
+                User(id = 2L, name = "Friend2", image = null),
+                User(id = 3L, name = "Friend3", image = null)
+            )
         val state = UserFriendsUiState.Success(friends = friends)
 
         // When
@@ -195,11 +198,12 @@ class UserFriendsScreenTest {
     @Test
     fun userFriendsScreen_doesNotDisplayEmptyState_whenHasFriends() {
         // Given
-        val testUser = User(
-            id = 1L,
-            name = "TestUser",
-            image = null
-        )
+        val testUser =
+            User(
+                id = 1L,
+                name = "TestUser",
+                image = null
+            )
         val state = UserFriendsUiState.Success(friends = listOf(testUser))
 
         // When
@@ -214,11 +218,12 @@ class UserFriendsScreenTest {
     @Test
     fun userFriendsScreen_doesNotDisplayError_whenSuccess() {
         // Given
-        val testUser = User(
-            id = 1L,
-            name = "TestUser",
-            image = null
-        )
+        val testUser =
+            User(
+                id = 1L,
+                name = "TestUser",
+                image = null
+            )
         val state = UserFriendsUiState.Success(friends = listOf(testUser))
 
         // When

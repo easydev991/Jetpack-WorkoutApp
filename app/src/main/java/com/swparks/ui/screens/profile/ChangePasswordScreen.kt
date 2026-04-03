@@ -81,11 +81,12 @@ fun ChangePasswordScreen(
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(paddingValues)
-                    .verticalScroll(scrollState)
-                    .padding(dimensionResource(R.dimen.spacing_regular)),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(paddingValues)
+                        .verticalScroll(scrollState)
+                        .padding(dimensionResource(R.dimen.spacing_regular)),
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
             ) {
                 PasswordFields(
@@ -110,16 +111,16 @@ private fun SaveButton(
     onClick: () -> Unit
 ) {
     SWButton(
-        config = ButtonConfig(
-            mode = SWButtonMode.FILLED,
-            size = SWButtonSize.LARGE,
-            text = stringResource(R.string.save_changes),
-            enabled = enabled,
-            onClick = onClick
-        )
+        config =
+            ButtonConfig(
+                mode = SWButtonMode.FILLED,
+                size = SWButtonSize.LARGE,
+                text = stringResource(R.string.save_changes),
+                enabled = enabled,
+                onClick = onClick
+            )
     )
 }
-
 
 @Composable
 private fun PasswordFields(
@@ -133,38 +134,43 @@ private fun PasswordFields(
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
     ) {
         SWTextField(
-            config = TextFieldConfig(
-                text = uiState.currentPassword,
-                labelID = R.string.current_password,
-                secure = true,
-                enabled = isEnabled,
-                onTextChange = onCurrentPasswordChange
-            )
+            config =
+                TextFieldConfig(
+                    text = uiState.currentPassword,
+                    labelID = R.string.current_password,
+                    secure = true,
+                    enabled = isEnabled,
+                    onTextChange = onCurrentPasswordChange
+                )
         )
         SWTextField(
-            config = TextFieldConfig(
-                text = uiState.newPassword,
-                labelID = R.string.new_password,
-                secure = true,
-                enabled = isEnabled,
-                isError = uiState.newPasswordError != null,
-                supportingText = uiState.newPasswordError?.let { stringResource(it) }
-                    ?: "",
-                onTextChange = onNewPasswordChange
-            )
+            config =
+                TextFieldConfig(
+                    text = uiState.newPassword,
+                    labelID = R.string.new_password,
+                    secure = true,
+                    enabled = isEnabled,
+                    isError = uiState.newPasswordError != null,
+                    supportingText =
+                        uiState.newPasswordError?.let { stringResource(it) }
+                            ?: "",
+                    onTextChange = onNewPasswordChange
+                )
         )
 
         SWTextField(
-            config = TextFieldConfig(
-                text = uiState.confirmPassword,
-                labelID = R.string.password_confirmation,
-                secure = true,
-                enabled = isEnabled,
-                isError = uiState.confirmPasswordError != null,
-                supportingText = uiState.confirmPasswordError?.let { stringResource(it) }
-                    ?: "",
-                onTextChange = onConfirmPasswordChange
-            )
+            config =
+                TextFieldConfig(
+                    text = uiState.confirmPassword,
+                    labelID = R.string.password_confirmation,
+                    secure = true,
+                    enabled = isEnabled,
+                    isError = uiState.confirmPasswordError != null,
+                    supportingText =
+                        uiState.confirmPasswordError?.let { stringResource(it) }
+                            ?: "",
+                    onTextChange = onConfirmPasswordChange
+                )
         )
     }
 }

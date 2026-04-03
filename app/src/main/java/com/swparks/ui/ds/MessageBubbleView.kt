@@ -64,10 +64,11 @@ fun MessageBubbleView(
     messageBody: String,
     dateString: String
 ) {
-    val bubbleColor = when (messageType) {
-        MessageType.INCOMING -> MaterialTheme.colorScheme.surfaceVariant
-        MessageType.SENT -> MaterialTheme.colorScheme.primary
-    }
+    val bubbleColor =
+        when (messageType) {
+            MessageType.INCOMING -> MaterialTheme.colorScheme.surfaceVariant
+            MessageType.SENT -> MaterialTheme.colorScheme.primary
+        }
     val isIncoming = messageType == MessageType.INCOMING
     Column(
         verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_xxsmall_plus)),
@@ -75,34 +76,45 @@ fun MessageBubbleView(
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
-            horizontalArrangement = if (isIncoming)
-                Arrangement.Start else Arrangement.End,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(messageType.contentPadding)
+            horizontalArrangement =
+                if (isIncoming) {
+                    Arrangement.Start
+                } else {
+                    Arrangement.End
+                },
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(messageType.contentPadding)
         ) {
             Box(
                 contentAlignment = if (isIncoming) Alignment.TopStart else Alignment.TopEnd,
-                modifier = Modifier
-                    .clip(
-                        RoundedCornerShape(
-                            topStart = messageType.topStartCorner,
-                            topEnd = dimensionResource(id = R.dimen.corner_radius_bubble),
-                            bottomStart = dimensionResource(id = R.dimen.corner_radius_bubble),
-                            bottomEnd = messageType.bottomEndCorner
+                modifier =
+                    Modifier
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = messageType.topStartCorner,
+                                topEnd = dimensionResource(id = R.dimen.corner_radius_bubble),
+                                bottomStart = dimensionResource(id = R.dimen.corner_radius_bubble),
+                                bottomEnd = messageType.bottomEndCorner
+                            )
                         )
-                    )
-                    .background(bubbleColor)
+                        .background(bubbleColor)
             ) {
                 Text(
                     text = messageBody,
-                    color = if (isIncoming) MaterialTheme.colorScheme.onPrimaryContainer
-                    else MaterialTheme.colorScheme.onPrimary,
+                    color =
+                        if (isIncoming) {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onPrimary
+                        },
                     textAlign = TextAlign.Start,
-                    modifier = Modifier.padding(
-                        vertical = dimensionResource(id = R.dimen.spacing_small),
-                        horizontal = dimensionResource(id = R.dimen.bubble_padding_horizontal)
-                    )
+                    modifier =
+                        Modifier.padding(
+                            vertical = dimensionResource(id = R.dimen.spacing_small),
+                            horizontal = dimensionResource(id = R.dimen.bubble_padding_horizontal)
+                        )
                 )
             }
         }
@@ -130,15 +142,17 @@ fun MessageBubbleViewPreview() {
             Column(
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(dimensionResource(R.dimen.spacing_regular))
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(dimensionResource(R.dimen.spacing_regular))
             ) {
                 MessageBubbleView(
                     messageType = MessageType.INCOMING,
-                    messageBody = "orem ipsum dolor sit amet, consectetur adipiscing elit. " +
-                        "Suspendisse ut semper quam. Phasellus non mauris sem. " +
-                        "Donec sed fermentum eros. Donec pretium nec turpis a semper.",
+                    messageBody =
+                        "orem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                            "Suspendisse ut semper quam. Phasellus non mauris sem. " +
+                            "Donec sed fermentum eros. Donec pretium nec turpis a semper.",
                     dateString = "11:22"
                 )
                 MessageBubbleView(

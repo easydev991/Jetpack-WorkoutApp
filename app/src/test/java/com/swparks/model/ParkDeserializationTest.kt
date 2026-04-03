@@ -9,15 +9,16 @@ import org.junit.Test
  * Тесты десериализации модели [com.swparks.data.model.Park] с использованием IntStringSerializer и LongStringSerializer
  */
 class ParkDeserializationTest {
-
-    private val json = Json {
-        ignoreUnknownKeys = true
-    }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+        }
 
     @Test
     fun deserialize_whenAllInts_thenReturnsPark() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {
                 "id": 123,
                 "name": "Test Park",
@@ -34,7 +35,7 @@ class ParkDeserializationTest {
                 "create_date": "2024-01-15T10:30:00Z",
                 "modify_date": "2024-01-16T10:30:00Z"
             }
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<Park>(jsonString)
@@ -53,7 +54,8 @@ class ParkDeserializationTest {
     @Test
     fun deserialize_whenAllStrings_thenReturnsPark() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {
                 "id": "123",
                 "name": "Test Park",
@@ -70,7 +72,7 @@ class ParkDeserializationTest {
                 "create_date": "2024-01-15T10:30:00Z",
                 "modify_date": "2024-01-16T10:30:00Z"
             }
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<Park>(jsonString)
@@ -89,7 +91,8 @@ class ParkDeserializationTest {
     @Test
     fun deserialize_whenMixedIntsAndStrings_thenReturnsPark() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {
                 "id": "123",
                 "name": "Test Park",
@@ -106,7 +109,7 @@ class ParkDeserializationTest {
                 "create_date": "2024-01-15T10:30:00Z",
                 "modify_date": "2024-01-16T10:30:00Z"
             }
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<Park>(jsonString)
@@ -125,7 +128,8 @@ class ParkDeserializationTest {
     @Test
     fun deserialize_whenZeroValues_thenReturnsPark() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {
                 "id": "0",
                 "name": "Test Park",
@@ -140,7 +144,7 @@ class ParkDeserializationTest {
                 "preview": "preview.jpg",
                 "trainings": 0
             }
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<Park>(jsonString)
@@ -158,7 +162,8 @@ class ParkDeserializationTest {
     @Test
     fun deserialize_whenNegativeValues_thenReturnsPark() {
         // Given
-        val jsonString = """
+        val jsonString =
+            """
             {
                 "id": "123",
                 "name": "Test Park",
@@ -173,7 +178,7 @@ class ParkDeserializationTest {
                 "preview": "preview.jpg",
                 "trainings": "-6"
             }
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val result = json.decodeFromString<Park>(jsonString)

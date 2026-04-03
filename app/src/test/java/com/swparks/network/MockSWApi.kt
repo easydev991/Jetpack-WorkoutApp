@@ -20,7 +20,6 @@ import retrofit2.Response
  * Возвращает предопределенные данные для всех методов API.
  */
 class MockSWApi : SWApi {
-
     // ==================== Вспомогательные методы для создания фиктивных данных ====================
 
     /**
@@ -216,9 +215,7 @@ class MockSWApi : SWApi {
 
     // ==================== АВТОРИЗАЦИЯ И ПРОФИЛЬ ====================
 
-    override suspend fun login(): LoginSuccess {
-        return createMockLoginSuccess()
-    }
+    override suspend fun login(): LoginSuccess = createMockLoginSuccess()
 
     override suspend fun register(
         name: String,
@@ -229,22 +226,17 @@ class MockSWApi : SWApi {
         genderCode: Int,
         countryId: Int?,
         cityId: Int?
-    ): User {
-        return createMockUser()
-    }
+    ): User = createMockUser()
 
+    override suspend fun resetPassword(usernameOrEmail: String): LoginSuccess =
+        createMockLoginSuccess()
 
-    override suspend fun resetPassword(usernameOrEmail: String): LoginSuccess {
-        return createMockLoginSuccess()
-    }
+    override suspend fun changePassword(
+        password: String,
+        newPassword: String
+    ): Response<Unit> = Response.success(Unit)
 
-    override suspend fun changePassword(password: String, newPassword: String): Response<Unit> {
-        return Response.success(Unit)
-    }
-
-    override suspend fun getUser(userId: Long): User {
-        return createMockUser(id = userId)
-    }
+    override suspend fun getUser(userId: Long): User = createMockUser(id = userId)
 
     override suspend fun editUser(
         userId: Long,
@@ -256,94 +248,69 @@ class MockSWApi : SWApi {
         countryId: RequestBody?,
         cityId: RequestBody?,
         image: MultipartBody.Part?
-    ): User {
-        return createMockUser(id = userId)
-    }
+    ): User = createMockUser(id = userId)
 
-    override suspend fun deleteUser(): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun deleteUser(): Response<Unit> = Response.success(Unit)
 
     // ==================== ДРУЗЬЯ И ЧЕРНЫЙ СПИСОК ====================
 
-    override suspend fun getFriendsForUser(userId: Long): List<User> {
-        return listOf(
+    override suspend fun getFriendsForUser(userId: Long): List<User> =
+        listOf(
             createMockUser(id = 2L, name = "friend1", fullName = "Friend One"),
             createMockUser(id = 3L, name = "friend2", fullName = "Friend Two")
         )
-    }
 
-    override suspend fun getFriendRequests(): List<User> {
-        return listOf(
+    override suspend fun getFriendRequests(): List<User> =
+        listOf(
             createMockUser(id = 4L, name = "request1", fullName = "Request One")
         )
-    }
 
-    override suspend fun acceptFriendRequest(userId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun acceptFriendRequest(userId: Long): Response<Unit> = Response.success(Unit)
 
-    override suspend fun declineFriendRequest(userId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun declineFriendRequest(userId: Long): Response<Unit> = Response.success(Unit)
 
-    override suspend fun sendFriendRequest(userId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun sendFriendRequest(userId: Long): Response<Unit> = Response.success(Unit)
 
-    override suspend fun deleteFriend(friendId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun deleteFriend(friendId: Long): Response<Unit> = Response.success(Unit)
 
-    override suspend fun getBlacklist(): List<User> {
-        return listOf(
+    override suspend fun getBlacklist(): List<User> =
+        listOf(
             createMockUser(id = 5L, name = "blocked1", fullName = "Blocked User")
         )
-    }
 
-    override suspend fun addToBlacklist(userId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun addToBlacklist(userId: Long): Response<Unit> = Response.success(Unit)
 
-    override suspend fun deleteFromBlacklist(userId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun deleteFromBlacklist(userId: Long): Response<Unit> = Response.success(Unit)
 
-    override suspend fun findUsers(name: String): List<User> {
-        return listOf(
+    override suspend fun findUsers(name: String): List<User> =
+        listOf(
             createMockUser(id = 6L, name = name, fullName = "Found User")
         )
-    }
 
     // ==================== СТРАНЫ И ГОРОДА ====================
 
-    override suspend fun getCountries(): List<Country> {
-        return listOf(
+    override suspend fun getCountries(): List<Country> =
+        listOf(
             createMockCountry(id = "1", name = "Russia"),
             createMockCountry(id = "2", name = "USA"),
             createMockCountry(id = "3", name = "Germany")
         )
-    }
 
     // ==================== ПЛОЩАДКИ ====================
 
-    override suspend fun getAllParks(fields: String): List<Park> {
-        return listOf(
+    override suspend fun getAllParks(fields: String): List<Park> =
+        listOf(
             createMockPark(id = 1L, name = "Park 1"),
             createMockPark(id = 2L, name = "Park 2"),
             createMockPark(id = 3L, name = "Park 3")
         )
-    }
 
-    override suspend fun getUpdatedParks(date: String): List<Park> {
-        return listOf(
+    override suspend fun getUpdatedParks(date: String): List<Park> =
+        listOf(
             createMockPark(id = 1L, name = "Updated Park")
         )
-    }
 
-    override suspend fun getPark(parkId: Long): Park {
-        return createMockPark(id = parkId)
-    }
+    override suspend fun getPark(parkId: Long): Park = createMockPark(id = parkId)
 
     override suspend fun createPark(
         address: RequestBody,
@@ -353,9 +320,7 @@ class MockSWApi : SWApi {
         typeId: RequestBody,
         sizeId: RequestBody,
         photos: List<MultipartBody.Part>?
-    ): Park {
-        return createMockPark(id = 100L, name = "New Park")
-    }
+    ): Park = createMockPark(id = 100L, name = "New Park")
 
     override suspend fun editPark(
         parkId: Long,
@@ -366,68 +331,56 @@ class MockSWApi : SWApi {
         typeId: RequestBody,
         sizeId: RequestBody,
         photos: List<MultipartBody.Part>?
-    ): Park {
-        return createMockPark(id = parkId, name = "Edited Park")
-    }
+    ): Park = createMockPark(id = parkId, name = "Edited Park")
 
-    override suspend fun deletePark(parkId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun deletePark(parkId: Long): Response<Unit> = Response.success(Unit)
 
-    override suspend fun getParksForUser(userId: Long): List<Park> {
-        return listOf(
+    override suspend fun getParksForUser(userId: Long): List<Park> =
+        listOf(
             createMockPark(id = 1L, name = "User Park 1"),
             createMockPark(id = 2L, name = "User Park 2")
         )
-    }
 
-    override suspend fun postTrainHere(parkId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun postTrainHere(parkId: Long): Response<Unit> = Response.success(Unit)
 
-    override suspend fun deleteTrainHere(parkId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun deleteTrainHere(parkId: Long): Response<Unit> = Response.success(Unit)
 
-    override suspend fun addCommentToPark(parkId: Long, comment: String): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun addCommentToPark(
+        parkId: Long,
+        comment: String
+    ): Response<Unit> = Response.success(Unit)
 
     override suspend fun editParkComment(
         parkId: Long,
         commentId: Long,
         comment: String
-    ): Response<Unit> {
-        return Response.success(Unit)
-    }
+    ): Response<Unit> = Response.success(Unit)
 
-    override suspend fun deleteParkComment(parkId: Long, commentId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun deleteParkComment(
+        parkId: Long,
+        commentId: Long
+    ): Response<Unit> = Response.success(Unit)
 
-    override suspend fun deleteParkPhoto(parkId: Long, photoId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun deleteParkPhoto(
+        parkId: Long,
+        photoId: Long
+    ): Response<Unit> = Response.success(Unit)
 
     // ==================== МЕРОПРИЯТИЯ ====================
 
-    override suspend fun getFutureEvents(): List<Event> {
-        return listOf(
+    override suspend fun getFutureEvents(): List<Event> =
+        listOf(
             createMockEvent(id = 1L, title = "Future Event 1", beginDate = "2025-02-01"),
             createMockEvent(id = 2L, title = "Future Event 2", beginDate = "2025-03-01")
         )
-    }
 
-    override suspend fun getPastEvents(): List<Event> {
-        return listOf(
+    override suspend fun getPastEvents(): List<Event> =
+        listOf(
             createMockEvent(id = 3L, title = "Past Event 1", beginDate = "2024-01-01"),
             createMockEvent(id = 4L, title = "Past Event 2", beginDate = "2024-02-01")
         )
-    }
 
-    override suspend fun getEvent(eventId: Long): Event {
-        return createMockEvent(id = eventId)
-    }
+    override suspend fun getEvent(eventId: Long): Event = createMockEvent(id = eventId)
 
     override suspend fun createEvent(
         title: RequestBody,
@@ -435,9 +388,7 @@ class MockSWApi : SWApi {
         date: RequestBody,
         parkId: RequestBody,
         photos: List<MultipartBody.Part>?
-    ): Event {
-        return createMockEvent(id = 200L, title = "New Event")
-    }
+    ): Event = createMockEvent(id = 200L, title = "New Event")
 
     override suspend fun editEvent(
         eventId: Long,
@@ -446,84 +397,72 @@ class MockSWApi : SWApi {
         date: RequestBody,
         parkId: RequestBody,
         photos: List<MultipartBody.Part>?
-    ): Event {
-        return createMockEvent(id = eventId, title = "Edited Event")
-    }
+    ): Event = createMockEvent(id = eventId, title = "Edited Event")
 
-    override suspend fun postGoToEvent(eventId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun postGoToEvent(eventId: Long): Response<Unit> = Response.success(Unit)
 
-    override suspend fun deleteGoToEvent(eventId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun deleteGoToEvent(eventId: Long): Response<Unit> = Response.success(Unit)
 
-    override suspend fun addCommentToEvent(eventId: Long, comment: String): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun addCommentToEvent(
+        eventId: Long,
+        comment: String
+    ): Response<Unit> = Response.success(Unit)
 
-    override suspend fun deleteEventComment(eventId: Long, commentId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun deleteEventComment(
+        eventId: Long,
+        commentId: Long
+    ): Response<Unit> = Response.success(Unit)
 
     override suspend fun editEventComment(
         eventId: Long,
         commentId: Long,
         comment: String
-    ): Response<Unit> {
-        return Response.success(Unit)
-    }
+    ): Response<Unit> = Response.success(Unit)
 
-    override suspend fun deleteEvent(eventId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun deleteEvent(eventId: Long): Response<Unit> = Response.success(Unit)
 
-    override suspend fun deleteEventPhoto(eventId: Long, photoId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun deleteEventPhoto(
+        eventId: Long,
+        photoId: Long
+    ): Response<Unit> = Response.success(Unit)
 
     // ==================== СООБЩЕНИЯ ====================
 
-    override suspend fun getDialogs(): List<DialogResponse> {
-        return listOf(
+    override suspend fun getDialogs(): List<DialogResponse> =
+        listOf(
             createMockDialog(id = 1L, userId = 2, name = "Dialog 1"),
             createMockDialog(id = 2L, userId = 3, name = "Dialog 2"),
             createMockDialog(id = 3L, userId = 4, name = "Dialog 3")
         )
-    }
 
-    override suspend fun getMessages(dialogId: Long): List<MessageResponse> {
-        return listOf(
+    override suspend fun getMessages(dialogId: Long): List<MessageResponse> =
+        listOf(
             createMockMessage(id = 1L, message = "Hello!", created = "2024-01-15T10:00:00"),
             createMockMessage(id = 2L, message = "How are you?", created = "2024-01-15T10:05:00")
         )
-    }
 
-    override suspend fun sendMessageTo(userId: Long, message: String): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun sendMessageTo(
+        userId: Long,
+        message: String
+    ): Response<Unit> = Response.success(Unit)
 
-    override suspend fun markAsRead(fromUserId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun markAsRead(fromUserId: Long): Response<Unit> = Response.success(Unit)
 
-    override suspend fun deleteDialog(dialogId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun deleteDialog(dialogId: Long): Response<Unit> = Response.success(Unit)
 
     // ==================== ДНЕВНИКИ ====================
 
-    override suspend fun getJournals(userId: Long): List<JournalResponse> {
-        return listOf(
+    override suspend fun getJournals(userId: Long): List<JournalResponse> =
+        listOf(
             createMockJournal(id = 1L, title = "Journal 1"),
             createMockJournal(id = 2L, title = "Journal 2"),
             createMockJournal(id = 3L, title = "Journal 3")
         )
-    }
 
-    override suspend fun getJournal(userId: Long, journalId: Long): JournalResponse {
-        return createMockJournal(id = journalId)
-    }
+    override suspend fun getJournal(
+        userId: Long,
+        journalId: Long
+    ): JournalResponse = createMockJournal(id = journalId)
 
     override suspend fun editJournalSettings(
         userId: Long,
@@ -531,51 +470,44 @@ class MockSWApi : SWApi {
         title: String,
         viewAccess: String,
         commentAccess: String
-    ): Response<Unit> {
-        return Response.success(Unit)
-    }
+    ): Response<Unit> = Response.success(Unit)
 
-    override suspend fun createJournal(userId: Long, title: String): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun createJournal(
+        userId: Long,
+        title: String
+    ): Response<Unit> = Response.success(Unit)
 
     override suspend fun getJournalEntries(
         userId: Long,
         journalId: Long
-    ): List<JournalEntryResponse> {
-        return listOf(
+    ): List<JournalEntryResponse> =
+        listOf(
             createMockJournalEntry(id = 1L, message = "Entry 1"),
             createMockJournalEntry(id = 2L, message = "Entry 2"),
             createMockJournalEntry(id = 3L, message = "Entry 3")
         )
-    }
 
     override suspend fun saveJournalEntry(
         userId: Long,
         journalId: Long,
         message: String
-    ): Response<Unit> {
-        return Response.success(Unit)
-    }
+    ): Response<Unit> = Response.success(Unit)
 
     override suspend fun editJournalEntry(
         userId: Long,
         journalId: Long,
         entryId: Long,
         newEntryText: String
-    ): Response<Unit> {
-        return Response.success(Unit)
-    }
+    ): Response<Unit> = Response.success(Unit)
 
     override suspend fun deleteJournalEntry(
         userId: Long,
         journalId: Long,
         entryId: Long
-    ): Response<Unit> {
-        return Response.success(Unit)
-    }
+    ): Response<Unit> = Response.success(Unit)
 
-    override suspend fun deleteJournal(userId: Long, journalId: Long): Response<Unit> {
-        return Response.success(Unit)
-    }
+    override suspend fun deleteJournal(
+        userId: Long,
+        journalId: Long
+    ): Response<Unit> = Response.success(Unit)
 }

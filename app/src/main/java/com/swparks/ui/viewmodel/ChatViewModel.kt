@@ -38,8 +38,8 @@ class ChatViewModel(
     private val userNotifier: UserNotifier,
     private val logger: Logger,
     private val crashReporter: CrashReporter
-) : ViewModel(), IChatViewModel {
-
+) : ViewModel(),
+    IChatViewModel {
     private companion object {
         private const val TAG = "ChatViewModel"
     }
@@ -118,8 +118,10 @@ class ChatViewModel(
     }
 
     private suspend fun refreshMessagesInternal(dialogId: Long) {
-        val messages = swApi.getMessages(dialogId)
-            .sortedBy { it.created }
+        val messages =
+            swApi
+                .getMessages(dialogId)
+                .sortedBy { it.created }
         _uiState.value = ChatUiState.Success(messages)
     }
 

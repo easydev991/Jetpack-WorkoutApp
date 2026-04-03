@@ -57,8 +57,13 @@ data class SearchQueryState(
 
 sealed class SearchUserAction {
     data object Search : SearchUserAction()
-    data class UserClick(val userId: Long) : SearchUserAction()
+
+    data class UserClick(
+        val userId: Long
+    ) : SearchUserAction()
+
     data object Back : SearchUserAction()
+
     data object Retry : SearchUserAction()
 }
 
@@ -84,10 +89,11 @@ fun SearchUserScreen(
     SearchUserScreenContent(
         modifier = modifier,
         uiState = uiState,
-        searchQueryState = SearchQueryState(
-            query = searchQuery,
-            onQueryChange = { viewModel.searchQuery.value = it }
-        ),
+        searchQueryState =
+            SearchQueryState(
+                query = searchQuery,
+                onQueryChange = { viewModel.searchQuery.value = it }
+            ),
         config = config,
         onAction = onAction
     )
@@ -121,11 +127,12 @@ fun SearchUserScreenContent(
         }
     }
 
-    val displayState = if (uiState is SearchUserUiState.Loading) {
-        lastVisibleState
-    } else {
-        uiState
-    }
+    val displayState =
+        if (uiState is SearchUserUiState.Loading) {
+            lastVisibleState
+        } else {
+            uiState
+        }
 
     Scaffold(
         modifier = modifier,
@@ -133,10 +140,11 @@ fun SearchUserScreenContent(
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(config.parentPaddingValues)
-                .padding(innerPadding)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(config.parentPaddingValues)
+                    .padding(innerPadding)
         ) {
             Column(
                 modifier = Modifier.fillMaxSize(),
@@ -164,7 +172,6 @@ fun SearchUserScreenContent(
     }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SearchUserTopBar(onBack: () -> Unit) {
@@ -188,17 +195,19 @@ private fun SearchInputField(
     modifier: Modifier = Modifier
 ) {
     SWTextField(
-        config = TextFieldConfig(
-            modifier = modifier
-                .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
-                .testTag(ScreenshotTestTags.SEARCH_USER_FIELD),
-            text = searchQueryState.query,
-            labelID = R.string.username_in_english,
-            supportingText = stringResource(R.string.search_min_length_hint),
-            onTextChange = searchQueryState.onQueryChange,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = { onSearch() })
-        )
+        config =
+            TextFieldConfig(
+                modifier =
+                    modifier
+                        .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
+                        .testTag(ScreenshotTestTags.SEARCH_USER_FIELD),
+                text = searchQueryState.query,
+                labelID = R.string.username_in_english,
+                supportingText = stringResource(R.string.search_min_length_hint),
+                onTextChange = searchQueryState.onQueryChange,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { onSearch() })
+            )
     )
 }
 
@@ -251,12 +260,13 @@ private fun UsersList(
 ) {
     LazyColumn(
         modifier = modifier,
-        contentPadding = PaddingValues(
-            start = dimensionResource(R.dimen.spacing_regular),
-            top = dimensionResource(R.dimen.spacing_small),
-            end = dimensionResource(R.dimen.spacing_regular),
-            bottom = dimensionResource(R.dimen.spacing_regular)
-        ),
+        contentPadding =
+            PaddingValues(
+                start = dimensionResource(R.dimen.spacing_regular),
+                top = dimensionResource(R.dimen.spacing_small),
+                end = dimensionResource(R.dimen.spacing_regular),
+                bottom = dimensionResource(R.dimen.spacing_regular)
+            ),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
     ) {
         items(
@@ -265,16 +275,18 @@ private fun UsersList(
         ) { user ->
             val isDisabled = user.id == currentUserId
             UserRowView(
-                data = UserRowData(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("${ScreenshotTestTags.SEARCH_USER_ROW_PREFIX}${user.id}"),
-                    enabled = !isDisabled,
-                    imageStringURL = user.image,
-                    name = user.name,
-                    address = null,
-                    onClick = { onUserClick(user.id) }
-                )
+                data =
+                    UserRowData(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .testTag("${ScreenshotTestTags.SEARCH_USER_ROW_PREFIX}${user.id}"),
+                        enabled = !isDisabled,
+                        imageStringURL = user.image,
+                        name = user.name,
+                        address = null,
+                        onClick = { onUserClick(user.id) }
+                    )
             )
         }
     }

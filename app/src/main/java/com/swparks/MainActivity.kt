@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
             // Создаём ViewModel для MainActivity
             val viewModel: MainActivityViewModel =
                 viewModel(
-                    factory = MainActivityViewModel.factory(dataStore),
+                    factory = MainActivityViewModel.factory(dataStore)
                 )
 
             val theme by viewModel.theme.collectAsState()
@@ -52,12 +52,13 @@ class MainActivity : ComponentActivity() {
             ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background,
+                    color = MaterialTheme.colorScheme.background
                 ) {
-                    val appState = rememberAppState(
-                        navController = rememberNavController(),
-                        analyticsReporter = appContainer.analyticsReporter,
-                    )
+                    val appState =
+                        rememberAppState(
+                            navController = rememberNavController(),
+                            analyticsReporter = appContainer.analyticsReporter
+                        )
                     RootScreen(
                         appState = appState
                     )

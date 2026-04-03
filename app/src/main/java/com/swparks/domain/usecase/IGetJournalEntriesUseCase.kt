@@ -5,5 +5,8 @@ import kotlinx.coroutines.flow.Flow
 
 /** Интерфейс для use case получения списка записей в дневнике. Создан для удобства тестирования ViewModels. */
 interface IGetJournalEntriesUseCase {
-    operator fun invoke(userId: Long, journalId: Long): Flow<List<JournalEntry>>
+    operator fun invoke(
+        userId: Long,
+        journalId: Long
+    ): Flow<List<JournalEntry>>
 }

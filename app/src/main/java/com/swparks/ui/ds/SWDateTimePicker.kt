@@ -93,10 +93,11 @@ fun SWDateTimePicker(config: DateTimePickerConfig) {
     var selectedDate by remember(config.initialSelectedDateMillis) {
         mutableLongStateOf(config.initialSelectedDateMillis ?: System.currentTimeMillis())
     }
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = selectedDate,
-        yearRange = config.yearRange
-    )
+    val datePickerState =
+        rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate,
+            yearRange = config.yearRange
+        )
 
     LaunchedEffect(selectedDate) {
         datePickerState.selectedDateMillis = selectedDate
@@ -108,11 +109,12 @@ fun SWDateTimePicker(config: DateTimePickerConfig) {
     var selectedMinute by remember(config.initialMinute) {
         mutableIntStateOf(config.initialMinute ?: 0)
     }
-    val timePickerState = rememberTimePickerState(
-        initialHour = selectedHour,
-        initialMinute = selectedMinute,
-        is24Hour = true
-    )
+    val timePickerState =
+        rememberTimePickerState(
+            initialHour = selectedHour,
+            initialMinute = selectedMinute,
+            is24Hour = true
+        )
 
     LaunchedEffect(config.initialHour, config.initialMinute) {
         val initialHour = config.initialHour ?: 0
@@ -131,13 +133,14 @@ fun SWDateTimePicker(config: DateTimePickerConfig) {
         Text(text = stringResource(id = config.mode.titleID))
         PickerButtons(
             config = config,
-            state = PickerButtonsState(
-                selectedDate = selectedDate,
-                datePickerState = datePickerState,
-                selectedHour = selectedHour,
-                selectedMinute = selectedMinute,
-                timePickerState = timePickerState
-            ),
+            state =
+                PickerButtonsState(
+                    selectedDate = selectedDate,
+                    datePickerState = datePickerState,
+                    selectedHour = selectedHour,
+                    selectedMinute = selectedMinute,
+                    timePickerState = timePickerState
+                ),
             onDateSelected = { dateLong ->
                 selectedDate = dateLong
                 config.onClickSaveDate(dateLong)
@@ -173,22 +176,26 @@ private fun PickerButtons(
         verticalAlignment = Alignment.CenterVertically
     ) {
         SWDatePicker(
-            config = DatePickerConfig(
-                initialSelectedDateMillis = state.selectedDate,
-                formattedString = DateFormat.getDateInstance(DateFormat.MEDIUM)
-                    .format(state.selectedDate),
-                state = state.datePickerState,
-                enabled = config.enabled,
-                onClickSaveDate = onDateSelected
-            )
+            config =
+                DatePickerConfig(
+                    initialSelectedDateMillis = state.selectedDate,
+                    formattedString =
+                        DateFormat
+                            .getDateInstance(DateFormat.MEDIUM)
+                            .format(state.selectedDate),
+                    state = state.datePickerState,
+                    enabled = config.enabled,
+                    onClickSaveDate = onDateSelected
+                )
         )
         if (config.mode.showTimePicker) {
-            val timeString = String.format(
-                Locale.getDefault(),
-                "%02d:%02d",
-                state.selectedHour,
-                state.selectedMinute
-            )
+            val timeString =
+                String.format(
+                    Locale.getDefault(),
+                    "%02d:%02d",
+                    state.selectedHour,
+                    state.selectedMinute
+                )
             SWTimePicker(
                 state = state.timePickerState,
                 formattedString = timeString,
@@ -198,7 +205,6 @@ private fun PickerButtons(
         }
     }
 }
-
 
 /**
  * Конфигурация для отображения пикера даты
@@ -224,14 +230,15 @@ data class DatePickerConfig(
 private fun SWDatePicker(config: DatePickerConfig) {
     var showDatePicker by remember { mutableStateOf(false) }
     SWButton(
-        config = ButtonConfig(
-            modifier = config.modifier,
-            text = config.formattedString,
-            size = SWButtonSize.SMALL,
-            mode = SWButtonMode.TINTED,
-            enabled = config.enabled,
-            onClick = { showDatePicker = true }
-        )
+        config =
+            ButtonConfig(
+                modifier = config.modifier,
+                text = config.formattedString,
+                size = SWButtonSize.SMALL,
+                mode = SWButtonMode.TINTED,
+                enabled = config.enabled,
+                onClick = { showDatePicker = true }
+            )
     )
     if (showDatePicker) {
         DatePickerDialog(
@@ -264,7 +271,6 @@ private fun SWDatePicker(config: DatePickerConfig) {
     }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SWTimePicker(
@@ -276,23 +282,25 @@ private fun SWTimePicker(
 ) {
     var showTimePicker by remember { mutableStateOf(false) }
     SWButton(
-        config = ButtonConfig(
-            modifier = modifier,
-            text = formattedString,
-            size = SWButtonSize.SMALL,
-            mode = SWButtonMode.TINTED,
-            enabled = enabled,
-            onClick = { showTimePicker = true }
-        )
+        config =
+            ButtonConfig(
+                modifier = modifier,
+                text = formattedString,
+                size = SWButtonSize.SMALL,
+                mode = SWButtonMode.TINTED,
+                enabled = enabled,
+                onClick = { showTimePicker = true }
+            )
     )
     if (showTimePicker) {
         AlertDialog(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(size = dimensionResource(R.dimen.spacing_small))
-                ),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(size = dimensionResource(R.dimen.spacing_small))
+                    ),
             onDismissRequest = { showTimePicker = false }
         ) {
             Column(
@@ -301,9 +309,10 @@ private fun SWTimePicker(
             ) {
                 TimePicker(state = state)
                 Row(
-                    modifier = Modifier
-                        .padding(top = dimensionResource(id = R.dimen.spacing_small))
-                        .fillMaxWidth(),
+                    modifier =
+                        Modifier
+                            .padding(top = dimensionResource(id = R.dimen.spacing_small))
+                            .fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = { showTimePicker = false }) {
@@ -343,21 +352,23 @@ fun SWDateTimePickerPreview() {
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
             ) {
                 SWDateTimePicker(
-                    config = DateTimePickerConfig(
-                        mode = SWDatePickerMode.BIRTHDAY,
-                        yearRange = 1900..2010,
-                        onClickSaveDate = {}
-                    )
+                    config =
+                        DateTimePickerConfig(
+                            mode = SWDatePickerMode.BIRTHDAY,
+                            yearRange = 1900..2010,
+                            onClickSaveDate = {}
+                        )
                 )
                 SWDateTimePicker(
-                    config = DateTimePickerConfig(
-                        mode = SWDatePickerMode.EVENT,
-                        yearRange = 2023..2024,
-                        initialHour = 12,
-                        initialMinute = 22,
-                        onClickSaveDate = {},
-                        onClickSaveTime = { _, _ -> }
-                    )
+                    config =
+                        DateTimePickerConfig(
+                            mode = SWDatePickerMode.EVENT,
+                            yearRange = 2023..2024,
+                            initialHour = 12,
+                            initialMinute = 22,
+                            onClickSaveDate = {},
+                            onClickSaveTime = { _, _ -> }
+                        )
                 )
             }
         }

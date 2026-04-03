@@ -58,26 +58,34 @@ sealed class EventDetailEvent {
      *
      * @param photo Фотография для удаления
      */
-    data class ShowDeletePhotoConfirmDialog(val photo: Photo) : EventDetailEvent()
+    data class ShowDeletePhotoConfirmDialog(
+        val photo: Photo
+    ) : EventDetailEvent()
 
     /**
      * Мероприятие успешно удалено, нужно закрыть экран.
      *
      * @param eventId Идентификатор удаленного мероприятия
      */
-    data class EventDeleted(val eventId: Long) : EventDetailEvent()
+    data class EventDeleted(
+        val eventId: Long
+    ) : EventDetailEvent()
 
     /**
      * Навигация к экрану редактирования мероприятия.
      *
      * @param event Мероприятие для редактирования
      */
-    data class NavigateToEditEvent(val event: Event) : EventDetailEvent()
+    data class NavigateToEditEvent(
+        val event: Event
+    ) : EventDetailEvent()
 
     /**
      * Фото успешно удалено.
      */
-    data class PhotoDeleted(val photoId: Long) : EventDetailEvent()
+    data class PhotoDeleted(
+        val photoId: Long
+    ) : EventDetailEvent()
 
     /**
      * Открыть системный календарь для добавления события.
@@ -179,15 +187,16 @@ class EventDetailViewModel(
     private val userNotifier: UserNotifier,
     private val logger: Logger,
     private val deleteEventUseCase: DeleteEventUseCase,
-    private val resourcesProvider: ResourcesProvider,
-) : ViewModel(), IEventDetailViewModel {
-
+    private val resourcesProvider: ResourcesProvider
+) : ViewModel(),
+    IEventDetailViewModel {
     companion object {
         private const val TAG = "EventDetailViewModel"
         private const val EVENT_ID_KEY = "eventId"
         private const val NO_CALENDAR_APP_MESSAGE = "Нет календарного приложения на устройстве."
         private const val UNKNOWN_COMMENT_AUTHOR = "неизвестен"
 
+        @Suppress("LongParameterList")
         fun factory(
             swRepository: SWRepository,
             countriesRepository: CountriesRepository,
@@ -195,25 +204,28 @@ class EventDetailViewModel(
             userNotifier: UserNotifier,
             logger: Logger,
             deleteEventUseCase: DeleteEventUseCase,
-            resourcesProvider: ResourcesProvider,
-        ): ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val savedStateHandle = createSavedStateHandle()
-                EventDetailViewModel(
-                    swRepository = swRepository,
-                    countriesRepository = countriesRepository,
-                    userPreferencesRepository = userPreferencesRepository,
-                    savedStateHandle = savedStateHandle,
-                    userNotifier = userNotifier,
-                    logger = logger,
-                    deleteEventUseCase = deleteEventUseCase,
-                    resourcesProvider = resourcesProvider
-                )
+            resourcesProvider: ResourcesProvider
+        ): ViewModelProvider.Factory =
+            viewModelFactory {
+                initializer {
+                    val savedStateHandle = createSavedStateHandle()
+                    EventDetailViewModel(
+                        swRepository = swRepository,
+                        countriesRepository = countriesRepository,
+                        userPreferencesRepository = userPreferencesRepository,
+                        savedStateHandle = savedStateHandle,
+                        userNotifier = userNotifier,
+                        logger = logger,
+                        deleteEventUseCase = deleteEventUseCase,
+                        resourcesProvider = resourcesProvider
+                    )
+                }
             }
-        }
     }
 
-    private enum class ManageEventAction(val logName: String) {
+    private enum class ManageEventAction(
+        val logName: String
+    ) {
         DeleteEventClick("delete_event_click"),
         DeleteEventConfirm("delete_event_confirm"),
         DeletePhotoClick("delete_photo_click"),
@@ -297,7 +309,8 @@ class EventDetailViewModel(
         if (currentState is EventDetailUIState.Content) {
             val eventAuthorId = currentState.event.author.id
             _isEventAuthor.value =
-                _currentUserId.value != null && _currentUserId.value == eventAuthorId
+                _currentUserId.value != null &&
+                    _currentUserId.value == eventAuthorId
             logger.d(
                 TAG,
                 "isEventAuthor: ${_isEventAuthor.value} " +
@@ -306,11 +319,10 @@ class EventDetailViewModel(
         }
     }
 
-    private fun getEventId(): Long? {
-        return savedStateHandle.get<Long>(EVENT_ID_KEY)
+    private fun getEventId(): Long? =
+        savedStateHandle.get<Long>(EVENT_ID_KEY)
             ?: savedStateHandle.get<Int>(EVENT_ID_KEY)?.toLong()
             ?: savedStateHandle.get<String>(EVENT_ID_KEY)?.toLongOrNull()
-    }
 
     private fun canManageEvent(action: ManageEventAction): Boolean {
         val canManage = _isAuthorized.value && _isEventAuthor.value
@@ -339,18 +351,20 @@ class EventDetailViewModel(
         logger.d(TAG, "Загрузка мероприятия id=$eventId")
         viewModelScope.launch {
             try {
+                val cachedEvent = swRepository.getEventFromCache(eventId)
+                if (cachedEvent != null) {
+                    logger.d(TAG, "Кэш найден для мероприятия id=$eventId, показываем контент")
+                    showEventContent(cachedEvent)
+                    refreshEventContentInBackground(eventId)
+                    return@launch
+                }
+
                 val result = swRepository.getEvent(eventId)
                 result.fold(
                     onSuccess = { event ->
                         logger.i(TAG, "Мероприятие загружено: ${event.title}")
-                        val address = buildAddress(event.countryID, event.cityID, event.address)
-                        val authorAddress = buildAuthorAddress(event.author)
-                        _uiState.value = EventDetailUIState.Content(
-                            event = event,
-                            address = address,
-                            authorAddress = authorAddress
-                        )
-                        updateIsEventAuthor()
+                        showEventContent(event)
+                        cacheEventIfNeeded(event)
                     },
                     onFailure = { exception ->
                         logger.e(
@@ -371,13 +385,38 @@ class EventDetailViewModel(
         }
     }
 
-    private suspend fun buildAddress(countryId: Int, cityId: Int, serverAddress: String?): String {
+    private suspend fun buildAddress(
+        countryId: Int,
+        cityId: Int,
+        serverAddress: String?
+    ): String {
         val address = buildAddressNullable(countryId, cityId, serverAddress)
         return address ?: "$countryId, $cityId"
     }
 
-    private suspend fun buildAuthorAddress(user: User): String {
-        return buildAddressNullable(user.countryID, user.cityID, null) ?: ""
+    private suspend fun buildAuthorAddress(user: User): String =
+        buildAddressNullable(
+            user.countryID,
+            user.cityID,
+            null
+        ) ?: ""
+
+    private suspend fun showEventContent(event: Event) {
+        val address = buildAddress(event.countryID, event.cityID, event.address)
+        val authorAddress = buildAuthorAddress(event.author)
+        _uiState.value =
+            EventDetailUIState.Content(
+                event = event,
+                address = address,
+                authorAddress = authorAddress
+            )
+        updateIsEventAuthor()
+    }
+
+    private suspend fun cacheEventIfNeeded(event: Event) {
+        if (!event.isCurrent && event.isFull) {
+            swRepository.saveEventFull(event)
+        }
     }
 
     private suspend fun buildAddressNullable(
@@ -410,41 +449,83 @@ class EventDetailViewModel(
     override fun refresh() {
         logger.d(TAG, "Pull-to-refresh: обновление мероприятия")
         viewModelScope.launch {
+            val previousState = _uiState.value
+            val eventId = getEventId()
+
+            if (eventId == null) {
+                logger.e(TAG, "eventId отсутствует при refresh")
+                if (previousState !is EventDetailUIState.Content) {
+                    _uiState.value = EventDetailUIState.Error("Неверный идентификатор мероприятия")
+                }
+                return@launch
+            }
+
+            if (previousState is EventDetailUIState.Error) {
+                _uiState.value = EventDetailUIState.InitialLoading
+            }
+
             _isRefreshing.value = true
             try {
-                val eventId = getEventId()
-                if (eventId == null) {
-                    logger.e(TAG, "eventId отсутствует при refresh")
-                    return@launch
-                }
-                refreshEventContent(eventId)
+                refreshEventContent(eventId, previousState)
             } finally {
                 _isRefreshing.value = false
             }
         }
     }
 
-    private suspend fun refreshEventContent(eventId: Long) {
+    private suspend fun refreshEventContent(
+        eventId: Long,
+        previousState: EventDetailUIState
+    ) {
+        try {
+            val result = swRepository.getEvent(eventId)
+            result.fold(
+                onSuccess = { event ->
+                    logger.i(TAG, "Мероприятие обновлено: ${event.title}")
+                    showEventContent(event)
+                    cacheEventIfNeeded(event)
+                },
+                onFailure = { exception ->
+                    logger.e(
+                        TAG,
+                        "Ошибка обновления мероприятия: ${exception.message}",
+                        exception
+                    )
+                    handleError(exception, "обновлении мероприятия")
+                    applyRefreshFailureState(previousState, exception.message)
+                }
+            )
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            logger.e(TAG, "Исключение при обновлении мероприятия: ${e.message}", e)
+            handleError(e, "обновлении мероприятия")
+            applyRefreshFailureState(previousState, e.message)
+        }
+    }
+
+    private fun applyRefreshFailureState(
+        previousState: EventDetailUIState,
+        message: String?
+    ) {
+        if (previousState !is EventDetailUIState.Content) {
+            _uiState.value = EventDetailUIState.Error(message)
+        }
+    }
+
+    private suspend fun refreshEventContentInBackground(eventId: Long) {
         val result = swRepository.getEvent(eventId)
         result.fold(
             onSuccess = { event ->
-                logger.i(TAG, "Мероприятие обновлено: ${event.title}")
-                val address = buildAddress(event.countryID, event.cityID, event.address)
-                val authorAddress = buildAuthorAddress(event.author)
-                _uiState.value = EventDetailUIState.Content(
-                    event = event,
-                    address = address,
-                    authorAddress = authorAddress
-                )
-                updateIsEventAuthor()
+                logger.i(TAG, "Фоновое обновление мероприятия: ${event.title}")
+                val currentState = _uiState.value
+                if (currentState is EventDetailUIState.Content) {
+                    showEventContent(event)
+                    cacheEventIfNeeded(event)
+                }
             },
             onFailure = { exception ->
-                logger.e(
-                    TAG,
-                    "Ошибка обновления мероприятия: ${exception.message}",
-                    exception
-                )
-                handleError(exception, "обновлении мероприятия")
+                logger.w(TAG, "Фоновое обновление мероприятия не удалось: ${exception.message}")
+                handleError(exception, "фоновом обновлении мероприятия")
             }
         )
     }
@@ -629,17 +710,20 @@ class EventDetailViewModel(
 
                 if (result.isSuccess) {
                     val currentUser = swRepository.getCurrentUserFlow().first()
-                    val updatedUsers = if (newValue && currentUser != null) {
-                        (currentState.event.trainingUsers.orEmpty() + currentUser)
-                            .distinctBy { it.id }
-                    } else {
-                        currentState.event.trainingUsers.orEmpty()
-                            .filterNot { it.id == _currentUserId.value }
-                    }
-                    val finalEvent = optimisticEvent.copy(
-                        trainingUsers = updatedUsers,
-                        trainingUsersCount = updatedUsers.size
-                    )
+                    val updatedUsers =
+                        if (newValue && currentUser != null) {
+                            (currentState.event.trainingUsers.orEmpty() + currentUser)
+                                .distinctBy { it.id }
+                        } else {
+                            currentState.event.trainingUsers
+                                .orEmpty()
+                                .filterNot { it.id == _currentUserId.value }
+                        }
+                    val finalEvent =
+                        optimisticEvent.copy(
+                            trainingUsers = updatedUsers,
+                            trainingUsersCount = updatedUsers.size
+                        )
                     _uiState.value = currentState.copy(event = finalEvent)
                     logger.i(
                         TAG,
@@ -754,13 +838,19 @@ class EventDetailViewModel(
         }
     }
 
-    override fun onCommentActionClick(commentId: Long, action: CommentAction) {
+    override fun onCommentActionClick(
+        commentId: Long,
+        action: CommentAction
+    ) {
         val currentState = _uiState.value
         if (currentState !is EventDetailUIState.Content) return
 
         logger.d(TAG, "Нажато действие $action для комментария id=$commentId")
 
-        val comment = currentState.event.comments.orEmpty().firstOrNull { it.id == commentId }
+        val comment =
+            currentState.event.comments
+                .orEmpty()
+                .firstOrNull { it.id == commentId }
         if (comment == null) {
             logger.w(TAG, "Комментарий не найден: id=$commentId")
             return
@@ -773,41 +863,54 @@ class EventDetailViewModel(
         }
     }
 
-    private fun handleEditComment(comment: Comment, eventId: Long) {
+    private fun handleEditComment(
+        comment: Comment,
+        eventId: Long
+    ) {
         viewModelScope.launch {
             _events.emit(
                 EventDetailEvent.OpenCommentTextEntry(
-                    mode = TextEntryMode.EditEvent(
-                        editInfo = EditInfo(
-                            parentObjectId = eventId,
-                            entryId = comment.id,
-                            oldEntry = comment.parsedBody.orEmpty()
+                    mode =
+                        TextEntryMode.EditEvent(
+                            editInfo =
+                                EditInfo(
+                                    parentObjectId = eventId,
+                                    entryId = comment.id,
+                                    oldEntry = comment.parsedBody.orEmpty()
+                                )
                         )
-                    )
                 )
             )
         }
     }
 
-    private fun handleReportComment(comment: Comment, eventTitle: String) {
-        val complaintAuthor = comment.user?.name?.ifBlank { UNKNOWN_COMMENT_AUTHOR }
-            ?: UNKNOWN_COMMENT_AUTHOR
+    private fun handleReportComment(
+        comment: Comment,
+        eventTitle: String
+    ) {
+        val complaintAuthor =
+            comment.user?.name?.ifBlank { UNKNOWN_COMMENT_AUTHOR }
+                ?: UNKNOWN_COMMENT_AUTHOR
         val complaintText = comment.parsedBody ?: comment.body.orEmpty()
 
         viewModelScope.launch {
             _events.emit(
                 EventDetailEvent.SendCommentComplaint(
-                    complaint = Complaint.EventComment(
-                        eventTitle = eventTitle,
-                        author = complaintAuthor,
-                        commentText = complaintText
-                    )
+                    complaint =
+                        Complaint.EventComment(
+                            eventTitle = eventTitle,
+                            author = complaintAuthor,
+                            commentText = complaintText
+                        )
                 )
             )
         }
     }
 
-    private fun handleDeleteComment(comment: Comment, commentId: Long) {
+    private fun handleDeleteComment(
+        comment: Comment,
+        commentId: Long
+    ) {
         val isOwnComment = comment.user?.id != null && comment.user.id == _currentUserId.value
         if (!isOwnComment) {
             logger.w(TAG, "Отклонено удаление комментария id=$commentId: не автор")
@@ -829,14 +932,15 @@ class EventDetailViewModel(
         viewModelScope.launch {
             _isRefreshing.value = true
             try {
-                val result = swRepository.deleteComment(
-                    option = TextEntryOption.Event(currentState.event.id),
-                    commentId = commentId
-                )
+                val result =
+                    swRepository.deleteComment(
+                        option = TextEntryOption.Event(currentState.event.id),
+                        commentId = commentId
+                    )
                 result.fold(
                     onSuccess = {
                         logger.i(TAG, "Комментарий id=$commentId успешно удален")
-                        refreshEventContent(currentState.event.id)
+                        refreshEventContent(currentState.event.id, currentState)
                     },
                     onFailure = { exception ->
                         logger.e(
@@ -868,15 +972,19 @@ class EventDetailViewModel(
         if (currentState is EventDetailUIState.Content) {
             logger.d(TAG, "Локальное удаление фото id=$photoId из UI с перенумерацией")
             val updatedPhotos = currentState.event.photos.removePhotoById(photoId)
-            _uiState.value = currentState.copy(
-                event = currentState.event.copy(photos = updatedPhotos)
-            )
+            _uiState.value =
+                currentState.copy(
+                    event = currentState.event.copy(photos = updatedPhotos)
+                )
         }
     }
 
     // ==================== Обработка ошибок ====================
 
-    private fun handleError(exception: Throwable, operation: String) {
+    private fun handleError(
+        exception: Throwable,
+        operation: String
+    ) {
         when (exception) {
             is NotFoundException.EventNotFound -> {
                 viewModelScope.launch {
@@ -929,13 +1037,13 @@ class EventDetailViewModel(
             val address = buildAddress(event.countryID, event.cityID, event.address)
             val authorAddress = buildAuthorAddress(event.author)
 
-            _uiState.value = EventDetailUIState.Content(
-                event = event,
-                address = address,
-                authorAddress = authorAddress
-            )
+            _uiState.value =
+                EventDetailUIState.Content(
+                    event = event,
+                    address = address,
+                    authorAddress = authorAddress
+                )
             updateIsEventAuthor()
         }
     }
-
 }

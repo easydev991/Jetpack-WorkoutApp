@@ -12,27 +12,27 @@ class DefaultCreateParkLocationHandler(
     private val locationService: LocationService,
     private val userNotifier: UserNotifier
 ) : ICreateParkLocationHandler {
-
     override suspend fun invoke(): Result<NewParkDraft> {
-        val result = locationService.getCurrentLocation().fold(
-            onSuccess = { coordinates ->
-                Result.success(
-                    NewParkDraft.EMPTY.withCoordinates(
-                        coordinates.latitude,
-                        coordinates.longitude
+        val result =
+            locationService.getCurrentLocation().fold(
+                onSuccess = { coordinates ->
+                    Result.success(
+                        NewParkDraft.EMPTY.withCoordinates(
+                            coordinates.latitude,
+                            coordinates.longitude
+                        )
                     )
-                )
-            },
-            onFailure = { error ->
-                userNotifier.handleError(
-                    AppError.LocationFailed(
-                        message = error.message ?: "Location request failed",
-                        cause = error
+                },
+                onFailure = { error ->
+                    userNotifier.handleError(
+                        AppError.LocationFailed(
+                            message = error.message ?: "Location request failed",
+                            cause = error
+                        )
                     )
-                )
-                Result.failure(error)
-            }
-        )
+                    Result.failure(error)
+                }
+            )
         return result
     }
 }

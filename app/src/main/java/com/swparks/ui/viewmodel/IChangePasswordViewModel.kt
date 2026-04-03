@@ -10,7 +10,10 @@ interface IChangePasswordViewModel {
     val events: Flow<ChangePasswordEvent>
 
     fun onCurrentPasswordChange(value: String)
+
     fun onNewPasswordChange(value: String)
+
     fun onConfirmPasswordChange(value: String)
+
     fun onSaveClick()
 }

@@ -4,7 +4,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class UserTrainingParkEntityTest {
-
     @Test
     fun creation_withUserIdAndParkId_storesValues() {
         val userId = 1L
@@ -18,11 +17,12 @@ class UserTrainingParkEntityTest {
 
     @Test
     fun creation_withPosition_storesPosition() {
-        val entity = UserTrainingParkEntity(
-            userId = 1L,
-            parkId = 100L,
-            position = 5
-        )
+        val entity =
+            UserTrainingParkEntity(
+                userId = 1L,
+                parkId = 100L,
+                position = 5
+            )
 
         assertEquals(5, entity.position)
     }

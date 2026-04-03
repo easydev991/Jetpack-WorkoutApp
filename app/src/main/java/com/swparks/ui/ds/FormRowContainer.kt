@@ -40,12 +40,13 @@ fun FormRowContainer(config: FormRowConfig) {
     Row(
         horizontalArrangement = config.horizontalArrangement,
         verticalAlignment = config.verticalAlignment,
-        modifier = config.modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = config.horizontalPadding,
-                vertical = config.verticalPadding
-            ),
+        modifier =
+            config.modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = config.horizontalPadding,
+                    vertical = config.verticalPadding
+                ),
         content = config.content
     )
 }

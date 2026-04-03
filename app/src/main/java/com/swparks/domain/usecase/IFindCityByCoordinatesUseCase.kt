@@ -13,5 +13,9 @@ interface IFindCityByCoordinatesUseCase {
      * @param longitude Долгота
      * @return ID города или null, если город не найден / id не конвертируется в Int
      */
-    suspend operator fun invoke(locality: String?, latitude: Double, longitude: Double): Int?
+    suspend operator fun invoke(
+        locality: String?,
+        latitude: Double,
+        longitude: Double
+    ): Int?
 }

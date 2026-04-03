@@ -65,7 +65,7 @@ fun EventsScreen(
     viewModel: IEventsViewModel = viewModel<EventsViewModel>(factory = EventsViewModel.Factory),
     onNavigateToEventDetail: (Long) -> Unit = {},
     onNavigateToCreateEvent: () -> Unit = {},
-    onNavigateToParks: () -> Unit = {},
+    onNavigateToParks: () -> Unit = {}
 ) {
     val uiState by viewModel.eventsUIState.collectAsState()
     val isAuthorized by viewModel.isAuthorized.collectAsState()
@@ -92,14 +92,15 @@ fun EventsScreen(
             text = { Text(text = stringResource(R.string.event_creation_rule_message)) },
             confirmButton = {
                 SWButton(
-                    config = ButtonConfig(
-                        size = SWButtonSize.SMALL,
-                        text = stringResource(R.string.event_creation_rule_open_parks),
-                        onClick = {
-                            showEventCreationRuleDialog = false
-                            onNavigateToParks()
-                        }
-                    )
+                    config =
+                        ButtonConfig(
+                            size = SWButtonSize.SMALL,
+                            text = stringResource(R.string.event_creation_rule_open_parks),
+                            onClick = {
+                                showEventCreationRuleDialog = false
+                                onNavigateToParks()
+                            }
+                        )
                 )
             },
             dismissButton = {
@@ -149,34 +150,37 @@ private fun EventsTabRow(
 ) {
     PrimaryTabRow(
         selectedTabIndex = selectedTabIndex,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                start = dimensionResource(id = R.dimen.spacing_regular),
-                end = dimensionResource(id = R.dimen.spacing_regular),
-                top = dimensionResource(id = R.dimen.spacing_small)
-            )
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(
+                    start = dimensionResource(id = R.dimen.spacing_regular),
+                    end = dimensionResource(id = R.dimen.spacing_regular),
+                    top = dimensionResource(id = R.dimen.spacing_small)
+                )
     ) {
         EventKind.entries.forEachIndexed { index, eventKind ->
             Tab(
-                modifier = Modifier
-                    .focusProperties { canFocus = false }
-                    .testTag(
-                        if (eventKind == EventKind.FUTURE) {
-                            ScreenshotTestTags.EVENTS_TAB_FUTURE
-                        } else {
-                            ScreenshotTestTags.EVENTS_TAB_PAST
-                        }
-                    ),
+                modifier =
+                    Modifier
+                        .focusProperties { canFocus = false }
+                        .testTag(
+                            if (eventKind == EventKind.FUTURE) {
+                                ScreenshotTestTags.EVENTS_TAB_FUTURE
+                            } else {
+                                ScreenshotTestTags.EVENTS_TAB_PAST
+                            }
+                        ),
                 selected = selectedTabIndex == index,
                 enabled = !isRefreshing,
                 onClick = { onTabSelected(eventKind) },
                 text = {
                     Text(
-                        text = when (eventKind) {
-                            EventKind.FUTURE -> stringResource(id = R.string.future_events)
-                            EventKind.PAST -> stringResource(id = R.string.past_events)
-                        }
+                        text =
+                            when (eventKind) {
+                                EventKind.FUTURE -> stringResource(id = R.string.future_events)
+                                EventKind.PAST -> stringResource(id = R.string.past_events)
+                            }
                     )
                 }
             )
@@ -193,20 +197,22 @@ private fun EventsStateContent(
     modifier: Modifier = Modifier
 ) {
     when (uiState) {
-        is EventsUIState.InitialLoading -> Box(modifier = modifier.fillMaxSize()) {
-            LoadingOverlayView()
-        }
+        is EventsUIState.InitialLoading ->
+            Box(modifier = modifier.fillMaxSize()) {
+                LoadingOverlayView()
+            }
 
         is EventsUIState.Content -> {
             Box(modifier = modifier.fillMaxSize()) {
                 EventsListWithRefresh(
-                    state = EventsListState(
-                        events = uiState.events,
-                        addresses = uiState.addresses,
-                        selectedTab = uiState.selectedTab,
-                        isRefreshing = isRefreshing,
-                        isLoading = uiState.isLoading
-                    ),
+                    state =
+                        EventsListState(
+                            events = uiState.events,
+                            addresses = uiState.addresses,
+                            selectedTab = uiState.selectedTab,
+                            isRefreshing = isRefreshing,
+                            isLoading = uiState.isLoading
+                        ),
                     onAction = { action ->
                         when (action) {
                             is EventsListAction.Refresh -> onRefresh()
@@ -220,10 +226,11 @@ private fun EventsStateContent(
             }
         }
 
-        is EventsUIState.Error -> ErrorContentView(
-            retryAction = onRefresh,
-            message = uiState.message
-        )
+        is EventsUIState.Error ->
+            ErrorContentView(
+                retryAction = onRefresh,
+                message = uiState.message
+            )
     }
 }
 
@@ -253,16 +260,18 @@ private fun EventsListWithRefresh(
     val content: @Composable () -> Unit = {
         if (state.events.isEmpty() && !state.isLoading) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState()),
                 contentAlignment = Alignment.Center
             ) {
                 EmptyStateView(
-                    text = when (state.selectedTab) {
-                        EventKind.FUTURE -> stringResource(id = R.string.events_empty_future)
-                        EventKind.PAST -> stringResource(id = R.string.events_empty_past)
-                    }
+                    text =
+                        when (state.selectedTab) {
+                            EventKind.FUTURE -> stringResource(id = R.string.events_empty_future)
+                            EventKind.PAST -> stringResource(id = R.string.events_empty_past)
+                        }
                 )
             }
         } else if (state.events.isNotEmpty()) {
@@ -296,33 +305,37 @@ private fun EventsList(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            start = dimensionResource(id = R.dimen.spacing_regular),
-            top = dimensionResource(id = R.dimen.spacing_small),
-            end = dimensionResource(id = R.dimen.spacing_regular),
-            bottom = dimensionResource(id = R.dimen.spacing_regular)
-        ),
+        contentPadding =
+            PaddingValues(
+                start = dimensionResource(id = R.dimen.spacing_regular),
+                top = dimensionResource(id = R.dimen.spacing_small),
+                end = dimensionResource(id = R.dimen.spacing_regular),
+                bottom = dimensionResource(id = R.dimen.spacing_regular)
+            ),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_small)),
-        horizontalAlignment = Alignment.Start,
+        horizontalAlignment = Alignment.Start
     ) {
         items(
             events,
             key = { it.id }
         ) { event ->
             EventRowView(
-                data = EventRowData(
-                    modifier = Modifier.testTag("${ScreenshotTestTags.EVENT_ROW_PREFIX}${event.id}"),
-                    imageStringURL = event.preview,
-                    name = event.title,
-                    dateString = DateFormatter.formatDate(
-                        context = context,
-                        dateString = event.beginDate
-                    ),
-                    address = addresses[event.countryID to event.cityID]
-                        ?: "${event.countryID}, ${event.cityID}",
-                    enabled = enabled,
-                    onClick = { onEventClick(event) }
-                )
+                data =
+                    EventRowData(
+                        modifier = Modifier.testTag("${ScreenshotTestTags.EVENT_ROW_PREFIX}${event.id}"),
+                        imageStringURL = event.preview,
+                        name = event.title,
+                        dateString =
+                            DateFormatter.formatDate(
+                                context = context,
+                                dateString = event.beginDate
+                            ),
+                        address =
+                            addresses[event.countryID to event.cityID]
+                                ?: "${event.countryID}, ${event.cityID}",
+                        enabled = enabled,
+                        onClick = { onEventClick(event) }
+                    )
             )
         }
     }
@@ -334,6 +347,6 @@ fun EventsTopAppBar() {
     CenterAlignedTopAppBar(
         title = {
             Text(text = stringResource(id = R.string.events_title))
-        },
+        }
     )
 }

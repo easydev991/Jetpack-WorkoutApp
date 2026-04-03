@@ -132,7 +132,6 @@ interface IRegisterViewModel {
      */
     fun clearErrors()
 
-
     /**
      * Обрабатывает действие из UI.
      */

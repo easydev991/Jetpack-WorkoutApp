@@ -146,15 +146,16 @@ class DialogResponseTest {
     @Test
     fun dialog_whenAllFieldsArePresent_thenCreatesCorrectly() {
         // Given
-        val dialog = createTestDialog(
-            id = 1L,
-            anotherUserId = 2,
-            name = "Test Dialog",
-            image = "https://example.com/image.jpg",
-            lastMessageText = "Hello",
-            lastMessageDate = "2024-01-01",
-            count = 3
-        )
+        val dialog =
+            createTestDialog(
+                id = 1L,
+                anotherUserId = 2,
+                name = "Test Dialog",
+                image = "https://example.com/image.jpg",
+                lastMessageText = "Hello",
+                lastMessageDate = "2024-01-01",
+                count = 3
+            )
 
         // When & Then
         assertEquals(1L, dialog.id)

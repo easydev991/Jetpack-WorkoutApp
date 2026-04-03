@@ -12,13 +12,14 @@ import kotlinx.coroutines.launch
 internal fun createAppForegroundSyncObserver(
     scope: CoroutineScope,
     onSyncCountries: suspend () -> Result<Unit>
-): LifecycleEventObserver = LifecycleEventObserver { _, event ->
-    if (event == Lifecycle.Event.ON_START) {
-        scope.launch {
-            runCatching { onSyncCountries() }
+): LifecycleEventObserver =
+    LifecycleEventObserver { _, event ->
+        if (event == Lifecycle.Event.ON_START) {
+            scope.launch {
+                runCatching { onSyncCountries() }
+            }
         }
     }
-}
 
 @Composable
 fun AppForegroundSyncHandler(syncCountriesUseCase: SyncCountriesUseCase) {

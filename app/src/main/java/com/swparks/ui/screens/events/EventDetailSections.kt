@@ -60,7 +60,9 @@ import com.swparks.util.parseHtmlOrNull
 
 internal sealed class EventHeaderAction {
     object OpenMap : EventHeaderAction()
+
     object Route : EventHeaderAction()
+
     object AddToCalendar : EventHeaderAction()
 }
 
@@ -146,9 +148,10 @@ internal fun EventHeaderMapCalendarSection(
     onAction: (EventHeaderAction) -> Unit
 ) {
     FormCardContainer(
-        params = FormCardContainerParams(
-            Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
-        )
+        params =
+            FormCardContainerParams(
+                Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
+            )
     ) {
         EventHeaderContent(
             event = event,
@@ -167,12 +170,14 @@ private fun EventHeaderContent(
     onAction: (EventHeaderAction) -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(dimensionResource(R.dimen.spacing_regular)),
-        verticalArrangement = Arrangement.spacedBy(
-            dimensionResource(R.dimen.spacing_small)
-        )
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(dimensionResource(R.dimen.spacing_regular)),
+        verticalArrangement =
+            Arrangement.spacedBy(
+                dimensionResource(R.dimen.spacing_small)
+            )
     ) {
         Text(
             text = event.title,
@@ -181,10 +186,11 @@ private fun EventHeaderContent(
 
         LabeledValueRow(
             label = stringResource(R.string.`when`),
-            value = DateFormatter.formatDate(
-                context = LocalContext.current,
-                dateString = event.beginDate
-            )
+            value =
+                DateFormatter.formatDate(
+                    context = LocalContext.current,
+                    dateString = event.beginDate
+                )
         )
 
         LabeledValueRow(
@@ -201,26 +207,28 @@ private fun EventHeaderContent(
         }
 
         LocationInfoView(
-            config = LocationInfoConfig(
-                latitude = event.latitude,
-                longitude = event.longitude,
-                address = address,
-                enabled = !isRefreshing,
-                onOpenMapClick = { onAction(EventHeaderAction.OpenMap) },
-                onRouteClick = { onAction(EventHeaderAction.Route) }
-            )
+            config =
+                LocationInfoConfig(
+                    latitude = event.latitude,
+                    longitude = event.longitude,
+                    address = address,
+                    enabled = !isRefreshing,
+                    onOpenMapClick = { onAction(EventHeaderAction.OpenMap) },
+                    onRouteClick = { onAction(EventHeaderAction.Route) }
+                )
         )
 
         if (event.isCurrent) {
             SWButton(
-                config = ButtonConfig(
-                    modifier = Modifier.fillMaxWidth(),
-                    size = SWButtonSize.LARGE,
-                    mode = SWButtonMode.FILLED,
-                    text = stringResource(R.string.event_add_to_calendar),
-                    enabled = !isRefreshing,
-                    onClick = { onAction(EventHeaderAction.AddToCalendar) }
-                )
+                config =
+                    ButtonConfig(
+                        modifier = Modifier.fillMaxWidth(),
+                        size = SWButtonSize.LARGE,
+                        mode = SWButtonMode.FILLED,
+                        text = stringResource(R.string.event_add_to_calendar),
+                        enabled = !isRefreshing,
+                        onClick = { onAction(EventHeaderAction.AddToCalendar) }
+                    )
             )
         }
     }
@@ -237,22 +245,26 @@ internal fun EventParticipantsSection(
     if (!isAuthorized) return
 
     Column(
-        modifier = Modifier.padding(
-            horizontal = dimensionResource(R.dimen.spacing_regular)
-        ),
+        modifier =
+            Modifier.padding(
+                horizontal = dimensionResource(R.dimen.spacing_regular)
+            ),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
     ) {
         val participantsCount = event.trainingUsersCount ?: 0
+        val hasParticipantsList = event.trainingUsers.orEmpty().isNotEmpty()
+        val participantsEnabled = !isRefreshing && hasParticipantsList
         if (participantsCount > 0) {
             FormRowView(
                 modifier = Modifier.fillMaxWidth(),
                 leadingText = stringResource(R.string.participants),
-                trailingText = pluralStringResource(
-                    id = R.plurals.peopleCount,
-                    count = participantsCount,
-                    participantsCount
-                ),
-                enabled = !isRefreshing,
+                trailingText =
+                    pluralStringResource(
+                        id = R.plurals.peopleCount,
+                        count = participantsCount,
+                        participantsCount
+                    ),
+                enabled = participantsEnabled,
                 onClick = onClickParticipants
             )
         }
@@ -269,9 +281,7 @@ internal fun EventParticipantsSection(
 }
 
 @Composable
-internal fun EventDescriptionSection(
-    description: String
-) {
+internal fun EventDescriptionSection(description: String) {
     val parsedDescription = description.parseHtmlOrNull(compactMode = false)
     if (parsedDescription.isNullOrBlank()) return
 
@@ -285,9 +295,10 @@ internal fun EventDescriptionSection(
         ) {
             Text(
                 text = parsedDescription,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(dimensionResource(R.dimen.spacing_small)),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(dimensionResource(R.dimen.spacing_small)),
                 style = MaterialTheme.typography.bodyLarge
             )
         }
@@ -316,13 +327,14 @@ internal fun EventAuthorSection(
         modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
     ) {
         UserRowView(
-            data = UserRowData(
-                enabled = config.isEnabled,
-                imageStringURL = event.author.image,
-                name = event.author.name,
-                address = address,
-                onClick = { onAuthorClick(event.author.id) }
-            )
+            data =
+                UserRowData(
+                    enabled = config.isEnabled,
+                    imageStringURL = event.author.image,
+                    name = event.author.name,
+                    address = address,
+                    onClick = { onAuthorClick(event.author.id) }
+                )
         )
     }
 }
@@ -334,11 +346,12 @@ internal fun EventPhotosSection(
     onPhotoClick: (Photo) -> Unit
 ) {
     PhotoSectionView(
-        config = PhotoSectionConfig(
-            photos = photos,
-            enabled = !isRefreshing,
-            onPhotoClick = onPhotoClick
-        ),
+        config =
+            PhotoSectionConfig(
+                photos = photos,
+                enabled = !isRefreshing,
+                onPhotoClick = onPhotoClick
+            ),
         modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_regular))
     )
 }
@@ -350,9 +363,14 @@ internal data class CommentItemConfig(
 )
 
 internal sealed class CommentItemAction {
-    data class AuthorClick(val userId: Long) : CommentItemAction()
-    data class CommentAction(val commentId: Long, val action: com.swparks.ui.ds.CommentAction) :
-        CommentItemAction()
+    data class AuthorClick(
+        val userId: Long
+    ) : CommentItemAction()
+
+    data class CommentAction(
+        val commentId: Long,
+        val action: com.swparks.ui.ds.CommentAction
+    ) : CommentItemAction()
 }
 
 @Composable
@@ -369,26 +387,36 @@ internal fun EventCommentItem(
             params = FormCardContainerParams(modifier)
         ) {
             CommentRowView(
-                data = CommentRowData(
-                    imageStringURL = author?.image,
-                    authorName = author?.name ?: "",
-                    dateString = DateFormatter.formatDate(
-                        context = LocalContext.current,
-                        dateString = comment.date
-                    ),
-                    bodyText = comment.parsedBody.orEmpty(),
-                    enabled = config.enabled,
-                    byMainUser = byMainUser,
-                    onAuthorClick = { author?.id?.let { onAction(CommentItemAction.AuthorClick(it)) } },
-                    onClickAction = { action ->
-                        onAction(
-                            CommentItemAction.CommentAction(
-                                comment.id,
-                                action
+                data =
+                    CommentRowData(
+                        imageStringURL = author?.image,
+                        authorName = author?.name ?: "",
+                        dateString =
+                            DateFormatter.formatDate(
+                                context = LocalContext.current,
+                                dateString = comment.date
+                            ),
+                        bodyText = comment.parsedBody.orEmpty(),
+                        enabled = config.enabled,
+                        byMainUser = byMainUser,
+                        onAuthorClick = {
+                            author?.id?.let {
+                                onAction(
+                                    CommentItemAction.AuthorClick(
+                                        it
+                                    )
+                                )
+                            }
+                        },
+                        onClickAction = { action ->
+                            onAction(
+                                CommentItemAction.CommentAction(
+                                    comment.id,
+                                    action
+                                )
                             )
-                        )
-                    }
-                )
+                        }
+                    )
             )
         }
     }
@@ -399,11 +427,14 @@ internal fun EventCommentItem(
                 text = stringResource(id = R.string.comments).uppercase(),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(
-                    start = dimensionResource(id = R.dimen.spacing_small) + dimensionResource(
-                        R.dimen.spacing_regular
+                modifier =
+                    Modifier.padding(
+                        start =
+                            dimensionResource(id = R.dimen.spacing_small) +
+                                dimensionResource(
+                                    R.dimen.spacing_regular
+                                )
                     )
-                )
             )
             commentContent()
         }
@@ -419,17 +450,19 @@ internal fun EventAddCommentButton(
     onAddCommentClick: () -> Unit
 ) {
     SWButton(
-        config = ButtonConfig(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
-                .padding(bottom = dimensionResource(R.dimen.spacing_regular)),
-            size = SWButtonSize.LARGE,
-            mode = SWButtonMode.FILLED,
-            text = stringResource(R.string.add_comment),
-            enabled = isAuthorized && !isRefreshing,
-            onClick = onAddCommentClick
-        )
+        config =
+            ButtonConfig(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
+                        .padding(bottom = dimensionResource(R.dimen.spacing_regular)),
+                size = SWButtonSize.LARGE,
+                mode = SWButtonMode.FILLED,
+                text = stringResource(R.string.add_comment),
+                enabled = isAuthorized && !isRefreshing,
+                onClick = onAddCommentClick
+            )
     )
 }
 
@@ -465,10 +498,11 @@ internal fun EventParticipantsSectionPreview() {
         Surface {
             Column {
                 EventParticipantsSection(
-                    event = previewEvent.copy(
-                        trainingUsersCount = 15,
-                        trainHere = false
-                    ),
+                    event =
+                        previewEvent.copy(
+                            trainingUsersCount = 15,
+                            trainHere = false
+                        ),
                     isAuthorized = true,
                     isRefreshing = false,
                     onParticipantToggle = {},
@@ -511,11 +545,12 @@ internal fun EventAuthorSectionPreview() {
             EventAuthorSection(
                 event = previewEvent,
                 address = "Москва",
-                config = EventAuthorConfig(
-                    isAuthorized = true,
-                    isRefreshing = false,
-                    isEventAuthor = false
-                ),
+                config =
+                    EventAuthorConfig(
+                        isAuthorized = true,
+                        isRefreshing = false,
+                        isEventAuthor = false
+                    ),
                 onAuthorClick = {}
             )
         }
@@ -537,21 +572,24 @@ internal fun EventCommentItemPreview() {
             ) {
                 EventCommentItem(
                     comment = previewComment,
-                    config = CommentItemConfig(
-                        enabled = true,
-                        currentUserId = 999L
-                    ),
+                    config =
+                        CommentItemConfig(
+                            enabled = true,
+                            currentUserId = 999L
+                        ),
                     modifier = Modifier.fillMaxWidth(),
                     onAction = {}
                 )
                 EventCommentItem(
-                    comment = previewComment.copy(
-                        user = previewComment.user?.copy(id = 999L)
-                    ),
-                    config = CommentItemConfig(
-                        enabled = true,
-                        currentUserId = 999L
-                    ),
+                    comment =
+                        previewComment.copy(
+                            user = previewComment.user?.copy(id = 999L)
+                        ),
+                    config =
+                        CommentItemConfig(
+                            enabled = true,
+                            currentUserId = 999L
+                        ),
                     modifier = Modifier.fillMaxWidth(),
                     onAction = {}
                 )
@@ -594,39 +632,43 @@ internal fun EventAuthorActionsButtonPreview() {
     }
 }
 
-private val previewUser = User(
-    id = 123L,
-    name = "ivan_petrov",
-    image = "https://workout.su/img/avatar_default.jpg",
-    cityID = 1,
-    countryID = 1,
-    fullName = "Иван Петров"
-)
+private val previewUser =
+    User(
+        id = 123L,
+        name = "ivan_petrov",
+        image = "https://workout.su/img/avatar_default.jpg",
+        cityID = 1,
+        countryID = 1,
+        fullName = "Иван Петров"
+    )
 
-private val previewEvent = Event(
-    id = 1L,
-    title = "Открытая тренировка в парке",
-    description = "<p>Приглашаем всех желающих!</p>",
-    beginDate = "2024-06-15 10:00:00",
-    countryID = 1,
-    cityID = 1,
-    preview = "",
-    latitude = "55.7558",
-    longitude = "37.6173",
-    isCurrent = true,
-    address = "Москва, Парк Горького",
-    photos = listOf(
-        Photo(id = 1L, photo = "https://workout.su/files/trainings/photo1.jpg")
-    ),
-    author = previewUser,
-    name = "Открытая тренировка",
-    trainingUsersCount = 10,
-    trainHere = true
-)
+private val previewEvent =
+    Event(
+        id = 1L,
+        title = "Открытая тренировка в парке",
+        description = "<p>Приглашаем всех желающих!</p>",
+        beginDate = "2024-06-15 10:00:00",
+        countryID = 1,
+        cityID = 1,
+        preview = "",
+        latitude = "55.7558",
+        longitude = "37.6173",
+        isCurrent = true,
+        address = "Москва, Парк Горького",
+        photos =
+            listOf(
+                Photo(id = 1L, photo = "https://workout.su/files/trainings/photo1.jpg")
+            ),
+        author = previewUser,
+        name = "Открытая тренировка",
+        trainingUsersCount = 10,
+        trainHere = true
+    )
 
-private val previewComment = Comment(
-    id = 1L,
-    body = "Отличное мероприятие! Всем советую прийти.",
-    date = "2024-06-10 14:30:00",
-    user = previewUser
-)
+private val previewComment =
+    Comment(
+        id = 1L,
+        body = "Отличное мероприятие! Всем советую прийти.",
+        date = "2024-06-10 14:30:00",
+        user = previewUser
+    )

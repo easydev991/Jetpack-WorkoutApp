@@ -11,7 +11,6 @@ import org.junit.Test
  * Тестируются все методы валидации учетных данных.
  */
 class LoginCredentialsTest {
-
     private val defaultMinPasswordSize = 6
 
     @Test
@@ -28,11 +27,12 @@ class LoginCredentialsTest {
     @Test
     fun initializationWithCustomParameters() {
         // When
-        val credentials = LoginCredentials(
-            login = "test@mail.com",
-            password = "qwerty",
-            minPasswordSize = 5
-        )
+        val credentials =
+            LoginCredentials(
+                login = "test@mail.com",
+                password = "qwerty",
+                minPasswordSize = 5
+            )
 
         // Then
         assertEquals("test@mail.com", credentials.login)
@@ -90,21 +90,23 @@ class LoginCredentialsTest {
     @Test
     fun isReady_CustomMinPasswordSizeValidation() {
         // Given
-        val credentials1 = LoginCredentials(
-            login = "user",
-            password = "1234",
-            minPasswordSize = 4
-        )
+        val credentials1 =
+            LoginCredentials(
+                login = "user",
+                password = "1234",
+                minPasswordSize = 4
+            )
 
         // Then
         assertTrue(credentials1.isReady)
 
         // Given
-        val credentials2 = LoginCredentials(
-            login = "user",
-            password = "123",
-            minPasswordSize = 4
-        )
+        val credentials2 =
+            LoginCredentials(
+                login = "user",
+                password = "123",
+                minPasswordSize = 4
+            )
 
         // Then
         assertFalse(credentials2.isReady)

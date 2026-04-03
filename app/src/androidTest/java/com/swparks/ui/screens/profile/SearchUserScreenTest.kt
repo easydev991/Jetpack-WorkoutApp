@@ -43,13 +43,15 @@ class SearchUserScreenTest {
             JetpackWorkoutAppTheme {
                 SearchUserScreenContent(
                     uiState = uiState,
-                    searchQueryState = SearchQueryState(
-                        query = searchQuery,
-                        onQueryChange = onSearchQueryChange
-                    ),
-                    config = SearchUserConfig(
-                        parentPaddingValues = PaddingValues()
-                    ),
+                    searchQueryState =
+                        SearchQueryState(
+                            query = searchQuery,
+                            onQueryChange = onSearchQueryChange
+                        ),
+                    config =
+                        SearchUserConfig(
+                            parentPaddingValues = PaddingValues()
+                        ),
                     onAction = { action ->
                         when (action) {
                             is SearchUserAction.Search -> onSearch()
@@ -117,10 +119,11 @@ class SearchUserScreenTest {
     @Test
     fun searchUserScreen_success_displaysUsersList() {
         // Given
-        val users = listOf(
-            User(id = 1L, name = "User1", image = null),
-            User(id = 2L, name = "User2", image = null)
-        )
+        val users =
+            listOf(
+                User(id = 1L, name = "User1", image = null),
+                User(id = 2L, name = "User2", image = null)
+            )
 
         // When
         setContent(uiState = SearchUserUiState.Success(users))
@@ -253,11 +256,12 @@ class SearchUserScreenTest {
     @Test
     fun searchUserScreen_multipleUsers_allDisplayed() {
         // Given
-        val users = listOf(
-            User(id = 1L, name = "User1", image = null),
-            User(id = 2L, name = "User2", image = null),
-            User(id = 3L, name = "User3", image = null)
-        )
+        val users =
+            listOf(
+                User(id = 1L, name = "User1", image = null),
+                User(id = 2L, name = "User2", image = null),
+                User(id = 3L, name = "User3", image = null)
+            )
 
         // When
         setContent(uiState = SearchUserUiState.Success(users))
@@ -273,12 +277,13 @@ class SearchUserScreenTest {
     @Test
     fun searchUserScreen_userWithFullName_displaysName() {
         // Given
-        val testUser = User(
-            id = 1L,
-            name = "username",
-            fullName = "Full Name",
-            image = null
-        )
+        val testUser =
+            User(
+                id = 1L,
+                name = "username",
+                fullName = "Full Name",
+                image = null
+            )
 
         // When
         setContent(uiState = SearchUserUiState.Success(listOf(testUser)))

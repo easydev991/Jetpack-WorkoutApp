@@ -39,29 +39,35 @@ fun RegisterSelectCityScreen(
     var searchQuery by rememberSaveable { mutableStateOf("") }
 
     // Если страна выбрана - показываем города этой страны, иначе - все города
-    val displayCities = remember(selectedCountry, cities, allCities) {
-        if (selectedCountry != null) {
-            cities.map { it.name }
-        } else {
-            allCities.map { it.name }
+    val displayCities =
+        remember(selectedCountry, cities, allCities) {
+            if (selectedCountry != null) {
+                cities.map { it.name }
+            } else {
+                allCities.map { it.name }
+            }
         }
-    }
 
-    val filteredItems = remember(searchQuery, displayCities) {
-        if (searchQuery.isEmpty()) displayCities
-        else displayCities.filter { it.contains(searchQuery, ignoreCase = true) }
-    }
+    val filteredItems =
+        remember(searchQuery, displayCities) {
+            if (searchQuery.isEmpty()) {
+                displayCities
+            } else {
+                displayCities.filter { it.contains(searchQuery, ignoreCase = true) }
+            }
+        }
 
     val isEmpty = filteredItems.isEmpty() && searchQuery.isNotEmpty()
 
     ItemListScreen(
-        state = ItemListUiState(
-            mode = ItemListMode.CITY,
-            items = filteredItems,
-            selectedItem = selectedCity?.name,
-            searchQuery = searchQuery,
-            isEmpty = isEmpty
-        ),
+        state =
+            ItemListUiState(
+                mode = ItemListMode.CITY,
+                items = filteredItems,
+                selectedItem = selectedCity?.name,
+                searchQuery = searchQuery,
+                isEmpty = isEmpty
+            ),
         onSearchQueryChange = { searchQuery = it },
         onItemSelected = { cityName ->
             viewModel.onCitySelectedByName(cityName)

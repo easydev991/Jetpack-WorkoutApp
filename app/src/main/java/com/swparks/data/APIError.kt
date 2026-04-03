@@ -7,7 +7,10 @@ package com.swparks.data
  * Используется для обработки ошибок HTTP с локализованными сообщениями.
  */
 @Suppress("MagicNumber")
-enum class APIError(val errorMessage: String, val statusCode: Int? = null) {
+enum class APIError(
+    val errorMessage: String,
+    val statusCode: Int? = null
+) {
     NO_DATA("Нет данных"),
     UNKNOWN("Неизвестная ошибка"),
     BAD_REQUEST("Неверные данные формы", 400),
@@ -25,8 +28,8 @@ enum class APIError(val errorMessage: String, val statusCode: Int? = null) {
          * Создает ошибку на основе кода статуса
          */
         @Suppress("MagicNumber")
-        fun fromStatusCode(code: Int): APIError {
-            return when {
+        fun fromStatusCode(code: Int): APIError =
+            when {
                 code == 401 -> INVALID_CREDENTIALS
                 code == 403 -> FORBIDDEN
                 code == 404 -> NOT_FOUND
@@ -37,6 +40,5 @@ enum class APIError(val errorMessage: String, val statusCode: Int? = null) {
                 code in listOf(400, 402) || code in 405..412 || code in 414..428 -> BAD_REQUEST
                 else -> UNKNOWN
             }
-        }
     }
 }

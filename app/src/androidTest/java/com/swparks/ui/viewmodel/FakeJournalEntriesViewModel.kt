@@ -22,7 +22,6 @@ class FakeJournalEntriesViewModel(
     override val canCreateEntry: StateFlow<Boolean> = MutableStateFlow(false),
     override val isSavingSettings: StateFlow<Boolean> = MutableStateFlow(false)
 ) : IJournalEntriesViewModel {
-
     // Поток событий для тестирования
     private val _events = MutableSharedFlow<JournalEntriesEvent>()
     override val events: SharedFlow<JournalEntriesEvent> = _events.asSharedFlow()

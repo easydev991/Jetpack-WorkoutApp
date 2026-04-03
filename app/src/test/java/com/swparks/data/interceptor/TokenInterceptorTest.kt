@@ -13,7 +13,6 @@ import org.junit.Test
 
 /** Unit тесты для TokenInterceptor */
 class TokenInterceptorTest {
-
     @Before
     fun setup() {
         // Mock не требуется для TokenInterceptor
@@ -54,9 +53,11 @@ class TokenInterceptorTest {
         val interceptor = TokenInterceptor(mockSecureTokenRepository)
 
         val chain = mockk<Interceptor.Chain>()
-        val originalRequest = Request.Builder()
-            .url("https://example.com/api/test")
-            .build()
+        val originalRequest =
+            Request
+                .Builder()
+                .url("https://example.com/api/test")
+                .build()
         val response = mockk<Response>()
 
         every { mockSecureTokenRepository.getAuthTokenSync() } returns ""
@@ -79,9 +80,11 @@ class TokenInterceptorTest {
         val interceptor = TokenInterceptor(mockSecureTokenRepository)
 
         val chain = mockk<Interceptor.Chain>()
-        val originalRequest = Request.Builder()
-            .url("https://example.com/api/test")
-            .build()
+        val originalRequest =
+            Request
+                .Builder()
+                .url("https://example.com/api/test")
+                .build()
         val response = mockk<Response>()
 
         every { mockSecureTokenRepository.getAuthTokenSync() } returns null
@@ -104,9 +107,11 @@ class TokenInterceptorTest {
         val interceptor = TokenInterceptor(mockSecureTokenRepository)
 
         val chain = mockk<Interceptor.Chain>()
-        val originalRequest = Request.Builder()
-            .url("https://example.com/api/test")
-            .build()
+        val originalRequest =
+            Request
+                .Builder()
+                .url("https://example.com/api/test")
+                .build()
         val response = mockk<Response>()
 
         every { mockSecureTokenRepository.getAuthTokenSync() } returns "  my_token_with_spaces  "

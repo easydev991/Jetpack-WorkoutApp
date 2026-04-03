@@ -281,11 +281,17 @@ interface AppContainer {
 
     // API клиенты для разных функциональных областей
     fun provideAuthApi(): SWApi
+
     fun provideProfileApi(): SWApi
+
     fun provideFriendsApi(): SWApi
+
     fun provideParksApi(): SWApi
+
     fun provideEventsApi(): SWApi
+
     fun provideMessagesApi(): SWApi
+
     fun provideJournalsApi(): SWApi
 }
 
@@ -294,13 +300,16 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
 )
 
 @Suppress("TooManyFunctions")
-class DefaultAppContainer(context: Context) : AppContainer {
+class DefaultAppContainer(
+    context: Context
+) : AppContainer {
     private val appContext: Context = context.applicationContext
     private val baseUrl = "https://workout.su/api/v3/"
-    private val jsonFactory = Json {
-        isLenient = true
-        ignoreUnknownKeys = true
-    }
+    private val jsonFactory =
+        Json {
+            isLenient = true
+            ignoreUnknownKeys = true
+        }
 
     override val logger: Logger = if (BuildConfig.DEBUG) AndroidLogger() else NoOpLogger()
     override val userNotifier: UserNotifier = UserNotifierImpl(logger)
@@ -309,7 +318,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
         FirebaseAnalyticsReporter(
             context = appContext,
             logger = logger,
-            crashReporter = crashReporter,
+            crashReporter = crashReporter
         )
     }
     override val messageSentNotifier: MessageSentNotifier = MessageSentNotifier()
@@ -384,11 +393,12 @@ class DefaultAppContainer(context: Context) : AppContainer {
      * Использует миграции для сохранения данных при обновлении схемы
      */
     val database: SWDatabase by lazy {
-        Room.databaseBuilder(
-            appContext,
-            SWDatabase::class.java,
-            "sw_database"
-        ).fallbackToDestructiveMigration(dropAllTables = true)
+        Room
+            .databaseBuilder(
+                appContext,
+                SWDatabase::class.java,
+                "sw_database"
+            ).fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }
 
@@ -464,7 +474,8 @@ class DefaultAppContainer(context: Context) : AppContainer {
     // Создаем OkHttpClient с interceptor chain
     // Порядок важен: logging → retry → token → auth
     private val okHttpClient: OkHttpClient by lazy {
-        OkHttpClient.Builder()
+        OkHttpClient
+            .Builder()
             // Таймауты для сетевых операций
             .connectTimeout(NetworkTimeouts.CONNECT_SECONDS, TimeUnit.SECONDS)
             .readTimeout(NetworkTimeouts.READ_SECONDS, TimeUnit.SECONDS)
@@ -475,18 +486,19 @@ class DefaultAppContainer(context: Context) : AppContainer {
                 if (BuildConfig.DEBUG) {
                     addInterceptor(LoggingInterceptor())
                 }
-            }
-            .addInterceptor(retryInterceptor)   // ← ОБЯЗАТЕЛЬНО ПЕРВЫМ после logging!
+            }.addInterceptor(retryInterceptor) // ← ОБЯЗАТЕЛЬНО ПЕРВЫМ после logging!
             .addInterceptor(tokenInterceptor)
             .addInterceptor(authInterceptor)
             .build()
     }
 
-    private val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl(baseUrl)
-        .client(okHttpClient)
-        .addConverterFactory(jsonFactory.asConverterFactory("application/json".toMediaType()))
-        .build()
+    private val retrofit: Retrofit =
+        Retrofit
+            .Builder()
+            .baseUrl(baseUrl)
+            .client(okHttpClient)
+            .addConverterFactory(jsonFactory.asConverterFactory("application/json".toMediaType()))
+            .build()
 
     // Единый экземпляр SWApi для всех API запросов
     private val retrofitService: SWApi by lazy {
@@ -655,43 +667,48 @@ class DefaultAppContainer(context: Context) : AppContainer {
     }
 
     /** Factory метод для создания ProfileViewModel */
-    override fun profileViewModelFactory() = ProfileViewModel(
-        countriesRepository = countriesRepository,
-        swRepository = swRepository,
-        logger = logger,
-        userNotifier = userNotifier
-    )
+    override fun profileViewModelFactory() =
+        ProfileViewModel(
+            countriesRepository = countriesRepository,
+            swRepository = swRepository,
+            logger = logger,
+            userNotifier = userNotifier
+        )
 
     /** Factory метод для создания FriendsListViewModel */
-    override fun friendsListViewModelFactory() = FriendsListViewModel(
-        userDao = userDao,
-        swRepository = swRepository,
-        logger = logger,
-        userNotifier = userNotifier
-    )
+    override fun friendsListViewModelFactory() =
+        FriendsListViewModel(
+            userDao = userDao,
+            swRepository = swRepository,
+            logger = logger,
+            userNotifier = userNotifier
+        )
 
     /** Factory метод для создания UserFriendsViewModel */
-    override fun userFriendsViewModelFactory(userId: Long) = UserFriendsViewModel(
-        userId = userId,
-        swRepository = swRepository,
-        logger = logger,
-        userNotifier = userNotifier
-    )
+    override fun userFriendsViewModelFactory(userId: Long) =
+        UserFriendsViewModel(
+            userId = userId,
+            swRepository = swRepository,
+            logger = logger,
+            userNotifier = userNotifier
+        )
 
     /** Factory метод для создания BlacklistViewModel */
-    override fun blacklistViewModelFactory() = BlacklistViewModel(
-        swRepository = swRepository,
-        logger = logger,
-        userNotifier = userNotifier
-    )
+    override fun blacklistViewModelFactory() =
+        BlacklistViewModel(
+            swRepository = swRepository,
+            logger = logger,
+            userNotifier = userNotifier
+        )
 
     /** Factory метод для создания UserTrainingParksViewModel */
-    override fun userTrainingParksViewModelFactory(userId: Long) = UserTrainingParksViewModel(
-        swRepository = swRepository,
-        userId = userId,
-        logger = logger,
-        userNotifier = userNotifier
-    )
+    override fun userTrainingParksViewModelFactory(userId: Long) =
+        UserTrainingParksViewModel(
+            swRepository = swRepository,
+            userId = userId,
+            logger = logger,
+            userNotifier = userNotifier
+        )
 
     override fun userAddedParksViewModelFactory(
         userId: Long,
@@ -707,26 +724,27 @@ class DefaultAppContainer(context: Context) : AppContainer {
     )
 
     /** Factory метод для создания JournalsViewModel */
-    override fun journalsViewModelFactory(userId: Long) = JournalsViewModel(
-        userId = userId,
-        getJournalsUseCase = getJournalsUseCase,
-        syncJournalsUseCase = syncJournalsUseCase,
-        deleteJournalUseCase = deleteJournalUseCase,
-        editJournalSettingsUseCase = editJournalSettingsUseCase,
-        userNotifier = userNotifier,
-        resources = resourcesProvider
-    )
+    override fun journalsViewModelFactory(userId: Long) =
+        JournalsViewModel(
+            userId = userId,
+            getJournalsUseCase = getJournalsUseCase,
+            syncJournalsUseCase = syncJournalsUseCase,
+            deleteJournalUseCase = deleteJournalUseCase,
+            editJournalSettingsUseCase = editJournalSettingsUseCase,
+            userNotifier = userNotifier,
+            resources = resourcesProvider
+        )
 
     /** Factory метод для создания JournalEntriesViewModel */
     override fun journalEntriesViewModelFactory(
         journalOwnerId: Long,
         journalId: Long,
         savedStateHandle: SavedStateHandle
-    ) =
-        JournalEntriesViewModel(
-            journalOwnerId = journalOwnerId,
-            journalId = journalId,
-            deps = JournalEntriesDeps(
+    ) = JournalEntriesViewModel(
+        journalOwnerId = journalOwnerId,
+        journalId = journalId,
+        deps =
+            JournalEntriesDeps(
                 getJournalEntriesUseCase = getJournalEntriesUseCase,
                 syncJournalEntriesUseCase = syncJournalEntriesUseCase,
                 deleteJournalEntryUseCase = deleteJournalEntryUseCase,
@@ -738,39 +756,43 @@ class DefaultAppContainer(context: Context) : AppContainer {
                 userNotifier = userNotifier,
                 resources = resourcesProvider
             )
-        )
+    )
 
     /** Factory метод для создания TextEntryViewModel */
-    override fun textEntryViewModelFactory(mode: TextEntryMode) = TextEntryViewModel(
-        textEntryUseCase = textEntryUseCase,
-        userNotifier = userNotifier,
-        mode = mode,
-        context = appContext
-    )
+    override fun textEntryViewModelFactory(mode: TextEntryMode) =
+        TextEntryViewModel(
+            textEntryUseCase = textEntryUseCase,
+            userNotifier = userNotifier,
+            mode = mode,
+            context = appContext
+        )
 
     /** Factory метод для создания DialogsViewModel */
-    override fun dialogsViewModelFactory() = DialogsViewModel(
-        messagesRepository = messagesRepository,
-        swRepository = swRepository,
-        logger = logger,
-        resources = resourcesProvider,
-        messageSentNotifier = messageSentNotifier
-    )
+    override fun dialogsViewModelFactory() =
+        DialogsViewModel(
+            messagesRepository = messagesRepository,
+            swRepository = swRepository,
+            logger = logger,
+            resources = resourcesProvider,
+            messageSentNotifier = messageSentNotifier
+        )
 
     /** Factory метод для создания ChatViewModel */
-    override fun chatViewModelFactory() = ChatViewModel(
-        swApi = provideMessagesApi(),
-        swRepository = swRepository,
-        userNotifier = userNotifier,
-        logger = logger,
-        crashReporter = crashReporter
-    )
+    override fun chatViewModelFactory() =
+        ChatViewModel(
+            swApi = provideMessagesApi(),
+            swRepository = swRepository,
+            userNotifier = userNotifier,
+            logger = logger,
+            crashReporter = crashReporter
+        )
 
     /** Factory метод для создания SearchUserViewModel */
-    override fun searchUserViewModelFactory() = SearchUserViewModel(
-        swRepository = swRepository,
-        logger = logger
-    )
+    override fun searchUserViewModelFactory() =
+        SearchUserViewModel(
+            swRepository = swRepository,
+            logger = logger
+        )
 
     /** Factory метод для создания OtherUserProfileViewModel */
     override fun otherUserProfileViewModelFactory(userId: Long) =
@@ -784,48 +806,52 @@ class DefaultAppContainer(context: Context) : AppContainer {
         )
 
     /** Factory метод для создания EditProfileViewModel */
-    override fun editProfileViewModelFactory() = EditProfileViewModel(
-        swRepository = swRepository,
-        countriesRepository = countriesRepository,
-        deleteUserUseCase = deleteUserUseCase,
-        avatarHelper = avatarHelper,
-        logger = logger,
-        userNotifier = userNotifier,
-        resources = resourcesProvider
-    )
+    override fun editProfileViewModelFactory() =
+        EditProfileViewModel(
+            swRepository = swRepository,
+            countriesRepository = countriesRepository,
+            deleteUserUseCase = deleteUserUseCase,
+            avatarHelper = avatarHelper,
+            logger = logger,
+            userNotifier = userNotifier,
+            resources = resourcesProvider
+        )
 
     /** Factory метод для создания ChangePasswordViewModel */
-    override fun changePasswordViewModelFactory() = ChangePasswordViewModel(
-        changePasswordUseCase = changePasswordUseCase,
-        logger = logger,
-        userNotifier = userNotifier,
-        resources = resourcesProvider
-    )
+    override fun changePasswordViewModelFactory() =
+        ChangePasswordViewModel(
+            changePasswordUseCase = changePasswordUseCase,
+            logger = logger,
+            userNotifier = userNotifier,
+            resources = resourcesProvider
+        )
 
     /** Factory метод для создания RegisterViewModel */
-    override fun registerViewModelFactory() = RegisterViewModel(
-        logger = logger,
-        swRepository = swRepository,
-        secureTokenRepository = secureTokenRepository,
-        userPreferencesRepository = userPreferencesRepository,
-        tokenEncoder = tokenEncoder,
-        countriesRepository = countriesRepository,
-        resources = resourcesProvider,
-        userNotifier = userNotifier
-    )
+    override fun registerViewModelFactory() =
+        RegisterViewModel(
+            logger = logger,
+            swRepository = swRepository,
+            secureTokenRepository = secureTokenRepository,
+            userPreferencesRepository = userPreferencesRepository,
+            tokenEncoder = tokenEncoder,
+            countriesRepository = countriesRepository,
+            resources = resourcesProvider,
+            userNotifier = userNotifier
+        )
 
     /** Factory метод для создания EventsViewModel */
-    override fun eventsViewModelFactory() = EventsViewModel(
-        getFutureEventsFlowUseCase = getFutureEventsFlowUseCase,
-        syncFutureEventsUseCase = syncFutureEventsUseCase,
-        getPastEventsFlowUseCase = getPastEventsFlowUseCase,
-        syncPastEventsUseCase = syncPastEventsUseCase,
-        userPreferencesRepository = userPreferencesRepository,
-        countriesRepository = countriesRepository,
-        userNotifier = userNotifier,
-        logger = logger,
-        swRepository = swRepository
-    )
+    override fun eventsViewModelFactory() =
+        EventsViewModel(
+            getFutureEventsFlowUseCase = getFutureEventsFlowUseCase,
+            syncFutureEventsUseCase = syncFutureEventsUseCase,
+            getPastEventsFlowUseCase = getPastEventsFlowUseCase,
+            syncPastEventsUseCase = syncPastEventsUseCase,
+            userPreferencesRepository = userPreferencesRepository,
+            countriesRepository = countriesRepository,
+            userNotifier = userNotifier,
+            logger = logger,
+            swRepository = swRepository
+        )
 
     /** Factory метод для создания EventDetailViewModel */
     override fun eventDetailViewModelFactory(savedStateHandle: SavedStateHandle) =

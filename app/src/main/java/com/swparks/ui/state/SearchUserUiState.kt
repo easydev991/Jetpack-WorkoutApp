@@ -19,7 +19,9 @@ sealed class SearchUserUiState {
     /**
      * Успешный результат поиска - отображается список пользователей.
      */
-    data class Success(val users: List<User>) : SearchUserUiState()
+    data class Success(
+        val users: List<User>
+    ) : SearchUserUiState()
 
     /**
      * Пользователи не найдены - отображается сообщение.

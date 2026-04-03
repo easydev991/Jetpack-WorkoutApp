@@ -68,10 +68,14 @@ import androidx.compose.material.icons.Icons.AutoMirrored.Filled as AutoMirrored
 
 sealed class EventFormNavigationAction {
     data object Back : EventFormNavigationAction()
-    data class BackWithCreatedEvent(val event: Event) :
-        EventFormNavigationAction()
 
-    data class NavigateToSelectPark(val currentParkId: Long?) : EventFormNavigationAction()
+    data class BackWithCreatedEvent(
+        val event: Event
+    ) : EventFormNavigationAction()
+
+    data class NavigateToSelectPark(
+        val currentParkId: Long?
+    ) : EventFormNavigationAction()
 }
 
 private data class EventFormContentParams(
@@ -98,11 +102,12 @@ fun EventFormScreen(
     var showConfirmDialog by remember { mutableStateOf(false) }
     var previewUri by remember { mutableStateOf<Uri?>(null) }
 
-    val photoPickerController = rememberPickedImagesController(
-        currentImageCount = uiState.selectedPhotos.size,
-        selectionLimit = uiState.maxNewPhotos,
-        onImagesSelected = viewModel::onPhotoSelected
-    )
+    val photoPickerController =
+        rememberPickedImagesController(
+            currentImageCount = uiState.selectedPhotos.size,
+            selectionLimit = uiState.maxNewPhotos,
+            onImagesSelected = viewModel::onPhotoSelected
+        )
 
     HandleEventFormEvents(
         viewModel = viewModel,
@@ -137,17 +142,18 @@ fun EventFormScreen(
             EventFormContent(
                 paddingValues = paddingValues,
                 scrollState = scrollState,
-                params = EventFormContentParams(
-                    form = uiState.form,
-                    canSelectPark = uiState.canSelectPark,
-                    isEnabled = !uiState.isSaving,
-                    selectedPhotos = uiState.selectedPhotos,
-                    maxNewPhotos = uiState.maxNewPhotos,
-                    onAction = viewModel::onAction,
-                    onAddPhotoClick = viewModel::onAddPhotoClick,
-                    onPhotoRemove = viewModel::onPhotoRemove,
-                    onPhotoPreview = { uri -> previewUri = uri }
-                )
+                params =
+                    EventFormContentParams(
+                        form = uiState.form,
+                        canSelectPark = uiState.canSelectPark,
+                        isEnabled = !uiState.isSaving,
+                        selectedPhotos = uiState.selectedPhotos,
+                        maxNewPhotos = uiState.maxNewPhotos,
+                        onAction = viewModel::onAction,
+                        onAddPhotoClick = viewModel::onAddPhotoClick,
+                        onPhotoRemove = viewModel::onPhotoRemove,
+                        onPhotoPreview = { uri -> previewUri = uri }
+                    )
             )
 
             if (uiState.isSaving) {
@@ -192,9 +198,10 @@ private fun HandleEventFormEvents(
                 }
 
                 is EventFormEvent.NavigateBack -> onAction(EventFormNavigationAction.Back)
-                is EventFormEvent.NavigateToSelectPark -> onAction(
-                    EventFormNavigationAction.NavigateToSelectPark(event.currentParkId)
-                )
+                is EventFormEvent.NavigateToSelectPark ->
+                    onAction(
+                        EventFormNavigationAction.NavigateToSelectPark(event.currentParkId)
+                    )
 
                 is EventFormEvent.ShowDatePicker -> {}
                 is EventFormEvent.ShowPhotoPicker -> onShowPhotoPicker()
@@ -229,14 +236,15 @@ private fun EventFormContent(
     params: EventFormContentParams
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-            .verticalScroll(scrollState)
-            .padding(
-                horizontal = dimensionResource(R.dimen.spacing_regular),
-                vertical = dimensionResource(R.dimen.spacing_regular)
-            ),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(scrollState)
+                .padding(
+                    horizontal = dimensionResource(R.dimen.spacing_regular),
+                    vertical = dimensionResource(R.dimen.spacing_regular)
+                ),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_regular))
     ) {
         Column {
@@ -291,13 +299,14 @@ private fun TitleField(
     onValueChange: (String) -> Unit
 ) {
     SWTextField(
-        config = TextFieldConfig(
-            text = value,
-            labelID = R.string.event_form_name_label,
-            enabled = enabled,
-            singleLine = true,
-            onTextChange = onValueChange
-        )
+        config =
+            TextFieldConfig(
+                text = value,
+                labelID = R.string.event_form_name_label,
+                enabled = enabled,
+                singleLine = true,
+                onTextChange = onValueChange
+            )
     )
 }
 
@@ -323,19 +332,21 @@ private fun ParkSelector(
     onClick: () -> Unit
 ) {
     FormCardContainer(
-        params = FormCardContainerParams(
-            enabled = enabled && canSelectPark,
-            onClick = onClick.takeIf { canSelectPark }
-        )
+        params =
+            FormCardContainerParams(
+                enabled = enabled && canSelectPark,
+                onClick = onClick.takeIf { canSelectPark }
+            )
     ) {
         ListRowView(
-            data = ListRowData(
-                modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
-                leadingText = stringResource(R.string.event_form_park_label),
-                trailingText = parkName.ifBlank { stringResource(R.string.event_form_park_select) },
-                showChevron = canSelectPark,
-                enabled = enabled
-            )
+            data =
+                ListRowData(
+                    modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
+                    leadingText = stringResource(R.string.event_form_park_label),
+                    trailingText = parkName.ifBlank { stringResource(R.string.event_form_park_select) },
+                    showChevron = canSelectPark,
+                    enabled = enabled
+                )
         )
     }
 }
@@ -348,12 +359,14 @@ private fun DatePickerSection(
     onDateChange: (Long) -> Unit,
     onTimeChange: (Int, Int) -> Unit
 ) {
-    val initialDateTime = remember(date) {
-        parseEventDateTime(date) ?: LocalDateTime.now()
-    }
-    val initialTimestamp = remember(initialDateTime) {
-        initialDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-    }
+    val initialDateTime =
+        remember(date) {
+            parseEventDateTime(date) ?: LocalDateTime.now()
+        }
+    val initialTimestamp =
+        remember(initialDateTime) {
+            initialDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        }
 
     val currentYear = LocalDate.now().year
     val maxYear = currentYear + 1
@@ -362,17 +375,18 @@ private fun DatePickerSection(
         params = FormCardContainerParams(enabled = enabled)
     ) {
         SWDateTimePicker(
-            config = DateTimePickerConfig(
-                modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
-                mode = SWDatePickerMode.EVENT,
-                initialSelectedDateMillis = initialTimestamp,
-                initialHour = initialDateTime.hour,
-                initialMinute = initialDateTime.minute,
-                yearRange = currentYear..maxYear,
-                enabled = enabled,
-                onClickSaveDate = onDateChange,
-                onClickSaveTime = onTimeChange
-            )
+            config =
+                DateTimePickerConfig(
+                    modifier = Modifier.padding(dimensionResource(R.dimen.spacing_small)),
+                    mode = SWDatePickerMode.EVENT,
+                    initialSelectedDateMillis = initialTimestamp,
+                    initialHour = initialDateTime.hour,
+                    initialMinute = initialDateTime.minute,
+                    yearRange = currentYear..maxYear,
+                    enabled = enabled,
+                    onClickSaveDate = onDateChange,
+                    onClickSaveTime = onTimeChange
+                )
         )
     }
 }
@@ -385,7 +399,8 @@ private fun parseEventDateTime(value: String): LocalDateTime? {
     return try {
         when {
             value.contains('Z') || value.contains('+') -> {
-                OffsetDateTime.parse(value)
+                OffsetDateTime
+                    .parse(value)
                     .atZoneSameInstant(ZoneId.systemDefault())
                     .toLocalDateTime()
             }
@@ -415,13 +430,14 @@ private fun SaveButton(
     onClick: () -> Unit
 ) {
     SWButton(
-        config = ButtonConfig(
-            mode = SWButtonMode.FILLED,
-            size = SWButtonSize.LARGE,
-            text = stringResource(R.string.event_form_save),
-            enabled = enabled,
-            onClick = onClick
-        )
+        config =
+            ButtonConfig(
+                mode = SWButtonMode.FILLED,
+                size = SWButtonSize.LARGE,
+                text = stringResource(R.string.event_form_save),
+                enabled = enabled,
+                onClick = onClick
+            )
     )
 }
 

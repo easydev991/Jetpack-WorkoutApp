@@ -17,7 +17,6 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P])
 class UserIdSourceNavArgsTest {
-
     private lateinit var savedStateHandle: SavedStateHandle
 
     @Before
@@ -27,10 +26,11 @@ class UserIdSourceNavArgsTest {
 
     @Test
     fun consumeUserIdSourceArgs_whenValidData_thenReturnsParsedArgs() {
-        val bundle = Bundle().apply {
-            putString("userId", "42")
-            putString("source", "events")
-        }
+        val bundle =
+            Bundle().apply {
+                putString("userId", "42")
+                putString("source", "events")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeUserIdSourceArgs()
@@ -42,9 +42,10 @@ class UserIdSourceNavArgsTest {
 
     @Test
     fun consumeUserIdSourceArgs_whenNoSource_thenReturnsDefaultSource() {
-        val bundle = Bundle().apply {
-            putString("userId", "100")
-        }
+        val bundle =
+            Bundle().apply {
+                putString("userId", "100")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeUserIdSourceArgs()
@@ -56,9 +57,10 @@ class UserIdSourceNavArgsTest {
 
     @Test
     fun consumeUserIdSourceArgs_whenCustomDefaultSource_thenReturnsCustomDefault() {
-        val bundle = Bundle().apply {
-            putString("userId", "200")
-        }
+        val bundle =
+            Bundle().apply {
+                putString("userId", "200")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeUserIdSourceArgs(defaultSource = "messages")
@@ -70,9 +72,10 @@ class UserIdSourceNavArgsTest {
 
     @Test
     fun consumeUserIdSourceArgs_whenNullUserId_thenReturnsNull() {
-        val bundle = Bundle().apply {
-            putString("source", "events")
-        }
+        val bundle =
+            Bundle().apply {
+                putString("source", "events")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeUserIdSourceArgs()
@@ -82,10 +85,11 @@ class UserIdSourceNavArgsTest {
 
     @Test
     fun consumeUserIdSourceArgs_whenInvalidUserId_thenReturnsNull() {
-        val bundle = Bundle().apply {
-            putString("userId", "invalid")
-            putString("source", "events")
-        }
+        val bundle =
+            Bundle().apply {
+                putString("userId", "invalid")
+                putString("source", "events")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeUserIdSourceArgs()
@@ -105,10 +109,9 @@ class UserIdSourceNavArgsTest {
     private fun createNavBackStackEntry(
         arguments: Bundle?,
         savedStateHandle: SavedStateHandle
-    ): androidx.navigation.NavBackStackEntry {
-        return mockk {
+    ): androidx.navigation.NavBackStackEntry =
+        mockk {
             every { this@mockk.arguments } returns arguments
             every { this@mockk.savedStateHandle } returns savedStateHandle
         }
-    }
 }

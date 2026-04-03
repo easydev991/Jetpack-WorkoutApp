@@ -45,12 +45,13 @@ class ProfileRootScreenTest {
     fun profileRootScreen_displaysProfile_whenUserAuthorized() {
         // Given
         val testUser = createTestUser()
-        val viewModel = FakeProfileViewModel(
-            currentUser = MutableStateFlow(testUser),
-            uiState = MutableStateFlow(ProfileUiState.Success(country = null, city = null)),
-            isRefreshing = MutableStateFlow(false),
-            blacklist = MutableStateFlow(emptyList())
-        )
+        val viewModel =
+            FakeProfileViewModel(
+                currentUser = MutableStateFlow(testUser),
+                uiState = MutableStateFlow(ProfileUiState.Success(country = null, city = null)),
+                isRefreshing = MutableStateFlow(false),
+                blacklist = MutableStateFlow(emptyList())
+            )
 
         // When
         setContent(viewModel)
@@ -65,12 +66,13 @@ class ProfileRootScreenTest {
     fun profileRootScreen_displaysEditProfileButton_whenUserAuthorized() {
         // Given
         val testUser = createTestUser()
-        val viewModel = FakeProfileViewModel(
-            currentUser = MutableStateFlow(testUser),
-            uiState = MutableStateFlow(ProfileUiState.Success(country = null, city = null)),
-            isRefreshing = MutableStateFlow(false),
-            blacklist = MutableStateFlow(emptyList())
-        )
+        val viewModel =
+            FakeProfileViewModel(
+                currentUser = MutableStateFlow(testUser),
+                uiState = MutableStateFlow(ProfileUiState.Success(country = null, city = null)),
+                isRefreshing = MutableStateFlow(false),
+                blacklist = MutableStateFlow(emptyList())
+            )
 
         // When
         setContent(viewModel)
@@ -86,12 +88,13 @@ class ProfileRootScreenTest {
     fun profileRootScreen_displaysLogoutButton_whenUserAuthorized() {
         // Given
         val testUser = createTestUser()
-        val viewModel = FakeProfileViewModel(
-            currentUser = MutableStateFlow(testUser),
-            uiState = MutableStateFlow(ProfileUiState.Success(country = null, city = null)),
-            isRefreshing = MutableStateFlow(false),
-            blacklist = MutableStateFlow(emptyList())
-        )
+        val viewModel =
+            FakeProfileViewModel(
+                currentUser = MutableStateFlow(testUser),
+                uiState = MutableStateFlow(ProfileUiState.Success(country = null, city = null)),
+                isRefreshing = MutableStateFlow(false),
+                blacklist = MutableStateFlow(emptyList())
+            )
 
         // When
         setContent(viewModel)
@@ -106,12 +109,13 @@ class ProfileRootScreenTest {
     @Test
     fun profileRootScreen_whenNotAuthorized_displaysIncognitoProfile() {
         // Given
-        val viewModel = FakeProfileViewModel(
-            currentUser = MutableStateFlow(null),
-            uiState = MutableStateFlow(ProfileUiState.Success(country = null, city = null)),
-            isRefreshing = MutableStateFlow(false),
-            blacklist = MutableStateFlow(emptyList())
-        )
+        val viewModel =
+            FakeProfileViewModel(
+                currentUser = MutableStateFlow(null),
+                uiState = MutableStateFlow(ProfileUiState.Success(country = null, city = null)),
+                isRefreshing = MutableStateFlow(false),
+                blacklist = MutableStateFlow(emptyList())
+            )
 
         // When
         setContent(viewModel)
@@ -126,12 +130,13 @@ class ProfileRootScreenTest {
     @Test
     fun profileRootScreen_whenNotAuthorized_displaysNoFriendsButton() {
         // Given
-        val viewModel = FakeProfileViewModel(
-            currentUser = MutableStateFlow(null),
-            uiState = MutableStateFlow(ProfileUiState.Success(null)),
-            isRefreshing = MutableStateFlow(false),
-            blacklist = MutableStateFlow(emptyList())
-        )
+        val viewModel =
+            FakeProfileViewModel(
+                currentUser = MutableStateFlow(null),
+                uiState = MutableStateFlow(ProfileUiState.Success(null)),
+                isRefreshing = MutableStateFlow(false),
+                blacklist = MutableStateFlow(emptyList())
+            )
 
         // When
         setContent(viewModel)
@@ -147,12 +152,13 @@ class ProfileRootScreenTest {
     fun profileRootScreen_whenAuthorized_withFriends_displaysFriendsButton() {
         // Given
         val user = createTestUser().copy(friendsCount = 5)
-        val viewModel = FakeProfileViewModel(
-            currentUser = MutableStateFlow(user),
-            uiState = MutableStateFlow(ProfileUiState.Success(country = null, city = null)),
-            isRefreshing = MutableStateFlow(false),
-            blacklist = MutableStateFlow(emptyList())
-        )
+        val viewModel =
+            FakeProfileViewModel(
+                currentUser = MutableStateFlow(user),
+                uiState = MutableStateFlow(ProfileUiState.Success(country = null, city = null)),
+                isRefreshing = MutableStateFlow(false),
+                blacklist = MutableStateFlow(emptyList())
+            )
 
         // When
         setContent(viewModel)
@@ -168,12 +174,13 @@ class ProfileRootScreenTest {
     fun profileRootScreen_whenAuthorized_withFriendRequests_displaysBadge() {
         // Given
         val user = createTestUser().copy(friendRequestCount = "3")
-        val viewModel = FakeProfileViewModel(
-            currentUser = MutableStateFlow(user),
-            uiState = MutableStateFlow(ProfileUiState.Success(country = null, city = null)),
-            isRefreshing = MutableStateFlow(false),
-            blacklist = MutableStateFlow(emptyList())
-        )
+        val viewModel =
+            FakeProfileViewModel(
+                currentUser = MutableStateFlow(user),
+                uiState = MutableStateFlow(ProfileUiState.Success(country = null, city = null)),
+                isRefreshing = MutableStateFlow(false),
+                blacklist = MutableStateFlow(emptyList())
+            )
 
         // When
         setContent(viewModel)
@@ -187,8 +194,8 @@ class ProfileRootScreenTest {
     /**
      * Создает тестового пользователя
      */
-    private fun createTestUser(): User {
-        return User(
+    private fun createTestUser(): User =
+        User(
             id = 1L,
             name = "Test User",
             fullName = "Test User",
@@ -201,5 +208,4 @@ class ProfileRootScreenTest {
             addedParks = emptyList(),
             journalCount = 0
         )
-    }
 }

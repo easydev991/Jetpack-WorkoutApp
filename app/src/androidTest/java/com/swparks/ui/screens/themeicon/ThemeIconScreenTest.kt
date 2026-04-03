@@ -34,7 +34,7 @@ class ThemeIconScreenTest {
         onThemeChange: (AppTheme) -> Unit = {},
         onDynamicColorsChange: (Boolean) -> Unit = {},
         onIconChange: (AppIcon) -> Unit = {},
-        onBackClick: () -> Unit = {},
+        onBackClick: () -> Unit = {}
     ) {
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
@@ -47,8 +47,8 @@ class ThemeIconScreenTest {
                             onThemeChange = onThemeChange,
                             onDynamicColorsChange = onDynamicColorsChange,
                             onIconChange = onIconChange,
-                            onBackClick = onBackClick,
-                        ),
+                            onBackClick = onBackClick
+                        )
                 )
             }
         }
@@ -168,7 +168,7 @@ class ThemeIconScreenTest {
         var clickedTheme: AppTheme? = null
         setContent(
             theme = AppTheme.DARK,
-            onThemeChange = { clickedTheme = it },
+            onThemeChange = { clickedTheme = it }
         )
 
         // When
@@ -186,7 +186,7 @@ class ThemeIconScreenTest {
         var clickedTheme: AppTheme? = null
         setContent(
             theme = AppTheme.LIGHT,
-            onThemeChange = { clickedTheme = it },
+            onThemeChange = { clickedTheme = it }
         )
 
         // When
@@ -204,7 +204,7 @@ class ThemeIconScreenTest {
         var clickedTheme: AppTheme? = null
         setContent(
             theme = AppTheme.LIGHT,
-            onThemeChange = { clickedTheme = it },
+            onThemeChange = { clickedTheme = it }
         )
 
         // When

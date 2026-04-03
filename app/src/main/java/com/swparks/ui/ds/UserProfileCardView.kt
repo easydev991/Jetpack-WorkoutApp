@@ -63,11 +63,12 @@ fun UserProfileCardView(data: UserProfileData) {
         modifier = data.modifier.fillMaxWidth()
     ) {
         SWAsyncImage(
-            config = AsyncImageConfig(
-                imageStringURL = data.imageStringURL,
-                size = 150.dp,
-                contentScale = ContentScale.Crop
-            )
+            config =
+                AsyncImageConfig(
+                    imageStringURL = data.imageStringURL,
+                    size = 150.dp,
+                    contentScale = ContentScale.Crop
+                )
         )
         Column(
             verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall)),
@@ -83,7 +84,7 @@ fun UserProfileCardView(data: UserProfileData) {
                 textAlign = TextAlign.Center
             )
             Column(
-                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall_plus)),
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xxsmall_plus))
             ) {
                 AdditionalInfoRow(
                     imageVector = Icons.Rounded.AccountCircle,
@@ -103,7 +104,6 @@ fun UserProfileCardView(data: UserProfileData) {
         }
     }
 }
-
 
 @Composable
 private fun AdditionalInfoRow(
@@ -138,13 +138,14 @@ fun UserProfileCardViewPreview() {
     JetpackWorkoutAppTheme {
         Surface {
             UserProfileCardView(
-                data = UserProfileData(
-                    imageStringURL = null,
-                    userName = "Very very very very very very long user name for two lines",
-                    gender = stringResource(id = Gender.FEMALE.description),
-                    age = 30,
-                    shortAddress = "Россия, Москва"
-                )
+                data =
+                    UserProfileData(
+                        imageStringURL = null,
+                        userName = "Very very very very very very long user name for two lines",
+                        gender = stringResource(id = Gender.FEMALE.description),
+                        age = 30,
+                        shortAddress = "Россия, Москва"
+                    )
             )
         }
     }

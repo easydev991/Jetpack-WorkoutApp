@@ -8,6 +8,7 @@ import com.swparks.R
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.toDomain
 import com.swparks.data.repository.SWRepository
+import com.swparks.domain.model.JournalEntry
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.usecase.ICanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.IDeleteJournalEntryUseCase
@@ -50,7 +51,7 @@ data class JournalEntriesDeps(
     val swRepository: SWRepository,
     val savedStateHandle: SavedStateHandle,
     val userNotifier: UserNotifier,
-    val resources: ResourcesProvider,
+    val resources: ResourcesProvider
 )
 
 /**
@@ -67,8 +68,8 @@ class JournalEntriesViewModel(
     private val journalOwnerId: Long,
     private val journalId: Long,
     private val deps: JournalEntriesDeps
-) : ViewModel(), IJournalEntriesViewModel {
-
+) : ViewModel(),
+    IJournalEntriesViewModel {
     private companion object {
         const val TAG = "JournalEntriesVM"
     }
@@ -95,11 +96,15 @@ class JournalEntriesViewModel(
     override val canCreateEntry: StateFlow<Boolean> = _canCreateEntry.asStateFlow()
 
     // Текущий пользователь (для canEditEntry)
-    private val _currentUserId = MutableStateFlow<Long?>(null)
+    private val currentUserIdFlow = MutableStateFlow<Long?>(null)
 
     // Поток событий UI (реализует интерфейс IJournalEntriesViewModel)
     private val _events = MutableSharedFlow<JournalEntriesEvent>()
     override val events: SharedFlow<JournalEntriesEvent> = _events.asSharedFlow()
+
+    private var latestObservedEntries = emptyList<JournalEntry>()
+    private var hasObservedEntries = false
+    private var hasCompletedSuccessfulLoad = false
 
     init {
         observeCurrentUserId()
@@ -109,7 +114,7 @@ class JournalEntriesViewModel(
         observeEntries()
         observeJournal()
         loadJournal()
-        loadEntries()
+        loadEntries(LoadMode.INITIAL)
     }
 
     /**
@@ -152,15 +157,17 @@ class JournalEntriesViewModel(
      * Обновляет UI State при изменении дневника в кэше.
      */
     private fun observeJournal() {
-        deps.swRepository.observeJournalById(journalId)
+        deps.swRepository
+            .observeJournalById(journalId)
             .onEach { journal ->
                 _uiState.update { state ->
                     if (state is JournalEntriesUiState.Content) {
                         state.copy(journal = journal)
-                    } else state
+                    } else {
+                        state
+                    }
                 }
-            }
-            .launchIn(viewModelScope)
+            }.launchIn(viewModelScope)
     }
 
     /**
@@ -169,7 +176,7 @@ class JournalEntriesViewModel(
     private fun observeCurrentUserId() {
         viewModelScope.launch {
             deps.userPreferencesRepository.currentUserId.collect { userId ->
-                _currentUserId.value = userId
+                currentUserIdFlow.value = userId
             }
         }
     }
@@ -181,19 +188,17 @@ class JournalEntriesViewModel(
     private fun observeEntries() {
         viewModelScope.launch {
             deps.getJournalEntriesUseCase(journalOwnerId, journalId).collect { entries ->
-                val firstEntryId = entries.minByOrNull { it.id }?.id
-                // Используем текущее вычисленное значение canCreateEntry
-                val canCreateEntry = _canCreateEntry.value
-                // Сохраняем текущий журнал при обновлении записей
-                val currentJournal = (_uiState.value as? JournalEntriesUiState.Content)?.journal
-                _uiState.value =
-                    JournalEntriesUiState.Content(
-                        entries = entries,
-                        isRefreshing = _isRefreshing.value,
-                        firstEntryId = firstEntryId,
-                        canCreateEntry = canCreateEntry,
-                        journal = currentJournal
-                    )
+                hasObservedEntries = true
+                latestObservedEntries = entries
+                val currentState = _uiState.value
+                val shouldShowContent =
+                    entries.isNotEmpty() ||
+                        hasCompletedSuccessfulLoad ||
+                        currentState is JournalEntriesUiState.Content
+
+                if (shouldShowContent) {
+                    _uiState.value = buildContentState(entries)
+                }
             }
         }
     }
@@ -222,9 +227,10 @@ class JournalEntriesViewModel(
      */
     private fun computeCanCreateEntry(): Flow<Boolean> {
         val commentAccessRaw = deps.savedStateHandle.get<String>("commentAccess")
-        val commentAccessType = commentAccessRaw
-            ?.let { JournalAccess.valueOf(it) }
-            ?: JournalAccess.NOBODY // по умолчанию самый строгий режим
+        val commentAccessType =
+            commentAccessRaw
+                ?.let { JournalAccess.valueOf(it) }
+                ?: JournalAccess.NOBODY // по умолчанию самый строгий режим
 
         return combine(
             deps.userPreferencesRepository.currentUserId,
@@ -237,11 +243,12 @@ class JournalEntriesViewModel(
             Log.d(TAG, "isFriend=${friendsIds.contains(journalOwnerId)}")
             Log.d(TAG, "==================")
 
-            val result = commentAccessType.canCreateEntry(
-                journalOwnerId = this@JournalEntriesViewModel.journalOwnerId, // владелец дневника
-                mainUserId = currentUserIdParam,
-                mainUserFriendsIds = friendsIds
-            )
+            val result =
+                commentAccessType.canCreateEntry(
+                    journalOwnerId = this@JournalEntriesViewModel.journalOwnerId, // владелец дневника
+                    mainUserId = currentUserIdParam,
+                    mainUserFriendsIds = friendsIds
+                )
             Log.d(TAG, "canCreateEntry result: $result")
             result
         }
@@ -253,25 +260,33 @@ class JournalEntriesViewModel(
      */
     @Suppress("TooGenericExceptionCaught")
     override fun loadEntries() {
+        loadEntries(LoadMode.REFRESH)
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private fun loadEntries(mode: LoadMode) {
         viewModelScope.launch {
+            val previousState = _uiState.value
+
             try {
+                if (mode == LoadMode.RETRY) {
+                    _uiState.value = JournalEntriesUiState.InitialLoading
+                }
+
                 _isRefreshing.value = true
 
                 val result = deps.syncJournalEntriesUseCase(journalOwnerId, journalId)
                 result.fold(
                     onSuccess = {
-                        _isRefreshing.value = false
+                        hasCompletedSuccessfulLoad = true
+                        if (hasObservedEntries && _uiState.value !is JournalEntriesUiState.Content) {
+                            _uiState.value = buildContentState(latestObservedEntries)
+                        }
                     },
                     onFailure = { error ->
                         val message = "Ошибка при синхронизации записей: ${error.message}"
                         deps.userNotifier.handleError(AppError.Generic(message, error))
-                        _isRefreshing.value = false
-                        // Если это первая загрузка и список пустой - показываем ошибку
-                        val currentState = _uiState.value
-                        if (currentState is JournalEntriesUiState.Content && currentState.entries.isEmpty()) {
-                            _uiState.value =
-                                JournalEntriesUiState.Error(deps.resources.getString(R.string.error_loading_entries))
-                        }
+                        applyLoadFailureState(previousState)
                     }
                 )
             } catch (e: CancellationException) {
@@ -279,12 +294,9 @@ class JournalEntriesViewModel(
             } catch (e: Exception) {
                 val message = "Исключение при загрузке записей: ${e.message}"
                 deps.userNotifier.handleError(AppError.Generic(message, e))
+                applyLoadFailureState(previousState)
+            } finally {
                 _isRefreshing.value = false
-                val currentState = _uiState.value
-                if (currentState is JournalEntriesUiState.Content && currentState.entries.isEmpty()) {
-                    _uiState.value =
-                        JournalEntriesUiState.Error(deps.resources.getString(R.string.error_loading_entries))
-                }
             }
         }
     }
@@ -294,7 +306,7 @@ class JournalEntriesViewModel(
      * Аналогично loadEntries, но используется для явного повтора пользователем.
      */
     override fun retry() {
-        loadEntries()
+        loadEntries(LoadMode.RETRY)
     }
 
     /**
@@ -315,12 +327,12 @@ class JournalEntriesViewModel(
                 result
                     .onSuccess {
                         deps.userNotifier.showInfo(deps.resources.getString(R.string.entry_deleted))
-                    }
-                    .onFailure { error ->
+                    }.onFailure { error ->
                         deps.userNotifier.handleError(
                             AppError.Generic(
                                 error.message
-                                    ?: deps.resources.getString(R.string.error_delete_entry), error
+                                    ?: deps.resources.getString(R.string.error_delete_entry),
+                                error
                             )
                         )
                     }
@@ -347,16 +359,40 @@ class JournalEntriesViewModel(
      * @param entryId Идентификатор записи
      * @return true если удаление разрешено, false если это первая запись
      */
-    override suspend fun canDeleteEntry(entryId: Long): Boolean {
-        return deps.canDeleteJournalEntryUseCase(entryId, journalId)
-    }
+    override suspend fun canDeleteEntry(entryId: Long): Boolean =
+        deps.canDeleteJournalEntryUseCase(entryId, journalId)
 
     /**
      * Обновить список записей (public метод для refresh).
      * Используется для обновления списка после создания или редактирования записи.
      */
     override fun refresh() {
-        loadEntries()
+        loadEntries(LoadMode.REFRESH)
+    }
+
+    private fun applyLoadFailureState(previousState: JournalEntriesUiState) {
+        val currentState = _uiState.value
+        val hasVisibleContent =
+            previousState is JournalEntriesUiState.Content ||
+                (currentState is JournalEntriesUiState.Content && currentState.entries.isNotEmpty())
+
+        if (!hasVisibleContent) {
+            _uiState.value =
+                JournalEntriesUiState.Error(deps.resources.getString(R.string.error_loading_entries))
+        }
+    }
+
+    private fun buildContentState(entries: List<JournalEntry>): JournalEntriesUiState.Content {
+        val firstEntryId = entries.minByOrNull { it.id }?.id
+        val currentJournal = (_uiState.value as? JournalEntriesUiState.Content)?.journal
+
+        return JournalEntriesUiState.Content(
+            entries = entries,
+            isRefreshing = _isRefreshing.value,
+            firstEntryId = firstEntryId,
+            canCreateEntry = _canCreateEntry.value,
+            journal = currentJournal
+        )
     }
 
     /**
@@ -367,8 +403,8 @@ class JournalEntriesViewModel(
      * @param entry Запись в дневнике
      * @return true если редактирование разрешено
      */
-    override fun canEditEntry(entry: com.swparks.domain.model.JournalEntry): Boolean {
-        val currentUserId = _currentUserId.value
+    override fun canEditEntry(entry: JournalEntry): Boolean {
+        val currentUserId = currentUserIdFlow.value
         val commentAccessRaw = deps.savedStateHandle.get<String>("commentAccess")
         val commentAccessType =
             commentAccessRaw?.let { JournalAccess.valueOf(it) } ?: JournalAccess.NOBODY
@@ -397,8 +433,8 @@ class JournalEntriesViewModel(
      * @param entry Запись в дневнике
      * @return true если удаление разрешено
      */
-    override fun canDeleteEntry(entry: com.swparks.domain.model.JournalEntry): Boolean {
-        val currentUserId = _currentUserId.value
+    override fun canDeleteEntry(entry: JournalEntry): Boolean {
+        val currentUserId = currentUserIdFlow.value
         val commentAccessRaw = deps.savedStateHandle.get<String>("commentAccess")
         val commentAccessType =
             commentAccessRaw?.let { JournalAccess.valueOf(it) } ?: JournalAccess.NOBODY
@@ -441,13 +477,14 @@ class JournalEntriesViewModel(
 
                 Log.i(TAG, "Редактирование настроек дневника: journalId=$journalId, title=$title")
 
-                val result = deps.editJournalSettingsUseCase(
-                    journalId = journalId,
-                    title = title,
-                    userId = journalOwnerId,
-                    viewAccess = viewAccess,
-                    commentAccess = commentAccess
-                )
+                val result =
+                    deps.editJournalSettingsUseCase(
+                        journalId = journalId,
+                        title = title,
+                        userId = journalOwnerId,
+                        viewAccess = viewAccess,
+                        commentAccess = commentAccess
+                    )
 
                 result.fold(
                     onSuccess = {
@@ -476,7 +513,8 @@ class JournalEntriesViewModel(
      * Обновляет локальный кэш и эмитит событие об успехе.
      */
     private suspend fun loadJournalAfterSettingsUpdate(journalId: Long) {
-        deps.swRepository.getJournal(journalOwnerId, journalId)
+        deps.swRepository
+            .getJournal(journalOwnerId, journalId)
             .fold(
                 onSuccess = { journalResponse ->
                     val journal = journalResponse.toDomain()
@@ -504,15 +542,16 @@ class JournalEntriesViewModel(
      * Обработать ошибку редактирования настроек.
      */
     private fun handleEditSettingsError(error: Throwable) {
-        val message = when {
-            error.message?.contains("403") == true -> {
-                deps.resources.getString(R.string.error_no_permission)
-            }
+        val message =
+            when {
+                error.message?.contains("403") == true -> {
+                    deps.resources.getString(R.string.error_no_permission)
+                }
 
-            else -> {
-                deps.resources.getString(R.string.error_saving_settings)
+                else -> {
+                    deps.resources.getString(R.string.error_saving_settings)
+                }
             }
-        }
         deps.userNotifier.handleError(AppError.Generic(message, error))
     }
 }

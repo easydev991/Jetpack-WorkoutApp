@@ -25,7 +25,9 @@ sealed class RegisterUiState {
      *
      * @param userId ID зарегистрированного пользователя
      */
-    data class Success(val userId: Long) : RegisterUiState()
+    data class Success(
+        val userId: Long
+    ) : RegisterUiState()
 
     /**
      * Ошибка регистрации.

@@ -15,26 +15,28 @@ import org.junit.Test
  * Unit тесты для [UserEntityMapper]
  */
 class UserEntityMapperTest {
-
     @Test
     fun user_toEntity_convertsAllFieldsCorrectly() {
         // Given
-        val user = createTestUser(
-            id = 123,
-            name = "testuser",
-            addedParks = listOf(
-                createTestPark(id = 1, name = "Park 1"),
-                createTestPark(id = 2, name = "Park 2")
+        val user =
+            createTestUser(
+                id = 123,
+                name = "testuser",
+                addedParks =
+                    listOf(
+                        createTestPark(id = 1, name = "Park 1"),
+                        createTestPark(id = 2, name = "Park 2")
+                    )
             )
-        )
 
         // When
-        val entity = user.toEntity(
-            isCurrentUser = true,
-            isFriend = false,
-            isFriendRequest = false,
-            isBlacklisted = false
-        )
+        val entity =
+            user.toEntity(
+                isCurrentUser = true,
+                isFriend = false,
+                isFriendRequest = false,
+                isBlacklisted = false
+            )
 
         // Then
         assertEquals(user.id, entity.id)
@@ -96,29 +98,31 @@ class UserEntityMapperTest {
     @Test
     fun userEntity_toDomain_convertsAllFieldsCorrectly() {
         // Given
-        val entity = UserEntity(
-            id = 123,
-            name = "testuser",
-            image = "https://example.com/avatar.jpg",
-            cityId = 1,
-            countryId = 1,
-            birthDate = "1990-01-01",
-            email = "test@example.com",
-            fullName = "Test User",
-            genderCode = 0,
-            friendRequestCount = "1",
-            friendsCount = 10,
-            parksCount = "5",
-            addedParks = listOf(
-                createTestPark(id = 1, name = "Park 1"),
-                createTestPark(id = 2, name = "Park 2")
-            ),
-            journalCount = 3,
-            isCurrentUser = true,
-            isFriend = false,
-            isFriendRequest = false,
-            isBlacklisted = false
-        )
+        val entity =
+            UserEntity(
+                id = 123,
+                name = "testuser",
+                image = "https://example.com/avatar.jpg",
+                cityId = 1,
+                countryId = 1,
+                birthDate = "1990-01-01",
+                email = "test@example.com",
+                fullName = "Test User",
+                genderCode = 0,
+                friendRequestCount = "1",
+                friendsCount = 10,
+                parksCount = "5",
+                addedParks =
+                    listOf(
+                        createTestPark(id = 1, name = "Park 1"),
+                        createTestPark(id = 2, name = "Park 2")
+                    ),
+                journalCount = 3,
+                isCurrentUser = true,
+                isFriend = false,
+                isFriendRequest = false,
+                isBlacklisted = false
+            )
 
         // When
         val user = entity.toDomain()
@@ -150,26 +154,27 @@ class UserEntityMapperTest {
     @Test
     fun userEntity_toDomain_whenAddedParksNull_convertsCorrectly() {
         // Given
-        val entity = UserEntity(
-            id = 123,
-            name = "testuser",
-            image = "https://example.com/avatar.jpg",
-            cityId = 1,
-            countryId = 1,
-            birthDate = "1990-01-01",
-            email = "test@example.com",
-            fullName = "Test User",
-            genderCode = 0,
-            friendRequestCount = "1",
-            friendsCount = 10,
-            parksCount = "5",
-            addedParks = null,
-            journalCount = 3,
-            isCurrentUser = false,
-            isFriend = false,
-            isFriendRequest = false,
-            isBlacklisted = false
-        )
+        val entity =
+            UserEntity(
+                id = 123,
+                name = "testuser",
+                image = "https://example.com/avatar.jpg",
+                cityId = 1,
+                countryId = 1,
+                birthDate = "1990-01-01",
+                email = "test@example.com",
+                fullName = "Test User",
+                genderCode = 0,
+                friendRequestCount = "1",
+                friendsCount = 10,
+                parksCount = "5",
+                addedParks = null,
+                journalCount = 3,
+                isCurrentUser = false,
+                isFriend = false,
+                isFriendRequest = false,
+                isBlacklisted = false
+            )
 
         // When
         val user = entity.toDomain()
@@ -182,26 +187,27 @@ class UserEntityMapperTest {
     @Test
     fun userEntity_toDomain_whenAddedParksEmpty_convertsCorrectly() {
         // Given
-        val entity = UserEntity(
-            id = 123,
-            name = "testuser",
-            image = "https://example.com/avatar.jpg",
-            cityId = 1,
-            countryId = 1,
-            birthDate = "1990-01-01",
-            email = "test@example.com",
-            fullName = "Test User",
-            genderCode = 0,
-            friendRequestCount = "1",
-            friendsCount = 10,
-            parksCount = "5",
-            addedParks = emptyList(),
-            journalCount = 3,
-            isCurrentUser = false,
-            isFriend = false,
-            isFriendRequest = false,
-            isBlacklisted = false
-        )
+        val entity =
+            UserEntity(
+                id = 123,
+                name = "testuser",
+                image = "https://example.com/avatar.jpg",
+                cityId = 1,
+                countryId = 1,
+                birthDate = "1990-01-01",
+                email = "test@example.com",
+                fullName = "Test User",
+                genderCode = 0,
+                friendRequestCount = "1",
+                friendsCount = 10,
+                parksCount = "5",
+                addedParks = emptyList(),
+                journalCount = 3,
+                isCurrentUser = false,
+                isFriend = false,
+                isFriendRequest = false,
+                isBlacklisted = false
+            )
 
         // When
         val user = entity.toDomain()
@@ -215,15 +221,17 @@ class UserEntityMapperTest {
     @Test
     fun roundTrip_conversionReturnsSameUser() {
         // Given
-        val originalUser = createTestUser(
-            id = 123,
-            name = "testuser",
-            addedParks = listOf(
-                createTestPark(id = 1, name = "Park 1"),
-                createTestPark(id = 2, name = "Park 2"),
-                createTestPark(id = 3, name = "Park 3")
+        val originalUser =
+            createTestUser(
+                id = 123,
+                name = "testuser",
+                addedParks =
+                    listOf(
+                        createTestPark(id = 1, name = "Park 1"),
+                        createTestPark(id = 2, name = "Park 2"),
+                        createTestPark(id = 3, name = "Park 3")
+                    )
             )
-        )
 
         // When
         val entity = originalUser.toEntity()
@@ -262,8 +270,8 @@ class UserEntityMapperTest {
         id: Long,
         name: String,
         addedParks: List<Park>? = null
-    ): User {
-        return User(
+    ): User =
+        User(
             id = id,
             name = name,
             image = "https://example.com/avatar.jpg",
@@ -279,13 +287,15 @@ class UserEntityMapperTest {
             addedParks = addedParks,
             journalCount = 3
         )
-    }
 
     /**
      * Вспомогательный метод для создания тестовой площадки
      */
-    private fun createTestPark(id: Long, name: String): Park {
-        return Park(
+    private fun createTestPark(
+        id: Long,
+        name: String
+    ): Park =
+        Park(
             id = id,
             name = name,
             sizeID = 1,
@@ -297,5 +307,4 @@ class UserEntityMapperTest {
             countryID = 1,
             preview = "preview.jpg"
         )
-    }
 }

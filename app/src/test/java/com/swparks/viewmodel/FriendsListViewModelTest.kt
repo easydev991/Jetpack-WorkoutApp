@@ -31,7 +31,6 @@ import java.io.IOException
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class FriendsListViewModelTest {
-
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -49,12 +48,13 @@ class FriendsListViewModelTest {
         swRepository = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
-        friendsListViewModel = FriendsListViewModel(
-            userDao,
-            swRepository,
-            logger,
-            userNotifier
-        )
+        friendsListViewModel =
+            FriendsListViewModel(
+                userDao,
+                swRepository,
+                logger,
+                userNotifier
+            )
     }
 
     @After
@@ -72,115 +72,127 @@ class FriendsListViewModelTest {
     }
 
     @Test
-    fun uiState_whenDataLoaded_shouldReturnSuccess() = runTest {
-        // Given
-        val testUser1 = mockk<UserEntity>(relaxed = true)
-        val testUser2 = mockk<UserEntity>(relaxed = true)
-        val testList = listOf(testUser1, testUser2)
+    fun uiState_whenDataLoaded_shouldReturnSuccess() =
+        runTest {
+            // Given
+            val testUser1 = mockk<UserEntity>(relaxed = true)
+            val testUser2 = mockk<UserEntity>(relaxed = true)
+            val testList = listOf(testUser1, testUser2)
 
-        coEvery { userDao.getFriendRequestsFlow() } returns flowOf(testList)
-        coEvery { userDao.getFriendsFlow() } returns flowOf(testList)
-        coEvery { userDao.getCurrentUserFlow() } returns flowOf(null)
+            coEvery { userDao.getFriendRequestsFlow() } returns flowOf(testList)
+            coEvery { userDao.getFriendsFlow() } returns flowOf(testList)
+            coEvery { userDao.getCurrentUserFlow() } returns flowOf(null)
 
-        // When
-        val viewModel = FriendsListViewModel(
-            userDao,
-            swRepository,
-            logger,
-            userNotifier
-        )
-        advanceUntilIdle()
+            // When
+            val viewModel =
+                FriendsListViewModel(
+                    userDao,
+                    swRepository,
+                    logger,
+                    userNotifier
+                )
+            advanceUntilIdle()
 
-        // Then
-        val state = viewModel.uiState.value
-        assertTrue("Состояние должно быть Success", state is FriendsListUiState.Success)
-        val successState = state as FriendsListUiState.Success
-        assertEquals("Заявки должны содержать 2 пользователя", 2, successState.friendRequests.size)
-        assertEquals("Друзья должны содержать 2 пользователя", 2, successState.friends.size)
-    }
-
-    @Test
-    fun onAcceptFriendRequest_shouldCallRepository() = runTest {
-        // Given
-        val testUserId = 123L
-        coEvery { swRepository.respondToFriendRequest(testUserId, accept = true) } returns mockk(
-            relaxed = true
-        )
-
-        // When
-        friendsListViewModel.onAcceptFriendRequest(testUserId)
-        advanceUntilIdle()
-
-        // Then
-        coVerify(exactly = 1) {
-            swRepository.respondToFriendRequest(testUserId, accept = true)
-        }
-    }
-
-    @Test
-    fun onDeclineFriendRequest_shouldCallRepository() = runTest {
-        // Given
-        val testUserId = 456L
-        coEvery { swRepository.respondToFriendRequest(testUserId, accept = false) } returns mockk(
-            relaxed = true
-        )
-
-        // When
-        friendsListViewModel.onDeclineFriendRequest(testUserId)
-        advanceUntilIdle()
-
-        // Then
-        coVerify(exactly = 1) {
-            swRepository.respondToFriendRequest(testUserId, accept = false)
-        }
-    }
-
-    @Test
-    fun onAcceptFriendRequest_whenRepositorySuccess_thenLogsSuccess() = runTest {
-        // Given
-        val testUserId = 123L
-        coEvery {
-            swRepository.respondToFriendRequest(
-                testUserId,
-                accept = true
+            // Then
+            val state = viewModel.uiState.value
+            assertTrue("Состояние должно быть Success", state is FriendsListUiState.Success)
+            val successState = state as FriendsListUiState.Success
+            assertEquals(
+                "Заявки должны содержать 2 пользователя",
+                2,
+                successState.friendRequests.size
             )
-        } returns Result.success(Unit)
-
-        // When
-        friendsListViewModel.onAcceptFriendRequest(testUserId)
-        advanceUntilIdle()
-
-        // Then
-        coVerify(exactly = 1) {
-            logger.i(any(), "Заявка успешно принята: userId=$testUserId")
+            assertEquals("Друзья должны содержать 2 пользователя", 2, successState.friends.size)
         }
-    }
 
     @Test
-    fun onAcceptFriendRequest_whenRepositoryFails_thenReportsError() = runTest {
-        // Given
-        val testUserId = 123L
-        val testError = IOException("Нет подключения к сети")
-        coEvery {
-            swRepository.respondToFriendRequest(
-                testUserId,
-                accept = true
-            )
-        } returns Result.failure(testError)
+    fun onAcceptFriendRequest_shouldCallRepository() =
+        runTest {
+            // Given
+            val testUserId = 123L
+            coEvery { swRepository.respondToFriendRequest(testUserId, accept = true) } returns
+                mockk(
+                    relaxed = true
+                )
 
-        // When
-        friendsListViewModel.onAcceptFriendRequest(testUserId)
-        advanceUntilIdle()
+            // When
+            friendsListViewModel.onAcceptFriendRequest(testUserId)
+            advanceUntilIdle()
 
-        // Then
-        verify {
-            userNotifier.handleError(
-                match<AppError> {
-                    it is AppError.Network && it.message.contains("Не удалось принять заявку")
-                }
-            )
+            // Then
+            coVerify(exactly = 1) {
+                swRepository.respondToFriendRequest(testUserId, accept = true)
+            }
         }
-    }
+
+    @Test
+    fun onDeclineFriendRequest_shouldCallRepository() =
+        runTest {
+            // Given
+            val testUserId = 456L
+            coEvery { swRepository.respondToFriendRequest(testUserId, accept = false) } returns
+                mockk(
+                    relaxed = true
+                )
+
+            // When
+            friendsListViewModel.onDeclineFriendRequest(testUserId)
+            advanceUntilIdle()
+
+            // Then
+            coVerify(exactly = 1) {
+                swRepository.respondToFriendRequest(testUserId, accept = false)
+            }
+        }
+
+    @Test
+    fun onAcceptFriendRequest_whenRepositorySuccess_thenLogsSuccess() =
+        runTest {
+            // Given
+            val testUserId = 123L
+            coEvery {
+                swRepository.respondToFriendRequest(
+                    testUserId,
+                    accept = true
+                )
+            } returns Result.success(Unit)
+
+            // When
+            friendsListViewModel.onAcceptFriendRequest(testUserId)
+            advanceUntilIdle()
+
+            // Then
+            coVerify(exactly = 1) {
+                logger.i(any(), "Заявка успешно принята: userId=$testUserId")
+            }
+        }
+
+    @Test
+    fun onAcceptFriendRequest_whenRepositoryFails_thenReportsError() =
+        runTest {
+            // Given
+            val testUserId = 123L
+            val testError = IOException("Нет подключения к сети")
+            coEvery {
+                swRepository.respondToFriendRequest(
+                    testUserId,
+                    accept = true
+                )
+            } returns Result.failure(testError)
+
+            // When
+            friendsListViewModel.onAcceptFriendRequest(testUserId)
+            advanceUntilIdle()
+
+            // Then
+            verify {
+                userNotifier.handleError(
+                    match<AppError> {
+                        it is AppError.Network && it.message.contains("Не удалось принять заявку")
+                    }
+                )
+            }
+        }
 
     @Test
     fun onFriendClick_shouldLogAction() {
@@ -197,28 +209,29 @@ class FriendsListViewModelTest {
     }
 
     @Test
-    fun onDeclineFriendRequest_whenRepositoryFails_thenReportsError() = runTest {
-        // Given
-        val testUserId = 456L
-        val testError = IOException("Нет подключения к сети")
-        coEvery {
-            swRepository.respondToFriendRequest(
-                testUserId,
-                accept = false
-            )
-        } returns Result.failure(testError)
+    fun onDeclineFriendRequest_whenRepositoryFails_thenReportsError() =
+        runTest {
+            // Given
+            val testUserId = 456L
+            val testError = IOException("Нет подключения к сети")
+            coEvery {
+                swRepository.respondToFriendRequest(
+                    testUserId,
+                    accept = false
+                )
+            } returns Result.failure(testError)
 
-        // When
-        friendsListViewModel.onDeclineFriendRequest(testUserId)
-        advanceUntilIdle()
+            // When
+            friendsListViewModel.onDeclineFriendRequest(testUserId)
+            advanceUntilIdle()
 
-        // Then
-        verify {
-            userNotifier.handleError(
-                match<AppError> {
-                    it is AppError.Network && it.message.contains("Не удалось отклонить заявку")
-                }
-            )
+            // Then
+            verify {
+                userNotifier.handleError(
+                    match<AppError> {
+                        it is AppError.Network && it.message.contains("Не удалось отклонить заявку")
+                    }
+                )
+            }
         }
-    }
 }

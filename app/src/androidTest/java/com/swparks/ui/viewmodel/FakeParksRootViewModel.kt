@@ -18,11 +18,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 class FakeParksRootViewModel : IParksRootViewModel {
-
-    private val _uiState = MutableStateFlow(ParksRootUiState())
+    private val _uiState = MutableStateFlow(ParksRootUiState(isLoadingFilter = false))
     override val uiState: StateFlow<ParksRootUiState> = _uiState
 
-    private val _events = MutableSharedFlow<ParksRootEvent>()
+    private val _events = MutableSharedFlow<ParksRootEvent>(extraBufferCapacity = 1)
     override val events: SharedFlow<ParksRootEvent> = _events.asSharedFlow()
 
     private val _parksFilter = MutableStateFlow(ParkFilter())
@@ -43,7 +42,7 @@ class FakeParksRootViewModel : IParksRootViewModel {
     private var dialogCauseToShow: PermissionDialogCause? = null
 
     fun reset() {
-        _uiState.value = ParksRootUiState()
+        _uiState.value = ParksRootUiState(isLoadingFilter = false)
         _capturedEvents.clear()
         nextDraft = NewParkDraft.EMPTY
         shouldBypassPermission = false
@@ -61,15 +60,16 @@ class FakeParksRootViewModel : IParksRootViewModel {
     }
 
     override fun onPermissionGranted() {
-        _capturedEvents.add(ParksRootEvent.NavigateToCreatePark(nextDraft))
+        emitEvent(ParksRootEvent.NavigateToCreatePark(nextDraft))
     }
 
     override fun onPermissionDenied(shouldShowRationale: Boolean) {
         if (shouldShowDialogOnPermissionDenied) {
-            _uiState.value = ParksRootUiState(
-                showPermissionDialog = true,
-                permissionDialogCause = dialogCauseToShow
-            )
+            _uiState.value =
+                ParksRootUiState(
+                    showPermissionDialog = true,
+                    permissionDialogCause = dialogCauseToShow
+                )
         } else if (!shouldShowRationale) {
             // If no dialog should be shown and no rationale needed, simulate requesting permission
             permissionLauncher?.invoke(
@@ -87,27 +87,31 @@ class FakeParksRootViewModel : IParksRootViewModel {
         val isGranted = fineLocationGranted || coarseLocationGranted
 
         if (isGranted) {
-            _capturedEvents.add(ParksRootEvent.NavigateToCreatePark(nextDraft))
+            emitEvent(ParksRootEvent.NavigateToCreatePark(nextDraft))
         } else {
-            _uiState.value = ParksRootUiState(
-                showPermissionDialog = true,
-                permissionDialogCause = PermissionDialogCause.FOREVER_DENIED
-            )
+            _uiState.value =
+                ParksRootUiState(
+                    showPermissionDialog = true,
+                    permissionDialogCause = PermissionDialogCause.FOREVER_DENIED,
+                    isLoadingFilter = false
+                )
         }
     }
 
     override fun onDismissDialog() {
-        _uiState.value = _uiState.value.copy(
-            showPermissionDialog = false,
-            permissionDialogCause = null
-        )
+        _uiState.value =
+            _uiState.value.copy(
+                showPermissionDialog = false,
+                permissionDialogCause = null
+            )
     }
 
     override fun onConfirmDialog() {
-        _uiState.value = _uiState.value.copy(
-            showPermissionDialog = false,
-            permissionDialogCause = null
-        )
+        _uiState.value =
+            _uiState.value.copy(
+                showPermissionDialog = false,
+                permissionDialogCause = null
+            )
         permissionLauncher?.invoke(
             mapOf(
                 Manifest.permission.ACCESS_FINE_LOCATION to true,
@@ -117,15 +121,16 @@ class FakeParksRootViewModel : IParksRootViewModel {
     }
 
     override fun onOpenSettings(intent: Intent) {
-        _uiState.value = _uiState.value.copy(
-            showPermissionDialog = false,
-            permissionDialogCause = null
-        )
+        _uiState.value =
+            _uiState.value.copy(
+                showPermissionDialog = false,
+                permissionDialogCause = null
+            )
     }
 
     override fun onLocationSettingsResolutionResult(succeeded: Boolean) {
         if (succeeded) {
-            _capturedEvents.add(ParksRootEvent.NavigateToCreatePark(nextDraft))
+            emitEvent(ParksRootEvent.NavigateToCreatePark(nextDraft))
         }
     }
 
@@ -137,25 +142,31 @@ class FakeParksRootViewModel : IParksRootViewModel {
 
     override fun onFilterToggleSize(size: ParkSize) {
         val current = _uiState.value.localFilter
-        val newFilter = if (current.sizes.contains(size)) {
-            if (current.sizes.size > 1) {
-                current.copy(sizes = current.sizes - size)
-            } else current
-        } else {
-            current.copy(sizes = current.sizes + size)
-        }
+        val newFilter =
+            if (current.sizes.contains(size)) {
+                if (current.sizes.size > 1) {
+                    current.copy(sizes = current.sizes - size)
+                } else {
+                    current
+                }
+            } else {
+                current.copy(sizes = current.sizes + size)
+            }
         _uiState.value = _uiState.value.copy(localFilter = newFilter)
     }
 
     override fun onFilterToggleType(type: ParkType) {
         val current = _uiState.value.localFilter
-        val newFilter = if (current.types.contains(type)) {
-            if (current.types.size > 1) {
-                current.copy(types = current.types - type)
-            } else current
-        } else {
-            current.copy(types = current.types + type)
-        }
+        val newFilter =
+            if (current.types.contains(type)) {
+                if (current.types.size > 1) {
+                    current.copy(types = current.types - type)
+                } else {
+                    current
+                }
+            } else {
+                current.copy(types = current.types + type)
+            }
         _uiState.value = _uiState.value.copy(localFilter = newFilter)
     }
 
@@ -168,10 +179,11 @@ class FakeParksRootViewModel : IParksRootViewModel {
     }
 
     override fun onShowFilterDialog() {
-        _uiState.value = _uiState.value.copy(
-            showFilterDialog = true,
-            localFilter = _parksFilter.value
-        )
+        _uiState.value =
+            _uiState.value.copy(
+                showFilterDialog = true,
+                localFilter = _parksFilter.value
+            )
     }
 
     override fun onDismissFilterDialog() {
@@ -189,18 +201,20 @@ class FakeParksRootViewModel : IParksRootViewModel {
         val city = _uiState.value.cities.find { it.name == cityName }
         val cityId = city?.id?.toIntOrNull()
         if (city != null && cityId != null) {
-            _uiState.value = _uiState.value.copy(
-                localFilter = _uiState.value.localFilter.copy(selectedCityId = cityId),
-                selectedCity = city
-            )
+            _uiState.value =
+                _uiState.value.copy(
+                    localFilter = _uiState.value.localFilter.copy(selectedCityId = cityId),
+                    selectedCity = city
+                )
         }
     }
 
     override fun onClearCityFilter() {
-        _uiState.value = _uiState.value.copy(
-            localFilter = _uiState.value.localFilter.copy(selectedCityId = null),
-            selectedCity = null
-        )
+        _uiState.value =
+            _uiState.value.copy(
+                localFilter = _uiState.value.localFilter.copy(selectedCityId = null),
+                selectedCity = null
+            )
     }
 
     override fun onTabSelected(tab: ParksTab) {
@@ -208,17 +222,22 @@ class FakeParksRootViewModel : IParksRootViewModel {
     }
 
     override fun updateParks(parks: List<Park>) {
-        _uiState.value = _uiState.value.copy(
-            filteredParks = parks,
-            hasParks = parks.isNotEmpty()
-        )
+        _uiState.value =
+            _uiState.value.copy(
+                filteredParks = parks,
+                hasParks = parks.isNotEmpty()
+            )
     }
 
-    fun setParksState(hasParks: Boolean, filteredParks: List<Park>) {
-        _uiState.value = _uiState.value.copy(
-            hasParks = hasParks,
-            filteredParks = filteredParks
-        )
+    fun setParksState(
+        hasParks: Boolean,
+        filteredParks: List<Park>
+    ) {
+        _uiState.value =
+            _uiState.value.copy(
+                hasParks = hasParks,
+                filteredParks = filteredParks
+            )
     }
 
     fun setSelectedCity(city: City?) {
@@ -226,9 +245,15 @@ class FakeParksRootViewModel : IParksRootViewModel {
     }
 
     override val cityNames: List<String>
-        get() = _uiState.value.cities
-            .filter { it.name.contains(_uiState.value.citySearchQuery, ignoreCase = true) }
-            .map { it.name }
+        get() =
+            _uiState.value.cities
+                .filter { it.name.contains(_uiState.value.citySearchQuery, ignoreCase = true) }
+                .map { it.name }
 
     override fun refresh() {}
+
+    private fun emitEvent(event: ParksRootEvent) {
+        _capturedEvents.add(event)
+        _events.tryEmit(event)
+    }
 }

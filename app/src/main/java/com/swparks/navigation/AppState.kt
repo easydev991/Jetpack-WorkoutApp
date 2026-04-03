@@ -42,11 +42,12 @@ private const val TAG = "Navigation"
 @Composable
 fun rememberAppState(
     navController: NavHostController = rememberNavController(),
-    analyticsReporter: AnalyticsReporter,
+    analyticsReporter: AnalyticsReporter
 ): AppState {
-    val appState = remember(navController) {
-        AppState(navController, analyticsReporter)
-    }
+    val appState =
+        remember(navController) {
+            AppState(navController, analyticsReporter)
+        }
 
     // Слушаем изменения навигации для обновления активной вкладки
     DisposableEffect(navController) {
@@ -63,7 +64,7 @@ fun rememberAppState(
                     destination.route?.substringBefore("?") ?: destination.displayName
                 appState.analyticsReporter.logScreenView(
                     screenName = analyticsRoute.substringBefore("/"),
-                    screenClass = analyticsRoute,
+                    screenClass = analyticsRoute
                 )
             }
         navController.addOnDestinationChangedListener(listener)
@@ -81,7 +82,7 @@ fun rememberAppState(
  */
 class AppState(
     val navController: NavHostController,
-    val analyticsReporter: AnalyticsReporter,
+    val analyticsReporter: AnalyticsReporter
 ) {
     private val previousDestination =
         mutableStateOf<NavDestination?>(null)
@@ -163,7 +164,10 @@ class AppState(
      * @param route строка маршрута (может содержать placeholder-ы)
      * @param arguments Bundle с фактическими значениями аргументов навигации
      */
-    fun onDestinationChanged(route: String?, arguments: android.os.Bundle? = null) {
+    fun onDestinationChanged(
+        route: String?,
+        arguments: android.os.Bundle? = null
+    ) {
         Log.d(TAG, "onDestinationChanged: route=$route, arguments=${arguments?.keySet()}")
 
         // Сначала проверяем прямое совпадение с корневой вкладкой
@@ -207,22 +211,24 @@ class AppState(
         @Composable get() {
             val route = currentDestination?.route ?: return false
             val baseRoute = route.substringBefore("/")
-            val screen = Screen.allScreens.find {
-                it.route.substringBefore("/") == baseRoute
-            }
+            val screen =
+                Screen.allScreens.find {
+                    it.route.substringBefore("/") == baseRoute
+                }
             return screen?.parentTab == null
         }
 
     /**
      * Список верхнеуровневых назначений (вкладок)
      */
-    val topLevelDestinations: List<TopLevelDestination> = listOf(
-        PARKS,
-        EVENTS,
-        MESSAGES,
-        PROFILE,
-        MORE,
-    )
+    val topLevelDestinations: List<TopLevelDestination> =
+        listOf(
+            PARKS,
+            EVENTS,
+            MESSAGES,
+            PROFILE,
+            MORE
+        )
 
     /**
      * UI логика для навигации к верхнеуровневому назначению.
@@ -252,7 +258,7 @@ class AppState(
                 // Удаляем весь стек выше корня вкладки (включительно),
                 // затем создаем заново
                 popUpTo(topLevelDestination.route) {
-                    inclusive = true  // Удаляем и сам корень вкладки
+                    inclusive = true // Удаляем и сам корень вкладки
                 }
                 launchSingleTop = true
                 // restoreState = false — не восстанавливаем, а создаем заново
@@ -277,50 +283,54 @@ class AppState(
             )
         }
     }
-
 }
 
 /**
  * Определения верхнеуровневых назначений (вкладок)
  */
 object TopLevelDestinations {
-    val PARKS = TopLevelDestination(
-        route = Screen.Parks.route,
-        selectedIcon = Icons.Filled.Map,
-        unselectedIcon = Icons.Outlined.Map,
-        iconTextId = R.string.parks,
-        titleTextId = R.string.parks_title,
-    )
+    val PARKS =
+        TopLevelDestination(
+            route = Screen.Parks.route,
+            selectedIcon = Icons.Filled.Map,
+            unselectedIcon = Icons.Outlined.Map,
+            iconTextId = R.string.parks,
+            titleTextId = R.string.parks_title
+        )
 
-    val EVENTS = TopLevelDestination(
-        route = Screen.Events.route,
-        selectedIcon = Icons.Filled.Event,
-        unselectedIcon = Icons.Outlined.Event,
-        iconTextId = R.string.events,
-        titleTextId = R.string.events_title,
-    )
+    val EVENTS =
+        TopLevelDestination(
+            route = Screen.Events.route,
+            selectedIcon = Icons.Filled.Event,
+            unselectedIcon = Icons.Outlined.Event,
+            iconTextId = R.string.events,
+            titleTextId = R.string.events_title
+        )
 
-    val MESSAGES = TopLevelDestination(
-        route = Screen.Messages.route,
-        selectedIcon = Icons.AutoMirrored.Filled.Chat,
-        unselectedIcon = Icons.AutoMirrored.Outlined.Chat,
-        iconTextId = R.string.messages,
-        titleTextId = R.string.messages_title,
-    )
+    val MESSAGES =
+        TopLevelDestination(
+            route = Screen.Messages.route,
+            selectedIcon = Icons.AutoMirrored.Filled.Chat,
+            unselectedIcon = Icons.AutoMirrored.Outlined.Chat,
+            iconTextId = R.string.messages,
+            titleTextId = R.string.messages_title
+        )
 
-    val PROFILE = TopLevelDestination(
-        route = Screen.Profile.route,
-        selectedIcon = Icons.Filled.Person,
-        unselectedIcon = Icons.Outlined.Person,
-        iconTextId = R.string.profile,
-        titleTextId = R.string.profile_title,
-    )
+    val PROFILE =
+        TopLevelDestination(
+            route = Screen.Profile.route,
+            selectedIcon = Icons.Filled.Person,
+            unselectedIcon = Icons.Outlined.Person,
+            iconTextId = R.string.profile,
+            titleTextId = R.string.profile_title
+        )
 
-    val MORE = TopLevelDestination(
-        route = Screen.More.route,
-        selectedIcon = Icons.AutoMirrored.Filled.List,
-        unselectedIcon = Icons.AutoMirrored.Outlined.List,
-        iconTextId = R.string.more,
-        titleTextId = R.string.more_title,
-    )
+    val MORE =
+        TopLevelDestination(
+            route = Screen.More.route,
+            selectedIcon = Icons.AutoMirrored.Filled.List,
+            unselectedIcon = Icons.AutoMirrored.Outlined.List,
+            iconTextId = R.string.more,
+            titleTextId = R.string.more_title
+        )
 }

@@ -18,7 +18,10 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
+import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -38,7 +41,6 @@ import org.junit.Test
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class JournalsViewModelTest {
-
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -51,19 +53,20 @@ class JournalsViewModelTest {
     private lateinit var viewModel: JournalsViewModel
 
     private val testUserId = 1L
-    private val testJournal = Journal(
-        id = 1L,
-        title = "Тестовый дневник",
-        lastMessageImage = null,
-        createDate = "2024-01-01",
-        modifyDate = "2024-01-15",
-        lastMessageDate = "2024-01-15",
-        lastMessageText = "Последнее сообщение",
-        entriesCount = 10,
-        ownerId = testUserId,
-        viewAccess = JournalAccess.ALL,
-        commentAccess = JournalAccess.ALL
-    )
+    private val testJournal =
+        Journal(
+            id = 1L,
+            title = "Тестовый дневник",
+            lastMessageImage = null,
+            createDate = "2024-01-01",
+            modifyDate = "2024-01-15",
+            lastMessageDate = "2024-01-15",
+            lastMessageText = "Последнее сообщение",
+            entriesCount = 10,
+            ownerId = testUserId,
+            viewAccess = JournalAccess.ALL,
+            commentAccess = JournalAccess.ALL
+        )
 
     @Before
     fun setup() {
@@ -101,15 +104,16 @@ class JournalsViewModelTest {
         coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
 
         // When
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
+        viewModel =
+            JournalsViewModel(
+                testUserId,
+                getJournalsUseCase,
+                syncJournalsUseCase,
+                deleteJournalUseCase,
+                editJournalSettingsUseCase,
+                userNotifier,
+                resources
+            )
 
         // Then
         val initialState = viewModel.uiState.value
@@ -120,656 +124,821 @@ class JournalsViewModelTest {
     }
 
     @Test
-    fun init_whenViewModelCreated_thenCallsLoadJournals() = runTest {
-        // Given
-        coEvery { getJournalsUseCase(testUserId) } returns emptyFlow()
-        coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
+    fun init_whenViewModelCreated_thenCallsLoadJournals() =
+        runTest {
+            // Given
+            coEvery { getJournalsUseCase(testUserId) } returns emptyFlow()
+            coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
 
-        // When
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            // When
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        // Then
-        coVerify(exactly = 1) { syncJournalsUseCase(testUserId) }
-    }
-
-    @Test
-    fun loadJournals_whenSyncSucceeds_thenSetsIsRefreshingToFalse() = runTest {
-        // Given
-        coEvery { getJournalsUseCase(testUserId) } returns emptyFlow()
-        coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
-
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
-
-        // When
-        viewModel.loadJournals()
-        advanceUntilIdle()
-
-        // Then
-        val isRefreshing = viewModel.isRefreshing.value
-        assertTrue(
-            "Флаг обновления должен быть false после успешной синхронизации",
-            !isRefreshing
-        )
-    }
+            // Then
+            coVerify(exactly = 1) { syncJournalsUseCase(testUserId) }
+        }
 
     @Test
-    fun loadJournals_whenSyncFailsAndListIsEmpty_thenSetsErrorState() = runTest {
-        // Given
-        val errorMessage = "Ошибка сети"
-        coEvery { getJournalsUseCase(testUserId) } returns flowOf(emptyList())
-        coEvery { syncJournalsUseCase(testUserId) } returns Result.failure(
-            Exception(errorMessage)
-        )
+    fun loadJournals_whenSyncSucceeds_thenSetsIsRefreshingToFalse() =
+        runTest {
+            // Given
+            coEvery { getJournalsUseCase(testUserId) } returns emptyFlow()
+            coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
 
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        // When
-        viewModel.loadJournals()
-        advanceUntilIdle()
+            // When
+            viewModel.loadJournals()
+            advanceUntilIdle()
 
-        // Then
-        val state = viewModel.uiState.value
-        assertTrue(
-            "Состояние должно быть Error при неудачной загрузке",
-            state is JournalsUiState.Error
-        )
-        val errorState = state as JournalsUiState.Error
-        assertEquals(
-            "Сообщение об ошибке должно содержать Error loading journals",
-            "Error loading journals",
-            errorState.message
-        )
-    }
+            // Then
+            val isRefreshing = viewModel.isRefreshing.value
+            assertTrue(
+                "Флаг обновления должен быть false после успешной синхронизации",
+                !isRefreshing
+            )
+        }
 
     @Test
-    fun loadJournals_whenSyncFailsAndListIsNotEmpty_thenKeepsContentState() = runTest {
-        // Given
-        coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
-        coEvery { syncJournalsUseCase(testUserId) } returns Result.failure(
-            Exception("Ошибка сети")
-        )
+    fun loadJournals_whenSyncFailsAndListIsEmpty_thenSetsErrorState() =
+        runTest {
+            // Given
+            val errorMessage = "Ошибка сети"
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(emptyList())
+            coEvery { syncJournalsUseCase(testUserId) } returns
+                Result.failure(
+                    Exception(errorMessage)
+                )
 
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        // When
-        viewModel.loadJournals()
-        advanceUntilIdle()
+            // When
+            viewModel.loadJournals()
+            advanceUntilIdle()
 
-        // Then
-        val state = viewModel.uiState.value
-        assertTrue(
-            "Состояние должно оставаться Content при наличии данных",
-            state is JournalsUiState.Content
-        )
-    }
-
-    @Test
-    fun loadJournals_whenExceptionThrown_thenSetsErrorState() = runTest {
-        // Given
-        coEvery { getJournalsUseCase(testUserId) } returns flowOf(emptyList())
-        coEvery { syncJournalsUseCase(testUserId) } throws Exception("Неожиданная ошибка")
-
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
-
-        // When
-        viewModel.loadJournals()
-        advanceUntilIdle()
-
-        // Then
-        val state = viewModel.uiState.value
-        assertTrue(
-            "Состояние должно быть Error при исключении",
-            state is JournalsUiState.Error
-        )
-    }
+            // Then
+            val state = viewModel.uiState.value
+            assertTrue(
+                "Состояние должно быть Error при неудачной загрузке",
+                state is JournalsUiState.Error
+            )
+            val errorState = state as JournalsUiState.Error
+            assertEquals(
+                "Сообщение об ошибке должно содержать Error loading journals",
+                "Error loading journals",
+                errorState.message
+            )
+        }
 
     @Test
-    fun loadJournals_whenSuccess_thenCallsSyncUseCase() = runTest {
-        // Given
-        coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
-        coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
+    fun loadJournals_whenSyncFailsAndListIsNotEmpty_thenKeepsContentState() =
+        runTest {
+            // Given
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
+            coEvery { syncJournalsUseCase(testUserId) } returns
+                Result.failure(
+                    Exception("Ошибка сети")
+                )
 
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        // Сбрасываем верификацию (init уже вызвал loadJournals)
-        coVerify(exactly = 1) { syncJournalsUseCase(testUserId) }
+            // When
+            viewModel.loadJournals()
+            advanceUntilIdle()
 
-        // When
-        viewModel.loadJournals()
-        advanceUntilIdle()
-
-        // Then
-        coVerify(atLeast = 2) { syncJournalsUseCase(testUserId) }
-    }
-
-    @Test
-    fun retry_whenCalled_thenCallsLoadJournalsAgain() = runTest {
-        // Given
-        coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
-        coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
-
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
-
-        // Сбрасываем верификацию
-        coVerify(exactly = 1) { syncJournalsUseCase(testUserId) }
-
-        // When
-        viewModel.retry()
-        advanceUntilIdle()
-
-        // Then
-        coVerify(atLeast = 2) { syncJournalsUseCase(testUserId) }
-    }
+            // Then
+            val state = viewModel.uiState.value
+            assertTrue(
+                "Состояние должно оставаться Content при наличии данных",
+                state is JournalsUiState.Content
+            )
+        }
 
     @Test
-    fun observeJournals_whenDataEmitted_thenUpdatesUiState() = runTest {
-        // Given
-        val journals = listOf(testJournal)
-        coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
+    fun loadJournals_whenExceptionThrown_thenSetsErrorState() =
+        runTest {
+            // Given
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(emptyList())
+            coEvery { syncJournalsUseCase(testUserId) } throws Exception("Неожиданная ошибка")
 
-        // When
-        coEvery { getJournalsUseCase(testUserId) } returns flowOf(journals)
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        // Then
-        val state = viewModel.uiState.value
-        assertTrue(
-            "Состояние должно быть Content",
-            state is JournalsUiState.Content
-        )
-        val contentState = state as JournalsUiState.Content
-        assertEquals(
-            "Количество дневников должно совпадать",
-            journals.size,
-            contentState.journals.size
-        )
-    }
+            // When
+            viewModel.loadJournals()
+            advanceUntilIdle()
+
+            // Then
+            val state = viewModel.uiState.value
+            assertTrue(
+                "Состояние должно быть Error при исключении",
+                state is JournalsUiState.Error
+            )
+        }
 
     @Test
-    fun observeJournals_whenEmptyList_thenShowsEmptyContent() = runTest {
-        // Given
-        val emptyJournals = emptyList<Journal>()
-        coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
+    fun loadJournals_whenSuccess_thenCallsSyncUseCase() =
+        runTest {
+            // Given
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
+            coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
 
-        // When
-        coEvery { getJournalsUseCase(testUserId) } returns flowOf(emptyJournals)
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        // Then
-        val state = viewModel.uiState.value
-        assertTrue(
-            "Состояние должно быть Content с пустым списком",
-            state is JournalsUiState.Content
-        )
-        val contentState = state as JournalsUiState.Content
-        assertEquals(
-            "Список дневников должен быть пустым",
-            0,
-            contentState.journals.size
-        )
-    }
+            // Сбрасываем верификацию (init уже вызвал loadJournals)
+            coVerify(exactly = 1) { syncJournalsUseCase(testUserId) }
+
+            // When
+            viewModel.loadJournals()
+            advanceUntilIdle()
+
+            // Then
+            coVerify(atLeast = 2) { syncJournalsUseCase(testUserId) }
+        }
 
     @Test
-    fun isRefreshing_whenLoadJournalsCalled_thenBecomesTrueThenFalse() = runTest {
-        // Given
-        coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
-        coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
+    fun retry_whenCalled_thenCallsLoadJournalsAgain() =
+        runTest {
+            // Given
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
+            coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
 
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        // Сбрасываем состояние
-        coVerify(exactly = 1) { syncJournalsUseCase(testUserId) }
+            // Сбрасываем верификацию
+            coVerify(exactly = 1) { syncJournalsUseCase(testUserId) }
 
-        // When
-        viewModel.loadJournals()
+            // When
+            viewModel.retry()
+            advanceUntilIdle()
 
-        // Then - Флаг должен быть true сразу после вызова
-        // (но из-за асинхронности может уже успеть измениться)
-        // Проверяем финальное состояние
-        advanceUntilIdle()
-        val isRefreshing = viewModel.isRefreshing.value
-        assertTrue(
-            "Флаг обновления должен быть false после завершения загрузки",
-            !isRefreshing
-        )
-    }
+            // Then
+            coVerify(atLeast = 2) { syncJournalsUseCase(testUserId) }
+        }
 
     @Test
-    fun observeJournals_whenMultipleJournals_thenShowsAll() = runTest {
-        // Given
-        val journals = listOf(
-            testJournal,
-            testJournal.copy(id = 2L, title = "Дневник 2"),
-            testJournal.copy(id = 3L, title = "Дневник 3")
-        )
-        coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
+    fun observeJournals_whenDataEmitted_thenUpdatesUiState() =
+        runTest {
+            // Given
+            val journals = listOf(testJournal)
+            coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
 
-        // When
-        coEvery { getJournalsUseCase(testUserId) } returns flowOf(journals)
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            // When
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(journals)
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        // Then
-        val state = viewModel.uiState.value
-        assertTrue(
-            "Состояние должно быть Content",
-            state is JournalsUiState.Content
-        )
-        val contentState = state as JournalsUiState.Content
-        assertEquals(
-            "Количество дневников должно быть 3",
-            3,
-            contentState.journals.size
-        )
-    }
+            // Then
+            val state = viewModel.uiState.value
+            assertTrue(
+                "Состояние должно быть Content",
+                state is JournalsUiState.Content
+            )
+            val contentState = state as JournalsUiState.Content
+            assertEquals(
+                "Количество дневников должно совпадать",
+                journals.size,
+                contentState.journals.size
+            )
+        }
+
+    @Test
+    fun observeJournals_whenEmptyList_thenShowsEmptyContent() =
+        runTest {
+            // Given
+            val emptyJournals = emptyList<Journal>()
+            coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
+
+            // When
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(emptyJournals)
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
+
+            // Then
+            val state = viewModel.uiState.value
+            assertTrue(
+                "Состояние должно быть Content с пустым списком",
+                state is JournalsUiState.Content
+            )
+            val contentState = state as JournalsUiState.Content
+            assertEquals(
+                "Список дневников должен быть пустым",
+                0,
+                contentState.journals.size
+            )
+        }
+
+    @Test
+    fun isRefreshing_whenLoadJournalsCalled_thenBecomesTrueThenFalse() =
+        runTest {
+            // Given
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
+            coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
+
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
+
+            // Сбрасываем состояние
+            coVerify(exactly = 1) { syncJournalsUseCase(testUserId) }
+
+            // When
+            viewModel.loadJournals()
+
+            // Then - Флаг должен быть true сразу после вызова
+            // (но из-за асинхронности может уже успеть измениться)
+            // Проверяем финальное состояние
+            advanceUntilIdle()
+            val isRefreshing = viewModel.isRefreshing.value
+            assertTrue(
+                "Флаг обновления должен быть false после завершения загрузки",
+                !isRefreshing
+            )
+        }
+
+    @Test
+    fun retry_whenStateIsError_thenShowsInitialLoadingAndThenContent() =
+        runTest {
+            val journalsFlow = MutableStateFlow(emptyList<Journal>())
+            val retryResult = CompletableDeferred<Result<Unit>>()
+            var syncCallCount = 0
+
+            coEvery { getJournalsUseCase(testUserId) } returns journalsFlow
+            coEvery { syncJournalsUseCase(testUserId) } coAnswers {
+                syncCallCount++
+                when (syncCallCount) {
+                    1 -> Result.failure(Exception("initial failure"))
+                    else -> retryResult.await()
+                }
+            }
+
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
+
+            assertTrue(viewModel.uiState.value is JournalsUiState.Error)
+
+            viewModel.retry()
+
+            assertTrue(viewModel.uiState.value is JournalsUiState.InitialLoading)
+            assertTrue(viewModel.isRefreshing.value)
+
+            journalsFlow.value = listOf(testJournal)
+            retryResult.complete(Result.success(Unit))
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertTrue(state is JournalsUiState.Content)
+            assertEquals(listOf(testJournal), (state as JournalsUiState.Content).journals)
+        }
+
+    @Test
+    fun retry_whenStateIsError_thenShowsInitialLoadingAndThenError() =
+        runTest {
+            val journalsFlow = MutableStateFlow(emptyList<Journal>())
+            val retryResult = CompletableDeferred<Result<Unit>>()
+            var syncCallCount = 0
+
+            coEvery { getJournalsUseCase(testUserId) } returns journalsFlow
+            coEvery { syncJournalsUseCase(testUserId) } coAnswers {
+                syncCallCount++
+                when (syncCallCount) {
+                    1 -> Result.failure(Exception("initial failure"))
+                    else -> retryResult.await()
+                }
+            }
+
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
+
+            viewModel.retry()
+
+            assertTrue(viewModel.uiState.value is JournalsUiState.InitialLoading)
+            retryResult.complete(Result.failure(Exception("retry failure")))
+            advanceUntilIdle()
+
+            assertTrue(viewModel.uiState.value is JournalsUiState.Error)
+        }
+
+    @Test
+    fun loadJournals_whenContentAlreadyExistsAndSyncFails_thenKeepsContentState() =
+        runTest {
+            val journalsFlow = MutableStateFlow(listOf(testJournal))
+            val refreshResult = CompletableDeferred<Result<Unit>>()
+            var syncCallCount = 0
+
+            coEvery { getJournalsUseCase(testUserId) } returns journalsFlow
+            coEvery { syncJournalsUseCase(testUserId) } coAnswers {
+                syncCallCount++
+                when (syncCallCount) {
+                    1 -> Result.success(Unit)
+                    else -> refreshResult.await()
+                }
+            }
+
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
+
+            viewModel.loadJournals()
+
+            val loadingState = viewModel.uiState.value
+            assertTrue(loadingState is JournalsUiState.Content)
+            assertTrue(viewModel.isRefreshing.value)
+
+            refreshResult.complete(Result.failure(Exception("refresh failure")))
+            advanceUntilIdle()
+
+            val finalState = viewModel.uiState.value
+            assertTrue(finalState is JournalsUiState.Content)
+            assertEquals(listOf(testJournal), (finalState as JournalsUiState.Content).journals)
+            verify(atLeast = 1) { userNotifier.handleError(any()) }
+        }
+
+    @Test
+    fun observeJournals_whenMultipleJournals_thenShowsAll() =
+        runTest {
+            // Given
+            val journals =
+                listOf(
+                    testJournal,
+                    testJournal.copy(id = 2L, title = "Дневник 2"),
+                    testJournal.copy(id = 3L, title = "Дневник 3")
+                )
+            coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
+
+            // When
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(journals)
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
+
+            // Then
+            val state = viewModel.uiState.value
+            assertTrue(
+                "Состояние должно быть Content",
+                state is JournalsUiState.Content
+            )
+            val contentState = state as JournalsUiState.Content
+            assertEquals(
+                "Количество дневников должно быть 3",
+                3,
+                contentState.journals.size
+            )
+        }
 
     /**
      * Тест 13: Успешное удаление дневника эмитит событие Snackbar с сообщением об успехе
      */
     @Test
-    fun testDeleteJournal_success_emitsSnackbarEvent() = runTest {
-        // Given
-        val testJournalId = 1L
-        coEvery {
-            deleteJournalUseCase(testUserId, testJournalId)
-        } returns Result.success(Unit)
+    fun testDeleteJournal_success_emitsSnackbarEvent() =
+        runTest {
+            // Given
+            val testJournalId = 1L
+            coEvery {
+                deleteJournalUseCase(testUserId, testJournalId)
+            } returns Result.success(Unit)
 
-        // When
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            // When
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        // Then - подписываемся на события перед вызовом deleteJournal
-        viewModel.deleteJournal(testJournalId)
-        advanceUntilIdle()
+            // Then - подписываемся на события перед вызовом deleteJournal
+            viewModel.deleteJournal(testJournalId)
+            advanceUntilIdle()
 
-        // Проверяем, что showInfo был вызван с сообщением об успешном удалении
-        coVerify(exactly = 1) {
-            userNotifier.showInfo("Journal deleted")
+            // Проверяем, что showInfo был вызван с сообщением об успешном удалении
+            coVerify(exactly = 1) {
+                userNotifier.showInfo("Journal deleted")
+            }
         }
-    }
 
     /**
      * Тест 14: Ошибка при удалении дневника вызывает handleError с текстом ошибки
      */
     @Test
-    fun testDeleteJournal_failure_callsHandleError() = runTest {
-        // Given
-        val testJournalId = 1L
-        val errorMessage = "Ошибка доступа"
-        coEvery {
-            deleteJournalUseCase(testUserId, testJournalId)
-        } returns Result.failure(Exception(errorMessage))
+    fun testDeleteJournal_failure_callsHandleError() =
+        runTest {
+            // Given
+            val testJournalId = 1L
+            val errorMessage = "Ошибка доступа"
+            coEvery {
+                deleteJournalUseCase(testUserId, testJournalId)
+            } returns Result.failure(Exception(errorMessage))
 
-        // When
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            // When
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        viewModel.deleteJournal(testJournalId)
-        advanceUntilIdle()
+            viewModel.deleteJournal(testJournalId)
+            advanceUntilIdle()
 
-        // Then - проверяем, что handleError был вызван
-        coVerify(exactly = 1) {
-            userNotifier.handleError(match { it is AppError.Generic })
+            // Then - проверяем, что handleError был вызван
+            coVerify(exactly = 1) {
+                userNotifier.handleError(match { it is AppError.Generic })
+            }
         }
-    }
 
     /**
      * Тест 15: deleteJournal вызывает use case с правильными параметрами
      */
     @Test
-    fun testDeleteJournal_callsUseCaseWithCorrectParameters() = runTest {
-        // Given
-        val testJournalId = 123L
-        coEvery {
-            deleteJournalUseCase(testUserId, testJournalId)
-        } returns Result.success(Unit)
+    fun testDeleteJournal_callsUseCaseWithCorrectParameters() =
+        runTest {
+            // Given
+            val testJournalId = 123L
+            coEvery {
+                deleteJournalUseCase(testUserId, testJournalId)
+            } returns Result.success(Unit)
 
-        // When
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            // When
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        viewModel.deleteJournal(testJournalId)
-        advanceUntilIdle()
+            viewModel.deleteJournal(testJournalId)
+            advanceUntilIdle()
 
-        // Then - проверяем, что use case был вызван с правильными параметрами
-        coVerify(exactly = 1) {
-            deleteJournalUseCase(
-                userId = testUserId,
-                journalId = testJournalId
-            )
+            // Then - проверяем, что use case был вызван с правильными параметрами
+            coVerify(exactly = 1) {
+                deleteJournalUseCase(
+                    userId = testUserId,
+                    journalId = testJournalId
+                )
+            }
         }
-    }
 
     /**
      * Тест 16: Удаление дневника без сообщения об ошибке (null message)
      */
     @Test
-    fun testDeleteJournal_failureWithoutMessage_callsHandleError() = runTest {
-        // Given
-        val testJournalId = 1L
-        coEvery {
-            deleteJournalUseCase(testUserId, testJournalId)
-        } returns Result.failure(Exception())
+    fun testDeleteJournal_failureWithoutMessage_callsHandleError() =
+        runTest {
+            // Given
+            val testJournalId = 1L
+            coEvery {
+                deleteJournalUseCase(testUserId, testJournalId)
+            } returns Result.failure(Exception())
 
-        // When
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            // When
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        viewModel.deleteJournal(testJournalId)
-        advanceUntilIdle()
+            viewModel.deleteJournal(testJournalId)
+            advanceUntilIdle()
 
-        // Then - проверяем, что handleError был вызван
-        coVerify(exactly = 1) {
-            userNotifier.handleError(match { it is AppError.Generic })
+            // Then - проверяем, что handleError был вызван
+            coVerify(exactly = 1) {
+                userNotifier.handleError(match { it is AppError.Generic })
+            }
         }
-    }
 
     /**
      * Тест 17: isDeleting возвращается в false после завершения удаления
      */
     @Test
-    fun testDeleteJournal_isDeletingReturnsToFalseAfterCompletion() = runTest {
-        // Given
-        val testJournalId = 1L
-        coEvery {
-            deleteJournalUseCase(testUserId, testJournalId)
-        } returns Result.success(Unit)
+    fun testDeleteJournal_isDeletingReturnsToFalseAfterCompletion() =
+        runTest {
+            // Given
+            val testJournalId = 1L
+            coEvery {
+                deleteJournalUseCase(testUserId, testJournalId)
+            } returns Result.success(Unit)
 
-        // When
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            // When
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        // Then - проверяем, что флаг устанавливается в false после завершения
-        viewModel.deleteJournal(testJournalId)
-        advanceUntilIdle()
+            // Then - проверяем, что флаг устанавливается в false после завершения
+            viewModel.deleteJournal(testJournalId)
+            advanceUntilIdle()
 
-        val isDeleting = viewModel.isDeleting.value
-        assertTrue(
-            "Флаг удаления должен быть false после завершения операции",
-            !isDeleting
-        )
-    }
+            val isDeleting = viewModel.isDeleting.value
+            assertTrue(
+                "Флаг удаления должен быть false после завершения операции",
+                !isDeleting
+            )
+        }
 
     /**
      * Тест 18: Успешное сохранение настроек дневника
      */
     @Test
-    fun testEditJournalSettings_success_callsUseCaseWithCorrectParameters() = runTest {
-        // Given
-        val testJournalId = 1L
-        val newTitle = "Новое название"
-        val newViewAccess = JournalAccess.FRIENDS
-        val newCommentAccess = JournalAccess.NOBODY
+    fun testEditJournalSettings_success_callsUseCaseWithCorrectParameters() =
+        runTest {
+            // Given
+            val testJournalId = 1L
+            val newTitle = "Новое название"
+            val newViewAccess = JournalAccess.FRIENDS
+            val newCommentAccess = JournalAccess.NOBODY
 
-        coEvery {
-            editJournalSettingsUseCase(
+            coEvery {
+                editJournalSettingsUseCase(
+                    journalId = testJournalId,
+                    title = newTitle,
+                    userId = testUserId,
+                    viewAccess = newViewAccess,
+                    commentAccess = newCommentAccess
+                )
+            } returns Result.success(Unit)
+
+            coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
+
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
+
+            // When
+            viewModel.editJournalSettings(
                 journalId = testJournalId,
                 title = newTitle,
-                userId = testUserId,
                 viewAccess = newViewAccess,
                 commentAccess = newCommentAccess
             )
-        } returns Result.success(Unit)
+            advanceUntilIdle()
 
-        coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
-
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
-
-        // When
-        viewModel.editJournalSettings(
-            journalId = testJournalId,
-            title = newTitle,
-            viewAccess = newViewAccess,
-            commentAccess = newCommentAccess
-        )
-        advanceUntilIdle()
-
-        // Then - проверяем, что use case был вызван с правильными параметрами
-        coVerify(exactly = 1) {
-            editJournalSettingsUseCase(
-                journalId = testJournalId,
-                title = newTitle,
-                userId = testUserId,
-                viewAccess = newViewAccess,
-                commentAccess = newCommentAccess
-            )
+            // Then - проверяем, что use case был вызван с правильными параметрами
+            coVerify(exactly = 1) {
+                editJournalSettingsUseCase(
+                    journalId = testJournalId,
+                    title = newTitle,
+                    userId = testUserId,
+                    viewAccess = newViewAccess,
+                    commentAccess = newCommentAccess
+                )
+            }
         }
-    }
 
     /**
      * Тест 19: isSavingJournalSettings устанавливается в true перед запросом и в false после успешного сохранения
      */
     @Test
-    fun testEditJournalSettings_success_isSavingJournalSettingsChangesCorrectly() = runTest {
-        // Given
-        val testJournalId = 1L
-        val testJournal = testJournal.copy(id = testJournalId)
+    fun testEditJournalSettings_success_isSavingJournalSettingsChangesCorrectly() =
+        runTest {
+            // Given
+            val testJournalId = 1L
+            val testJournal = testJournal.copy(id = testJournalId)
 
-        coEvery {
-            editJournalSettingsUseCase(any(), any(), any(), any(), any())
-        } returns Result.success(Unit)
+            coEvery {
+                editJournalSettingsUseCase(any(), any(), any(), any(), any())
+            } returns Result.success(Unit)
 
-        coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
-        coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
+            coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
 
-        // When - создаем ViewModel с уже настроенным getJournalsUseCase
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            // When - создаем ViewModel с уже настроенным getJournalsUseCase
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        // Then - проверяем, что флаг устанавливается в false после завершения
-        viewModel.editJournalSettings(
-            journalId = testJournalId,
-            title = "Новое название",
-            viewAccess = JournalAccess.ALL,
-            commentAccess = JournalAccess.ALL
-        )
-        advanceUntilIdle()
+            // Then - проверяем, что флаг устанавливается в false после завершения
+            viewModel.editJournalSettings(
+                journalId = testJournalId,
+                title = "Новое название",
+                viewAccess = JournalAccess.ALL,
+                commentAccess = JournalAccess.ALL
+            )
+            advanceUntilIdle()
 
-        val state = viewModel.uiState.value
-        assertTrue(
-            "Состояние должно быть Content",
-            state is JournalsUiState.Content
-        )
-        val contentState = state as JournalsUiState.Content
-        assertTrue(
-            "Флаг isSavingJournalSettings должен быть false после завершения",
-            !contentState.isSavingJournalSettings
-        )
-    }
+            val state = viewModel.uiState.value
+            assertTrue(
+                "Состояние должно быть Content",
+                state is JournalsUiState.Content
+            )
+            val contentState = state as JournalsUiState.Content
+            assertTrue(
+                "Флаг isSavingJournalSettings должен быть false после завершения",
+                !contentState.isSavingJournalSettings
+            )
+        }
 
     /**
      * Тест 20: При успешном сохранении вызывается syncJournalsUseCase
      */
     @Test
-    fun testEditJournalSettings_success_callsSyncJournalsUseCase() = runTest {
-        // Given
-        val testJournalId = 1L
+    fun testEditJournalSettings_success_callsSyncJournalsUseCase() =
+        runTest {
+            // Given
+            val testJournalId = 1L
 
-        coEvery {
-            editJournalSettingsUseCase(any(), any(), any(), any(), any())
-        } returns Result.success(Unit)
+            coEvery {
+                editJournalSettingsUseCase(any(), any(), any(), any(), any())
+            } returns Result.success(Unit)
 
-        // When
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            // When
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        // Сбрасываем верификацию (init уже вызвал syncJournalsUseCase)
-        coVerify(atLeast = 1) { syncJournalsUseCase(testUserId) }
+            // Сбрасываем верификацию (init уже вызвал syncJournalsUseCase)
+            coVerify(atLeast = 1) { syncJournalsUseCase(testUserId) }
 
-        viewModel.editJournalSettings(
-            journalId = testJournalId,
-            title = "Новое название",
-            viewAccess = JournalAccess.ALL,
-            commentAccess = JournalAccess.ALL
-        )
-        advanceUntilIdle()
+            viewModel.editJournalSettings(
+                journalId = testJournalId,
+                title = "Новое название",
+                viewAccess = JournalAccess.ALL,
+                commentAccess = JournalAccess.ALL
+            )
+            advanceUntilIdle()
 
-        // Then - проверяем, что syncJournalsUseCase был вызван снова после редактирования
-        coVerify(atLeast = 2) { syncJournalsUseCase(testUserId) }
-    }
+            // Then - проверяем, что syncJournalsUseCase был вызван снова после редактирования
+            coVerify(atLeast = 2) { syncJournalsUseCase(testUserId) }
+        }
 
     /**
      * Тест 21: При успешном сохранении не выбрасывается исключение
@@ -777,394 +946,412 @@ class JournalsViewModelTest {
      * поэтому проверяем только, что не было исключений при отправке события
      */
     @Test
-    fun testEditJournalSettings_success_doesNotThrowException() = runTest {
-        // Given
-        val testJournalId = 1L
-        val testJournal = testJournal.copy(id = testJournalId)
+    fun testEditJournalSettings_success_doesNotThrowException() =
+        runTest {
+            // Given
+            val testJournalId = 1L
+            val testJournal = testJournal.copy(id = testJournalId)
 
-        coEvery {
-            editJournalSettingsUseCase(any(), any(), any(), any(), any())
-        } returns Result.success(Unit)
+            coEvery {
+                editJournalSettingsUseCase(any(), any(), any(), any(), any())
+            } returns Result.success(Unit)
 
-        coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
-        coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
+            coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
 
-        // When
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            // When
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        // Then - не должно быть исключений при редактировании
-        viewModel.editJournalSettings(
-            journalId = testJournalId,
-            title = "Новое название",
-            viewAccess = JournalAccess.ALL,
-            commentAccess = JournalAccess.ALL
-        )
-        advanceUntilIdle()
+            // Then - не должно быть исключений при редактировании
+            viewModel.editJournalSettings(
+                journalId = testJournalId,
+                title = "Новое название",
+                viewAccess = JournalAccess.ALL,
+                commentAccess = JournalAccess.ALL
+            )
+            advanceUntilIdle()
 
-        // Проверяем только, что состояние Content обновлено
-        val state = viewModel.uiState.value
-        assertTrue(
-            "Состояние должно быть Content",
-            state is JournalsUiState.Content
-        )
-    }
+            // Проверяем только, что состояние Content обновлено
+            val state = viewModel.uiState.value
+            assertTrue(
+                "Состояние должно быть Content",
+                state is JournalsUiState.Content
+            )
+        }
 
     /**
      * Тест 23: При ошибке сети/сервера isSavingJournalSettings сбрасывается в false
      */
     @Test
-    fun testEditJournalSettings_failure_isSavingJournalSettingsResetsToFalse() = runTest {
-        // Given
-        val testJournalId = 1L
-        val errorMessage = "Ошибка сети"
+    fun testEditJournalSettings_failure_isSavingJournalSettingsResetsToFalse() =
+        runTest {
+            // Given
+            val testJournalId = 1L
+            val errorMessage = "Ошибка сети"
 
-        coEvery {
-            editJournalSettingsUseCase(any(), any(), any(), any(), any())
-        } returns Result.failure(Exception(errorMessage))
+            coEvery {
+                editJournalSettingsUseCase(any(), any(), any(), any(), any())
+            } returns Result.failure(Exception(errorMessage))
 
-        val testJournal = testJournal.copy(id = testJournalId)
-        coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
+            val testJournal = testJournal.copy(id = testJournalId)
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
 
-        // When
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            // When
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        viewModel.editJournalSettings(
-            journalId = testJournalId,
-            title = "Новое название",
-            viewAccess = JournalAccess.ALL,
-            commentAccess = JournalAccess.ALL
-        )
-        advanceUntilIdle()
+            viewModel.editJournalSettings(
+                journalId = testJournalId,
+                title = "Новое название",
+                viewAccess = JournalAccess.ALL,
+                commentAccess = JournalAccess.ALL
+            )
+            advanceUntilIdle()
 
-        // Then - проверяем, что флаг сбрасывается в false при ошибке
-        val state = viewModel.uiState.value
-        assertTrue(
-            "Состояние должно быть Content",
-            state is JournalsUiState.Content
-        )
-        val contentState = state as JournalsUiState.Content
-        assertTrue(
-            "Флаг isSavingJournalSettings должен быть false при ошибке",
-            !contentState.isSavingJournalSettings
-        )
-    }
+            // Then - проверяем, что флаг сбрасывается в false при ошибке
+            val state = viewModel.uiState.value
+            assertTrue(
+                "Состояние должно быть Content",
+                state is JournalsUiState.Content
+            )
+            val contentState = state as JournalsUiState.Content
+            assertTrue(
+                "Флаг isSavingJournalSettings должен быть false при ошибке",
+                !contentState.isSavingJournalSettings
+            )
+        }
 
     /**
      * Тест 24: При ошибке сети/сервера не выбрасывается исключение
      */
     @Test
-    fun testEditJournalSettings_failure_doesNotThrowException() = runTest {
-        // Given
-        val testJournalId = 1L
-        val errorMessage = "Ошибка доступа"
+    fun testEditJournalSettings_failure_doesNotThrowException() =
+        runTest {
+            // Given
+            val testJournalId = 1L
+            val errorMessage = "Ошибка доступа"
 
-        coEvery {
-            editJournalSettingsUseCase(any(), any(), any(), any(), any())
-        } returns Result.failure(Exception(errorMessage))
+            coEvery {
+                editJournalSettingsUseCase(any(), any(), any(), any(), any())
+            } returns Result.failure(Exception(errorMessage))
 
-        val testJournal = testJournal.copy(id = testJournalId)
-        coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
+            val testJournal = testJournal.copy(id = testJournalId)
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
 
-        // When
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            // When
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        // Then - не должно быть исключений при редактировании
-        viewModel.editJournalSettings(
-            journalId = testJournalId,
-            title = "Новое название",
-            viewAccess = JournalAccess.ALL,
-            commentAccess = JournalAccess.ALL
-        )
-        advanceUntilIdle()
+            // Then - не должно быть исключений при редактировании
+            viewModel.editJournalSettings(
+                journalId = testJournalId,
+                title = "Новое название",
+                viewAccess = JournalAccess.ALL,
+                commentAccess = JournalAccess.ALL
+            )
+            advanceUntilIdle()
 
-        // Проверяем только, что состояние Content обновлено
-        val state = viewModel.uiState.value
-        assertTrue(
-            "Состояние должно быть Content",
-            state is JournalsUiState.Content
-        )
-    }
+            // Проверяем только, что состояние Content обновлено
+            val state = viewModel.uiState.value
+            assertTrue(
+                "Состояние должно быть Content",
+                state is JournalsUiState.Content
+            )
+        }
 
     /**
      * Тест 25: При неожиданной ошибке (исключении) isSavingJournalSettings сбрасывается в false
      */
     @Test
-    fun testEditJournalSettings_exception_isSavingJournalSettingsResetsToFalse() = runTest {
-        // Given
-        val testJournalId = 1L
+    fun testEditJournalSettings_exception_isSavingJournalSettingsResetsToFalse() =
+        runTest {
+            // Given
+            val testJournalId = 1L
 
-        coEvery {
-            editJournalSettingsUseCase(any(), any(), any(), any(), any())
-        } throws Exception("Неожиданная ошибка")
+            coEvery {
+                editJournalSettingsUseCase(any(), any(), any(), any(), any())
+            } throws Exception("Неожиданная ошибка")
 
-        val testJournal = testJournal.copy(id = testJournalId)
-        coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
+            val testJournal = testJournal.copy(id = testJournalId)
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
 
-        // When
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            // When
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        viewModel.editJournalSettings(
-            journalId = testJournalId,
-            title = "Новое название",
-            viewAccess = JournalAccess.ALL,
-            commentAccess = JournalAccess.ALL
-        )
-        advanceUntilIdle()
+            viewModel.editJournalSettings(
+                journalId = testJournalId,
+                title = "Новое название",
+                viewAccess = JournalAccess.ALL,
+                commentAccess = JournalAccess.ALL
+            )
+            advanceUntilIdle()
 
-        // Then - проверяем, что флаг сбрасывается в false при исключении
-        val state = viewModel.uiState.value
-        assertTrue(
-            "Состояние должно быть Content",
-            state is JournalsUiState.Content
-        )
-        val contentState = state as JournalsUiState.Content
-        assertTrue(
-            "Флаг isSavingJournalSettings должен быть false при исключении",
-            !contentState.isSavingJournalSettings
-        )
-    }
+            // Then - проверяем, что флаг сбрасывается в false при исключении
+            val state = viewModel.uiState.value
+            assertTrue(
+                "Состояние должно быть Content",
+                state is JournalsUiState.Content
+            )
+            val contentState = state as JournalsUiState.Content
+            assertTrue(
+                "Флаг isSavingJournalSettings должен быть false при исключении",
+                !contentState.isSavingJournalSettings
+            )
+        }
 
     /**
      * Тест 26: При неожиданной ошибке не выбрасывается исключение
      */
     @Test
-    fun testEditJournalSettings_exception_doesNotThrowException() = runTest {
-        // Given
-        val testJournalId = 1L
+    fun testEditJournalSettings_exception_doesNotThrowException() =
+        runTest {
+            // Given
+            val testJournalId = 1L
 
-        coEvery {
-            editJournalSettingsUseCase(any(), any(), any(), any(), any())
-        } throws Exception("Неожиданная ошибка")
+            coEvery {
+                editJournalSettingsUseCase(any(), any(), any(), any(), any())
+            } throws Exception("Неожиданная ошибка")
 
-        val testJournal = testJournal.copy(id = testJournalId)
-        coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
+            val testJournal = testJournal.copy(id = testJournalId)
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
 
-        // When
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            // When
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        // Then - не должно быть исключений при редактировании
-        viewModel.editJournalSettings(
-            journalId = testJournalId,
-            title = "Новое название",
-            viewAccess = JournalAccess.ALL,
-            commentAccess = JournalAccess.ALL
-        )
-        advanceUntilIdle()
+            // Then - не должно быть исключений при редактировании
+            viewModel.editJournalSettings(
+                journalId = testJournalId,
+                title = "Новое название",
+                viewAccess = JournalAccess.ALL,
+                commentAccess = JournalAccess.ALL
+            )
+            advanceUntilIdle()
 
-        // Проверяем только, что состояние Content обновлено
-        val state = viewModel.uiState.value
-        assertTrue(
-            "Состояние должно быть Content",
-            state is JournalsUiState.Content
-        )
-    }
+            // Проверяем только, что состояние Content обновлено
+            val state = viewModel.uiState.value
+            assertTrue(
+                "Состояние должно быть Content",
+                state is JournalsUiState.Content
+            )
+        }
 
     /**
      * Тест 27: При состоянии не Content обновления isSavingJournalSettings игнорируются
      */
     @Test
-    fun testEditJournalSettings_nonContentState_isSavingJournalSettingsIgnored() = runTest {
-        // Given
-        val testJournalId = 1L
+    fun testEditJournalSettings_nonContentState_isSavingJournalSettingsIgnored() =
+        runTest {
+            // Given
+            val testJournalId = 1L
 
-        coEvery {
-            editJournalSettingsUseCase(any(), any(), any(), any(), any())
-        } returns Result.success(Unit)
+            coEvery {
+                editJournalSettingsUseCase(any(), any(), any(), any(), any())
+            } returns Result.success(Unit)
 
-        coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
+            coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
 
-        // When - создаем ViewModel, которая должна начать с InitialLoading
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
+            // When - создаем ViewModel, которая должна начать с InitialLoading
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
 
-        // Сразу вызываем editJournalSettings до того, как перейдем в Content состояние
-        viewModel.editJournalSettings(
-            journalId = testJournalId,
-            title = "Новое название",
-            viewAccess = JournalAccess.ALL,
-            commentAccess = JournalAccess.ALL
-        )
-        advanceUntilIdle()
+            // Сразу вызываем editJournalSettings до того, как перейдем в Content состояние
+            viewModel.editJournalSettings(
+                journalId = testJournalId,
+                title = "Новое название",
+                viewAccess = JournalAccess.ALL,
+                commentAccess = JournalAccess.ALL
+            )
+            advanceUntilIdle()
 
-        // Then - проверяем, что если состояние не Content, оно не меняется
-        val state = viewModel.uiState.value
-        assertTrue(
-            "Состояние не должно быть Content при редактировании в не-Content состоянии",
-            state !is JournalsUiState.Content || !state.isSavingJournalSettings
-        )
-    }
+            // Then - проверяем, что если состояние не Content, оно не меняется
+            val state = viewModel.uiState.value
+            assertTrue(
+                "Состояние не должно быть Content при редактировании в не-Content состоянии",
+                state !is JournalsUiState.Content || !state.isSavingJournalSettings
+            )
+        }
 
     /**
      * Тест 28: При состоянии не Content событие JournalSettingsSaved всё равно эмитится при успехе
      */
     @Test
-    fun testEditJournalSettings_nonContentState_doesNotThrowException() = runTest {
-        // Given
-        val testJournalId = 1L
-        val testJournal = testJournal.copy(id = testJournalId)
+    fun testEditJournalSettings_nonContentState_doesNotThrowException() =
+        runTest {
+            // Given
+            val testJournalId = 1L
+            val testJournal = testJournal.copy(id = testJournalId)
 
-        coEvery {
-            editJournalSettingsUseCase(any(), any(), any(), any(), any())
-        } returns Result.success(Unit)
+            coEvery {
+                editJournalSettingsUseCase(any(), any(), any(), any(), any())
+            } returns Result.success(Unit)
 
-        coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
-        coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
+            coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
 
-        // When - создаем ViewModel
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            // When - создаем ViewModel
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        // Вызываем editJournalSettings
-        viewModel.editJournalSettings(
-            journalId = testJournalId,
-            title = "Новое название",
-            viewAccess = JournalAccess.ALL,
-            commentAccess = JournalAccess.ALL
-        )
-        advanceUntilIdle()
+            // Вызываем editJournalSettings
+            viewModel.editJournalSettings(
+                journalId = testJournalId,
+                title = "Новое название",
+                viewAccess = JournalAccess.ALL,
+                commentAccess = JournalAccess.ALL
+            )
+            advanceUntilIdle()
 
-        // Then - проверяем, что состояние Content обновлено и не было исключений
-        val state = viewModel.uiState.value
-        assertTrue(
-            "Состояние должно быть Content",
-            state is JournalsUiState.Content
-        )
-    }
+            // Then - проверяем, что состояние Content обновлено и не было исключений
+            val state = viewModel.uiState.value
+            assertTrue(
+                "Состояние должно быть Content",
+                state is JournalsUiState.Content
+            )
+        }
 
     /**
      * Тест 29: При успешном сохранении вызывается UserNotifier для уведомления
      */
     @Test
-    fun testEditJournalSettings_success_callsUserNotifier() = runTest {
-        // Given
-        val testJournalId = 1L
+    fun testEditJournalSettings_success_callsUserNotifier() =
+        runTest {
+            // Given
+            val testJournalId = 1L
 
-        coEvery {
-            editJournalSettingsUseCase(any(), any(), any(), any(), any())
-        } returns Result.success(Unit)
+            coEvery {
+                editJournalSettingsUseCase(any(), any(), any(), any(), any())
+            } returns Result.success(Unit)
 
-        coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
+            coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
 
-        // When
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            // When
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        viewModel.editJournalSettings(
-            journalId = testJournalId,
-            title = "Новое название",
-            viewAccess = JournalAccess.ALL,
-            commentAccess = JournalAccess.ALL
-        )
-        advanceUntilIdle()
+            viewModel.editJournalSettings(
+                journalId = testJournalId,
+                title = "Новое название",
+                viewAccess = JournalAccess.ALL,
+                commentAccess = JournalAccess.ALL
+            )
+            advanceUntilIdle()
 
-        // Then - проверяем, что UserNotifier был вызван
-        coVerify(atLeast = 1) { userNotifier.showInfo(any<String>()) }
-    }
+            // Then - проверяем, что UserNotifier был вызван
+            coVerify(atLeast = 1) { userNotifier.showInfo(any<String>()) }
+        }
 
     /**
      * Тест 30: При ошибке сохранения вызывается UserNotifier с сообщением об ошибке
      */
     @Test
-    fun testEditJournalSettings_failure_callsUserNotifierWithError() = runTest {
-        // Given
-        val testJournalId = 1L
+    fun testEditJournalSettings_failure_callsUserNotifierWithError() =
+        runTest {
+            // Given
+            val testJournalId = 1L
 
-        coEvery {
-            editJournalSettingsUseCase(any(), any(), any(), any(), any())
-        } returns Result.failure(Exception("Ошибка сохранения"))
+            coEvery {
+                editJournalSettingsUseCase(any(), any(), any(), any(), any())
+            } returns Result.failure(Exception("Ошибка сохранения"))
 
-        val testJournal = testJournal.copy(id = testJournalId)
-        coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
+            val testJournal = testJournal.copy(id = testJournalId)
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
 
-        // When
-        viewModel = JournalsViewModel(
-            testUserId,
-            getJournalsUseCase,
-            syncJournalsUseCase,
-            deleteJournalUseCase,
-            editJournalSettingsUseCase,
-            userNotifier,
-            resources
-        )
-        advanceUntilIdle()
+            // When
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources
+                )
+            advanceUntilIdle()
 
-        viewModel.editJournalSettings(
-            journalId = testJournalId,
-            title = "Новое название",
-            viewAccess = JournalAccess.ALL,
-            commentAccess = JournalAccess.ALL
-        )
-        advanceUntilIdle()
+            viewModel.editJournalSettings(
+                journalId = testJournalId,
+                title = "Новое название",
+                viewAccess = JournalAccess.ALL,
+                commentAccess = JournalAccess.ALL
+            )
+            advanceUntilIdle()
 
-        // Then - проверяем, что UserNotifier был вызван с ошибкой
-        coVerify(atLeast = 1) { userNotifier.handleError(any()) }
-    }
+            // Then - проверяем, что UserNotifier был вызван с ошибкой
+            coVerify(atLeast = 1) { userNotifier.handleError(any()) }
+        }
 }

@@ -43,17 +43,20 @@ fun ParkInfoCard(
     Card(
         modifier = modifier.widthIn(max = PARK_INFO_CARD_MAX_WIDTH),
         shape = RoundedCornerShape(dimensionResource(R.dimen.corner_radius_small)),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = dimensionResource(R.dimen.elevation_medium)
-        )
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = dimensionResource(R.dimen.elevation_medium)
+            )
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(dimensionResource(R.dimen.spacing_regular)),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(dimensionResource(R.dimen.spacing_regular)),
             verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xsmall))
         ) {
             ParkInfoCardHeader(
@@ -64,11 +67,12 @@ fun ParkInfoCard(
             ParkInfoDescription(park = park)
 
             SWButton(
-                config = ButtonConfig(
-                    size = SWButtonSize.SMALL,
-                    text = stringResource(R.string.see_details),
-                    onClick = { onDetailsClick(park) }
-                )
+                config =
+                    ButtonConfig(
+                        size = SWButtonSize.SMALL,
+                        text = stringResource(R.string.see_details),
+                        onClick = { onDetailsClick(park) }
+                    )
             )
         }
     }
@@ -135,18 +139,19 @@ private fun ParkInfoDescription(park: Park) {
 @Preview
 @Composable
 private fun ParkInfoCardPreview() {
-    val park = Park(
-        id = 1L,
-        name = "Спортивная площадка",
-        sizeID = ParkSize.LARGE.rawValue,
-        typeID = ParkType.MODERN.rawValue,
-        longitude = "37.6173",
-        latitude = "55.7558",
-        address = "ул. Пушкина, д. 10",
-        cityID = 1,
-        countryID = 1,
-        preview = ""
-    )
+    val park =
+        Park(
+            id = 1L,
+            name = "Спортивная площадка",
+            sizeID = ParkSize.LARGE.rawValue,
+            typeID = ParkType.MODERN.rawValue,
+            longitude = "37.6173",
+            latitude = "55.7558",
+            address = "ул. Пушкина, д. 10",
+            cityID = 1,
+            countryID = 1,
+            preview = ""
+        )
     JetpackWorkoutAppTheme {
         ParkInfoCard(
             park = park,

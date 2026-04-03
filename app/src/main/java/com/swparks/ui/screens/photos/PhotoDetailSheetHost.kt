@@ -40,31 +40,34 @@ fun PhotoDetailSheetHost(
     val context = LocalContext.current
     val appContainer = (context.applicationContext as JetpackWorkoutApplication).container
 
-    val viewModel: PhotoDetailViewModel = viewModel(
-        key = buildPhotoDetailViewModelKey(config),
-        factory = PhotoDetailViewModel.factoryWithConfig(
-            config = config,
-            swRepository = appContainer.swRepository,
-            userPreferencesRepository = appContainer.userPreferencesRepository,
-            logger = appContainer.logger,
-            userNotifier = appContainer.userNotifier
+    val viewModel: PhotoDetailViewModel =
+        viewModel(
+            key = buildPhotoDetailViewModelKey(config),
+            factory =
+                PhotoDetailViewModel.factoryWithConfig(
+                    config = config,
+                    swRepository = appContainer.swRepository,
+                    userPreferencesRepository = appContainer.userPreferencesRepository,
+                    logger = appContainer.logger,
+                    userNotifier = appContainer.userNotifier
+                )
         )
-    )
 
     val uiState by viewModel.uiState.collectAsState()
     val isAuthorized by viewModel.isAuthorized.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-        confirmValueChange = { newValue ->
-            when (newValue) {
-                SheetValue.Expanded -> true
-                SheetValue.PartiallyExpanded -> false
-                SheetValue.Hidden -> allowHide
+    val sheetState =
+        rememberModalBottomSheetState(
+            skipPartiallyExpanded = true,
+            confirmValueChange = { newValue ->
+                when (newValue) {
+                    SheetValue.Expanded -> true
+                    SheetValue.PartiallyExpanded -> false
+                    SheetValue.Hidden -> allowHide
+                }
             }
-        }
-    )
+        )
 
     fun dismissSheet(onComplete: () -> Unit) {
         scope.launch {
@@ -82,10 +85,11 @@ fun PhotoDetailSheetHost(
             onDismissRequest = {},
             sheetState = sheetState,
             dragHandle = null,
-            properties = ModalBottomSheetProperties(
-                shouldDismissOnBackPress = false,
-                shouldDismissOnClickOutside = false
-            ),
+            properties =
+                ModalBottomSheetProperties(
+                    shouldDismissOnBackPress = false,
+                    shouldDismissOnClickOutside = false
+                )
         ) {
             SheetContent(
                 uiState = uiState,
@@ -117,7 +121,6 @@ private fun HandleEvents(
         }
     }
 }
-
 
 @Composable
 private fun SheetContent(

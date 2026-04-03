@@ -32,14 +32,15 @@ fun SWTextEditor(
     onTextChange: (String) -> Unit
 ) {
     SWTextField(
-        config = TextFieldConfig(
-            modifier = modifier.defaultMinSize(minHeight = 104.dp),
-            text = text,
-            labelID = labelID,
-            onTextChange = onTextChange,
-            enabled = enabled,
-            singleLine = false
-        )
+        config =
+            TextFieldConfig(
+                modifier = modifier.defaultMinSize(minHeight = 104.dp),
+                text = text,
+                labelID = labelID,
+                onTextChange = onTextChange,
+                enabled = enabled,
+                singleLine = false
+            )
     )
 }
 

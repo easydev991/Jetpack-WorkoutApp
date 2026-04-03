@@ -7,10 +7,10 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 
 @Composable
-inline fun <reified VM : ViewModel> appViewModel(
-    noinline create: () -> VM
-): VM = viewModel(
-    factory = viewModelFactory {
-        initializer { create() }
-    }
-)
+inline fun <reified VM : ViewModel> appViewModel(noinline create: () -> VM): VM =
+    viewModel(
+        factory =
+            viewModelFactory {
+                initializer { create() }
+            }
+    )

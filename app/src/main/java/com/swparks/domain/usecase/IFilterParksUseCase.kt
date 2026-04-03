@@ -4,5 +4,8 @@ import com.swparks.data.model.Park
 import com.swparks.data.model.ParkFilter
 
 interface IFilterParksUseCase {
-    operator fun invoke(allParks: List<Park>, filter: ParkFilter): List<Park>
+    operator fun invoke(
+        allParks: List<Park>,
+        filter: ParkFilter
+    ): List<Park>
 }

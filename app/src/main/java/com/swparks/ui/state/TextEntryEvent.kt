@@ -5,5 +5,8 @@ package com.swparks.ui.state
  */
 sealed class TextEntryEvent {
     data object Success : TextEntryEvent()
-    data class Error(val message: String) : TextEntryEvent()
+
+    data class Error(
+        val message: String
+    ) : TextEntryEvent()
 }

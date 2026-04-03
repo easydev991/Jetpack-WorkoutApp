@@ -29,8 +29,9 @@ object LongStringSerializer : KSerializer<Long> {
         PrimitiveSerialDescriptor("LongString", PrimitiveKind.LONG)
 
     override fun deserialize(decoder: Decoder): Long {
-        val jsonDecoder = decoder as? JsonDecoder
-            ?: throw SerializationException("LongStringSerializer поддерживает только JSON")
+        val jsonDecoder =
+            decoder as? JsonDecoder
+                ?: throw SerializationException("LongStringSerializer поддерживает только JSON")
 
         return when (val element = jsonDecoder.decodeJsonElement()) {
             is JsonPrimitive -> {
@@ -47,7 +48,10 @@ object LongStringSerializer : KSerializer<Long> {
         }
     }
 
-    override fun serialize(encoder: Encoder, value: Long) {
+    override fun serialize(
+        encoder: Encoder,
+        value: Long
+    ) {
         encoder.encodeLong(value)
     }
 }

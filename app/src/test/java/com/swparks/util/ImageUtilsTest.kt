@@ -15,7 +15,6 @@ import org.junit.Test
  * Тесты для ImageUtils.
  */
 class ImageUtilsTest {
-
     private lateinit var context: Context
     private lateinit var contentResolver: ContentResolver
 

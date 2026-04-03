@@ -18,7 +18,6 @@ import java.util.Locale
  * @see DateFormatterTests для примеров форматирования
  */
 object DateFormatter {
-
     private const val DAY_MONTH_YEAR = "d MMM yyyy"
     private const val DAY_MONTH_MEDIUM_TIME = "d MMM, HH:mm"
     private const val MEDIUM_TIME = "HH:mm"
@@ -44,7 +43,6 @@ object DateFormatter {
         dateString: String?,
         showTimeInThisYear: Boolean = true
     ): String {
-
         if (dateString.isNullOrEmpty()) {
             return ""
         }
@@ -52,7 +50,9 @@ object DateFormatter {
         return try {
             val date = parseIsoDate(dateString)
             val localDate = date.toLocalDate()
-            val locale = context.resources.configuration.locales.get(0)
+            val locale =
+                context.resources.configuration.locales
+                    .get(0)
             val yesterdayString = context.getString(com.swparks.R.string.yesterday)
 
             when {
@@ -110,26 +110,33 @@ object DateFormatter {
     @VisibleForTesting
     internal fun parseIsoDate(dateString: String): Date {
         // Пробуем разные форматы ISO8601
-        val formats = listOf(
-            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.forLanguageTag("en-US")).apply {
-                timeZone = java.util.TimeZone.getTimeZone("UTC")
-            },
-            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.forLanguageTag("en-US")).apply {
-                timeZone = java.util.TimeZone.getTimeZone("UTC")
-            },
-            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.forLanguageTag("en-US")).apply {
-                timeZone = java.util.TimeZone.getTimeZone("UTC")
-            },
-            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.forLanguageTag("en-US")).apply {
-                timeZone = java.util.TimeZone.getTimeZone("UTC")
-            },
-            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.forLanguageTag("en-US")).apply {
-                timeZone = java.util.TimeZone.getTimeZone("UTC")
-            },
-            SimpleDateFormat("yyyy-MM-dd", Locale.forLanguageTag("en-US")).apply {
-                timeZone = java.util.TimeZone.getTimeZone("UTC")
-            }
-        )
+        val formats =
+            listOf(
+                SimpleDateFormat(
+                    "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+                    Locale.forLanguageTag("en-US")
+                ).apply {
+                    timeZone = java.util.TimeZone.getTimeZone("UTC")
+                },
+                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.forLanguageTag("en-US")).apply {
+                    timeZone = java.util.TimeZone.getTimeZone("UTC")
+                },
+                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.forLanguageTag("en-US")).apply {
+                    timeZone = java.util.TimeZone.getTimeZone("UTC")
+                },
+                SimpleDateFormat(
+                    "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
+                    Locale.forLanguageTag("en-US")
+                ).apply {
+                    timeZone = java.util.TimeZone.getTimeZone("UTC")
+                },
+                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.forLanguageTag("en-US")).apply {
+                    timeZone = java.util.TimeZone.getTimeZone("UTC")
+                },
+                SimpleDateFormat("yyyy-MM-dd", Locale.forLanguageTag("en-US")).apply {
+                    timeZone = java.util.TimeZone.getTimeZone("UTC")
+                }
+            )
 
         for (format in formats) {
             try {
@@ -154,30 +161,22 @@ object DateFormatter {
      * @param dateString Дата в формате ISO8601
      * @return Время в миллисекундах или null, если дату невозможно распарсить
      */
-    fun parseIsoDateToMillis(dateString: String): Long? {
-        return try {
+    fun parseIsoDateToMillis(dateString: String): Long? =
+        try {
             parseIsoDate(dateString).time
         } catch (_: Exception) {
             null
         }
-    }
 }
 
 /**
  * Расширения для работы с датами
  */
-private fun Date.toLocalDate(): LocalDate {
-    return this.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
-}
+private fun Date.toLocalDate(): LocalDate =
+    this.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
 
-private fun LocalDate.isToday(): Boolean {
-    return this == LocalDate.now()
-}
+private fun LocalDate.isToday(): Boolean = this == LocalDate.now()
 
-private fun LocalDate.isYesterday(): Boolean {
-    return this == LocalDate.now().minusDays(1)
-}
+private fun LocalDate.isYesterday(): Boolean = this == LocalDate.now().minusDays(1)
 
-private fun LocalDate.isThisYear(): Boolean {
-    return this.year == LocalDate.now().year
-}
+private fun LocalDate.isThisYear(): Boolean = this.year == LocalDate.now().year

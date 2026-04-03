@@ -40,16 +40,19 @@ sealed class LocationFeedback {
             )
         }
 
-        private fun buildBody(appVersion: String, androidSdk: String, question: String): String {
-            return "Android SDK: $androidSdk\nApp Version: $appVersion\n\n$question"
-        }
+        private fun buildBody(
+            appVersion: String,
+            androidSdk: String,
+            question: String
+        ): String = "Android SDK: $androidSdk\nApp Version: $appVersion\n\n$question"
     }
 }
 
 /**
  * Объект с настройками Json для десериализации данных
  */
-val WorkoutAppJson = Json {
-    isLenient = true
-    ignoreUnknownKeys = true
-}
+val WorkoutAppJson =
+    Json {
+        isLenient = true
+        ignoreUnknownKeys = true
+    }

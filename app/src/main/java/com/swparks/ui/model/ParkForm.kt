@@ -35,12 +35,14 @@ data class ParkForm(
         get() = (PHOTOS_LIMIT - selectedPhotos.size - photosCount).coerceAtLeast(0)
 
     val gradeStringRes: Int
-        get() = ParkType.entries.firstOrNull { it.rawValue == typeId }?.description
-            ?: 0
+        get() =
+            ParkType.entries.firstOrNull { it.rawValue == typeId }?.description
+                ?: 0
 
     val sizeStringRes: Int
-        get() = ParkSize.entries.firstOrNull { it.rawValue == sizeId }?.description
-            ?: 0
+        get() =
+            ParkSize.entries.firstOrNull { it.rawValue == sizeId }?.description
+                ?: 0
 
     private val hasValidStrings: Boolean
         get() = address.isNotBlank() && latitude.isNotBlank() && longitude.isNotBlank()
@@ -71,8 +73,8 @@ data class ParkForm(
     companion object {
         const val PHOTOS_LIMIT = 15
 
-        fun fromPark(park: Park): ParkForm {
-            return ParkForm(
+        fun fromPark(park: Park): ParkForm =
+            ParkForm(
                 address = park.address,
                 latitude = park.latitude,
                 longitude = park.longitude,
@@ -82,15 +84,14 @@ data class ParkForm(
                 photosCount = park.photos?.size ?: 0,
                 selectedPhotos = emptyList()
             )
-        }
 
         fun create(
             address: String,
             latitude: Double,
             longitude: Double,
             cityId: Int?
-        ): ParkForm {
-            return ParkForm(
+        ): ParkForm =
+            ParkForm(
                 address = address,
                 latitude = latitude.toString(),
                 longitude = longitude.toString(),
@@ -100,6 +101,5 @@ data class ParkForm(
                 photosCount = 0,
                 selectedPhotos = emptyList()
             )
-        }
     }
 }

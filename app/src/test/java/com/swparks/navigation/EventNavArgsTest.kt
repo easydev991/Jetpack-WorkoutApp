@@ -20,7 +20,6 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P])
 class EventNavArgsTest {
-
     private lateinit var savedStateHandle: SavedStateHandle
 
     @Before
@@ -34,10 +33,11 @@ class EventNavArgsTest {
         val usersJson = WorkoutAppJson.encodeToString(users)
         savedStateHandle[EVENT_PARTICIPANTS_USERS_JSON_KEY] = usersJson
 
-        val bundle = Bundle().apply {
-            putLong("eventId", 42L)
-            putString("source", "events")
-        }
+        val bundle =
+            Bundle().apply {
+                putLong("eventId", 42L)
+                putString("source", "events")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeEventParticipantsArgs()
@@ -52,10 +52,11 @@ class EventNavArgsTest {
 
     @Test
     fun consumeEventParticipantsArgs_whenNoUsersJson_thenReturnsEmptyList() {
-        val bundle = Bundle().apply {
-            putLong("eventId", 100L)
-            putString("source", "profile")
-        }
+        val bundle =
+            Bundle().apply {
+                putLong("eventId", 100L)
+                putString("source", "profile")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeEventParticipantsArgs()
@@ -69,10 +70,11 @@ class EventNavArgsTest {
     @Test
     fun consumeEventParticipantsArgs_whenMalformedJson_thenReturnsEmptyList() {
         savedStateHandle[EVENT_PARTICIPANTS_USERS_JSON_KEY] = "{invalid json"
-        val bundle = Bundle().apply {
-            putLong("eventId", 1L)
-            putString("source", "events")
-        }
+        val bundle =
+            Bundle().apply {
+                putLong("eventId", 1L)
+                putString("source", "events")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeEventParticipantsArgs()
@@ -84,10 +86,11 @@ class EventNavArgsTest {
     @Test
     fun consumeEventParticipantsArgs_whenConsumed_thenKeyRemovedFromSavedStateHandle() {
         savedStateHandle[EVENT_PARTICIPANTS_USERS_JSON_KEY] = "[]"
-        val bundle = Bundle().apply {
-            putLong("eventId", 1L)
-            putString("source", "events")
-        }
+        val bundle =
+            Bundle().apply {
+                putLong("eventId", 1L)
+                putString("source", "events")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         navBackStackEntry.consumeEventParticipantsArgs()
@@ -101,10 +104,11 @@ class EventNavArgsTest {
         val eventJson = WorkoutAppJson.encodeToString(event)
         savedStateHandle[EDIT_EVENT_JSON_KEY] = eventJson
 
-        val bundle = Bundle().apply {
-            putLong("eventId", 77L)
-            putString("source", "events")
-        }
+        val bundle =
+            Bundle().apply {
+                putLong("eventId", 77L)
+                putString("source", "events")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeEditEventArgs()
@@ -119,10 +123,11 @@ class EventNavArgsTest {
 
     @Test
     fun consumeEditEventArgs_whenNoEventJson_thenReturnsNullEvent() {
-        val bundle = Bundle().apply {
-            putLong("eventId", 100L)
-            putString("source", "profile")
-        }
+        val bundle =
+            Bundle().apply {
+                putLong("eventId", 100L)
+                putString("source", "profile")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeEditEventArgs()
@@ -135,10 +140,11 @@ class EventNavArgsTest {
     @Test
     fun consumeEditEventArgs_whenMalformedJson_thenReturnsNullEvent() {
         savedStateHandle[EDIT_EVENT_JSON_KEY] = "{invalid json"
-        val bundle = Bundle().apply {
-            putLong("eventId", 1L)
-            putString("source", "events")
-        }
+        val bundle =
+            Bundle().apply {
+                putLong("eventId", 1L)
+                putString("source", "events")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeEditEventArgs()
@@ -150,10 +156,11 @@ class EventNavArgsTest {
     @Test
     fun consumeEditEventArgs_whenConsumed_thenKeyRemovedFromSavedStateHandle() {
         savedStateHandle[EDIT_EVENT_JSON_KEY] = "{}"
-        val bundle = Bundle().apply {
-            putLong("eventId", 1L)
-            putString("source", "events")
-        }
+        val bundle =
+            Bundle().apply {
+                putLong("eventId", 1L)
+                putString("source", "events")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         navBackStackEntry.consumeEditEventArgs()
@@ -161,13 +168,17 @@ class EventNavArgsTest {
         assertNull(savedStateHandle.get<String>(EDIT_EVENT_JSON_KEY))
     }
 
-    private fun createUser(id: Long) = User(
-        id = id,
-        name = "User $id",
-        image = "https://example.com/user$id.jpg"
-    )
+    private fun createUser(id: Long) =
+        User(
+            id = id,
+            name = "User $id",
+            image = "https://example.com/user$id.jpg"
+        )
 
-    private fun createEvent(id: Long, title: String) = Event(
+    private fun createEvent(
+        id: Long,
+        title: String
+    ) = Event(
         id = id,
         title = title,
         description = "Test description",
@@ -187,10 +198,9 @@ class EventNavArgsTest {
     private fun createNavBackStackEntry(
         arguments: Bundle,
         savedStateHandle: SavedStateHandle
-    ): androidx.navigation.NavBackStackEntry {
-        return mockk {
+    ): androidx.navigation.NavBackStackEntry =
+        mockk {
             every { this@mockk.arguments } returns arguments
             every { this@mockk.savedStateHandle } returns savedStateHandle
         }
-    }
 }

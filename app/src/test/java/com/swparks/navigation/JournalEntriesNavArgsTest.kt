@@ -18,7 +18,6 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P])
 class JournalEntriesNavArgsTest {
-
     private lateinit var savedStateHandle: SavedStateHandle
 
     @Before
@@ -28,14 +27,15 @@ class JournalEntriesNavArgsTest {
 
     @Test
     fun consumeJournalEntriesArgs_whenValidData_thenReturnsParsedArgs() {
-        val bundle = Bundle().apply {
-            putString("journalId", "10")
-            putString("userId", "42")
-            putString("journalTitle", Uri.encode("Мой дневник"))
-            putString("viewAccess", "ALL")
-            putString("commentAccess", "FRIENDS")
-            putString("source", "events")
-        }
+        val bundle =
+            Bundle().apply {
+                putString("journalId", "10")
+                putString("userId", "42")
+                putString("journalTitle", Uri.encode("Мой дневник"))
+                putString("viewAccess", "ALL")
+                putString("commentAccess", "FRIENDS")
+                putString("source", "events")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeJournalEntriesArgs()
@@ -51,11 +51,12 @@ class JournalEntriesNavArgsTest {
 
     @Test
     fun consumeJournalEntriesArgs_whenAccessAndSourceMissing_thenDefaultsApplied() {
-        val bundle = Bundle().apply {
-            putString("journalId", "10")
-            putString("userId", "42")
-            putString("journalTitle", Uri.encode("Title"))
-        }
+        val bundle =
+            Bundle().apply {
+                putString("journalId", "10")
+                putString("userId", "42")
+                putString("journalTitle", Uri.encode("Title"))
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeJournalEntriesArgs()
@@ -68,12 +69,13 @@ class JournalEntriesNavArgsTest {
 
     @Test
     fun consumeJournalEntriesArgs_whenAccessMalformed_thenFallsBackToNobody() {
-        val bundle = Bundle().apply {
-            putString("journalId", "10")
-            putString("userId", "42")
-            putString("viewAccess", "UNKNOWN")
-            putString("commentAccess", "INVALID")
-        }
+        val bundle =
+            Bundle().apply {
+                putString("journalId", "10")
+                putString("userId", "42")
+                putString("viewAccess", "UNKNOWN")
+                putString("commentAccess", "INVALID")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeJournalEntriesArgs()
@@ -85,10 +87,11 @@ class JournalEntriesNavArgsTest {
 
     @Test
     fun consumeJournalEntriesArgs_whenJournalIdInvalid_thenReturnsNull() {
-        val bundle = Bundle().apply {
-            putString("journalId", "invalid")
-            putString("userId", "42")
-        }
+        val bundle =
+            Bundle().apply {
+                putString("journalId", "invalid")
+                putString("userId", "42")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeJournalEntriesArgs()
@@ -98,10 +101,11 @@ class JournalEntriesNavArgsTest {
 
     @Test
     fun consumeJournalEntriesArgs_whenOwnerIdInvalid_thenReturnsNull() {
-        val bundle = Bundle().apply {
-            putString("journalId", "10")
-            putString("userId", "invalid")
-        }
+        val bundle =
+            Bundle().apply {
+                putString("journalId", "10")
+                putString("userId", "invalid")
+            }
         val navBackStackEntry = createNavBackStackEntry(bundle, savedStateHandle)
 
         val args = navBackStackEntry.consumeJournalEntriesArgs()
@@ -121,10 +125,9 @@ class JournalEntriesNavArgsTest {
     private fun createNavBackStackEntry(
         arguments: Bundle?,
         savedStateHandle: SavedStateHandle
-    ): androidx.navigation.NavBackStackEntry {
-        return mockk {
+    ): androidx.navigation.NavBackStackEntry =
+        mockk {
             every { this@mockk.arguments } returns arguments
             every { this@mockk.savedStateHandle } returns savedStateHandle
         }
-    }
 }

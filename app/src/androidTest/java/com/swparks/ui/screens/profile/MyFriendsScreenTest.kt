@@ -3,6 +3,7 @@ package com.swparks.ui.screens.profile
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -42,18 +43,20 @@ class MyFriendsScreenTest {
         onDeclineFriendRequest: (Long) -> Unit = {},
         onFriendClick: (Long) -> Unit = {}
     ) {
-        val testState = when (uiState) {
-            is FriendsListUiState.Success -> uiState.copy(isProcessing = isProcessing)
-            else -> uiState
-        }
+        val testState =
+            when (uiState) {
+                is FriendsListUiState.Success -> uiState.copy(isProcessing = isProcessing)
+                else -> uiState
+            }
 
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
                 MyFriendsScreenContent(
                     uiState = testState,
-                    config = FriendsScreenConfig(
-                        parentPaddingValues = PaddingValues()
-                    ),
+                    config =
+                        FriendsScreenConfig(
+                            parentPaddingValues = PaddingValues()
+                        ),
                     onFriendClick = onFriendClick,
                     onAction = { action ->
                         when (action) {
@@ -82,15 +85,17 @@ class MyFriendsScreenTest {
     @Test
     fun myFriendsScreen_displaysRequestsSection_whenHasFriendRequests() {
         // Given
-        val testUser = User(
-            id = 1L,
-            name = "Silverfrog19",
-            image = null
-        )
-        val state = FriendsListUiState.Success(
-            friendRequests = listOf(testUser),
-            friends = emptyList()
-        )
+        val testUser =
+            User(
+                id = 1L,
+                name = "Silverfrog19",
+                image = null
+            )
+        val state =
+            FriendsListUiState.Success(
+                friendRequests = listOf(testUser),
+                friends = emptyList()
+            )
 
         // When
         setContent(uiState = state)
@@ -109,15 +114,17 @@ class MyFriendsScreenTest {
     @Test
     fun myFriendsScreen_displaysFriendRequestWithButtons() {
         // Given
-        val testUser = User(
-            id = 1L,
-            name = "Silverfrog19",
-            image = null
-        )
-        val state = FriendsListUiState.Success(
-            friendRequests = listOf(testUser),
-            friends = emptyList()
-        )
+        val testUser =
+            User(
+                id = 1L,
+                name = "Silverfrog19",
+                image = null
+            )
+        val state =
+            FriendsListUiState.Success(
+                friendRequests = listOf(testUser),
+                friends = emptyList()
+            )
 
         // When
         setContent(uiState = state)
@@ -142,17 +149,19 @@ class MyFriendsScreenTest {
     fun myFriendsScreen_clicksAcceptButton_callsOnAcceptFriendRequest() {
         // Given
         val testUserId = 1L
-        val testUser = User(
-            id = testUserId,
-            name = "Silverfrog19",
-            image = null
-        )
+        val testUser =
+            User(
+                id = testUserId,
+                name = "Silverfrog19",
+                image = null
+            )
         var acceptedUserId: Long? = null
 
-        val state = FriendsListUiState.Success(
-            friendRequests = listOf(testUser),
-            friends = emptyList()
-        )
+        val state =
+            FriendsListUiState.Success(
+                friendRequests = listOf(testUser),
+                friends = emptyList()
+            )
 
         setContent(
             uiState = state,
@@ -172,17 +181,19 @@ class MyFriendsScreenTest {
     fun myFriendsScreen_clicksDeclineButton_callsOnDeclineFriendRequest() {
         // Given
         val testUserId = 1L
-        val testUser = User(
-            id = testUserId,
-            name = "Silverfrog19",
-            image = null
-        )
+        val testUser =
+            User(
+                id = testUserId,
+                name = "Silverfrog19",
+                image = null
+            )
         var declinedUserId: Long? = null
 
-        val state = FriendsListUiState.Success(
-            friendRequests = listOf(testUser),
-            friends = emptyList()
-        )
+        val state =
+            FriendsListUiState.Success(
+                friendRequests = listOf(testUser),
+                friends = emptyList()
+            )
 
         setContent(
             uiState = state,
@@ -201,15 +212,17 @@ class MyFriendsScreenTest {
     @Test
     fun myFriendsScreen_displaysFriendsSection_whenHasFriends() {
         // Given
-        val testUser = User(
-            id = 2L,
-            name = "WorkoutMaster",
-            image = null
-        )
-        val state = FriendsListUiState.Success(
-            friendRequests = emptyList(),
-            friends = listOf(testUser)
-        )
+        val testUser =
+            User(
+                id = 2L,
+                name = "WorkoutMaster",
+                image = null
+            )
+        val state =
+            FriendsListUiState.Success(
+                friendRequests = emptyList(),
+                friends = listOf(testUser)
+            )
 
         // When
         setContent(uiState = state)
@@ -230,20 +243,23 @@ class MyFriendsScreenTest {
     @Test
     fun myFriendsScreen_displaysBothSections_whenHasRequestsAndFriends() {
         // Given
-        val requestUser = User(
-            id = 1L,
-            name = "Silverfrog19",
-            image = null
-        )
-        val friendUser = User(
-            id = 2L,
-            name = "WorkoutMaster",
-            image = null
-        )
-        val state = FriendsListUiState.Success(
-            friendRequests = listOf(requestUser),
-            friends = listOf(friendUser)
-        )
+        val requestUser =
+            User(
+                id = 1L,
+                name = "Silverfrog19",
+                image = null
+            )
+        val friendUser =
+            User(
+                id = 2L,
+                name = "WorkoutMaster",
+                image = null
+            )
+        val state =
+            FriendsListUiState.Success(
+                friendRequests = listOf(requestUser),
+                friends = listOf(friendUser)
+            )
 
         // When
         setContent(uiState = state)
@@ -274,15 +290,17 @@ class MyFriendsScreenTest {
     @Test
     fun myFriendsScreen_hidesRequestSection_whenNoRequests() {
         // Given
-        val testUser = User(
-            id = 2L,
-            name = "WorkoutMaster",
-            image = null
-        )
-        val state = FriendsListUiState.Success(
-            friendRequests = emptyList(),
-            friends = listOf(testUser)
-        )
+        val testUser =
+            User(
+                id = 2L,
+                name = "WorkoutMaster",
+                image = null
+            )
+        val state =
+            FriendsListUiState.Success(
+                friendRequests = emptyList(),
+                friends = listOf(testUser)
+            )
 
         // When
         setContent(uiState = state)
@@ -296,15 +314,17 @@ class MyFriendsScreenTest {
     @Test
     fun myFriendsScreen_hidesFriendsSection_whenNoFriends() {
         // Given
-        val testUser = User(
-            id = 1L,
-            name = "Silverfrog19",
-            image = null
-        )
-        val state = FriendsListUiState.Success(
-            friendRequests = listOf(testUser),
-            friends = emptyList()
-        )
+        val testUser =
+            User(
+                id = 1L,
+                name = "Silverfrog19",
+                image = null
+            )
+        val state =
+            FriendsListUiState.Success(
+                friendRequests = listOf(testUser),
+                friends = emptyList()
+            )
 
         // When
         setContent(uiState = state)
@@ -350,17 +370,19 @@ class MyFriendsScreenTest {
     fun myFriendsScreen_clicksFriend_callsOnFriendClick() {
         // Given
         val testUserId = 2L
-        val testUser = User(
-            id = testUserId,
-            name = "WorkoutMaster",
-            image = null
-        )
+        val testUser =
+            User(
+                id = testUserId,
+                name = "WorkoutMaster",
+                image = null
+            )
         var clickedUserId: Long? = null
 
-        val state = FriendsListUiState.Success(
-            friendRequests = emptyList(),
-            friends = listOf(testUser)
-        )
+        val state =
+            FriendsListUiState.Success(
+                friendRequests = emptyList(),
+                friends = listOf(testUser)
+            )
 
         setContent(
             uiState = state,
@@ -380,15 +402,17 @@ class MyFriendsScreenTest {
     fun myFriendsScreen_friendRowIsClickable() {
         // Given
         val testUserId = 2L
-        val testUser = User(
-            id = testUserId,
-            name = "WorkoutMaster",
-            image = null
-        )
-        val state = FriendsListUiState.Success(
-            friendRequests = emptyList(),
-            friends = listOf(testUser)
-        )
+        val testUser =
+            User(
+                id = testUserId,
+                name = "WorkoutMaster",
+                image = null
+            )
+        val state =
+            FriendsListUiState.Success(
+                friendRequests = emptyList(),
+                friends = listOf(testUser)
+            )
 
         setContent(uiState = state)
 
@@ -401,10 +425,11 @@ class MyFriendsScreenTest {
     @Test
     fun myFriendsScreen_displaysEmptyState_whenNoData() {
         // Given
-        val state = FriendsListUiState.Success(
-            friendRequests = emptyList(),
-            friends = emptyList()
-        )
+        val state =
+            FriendsListUiState.Success(
+                friendRequests = emptyList(),
+                friends = emptyList()
+            )
 
         // When
         setContent(uiState = state)
@@ -418,15 +443,17 @@ class MyFriendsScreenTest {
     @Test
     fun myFriendsScreen_multipleFriendRequests_allDisplayed() {
         // Given
-        val users = listOf(
-            User(id = 1L, name = "User1", image = null),
-            User(id = 2L, name = "User2", image = null),
-            User(id = 3L, name = "User3", image = null)
-        )
-        val state = FriendsListUiState.Success(
-            friendRequests = users,
-            friends = emptyList()
-        )
+        val users =
+            listOf(
+                User(id = 1L, name = "User1", image = null),
+                User(id = 2L, name = "User2", image = null),
+                User(id = 3L, name = "User3", image = null)
+            )
+        val state =
+            FriendsListUiState.Success(
+                friendRequests = users,
+                friends = emptyList()
+            )
 
         // When
         setContent(uiState = state)
@@ -442,15 +469,17 @@ class MyFriendsScreenTest {
     @Test
     fun myFriendsScreen_multipleFriends_allDisplayed() {
         // Given
-        val friends = listOf(
-            User(id = 1L, name = "Friend1", image = null),
-            User(id = 2L, name = "Friend2", image = null),
-            User(id = 3L, name = "Friend3", image = null)
-        )
-        val state = FriendsListUiState.Success(
-            friendRequests = emptyList(),
-            friends = friends
-        )
+        val friends =
+            listOf(
+                User(id = 1L, name = "Friend1", image = null),
+                User(id = 2L, name = "Friend2", image = null),
+                User(id = 3L, name = "Friend3", image = null)
+            )
+        val state =
+            FriendsListUiState.Success(
+                friendRequests = emptyList(),
+                friends = friends
+            )
 
         // When
         setContent(uiState = state)
@@ -467,17 +496,19 @@ class MyFriendsScreenTest {
     fun myFriendsScreen_friendRequestAccepted_requestMovedToFriends() {
         // Given
         val testUserId = 1L
-        val testUser = User(
-            id = testUserId,
-            name = "Silverfrog19",
-            image = null
-        )
+        val testUser =
+            User(
+                id = testUserId,
+                name = "Silverfrog19",
+                image = null
+            )
 
         // Когда есть и заявки, и друзья (для проверки заголовков)
-        val initialState = FriendsListUiState.Success(
-            friendRequests = listOf(testUser),
-            friends = listOf(User(id = 2L, name = "OtherFriend", image = null))
-        )
+        val initialState =
+            FriendsListUiState.Success(
+                friendRequests = listOf(testUser),
+                friends = listOf(User(id = 2L, name = "OtherFriend", image = null))
+            )
 
         // When - Отображаем начальное состояние
         setContent(uiState = initialState)
@@ -503,17 +534,19 @@ class MyFriendsScreenTest {
     fun myFriendsScreen_friendRequestDeclined_requestDisappears() {
         // Given
         val testUserId = 1L
-        val testUser = User(
-            id = testUserId,
-            name = "Silverfrog19",
-            image = null
-        )
+        val testUser =
+            User(
+                id = testUserId,
+                name = "Silverfrog19",
+                image = null
+            )
 
         // Начальное состояние - есть заявка
-        val initialState = FriendsListUiState.Success(
-            friendRequests = listOf(testUser),
-            friends = emptyList()
-        )
+        val initialState =
+            FriendsListUiState.Success(
+                friendRequests = listOf(testUser),
+                friends = emptyList()
+            )
 
         // When - Отображаем начальное состояние
         setContent(uiState = initialState)
@@ -538,15 +571,17 @@ class MyFriendsScreenTest {
     @Test
     fun myFriendsScreen_acceptButtonDisabled_whenProcessing() {
         // Given
-        val testUser = User(
-            id = 1L,
-            name = "Silverfrog19",
-            image = null
-        )
-        val state = FriendsListUiState.Success(
-            friendRequests = listOf(testUser),
-            friends = emptyList()
-        )
+        val testUser =
+            User(
+                id = 1L,
+                name = "Silverfrog19",
+                image = null
+            )
+        val state =
+            FriendsListUiState.Success(
+                friendRequests = listOf(testUser),
+                friends = emptyList()
+            )
 
         // When
         setContent(
@@ -564,15 +599,17 @@ class MyFriendsScreenTest {
     @Test
     fun myFriendsScreen_declineButtonDisabled_whenProcessing() {
         // Given
-        val testUser = User(
-            id = 1L,
-            name = "Silverfrog19",
-            image = null
-        )
-        val state = FriendsListUiState.Success(
-            friendRequests = listOf(testUser),
-            friends = emptyList()
-        )
+        val testUser =
+            User(
+                id = 1L,
+                name = "Silverfrog19",
+                image = null
+            )
+        val state =
+            FriendsListUiState.Success(
+                friendRequests = listOf(testUser),
+                friends = emptyList()
+            )
 
         // When
         setContent(
@@ -590,15 +627,17 @@ class MyFriendsScreenTest {
     @Test
     fun myFriendsScreen_friendRowNotClickable_whenProcessing() {
         // Given
-        val testUser = User(
-            id = 2L,
-            name = "WorkoutMaster",
-            image = null
-        )
-        val state = FriendsListUiState.Success(
-            friendRequests = emptyList(),
-            friends = listOf(testUser)
-        )
+        val testUser =
+            User(
+                id = 2L,
+                name = "WorkoutMaster",
+                image = null
+            )
+        val state =
+            FriendsListUiState.Success(
+                friendRequests = emptyList(),
+                friends = listOf(testUser)
+            )
 
         // When
         setContent(
@@ -610,21 +649,23 @@ class MyFriendsScreenTest {
         composeTestRule
             .onNodeWithText(testUser.name)
             .assertIsDisplayed()
-            .assertIsNotEnabled()
+            .assertHasNoClickAction()
     }
 
     @Test
     fun myFriendsScreen_buttonsEnabled_whenNotBusy() {
         // Given
-        val testUser = User(
-            id = 1L,
-            name = "Silverfrog19",
-            image = null
-        )
-        val state = FriendsListUiState.Success(
-            friendRequests = listOf(testUser),
-            friends = emptyList()
-        )
+        val testUser =
+            User(
+                id = 1L,
+                name = "Silverfrog19",
+                image = null
+            )
+        val state =
+            FriendsListUiState.Success(
+                friendRequests = listOf(testUser),
+                friends = emptyList()
+            )
 
         // When
         setContent(uiState = state)

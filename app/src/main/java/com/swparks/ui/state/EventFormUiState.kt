@@ -16,11 +16,12 @@ data class EventFormUiState(
         get() = form != initialForm || selectedPhotos.isNotEmpty()
 
     val canSave: Boolean
-        get() = when (mode) {
-            is EventFormMode.RegularCreate -> form.isReadyToCreate && hasChanges
-            is EventFormMode.CreateForSelected -> form.isReadyToCreate && hasChanges
-            is EventFormMode.EditExisting -> form.isReadyToUpdate(initialForm) || selectedPhotos.isNotEmpty()
-        }
+        get() =
+            when (mode) {
+                is EventFormMode.RegularCreate -> form.isReadyToCreate && hasChanges
+                is EventFormMode.CreateForSelected -> form.isReadyToCreate && hasChanges
+                is EventFormMode.EditExisting -> form.isReadyToUpdate(initialForm) || selectedPhotos.isNotEmpty()
+            }
 
     val canSelectPark: Boolean
         get() = mode !is EventFormMode.CreateForSelected
@@ -40,11 +41,15 @@ data class EventFormUiState(
 }
 
 sealed interface EventFormEvent {
-    data class Saved(val event: com.swparks.data.model.Event) : EventFormEvent
+    data class Saved(
+        val event: com.swparks.data.model.Event
+    ) : EventFormEvent
 
     data object NavigateBack : EventFormEvent
 
-    data class NavigateToSelectPark(val currentParkId: Long?) : EventFormEvent
+    data class NavigateToSelectPark(
+        val currentParkId: Long?
+    ) : EventFormEvent
 
     data object ShowDatePicker : EventFormEvent
 

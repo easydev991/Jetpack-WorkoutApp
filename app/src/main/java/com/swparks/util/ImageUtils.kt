@@ -34,7 +34,10 @@ object ImageUtils {
      * @param uri Uri изображения
      * @return true если MIME-тип поддерживается
      */
-    fun isSupportedMimeType(context: Context, uri: Uri): Boolean {
+    fun isSupportedMimeType(
+        context: Context,
+        uri: Uri
+    ): Boolean {
         val mimeType = context.contentResolver.getType(uri)
         return mimeType in SUPPORTED_MIME_TYPES
     }
@@ -46,7 +49,10 @@ object ImageUtils {
      * @param maxSizeBytes Максимальный размер в байтах
      * @return Сжатый ByteArray или исходный, если размер в норме
      */
-    fun compressIfNeeded(data: ByteArray, maxSizeBytes: Int = MAX_IMAGE_SIZE_BYTES): ByteArray {
+    fun compressIfNeeded(
+        data: ByteArray,
+        maxSizeBytes: Int = MAX_IMAGE_SIZE_BYTES
+    ): ByteArray {
         // Если размер в норме - возвращаем как есть
         if (data.size <= maxSizeBytes) return data
 
@@ -64,7 +70,10 @@ object ImageUtils {
      *
      * Если декодирование не удалось, возвращает исходные данные.
      */
-    fun convertToJpeg(data: ByteArray, quality: Int = 100): ByteArray {
+    fun convertToJpeg(
+        data: ByteArray,
+        quality: Int = 100
+    ): ByteArray {
         val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size) ?: return data
         return compressBitmapToJpeg(bitmap, quality).takeIf { it.isNotEmpty() } ?: data
     }
@@ -76,7 +85,10 @@ object ImageUtils {
      * @param maxSizeBytes Максимальный размер в байтах
      * @return Сжатый ByteArray
      */
-    private fun compressBitmap(bitmap: Bitmap, maxSizeBytes: Int): ByteArray {
+    private fun compressBitmap(
+        bitmap: Bitmap,
+        maxSizeBytes: Int
+    ): ByteArray {
         var quality = INITIAL_QUALITY
         var compressedData = compressBitmapToJpeg(bitmap, quality)
 
@@ -100,17 +112,22 @@ object ImageUtils {
     /**
      * Сжимает bitmap в JPEG формат.
      */
-    private fun compressBitmapToJpeg(bitmap: Bitmap, quality: Int): ByteArray {
-        return ByteArrayOutputStream().use { stream ->
+    private fun compressBitmapToJpeg(
+        bitmap: Bitmap,
+        quality: Int
+    ): ByteArray =
+        ByteArrayOutputStream().use { stream ->
             bitmap.compress(Bitmap.CompressFormat.JPEG, quality, stream)
             stream.toByteArray()
         }
-    }
 
     /**
      * Масштабирует bitmap.
      */
-    private fun scaleBitmap(bitmap: Bitmap, scale: Float): Bitmap {
+    private fun scaleBitmap(
+        bitmap: Bitmap,
+        scale: Float
+    ): Bitmap {
         val width = (bitmap.width * scale).toInt()
         val height = (bitmap.height * scale).toInt()
         return Bitmap.createScaledBitmap(bitmap, width, height, true)
