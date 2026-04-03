@@ -12,8 +12,7 @@ object NetworkUtils {
     /**
      * Создает RequestBody из строки
      */
-    fun createStringPart(value: String): RequestBody =
-        value.toRequestBody("text/plain".toMediaType())
+    fun createStringPart(value: String): RequestBody = value.toRequestBody("text/plain".toMediaType())
 
     /**
      * Создает опциональный RequestBody из строки

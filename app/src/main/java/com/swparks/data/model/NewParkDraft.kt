@@ -91,6 +91,5 @@ data class NewParkDraft(
     /**
      * Обновляет дату последнего запроса локации
      */
-    fun updatingLastLocationRequestDate(): NewParkDraft =
-        copy(lastLocationRequestDate = System.currentTimeMillis())
+    fun updatingLastLocationRequestDate(): NewParkDraft = copy(lastLocationRequestDate = System.currentTimeMillis())
 }

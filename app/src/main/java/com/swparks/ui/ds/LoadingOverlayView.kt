@@ -79,8 +79,7 @@ private fun Modifier.blockInput(contentDescription: String): Modifier =
     this
         .semantics {
             this.contentDescription = contentDescription
-        }
-        .pointerInput(Unit) {
+        }.pointerInput(Unit) {
             awaitPointerEventScope {
                 while (true) {
                     val event = awaitPointerEvent(pass = PointerEventPass.Initial)

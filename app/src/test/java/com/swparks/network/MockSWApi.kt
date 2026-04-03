@@ -228,8 +228,7 @@ class MockSWApi : SWApi {
         cityId: Int?
     ): User = createMockUser()
 
-    override suspend fun resetPassword(usernameOrEmail: String): LoginSuccess =
-        createMockLoginSuccess()
+    override suspend fun resetPassword(usernameOrEmail: String): LoginSuccess = createMockLoginSuccess()
 
     override suspend fun changePassword(
         password: String,

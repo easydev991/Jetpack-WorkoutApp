@@ -266,14 +266,14 @@ fun ParksRootScreen(
                                         animationSpec =
                                             tween(
                                                 durationMillis =
-                                                    PARK_INFO_CARD_ANIMATION_DURATION_MS
+                                                PARK_INFO_CARD_ANIMATION_DURATION_MS
                                             )
                                     ) +
                                         slideInVertically(
                                             animationSpec =
                                                 tween(
                                                     durationMillis =
-                                                        PARK_INFO_CARD_ANIMATION_DURATION_MS
+                                                    PARK_INFO_CARD_ANIMATION_DURATION_MS
                                                 ),
                                             initialOffsetY = { fullHeight -> fullHeight / 2 }
                                         ),
@@ -282,14 +282,14 @@ fun ParksRootScreen(
                                         animationSpec =
                                             tween(
                                                 durationMillis =
-                                                    PARK_INFO_CARD_ANIMATION_DURATION_MS
+                                                PARK_INFO_CARD_ANIMATION_DURATION_MS
                                             )
                                     ) +
                                         slideOutVertically(
                                             animationSpec =
                                                 tween(
                                                     durationMillis =
-                                                        PARK_INFO_CARD_ANIMATION_DURATION_MS
+                                                    PARK_INFO_CARD_ANIMATION_DURATION_MS
                                                 ),
                                             targetOffsetY = { fullHeight -> fullHeight / 2 }
                                         )
@@ -303,8 +303,7 @@ fun ParksRootScreen(
                                             Modifier
                                                 .onGloballyPositioned { coordinates ->
                                                     parkInfoCardHeightPx = coordinates.size.height
-                                                }
-                                                .padding(16.dp)
+                                                }.padding(16.dp)
                                     )
                                 }
                             }

@@ -192,8 +192,7 @@ private fun ItemsList(
                         .padding(
                             horizontal = dimensionResource(R.dimen.spacing_small),
                             vertical = dimensionResource(R.dimen.spacing_xsmall)
-                        )
-                        .then(
+                        ).then(
                             if (isSelected) {
                                 Modifier
                             } else {

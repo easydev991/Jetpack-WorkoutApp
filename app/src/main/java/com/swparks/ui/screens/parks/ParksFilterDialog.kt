@@ -181,8 +181,7 @@ private class ParksFilterDialogState(
 }
 
 @Composable
-private fun rememberParksFilterDialogState(filter: ParkFilter): ParksFilterDialogState =
-    remember(filter) { ParksFilterDialogState(filter) }
+private fun rememberParksFilterDialogState(filter: ParkFilter): ParksFilterDialogState = remember(filter) { ParksFilterDialogState(filter) }
 
 @Composable
 private fun DialogTitle(onDismiss: () -> Unit) {

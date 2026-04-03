@@ -28,6 +28,5 @@ class GetCityByIdUseCase(
      * @param cityId Идентификатор города
      * @return Город или null, если не найден
      */
-    override suspend operator fun invoke(cityId: String): City? =
-        countriesRepository.getCityById(cityId)
+    override suspend operator fun invoke(cityId: String): City? = countriesRepository.getCityById(cityId)
 }

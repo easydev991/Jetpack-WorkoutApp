@@ -339,8 +339,7 @@ private fun JournalsScaffoldContent(
                     start = params.parentPaddingValues.calculateStartPadding(params.layoutDirection),
                     top = params.parentPaddingValues.calculateTopPadding(),
                     end = params.parentPaddingValues.calculateEndPadding(params.layoutDirection)
-                )
-                .padding(params.innerPadding)
+                ).padding(params.innerPadding)
     ) {
         JournalsMainContent(params = params.contentParams, onAction = onContentAction)
     }

@@ -47,8 +47,7 @@ object AppConverters {
         }
 
     @TypeConverter
-    fun fromCommentList(comments: List<Comment>?): String? =
-        comments?.let { json.encodeToString(it) }
+    fun fromCommentList(comments: List<Comment>?): String? = comments?.let { json.encodeToString(it) }
 
     @TypeConverter
     fun toCommentList(data: String?): List<Comment>? =
@@ -90,8 +89,7 @@ object AppConverters {
         }
 
     @TypeConverter
-    fun fromIntList(ints: List<Int>?): String? =
-        ints?.let { json.encodeToString(ListSerializer(Int.serializer()), it) }
+    fun fromIntList(ints: List<Int>?): String? = ints?.let { json.encodeToString(ListSerializer(Int.serializer()), it) }
 
     @TypeConverter
     fun toIntList(data: String?): List<Int>? =

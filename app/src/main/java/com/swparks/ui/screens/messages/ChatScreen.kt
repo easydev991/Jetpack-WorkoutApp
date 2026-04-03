@@ -91,14 +91,14 @@ data class ChatContentParams(
  * Параметры для ChatTopAppBar
  */
 data class ChatTopAppBarParams
-@OptIn(ExperimentalMaterial3Api::class)
-constructor(
-    val userName: String,
-    val userImage: String?,
-    val onAction: (ChatAction) -> Unit,
-    val onRefresh: () -> Unit,
-    val scrollBehavior: TopAppBarScrollBehavior
-)
+    @OptIn(ExperimentalMaterial3Api::class)
+    constructor(
+        val userName: String,
+        val userImage: String?,
+        val onAction: (ChatAction) -> Unit,
+        val onRefresh: () -> Unit,
+        val scrollBehavior: TopAppBarScrollBehavior
+    )
 
 /**
  * Экран диалога (чата) с пользователем.

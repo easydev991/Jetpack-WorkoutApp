@@ -28,5 +28,5 @@ data class EventForm(
                     description != old.description ||
                     date != old.date ||
                     parkId != old.parkId
-                )
+            )
 }

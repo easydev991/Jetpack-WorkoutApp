@@ -65,8 +65,7 @@ sealed class Screen(
             parkId: Long,
             parkName: String,
             source: String = "parks"
-        ) =
-            "create_event_for_park/$parkId?parkName=${android.net.Uri.encode(parkName)}&source=$source"
+        ) = "create_event_for_park/$parkId?parkName=${android.net.Uri.encode(parkName)}&source=$source"
 
         fun findParentTab(arguments: Bundle?): Screen {
             val source = arguments?.getString("source") ?: "parks"

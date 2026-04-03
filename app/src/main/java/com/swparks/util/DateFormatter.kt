@@ -172,8 +172,7 @@ object DateFormatter {
 /**
  * Расширения для работы с датами
  */
-private fun Date.toLocalDate(): LocalDate =
-    this.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+private fun Date.toLocalDate(): LocalDate = this.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
 
 private fun LocalDate.isToday(): Boolean = this == LocalDate.now()
 

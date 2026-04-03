@@ -28,6 +28,5 @@ class GetCitiesByCountryUseCase(
      * @param countryId Идентификатор страны
      * @return Список городов страны
      */
-    override suspend operator fun invoke(countryId: String): List<City> =
-        countriesRepository.getCitiesByCountry(countryId)
+    override suspend operator fun invoke(countryId: String): List<City> = countriesRepository.getCitiesByCountry(countryId)
 }

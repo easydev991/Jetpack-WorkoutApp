@@ -160,7 +160,7 @@ class ParkDetailViewModel(
             val parkAuthorId = currentState.park.author?.id
             _isParkAuthor.value =
                 _currentUserId.value != null &&
-                    _currentUserId.value == parkAuthorId
+                _currentUserId.value == parkAuthorId
             logger.d(
                 TAG,
                 "isParkAuthor: ${_isParkAuthor.value} " +

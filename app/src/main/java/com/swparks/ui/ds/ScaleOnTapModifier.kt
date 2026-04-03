@@ -37,13 +37,11 @@ fun Modifier.scaleOnTap() =
             .graphicsLayer {
                 scaleX = animatedTranslation
                 scaleY = animatedTranslation
-            }
-            .clickable(
+            }.clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = { }
-            )
-            .pointerInput(buttonState) {
+            ).pointerInput(buttonState) {
                 awaitPointerEventScope {
                     buttonState =
                         if (buttonState == ButtonState.Pressed) {

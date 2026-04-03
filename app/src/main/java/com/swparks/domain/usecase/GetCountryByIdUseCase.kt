@@ -28,6 +28,5 @@ class GetCountryByIdUseCase(
      * @param countryId Идентификатор страны
      * @return Страна или null, если не найдена
      */
-    override suspend operator fun invoke(countryId: String): Country? =
-        countriesRepository.getCountryById(countryId)
+    override suspend operator fun invoke(countryId: String): Country? = countriesRepository.getCountryById(countryId)
 }

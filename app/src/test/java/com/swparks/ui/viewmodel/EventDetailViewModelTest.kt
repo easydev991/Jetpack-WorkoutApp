@@ -282,8 +282,7 @@ class EventDetailViewModelTest {
             resourcesProvider = resourcesProvider
         )
 
-    private fun createEvent(comments: List<Comment>): Event =
-        createEvent(comments = comments, photos = emptyList())
+    private fun createEvent(comments: List<Comment>): Event = createEvent(comments = comments, photos = emptyList())
 
     private fun createEvent(
         comments: List<Comment> = emptyList(),

@@ -359,8 +359,7 @@ class JournalEntriesViewModel(
      * @param entryId Идентификатор записи
      * @return true если удаление разрешено, false если это первая запись
      */
-    override suspend fun canDeleteEntry(entryId: Long): Boolean =
-        deps.canDeleteJournalEntryUseCase(entryId, journalId)
+    override suspend fun canDeleteEntry(entryId: Long): Boolean = deps.canDeleteJournalEntryUseCase(entryId, journalId)
 
     /**
      * Обновить список записей (public метод для refresh).

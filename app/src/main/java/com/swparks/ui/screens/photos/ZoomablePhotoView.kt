@@ -162,8 +162,7 @@ fun ZoomablePhotoView(config: ZoomConfig) {
                             )
                         }
                     )
-                }
-                .transformable(state = transformableState),
+                }.transformable(state = transformableState),
         contentAlignment = Alignment.Center
     ) {
         TransformableImage(

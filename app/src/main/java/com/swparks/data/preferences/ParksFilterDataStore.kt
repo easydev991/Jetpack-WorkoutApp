@@ -80,5 +80,4 @@ class ParksFilterDataStore(
     }
 }
 
-fun createParksFilterDataStore(context: Context): ParksFilterDataStore =
-    ParksFilterDataStore(context.applicationContext)
+fun createParksFilterDataStore(context: Context): ParksFilterDataStore = ParksFilterDataStore(context.applicationContext)

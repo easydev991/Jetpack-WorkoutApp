@@ -98,8 +98,7 @@ fun MessageBubbleView(
                                 bottomStart = dimensionResource(id = R.dimen.corner_radius_bubble),
                                 bottomEnd = messageType.bottomEndCorner
                             )
-                        )
-                        .background(bubbleColor)
+                        ).background(bubbleColor)
             ) {
                 Text(
                     text = messageBody,

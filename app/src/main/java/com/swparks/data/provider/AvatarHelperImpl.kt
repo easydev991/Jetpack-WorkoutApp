@@ -19,8 +19,7 @@ class AvatarHelperImpl(
         private const val TAG = "AvatarHelperImpl"
     }
 
-    override fun isSupportedMimeType(uri: Uri): Boolean =
-        ImageUtils.isSupportedMimeType(context, uri)
+    override fun isSupportedMimeType(uri: Uri): Boolean = ImageUtils.isSupportedMimeType(context, uri)
 
     override fun uriToByteArray(uri: Uri): Result<ByteArray> =
         try {

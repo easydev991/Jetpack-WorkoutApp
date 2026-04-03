@@ -21,6 +21,5 @@ class GetJournalsUseCase(
      * @param userId Идентификатор пользователя
      * @return Flow со списком дневников, отсортированным по дате изменения
      */
-    override operator fun invoke(userId: Long): Flow<List<Journal>> =
-        journalsRepository.observeJournals(userId)
+    override operator fun invoke(userId: Long): Flow<List<Journal>> = journalsRepository.observeJournals(userId)
 }

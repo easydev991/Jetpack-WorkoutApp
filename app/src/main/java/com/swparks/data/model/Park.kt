@@ -105,5 +105,5 @@ data class Park(
             hasPhotos &&
             !needUpdateParticipants &&
             !needUpdateComments
-        )
+    )
 }

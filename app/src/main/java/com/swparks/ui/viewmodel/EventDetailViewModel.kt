@@ -310,7 +310,7 @@ class EventDetailViewModel(
             val eventAuthorId = currentState.event.author.id
             _isEventAuthor.value =
                 _currentUserId.value != null &&
-                    _currentUserId.value == eventAuthorId
+                _currentUserId.value == eventAuthorId
             logger.d(
                 TAG,
                 "isEventAuthor: ${_isEventAuthor.value} " +

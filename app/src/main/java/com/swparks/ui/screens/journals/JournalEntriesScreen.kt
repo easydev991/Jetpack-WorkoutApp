@@ -285,8 +285,7 @@ private fun ScaffoldContent(
                     top = parentPaddingValues.calculateTopPadding(),
                     end = parentPaddingValues.calculateEndPadding(layoutDirection),
                     bottom = 0.dp
-                )
-                .padding(innerPadding)
+                ).padding(innerPadding)
     ) {
         when (state.uiState) {
             is JournalEntriesUiState.InitialLoading -> LoadingOverlayView()

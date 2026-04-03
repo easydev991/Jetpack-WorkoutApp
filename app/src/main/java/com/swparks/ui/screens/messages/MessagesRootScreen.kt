@@ -582,8 +582,7 @@ private fun BoxScope.NewDialogFab(
                 .padding(
                     end = dimensionResource(R.dimen.spacing_regular),
                     bottom = dimensionResource(R.dimen.spacing_regular)
-                )
-                .testTag("NewDialogFAB")
+                ).testTag("NewDialogFAB")
     ) {
         Icon(
             imageVector = Icons.Filled.Add,
