@@ -38,7 +38,7 @@ def find_latest_file(name: str) -> str | None:
 
 def replace_img_tag(content: str, name: str, new_path: str) -> tuple[str, bool]:
     pattern = re.compile(
-        rf'<img\s+src="\./fastlane/metadata/android/[^/]+/images/phoneScreenshots/{re.escape(name)}_\d+\.png"[^>]*>'
+        rf'<img\s+src="\./fastlane/metadata/android/[^/]+/images/phoneScreenshots/{re.escape(name)}(?:_\d+)?\.png"[^>]*>'
     )
     replacement = f'<img src="./{new_path}" alt="">'
     updated = pattern.sub(replacement, content, count=1)

@@ -45,15 +45,7 @@ Deploy a new version to the Google Play
 [bundle exec] fastlane android screenshots
 ```
 
-Создание скриншотов (ru-RU)
-
-### android screenshots_ru
-
-```sh
-[bundle exec] fastlane android screenshots_ru
-```
-
-Создание скриншотов только для русского
+Создание скриншотов
 
 ----
 

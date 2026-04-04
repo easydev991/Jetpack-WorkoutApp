@@ -28,17 +28,19 @@ class WorkoutAppScreenshotsTest {
         private const val PARK_MAP_TEST_TAG = "park_map"
     }
 
-    @get:Rule(order = 0)
-    val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
+    @get:Rule
+    val composeTestRule = createAndroidComposeRule<MainActivity>()
+
+    @Rule
+    @JvmField
+    val grantPermissionRule = GrantPermissionRule.grant(
         Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.ACCESS_COARSE_LOCATION
     )
 
-    @get:Rule(order = 1)
+    @Rule
+    @JvmField
     val localeTestRule = LocaleTestRule()
-
-    @get:Rule(order = 2)
-    val composeTestRule = createAndroidComposeRule<MainActivity>()
 
     @Before
     fun setUp() {
@@ -228,7 +230,9 @@ class WorkoutAppScreenshotsTest {
     }
 
     private fun parkRowTag(parkId: Long): String = "${ScreenshotTestTags.PARK_ROW_PREFIX}$parkId"
-    private fun eventRowTag(eventId: Long): String = "${ScreenshotTestTags.EVENT_ROW_PREFIX}$eventId"
+    private fun eventRowTag(eventId: Long): String =
+        "${ScreenshotTestTags.EVENT_ROW_PREFIX}$eventId"
+
     private fun searchUserRowTag(userId: Long): String =
         "${ScreenshotTestTags.SEARCH_USER_ROW_PREFIX}$userId"
 }
