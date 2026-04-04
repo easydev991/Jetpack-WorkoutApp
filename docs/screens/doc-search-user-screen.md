@@ -2,7 +2,7 @@
 
 ## Статус: ✅ ЗАВЕРШЕНО
 
-Экран поиска пользователей по никнейму. Вызывается из TopAppBar профиля.
+Экран поиска пользователей по никнейму. В текущей навигации открывается из `ProfileTopAppBar` и из `MessagesRootScreen`.
 
 **Реализовано:**
 - Поиск по никнейму (минимум 2 символа, автотрим пробелов)
@@ -54,7 +54,12 @@
 
 **API:** `SWRepository.findUsers(name: String): Result<List<User>>`
 
-**Навигация:** `Screen.UserSearch.route` → `ProfileTopAppBar.onSearchUsersClick`
+**Навигация:** `Screen.UserSearch.createRoute(source)` используется как минимум в двух сценариях:
+
+- из профиля: `source = "profile"`;
+- из сообщений: `source = "messages"`.
+
+При переходе в `OtherUserProfile` экран сохраняет исходный `source`, чтобы `AppState` корректно восстановил активную вкладку.
 
 **displayState логика:**
 - `Loading` → показывает `lastVisibleState` под оверлеем

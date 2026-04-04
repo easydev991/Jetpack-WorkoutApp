@@ -255,7 +255,7 @@
 
 **Основные:** Kotlin 2.3.20, Jetpack Compose (BOM 2026.03.01), Material 3, Android Gradle Plugin 9.1.0, Java 21
 
-**Требования:** minSdk 26, targetSdk 35, compileSdk 36
+**Требования:** minSdk 26, targetSdk 36, compileSdk 36
 
 **Архитектура:** ViewModel 2.10.0, Navigation 2.9.7, Lifecycle 2.10.0, Room 2.8.4
 

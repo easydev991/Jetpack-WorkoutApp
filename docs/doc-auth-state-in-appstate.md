@@ -1,30 +1,49 @@
 # Состояние авторизации в AppState
 
-## Реализованный функционал
+Краткая сводка по реализации. Подробное описание механики находится в `docs/doc-appstate-auth-state.md`.
 
-Добавлено состояние авторизации в `AppState` для мгновенного обновления UI при login/logout и удобной проверки авторизации на всех экранах.
+## Что реализовано
 
-### Ключевые изменения
+В `AppState` уже есть полноценное состояние авторизации:
 
-1. **AppState**: Добавлены свойства `currentUser` (с `mutableStateOf`) и вычисляемое `isAuthorized`, метод `updateCurrentUser()` для безопасного обновления
-2. **RootScreen**: Синхронизация `currentUser` из ProfileViewModel через `collectAsState()` и `LaunchedEffect`
-3. **ProfileTopAppBar**: Кнопка поиска использует `appState.isAuthorized` вместо отдельного параметра
-4. **Примеры использования**: `ParksTopAppBar` и `CreateParkFab` обновлены для работы с `appState.isAuthorized`
-5. **Документация**: Создана полная документация в `docs/appstate-auth-state.md`
-6. **Тестирование**: 9 unit-тестов в `AppStateTest.kt` (100% success rate), ручное тестирование мгновенного обновления UI
+- `currentUser: User?` на `mutableStateOf`;
+- вычисляемое свойство `isAuthorized`;
+- метод `updateCurrentUser(user: User?)`;
+- `bottomNavVisualEpoch` для принудительного обновления временного визуального состояния нижней навигации после auth-flow.
 
-### Преимущества
+## Откуда берётся `currentUser`
 
-- Мгновенное обновление UI при изменении авторизации
-- Доступность `appState.isAuthorized` из любого экрана
-- Соответствие MVVM архитектуре без глобального состояния
-- Легко тестируется и масштабируется
+В `RootScreen` создаётся общий `ProfileViewModel`, после чего:
 
----
+1. `currentUser` читается через `collectAsState()`;
+2. `LaunchedEffect(currentUser)` синхронизирует значение в `appState.updateCurrentUser(currentUser)`.
 
-## Следующие шаги (вне этого плана)
+Это и есть текущий источник правды для auth-state на уровне UI.
 
-- Использовать `appState.isAuthorized` для условного отображения FAB кнопок на экранах площадок/мероприятий
-- Добавить проверки авторизации в MessagesScreen для показа/скрытия чатов
-- Реализовать навигацию на экран авторизации при попытке доступа к закрытым функциям для неавторизованных пользователей
-- Рассмотреть добавление других глобальных состояний в `AppState` (тема, язык, предпочтения)
+## Где это уже используется
+
+Подтверждённые использования в коде:
+
+- `ProfileTopAppBar` открывает поиск пользователей с учётом `appState.isAuthorized`;
+- `ParksRootScreen` использует `appState.isAuthorized` для действий, доступных только после входа;
+- `MessagesRootScreen` переключает гостевой и авторизованный сценарии;
+- `BottomNavigationBar` учитывает `isAuthorized` и `bottomNavVisualEpoch`, чтобы корректно обновлять визуальное состояние после login/logout.
+
+## Что было устаревшим в старой версии документа
+
+Старый список "следующих шагов" больше не соответствует проекту:
+
+- условный UI по авторизации уже применяется;
+- проверки авторизации в сообщениях уже есть;
+- документ с неправильной ссылкой `docs/appstate-auth-state.md` заменён на актуальный путь `docs/doc-appstate-auth-state.md`.
+
+## Проверка актуальности
+
+Документ сверён с:
+
+- `app/src/main/java/com/swparks/navigation/AppState.kt`;
+- `app/src/main/java/com/swparks/ui/screens/RootScreen.kt`;
+- `app/src/main/java/com/swparks/ui/screens/profile/ProfileRootScreen.kt`;
+- `app/src/main/java/com/swparks/ui/screens/parks/ParksRootScreen.kt`;
+- `app/src/main/java/com/swparks/ui/screens/messages/MessagesRootScreen.kt`;
+- `app/src/main/java/com/swparks/navigation/Navigation.kt`.

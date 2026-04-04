@@ -1,126 +1,90 @@
-# План реализации TextEntryScreen
+# TextEntryScreen
 
-## Прогресс выполнения
+## Статус
 
-**Текущая итерация:** ~90%
+`TextEntryScreen` и `TextEntrySheetHost` реализованы и используются в нескольких сценариях приложения. Это уже не план, а актуальное описание текущего поведения.
 
-**Выполнено:**
-- ✅ Этапы 1-6: UI Model, Use Cases, ViewModel, фабрика в AppContainer, локализация, UI Screen и Sheet Host
-- ✅ Этап 8: UI-тесты для Screen (15 тестов)
-- ✅ Все 141 тестов проходят
+## Назначение
 
-**Осталось:**
-- ❌ Этап 7: Интеграция с экранами (ParkDetailScreen, EventDetailScreen)
+`TextEntryScreen` — универсальный экран ввода текста, который открывается как `ModalBottomSheet` через `TextEntrySheetHost`.
 
----
+Экран используется для:
 
-## Описание экрана
+- создания комментариев;
+- редактирования комментариев;
+- создания дневников и записей в дневнике;
+- редактирования записей;
+- отправки личного сообщения пользователю.
 
-Универсальный экран ввода текста для создания/редактирования комментариев и записей в дневнике. Открывается как bottom sheet, который нельзя закрыть жестами (только через кнопку X), содержит текстовое поле SWTextEditor и кнопку "Отправить". Поддерживает 6 сценариев через Mode enum с разными заголовками и поведением.
+## Поддерживаемые режимы `TextEntryMode`
 
-## Референсы
+Сейчас в коде поддерживаются 8 режимов:
 
-- iOS-версия: `SwiftUI-WorkoutApp/Screens/Common/TextEntryScreen.swift`
-- iOS-версия: `SwiftUI-WorkoutApp/Screens/Common/SendMessageScreen.swift`
-- UI компоненты: `SWTextEditor.kt`, `SWButton.kt`
-- Bottom Sheet: `LoginSheetHost.kt` - референс паттерна для управления состоянием bottom sheet (состояние `showLoginSheet` в RootScreen.kt)
-- Безопасные зоны: `LoginSheetHost.kt` - паттерн для modal bottom sheet с запретом закрытия жестами
+- `NewForPark`
+- `NewForEvent`
+- `NewForJournal`
+- `NewJournal`
+- `EditPark`
+- `EditEvent`
+- `EditJournalEntry`
+- `Message`
 
-## Правила работы с размерами и отступами
+## Как открывается экран
 
-**Важно:** Для кастомных значений использовать следующие правила:
-- Не создавать новые dimens для значений, близких к существующим (например, 26dp → использовать `spacing_large` = 24dp)
-- Для специфических значений без аналогов (например, высота текстового поля) использовать обычные значения без dimens: `200.dp`
-- Для всех остальных случаев использовать существующие значения из `app/src/main/res/values/dimens.xml`
+`TextEntryScreen` не имеет собственного navigation route. Он показывается локально внутри экранов-хостов через `TextEntrySheetHost`.
 
-**Доступные spacings:**
-- `spacing_micro` = 2dp
-- `spacing_xxsmall` = 4dp
-- `spacing_xxsmall_plus` = 6dp
-- `spacing_xsmall` = 8dp
-- `spacing_xsmall_plus` = 10dp
-- `spacing_small` = 12dp
-- `spacing_small_plus` = 14dp
-- `spacing_regular` = 16dp
-- `spacing_medium` = 20dp
-- `spacing_medium_plus` = 22dp
-- `spacing_large` = 24dp
-- `spacing_xlarge` = 32dp
+Текущее подтверждённое использование:
 
----
+- `ParkDetailScreen`
+- `EventDetailScreen`
+- `JournalEntriesScreen`
+- `JournalsListScreen`
+- `OtherUserProfileScreen`
 
-## Этап 1-6: Базовая реализация ✅
+## Поведение `TextEntrySheetHost`
 
-**Созданы:**
-- UI Model: `TextEntryMode` (6 режимов), `EditInfo`, extension функции
-- Use Cases: `ITextEntryUseCase`, `TextEntryUseCase` (делегирование Repository)
-- ViewModel: `TextEntryUiState`, `ITextEntryViewModel`, `TextEntryEvent`, `TextEntryViewModel`, factory в AppContainer
-- UI: `TextEntryScreen` (Scaffold, TopAppBar, SWTextEditor, SWButton, LoadingOverlayView)
-- Sheet Host: `TextEntrySheetHost` (ModalBottomSheet, обработка Success, запрет закрытия жестами)
-- Локализация: строки в `strings.xml` (RU, EN)
+- используется `ModalBottomSheet`;
+- закрытие по свайпу, тапу вне sheet и системной кнопке/жесту назад запрещено;
+- закрытие по кнопке X разрешено только когда `uiState.isLoading == false`;
+- после успешной отправки sheet автоматически скрывается и вызывает `onSendSuccess()`;
+- ошибки идут через `UserNotifier`, а показ сообщения остаётся на уровне `RootScreen`.
 
----
+## Архитектура
 
-## Этап 7: Интеграция с экранами
+```text
+TextEntrySheetHost
+    -> TextEntryScreen
+    -> TextEntryViewModel
+    -> TextEntryUseCase
+    -> SWRepository
+```
 
-> **Примечание:** Интеграция с JournalEntriesScreen перенесена в план [JournalEntriesScreen](./doc-journal-entries-screen.md) - см. "Третья итерация".
+Ключевые части реализации:
 
-### Интеграция с ParkDetailScreen
+- `TextEntryMode` описывает сценарий и влияет на заголовок, placeholder и правила валидации;
+- `TextEntryViewModel` управляет `TextEntryUiState` и эмитит `TextEntryEvent`;
+- `TextEntrySheetHost` создаёт ViewModel через `AppContainer` и управляет жизненным циклом sheet;
+- `TextEntryScreen` отвечает только за UI.
 
-**Задачи:**
-- Добавить кнопку "Добавить комментарий" (для авторизованных пользователей)
-- При добавлении: открыть `TextEntrySheetHost` с `TextEntryMode.NewForPark(parkId)`
-- При редактировании: открыть `TextEntrySheetHost` с `TextEntryMode.EditPark(parkId, editInfo)`
-- На `onSendSuccess` вызывать `refreshComments()`
+## Валидация и UX
 
-**Критерий завершения:** Кнопки работают, комментарии добавляются и редактируются, список обновляется
+- запрос перед отправкой берётся из состояния ViewModel;
+- для новых записей и комментариев нельзя отправить пустой текст;
+- для edit-сценариев текст должен отличаться от исходного значения;
+- во время отправки UI блокируется;
+- заголовок и placeholder зависят от `TextEntryMode`.
 
----
+## Тесты
 
-### Интеграция с EventDetailScreen
+Подтверждённые тестовые файлы:
 
-**Задачи:**
-- Добавить кнопку "Добавить комментарий" (для авторизованных пользователей)
-- При добавлении: открыть `TextEntrySheetHost` с `TextEntryMode.NewForEvent(eventId)`
-- При редактировании: открыть `TextEntrySheetHost` с `TextEntryMode.EditEvent(eventId, editInfo)`
-- На `onSendSuccess` вызывать `refreshComments()`
-
-**Критерий завершения:** Кнопки работают, комментарии добавляются и редактируются, список обновляется
-
----
-
-## Этап 8: Тестирование ✅
-
-**Выполнено:**
-- Unit-тесты: Use Cases (6 методов), ViewModel (изменение текста, валидация, отправка)
-- UI-тесты: 15 тестов для TextEntryScreen (заголовки для 6 режимов, placeholder, кнопки, блокировка при загрузке)
-
----
-
-## Архитектурные решения
-
-- **TextEntryMode vs TextEntryOption**: `TextEntryOption` (Repository, тип объекта) → `TextEntryMode` (UI-слой, режим работы)
-- **API**: endpoints и методы Repository уже реализованы (addComment, editComment, saveJournalEntry)
-- **Bottom Sheet**: референс `LoginSheetHost.kt` + `LoginScreen.kt`, запрет закрытия жестами, обработка Success в SheetHost
-- **Валидация**: новые записи - непустой текст, редактирование - текст отличается от старого, проверка сети
-- **Ошибки**: `userNotifier.handleError()` → Snackbar автоматический, логирование в консоль
-- **Безопасные зоны**: отступы для системных кнопок, не перекрывать индикатор навигации
-
----
-
-## Критерии приемки
-
-**Реализовано (Этапы 1-6, 8):**
-- UI Model, Use Cases, ViewModel, UI Screen, Sheet Host, локализация (RU, EN)
-- Unit-тесты и UI-тесты (15 тестов, все проходят)
-- Код соответствует стандартам проекта, все 141 тестов проходят
-
-**Осталось реализовать (Этап 7):**
-- Интеграция с ParkDetailScreen, EventDetailScreen
-
----
+- `app/src/test/java/com/swparks/ui/viewmodel/TextEntryViewModelTest.kt`
+- `app/src/androidTest/java/com/swparks/ui/screens/common/TextEntryScreenTest.kt`
 
 ## Связанные документы
 
-- [План JournalsListScreen](./doc-journals-list-screen.md)
-- [План JournalEntriesScreen](./doc-journal-entries-screen.md)
+- `docs/screens/doc-journals-list-screen.md`
+- `docs/screens/doc-journal-entries-screen.md`
+- `docs/screens/doc-park-detail-screen.md`
+- `docs/screens/doc-event-detail-screen.md`
+- `docs/screens/doc-other-user-profile-screen.md`

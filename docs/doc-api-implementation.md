@@ -7,14 +7,16 @@
 | Файл                                                            | Назначение                          |
 |-----------------------------------------------------------------|-------------------------------------|
 | `app/src/main/java/com/swparks/network/SWApi.kt`                | Retrofit интерфейс с 57 эндпоинтами |
-| `app/src/main/java/com/swparks/data/model/*.kt`                 | 17 DTO моделей для API              |
+| `app/src/main/java/com/swparks/data/model/*.kt`                 | 19 моделей данных для API и кэша    |
 | `app/src/main/java/com/swparks/data/repository/SWRepository.kt` | Репозиторий для работы с API        |
-| `app/src/main/java/com/swparks/JetpackWorkoutApplication.kt`    | Создание Retrofit клиента           |
+| `app/src/main/java/com/swparks/data/AppContainer.kt`            | Создание `OkHttpClient`, `Retrofit` и общего `SWApi` |
+| `app/src/main/java/com/swparks/JetpackWorkoutApplication.kt`    | Инициализация `DefaultAppContainer` и preload auth token |
 
 ### Interceptors
 
 | Файл                                   | Назначение                    |
 |----------------------------------------|-------------------------------|
+| `data/interceptor/LoggingInterceptor.kt` | Debug-логирование запросов |
 | `data/interceptor/TokenInterceptor.kt` | Добавление токена авторизации |
 | `data/interceptor/AuthInterceptor.kt`  | Обработка ошибок 401          |
 | `data/interceptor/RetryInterceptor.kt` | Повтор запросов при ошибках   |
@@ -49,6 +51,7 @@
 
 ✅ **Завершено**: 57 из 57 эндпоинтов (100%)
 
-## Запланированные улучшения
+## Примечания по текущей реализации
 
-- **Этап 8**: Рефакторинг kotlinx.serialization (kotlinx-datetime, JsonNamingStrategy.SnakeCase)
+- `DefaultAppContainer` создаёт один общий экземпляр `SWApi` и раздаёт его через `provideAuthApi()`, `provideProfileApi()` и остальные factory-методы.
+- `JetpackWorkoutApplication` не создаёт `Retrofit` напрямую: оно создаёт `DefaultAppContainer` и при старте подгружает токен в память через `secureTokenRepository.loadTokenToCache()`.
