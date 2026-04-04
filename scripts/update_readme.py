@@ -14,12 +14,12 @@ import re
 from pathlib import Path
 
 SCREENSHOT_NAMES = [
-    "0-parksMap",
-    "1-parksList",
-    "2-parkDetails",
-    "3-pastEvents",
-    "4-eventDetails",
-    "5-profile",
+    "1-parksMap",
+    "2-parksList",
+    "3-parkDetails",
+    "4-pastEvents",
+    "5-eventDetails",
+    "6-profile",
 ]
 
 LOCALE = "ru-RU"

@@ -65,7 +65,7 @@ class WorkoutAppScreenshotsTest {
             clickByTag(ScreenshotTestTags.MAP_MY_LOCATION_FAB)
             pauseForUi(3_000)
         }
-        Screengrab.screenshot("0-parksMap")
+        Screengrab.screenshot("1-parksMap")
     }
 
     private fun checkParks() {
@@ -73,7 +73,7 @@ class WorkoutAppScreenshotsTest {
         openParksTab(isMap = false)
         waitForTag(parkRowTag(ScreenshotScenarioState.PARK_DETAIL_ID))
         pauseForUi(6_000)
-        Screengrab.screenshot("1-parksList")
+        Screengrab.screenshot("2-parksList")
     }
 
     private fun checkParkDetails() {
@@ -81,7 +81,7 @@ class WorkoutAppScreenshotsTest {
         clickByTag(parkRowTag(ScreenshotScenarioState.PARK_DETAIL_ID))
         waitForTag(ScreenshotTestTags.PARK_DETAIL_SCREEN)
         pauseForUi(8_000)
-        Screengrab.screenshot("2-parkDetails")
+        Screengrab.screenshot("3-parkDetails")
         androidx.test.espresso.Espresso.pressBack()
         waitForTag(parkRowTag(ScreenshotScenarioState.PARK_DETAIL_ID))
     }
@@ -92,7 +92,7 @@ class WorkoutAppScreenshotsTest {
         tapNeutralArea()
         clearCurrentFocus()
         pauseForUi(3_000)
-        Screengrab.screenshot("3-pastEvents")
+        Screengrab.screenshot("4-pastEvents")
         pauseForUi(3_000)
     }
 
@@ -101,7 +101,7 @@ class WorkoutAppScreenshotsTest {
         clickByTag(eventRowTag(ScreenshotScenarioState.EVENT_DETAIL_ID))
         waitForTag(ScreenshotTestTags.EVENT_DETAIL_SCREEN)
         pauseForUi(6_000)
-        Screengrab.screenshot("4-eventDetails")
+        Screengrab.screenshot("5-eventDetails")
         androidx.test.espresso.Espresso.pressBack()
     }
 
@@ -141,7 +141,7 @@ class WorkoutAppScreenshotsTest {
         clickByTag(searchUserRowTag(DemoData.demoSearchUser.id), timeoutMillis = 30_000)
         waitForTag(ScreenshotTestTags.OTHER_USER_PROFILE_SCREEN, timeoutMillis = 20_000)
         pauseForUi(4_000)
-        Screengrab.screenshot("5-profile")
+        Screengrab.screenshot("6-profile")
     }
 
     private fun openTopLevelTab(tabTag: String) {
