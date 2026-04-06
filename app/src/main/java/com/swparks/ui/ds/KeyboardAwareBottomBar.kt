@@ -3,6 +3,7 @@ package com.swparks.ui.ds
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -24,6 +25,7 @@ fun KeyboardAwareBottomBar(
         modifier =
             modifier
                 .fillMaxWidth()
+                .navigationBarsPadding()
                 .imePadding()
                 .padding(
                     horizontal = dimensionResource(R.dimen.spacing_regular),
