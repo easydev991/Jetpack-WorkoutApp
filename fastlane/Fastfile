@@ -74,7 +74,7 @@ platform :android do
       locales: ['ru-RU'],
       clear_previous_screenshots: true,
       app_apk_path: File.expand_path('../app/build/outputs/apk/debug/app-debug.apk', __dir__),
-      tests_apk_path: File.expand_path('../screenshots/build/outputs/apk/debug/screenshots-debug.apk', __dir__)
+      tests_apk_path: File.expand_path('../screenshot-tests/build/outputs/apk/debug/screenshot-tests-debug.apk', __dir__)
     )
   end
 

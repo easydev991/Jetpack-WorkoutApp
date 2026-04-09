@@ -168,6 +168,7 @@ vendor/bundle/
 fastlane/report.xml
 fastlane/Preview.html
 fastlane/test_output/
+screenshot-tests/build/
 
 # glm-proxy
 glm-proxy/

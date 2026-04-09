@@ -30,5 +30,5 @@
 
 - [План разработки приложения](docs/plan-development.md)
 - [API](docs/doc-api-implementation.md)
-- [Скриншоты](docs/screenshots.md)
+- [Скриншоты](docs/doc-android-screenshot-automation.md)
 - Остальная документация есть в папке [docs](docs)

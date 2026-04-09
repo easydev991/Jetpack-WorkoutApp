@@ -390,15 +390,15 @@ update_readme_versions:
 _build_screenshots_apk:
 	@printf "$(YELLOW)Удаляю старые APK артефакты...$(RESET)\n"
 	@rm -rf app/build/outputs/apk
-	@rm -rf screenshots/build/outputs/apk
+	@rm -rf screenshot-tests/build/outputs/apk
 	@printf "$(YELLOW)Собираю APK для скриншотов...$(RESET)\n"
-	@./gradlew :app:assembleDebug :screenshots:assembleDebug --quiet
+	@./gradlew :app:assembleDebug :screenshot-tests:assembleDebug --quiet
 
 ## _cleanup_screenshots_apk: Удалить APK артефакты после генерации скриншотов
 _cleanup_screenshots_apk:
 	@printf "$(YELLOW)Удаляю APK артефакты после генерации...$(RESET)\n"
 	@rm -rf app/build/outputs/apk
-	@rm -rf screenshots/build/outputs/apk
+	@rm -rf screenshot-tests/build/outputs/apk
 	@printf "$(GREEN)Скриншоты готовы: fastlane/metadata/android$(RESET)\n"
 
 ## _ensure_fastlane: Проверить что fastlane готов к использованию
