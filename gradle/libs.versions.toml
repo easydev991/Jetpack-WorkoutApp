@@ -10,7 +10,7 @@ espressoCore = "3.7.0"
 androidxTestRules = "1.7.0"
 uiautomator = "2.3.0"
 kotlinxCoroutinesTest = "1.10.2"
-kotlinxSerializationJson = "1.10.0"
+kotlinxSerializationJson = "1.11.0"
 lifecycleRuntimeKtx = "2.10.0"
 activityCompose = "1.13.0"
 composeBom = "2026.03.01"
@@ -28,9 +28,9 @@ turbine = "1.2.1"
 tink = "1.21.0"
 playServicesLocation = "21.3.0"
 maplibre = "13.0.2"
-firebaseBom = "34.11.0"
+firebaseBom = "34.12.0"
 googleServices = "4.4.4"
-firebaseCrashlyticsGradle = "3.0.6"
+firebaseCrashlyticsGradle = "3.0.7"
 detekt = "1.23.8"
 ktlint = "14.2.0"
 
@@ -82,7 +82,7 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-test = { id = "com.android.test", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-ksp = { id = "com.google.devtools.ksp", version = "2.3.4" }
+ksp = { id = "com.google.devtools.ksp", version = "2.3.6" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsGradle" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
