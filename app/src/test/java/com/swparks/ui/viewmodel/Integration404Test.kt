@@ -3,6 +3,7 @@ package com.swparks.ui.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.swparks.R
+import com.swparks.analytics.AnalyticsService
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Event
 import com.swparks.data.model.Park
@@ -51,6 +52,7 @@ class Integration404Test {
     private lateinit var deleteEventUseCase: DeleteEventUseCase
     private lateinit var resourcesProvider: ResourcesProvider
     private val logger: Logger = NoOpLogger()
+    private val analyticsService: AnalyticsService = mockk(relaxed = true)
 
     private val testUser =
         User(
@@ -207,7 +209,8 @@ class Integration404Test {
                     countriesRepository = countriesRepository,
                     swRepository = swRepository,
                     logger = logger,
-                    userNotifier = userNotifier
+                    userNotifier = userNotifier,
+                    analyticsService = analyticsService
                 )
 
             advanceUntilIdle()
@@ -222,7 +225,8 @@ class Integration404Test {
                     userNotifier = userNotifier,
                     logger = logger,
                     deleteParkUseCase = deleteParkUseCase,
-                    resourcesProvider = resourcesProvider
+                    resourcesProvider = resourcesProvider,
+                    analyticsService = mockk<AnalyticsService>(relaxed = true)
                 )
 
             parkDetailViewModel.events.test {
@@ -297,7 +301,8 @@ class Integration404Test {
                     countriesRepository = countriesRepository,
                     userNotifier = userNotifier,
                     logger = logger,
-                    swRepository = swRepository
+                    swRepository = swRepository,
+                    analyticsService = mockk<AnalyticsService>(relaxed = true)
                 )
 
             advanceUntilIdle()
@@ -320,7 +325,8 @@ class Integration404Test {
                     userNotifier = userNotifier,
                     logger = logger,
                     deleteEventUseCase = deleteEventUseCase,
-                    resourcesProvider = resourcesProvider
+                    resourcesProvider = resourcesProvider,
+                    analyticsService = mockk<AnalyticsService>(relaxed = true)
                 )
 
             eventDetailViewModel.events.test {

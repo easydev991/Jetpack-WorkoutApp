@@ -4,6 +4,10 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.provider.AvatarHelper
@@ -27,7 +31,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-@Suppress("TooGenericExceptionCaught")
+@Suppress("TooGenericExceptionCaught", "LongParameterList")
 class ParkFormViewModel(
     private val mode: ParkFormMode,
     private val swRepository: SWRepository,
@@ -36,7 +40,8 @@ class ParkFormViewModel(
     private val userNotifier: UserNotifier,
     private val geocodingService: GeocodingService,
     private val findCityByCoordinatesUseCase: IFindCityByCoordinatesUseCase,
-    private val userDao: UserDao
+    private val userDao: UserDao,
+    private val analyticsService: AnalyticsService
 ) : ViewModel(),
     IParkFormViewModel {
     companion object {
@@ -262,6 +267,7 @@ class ParkFormViewModel(
         }
 
         logger.i(TAG, "Начало сохранения площадки")
+        analyticsService.log(AnalyticsEvent.UserAction(UserActionType.SAVE_PARK))
 
         _uiState.update { it.copy(isSaving = true) }
 
@@ -325,6 +331,7 @@ class ParkFormViewModel(
             },
             onFailure = { error ->
                 logger.e(TAG, "Ошибка сохранения площадки: ${error.message}", error)
+                analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.PARK_SAVE_FAILED, error))
                 _uiState.update { it.copy(isSaving = false) }
                 userNotifier.handleError(
                     AppError.Generic(

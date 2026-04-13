@@ -1,5 +1,9 @@
 package com.swparks.viewmodel
 
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.UserEntity
 import com.swparks.data.repository.SWRepository
@@ -39,6 +43,7 @@ class FriendsListViewModelTest {
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
     private lateinit var friendsListViewModel: FriendsListViewModel
+    private lateinit var analyticsService: AnalyticsService
 
     @Before
     fun setup() {
@@ -48,12 +53,14 @@ class FriendsListViewModelTest {
         swRepository = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
+        analyticsService = mockk(relaxed = true)
         friendsListViewModel =
             FriendsListViewModel(
                 userDao,
                 swRepository,
                 logger,
-                userNotifier
+                userNotifier,
+                analyticsService
             )
     }
 
@@ -89,7 +96,8 @@ class FriendsListViewModelTest {
                     userDao,
                     swRepository,
                     logger,
-                    userNotifier
+                    userNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
 
@@ -231,6 +239,78 @@ class FriendsListViewModelTest {
                     match<AppError> {
                         it is AppError.Network && it.message.contains("Не удалось отклонить заявку")
                     }
+                )
+            }
+        }
+
+    @Test
+    fun onAcceptFriendRequest_shouldLogRespondAcceptAction() =
+        runTest {
+            val testUserId = 123L
+            coEvery {
+                swRepository.respondToFriendRequest(testUserId, accept = true)
+            } returns mockk(relaxed = true)
+
+            friendsListViewModel.onAcceptFriendRequest(testUserId)
+
+            verify(exactly = 1) {
+                analyticsService.log(
+                    AnalyticsEvent.UserAction(UserActionType.RESPOND_FRIEND_REQUEST_ACCEPT)
+                )
+            }
+        }
+
+    @Test
+    fun onAcceptFriendRequest_whenRepositoryFails_shouldLogAppError() =
+        runTest {
+            val testUserId = 123L
+            val testError = IOException("Нет подключения к сети")
+            coEvery {
+                swRepository.respondToFriendRequest(testUserId, accept = true)
+            } returns Result.failure(testError)
+
+            friendsListViewModel.onAcceptFriendRequest(testUserId)
+            advanceUntilIdle()
+
+            verify(exactly = 1) {
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.FRIEND_REQUEST_FAILED, testError)
+                )
+            }
+        }
+
+    @Test
+    fun onDeclineFriendRequest_shouldLogRespondDeclineAction() =
+        runTest {
+            val testUserId = 456L
+            coEvery {
+                swRepository.respondToFriendRequest(testUserId, accept = false)
+            } returns mockk(relaxed = true)
+
+            friendsListViewModel.onDeclineFriendRequest(testUserId)
+
+            verify(exactly = 1) {
+                analyticsService.log(
+                    AnalyticsEvent.UserAction(UserActionType.RESPOND_FRIEND_REQUEST_DECLINE)
+                )
+            }
+        }
+
+    @Test
+    fun onDeclineFriendRequest_whenRepositoryFails_shouldLogAppError() =
+        runTest {
+            val testUserId = 456L
+            val testError = IOException("Нет подключения к сети")
+            coEvery {
+                swRepository.respondToFriendRequest(testUserId, accept = false)
+            } returns Result.failure(testError)
+
+            friendsListViewModel.onDeclineFriendRequest(testUserId)
+            advanceUntilIdle()
+
+            verify(exactly = 1) {
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.FRIEND_REQUEST_FAILED, testError)
                 )
             }
         }

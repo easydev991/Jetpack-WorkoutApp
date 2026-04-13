@@ -4,6 +4,10 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.repository.SWRepository
 import com.swparks.network.SWApi
 import com.swparks.ui.state.ChatEvent
@@ -37,7 +41,8 @@ class ChatViewModel(
     private val swRepository: SWRepository,
     private val userNotifier: UserNotifier,
     private val logger: Logger,
-    private val crashReporter: CrashReporter
+    private val crashReporter: CrashReporter,
+    private val analyticsService: AnalyticsService
 ) : ViewModel(),
     IChatViewModel {
     private companion object {
@@ -130,6 +135,7 @@ class ChatViewModel(
         if (text.isEmpty()) return
 
         val dialogId = currentDialogId ?: return
+        analyticsService.log(AnalyticsEvent.UserAction(UserActionType.SEND_MESSAGE))
         viewModelScope.launch {
             _isLoading.value = true
             try {
@@ -140,6 +146,9 @@ class ChatViewModel(
                 _events.emit(ChatEvent.MessageSent(dialogId))
             } catch (e: IOException) {
                 logger.e(TAG, "Ошибка отправки сообщения: ${e.message}", e)
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.SEND_MESSAGE_FAILED, e)
+                )
                 crashReporter.logException(e, "Ошибка отправки сообщения")
                 userNotifier.handleError(
                     AppError.Generic(
@@ -149,6 +158,9 @@ class ChatViewModel(
                 )
             } catch (e: HttpException) {
                 logger.e(TAG, "HTTP ошибка отправки сообщения: ${e.code()} ${e.message()}", e)
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.SEND_MESSAGE_FAILED, e)
+                )
                 crashReporter.logException(e, "HTTP ошибка отправки сообщения: ${e.code()}")
                 userNotifier.handleError(
                     AppError.Generic(

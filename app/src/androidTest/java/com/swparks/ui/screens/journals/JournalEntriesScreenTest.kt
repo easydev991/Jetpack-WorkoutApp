@@ -16,6 +16,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.FakeAnalyticsProvider
 import com.swparks.data.model.User
 import com.swparks.domain.model.JournalEntry
 import com.swparks.navigation.AppState
@@ -25,7 +27,8 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.FakeJournalEntriesViewModel
 import com.swparks.ui.viewmodel.IJournalEntriesViewModel
 import com.swparks.ui.viewmodel.JournalEntriesEvent
-import com.swparks.util.FakeAnalyticsReporter
+import com.swparks.util.Logger
+import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
@@ -78,7 +81,7 @@ class JournalEntriesScreenTest {
     ) {
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -273,7 +276,7 @@ class JournalEntriesScreenTest {
 
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -323,7 +326,7 @@ class JournalEntriesScreenTest {
         lateinit var appState: AppState
         composeTestRule.setContent {
             val navController = rememberNavController()
-            appState = AppState(navController, FakeAnalyticsReporter())
+            appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -376,7 +379,7 @@ class JournalEntriesScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -423,7 +426,7 @@ class JournalEntriesScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -470,7 +473,7 @@ class JournalEntriesScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -528,7 +531,7 @@ class JournalEntriesScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -665,7 +668,7 @@ class JournalEntriesScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -724,7 +727,7 @@ class JournalEntriesScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -792,7 +795,7 @@ class JournalEntriesScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -860,7 +863,7 @@ class JournalEntriesScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -935,7 +938,7 @@ class JournalEntriesScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -1112,7 +1115,7 @@ class JournalEntriesScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -1310,7 +1313,7 @@ class JournalEntriesScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -1377,7 +1380,7 @@ class JournalEntriesScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -1447,7 +1450,7 @@ class JournalEntriesScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -1526,7 +1529,7 @@ class JournalEntriesScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -1599,7 +1602,7 @@ class JournalEntriesScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID,
@@ -1783,7 +1786,7 @@ class JournalEntriesScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID, // Текущий пользователь != foreignOwnerId
@@ -1845,7 +1848,7 @@ class JournalEntriesScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID, // Текущий пользователь != foreignOwnerId
@@ -1906,7 +1909,7 @@ class JournalEntriesScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(
                 User(
                     id = TEST_JOURNAL_OWNER_ID, // Текущий пользователь != foreignOwnerId

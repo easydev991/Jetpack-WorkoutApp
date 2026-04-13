@@ -1,4 +1,4 @@
-@file:Suppress("UnusedPrivateMember")
+@file:Suppress("UnusedPrivateMember", "LongMethod")
 
 package com.swparks.ui.screens.journals
 
@@ -51,6 +51,9 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AppScreen
+import com.swparks.analytics.UserActionType
 import com.swparks.domain.model.Journal
 import com.swparks.domain.model.JournalEntry
 import com.swparks.navigation.AppState
@@ -441,8 +444,16 @@ fun JournalEntriesScreen(
         onAction = { action ->
             when (action) {
                 is ScaffoldAction.Back -> onBackClick()
-                is ScaffoldAction.Settings -> showSettingsDialog = true
+                is ScaffoldAction.Settings -> {
+                    appState.analyticsService.log(
+                        AnalyticsEvent.ScreenView(AppScreen.JOURNAL_SETTINGS)
+                    )
+                    showSettingsDialog = true
+                }
                 is ScaffoldAction.FabClick, is ScaffoldAction.AddEntry -> {
+                    appState.analyticsService.log(
+                        AnalyticsEvent.UserAction(UserActionType.CREATE_JOURNAL_ENTRY)
+                    )
                     textEntryMode =
                         TextEntryMode.NewForJournal(params.journalOwnerId, params.journalId)
                     showTextEntrySheet = true
@@ -450,7 +461,15 @@ fun JournalEntriesScreen(
 
                 is ScaffoldAction.Retry -> viewModel.retry()
                 is ScaffoldAction.Refresh -> viewModel.loadEntries()
-                is ScaffoldAction.Entry -> entryActionHandler(action.action)
+                is ScaffoldAction.Entry -> {
+                    val entryAction = (action.action as? EntriesAction.Entry)?.action
+                    if (entryAction is EntryAction.Edit) {
+                        appState.analyticsService.log(
+                            AnalyticsEvent.UserAction(UserActionType.EDIT_JOURNAL_ENTRY)
+                        )
+                    }
+                    entryActionHandler(action.action)
+                }
             }
         }
     )

@@ -1,5 +1,6 @@
 package com.swparks.ui.viewmodel
 
+import com.swparks.analytics.AnalyticsService
 import com.swparks.data.model.LoginSuccess
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
@@ -47,7 +48,8 @@ class LoginViewModelTest {
             LoginViewModel(
                 testLogger,
                 loginUseCase,
-                resetPasswordUseCase
+                resetPasswordUseCase,
+                mockk<AnalyticsService>(relaxed = true)
             )
     }
 

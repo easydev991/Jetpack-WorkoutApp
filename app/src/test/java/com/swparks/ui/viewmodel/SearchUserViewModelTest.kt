@@ -1,5 +1,8 @@
 package com.swparks.ui.viewmodel
 
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.ui.state.SearchUserUiState
@@ -9,6 +12,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -29,6 +33,7 @@ class SearchUserViewModelTest {
 
     private lateinit var swRepository: SWRepository
     private lateinit var viewModel: SearchUserViewModel
+    private lateinit var analyticsService: AnalyticsService
     private val testLogger: Logger = NoOpLogger()
 
     private val testUser =
@@ -41,10 +46,12 @@ class SearchUserViewModelTest {
     @Before
     fun setup() {
         swRepository = mockk(relaxed = true)
+        analyticsService = mockk(relaxed = true)
         viewModel =
             SearchUserViewModel(
                 swRepository = swRepository,
-                logger = testLogger
+                logger = testLogger,
+                analyticsService = analyticsService
             )
     }
 
@@ -253,5 +260,26 @@ class SearchUserViewModelTest {
 
             // Then - нет исключений, логирование прошло успешно
             assertTrue(true)
+        }
+
+    @Test
+    fun onSearch_whenFails_thenLogsAppErrorSearchUsersFailed() =
+        runTest {
+            val query = "test"
+            val exception = Exception("Ошибка поиска")
+            viewModel.searchQuery.value = query
+            coEvery { swRepository.findUsers(query) } returns Result.failure(exception)
+
+            viewModel.onSearch()
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match { event ->
+                        event is AnalyticsEvent.AppError &&
+                            event.operation == AppErrorOperation.SEARCH_USERS_FAILED
+                    }
+                )
+            }
         }
 }

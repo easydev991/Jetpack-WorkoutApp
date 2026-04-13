@@ -7,6 +7,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.JetpackWorkoutApplication
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.domain.usecase.ILoginUseCase
 import com.swparks.domain.usecase.IResetPasswordUseCase
 import com.swparks.ui.model.LoginCredentials
@@ -37,7 +41,8 @@ import kotlinx.coroutines.launch
 class LoginViewModel(
     private val logger: Logger,
     private val loginUseCase: ILoginUseCase,
-    private val resetPasswordUseCase: IResetPasswordUseCase
+    private val resetPasswordUseCase: IResetPasswordUseCase,
+    private val analyticsService: AnalyticsService
 ) : ViewModel(),
     ILoginViewModel {
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
@@ -96,6 +101,8 @@ class LoginViewModel(
      * Загрузка данных пользователя выполняется в ProfileViewModel при открытии профиля.
      */
     override fun login() {
+        analyticsService.log(AnalyticsEvent.UserAction(UserActionType.LOGIN))
+
         viewModelScope.launch {
             _uiState.value = LoginUiState.Loading
 
@@ -108,6 +115,9 @@ class LoginViewModel(
                     _loginErrorState.value = null
                 }.onFailure { exception ->
                     val errorMessage = exception.message ?: "Неизвестная ошибка авторизации"
+                    analyticsService.log(
+                        AnalyticsEvent.AppError(AppErrorOperation.LOGIN_FAILED, exception)
+                    )
                     _uiState.value = LoginUiState.LoginError(errorMessage, exception)
                     _loginErrorState.value = errorMessage
 
@@ -129,6 +139,8 @@ class LoginViewModel(
             return
         }
 
+        analyticsService.log(AnalyticsEvent.UserAction(UserActionType.RESET_PASSWORD))
+
         viewModelScope.launch {
             _uiState.value = LoginUiState.Loading
 
@@ -142,6 +154,9 @@ class LoginViewModel(
                 }.onFailure { exception ->
                     val errorMessage =
                         exception.message ?: "Неизвестная ошибка восстановления пароля"
+                    analyticsService.log(
+                        AnalyticsEvent.AppError(AppErrorOperation.PASSWORD_RESET_FAILED, exception)
+                    )
                     _uiState.value = LoginUiState.ResetError(errorMessage, exception)
                     _resetErrorState.value = errorMessage
 
@@ -191,7 +206,8 @@ class LoginViewModel(
                     LoginViewModel(
                         logger = application.container.logger,
                         loginUseCase = application.container.loginUseCase,
-                        resetPasswordUseCase = application.container.resetPasswordUseCase
+                        resetPasswordUseCase = application.container.resetPasswordUseCase,
+                        analyticsService = application.container.analyticsService
                     )
                 }
             }

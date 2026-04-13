@@ -2,6 +2,10 @@ package com.swparks.ui.viewmodel
 
 import android.util.Log
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.domain.model.Journal
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.usecase.IDeleteJournalUseCase
@@ -50,6 +54,7 @@ class JournalsViewModelTest {
     private lateinit var editJournalSettingsUseCase: IEditJournalSettingsUseCase
     private lateinit var userNotifier: UserNotifier
     private lateinit var resources: ResourcesProvider
+    private lateinit var analyticsService: AnalyticsService
     private lateinit var viewModel: JournalsViewModel
 
     private val testUserId = 1L
@@ -82,6 +87,7 @@ class JournalsViewModelTest {
         editJournalSettingsUseCase = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
         resources = mockk(relaxed = true)
+        analyticsService = mockk(relaxed = true)
 
         // Мокируем getString для локализованных строк
         every { resources.getString(R.string.journal_deleted) } returns "Journal deleted"
@@ -112,7 +118,8 @@ class JournalsViewModelTest {
                 deleteJournalUseCase,
                 editJournalSettingsUseCase,
                 userNotifier,
-                resources
+                resources,
+                analyticsService = analyticsService
             )
 
         // Then
@@ -139,7 +146,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -162,7 +170,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -197,7 +206,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -237,7 +247,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -268,7 +279,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -299,7 +311,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -329,7 +342,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -361,7 +375,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -396,7 +411,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -429,7 +445,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -474,7 +491,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -518,7 +536,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -555,7 +574,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -596,7 +616,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -635,7 +656,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -671,7 +693,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -705,7 +728,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -742,7 +766,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -776,7 +801,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -823,7 +849,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -874,7 +901,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -921,7 +949,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -968,7 +997,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -1015,7 +1045,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -1066,7 +1097,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -1112,7 +1144,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -1162,7 +1195,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -1207,7 +1241,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
 
             // Сразу вызываем editJournalSettings до того, как перейдем в Content состояние
@@ -1253,7 +1288,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -1298,7 +1334,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -1339,7 +1376,8 @@ class JournalsViewModelTest {
                     deleteJournalUseCase,
                     editJournalSettingsUseCase,
                     userNotifier,
-                    resources
+                    resources,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -1353,5 +1391,146 @@ class JournalsViewModelTest {
 
             // Then - проверяем, что UserNotifier был вызван с ошибкой
             coVerify(atLeast = 1) { userNotifier.handleError(any()) }
+        }
+
+    // === Analytics tests ===
+
+    @Test
+    fun deleteJournal_whenSuccess_thenLogsDeleteJournalAnalytics() =
+        runTest {
+            val testJournalId = 1L
+            coEvery {
+                deleteJournalUseCase(testUserId, testJournalId)
+            } returns Result.success(Unit)
+
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources,
+                    analyticsService = analyticsService
+                )
+            advanceUntilIdle()
+
+            viewModel.deleteJournal(testJournalId)
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(AnalyticsEvent.UserAction(UserActionType.DELETE_JOURNAL))
+            }
+        }
+
+    @Test
+    fun deleteJournal_whenFailure_thenLogsJournalDeleteFailedAnalytics() =
+        runTest {
+            val testJournalId = 1L
+            coEvery {
+                deleteJournalUseCase(testUserId, testJournalId)
+            } returns Result.failure(Exception("Delete error"))
+
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources,
+                    analyticsService = analyticsService
+                )
+            advanceUntilIdle()
+
+            viewModel.deleteJournal(testJournalId)
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.AppError &&
+                            it.operation == AppErrorOperation.JOURNAL_DELETE_FAILED
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun loadJournals_whenSyncFails_thenLogsJournalLoadFailedAnalytics() =
+        runTest {
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(emptyList())
+            coEvery { syncJournalsUseCase(testUserId) } returns
+                Result.failure(Exception("Sync error"))
+
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources,
+                    analyticsService = analyticsService
+                )
+            advanceUntilIdle()
+
+            viewModel.loadJournals()
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.AppError &&
+                            it.operation == AppErrorOperation.JOURNAL_LOAD_FAILED
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun editJournalSettings_whenFailure_thenLogsJournalSaveFailedAnalytics() =
+        runTest {
+            val testJournalId = 1L
+
+            coEvery {
+                editJournalSettingsUseCase(any(), any(), any(), any(), any())
+            } returns Result.failure(Exception("Save error"))
+
+            coEvery { syncJournalsUseCase(testUserId) } returns Result.success(Unit)
+            coEvery { getJournalsUseCase(testUserId) } returns flowOf(listOf(testJournal))
+
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources,
+                    analyticsService = analyticsService
+                )
+            advanceUntilIdle()
+
+            viewModel.editJournalSettings(
+                journalId = testJournalId,
+                title = "Новое название",
+                viewAccess = JournalAccess.ALL,
+                commentAccess = JournalAccess.ALL
+            )
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.AppError &&
+                            it.operation == AppErrorOperation.JOURNAL_SAVE_FAILED
+                    }
+                )
+            }
         }
 }

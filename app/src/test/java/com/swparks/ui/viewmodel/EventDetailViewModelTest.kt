@@ -3,6 +3,10 @@ package com.swparks.ui.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Comment
 import com.swparks.data.model.Event
@@ -53,6 +57,7 @@ class EventDetailViewModelTest {
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var deleteEventUseCase: DeleteEventUseCase
     private lateinit var resourcesProvider: ResourcesProvider
+    private lateinit var analyticsService: AnalyticsService
     private val logger: Logger = NoOpLogger()
 
     @Before
@@ -64,6 +69,7 @@ class EventDetailViewModelTest {
         savedStateHandle = SavedStateHandle(mapOf("eventId" to TEST_EVENT_ID))
         deleteEventUseCase = mockk(relaxed = true)
         resourcesProvider = mockk(relaxed = true)
+        analyticsService = mockk(relaxed = true)
 
         every { userPreferencesRepository.isAuthorized } returns flowOf(true)
         every { userPreferencesRepository.currentUserId } returns flowOf(1L)
@@ -279,7 +285,8 @@ class EventDetailViewModelTest {
             userNotifier = userNotifier,
             logger = logger,
             deleteEventUseCase = deleteEventUseCase,
-            resourcesProvider = resourcesProvider
+            resourcesProvider = resourcesProvider,
+            analyticsService = analyticsService
         )
 
     private fun createEvent(comments: List<Comment>): Event = createEvent(comments = comments, photos = emptyList())
@@ -951,6 +958,97 @@ class EventDetailViewModelTest {
 
             val state = viewModel.uiState.value
             assertTrue(state is EventDetailUIState.Error)
+        }
+
+    // === Analytics tests ===
+
+    @Test
+    fun onDeleteConfirm_whenSuccess_thenLogsDeleteEventAnalytics() =
+        runTest {
+            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
+            coEvery { swRepository.deleteEvent(TEST_EVENT_ID) } returns Result.success(Unit)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onDeleteClick()
+            advanceUntilIdle()
+            viewModel.onDeleteConfirm()
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(AnalyticsEvent.UserAction(UserActionType.DELETE_EVENT))
+            }
+        }
+
+    @Test
+    fun onDeleteConfirm_whenFailure_thenLogsEventDeleteFailedAnalytics() =
+        runTest {
+            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
+            coEvery { swRepository.deleteEvent(TEST_EVENT_ID) } returns
+                Result.failure(Exception("Delete error"))
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onDeleteClick()
+            advanceUntilIdle()
+            viewModel.onDeleteConfirm()
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.AppError &&
+                            it.operation == AppErrorOperation.EVENT_DELETE_FAILED
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun loadEvent_whenFailure_thenLogsEventLoadFailedAnalytics() =
+        runTest {
+            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+                Result.failure(Exception("Load error"))
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.AppError &&
+                            it.operation == AppErrorOperation.EVENT_LOAD_FAILED
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun onCommentActionClick_whenReport_thenLogsReportCommentAnalytics() =
+        runTest {
+            val comment =
+                Comment(
+                    id = TEST_COMMENT_ID,
+                    body = "Текст",
+                    date = "2026-03-13 12:00:00",
+                    user = User(id = 7L, name = "Автор", image = null)
+                )
+            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+                Result.success(createEvent(comments = listOf(comment)))
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onCommentActionClick(TEST_COMMENT_ID, CommentAction.REPORT)
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.UserAction &&
+                            it.action == UserActionType.REPORT_COMMENT &&
+                            it.params["source"] == "event"
+                    }
+                )
+            }
         }
 
     private companion object {

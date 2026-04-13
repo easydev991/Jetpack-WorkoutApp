@@ -3,6 +3,10 @@ package com.swparks.ui.viewmodel
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
@@ -60,6 +64,7 @@ class JournalEntriesViewModelTest {
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var userNotifier: UserNotifier
     private lateinit var resources: ResourcesProvider
+    private lateinit var analyticsService: AnalyticsService
     private lateinit var viewModel: JournalEntriesViewModel
 
     private val testUserId = 1L
@@ -112,7 +117,8 @@ class JournalEntriesViewModelTest {
                 swRepository = swRepository,
                 savedStateHandle = savedStateHandle,
                 userNotifier = userNotifier,
-                resources = resources
+                resources = resources,
+                analyticsService = analyticsService
             )
 
         return JournalEntriesViewModel(journalOwnerId, testJournalId, deps)
@@ -137,6 +143,7 @@ class JournalEntriesViewModelTest {
         savedStateHandle = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
         resources = mockk(relaxed = true)
+        analyticsService = mockk(relaxed = true)
 
         // Мокируем getString для локализованных строк
         every { resources.getString(R.string.entry_deleted) } returns "Entry deleted"
@@ -1423,5 +1430,71 @@ class JournalEntriesViewModelTest {
                 "Не авторизованный пользователь не может удалять записи",
                 result
             )
+        }
+
+    // === Analytics tests ===
+
+    @Test
+    fun deleteEntry_whenSuccess_thenLogsDeleteJournalEntryAnalytics() =
+        runTest {
+            val testEntryId = 1L
+            coEvery {
+                deleteJournalEntryUseCase(testUserId, testJournalId, testEntryId)
+            } returns Result.success(Unit)
+
+            viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.deleteEntry(testEntryId)
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(AnalyticsEvent.UserAction(UserActionType.DELETE_JOURNAL_ENTRY))
+            }
+        }
+
+    @Test
+    fun deleteEntry_whenFailure_thenLogsJournalDeleteFailedAnalytics() =
+        runTest {
+            val testEntryId = 1L
+            coEvery {
+                deleteJournalEntryUseCase(testUserId, testJournalId, testEntryId)
+            } returns Result.failure(Exception("Delete error"))
+
+            viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.deleteEntry(testEntryId)
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.AppError &&
+                            it.operation == AppErrorOperation.JOURNAL_DELETE_FAILED
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun loadEntries_whenSyncFails_thenLogsJournalLoadFailedAnalytics() =
+        runTest {
+            coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns
+                flowOf(emptyList())
+            coEvery { syncJournalEntriesUseCase(testUserId, testJournalId) } returns
+                Result.failure(Exception("Sync error"))
+
+            viewModel = createViewModel()
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.AppError &&
+                            it.operation == AppErrorOperation.JOURNAL_LOAD_FAILED
+                    }
+                )
+            }
         }
 }

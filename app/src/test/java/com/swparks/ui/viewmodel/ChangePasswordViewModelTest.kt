@@ -1,5 +1,9 @@
 package com.swparks.ui.viewmodel
 
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.usecase.IChangePasswordUseCase
 import com.swparks.ui.state.ChangePasswordEvent
@@ -31,6 +35,7 @@ class ChangePasswordViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
+    private lateinit var analyticsService: AnalyticsService
     private lateinit var changePasswordUseCase: IChangePasswordUseCase
     private lateinit var userNotifier: UserNotifier
     private lateinit var resourcesProvider: ResourcesProvider
@@ -39,6 +44,7 @@ class ChangePasswordViewModelTest {
 
     @Before
     fun setup() {
+        analyticsService = mockk(relaxed = true)
         changePasswordUseCase = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
         resourcesProvider = mockk(relaxed = true)
@@ -48,7 +54,8 @@ class ChangePasswordViewModelTest {
                 changePasswordUseCase = changePasswordUseCase,
                 logger = testLogger,
                 userNotifier = userNotifier,
-                resources = resourcesProvider
+                resources = resourcesProvider,
+                analyticsService = analyticsService
             )
     }
 
@@ -292,4 +299,44 @@ class ChangePasswordViewModelTest {
         // Then
         assertFalse(canSave)
     }
+
+    @Test
+    fun onSaveClick_whenCalled_thenLogsUserActionSavePassword() =
+        runTest {
+            viewModel.onCurrentPasswordChange("oldPass123")
+            viewModel.onNewPasswordChange("newPass456")
+            viewModel.onConfirmPasswordChange("newPass456")
+            coEvery { changePasswordUseCase(any(), any()) } returns Result.success(Unit)
+
+            viewModel.onSaveClick()
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    AnalyticsEvent.UserAction(UserActionType.SAVE_PASSWORD)
+                )
+            }
+        }
+
+    @Test
+    fun onSaveClick_whenFails_thenLogsAppErrorChangePasswordFailed() =
+        runTest {
+            viewModel.onCurrentPasswordChange("oldPass123")
+            viewModel.onNewPasswordChange("newPass456")
+            viewModel.onConfirmPasswordChange("newPass456")
+            val exception = Exception("Ошибка смены пароля")
+            coEvery { changePasswordUseCase(any(), any()) } returns Result.failure(exception)
+
+            viewModel.onSaveClick()
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match { event ->
+                        event is AnalyticsEvent.AppError &&
+                            event.operation == AppErrorOperation.CHANGE_PASSWORD_FAILED
+                    }
+                )
+            }
+        }
 }

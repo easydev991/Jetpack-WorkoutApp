@@ -2,6 +2,9 @@ package com.swparks.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
 import com.swparks.data.repository.SWRepository
 import com.swparks.ui.state.SearchUserUiState
 import com.swparks.util.Logger
@@ -19,9 +22,11 @@ import kotlinx.coroutines.launch
  * @param swRepository Репозиторий для вызова API поиска пользователей
  * @param logger Логгер для записи сообщений
  */
+@Suppress("UnusedPrivateProperty")
 class SearchUserViewModel(
     private val swRepository: SWRepository,
-    private val logger: Logger
+    private val logger: Logger,
+    private val analyticsService: AnalyticsService
 ) : ViewModel(),
     ISearchUserViewModel {
     private val _uiState = MutableStateFlow<SearchUserUiState>(SearchUserUiState.Initial)
@@ -76,6 +81,9 @@ class SearchUserViewModel(
                     logger.i(TAG, "Search completed: found ${users.size} users for '$query'")
                 }.onFailure { error ->
                     _uiState.value = SearchUserUiState.NetworkError
+                    analyticsService.log(
+                        AnalyticsEvent.AppError(AppErrorOperation.SEARCH_USERS_FAILED, error)
+                    )
                     logger.e(TAG, "Search failed for '$query': ${error.message}", error)
                 }
         }

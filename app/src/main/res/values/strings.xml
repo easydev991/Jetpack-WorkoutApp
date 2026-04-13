@@ -145,6 +145,7 @@
     <string name="use_dynamic_colors">Use dynamic colors</string>
     <string name="dynamic_colors_hint">Use colors based on your wallpaper</string>
     <string name="app_icon">App icon</string>
+    <string name="app_language">App language</string>
     <string name="light">Light</string>
     <string name="dark">Dark</string>
     <string name="system">System</string>

@@ -25,6 +25,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.swparks.JetpackWorkoutApplication
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AppScreen
+import com.swparks.analytics.UserActionType
 import com.swparks.data.model.Park
 import com.swparks.data.preferences.AppSettingsDataStore
 import com.swparks.data.provider.ResourcesProviderImpl
@@ -271,9 +274,19 @@ fun RootScreen(appState: AppState) {
                     Screen.Parks.route -> {
                         ParksTopAppBar(
                             parksCount = parksRootUiState.filteredParks.size,
-                            onFilterClick = { parksRootViewModel.onShowFilterDialog() },
+                            onFilterClick = {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(AppScreen.PARK_FILTER)
+                                )
+                                parksRootViewModel.onShowFilterDialog()
+                            },
                             isFilterLoading = parksRootUiState.isLoadingFilter,
-                            onRefreshClick = { parksRootViewModel.refresh() },
+                            onRefreshClick = {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.UserAction(UserActionType.REFRESH_PARKS)
+                                )
+                                parksRootViewModel.refresh()
+                            },
                             isRefreshing = parksRootUiState.isRefreshing
                         )
                     }
@@ -290,6 +303,9 @@ fun RootScreen(appState: AppState) {
                         ProfileTopAppBar(
                             appState = appState,
                             onSearchUsersClick = {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(AppScreen.SEARCH_USERS)
+                                )
                                 appState.navController.navigate(Screen.UserSearch.createRoute("profile"))
                             }
                         )
@@ -327,10 +343,16 @@ fun RootScreen(appState: AppState) {
                             .fillMaxSize()
                             .padding(paddingValues),
                     onParkClick = { park ->
+                        appState.analyticsService.log(
+                            AnalyticsEvent.ScreenView(AppScreen.PARK_DETAIL)
+                        )
                         appState.navController.navigate(Screen.ParkDetail.createRoute(park.id))
                     },
                     onCreateParkClick = { draft ->
                         Log.d("RootScreen", ">>> onCreateParkClick called with draft: $draft")
+                        appState.analyticsService.log(
+                            AnalyticsEvent.ScreenView(AppScreen.PARK_FORM)
+                        )
                         appState.navController.navigateToCreatePark(
                             source = "parks",
                             draft = draft
@@ -339,6 +361,15 @@ fun RootScreen(appState: AppState) {
                     },
                     onGettingLocationStateChange = { isGettingLocationForCreatePark = it },
                     onNavigateToSelectCity = {
+                        appState.analyticsService.log(
+                            AnalyticsEvent.UserAction(UserActionType.OPEN_CITY_SEARCH)
+                        )
+                        appState.analyticsService.log(
+                            AnalyticsEvent.ScreenView(
+                                AppScreen.CITY_LIST,
+                                AppScreen.PARKS_MAP
+                            )
+                        )
                         appState.navController.navigate(Screen.SelectCityForFilter.route)
                     },
                     appState = appState,
@@ -355,9 +386,15 @@ fun RootScreen(appState: AppState) {
                             .padding(paddingValues),
                     viewModel = eventsViewModel,
                     onNavigateToEventDetail = { eventId ->
+                        appState.analyticsService.log(
+                            AnalyticsEvent.ScreenView(AppScreen.EVENT_DETAIL)
+                        )
                         appState.navController.navigate(Screen.EventDetail.createRoute(eventId))
                     },
                     onNavigateToCreateEvent = {
+                        appState.analyticsService.log(
+                            AnalyticsEvent.ScreenView(AppScreen.EVENT_FORM)
+                        )
                         appState.navController.navigate(Screen.CreateEvent.route)
                     },
                     onNavigateToParks = {
@@ -380,6 +417,9 @@ fun RootScreen(appState: AppState) {
                     onAction = { action ->
                         when (action) {
                             MessagesNavigationAction.ShowLoginSheet -> {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(AppScreen.LOGIN)
+                                )
                                 showLoginSheet = true
                             }
 
@@ -388,6 +428,9 @@ fun RootScreen(appState: AppState) {
                             }
 
                             MessagesNavigationAction.NavigateToFriends -> {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(AppScreen.FRIENDS_LIST)
+                                )
                                 appState.navController.navigate(Screen.FriendsForDialog.route)
                             }
 
@@ -396,6 +439,9 @@ fun RootScreen(appState: AppState) {
                             }
 
                             is MessagesNavigationAction.NavigateToChat -> {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(AppScreen.DIALOG)
+                                )
                                 appState.navController.navigate(
                                     Screen.Chat.createRoute(
                                         action.dialogId,
@@ -426,7 +472,12 @@ fun RootScreen(appState: AppState) {
                         ),
                     onAuthAction = { action ->
                         when (action) {
-                            ProfileAuthAction.ShowLoginSheet -> showLoginSheet = true
+                            ProfileAuthAction.ShowLoginSheet -> {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(AppScreen.LOGIN)
+                                )
+                                showLoginSheet = true
+                            }
                             ProfileAuthAction.ShowRegisterSheet -> showRegisterSheet = true
                         }
                     }
@@ -440,7 +491,8 @@ fun RootScreen(appState: AppState) {
                         Modifier
                             .fillMaxSize()
                             .padding(paddingValues),
-                    navController = appState.navController
+                    navController = appState.navController,
+                    analyticsService = appState.analyticsService
                 )
             }
 
@@ -468,7 +520,8 @@ fun RootScreen(appState: AppState) {
                                 userNotifier = appContainer.userNotifier,
                                 logger = appContainer.logger,
                                 deleteParkUseCase = DeleteParkUseCase(appContainer.swRepository),
-                                resourcesProvider = ResourcesProviderImpl(context.applicationContext)
+                                resourcesProvider = ResourcesProviderImpl(context.applicationContext),
+                                analyticsService = appContainer.analyticsService
                             )
                     )
 
@@ -504,6 +557,9 @@ fun RootScreen(appState: AppState) {
                             }
 
                             is ParkDetailAction.OnNavigateToUserProfile -> {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(AppScreen.PROFILE_OTHER_USER)
+                                )
                                 appState.navController.navigate(
                                     Screen.OtherUserProfile.createRoute(
                                         action.userId,
@@ -513,6 +569,9 @@ fun RootScreen(appState: AppState) {
                             }
 
                             is ParkDetailAction.OnNavigateToTrainees -> {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(AppScreen.PARKS_LIST_USED_BY)
+                                )
                                 appState.navController.navigateToParkTrainees(
                                     parkId = action.parkId,
                                     source = parkDetailSource,
@@ -521,6 +580,9 @@ fun RootScreen(appState: AppState) {
                             }
 
                             is ParkDetailAction.OnNavigateToCreateEvent -> {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(AppScreen.EVENT_FORM)
+                                )
                                 appState.navController.navigate(
                                     Screen.CreateEventForPark.createRoute(
                                         parkId = action.parkId,
@@ -531,6 +593,9 @@ fun RootScreen(appState: AppState) {
                             }
 
                             is ParkDetailAction.OnNavigateToEditPark -> {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(AppScreen.PARK_FORM)
+                                )
                                 appState.navController.navigateToEditPark(
                                     parkId = action.park.id,
                                     source = parkDetailSource,
@@ -674,13 +739,17 @@ fun RootScreen(appState: AppState) {
                         onAction = { action ->
                             when (action) {
                                 ParticipantsAction.Back -> appState.navController.popBackStack()
-                                is ParticipantsAction.UserClick ->
+                                is ParticipantsAction.UserClick -> {
+                                    appState.analyticsService.log(
+                                        AnalyticsEvent.ScreenView(AppScreen.PROFILE_OTHER_USER)
+                                    )
                                     appState.navController.navigate(
                                         Screen.OtherUserProfile.createRoute(
                                             action.userId,
                                             parkTraineesArgs.source
                                         )
                                     )
+                                }
                             }
                         }
                     )
@@ -711,7 +780,8 @@ fun RootScreen(appState: AppState) {
                                 userNotifier = appContainer.userNotifier,
                                 logger = appContainer.logger,
                                 deleteEventUseCase = DeleteEventUseCase(appContainer.swRepository),
-                                resourcesProvider = ResourcesProviderImpl(context.applicationContext)
+                                resourcesProvider = ResourcesProviderImpl(context.applicationContext),
+                                analyticsService = appContainer.analyticsService
                             )
                     )
 
@@ -745,6 +815,9 @@ fun RootScreen(appState: AppState) {
                             }
 
                             is EventDetailAction.OnNavigateToUserProfile -> {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(AppScreen.PROFILE_OTHER_USER)
+                                )
                                 appState.navController.navigate(
                                     Screen.OtherUserProfile.createRoute(action.userId, "events")
                                 )
@@ -759,6 +832,9 @@ fun RootScreen(appState: AppState) {
                             }
 
                             is EventDetailAction.OnNavigateToEditEvent -> {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(AppScreen.EVENT_FORM)
+                                )
                                 appState.navController.navigateToEditEvent(
                                     eventId = action.event.id,
                                     source = "events",
@@ -801,6 +877,9 @@ fun RootScreen(appState: AppState) {
 
                             is EventFormNavigationAction.NavigateToSelectPark -> {
                                 val userId = currentUser?.id ?: return@EventFormScreen
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(AppScreen.PARKS_LIST_EVENT)
+                                )
                                 appState.navController.navigate(
                                     Screen.SelectParkForEvent.createRoute(userId, "events")
                                 )
@@ -873,6 +952,9 @@ fun RootScreen(appState: AppState) {
 
                             is EventFormNavigationAction.NavigateToSelectPark -> {
                                 val userId = currentUser?.id ?: return@EventFormScreen
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(AppScreen.PARKS_LIST_EVENT)
+                                )
                                 appState.navController.navigate(
                                     Screen.SelectParkForEvent.createRoute(userId, "events")
                                 )
@@ -1003,13 +1085,17 @@ fun RootScreen(appState: AppState) {
                         onAction = { action ->
                             when (action) {
                                 ParticipantsAction.Back -> appState.navController.popBackStack()
-                                is ParticipantsAction.UserClick ->
+                                is ParticipantsAction.UserClick -> {
+                                    appState.analyticsService.log(
+                                        AnalyticsEvent.ScreenView(AppScreen.PROFILE_OTHER_USER)
+                                    )
                                     appState.navController.navigate(
                                         Screen.OtherUserProfile.createRoute(
                                             action.userId,
                                             participantsArgs.source
                                         )
                                     )
+                                }
                             }
                         }
                     )
@@ -1067,6 +1153,9 @@ fun RootScreen(appState: AppState) {
                         when (action) {
                             ChatAction.Back -> appState.navController.popBackStack()
                             ChatAction.AvatarClick -> {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(AppScreen.PROFILE_OTHER_USER)
+                                )
                                 appState.navController.navigate(
                                     Screen.OtherUserProfile.createRoute(userId.toLong(), "messages")
                                 )
@@ -1111,12 +1200,21 @@ fun RootScreen(appState: AppState) {
                     onAction = { action ->
                         when (action) {
                             SearchUserAction.Back -> appState.navController.popBackStack()
-                            is SearchUserAction.UserClick ->
+                            is SearchUserAction.UserClick -> {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(AppScreen.PROFILE_OTHER_USER)
+                                )
                                 appState.navController.navigate(
                                     Screen.OtherUserProfile.createRoute(action.userId, source)
                                 )
+                            }
 
-                            SearchUserAction.Search -> viewModel.onSearch()
+                            SearchUserAction.Search -> {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.UserAction(UserActionType.SEARCH_USERS)
+                                )
+                                viewModel.onSearch()
+                            }
                             SearchUserAction.Retry -> viewModel.onSearch()
                         }
                     }
@@ -1135,20 +1233,38 @@ fun RootScreen(appState: AppState) {
                     onAction = { action ->
                         when (action) {
                             EditProfileNavigationAction.Back -> appState.navController.popBackStack()
-                            EditProfileNavigationAction.ChangePassword ->
+                            EditProfileNavigationAction.ChangePassword -> {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(AppScreen.CHANGE_PASSWORD)
+                                )
                                 appState.navController.navigate(
                                     Screen.ChangePassword.route
                                 )
+                            }
 
-                            EditProfileNavigationAction.SelectCountry ->
+                            EditProfileNavigationAction.SelectCountry -> {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(
+                                        AppScreen.COUNTRY_LIST,
+                                        AppScreen.EDIT_PROFILE
+                                    )
+                                )
                                 appState.navController.navigate(
                                     Screen.SelectCountry.route
                                 )
+                            }
 
-                            EditProfileNavigationAction.SelectCity ->
+                            EditProfileNavigationAction.SelectCity -> {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.ScreenView(
+                                        AppScreen.CITY_LIST,
+                                        AppScreen.EDIT_PROFILE
+                                    )
+                                )
                                 appState.navController.navigate(
                                     Screen.SelectCity.route
                                 )
+                            }
 
                             EditProfileNavigationAction.NavigateToLogin -> {
                                 appState.navController.popBackStack(
@@ -1180,6 +1296,9 @@ fun RootScreen(appState: AppState) {
                                 viewModel = viewModel,
                                 onBackClick = { appState.navController.popBackStack() },
                                 onParkClick = { park: Park ->
+                                    appState.analyticsService.log(
+                                        AnalyticsEvent.ScreenView(AppScreen.PARK_DETAIL)
+                                    )
                                     appState.navController.navigate(
                                         Screen.ParkDetail.createRoute(
                                             park.id,
@@ -1208,6 +1327,9 @@ fun RootScreen(appState: AppState) {
                             currentUserId = currentUser?.id
                         ),
                     onFriendClick = { userId ->
+                        appState.analyticsService.log(
+                            AnalyticsEvent.ScreenView(AppScreen.PROFILE_OTHER_USER)
+                        )
                         appState.navController.navigate(
                             Screen.OtherUserProfile.createRoute(userId, "profile")
                         )
@@ -1285,6 +1407,9 @@ fun RootScreen(appState: AppState) {
                         config =
                             UserTrainingParksConfig(
                                 onParkClick = { park ->
+                                    appState.analyticsService.log(
+                                        AnalyticsEvent.ScreenView(AppScreen.PARK_DETAIL)
+                                    )
                                     appState.navController.navigate(
                                         Screen.ParkDetail.createRoute(park.id, args.source)
                                     )
@@ -1314,13 +1439,17 @@ fun RootScreen(appState: AppState) {
                         onAction = { action ->
                             when (action) {
                                 UserFriendsAction.Back -> appState.navController.popBackStack()
-                                is UserFriendsAction.UserClick ->
+                                is UserFriendsAction.UserClick -> {
+                                    appState.analyticsService.log(
+                                        AnalyticsEvent.ScreenView(AppScreen.PROFILE_OTHER_USER)
+                                    )
                                     appState.navController.navigate(
                                         Screen.OtherUserProfile.createRoute(
                                             action.userId,
                                             args.source
                                         )
                                     )
+                                }
 
                                 UserFriendsAction.Refresh -> { // handled internally
                                 }
@@ -1409,6 +1538,9 @@ fun RootScreen(appState: AppState) {
                             when (action) {
                                 JournalsListAction.Back -> appState.navController.popBackStack()
                                 is JournalsListAction.JournalClick -> {
+                                    appState.analyticsService.log(
+                                        AnalyticsEvent.ScreenView(AppScreen.JOURNAL_ENTRIES)
+                                    )
                                     appState.navController.navigate(
                                         Screen.JournalEntries.createRoute(
                                             Screen.JournalEntries.JournalEntriesRoute(
@@ -1520,7 +1652,8 @@ fun RootScreen(appState: AppState) {
                     remember(appSettingsDataStore) {
                         ThemeIconViewModel.factory(
                             appSettingsDataStore,
-                            context.applicationContext as Application
+                            context.applicationContext as Application,
+                            appContainer.analyticsService
                         )
                     }
                 val viewModel =

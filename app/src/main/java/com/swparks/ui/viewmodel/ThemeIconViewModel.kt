@@ -8,6 +8,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.preferences.AppSettingsDataStore
 import com.swparks.domain.model.AppIcon
 import com.swparks.domain.model.AppTheme
@@ -18,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 /**
  * ViewModel для экрана Theme and Icon Screen. Управляет настройками темы и иконки приложения.
@@ -30,7 +35,8 @@ import kotlinx.coroutines.launch
  */
 class ThemeIconViewModel(
     private val dataStore: AppSettingsDataStore,
-    private val iconManager: IconManager
+    private val iconManager: IconManager,
+    private val analyticsService: AnalyticsService
 ) : ViewModel(),
     IThemeIconViewModel {
     companion object {
@@ -46,11 +52,12 @@ class ThemeIconViewModel(
          */
         fun factory(
             dataStore: AppSettingsDataStore,
-            application: Application
+            application: Application,
+            analyticsService: AnalyticsService
         ): ViewModelProvider.Factory =
             viewModelFactory {
                 val iconManager = IconManager(application)
-                initializer { ThemeIconViewModel(dataStore, iconManager) }
+                initializer { ThemeIconViewModel(dataStore, iconManager, analyticsService) }
             }
     }
 
@@ -73,13 +80,23 @@ class ThemeIconViewModel(
             initialValue = ThemeIconUiState()
         )
 
-    /**
-     * Обновляет тему приложения. Сохраняет выбор в DataStore.
-     *
-     * @param theme Новая тема приложения
-     */
     override fun updateTheme(theme: AppTheme) {
-        viewModelScope.launch { dataStore.setTheme(theme) }
+        analyticsService.log(
+            AnalyticsEvent.UserAction(
+                UserActionType.SELECT_THEME,
+                mapOf("theme" to theme.name)
+            )
+        )
+        viewModelScope.launch {
+            try {
+                dataStore.setTheme(theme)
+            } catch (e: IOException) {
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.THEME_CHANGE_FAILED, e)
+                )
+                Log.e(TAG, "Ошибка сохранения темы", e)
+            }
+        }
     }
 
     /**
@@ -94,30 +111,38 @@ class ThemeIconViewModel(
         }
     }
 
-    /**
-     * Обновляет иконку приложения. Сохраняет выбор в DataStore и применяет через PackageManager.
-     *
-     * @param icon Новая иконка приложения
-     */
     override fun updateIcon(icon: AppIcon) {
+        analyticsService.log(
+            AnalyticsEvent.UserAction(
+                UserActionType.SELECT_APP_ICON,
+                mapOf("icon_name" to icon.name)
+            )
+        )
         viewModelScope.launch {
             try {
-                // Сохраняем выбор в DataStore
                 dataStore.setIcon(icon)
-
-                // Применяем иконку через PackageManager
                 iconManager.changeIcon(icon)
-
                 Log.d(TAG, "Иконка успешно изменена на ${icon.name}")
+            } catch (e: IOException) {
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.ICON_CHANGE_FAILED, e)
+                )
+                Log.e(TAG, "Ошибка сохранения иконки в DataStore", e)
             } catch (e: SecurityException) {
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.ICON_CHANGE_FAILED, e)
+                )
                 Log.e(TAG, "Ошибка безопасности при смене иконки", e)
-                // Продолжаем работу, даже если смена иконки не удалась
             } catch (e: PackageManager.NameNotFoundException) {
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.ICON_CHANGE_FAILED, e)
+                )
                 Log.e(TAG, "Компонент иконки не найден", e)
-                // Продолжаем работу, даже если смена иконки не удалась
             } catch (e: IllegalArgumentException) {
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.ICON_CHANGE_FAILED, e)
+                )
                 Log.e(TAG, "Неверный аргумент при смене иконки", e)
-                // Продолжаем работу, даже если смена иконки не удалась
             }
         }
     }

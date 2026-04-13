@@ -170,5 +170,5 @@ fastlane/Preview.html
 fastlane/test_output/
 screenshot-tests/build/
 
-# glm-proxy
-glm-proxy/
+# opencode
+.opencode/package-lock.json

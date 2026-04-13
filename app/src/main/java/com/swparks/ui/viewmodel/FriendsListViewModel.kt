@@ -2,6 +2,10 @@ package com.swparks.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.UserEntity
 import com.swparks.data.database.entity.toDomain
@@ -28,11 +32,13 @@ import kotlinx.coroutines.launch
  * @param logger Логгер для записи сообщений
  * @param userNotifier Обработчик ошибок для отправки ошибок в UI
  */
+@Suppress("UnusedPrivateProperty")
 class FriendsListViewModel(
     private val userDao: UserDao,
     private val swRepository: SWRepository,
     private val logger: Logger,
-    private val userNotifier: UserNotifier
+    private val userNotifier: UserNotifier,
+    private val analyticsService: AnalyticsService
 ) : ViewModel(),
     IFriendsListViewModel {
     private companion object {
@@ -100,6 +106,10 @@ class FriendsListViewModel(
      * @param userId ID пользователя
      */
     override fun onAcceptFriendRequest(userId: Long) {
+        analyticsService.log(
+            AnalyticsEvent.UserAction(UserActionType.RESPOND_FRIEND_REQUEST_ACCEPT)
+        )
+
         viewModelScope.launch {
             isProcessingFlow.value = true
 
@@ -109,6 +119,9 @@ class FriendsListViewModel(
                 .onSuccess {
                     logger.i(TAG, "Заявка успешно принята: userId=$userId")
                 }.onFailure { error ->
+                    analyticsService.log(
+                        AnalyticsEvent.AppError(AppErrorOperation.FRIEND_REQUEST_FAILED, error)
+                    )
                     userNotifier.handleError(
                         AppError.Network(
                             message = "Не удалось принять заявку. Проверьте подключение к интернету.",
@@ -126,6 +139,10 @@ class FriendsListViewModel(
      * @param userId ID пользователя
      */
     override fun onDeclineFriendRequest(userId: Long) {
+        analyticsService.log(
+            AnalyticsEvent.UserAction(UserActionType.RESPOND_FRIEND_REQUEST_DECLINE)
+        )
+
         viewModelScope.launch {
             isProcessingFlow.value = true
 
@@ -135,6 +152,9 @@ class FriendsListViewModel(
                 .onSuccess {
                     logger.i(TAG, "Заявка успешно отклонена: userId=$userId")
                 }.onFailure { error ->
+                    analyticsService.log(
+                        AnalyticsEvent.AppError(AppErrorOperation.FRIEND_REQUEST_FAILED, error)
+                    )
                     userNotifier.handleError(
                         AppError.Network(
                             message = "Не удалось отклонить заявку. Проверьте подключение к интернету.",

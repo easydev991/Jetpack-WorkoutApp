@@ -3,6 +3,10 @@ package com.swparks.ui.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Comment
 import com.swparks.data.model.Park
@@ -55,6 +59,7 @@ class ParkDetailViewModelTest {
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var deleteParkUseCase: DeleteParkUseCase
     private lateinit var resourcesProvider: ResourcesProvider
+    private lateinit var analyticsService: AnalyticsService
     private val logger: Logger = NoOpLogger()
 
     @Before
@@ -66,6 +71,7 @@ class ParkDetailViewModelTest {
         savedStateHandle = SavedStateHandle(mapOf("parkId" to TEST_PARK_ID))
         deleteParkUseCase = mockk(relaxed = true)
         resourcesProvider = mockk(relaxed = true)
+        analyticsService = mockk(relaxed = true)
 
         every { userPreferencesRepository.isAuthorized } returns flowOf(true)
         every { userPreferencesRepository.currentUserId } returns flowOf(1L)
@@ -734,6 +740,95 @@ class ParkDetailViewModelTest {
             assertTrue(state is ParkDetailUIState.Error)
         }
 
+    // ==================== Тесты аналитики ====================
+
+    @Test
+    fun onDeleteConfirm_whenSuccess_logsDeletePark() =
+        runTest {
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            coEvery { swRepository.deletePark(TEST_PARK_ID) } returns Result.success(Unit)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onDeleteClick()
+            advanceUntilIdle()
+            viewModel.onDeleteConfirm()
+            advanceUntilIdle()
+
+            verify { analyticsService.log(AnalyticsEvent.UserAction(UserActionType.DELETE_PARK)) }
+        }
+
+    @Test
+    fun onDeleteConfirm_whenFailure_logsParkDeleteFailed() =
+        runTest {
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            coEvery { swRepository.deletePark(TEST_PARK_ID) } returns
+                Result.failure(RuntimeException("Delete failed"))
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onDeleteClick()
+            advanceUntilIdle()
+            viewModel.onDeleteConfirm()
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.AppError &&
+                            it.operation == AppErrorOperation.PARK_DELETE_FAILED
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun init_whenLoadFails_logsParkLoadFailed() =
+        runTest {
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+                Result.failure(RuntimeException("Network error"))
+
+            createViewModel()
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.AppError &&
+                            it.operation == AppErrorOperation.PARK_LOAD_FAILED
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun onCommentActionClick_whenReport_logsReportComment() =
+        runTest {
+            val comment =
+                Comment(
+                    id = TEST_COMMENT_ID,
+                    body = "Текст",
+                    date = "2026-03-13 12:00:00",
+                    user = User(id = 7L, name = "Автор", image = null)
+                )
+            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+                Result.success(createPark(comments = listOf(comment)))
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onCommentActionClick(TEST_COMMENT_ID, CommentAction.REPORT)
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.UserAction &&
+                            it.action == UserActionType.REPORT_COMMENT &&
+                            it.params["source"] == "park"
+                    }
+                )
+            }
+        }
+
     private fun createViewModel(): ParkDetailViewModel =
         ParkDetailViewModel(
             swRepository = swRepository,
@@ -743,7 +838,8 @@ class ParkDetailViewModelTest {
             userNotifier = userNotifier,
             logger = logger,
             deleteParkUseCase = deleteParkUseCase,
-            resourcesProvider = resourcesProvider
+            resourcesProvider = resourcesProvider,
+            analyticsService = analyticsService
         )
 
     private fun createPark(

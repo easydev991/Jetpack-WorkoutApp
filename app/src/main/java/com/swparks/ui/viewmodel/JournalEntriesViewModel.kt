@@ -5,6 +5,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.toDomain
 import com.swparks.data.repository.SWRepository
@@ -51,7 +55,8 @@ data class JournalEntriesDeps(
     val swRepository: SWRepository,
     val savedStateHandle: SavedStateHandle,
     val userNotifier: UserNotifier,
-    val resources: ResourcesProvider
+    val resources: ResourcesProvider,
+    val analyticsService: AnalyticsService
 )
 
 /**
@@ -285,6 +290,7 @@ class JournalEntriesViewModel(
                     },
                     onFailure = { error ->
                         val message = "Ошибка при синхронизации записей: ${error.message}"
+                        deps.analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.JOURNAL_LOAD_FAILED, error))
                         deps.userNotifier.handleError(AppError.Generic(message, error))
                         applyLoadFailureState(previousState)
                     }
@@ -293,6 +299,7 @@ class JournalEntriesViewModel(
                 throw e
             } catch (e: Exception) {
                 val message = "Исключение при загрузке записей: ${e.message}"
+                deps.analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.JOURNAL_LOAD_FAILED, e))
                 deps.userNotifier.handleError(AppError.Generic(message, e))
                 applyLoadFailureState(previousState)
             } finally {
@@ -319,6 +326,9 @@ class JournalEntriesViewModel(
      */
     @Suppress("TooGenericExceptionCaught")
     override fun deleteEntry(entryId: Long) {
+        deps.analyticsService.log(
+            AnalyticsEvent.UserAction(UserActionType.DELETE_JOURNAL_ENTRY)
+        )
         viewModelScope.launch {
             try {
                 _isDeleting.value = true
@@ -328,6 +338,7 @@ class JournalEntriesViewModel(
                     .onSuccess {
                         deps.userNotifier.showInfo(deps.resources.getString(R.string.entry_deleted))
                     }.onFailure { error ->
+                        deps.analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.JOURNAL_DELETE_FAILED, error))
                         deps.userNotifier.handleError(
                             AppError.Generic(
                                 error.message
@@ -339,6 +350,7 @@ class JournalEntriesViewModel(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                deps.analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.JOURNAL_DELETE_FAILED, e))
                 deps.userNotifier.handleError(
                     AppError.Generic(
                         deps.resources.getString(R.string.error_delete_entry),

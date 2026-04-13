@@ -1,5 +1,9 @@
 package com.swparks.ui.screens.events
 
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
@@ -56,6 +60,7 @@ class EventsViewModelTest {
     private val mockUserNotifier = mockk<UserNotifier>(relaxed = true)
     private val mockLogger = mockk<Logger>(relaxed = true)
     private val mockSWRepository = mockk<SWRepository>(relaxed = true)
+    private lateinit var analyticsService: AnalyticsService
     private val notificationFlow = MutableSharedFlow<AppNotification>(extraBufferCapacity = 10)
 
     @Before
@@ -64,6 +69,7 @@ class EventsViewModelTest {
         coEvery { mockSyncFutureEventsUseCase() } returns Result.success(Unit)
         coEvery { mockSyncPastEventsUseCase() } returns Result.success(Unit)
         every { mockUserNotifier.notificationFlow } returns notificationFlow
+        analyticsService = mockk(relaxed = true)
     }
 
     @After
@@ -104,6 +110,7 @@ class EventsViewModelTest {
             userNotifier = mockUserNotifier,
             logger = mockLogger,
             swRepository = mockSWRepository,
+            analyticsService = analyticsService,
             initialTab = initialTab
         )
 
@@ -1152,5 +1159,72 @@ class EventsViewModelTest {
 
             val event = viewModel.events.first()
             assertTrue(event is EventsEvent.ShowEventCreationRule)
+        }
+
+    // ==================== Тесты аналитики ====================
+
+    @Test
+    fun onTabSelected_logsSelectEventType() =
+        runTest {
+            every { mockGetFutureEventsFlowUseCase() } returns flowOf(emptyList())
+            every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+            every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onTabSelected(EventKind.PAST)
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.UserAction &&
+                            it.action == UserActionType.SELECT_EVENT_TYPE &&
+                            it.params["type"] == "past"
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun onFabClick_whenHasUsedParks_logsCreateEvent() =
+        runTest {
+            val userWithParks = User(id = 1L, name = "testuser", image = "", parksCount = "2")
+            val currentUserFlow = MutableStateFlow(userWithParks)
+
+            every { mockGetFutureEventsFlowUseCase() } returns flowOf(emptyList())
+            every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+            every { mockUserPreferencesRepository.isAuthorized } returns flowOf(true)
+            every { mockSWRepository.getCurrentUserFlow() } returns currentUserFlow
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onFabClick()
+            advanceUntilIdle()
+
+            verify { analyticsService.log(AnalyticsEvent.UserAction(UserActionType.CREATE_EVENT)) }
+        }
+
+    @Test
+    fun syncFutureEvents_whenFailure_logsEventLoadFailed() =
+        runTest {
+            coEvery { mockSyncFutureEventsUseCase() } returns Result.failure(IOException("Network error"))
+            every { mockGetFutureEventsFlowUseCase() } returns flowOf(emptyList())
+            every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())
+            every { mockUserPreferencesRepository.isAuthorized } returns flowOf(false)
+
+            createViewModel()
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.AppError &&
+                            it.operation == AppErrorOperation.EVENT_LOAD_FAILED
+                    }
+                )
+            }
         }
 }

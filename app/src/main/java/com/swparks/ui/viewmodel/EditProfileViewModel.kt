@@ -4,6 +4,10 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.EditProfileLocations
@@ -48,7 +52,7 @@ import java.time.format.DateTimeFormatter
  * @param userNotifier Обработчик ошибок для отправки ошибок в UI
  * @param resources Провайдер строковых ресурсов
  */
-@Suppress("TooGenericExceptionCaught")
+@Suppress("TooGenericExceptionCaught", "UnusedPrivateProperty")
 class EditProfileViewModel(
     private val swRepository: SWRepository,
     private val countriesRepository: CountriesRepository,
@@ -56,7 +60,8 @@ class EditProfileViewModel(
     private val avatarHelper: AvatarHelper,
     private val logger: Logger,
     private val userNotifier: UserNotifier,
-    private val resources: ResourcesProvider
+    private val resources: ResourcesProvider,
+    private val analyticsService: AnalyticsService
 ) : ViewModel(),
     IEditProfileViewModel {
     private companion object {
@@ -260,7 +265,6 @@ class EditProfileViewModel(
     override fun onSaveClick() {
         val currentState = _uiState.value
 
-        // Критическая ошибка - пользователь не авторизован
         val userId = currentUser.value?.id
         if (userId == null) {
             logger.e(TAG, "Пользователь не авторизован")
@@ -268,7 +272,6 @@ class EditProfileViewModel(
             return
         }
 
-        // Проверяем валидность состояния для сохранения
         if (!currentState.hasChanges || currentState.isLoading) {
             when {
                 !currentState.hasChanges -> logger.w(TAG, "Попытка сохранить без изменений")
@@ -277,6 +280,7 @@ class EditProfileViewModel(
             return
         }
 
+        analyticsService.log(AnalyticsEvent.UserAction(UserActionType.SAVE_PROFILE))
         logger.i(TAG, "Начало сохранения профиля")
 
         // Устанавливаем состояние загрузки
@@ -358,6 +362,9 @@ class EditProfileViewModel(
             },
             onFailure = { error ->
                 logger.e(TAG, "Ошибка сохранения профиля: ${error.message}", error)
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.PROFILE_SAVE_FAILED, error)
+                )
                 _uiState.update { it.copy(isLoading = false) }
                 userNotifier.handleError(
                     AppError.Generic(
@@ -369,70 +376,93 @@ class EditProfileViewModel(
         )
     }
 
-    /**
-     * Обрабатывает выбор страны.
-     *
-     * @param countryName Имя выбранной страны
-     */
     override fun onCountrySelected(countryName: String) {
-        val locations = EditProfileLocations.fromCountries(_uiState.value.countries)
-        val result = locations.selectCountry(countryName, _uiState.value.selectedCity)
+        try {
+            val locations = EditProfileLocations.fromCountries(_uiState.value.countries)
+            val result = locations.selectCountry(countryName, _uiState.value.selectedCity)
 
-        _uiState.update {
-            it.copy(
-                selectedCountry = result.newCountry,
-                selectedCity = result.newCity,
-                cities = result.newCities,
-                userForm =
-                    it.userForm.copy(
-                        countryId = result.newCountry?.id?.toIntOrNull(),
-                        cityId = result.newCity?.id?.toIntOrNull()
+            analyticsService.log(
+                AnalyticsEvent.UserAction(
+                    UserActionType.SELECT_COUNTRY,
+                    mapOf(
+                        "country_id" to (result.newCountry?.id ?: ""),
+                        "source" to "edit_profile"
                     )
+                )
             )
-        }
 
-        logger.d(TAG, "Выбрана страна: $countryName, город: ${result.newCity?.name ?: "сброшен"}")
+            _uiState.update {
+                it.copy(
+                    selectedCountry = result.newCountry,
+                    selectedCity = result.newCity,
+                    cities = result.newCities,
+                    userForm =
+                        it.userForm.copy(
+                            countryId = result.newCountry?.id?.toIntOrNull(),
+                            cityId = result.newCity?.id?.toIntOrNull()
+                        )
+                )
+            }
+
+            logger.d(TAG, "Выбрана страна: $countryName, город: ${result.newCity?.name ?: "сброшен"}")
+        } catch (e: Exception) {
+            analyticsService.log(
+                AnalyticsEvent.AppError(AppErrorOperation.SELECT_COUNTRY_FAILED, e)
+            )
+            logger.e(TAG, "Ошибка при выборе страны", e)
+        }
     }
 
-    /**
-     * Обрабатывает выбор города.
-     *
-     * @param cityName Имя выбранного города
-     */
     override fun onCitySelected(cityName: String) {
-        val locations = EditProfileLocations.fromCountries(_uiState.value.countries)
-        val result = locations.selectCity(cityName, _uiState.value.selectedCountry)
+        try {
+            val locations = EditProfileLocations.fromCountries(_uiState.value.countries)
+            val result = locations.selectCity(cityName, _uiState.value.selectedCountry)
 
-        // Если город из другой страны - сначала обновляем страну
-        if (result.countryName != null) {
-            val countryResult = locations.selectCountry(result.countryName, null)
-            _uiState.update {
-                it.copy(
-                    selectedCountry = countryResult.newCountry,
-                    selectedCity = result.newCity,
-                    cities = countryResult.newCities,
-                    userForm =
-                        it.userForm.copy(
-                            countryId = countryResult.newCountry?.id?.toIntOrNull(),
-                            cityId = result.newCity?.id?.toIntOrNull()
-                        )
+            analyticsService.log(
+                AnalyticsEvent.UserAction(
+                    UserActionType.SELECT_CITY,
+                    mapOf(
+                        "city_id" to (result.newCity?.id ?: ""),
+                        "source" to "edit_profile"
+                    )
                 )
-            }
-            logger.d(
-                TAG,
-                "Выбран город: $cityName из другой страны: ${result.countryName}"
             )
-        } else {
-            _uiState.update {
-                it.copy(
-                    selectedCity = result.newCity,
-                    userForm =
-                        it.userForm.copy(
-                            cityId = result.newCity?.id?.toIntOrNull()
-                        )
+
+            if (result.countryName != null) {
+                val countryResult = locations.selectCountry(result.countryName, null)
+                _uiState.update {
+                    it.copy(
+                        selectedCountry = countryResult.newCountry,
+                        selectedCity = result.newCity,
+                        cities = countryResult.newCities,
+                        userForm =
+                            it.userForm.copy(
+                                countryId = countryResult.newCountry?.id?.toIntOrNull(),
+                                cityId = result.newCity?.id?.toIntOrNull()
+                            )
+                    )
+                }
+                logger.d(
+                    TAG,
+                    "Выбран город: $cityName из другой страны: ${result.countryName}"
                 )
+            } else {
+                _uiState.update {
+                    it.copy(
+                        selectedCity = result.newCity,
+                        userForm =
+                            it.userForm.copy(
+                                cityId = result.newCity?.id?.toIntOrNull()
+                            )
+                    )
+                }
+                logger.d(TAG, "Выбран город: $cityName")
             }
-            logger.d(TAG, "Выбран город: $cityName")
+        } catch (e: Exception) {
+            analyticsService.log(
+                AnalyticsEvent.AppError(AppErrorOperation.SELECT_CITY_FAILED, e)
+            )
+            logger.e(TAG, "Ошибка при выборе города", e)
         }
     }
 

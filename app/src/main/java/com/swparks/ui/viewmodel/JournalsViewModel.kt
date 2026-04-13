@@ -4,6 +4,10 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.usecase.IDeleteJournalUseCase
 import com.swparks.domain.usecase.IEditJournalSettingsUseCase
@@ -44,7 +48,8 @@ class JournalsViewModel(
     private val deleteJournalUseCase: IDeleteJournalUseCase,
     private val editJournalSettingsUseCase: IEditJournalSettingsUseCase,
     private val userNotifier: UserNotifier,
-    private val resources: ResourcesProvider
+    private val resources: ResourcesProvider,
+    private val analyticsService: AnalyticsService
 ) : ViewModel(),
     IJournalsViewModel {
     private companion object {
@@ -138,6 +143,7 @@ class JournalsViewModel(
                     },
                     onFailure = { error ->
                         Log.e(TAG, "Ошибка при синхронизации дневников: ${error.message}")
+                        analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.JOURNAL_LOAD_FAILED, error))
                         val message = resources.getString(R.string.error_loading_journals)
                         if (mode == LoadMode.REFRESH) {
                             userNotifier.handleError(AppError.Generic(message, error))
@@ -148,6 +154,7 @@ class JournalsViewModel(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Log.e(TAG, "Исключение при загрузке дневников: ${e.message}")
+                analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.JOURNAL_LOAD_FAILED, e))
                 val message = resources.getString(R.string.error_loading_journals)
                 if (mode == LoadMode.REFRESH) {
                     userNotifier.handleError(AppError.Generic(message, e))
@@ -201,6 +208,7 @@ class JournalsViewModel(
      */
     @Suppress("TooGenericExceptionCaught")
     override fun deleteJournal(journalId: Long) {
+        analyticsService.log(AnalyticsEvent.UserAction(UserActionType.DELETE_JOURNAL))
         viewModelScope.launch {
             try {
                 Log.i(TAG, "Удаление дневника: journalId=$journalId")
@@ -213,6 +221,7 @@ class JournalsViewModel(
                         userNotifier.showInfo(resources.getString(R.string.journal_deleted))
                     }.onFailure { error ->
                         Log.e(TAG, "Ошибка при удалении дневника: ${error.message}")
+                        analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.JOURNAL_DELETE_FAILED, error))
                         userNotifier.handleError(
                             AppError.Generic(
                                 error.message ?: resources.getString(R.string.error_delete_journal),
@@ -223,6 +232,7 @@ class JournalsViewModel(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Log.e(TAG, "Исключение при удалении дневника: ${e.message}")
+                analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.JOURNAL_DELETE_FAILED, e))
                 userNotifier.handleError(
                     AppError.Generic(
                         resources.getString(R.string.error_delete_journal),
@@ -278,12 +288,18 @@ class JournalsViewModel(
                     },
                     onFailure = { error ->
                         Log.e(TAG, "Ошибка при редактировании настроек дневника: ${error.message}")
+                        analyticsService.log(
+                            AnalyticsEvent.AppError(AppErrorOperation.JOURNAL_SAVE_FAILED, error)
+                        )
                         handleJournalSettingsError(error.message)
                     }
                 )
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Log.e(TAG, "Исключение при редактировании настроек дневника: ${e.message}")
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.JOURNAL_SAVE_FAILED, e)
+                )
                 handleJournalSettingsError(null)
             }
         }

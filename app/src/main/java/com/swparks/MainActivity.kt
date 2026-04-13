@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
                     val appState =
                         rememberAppState(
                             navController = rememberNavController(),
-                            analyticsReporter = appContainer.analyticsReporter
+                            analyticsService = appContainer.analyticsService
                         )
                     RootScreen(
                         appState = appState

@@ -8,6 +8,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Comment
 import com.swparks.data.model.Event
@@ -178,7 +182,12 @@ sealed class EventDetailEvent {
  * @param userNotifier Интерфейс для обработки и отправки ошибок в UI-слой
  * @param logger Логгер для записи отладочной информации
  */
-@Suppress("TooManyFunctions", "TooGenericExceptionCaught", "InstanceOfCheckForException")
+@Suppress(
+    "TooManyFunctions",
+    "TooGenericExceptionCaught",
+    "InstanceOfCheckForException",
+    "LongParameterList"
+)
 class EventDetailViewModel(
     private val swRepository: SWRepository,
     private val countriesRepository: CountriesRepository,
@@ -187,7 +196,8 @@ class EventDetailViewModel(
     private val userNotifier: UserNotifier,
     private val logger: Logger,
     private val deleteEventUseCase: DeleteEventUseCase,
-    private val resourcesProvider: ResourcesProvider
+    private val resourcesProvider: ResourcesProvider,
+    private val analyticsService: AnalyticsService
 ) : ViewModel(),
     IEventDetailViewModel {
     companion object {
@@ -204,7 +214,8 @@ class EventDetailViewModel(
             userNotifier: UserNotifier,
             logger: Logger,
             deleteEventUseCase: DeleteEventUseCase,
-            resourcesProvider: ResourcesProvider
+            resourcesProvider: ResourcesProvider,
+            analyticsService: AnalyticsService
         ): ViewModelProvider.Factory =
             viewModelFactory {
                 initializer {
@@ -217,7 +228,8 @@ class EventDetailViewModel(
                         userNotifier = userNotifier,
                         logger = logger,
                         deleteEventUseCase = deleteEventUseCase,
-                        resourcesProvider = resourcesProvider
+                        resourcesProvider = resourcesProvider,
+                        analyticsService = analyticsService
                     )
                 }
             }
@@ -372,6 +384,7 @@ class EventDetailViewModel(
                             "Ошибка загрузки мероприятия: ${exception.message}",
                             exception
                         )
+                        analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.EVENT_LOAD_FAILED, exception))
                         handleError(exception, "загрузке мероприятия")
                         _uiState.value = EventDetailUIState.Error(exception.message)
                     }
@@ -379,6 +392,7 @@ class EventDetailViewModel(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 logger.e(TAG, "Исключение при загрузке мероприятия: ${e.message}", e)
+                analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.EVENT_LOAD_FAILED, e))
                 handleError(e, "загрузке мероприятия")
                 _uiState.value = EventDetailUIState.Error(e.message)
             }
@@ -491,6 +505,7 @@ class EventDetailViewModel(
                         "Ошибка обновления мероприятия: ${exception.message}",
                         exception
                     )
+                    analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.EVENT_LOAD_FAILED, exception))
                     handleError(exception, "обновлении мероприятия")
                     applyRefreshFailureState(previousState, exception.message)
                 }
@@ -498,6 +513,7 @@ class EventDetailViewModel(
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             logger.e(TAG, "Исключение при обновлении мероприятия: ${e.message}", e)
+            analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.EVENT_LOAD_FAILED, e))
             handleError(e, "обновлении мероприятия")
             applyRefreshFailureState(previousState, e.message)
         }
@@ -525,6 +541,7 @@ class EventDetailViewModel(
             },
             onFailure = { exception ->
                 logger.w(TAG, "Фоновое обновление мероприятия не удалось: ${exception.message}")
+                analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.EVENT_LOAD_FAILED, exception))
                 handleError(exception, "фоновом обновлении мероприятия")
             }
         )
@@ -560,6 +577,7 @@ class EventDetailViewModel(
         if (currentState !is EventDetailUIState.Content) return
         if (!canManageEvent(ManageEventAction.DeleteEventConfirm)) return
 
+        analyticsService.log(AnalyticsEvent.UserAction(UserActionType.DELETE_EVENT))
         val eventId = currentState.event.id
         logger.d(TAG, "Подтверждение удаления мероприятия id=$eventId")
 
@@ -580,12 +598,14 @@ class EventDetailViewModel(
                             "Ошибка удаления мероприятия: ${exception.message}",
                             exception
                         )
+                        analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.EVENT_DELETE_FAILED, exception))
                         handleError(exception, "удалении мероприятия")
                     }
                 )
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 logger.e(TAG, "Исключение при удалении мероприятия: ${e.message}", e)
+                analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.EVENT_DELETE_FAILED, e))
                 handleError(e, "удалении мероприятия")
             } finally {
                 _isRefreshing.value = false
@@ -893,6 +913,12 @@ class EventDetailViewModel(
                 ?: UNKNOWN_COMMENT_AUTHOR
         val complaintText = comment.parsedBody ?: comment.body.orEmpty()
 
+        analyticsService.log(
+            AnalyticsEvent.UserAction(
+                UserActionType.REPORT_COMMENT,
+                mapOf("source" to "event")
+            )
+        )
         viewModelScope.launch {
             _events.emit(
                 EventDetailEvent.SendCommentComplaint(

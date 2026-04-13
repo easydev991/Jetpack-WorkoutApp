@@ -4,6 +4,10 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.domain.provider.AvatarHelper
 import com.swparks.domain.usecase.ICreateEventUseCase
 import com.swparks.domain.usecase.IEditEventUseCase
@@ -38,7 +42,8 @@ class EventFormViewModel(
     private val editEventUseCase: IEditEventUseCase,
     private val avatarHelper: AvatarHelper,
     private val logger: Logger,
-    private val userNotifier: UserNotifier
+    private val userNotifier: UserNotifier,
+    private val analyticsService: AnalyticsService
 ) : ViewModel(),
     IEventFormViewModel {
     companion object {
@@ -310,6 +315,7 @@ class EventFormViewModel(
         }
 
         logger.i(TAG, "Начало сохранения мероприятия")
+        analyticsService.log(AnalyticsEvent.UserAction(UserActionType.SAVE_EVENT))
 
         _uiState.update { it.copy(isSaving = true) }
 
@@ -385,6 +391,7 @@ class EventFormViewModel(
             },
             onFailure = { error ->
                 logger.e(TAG, "Ошибка сохранения мероприятия: ${error.message}", error)
+                analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.EVENT_SAVE_FAILED, error))
                 _uiState.update { it.copy(isSaving = false) }
                 userNotifier.handleError(
                     AppError.Generic(

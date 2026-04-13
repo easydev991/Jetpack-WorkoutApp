@@ -1,6 +1,10 @@
 package com.swparks.ui.viewmodel
 
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.model.ApiBlacklistOption
 import com.swparks.data.model.ApiFriendAction
 import com.swparks.data.model.City
@@ -17,8 +21,10 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -43,6 +49,7 @@ class OtherUserProfileViewModelTest {
     private val mockLogger = mockk<Logger>(relaxed = true)
     private val mockUserNotifier = mockk<UserNotifier>(relaxed = true)
     private val mockResources = mockk<ResourcesProvider>(relaxed = true)
+    private val mockAnalyticsService = mockk<AnalyticsService>(relaxed = true)
 
     private val currentUserFlow = MutableSharedFlow<User?>(replay = 1)
     private val friendsFlow = MutableSharedFlow<List<User>>(replay = 1)
@@ -87,7 +94,8 @@ class OtherUserProfileViewModelTest {
                     mockSwRepository,
                     mockLogger,
                     mockUserNotifier,
-                    mockResources
+                    mockResources,
+                    mockAnalyticsService
                 )
             advanceUntilIdle()
 
@@ -109,7 +117,8 @@ class OtherUserProfileViewModelTest {
                     mockSwRepository,
                     mockLogger,
                     mockUserNotifier,
-                    mockResources
+                    mockResources,
+                    mockAnalyticsService
                 )
             advanceUntilIdle()
 
@@ -129,7 +138,8 @@ class OtherUserProfileViewModelTest {
                     mockSwRepository,
                     mockLogger,
                     mockUserNotifier,
-                    mockResources
+                    mockResources,
+                    mockAnalyticsService
                 )
             advanceUntilIdle()
 
@@ -155,7 +165,8 @@ class OtherUserProfileViewModelTest {
                     mockSwRepository,
                     mockLogger,
                     mockUserNotifier,
-                    mockResources
+                    mockResources,
+                    mockAnalyticsService
                 )
             advanceUntilIdle()
 
@@ -186,7 +197,8 @@ class OtherUserProfileViewModelTest {
                     mockSwRepository,
                     mockLogger,
                     mockUserNotifier,
-                    mockResources
+                    mockResources,
+                    mockAnalyticsService
                 )
             advanceUntilIdle()
 
@@ -219,7 +231,8 @@ class OtherUserProfileViewModelTest {
                     mockSwRepository,
                     mockLogger,
                     mockUserNotifier,
-                    mockResources
+                    mockResources,
+                    mockAnalyticsService
                 )
             advanceUntilIdle()
 
@@ -256,7 +269,8 @@ class OtherUserProfileViewModelTest {
                     mockSwRepository,
                     mockLogger,
                     mockUserNotifier,
-                    mockResources
+                    mockResources,
+                    mockAnalyticsService
                 )
             advanceUntilIdle()
 
@@ -280,7 +294,8 @@ class OtherUserProfileViewModelTest {
                     mockSwRepository,
                     mockLogger,
                     mockUserNotifier,
-                    mockResources
+                    mockResources,
+                    mockAnalyticsService
                 )
             advanceUntilIdle()
 
@@ -308,7 +323,8 @@ class OtherUserProfileViewModelTest {
                     mockSwRepository,
                     mockLogger,
                     mockUserNotifier,
-                    mockResources
+                    mockResources,
+                    mockAnalyticsService
                 )
             advanceUntilIdle()
 
@@ -338,7 +354,8 @@ class OtherUserProfileViewModelTest {
                     mockSwRepository,
                     mockLogger,
                     mockUserNotifier,
-                    mockResources
+                    mockResources,
+                    mockAnalyticsService
                 )
             advanceUntilIdle()
 
@@ -370,7 +387,8 @@ class OtherUserProfileViewModelTest {
                     mockSwRepository,
                     mockLogger,
                     mockUserNotifier,
-                    mockResources
+                    mockResources,
+                    mockAnalyticsService
                 )
             advanceUntilIdle()
 
@@ -399,7 +417,8 @@ class OtherUserProfileViewModelTest {
                     mockSwRepository,
                     mockLogger,
                     mockUserNotifier,
-                    mockResources
+                    mockResources,
+                    mockAnalyticsService
                 )
 
             // Используем advanceTimeBy для срабатывания timeout (10 сек + запас)
@@ -430,12 +449,176 @@ class OtherUserProfileViewModelTest {
                 mockSwRepository,
                 mockLogger,
                 mockUserNotifier,
-                mockResources
+                mockResources,
+                mockAnalyticsService
             )
 
             advanceUntilIdle()
 
             // Then - userNotifier.handleError должен быть вызван
             coVerify { mockUserNotifier.handleError(any<AppError>()) }
+        }
+
+    // === Analytics tests ===
+
+    @Test
+    fun performFriendAction_whenNotFriend_thenLogsAddFriendUserAction() =
+        runTest {
+            val userId = 123L
+            val user = User(id = userId, name = "test", image = null)
+            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery {
+                mockSwRepository.friendAction(userId, ApiFriendAction.ADD)
+            } returns Result.success(Unit)
+
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockSwRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources,
+                    mockAnalyticsService
+                )
+            advanceUntilIdle()
+
+            viewModel.performFriendAction()
+            advanceUntilIdle()
+
+            verify {
+                mockAnalyticsService.log(AnalyticsEvent.UserAction(UserActionType.ADD_FRIEND))
+            }
+        }
+
+    @Test
+    fun performFriendAction_whenAlreadyFriend_thenLogsRemoveFriendUserAction() =
+        runTest {
+            val userId = 123L
+            val user = User(id = userId, name = "test", image = null)
+            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            every { mockSwRepository.getFriendsFlow() } returns flowOf(listOf(user))
+            coEvery {
+                mockSwRepository.friendAction(userId, ApiFriendAction.REMOVE)
+            } returns Result.success(Unit)
+
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockSwRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources,
+                    mockAnalyticsService
+                )
+            advanceUntilIdle()
+
+            viewModel.friends.first()
+            advanceUntilIdle()
+
+            viewModel.performFriendAction()
+            advanceUntilIdle()
+
+            verify {
+                mockAnalyticsService.log(AnalyticsEvent.UserAction(UserActionType.REMOVE_FRIEND))
+            }
+        }
+
+    @Test
+    fun performFriendAction_whenFailure_thenLogsFriendRequestFailedAppError() =
+        runTest {
+            val userId = 123L
+            val user = User(id = userId, name = "test", image = null)
+            val error = Exception("Network error")
+            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery {
+                mockSwRepository.friendAction(userId, ApiFriendAction.ADD)
+            } returns Result.failure(error)
+
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockSwRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources,
+                    mockAnalyticsService
+                )
+            advanceUntilIdle()
+
+            viewModel.performFriendAction()
+            advanceUntilIdle()
+
+            verify {
+                mockAnalyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.FRIEND_REQUEST_FAILED, error)
+                )
+            }
+        }
+
+    @Test
+    fun performBlacklistAction_whenNotInBlacklist_thenLogsBlockUserUserAction() =
+        runTest {
+            val userId = 123L
+            val user = User(id = userId, name = "test", image = null)
+            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery {
+                mockSwRepository.blacklistAction(user, ApiBlacklistOption.ADD)
+            } returns Result.success(Unit)
+
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockSwRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources,
+                    mockAnalyticsService
+                )
+            advanceUntilIdle()
+
+            viewModel.performBlacklistAction {}
+            advanceUntilIdle()
+
+            verify {
+                mockAnalyticsService.log(AnalyticsEvent.UserAction(UserActionType.BLOCK_USER))
+            }
+        }
+
+    @Test
+    fun performBlacklistAction_whenInBlacklist_thenLogsUnblockUserUserAction() =
+        runTest {
+            val userId = 123L
+            val user = User(id = userId, name = "test", image = null)
+            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            every { mockSwRepository.getBlacklistFlow() } returns flowOf(listOf(user))
+            coEvery {
+                mockSwRepository.blacklistAction(user, ApiBlacklistOption.REMOVE)
+            } returns Result.success(Unit)
+
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockSwRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources,
+                    mockAnalyticsService
+                )
+            advanceUntilIdle()
+
+            viewModel.blacklist.first()
+            advanceUntilIdle()
+
+            viewModel.performBlacklistAction {}
+            advanceUntilIdle()
+
+            verify {
+                mockAnalyticsService.log(AnalyticsEvent.UserAction(UserActionType.UNBLOCK_USER))
+            }
         }
 }

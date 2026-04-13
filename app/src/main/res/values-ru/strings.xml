@@ -156,6 +156,7 @@
     <string name="use_dynamic_colors">Использовать динамические цвета</string>
     <string name="dynamic_colors_hint">Использовать цвета на основе обоев</string>
     <string name="app_icon">Иконка приложения</string>
+    <string name="app_language">Язык приложения</string>
     <string name="light">Светлая</string>
     <string name="dark">Тёмная</string>
     <string name="system">Системная</string>

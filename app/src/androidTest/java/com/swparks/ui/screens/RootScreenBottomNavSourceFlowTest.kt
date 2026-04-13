@@ -11,11 +11,14 @@ import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.FakeAnalyticsProvider
 import com.swparks.navigation.AppState
 import com.swparks.navigation.BottomNavigationBar
 import com.swparks.navigation.Screen
-import com.swparks.util.FakeAnalyticsReporter
+import com.swparks.util.Logger
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.mockkStatic
 import org.junit.After
 import org.junit.Before
@@ -57,7 +60,7 @@ class RootScreenBottomNavSourceFlowTest {
     fun profileFlow_whenNavigatingToUserParks_thenProfileTabIsSelected() {
         composeTestRule.setContent {
             navController = rememberNavController()
-            appState = AppState(navController, FakeAnalyticsReporter())
+            appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
 
             androidx.compose.material3.Surface {
                 androidx.compose.foundation.layout.Column {
@@ -91,7 +94,7 @@ class RootScreenBottomNavSourceFlowTest {
     fun profileFlow_whenNavigatingToParkDetail_thenProfileTabIsSelected() {
         composeTestRule.setContent {
             navController = rememberNavController()
-            appState = AppState(navController, FakeAnalyticsReporter())
+            appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
 
             androidx.compose.material3.Surface {
                 androidx.compose.foundation.layout.Column {
@@ -125,7 +128,7 @@ class RootScreenBottomNavSourceFlowTest {
     fun profileFlow_whenNavigatingChain_thenProfileTabIsPreserved() {
         composeTestRule.setContent {
             navController = rememberNavController()
-            appState = AppState(navController, FakeAnalyticsReporter())
+            appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
 
             androidx.compose.material3.Surface {
                 androidx.compose.foundation.layout.Column {
@@ -173,7 +176,7 @@ class RootScreenBottomNavSourceFlowTest {
     fun eventsFlow_whenNavigatingToJournalsList_thenEventsTabIsSelected() {
         composeTestRule.setContent {
             navController = rememberNavController()
-            appState = AppState(navController, FakeAnalyticsReporter())
+            appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
 
             androidx.compose.material3.Surface {
                 androidx.compose.foundation.layout.Column {
@@ -207,7 +210,7 @@ class RootScreenBottomNavSourceFlowTest {
     fun eventsFlow_whenNavigatingToJournalEntries_thenEventsTabIsSelected() {
         composeTestRule.setContent {
             navController = rememberNavController()
-            appState = AppState(navController, FakeAnalyticsReporter())
+            appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
 
             androidx.compose.material3.Surface {
                 androidx.compose.foundation.layout.Column {
@@ -245,7 +248,7 @@ class RootScreenBottomNavSourceFlowTest {
     fun eventsFlow_whenNavigatingJournalsChain_thenEventsTabIsPreserved() {
         composeTestRule.setContent {
             navController = rememberNavController()
-            appState = AppState(navController, FakeAnalyticsReporter())
+            appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
 
             androidx.compose.material3.Surface {
                 androidx.compose.foundation.layout.Column {
@@ -297,7 +300,7 @@ class RootScreenBottomNavSourceFlowTest {
     fun parksFlow_whenNavigatingToParkDetail_thenParksTabIsSelected() {
         composeTestRule.setContent {
             navController = rememberNavController()
-            appState = AppState(navController, FakeAnalyticsReporter())
+            appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
 
             androidx.compose.material3.Surface {
                 androidx.compose.foundation.layout.Column {
@@ -331,7 +334,7 @@ class RootScreenBottomNavSourceFlowTest {
     fun messagesFlow_whenNavigatingToOtherUserProfile_thenMessagesTabIsSelected() {
         composeTestRule.setContent {
             navController = rememberNavController()
-            appState = AppState(navController, FakeAnalyticsReporter())
+            appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
 
             androidx.compose.material3.Surface {
                 androidx.compose.foundation.layout.Column {
@@ -365,7 +368,7 @@ class RootScreenBottomNavSourceFlowTest {
     fun complexChain_profileToUserParksToParkDetailToOtherUserProfile_preservesProfileTab() {
         composeTestRule.setContent {
             navController = rememberNavController()
-            appState = AppState(navController, FakeAnalyticsReporter())
+            appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
 
             androidx.compose.material3.Surface {
                 androidx.compose.foundation.layout.Column {
