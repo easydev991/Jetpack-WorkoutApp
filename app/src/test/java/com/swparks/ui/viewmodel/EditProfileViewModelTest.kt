@@ -3,6 +3,10 @@ package com.swparks.ui.viewmodel
 import android.net.Uri
 import android.util.Log
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
@@ -23,6 +27,7 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -61,6 +66,7 @@ class EditProfileViewModelTest {
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
     private lateinit var resources: ResourcesProvider
+    private lateinit var analyticsService: AnalyticsService
 
     private val testUser = createTestUser()
     private val testCountry = Country(id = "1", name = "Россия", cities = emptyList())
@@ -84,6 +90,7 @@ class EditProfileViewModelTest {
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
         resources = mockk(relaxed = true)
+        analyticsService = mockk(relaxed = true)
 
         // Настройка базовых моков
         every { swRepository.getCurrentUserFlow() } returns userFlow
@@ -114,7 +121,8 @@ class EditProfileViewModelTest {
             avatarHelper = avatarHelper,
             logger = logger,
             userNotifier = userNotifier,
-            resources = resources
+            resources = resources,
+            analyticsService = analyticsService
         )
 
     @Test
@@ -948,5 +956,107 @@ class EditProfileViewModelTest {
                 "Ошибка даты рождения должна быть сброшена после resetChanges",
                 state.birthDateError
             )
+        }
+
+    // ==================== Тесты аналитики ====================
+
+    @Test
+    fun onSaveClick_whenHasChanges_logsSaveProfile() =
+        runTest {
+            val uri = mockk<Uri>()
+            val imageBytes = byteArrayOf(1, 2, 3)
+            every { avatarHelper.isSupportedMimeType(uri) } returns true
+            every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
+            every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
+            coEvery {
+                swRepository.editUser(any(), any<MainUserForm>(), any<ByteArray>())
+            } returns Result.success(testUser)
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onLoginChange("Новое имя")
+            advanceUntilIdle()
+
+            viewModel.onSaveClick()
+            advanceUntilIdle()
+
+            verify { analyticsService.log(AnalyticsEvent.UserAction(UserActionType.SAVE_PROFILE)) }
+        }
+
+    @Test
+    fun onSaveClick_whenEditUserFails_logsProfileSaveFailed() =
+        runTest {
+            val uri = mockk<Uri>()
+            val imageBytes = byteArrayOf(1, 2, 3)
+            val error = RuntimeException("Save failed")
+            every { avatarHelper.isSupportedMimeType(uri) } returns true
+            every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
+            every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
+            coEvery {
+                swRepository.editUser(any(), any<MainUserForm>(), any<ByteArray>())
+            } returns Result.failure(error)
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onLoginChange("Новое имя")
+            advanceUntilIdle()
+            viewModel.onAvatarSelected(uri)
+            advanceUntilIdle()
+
+            viewModel.onSaveClick()
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.AppError &&
+                            it.operation == AppErrorOperation.PROFILE_SAVE_FAILED
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun onCountrySelected_logsSelectCountry() =
+        runTest {
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onCountrySelected("Россия")
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.UserAction &&
+                            it.action == UserActionType.SELECT_COUNTRY &&
+                            it.params["source"] == "edit_profile"
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun onCitySelected_logsSelectCity() =
+        runTest {
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onCountrySelected("Россия")
+            advanceUntilIdle()
+            viewModel.onCitySelected("Москва")
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.UserAction &&
+                            it.action == UserActionType.SELECT_CITY &&
+                            it.params["source"] == "edit_profile"
+                    }
+                )
+            }
         }
 }

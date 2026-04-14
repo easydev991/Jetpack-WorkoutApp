@@ -8,10 +8,13 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swparks.R
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.FakeAnalyticsProvider
 import com.swparks.data.AppContainer
 import com.swparks.navigation.rememberAppState
 import com.swparks.util.AppError
-import com.swparks.util.FakeAnalyticsReporter
+import com.swparks.util.Logger
+import io.mockk.mockk
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -45,7 +48,10 @@ class RootScreenTest {
         // Given - настраиваем UI
         composeTestRule.setContent {
             RootScreen(
-                appState = rememberAppState(analyticsReporter = FakeAnalyticsReporter())
+                appState =
+                    rememberAppState(
+                        analyticsService = AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true))
+                    )
             )
         }
 
@@ -76,7 +82,10 @@ class RootScreenTest {
         // Given - настраиваем UI
         composeTestRule.setContent {
             RootScreen(
-                appState = rememberAppState(analyticsReporter = FakeAnalyticsReporter())
+                appState =
+                    rememberAppState(
+                        analyticsService = AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true))
+                    )
             )
         }
 
@@ -107,7 +116,10 @@ class RootScreenTest {
         // Given - настраиваем UI
         composeTestRule.setContent {
             RootScreen(
-                appState = rememberAppState(analyticsReporter = FakeAnalyticsReporter())
+                appState =
+                    rememberAppState(
+                        analyticsService = AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true))
+                    )
             )
         }
         // Ждем, когда UI будет готов
@@ -137,7 +149,10 @@ class RootScreenTest {
         // Given - настраиваем UI
         composeTestRule.setContent {
             RootScreen(
-                appState = rememberAppState(analyticsReporter = FakeAnalyticsReporter())
+                appState =
+                    rememberAppState(
+                        analyticsService = AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true))
+                    )
             )
         }
 

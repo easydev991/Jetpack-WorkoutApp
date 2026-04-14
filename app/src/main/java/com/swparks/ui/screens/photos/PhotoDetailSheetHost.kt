@@ -16,6 +16,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.swparks.JetpackWorkoutApplication
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.UserActionType
 import com.swparks.ui.screens.more.sendComplaint
 import com.swparks.ui.state.PhotoDetailAction
 import com.swparks.ui.state.PhotoDetailConfig
@@ -24,6 +27,7 @@ import com.swparks.ui.state.PhotoDetailUIState
 import com.swparks.ui.viewmodel.PhotoDetailViewModel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 internal fun buildPhotoDetailViewModelKey(config: PhotoDetailConfig): String =
     "photo_${config.ownerType.name}_${config.parentId}_${config.photoId}"
@@ -78,7 +82,15 @@ fun PhotoDetailSheetHost(
         }
     }
 
-    HandleEvents(viewModel, ::dismissSheet, context, onDismissed) { showDeleteDialog = it }
+    HandleEvents(
+        viewModel,
+        ::dismissSheet,
+        context,
+        onDismissed,
+        { showDeleteDialog = it },
+        appContainer.analyticsService,
+        config.ownerType
+    )
 
     if (show) {
         ModalBottomSheet(
@@ -102,20 +114,31 @@ fun PhotoDetailSheetHost(
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun HandleEvents(
     viewModel: PhotoDetailViewModel,
     dismissSheet: (() -> Unit) -> Unit,
     context: android.content.Context,
     onDismissed: (Long?) -> Unit,
-    onShowDeleteDialog: (Boolean) -> Unit
+    onShowDeleteDialog: (Boolean) -> Unit,
+    analyticsService: AnalyticsService,
+    ownerType: com.swparks.ui.state.PhotoOwner
 ) {
     LaunchedEffect(viewModel) {
         viewModel.events.receiveAsFlow().collect { event ->
             when (event) {
                 PhotoDetailEvent.CloseScreen -> dismissSheet { onDismissed(null) }
                 PhotoDetailEvent.ShowDeleteConfirmDialog -> onShowDeleteDialog(true)
-                is PhotoDetailEvent.SendPhotoComplaint -> sendComplaint(event.complaint, context)
+                is PhotoDetailEvent.SendPhotoComplaint -> {
+                    analyticsService.log(
+                        AnalyticsEvent.UserAction(
+                            UserActionType.REPORT_PHOTO,
+                            mapOf("source" to ownerType.name.lowercase(Locale.ROOT))
+                        )
+                    )
+                    sendComplaint(event.complaint, context)
+                }
                 is PhotoDetailEvent.PhotoDeleted -> dismissSheet { onDismissed(event.photoId) }
             }
         }

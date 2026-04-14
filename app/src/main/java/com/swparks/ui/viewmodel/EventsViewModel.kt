@@ -6,6 +6,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.JetpackWorkoutApplication
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Event
 import com.swparks.data.model.User
@@ -79,6 +83,7 @@ class EventsViewModel(
     private val userNotifier: UserNotifier,
     private val logger: Logger,
     private val swRepository: SWRepository,
+    private val analyticsService: AnalyticsService,
     private val initialTab: EventKind = EventKind.FUTURE
 ) : ViewModel(),
     IEventsViewModel {
@@ -111,6 +116,7 @@ class EventsViewModel(
                         userNotifier = container.userNotifier,
                         logger = container.logger,
                         swRepository = container.swRepository,
+                        analyticsService = container.analyticsService,
                         initialTab = initialTab
                     )
                 }
@@ -268,6 +274,7 @@ class EventsViewModel(
                 },
                 onFailure = { exception ->
                     logger.e(TAG, "Ошибка синхронизации: ${exception.message}", exception)
+                    analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.EVENT_LOAD_FAILED, exception))
                     userNotifier.handleError(
                         AppError.Network(
                             message = "Не удалось загрузить мероприятия",
@@ -282,6 +289,7 @@ class EventsViewModel(
             )
         } catch (e: IOException) {
             logger.e(TAG, "Исключение при синхронизации: ${e.message}", e)
+            analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.EVENT_LOAD_FAILED, e))
             applySyncFailureState(
                 previousContentState = previousContentState,
                 message = e.message
@@ -312,6 +320,18 @@ class EventsViewModel(
 
     override fun onTabSelected(tab: EventKind) {
         logger.d(TAG, "Переключение вкладки: $tab")
+        analyticsService.log(
+            AnalyticsEvent.UserAction(
+                UserActionType.SELECT_EVENT_TYPE,
+                mapOf(
+                    "type" to
+                        when (tab) {
+                            EventKind.FUTURE -> "future"
+                            EventKind.PAST -> "past"
+                        }
+                )
+            )
+        )
         _selectedTab.value = tab
 
         if (tab == EventKind.FUTURE) {
@@ -408,6 +428,7 @@ class EventsViewModel(
                 },
                 onFailure = { exception ->
                     logger.e(TAG, "Ошибка синхронизации: ${exception.message}", exception)
+                    analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.EVENT_LOAD_FAILED, exception))
                     userNotifier.handleError(
                         AppError.Network(
                             message = "Не удалось синхронизировать мероприятия",
@@ -422,6 +443,7 @@ class EventsViewModel(
             )
         } catch (e: IOException) {
             logger.e(TAG, "Исключение при синхронизации прошедших мероприятий: ${e.message}", e)
+            analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.EVENT_LOAD_FAILED, e))
             applySyncFailureState(
                 previousContentState = previousContentState,
                 message = e.message
@@ -479,6 +501,7 @@ class EventsViewModel(
 
                 else -> {
                     logger.d(TAG, "У пользователя есть площадки, переход к созданию мероприятия")
+                    analyticsService.log(AnalyticsEvent.UserAction(UserActionType.CREATE_EVENT))
                     _events.send(EventsEvent.NavigateToCreateEvent)
                 }
             }

@@ -3,6 +3,10 @@ package com.swparks.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.model.ApiFriendAction
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
@@ -29,14 +33,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import retrofit2.HttpException
 
-@Suppress("TooGenericExceptionCaught", "InstanceOfCheckForException")
+@Suppress("TooGenericExceptionCaught", "InstanceOfCheckForException", "UnusedPrivateProperty")
 class OtherUserProfileViewModel(
     private val userId: Long,
     private val countriesRepository: CountriesRepository,
     private val swRepository: SWRepository,
     private val logger: Logger,
     private val userNotifier: UserNotifier,
-    private val resources: ResourcesProvider
+    private val resources: ResourcesProvider,
+    private val analyticsService: AnalyticsService
 ) : ViewModel(),
     IOtherUserProfileViewModel {
     companion object {
@@ -249,6 +254,9 @@ class OtherUserProfileViewModel(
         val isFriend = friends.value.any { it.id == viewedUserId }
         val action = if (isFriend) ApiFriendAction.REMOVE else ApiFriendAction.ADD
 
+        val analyticsAction = if (isFriend) UserActionType.REMOVE_FRIEND else UserActionType.ADD_FRIEND
+        analyticsService.log(AnalyticsEvent.UserAction(analyticsAction))
+
         viewModelScope.launch {
             _isFriendActionLoading.update { true }
             logger.i(TAG, "Действие с друзьями: $action для $viewedUserId")
@@ -265,6 +273,9 @@ class OtherUserProfileViewModel(
                     userNotifier.showInfo(message)
                 }.onFailure { error ->
                     val message = "Ошибка действия с друзьями: ${error.message}"
+                    analyticsService.log(
+                        AnalyticsEvent.AppError(AppErrorOperation.FRIEND_REQUEST_FAILED, error)
+                    )
                     userNotifier.handleError(AppError.Generic(message, error))
                     logger.e(TAG, message)
                 }
@@ -276,6 +287,9 @@ class OtherUserProfileViewModel(
         val viewedUser = viewedUser.value ?: return
         val isInBlacklist = blacklist.value.any { it.id == viewedUser.id }
         val action = if (isInBlacklist) BlacklistAction.UNBLOCK else BlacklistAction.BLOCK
+
+        val analyticsAction = if (isInBlacklist) UserActionType.UNBLOCK_USER else UserActionType.BLOCK_USER
+        analyticsService.log(AnalyticsEvent.UserAction(analyticsAction))
 
         viewModelScope.launch {
             logger.i(TAG, "Действие с черным списком: $action для ${viewedUser.id}")

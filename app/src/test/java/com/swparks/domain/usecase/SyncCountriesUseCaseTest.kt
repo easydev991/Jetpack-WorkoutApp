@@ -1,5 +1,8 @@
 package com.swparks.domain.usecase
 
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.util.Clock
@@ -10,6 +13,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertFalse
@@ -21,6 +25,7 @@ class SyncCountriesUseCaseTest {
     private lateinit var clock: Clock
     private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var countriesRepository: CountriesRepository
+    private lateinit var analyticsService: AnalyticsService
     private lateinit var syncCountriesUseCase: SyncCountriesUseCase
 
     @Before
@@ -28,12 +33,14 @@ class SyncCountriesUseCaseTest {
         clock = TestClock("2025-10-27T12:00:00Z")
         userPreferencesRepository = mockk(relaxed = true)
         countriesRepository = mockk(relaxed = true)
+        analyticsService = mockk(relaxed = true)
         syncCountriesUseCase =
             SyncCountriesUseCase(
                 clock,
                 userPreferencesRepository,
                 countriesRepository,
-                NoOpLogger()
+                NoOpLogger(),
+                analyticsService
             )
     }
 
@@ -95,6 +102,14 @@ class SyncCountriesUseCaseTest {
             syncCountriesUseCase()
 
             coVerify(exactly = 0) { userPreferencesRepository.setLastCountriesUpdateDate(any()) }
+            verify {
+                analyticsService.log(
+                    match { event ->
+                        event is AnalyticsEvent.AppError &&
+                            event.operation == AppErrorOperation.COUNTRIES_UPDATE_FAILED
+                    }
+                )
+            }
         }
 
     @Test

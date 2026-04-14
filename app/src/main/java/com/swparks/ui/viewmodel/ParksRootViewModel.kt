@@ -8,6 +8,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.JetpackWorkoutApplication
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.model.City
 import com.swparks.data.model.NewParkDraft
 import com.swparks.data.model.Park
@@ -41,6 +45,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.IOException
 import kotlin.math.pow
 
 @Suppress("LongParameterList")
@@ -55,6 +60,7 @@ class ParksRootViewModel(
     private val userNotifier: UserNotifier,
     private val locationService: LocationService,
     private val syncParksUseCase: SyncParksUseCase,
+    private val analyticsService: AnalyticsService,
     private val userLocationCameraZoom: Double = USER_LOCATION_CAMERA_ZOOM
 ) : ViewModel(),
     IParksRootViewModel {
@@ -140,6 +146,7 @@ class ParksRootViewModel(
                     "Ошибка обновления площадок"
                 }
             logger.e(TAG, message, error)
+            analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.PARK_LOAD_FAILED, error))
         }
     }
 
@@ -245,6 +252,7 @@ class ParksRootViewModel(
                         userNotifier = container.userNotifier,
                         locationService = container.locationService,
                         syncParksUseCase = container.syncParksUseCase,
+                        analyticsService = container.analyticsService,
                         userLocationCameraZoom = userLocationZoom
                     )
                 }
@@ -549,6 +557,24 @@ class ParksRootViewModel(
 
     override fun onFilterApply() {
         val sizeTypeFilter = _uiState.value.localFilter
+        val defaultSizes = ParkSize.entries.toSet()
+        val defaultTypes = ParkType.entries.toSet()
+        if (sizeTypeFilter.sizes != defaultSizes) {
+            analyticsService.log(
+                AnalyticsEvent.UserAction(
+                    UserActionType.SELECT_PARK_FILTER_SIZE,
+                    mapOf("size" to sizeTypeFilter.sizes.joinToString(",") { it.name })
+                )
+            )
+        }
+        if (sizeTypeFilter.types != defaultTypes) {
+            analyticsService.log(
+                AnalyticsEvent.UserAction(
+                    UserActionType.SELECT_PARK_FILTER_TYPE,
+                    mapOf("type" to sizeTypeFilter.types.joinToString(",") { it.name })
+                )
+            )
+        }
         val cityId =
             _uiState.value.selectedCity
                 ?.id
@@ -556,7 +582,14 @@ class ParksRootViewModel(
         val finalFilter = sizeTypeFilter.copy(selectedCityId = cityId)
         logger.d(TAG, "onFilterApply: saving $finalFilter")
         viewModelScope.launch {
-            parksFilterDataStore.saveFilter(finalFilter)
+            try {
+                parksFilterDataStore.saveFilter(finalFilter)
+            } catch (e: IOException) {
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.SELECT_FILTER_FAILED, e)
+                )
+                logger.e(TAG, "Ошибка сохранения фильтра", e)
+            }
         }
         _uiState.value = _uiState.value.copy(showFilterDialog = false)
     }
@@ -589,6 +622,12 @@ class ParksRootViewModel(
         val city = _uiState.value.cities.find { it.name == cityName }
         val cityId = city?.id?.toIntOrNull()
         if (city != null && cityId != null) {
+            analyticsService.log(
+                AnalyticsEvent.UserAction(
+                    UserActionType.SELECT_PARK_FILTER_CITY,
+                    mapOf("city_id" to cityId.toString())
+                )
+            )
             val newFilter = _uiState.value.localFilter.copy(selectedCityId = cityId)
             val cityCameraPosition = cameraPositionForCity(city)
             _uiState.value =
@@ -602,7 +641,14 @@ class ParksRootViewModel(
                         )
                 )
             viewModelScope.launch {
-                parksFilterDataStore.saveFilter(newFilter)
+                try {
+                    parksFilterDataStore.saveFilter(newFilter)
+                } catch (e: IOException) {
+                    analyticsService.log(
+                        AnalyticsEvent.AppError(AppErrorOperation.SELECT_FILTER_FAILED, e)
+                    )
+                    logger.e(TAG, "Ошибка сохранения фильтра города", e)
+                }
             }
             recalculateFilteredParks()
         }
@@ -621,7 +667,14 @@ class ParksRootViewModel(
                     )
             )
         viewModelScope.launch {
-            parksFilterDataStore.saveFilter(newFilter)
+            try {
+                parksFilterDataStore.saveFilter(newFilter)
+            } catch (e: IOException) {
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.SELECT_FILTER_FAILED, e)
+                )
+                logger.e(TAG, "Ошибка очистки фильтра города", e)
+            }
         }
         recalculateFilteredParks()
     }
@@ -636,7 +689,15 @@ class ParksRootViewModel(
 
         logger.d(TAG, "onMapEvent: $event")
         when (event) {
-            is MapEvent.SelectPark -> updateMapState { it.copy(selectedParkId = event.parkId) }
+            is MapEvent.SelectPark -> {
+                analyticsService.log(
+                    AnalyticsEvent.UserAction(
+                        UserActionType.SELECT_PARK_ANNOTATION,
+                        mapOf("park_id" to event.parkId.toString())
+                    )
+                )
+                updateMapState { it.copy(selectedParkId = event.parkId) }
+            }
             is MapEvent.ClearSelection -> updateMapState { it.copy(selectedParkId = null) }
             is MapEvent.ClusterClick -> handleClusterClick(event)
             is MapEvent.CenterOnUser -> handleCenterOnUser()

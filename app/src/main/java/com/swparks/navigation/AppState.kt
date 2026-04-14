@@ -26,13 +26,15 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppScreen
 import com.swparks.data.model.User
 import com.swparks.navigation.TopLevelDestinations.EVENTS
 import com.swparks.navigation.TopLevelDestinations.MESSAGES
 import com.swparks.navigation.TopLevelDestinations.MORE
 import com.swparks.navigation.TopLevelDestinations.PARKS
 import com.swparks.navigation.TopLevelDestinations.PROFILE
-import com.swparks.util.AnalyticsReporter
 
 private const val TAG = "Navigation"
 
@@ -42,14 +44,13 @@ private const val TAG = "Navigation"
 @Composable
 fun rememberAppState(
     navController: NavHostController = rememberNavController(),
-    analyticsReporter: AnalyticsReporter
+    analyticsService: AnalyticsService
 ): AppState {
     val appState =
         remember(navController) {
-            AppState(navController, analyticsReporter)
+            AppState(navController, analyticsService)
         }
 
-    // Слушаем изменения навигации для обновления активной вкладки
     DisposableEffect(navController) {
         Log.d(TAG, "DisposableEffect: добавляем OnDestinationChangedListener")
         val listener =
@@ -60,12 +61,6 @@ fun rememberAppState(
                         "arguments=${arguments?.keySet()}"
                 )
                 appState.onDestinationChanged(destination.route, arguments)
-                val analyticsRoute =
-                    destination.route?.substringBefore("?") ?: destination.displayName
-                appState.analyticsReporter.logScreenView(
-                    screenName = analyticsRoute.substringBefore("/"),
-                    screenClass = analyticsRoute
-                )
             }
         navController.addOnDestinationChangedListener(listener)
         onDispose {
@@ -82,7 +77,7 @@ fun rememberAppState(
  */
 class AppState(
     val navController: NavHostController,
-    val analyticsReporter: AnalyticsReporter
+    val analyticsService: AnalyticsService
 ) {
     private val previousDestination =
         mutableStateOf<NavDestination?>(null)
@@ -237,10 +232,9 @@ class AppState(
      * @param topLevelDestination: Назначение, к которому нужно перейти.
      */
     fun navigateToTopLevelDestination(topLevelDestination: TopLevelDestination) {
-        // Проверяем, активна ли уже эта вкладка
-        // Мы используем "липкое" состояние currentTopLevelDestination, которое помнит,
-        // в какой вкладке мы находимся, даже если ушли на дочерний экран.
         val isReselect = currentTopLevelDestination?.route == topLevelDestination.route
+
+        logTabScreenView(topLevelDestination.route)
 
         Log.d(
             TAG,
@@ -282,6 +276,19 @@ class AppState(
                 "  -> navigate() вызван с popUpTo(startDestination), saveState=true, restoreState=true"
             )
         }
+    }
+
+    private fun logTabScreenView(route: String) {
+        val screen =
+            when (route) {
+                Screen.Parks.route -> AppScreen.PARKS_MAP
+                Screen.Events.route -> AppScreen.EVENTS_LIST
+                Screen.Messages.route -> AppScreen.DIALOGS_LIST
+                Screen.Profile.route -> AppScreen.PROFILE_MAIN_USER
+                Screen.More.route -> AppScreen.MORE
+                else -> return
+            }
+        analyticsService.log(AnalyticsEvent.ScreenView(screen))
     }
 }
 

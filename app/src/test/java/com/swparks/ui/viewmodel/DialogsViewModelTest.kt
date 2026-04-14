@@ -3,6 +3,9 @@ package com.swparks.ui.viewmodel
 import android.util.Log
 import app.cash.turbine.test
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
 import com.swparks.data.database.entity.DialogEntity
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.event.MessageSentNotifier
@@ -46,6 +49,7 @@ class DialogsViewModelTest {
     private lateinit var resources: ResourcesProvider
     private lateinit var messageSentNotifier: MessageSentNotifier
     private lateinit var viewModel: DialogsViewModel
+    private lateinit var analyticsService: AnalyticsService
 
     private val testDialog =
         DialogEntity(
@@ -73,6 +77,7 @@ class DialogsViewModelTest {
         messageSentNotifier = MessageSentNotifier()
         every { resources.getString(R.string.dialog_delete_error) } returns "Ошибка удаления диалога"
         every { resources.getString(R.string.sync_error_message) } returns "Ошибка синхронизации"
+        analyticsService = mockk(relaxed = true)
     }
 
     @After
@@ -95,7 +100,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
 
@@ -118,7 +124,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
             viewModel.refresh()
@@ -142,7 +149,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
 
             // Then
@@ -169,7 +177,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
 
@@ -194,7 +203,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
 
@@ -217,7 +227,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
 
@@ -249,7 +260,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
             viewModel.onDialogClick(dialogId = 1L, userId = 123)
@@ -272,7 +284,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
             viewModel.onDialogClick(dialogId = 1L, userId = null)
@@ -296,7 +309,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
 
@@ -335,7 +349,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
 
@@ -381,7 +396,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
 
@@ -414,7 +430,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
             viewModel.deleteDialog(dialogId)
@@ -447,7 +464,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
 
@@ -480,7 +498,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
             viewModel.deleteDialog(dialogId)
@@ -509,7 +528,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
             viewModel.deleteDialog(dialogId)
@@ -541,7 +561,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
             viewModel.markDialogAsRead(dialogId, userId)
@@ -574,7 +595,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
 
@@ -613,7 +635,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
             viewModel.markDialogAsRead(dialogId, userId)
@@ -648,7 +671,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
             viewModel.markDialogAsRead(dialogId, userId)
@@ -687,7 +711,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
 
@@ -752,7 +777,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
 
@@ -790,7 +816,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
 
@@ -831,7 +858,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
 
@@ -842,6 +870,60 @@ class DialogsViewModelTest {
                 assertEquals(true, awaitItem()) // During deletion
                 advanceUntilIdle()
                 assertEquals(false, awaitItem()) // After deletion
+            }
+        }
+
+    @Test
+    fun refresh_onFailure_logsDialogsLoadFailedAppError() =
+        runTest {
+            val error = Exception("Network error")
+            coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+            coEvery { messagesRepository.refreshDialogs() } returns Result.failure(error)
+
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier,
+                    analyticsService
+                )
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.DIALOGS_LOAD_FAILED, error)
+                )
+            }
+        }
+
+    @Test
+    fun deleteDialog_whenFailure_logsDialogDeleteFailedAppError() =
+        runTest {
+            val dialogId = 1L
+            val error = Exception("Network error")
+            coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
+            coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
+            coEvery { swRepository.deleteDialog(dialogId) } returns Result.failure(error)
+
+            viewModel =
+                DialogsViewModel(
+                    messagesRepository,
+                    swRepository,
+                    logger,
+                    resources,
+                    messageSentNotifier,
+                    analyticsService
+                )
+            advanceUntilIdle()
+            viewModel.deleteDialog(dialogId)
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.DIALOG_DELETE_FAILED, error)
+                )
             }
         }
 
@@ -860,7 +942,8 @@ class DialogsViewModelTest {
                     swRepository,
                     logger,
                     resources,
-                    messageSentNotifier
+                    messageSentNotifier,
+                    analyticsService
                 )
             advanceUntilIdle()
 

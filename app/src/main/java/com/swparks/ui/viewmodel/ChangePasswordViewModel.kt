@@ -3,6 +3,10 @@ package com.swparks.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.usecase.IChangePasswordUseCase
 import com.swparks.ui.state.ChangePasswordEvent
@@ -18,12 +22,13 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-@Suppress("TooGenericExceptionCaught")
+@Suppress("TooGenericExceptionCaught", "UnusedPrivateProperty")
 class ChangePasswordViewModel(
     private val changePasswordUseCase: IChangePasswordUseCase,
     private val logger: Logger,
     private val userNotifier: UserNotifier,
-    private val resources: ResourcesProvider
+    private val resources: ResourcesProvider,
+    private val analyticsService: AnalyticsService
 ) : ViewModel(),
     IChangePasswordViewModel {
     private companion object {
@@ -55,6 +60,7 @@ class ChangePasswordViewModel(
             return
         }
 
+        analyticsService.log(AnalyticsEvent.UserAction(UserActionType.SAVE_PASSWORD))
         logger.i(TAG, "Начало смены пароля")
         _uiState.update { it.copy(isSaving = true) }
 
@@ -73,6 +79,9 @@ class ChangePasswordViewModel(
                 },
                 onFailure = { error ->
                     logger.e(TAG, "Ошибка смены пароля: ${error.message}", error)
+                    analyticsService.log(
+                        AnalyticsEvent.AppError(AppErrorOperation.CHANGE_PASSWORD_FAILED, error)
+                    )
                     _uiState.update { it.copy(isSaving = false) }
                     userNotifier.handleError(
                         AppError.Generic(

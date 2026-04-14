@@ -2,6 +2,9 @@ package com.swparks.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
@@ -56,7 +59,8 @@ class ProfileViewModel(
     private val countriesRepository: CountriesRepository,
     private val swRepository: SWRepository,
     private val logger: Logger,
-    private val userNotifier: UserNotifier
+    private val userNotifier: UserNotifier,
+    private val analyticsService: AnalyticsService
 ) : ViewModel(),
     IProfileViewModel {
     private companion object {
@@ -120,6 +124,9 @@ class ProfileViewModel(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 val errorMessage = "Ошибка загрузки профиля и социальных данных: ${e.message}"
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.PROFILE_LOAD_FAILED, e)
+                )
                 userNotifier.handleError(AppError.Generic(errorMessage, e))
                 _uiState.update { ProfileUiState.Error(errorMessage) }
                 logger.e(TAG, errorMessage)
@@ -149,6 +156,9 @@ class ProfileViewModel(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 val errorMessage = "Ошибка обновления профиля: ${e.message}"
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.PROFILE_LOAD_FAILED, e)
+                )
                 userNotifier.handleError(AppError.Generic(errorMessage, e))
                 logger.e(TAG, errorMessage)
             } finally {
@@ -177,6 +187,9 @@ class ProfileViewModel(
                 logger.i(TAG, "Профиль успешно загружен: ${socialUpdates.user.id}")
             }.onFailure { error ->
                 val errorMessage = "Ошибка загрузки профиля и социальных данных: ${error.message}"
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.PROFILE_LOAD_FAILED, error)
+                )
                 userNotifier.handleError(AppError.Generic(errorMessage, error))
                 if (updateUiState) {
                     _uiState.update { ProfileUiState.Error(errorMessage) }
@@ -217,6 +230,9 @@ class ProfileViewModel(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 val message = "Ошибка загрузки адреса для профиля: ${e.message}"
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.PROFILE_LOAD_FAILED, e)
+                )
                 userNotifier.handleError(AppError.Generic(message, e))
 
                 // Сохраняем предыдущие данные из текущего состояния, если они есть

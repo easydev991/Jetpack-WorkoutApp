@@ -37,6 +37,9 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AppScreen
+import com.swparks.analytics.UserActionType
 import com.swparks.data.AppContainer
 import com.swparks.data.model.User
 import com.swparks.navigation.AppState
@@ -139,6 +142,9 @@ fun ProfileRootScreen(
         LogoutDialog(
             onDismiss = { showLogoutDialog = false },
             onConfirm = {
+                config.appState?.analyticsService?.log(
+                    AnalyticsEvent.UserAction(UserActionType.LOGOUT)
+                )
                 scope.launch {
                     config.appContainer?.logoutUseCase?.invoke()
                 }
@@ -253,6 +259,9 @@ private fun ProfileActionButtons(
 ) {
     EditProfileButton(
         onClick = {
+            config.appState?.analyticsService?.log(
+                AnalyticsEvent.ScreenView(AppScreen.EDIT_PROFILE)
+            )
             config.appState?.navController?.navigate(Screen.EditProfile.route)
         },
         enabled = !isRefreshing
@@ -263,6 +272,9 @@ private fun ProfileActionButtons(
             friendsCount = user.friendsCount ?: 0,
             friendRequestsCount = user.friendRequestCount?.toIntOrNull() ?: 0,
             onClick = {
+                config.appState?.analyticsService?.log(
+                    AnalyticsEvent.ScreenView(AppScreen.MAIN_USER_FRIENDS_LIST)
+                )
                 config.appState?.navController?.navigate(Screen.MyFriends.route)
             },
             enabled = !isRefreshing
@@ -273,6 +285,9 @@ private fun ProfileActionButtons(
         UsedParksButton(
             parksCount = user.parksCount?.toIntOrNull() ?: 0,
             onClick = {
+                config.appState?.analyticsService?.log(
+                    AnalyticsEvent.ScreenView(AppScreen.PARKS_LIST_USED_BY)
+                )
                 config.appState?.navController?.navigate(
                     Screen.UserTrainingParks.createRoute(user.id)
                 )
@@ -285,6 +300,9 @@ private fun ProfileActionButtons(
         AddedParksButton(
             addedParksCount = user.addedParks?.size ?: 0,
             onClick = {
+                config.appState?.analyticsService?.log(
+                    AnalyticsEvent.ScreenView(AppScreen.PARKS_ADDED_BY_USER)
+                )
                 config.appState?.navController?.navigateToUserAddedParks(
                     userId = user.id,
                     addedParks = user.addedParks.orEmpty()
@@ -297,6 +315,9 @@ private fun ProfileActionButtons(
     JournalsButton(
         journalsCount = user.journalCount ?: 0,
         onClick = {
+            config.appState?.analyticsService?.log(
+                AnalyticsEvent.ScreenView(AppScreen.JOURNALS_LIST)
+            )
             config.appState?.navController?.navigate(
                 Screen.JournalsList.createRoute(user.id)
             )
@@ -308,6 +329,9 @@ private fun ProfileActionButtons(
         BlacklistButton(
             blacklistCount = blacklist.size,
             onClick = {
+                config.appState?.analyticsService?.log(
+                    AnalyticsEvent.ScreenView(AppScreen.BLACK_LIST)
+                )
                 config.appState?.navController?.navigate(Screen.Blacklist.route)
             },
             enabled = !isRefreshing

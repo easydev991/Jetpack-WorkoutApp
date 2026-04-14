@@ -3,6 +3,10 @@ package com.swparks.ui.viewmodel
 import android.net.Uri
 import android.util.Log
 import app.cash.turbine.test
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.UserEntity
 import com.swparks.data.model.Park
@@ -27,6 +31,7 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -49,6 +54,7 @@ class ParkFormViewModelTest {
     private lateinit var geocodingService: GeocodingService
     private lateinit var findCityByCoordinatesUseCase: IFindCityByCoordinatesUseCase
     private lateinit var userDao: UserDao
+    private lateinit var analyticsService: AnalyticsService
 
     @Before
     fun setup() {
@@ -66,6 +72,7 @@ class ParkFormViewModelTest {
         geocodingService = mockk(relaxed = true)
         findCityByCoordinatesUseCase = mockk(relaxed = true)
         userDao = mockk(relaxed = true)
+        analyticsService = mockk(relaxed = true)
     }
 
     @After
@@ -85,7 +92,8 @@ class ParkFormViewModelTest {
             userNotifier = userNotifier,
             geocodingService = geocodingService,
             findCityByCoordinatesUseCase = findCityByCoordinatesUseCase,
-            userDao = userDao
+            userDao = userDao,
+            analyticsService = analyticsService
         )
 
     private fun createViewModelWithMocks(
@@ -103,7 +111,8 @@ class ParkFormViewModelTest {
             userNotifier = userNotifier,
             geocodingService = geocodingService,
             findCityByCoordinatesUseCase = findCityByCoordinatesUseCase,
-            userDao = userDao
+            userDao = userDao,
+            analyticsService = analyticsService
         )
 
     private fun createTestPark(): Park =
@@ -1225,5 +1234,82 @@ class ParkFormViewModelTest {
             // Then
             coVerify(exactly = 0) { geocodingService.reverseGeocode(any(), any()) }
             coVerify(exactly = 0) { findCityByCoordinatesUseCase.invoke(any(), any(), any()) }
+        }
+
+    // ==================== Analytics ====================
+
+    @Test
+    fun onSaveClick_logsSaveParkUserAction() =
+        runTest {
+            val uri = mockk<Uri>()
+            val imageBytes = byteArrayOf(1, 2, 3, 4, 5)
+
+            every { avatarHelper.isSupportedMimeType(uri) } returns true
+            every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
+            every { ImageUtils.convertToJpeg(imageBytes) } returns imageBytes
+            every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
+
+            val createdPark = createTestPark()
+            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
+            coEvery { swRepository.savePark(any(), any(), any()) } returns
+                Result.success(
+                    createdPark
+                )
+
+            val mode =
+                ParkFormMode.Create(
+                    initialAddress = "Address",
+                    initialLatitude = "55.0",
+                    initialLongitude = "37.0",
+                    initialCityId = 1
+                )
+            val viewModel = createViewModel(mode, swRepository)
+            advanceUntilIdle()
+
+            viewModel.onPhotoSelected(listOf(uri))
+            advanceUntilIdle()
+
+            viewModel.onSaveClick()
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(AnalyticsEvent.UserAction(UserActionType.SAVE_PARK))
+            }
+        }
+
+    @Test
+    fun onSaveClick_whenSaveFails_logsParkSaveFailedAppError() =
+        runTest {
+            val uri = mockk<Uri>()
+            val imageBytes = byteArrayOf(1, 2, 3, 4, 5)
+
+            every { avatarHelper.isSupportedMimeType(uri) } returns true
+            every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
+            every { ImageUtils.convertToJpeg(imageBytes) } returns imageBytes
+            every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
+
+            val error = RuntimeException("Network error")
+            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
+            coEvery { swRepository.savePark(any(), any(), any()) } returns Result.failure(error)
+
+            val mode =
+                ParkFormMode.Create(
+                    initialAddress = "Address",
+                    initialLatitude = "55.0",
+                    initialLongitude = "37.0",
+                    initialCityId = 1
+                )
+            val viewModel = createViewModel(mode, swRepository)
+            advanceUntilIdle()
+
+            viewModel.onPhotoSelected(listOf(uri))
+            advanceUntilIdle()
+
+            viewModel.onSaveClick()
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.PARK_SAVE_FAILED, error))
+            }
         }
 }

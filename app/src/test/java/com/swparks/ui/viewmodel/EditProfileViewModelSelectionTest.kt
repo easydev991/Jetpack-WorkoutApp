@@ -2,6 +2,9 @@ package com.swparks.ui.viewmodel
 
 import android.net.Uri
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.UserActionType
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
@@ -14,6 +17,7 @@ import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,6 +45,7 @@ class EditProfileViewModelSelectionTest {
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
     private lateinit var resources: ResourcesProvider
+    private lateinit var analyticsService: AnalyticsService
 
     private val currentUserFlow = MutableStateFlow<User?>(null)
     private val countriesFlow = MutableStateFlow<List<Country>>(emptyList())
@@ -56,6 +61,7 @@ class EditProfileViewModelSelectionTest {
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
         resources = mockk(relaxed = true)
+        analyticsService = mockk(relaxed = true)
 
         every { swRepository.getCurrentUserFlow() } returns currentUserFlow
         every { countriesRepository.getCountriesFlow() } returns countriesFlow
@@ -257,6 +263,60 @@ class EditProfileViewModelSelectionTest {
             Assert.assertEquals(uri, state.selectedAvatarUri)
         }
 
+    // MARK: - Analytics tests
+
+    @Test
+    fun onCountrySelected_logsSelectCountryAnalytics() =
+        runTest {
+            val countries = makeTestCountries()
+            val user = makeTestUser()
+            currentUserFlow.value = user
+            countriesFlow.value = countries
+
+            val viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.onCountrySelected("Россия")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.UserAction &&
+                            it.action == UserActionType.SELECT_COUNTRY &&
+                            it.params["source"] == "edit_profile"
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun onCitySelected_logsSelectCityAnalytics() =
+        runTest {
+            val countries = makeTestCountries()
+            val user = makeTestUser()
+            currentUserFlow.value = user
+            countriesFlow.value = countries
+
+            val viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.onCountrySelected("Россия")
+            testDispatcher.scheduler.advanceUntilIdle()
+            viewModel.onCitySelected("Москва")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.UserAction &&
+                            it.action == UserActionType.SELECT_CITY &&
+                            it.params["source"] == "edit_profile"
+                    }
+                )
+            }
+        }
+
     // MARK: - Helper methods
 
     private fun createViewModel(): EditProfileViewModel =
@@ -267,7 +327,8 @@ class EditProfileViewModelSelectionTest {
             avatarHelper = avatarHelper,
             logger = logger,
             userNotifier = userNotifier,
-            resources = resources
+            resources = resources,
+            analyticsService = analyticsService
         )
 
     private fun makeTestUser(): User =

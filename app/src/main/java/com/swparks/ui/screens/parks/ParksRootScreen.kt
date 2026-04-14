@@ -55,6 +55,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AppScreen
+import com.swparks.analytics.UserActionType
 import com.swparks.data.model.NewParkDraft
 import com.swparks.data.model.Park
 import com.swparks.navigation.AppState
@@ -181,6 +184,9 @@ fun ParksRootScreen(
                 enabled = !uiState.isGettingLocation,
                 modifier = Modifier.padding(bottom = createParkFabBottomOffset),
                 onClick = {
+                    appState.analyticsService.log(
+                        AnalyticsEvent.UserAction(UserActionType.CREATE_PARK)
+                    )
                     val hasFineLocation =
                         ContextCompat.checkSelfPermission(
                             context,
@@ -219,14 +225,26 @@ fun ParksRootScreen(
                 ParksTabRow(
                     selectedTabIndex = selectedTabIndex,
                     isGettingLocation = uiState.isGettingLocation,
-                    onTabSelected = viewModel::onTabSelected
+                    onTabSelected = { tab ->
+                        if (tab == ParksTab.LIST) {
+                            appState.analyticsService.log(
+                                AnalyticsEvent.ScreenView(AppScreen.PARKS_MAP_LIST)
+                            )
+                        }
+                        viewModel.onTabSelected(tab)
+                    }
                 )
                 SearchCityButton(
                     cityName = uiState.selectedCity?.name,
                     onClick = onNavigateToSelectCity,
                     onClearClick =
                         if (uiState.selectedCity != null) {
-                            viewModel::onClearCityFilter
+                            {
+                                appState.analyticsService.log(
+                                    AnalyticsEvent.UserAction(UserActionType.CLEAR_CITY_FILTER)
+                                )
+                                viewModel.onClearCityFilter()
+                            }
                         } else {
                             null
                         }
@@ -240,8 +258,22 @@ fun ParksRootScreen(
                     if (selectedTab == ParksTab.MAP) {
                         if (uiState.showNoParksFound) {
                             NoParksFoundView(
-                                onSelectCity = onNavigateToSelectCity,
-                                onOpenFilters = viewModel::onShowFilterDialog,
+                                onSelectCity = {
+                                    appState.analyticsService.log(
+                                        AnalyticsEvent.UserAction(
+                                            UserActionType.OPEN_CITY_SEARCH_EMPTY_STATE
+                                        )
+                                    )
+                                    onNavigateToSelectCity()
+                                },
+                                onOpenFilters = {
+                                    appState.analyticsService.log(
+                                        AnalyticsEvent.UserAction(
+                                            UserActionType.OPEN_FILTER_EMPTY_STATE
+                                        )
+                                    )
+                                    viewModel.onShowFilterDialog()
+                                },
                                 isSizeTypeFilterEdited = uiState.isSizeTypeFilterEdited
                             )
                         } else {
@@ -350,8 +382,22 @@ fun ParksRootScreen(
                     if (selectedTab == ParksTab.LIST) {
                         if (uiState.showNoParksFound) {
                             NoParksFoundView(
-                                onSelectCity = onNavigateToSelectCity,
-                                onOpenFilters = viewModel::onShowFilterDialog,
+                                onSelectCity = {
+                                    appState.analyticsService.log(
+                                        AnalyticsEvent.UserAction(
+                                            UserActionType.OPEN_CITY_SEARCH_EMPTY_STATE
+                                        )
+                                    )
+                                    onNavigateToSelectCity()
+                                },
+                                onOpenFilters = {
+                                    appState.analyticsService.log(
+                                        AnalyticsEvent.UserAction(
+                                            UserActionType.OPEN_FILTER_EMPTY_STATE
+                                        )
+                                    )
+                                    viewModel.onShowFilterDialog()
+                                },
                                 isSizeTypeFilterEdited = uiState.isSizeTypeFilterEdited
                             )
                         } else {

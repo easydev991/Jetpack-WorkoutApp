@@ -1,6 +1,10 @@
 package com.swparks.viewmodel
 
 import android.util.Log
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.preferences.AppSettingsDataStore
 import com.swparks.domain.model.AppIcon
 import com.swparks.domain.model.AppTheme
@@ -28,6 +32,7 @@ import org.junit.AfterClass
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
+import java.io.IOException
 
 /**
  * Unit-тесты для ThemeIconViewModel.
@@ -36,6 +41,7 @@ import org.junit.Test
 class ThemeIconViewModelTest {
     private lateinit var mockDataStore: AppSettingsDataStore
     private lateinit var mockIconManager: IconManager
+    private lateinit var mockAnalyticsService: AnalyticsService
     private lateinit var viewModel: ThemeIconViewModel
     private lateinit var testDispatcher: TestDispatcher
 
@@ -59,6 +65,7 @@ class ThemeIconViewModelTest {
     fun setUp() {
         mockDataStore = mockk(relaxed = true)
         mockIconManager = mockk()
+        mockAnalyticsService = mockk<AnalyticsService>(relaxed = true)
         testDispatcher = StandardTestDispatcher()
         Dispatchers.setMain(testDispatcher)
 
@@ -82,7 +89,7 @@ class ThemeIconViewModelTest {
             every { mockDataStore.useDynamicColors } returns flowOf(false)
 
             // When
-            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager)
+            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager, mockAnalyticsService)
             viewModel.updateTheme(AppTheme.LIGHT)
             testDispatcher.scheduler.advanceUntilIdle()
 
@@ -107,7 +114,7 @@ class ThemeIconViewModelTest {
             every { mockDataStore.useDynamicColors } returns flowOf(false)
 
             // When
-            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager)
+            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager, mockAnalyticsService)
             themes.forEach { theme ->
                 viewModel.updateTheme(theme)
             }
@@ -130,7 +137,7 @@ class ThemeIconViewModelTest {
             every { mockDataStore.useDynamicColors } returns flowOf(false)
 
             // When
-            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager)
+            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager, mockAnalyticsService)
             viewModel.updateIcon(AppIcon.ICON_2)
             testDispatcher.scheduler.advanceUntilIdle()
 
@@ -165,7 +172,7 @@ class ThemeIconViewModelTest {
             every { mockDataStore.useDynamicColors } returns flowOf(false)
 
             // When
-            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager)
+            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager, mockAnalyticsService)
             icons.forEach { icon ->
                 viewModel.updateIcon(icon)
             }
@@ -188,7 +195,7 @@ class ThemeIconViewModelTest {
             every { mockDataStore.useDynamicColors } returns flowOf(false)
 
             // When
-            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager)
+            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager, mockAnalyticsService)
             viewModel.updateTheme(AppTheme.LIGHT)
             testDispatcher.scheduler.advanceUntilIdle()
 
@@ -206,7 +213,7 @@ class ThemeIconViewModelTest {
             every { mockDataStore.useDynamicColors } returns flowOf(false)
 
             // When
-            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager)
+            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager, mockAnalyticsService)
             viewModel.updateTheme(AppTheme.DARK)
             testDispatcher.scheduler.advanceUntilIdle()
 
@@ -224,7 +231,7 @@ class ThemeIconViewModelTest {
             every { mockDataStore.useDynamicColors } returns flowOf(false)
 
             // When
-            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager)
+            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager, mockAnalyticsService)
             viewModel.updateTheme(AppTheme.SYSTEM)
             testDispatcher.scheduler.advanceUntilIdle()
 
@@ -242,7 +249,7 @@ class ThemeIconViewModelTest {
             every { mockDataStore.useDynamicColors } returns flowOf(false)
 
             // When
-            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager)
+            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager, mockAnalyticsService)
             viewModel.updateDynamicColors(true)
             testDispatcher.scheduler.advanceUntilIdle()
 
@@ -262,7 +269,7 @@ class ThemeIconViewModelTest {
             every { mockDataStore.useDynamicColors } returns flowOf(false)
 
             // When
-            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager)
+            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager, mockAnalyticsService)
             viewModel.updateTheme(AppTheme.LIGHT)
             viewModel.updateIcon(AppIcon.ICON_3)
             testDispatcher.scheduler.advanceUntilIdle()
@@ -284,12 +291,98 @@ class ThemeIconViewModelTest {
             every { mockDataStore.useDynamicColors } returns flowOf(false)
 
             // When
-            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager)
+            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager, mockAnalyticsService)
             viewModel.updateIcon(AppIcon.ICON_2)
             testDispatcher.scheduler.advanceUntilIdle()
 
             // Then
             coVerify { mockDataStore.setIcon(AppIcon.ICON_2) }
             verify(atLeast = 1) { mockIconManager.changeIcon(any()) }
+        }
+
+    @Test
+    fun updateTheme_logsSelectThemeUserAction() =
+        runTest(testDispatcher) {
+            coEvery { mockDataStore.setTheme(any()) } coAnswers { }
+            coEvery { mockDataStore.theme } returns flowOf(AppTheme.SYSTEM)
+            coEvery { mockDataStore.icon } returns flowOf(AppIcon.DEFAULT)
+            every { mockDataStore.useDynamicColors } returns flowOf(false)
+
+            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager, mockAnalyticsService)
+            viewModel.updateTheme(AppTheme.DARK)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verify {
+                mockAnalyticsService.log(
+                    AnalyticsEvent.UserAction(
+                        UserActionType.SELECT_THEME,
+                        mapOf("theme" to AppTheme.DARK.name)
+                    )
+                )
+            }
+        }
+
+    @Test
+    fun updateTheme_failure_logsThemeChangeFailedAppError() =
+        runTest(testDispatcher) {
+            val exception = IOException("disk error")
+            coEvery { mockDataStore.setTheme(any()) } throws exception
+            coEvery { mockDataStore.theme } returns flowOf(AppTheme.SYSTEM)
+            coEvery { mockDataStore.icon } returns flowOf(AppIcon.DEFAULT)
+            every { mockDataStore.useDynamicColors } returns flowOf(false)
+
+            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager, mockAnalyticsService)
+            viewModel.updateTheme(AppTheme.LIGHT)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verify {
+                mockAnalyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.THEME_CHANGE_FAILED, exception)
+                )
+            }
+        }
+
+    @Test
+    fun updateIcon_logsSelectAppIconUserAction() =
+        runTest(testDispatcher) {
+            every { mockIconManager.changeIcon(any()) } just Runs
+            coEvery { mockDataStore.setIcon(any()) } coAnswers { }
+            coEvery { mockDataStore.theme } returns flowOf(AppTheme.SYSTEM)
+            coEvery { mockDataStore.icon } returns flowOf(AppIcon.DEFAULT)
+            every { mockDataStore.useDynamicColors } returns flowOf(false)
+
+            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager, mockAnalyticsService)
+            viewModel.updateIcon(AppIcon.ICON_3)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verify {
+                mockAnalyticsService.log(
+                    AnalyticsEvent.UserAction(
+                        UserActionType.SELECT_APP_ICON,
+                        mapOf("icon_name" to AppIcon.ICON_3.name)
+                    )
+                )
+            }
+        }
+
+    @Test
+    fun updateIcon_failure_logsIconChangeFailedAppError() =
+        runTest(testDispatcher) {
+            val exception = IOException("write failed")
+            every { mockIconManager.changeIcon(any()) } just Runs
+            coEvery { mockDataStore.setIcon(any()) } throws exception
+            coEvery { mockDataStore.theme } returns flowOf(AppTheme.SYSTEM)
+            coEvery { mockDataStore.icon } returns flowOf(AppIcon.DEFAULT)
+            every { mockDataStore.useDynamicColors } returns flowOf(false)
+
+            viewModel = ThemeIconViewModel(mockDataStore, mockIconManager, mockAnalyticsService)
+            viewModel.updateIcon(AppIcon.ICON_2)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verify {
+                mockAnalyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.ICON_CHANGE_FAILED, exception)
+                )
+            }
         }
 }

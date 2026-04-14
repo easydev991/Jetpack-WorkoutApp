@@ -2,6 +2,9 @@ package com.swparks.viewmodel
 
 import android.util.Log
 import app.cash.turbine.test
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.SocialUpdates
@@ -18,6 +21,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -44,6 +48,7 @@ class ProfileViewModelTest {
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
     private lateinit var profileViewModel: ProfileViewModel
+    private lateinit var analyticsService: AnalyticsService
 
     private val testCountry = Country(id = "1", name = "Россия", cities = emptyList())
     private val testCity = City(id = "1", name = "Москва", lat = "55.75", lon = "37.62")
@@ -57,6 +62,7 @@ class ProfileViewModelTest {
         swRepository = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
+        analyticsService = mockk(relaxed = true)
     }
 
     @After
@@ -72,7 +78,8 @@ class ProfileViewModelTest {
             countriesRepository,
             swRepository,
             logger,
-            userNotifier
+            userNotifier,
+            analyticsService
         )
 
     @Test
@@ -378,6 +385,100 @@ class ProfileViewModelTest {
     /**
      * Создает тестового пользователя
      */
+    @Test
+    fun refreshProfile_whenRepositoryFailure_shouldLogAppErrorProfileLoadFailed() =
+        runTest {
+            val testUser = createTestUser()
+
+            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery {
+                swRepository.getSocialUpdates(testUser.id)
+            } returns Result.failure(IOException("Нет подключения к сети"))
+
+            profileViewModel = createViewModel()
+            advanceUntilIdle()
+
+            profileViewModel.refreshProfile()
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match { event ->
+                        event is AnalyticsEvent.AppError &&
+                            event.operation == AppErrorOperation.PROFILE_LOAD_FAILED
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun refreshProfile_whenCountriesRepositoryThrows_shouldLogAppErrorProfileLoadFailed() =
+        runTest {
+            val testUser = createTestUser()
+            val socialUpdates =
+                SocialUpdates(
+                    user = testUser,
+                    friends = emptyList(),
+                    friendRequests = emptyList(),
+                    blacklist = emptyList()
+                )
+
+            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery { swRepository.getSocialUpdates(testUser.id) } returns
+                Result.success(socialUpdates)
+            coEvery {
+                countriesRepository.getCountryById(testUser.countryID.toString())
+            } throws IllegalStateException("Ошибка базы данных")
+
+            profileViewModel = createViewModel()
+            advanceUntilIdle()
+
+            profileViewModel.refreshProfile()
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match { event ->
+                        event is AnalyticsEvent.AppError &&
+                            event.operation == AppErrorOperation.PROFILE_LOAD_FAILED
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun loadProfileFromServer_whenFailure_shouldLogAppErrorProfileLoadFailed() =
+        runTest {
+            val testUser = createTestUser()
+            val socialUpdates =
+                SocialUpdates(
+                    user = testUser,
+                    friends = emptyList(),
+                    friendRequests = emptyList(),
+                    blacklist = emptyList()
+                )
+
+            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery {
+                swRepository.getSocialUpdates(testUser.id)
+            } returns Result.failure(IOException("Нет подключения к сети"))
+
+            profileViewModel = createViewModel()
+            advanceUntilIdle()
+
+            profileViewModel.loadProfileFromServer(testUser.id)
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match { event ->
+                        event is AnalyticsEvent.AppError &&
+                            event.operation == AppErrorOperation.PROFILE_LOAD_FAILED
+                    }
+                )
+            }
+        }
+
     private fun createTestUser(): User =
         User(
             id = 1,

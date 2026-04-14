@@ -1,6 +1,10 @@
 package com.swparks.ui.viewmodel
 
 import app.cash.turbine.test
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.model.City
 import com.swparks.data.model.NewParkDraft
 import com.swparks.data.model.Park
@@ -25,6 +29,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,6 +59,7 @@ class ParksRootViewModelTest {
     private lateinit var userNotifier: UserNotifier
     private lateinit var locationService: LocationService
     private lateinit var syncParksUseCase: SyncParksUseCase
+    private lateinit var analyticsService: AnalyticsService
     private lateinit var viewModel: ParksRootViewModel
     private lateinit var parksFlow: MutableStateFlow<List<Park>>
 
@@ -104,6 +110,7 @@ class ParksRootViewModelTest {
                 coEvery { this@mockk.invoke() } returns Result.success(Unit)
                 coEvery { this@mockk.invoke(force = true) } returns Result.success(Unit)
             }
+        analyticsService = mockk(relaxed = true)
         viewModel =
             ParksRootViewModel(
                 createParkLocationHandler = createParkLocationHandler,
@@ -115,7 +122,8 @@ class ParksRootViewModelTest {
                 initializeParksUseCase = initializeParksUseCase,
                 userNotifier = userNotifier,
                 locationService = locationService,
-                syncParksUseCase = syncParksUseCase
+                syncParksUseCase = syncParksUseCase,
+                analyticsService = analyticsService
             )
     }
 
@@ -312,7 +320,8 @@ class ParksRootViewModelTest {
                     initializeParksUseCase = initializeParksUseCase,
                     userNotifier = userNotifier,
                     locationService = locationService,
-                    syncParksUseCase = syncParksUseCase
+                    syncParksUseCase = syncParksUseCase,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -353,7 +362,8 @@ class ParksRootViewModelTest {
                     initializeParksUseCase = initializeParksUseCase,
                     userNotifier = userNotifier,
                     locationService = locationService,
-                    syncParksUseCase = syncParksUseCase
+                    syncParksUseCase = syncParksUseCase,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -539,7 +549,8 @@ class ParksRootViewModelTest {
                     initializeParksUseCase = initializeParksUseCase,
                     userNotifier = userNotifier,
                     locationService = locationService,
-                    syncParksUseCase = syncParksUseCase
+                    syncParksUseCase = syncParksUseCase,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -593,7 +604,8 @@ class ParksRootViewModelTest {
                     initializeParksUseCase = initializeParksUseCase,
                     userNotifier = userNotifier,
                     locationService = locationService,
-                    syncParksUseCase = syncParksUseCase
+                    syncParksUseCase = syncParksUseCase,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -676,7 +688,8 @@ class ParksRootViewModelTest {
                     initializeParksUseCase = initializeParksUseCase,
                     userNotifier = userNotifier,
                     locationService = locationService,
-                    syncParksUseCase = syncParksUseCase
+                    syncParksUseCase = syncParksUseCase,
+                    analyticsService = analyticsService
                 )
             advanceUntilIdle()
 
@@ -734,7 +747,8 @@ class ParksRootViewModelTest {
                     initializeParksUseCase = initializeParksUseCase,
                     userNotifier = userNotifier,
                     locationService = locationService,
-                    syncParksUseCase = syncParksUseCase
+                    syncParksUseCase = syncParksUseCase,
+                    analyticsService = analyticsService
                 )
 
             viewModel.updateParks(allParks)
@@ -974,4 +988,132 @@ class ParksRootViewModelTest {
         viewModel.onTabSelected(ParksTab.LIST)
         assertEquals(ParksTab.LIST, viewModel.selectedTab.value)
     }
+
+    // ==================== Тесты аналитики ====================
+
+    @Test
+    fun syncParks_whenFailure_logsParkLoadFailed() =
+        runTest {
+            coEvery { syncParksUseCase.invoke() } returns Result.failure(Exception("Sync failed"))
+
+            val vm =
+                ParksRootViewModel(
+                    createParkLocationHandler = createParkLocationHandler,
+                    logger = logger,
+                    filterParksUseCase = filterParksUseCase,
+                    parksFilterDataStore = parksFilterDataStore,
+                    countriesRepository = countriesRepository,
+                    swRepository = swRepository,
+                    initializeParksUseCase = initializeParksUseCase,
+                    userNotifier = userNotifier,
+                    locationService = locationService,
+                    syncParksUseCase = syncParksUseCase,
+                    analyticsService = analyticsService
+                )
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.AppError &&
+                            it.operation == AppErrorOperation.PARK_LOAD_FAILED
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun onFilterApply_whenSizeFilterChanged_logsSelectParkFilterSize() =
+        runTest {
+            viewModel.onShowFilterDialog()
+            viewModel.onLocalFilterChange(
+                ParkFilter(sizes = setOf(ParkSize.SMALL), types = ParkType.entries.toSet())
+            )
+            viewModel.onFilterApply()
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.UserAction &&
+                            it.action == UserActionType.SELECT_PARK_FILTER_SIZE
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun onFilterApply_whenTypeFilterChanged_logsSelectParkFilterType() =
+        runTest {
+            viewModel.onShowFilterDialog()
+            viewModel.onLocalFilterChange(
+                ParkFilter(sizes = ParkSize.entries.toSet(), types = setOf(ParkType.SOVIET))
+            )
+            viewModel.onFilterApply()
+            advanceUntilIdle()
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.UserAction &&
+                            it.action == UserActionType.SELECT_PARK_FILTER_TYPE
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun onMapEvent_selectPark_logsSelectParkAnnotation() =
+        runTest {
+            viewModel.onMapEvent(
+                com.swparks.ui.state.MapEvent
+                    .SelectPark(42L)
+            )
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.UserAction &&
+                            it.action == UserActionType.SELECT_PARK_ANNOTATION &&
+                            it.params["park_id"] == "42"
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun onCitySelected_logsSelectParkFilterCity() =
+        runTest {
+            val city = City(id = "1", name = "Moscow", lat = "55.75", lon = "37.61")
+            coEvery { countriesRepository.getAllCities() } returns listOf(city)
+            coEvery { countriesRepository.getCityById(any()) } returns city
+            every { filterParksUseCase.invoke(any(), any()) } returns emptyList()
+
+            val vm =
+                ParksRootViewModel(
+                    createParkLocationHandler = createParkLocationHandler,
+                    logger = logger,
+                    filterParksUseCase = filterParksUseCase,
+                    parksFilterDataStore = parksFilterDataStore,
+                    countriesRepository = countriesRepository,
+                    swRepository = swRepository,
+                    initializeParksUseCase = initializeParksUseCase,
+                    userNotifier = userNotifier,
+                    locationService = locationService,
+                    syncParksUseCase = syncParksUseCase,
+                    analyticsService = analyticsService
+                )
+            advanceUntilIdle()
+
+            vm.onCitySelected("Moscow")
+
+            verify {
+                analyticsService.log(
+                    match {
+                        it is AnalyticsEvent.UserAction &&
+                            it.action == UserActionType.SELECT_PARK_FILTER_CITY
+                    }
+                )
+            }
+        }
 }

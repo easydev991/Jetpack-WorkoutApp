@@ -8,6 +8,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.room.Room
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.swparks.BuildConfig
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.FirebaseAnalyticsProvider
+import com.swparks.analytics.NoopAnalyticsProvider
 import com.swparks.data.crypto.CryptoManager
 import com.swparks.data.crypto.CryptoManagerImpl
 import com.swparks.data.database.SWDatabase
@@ -122,14 +125,12 @@ import com.swparks.ui.viewmodel.TextEntryViewModel
 import com.swparks.ui.viewmodel.UserAddedParksViewModel
 import com.swparks.ui.viewmodel.UserFriendsViewModel
 import com.swparks.ui.viewmodel.UserTrainingParksViewModel
-import com.swparks.util.AnalyticsReporter
 import com.swparks.util.AndroidLogger
 import com.swparks.util.CrashReporter
 import com.swparks.util.Logger
 import com.swparks.util.NoOpLogger
 import com.swparks.util.UserNotifier
 import com.swparks.util.UserNotifierImpl
-import com.swparks.util.analytics.FirebaseAnalyticsReporter
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -160,7 +161,7 @@ interface AppContainer {
     val logger: Logger
     val userNotifier: UserNotifier
     val crashReporter: CrashReporter
-    val analyticsReporter: AnalyticsReporter
+    val analyticsService: AnalyticsService
 
     // Event notifiers
     val messageSentNotifier: MessageSentNotifier
@@ -314,12 +315,15 @@ class DefaultAppContainer(
     override val logger: Logger = if (BuildConfig.DEBUG) AndroidLogger() else NoOpLogger()
     override val userNotifier: UserNotifier = UserNotifierImpl(logger)
     override val crashReporter: CrashReporter = com.swparks.util.crash.FirebaseCrashReporter
-    override val analyticsReporter: AnalyticsReporter by lazy {
-        FirebaseAnalyticsReporter(
-            context = appContext,
-            logger = logger,
-            crashReporter = crashReporter
-        )
+    override val analyticsService: AnalyticsService by lazy {
+        if (BuildConfig.DEBUG) {
+            AnalyticsService(listOf(NoopAnalyticsProvider()), logger)
+        } else {
+            AnalyticsService(
+                listOf(FirebaseAnalyticsProvider(appContext, logger, crashReporter)),
+                logger
+            )
+        }
     }
     override val messageSentNotifier: MessageSentNotifier = MessageSentNotifier()
     override val clock: com.swparks.domain.util.Clock by lazy { SystemClock() }
@@ -359,7 +363,7 @@ class DefaultAppContainer(
     }
 
     override val syncCountriesUseCase: SyncCountriesUseCase by lazy {
-        SyncCountriesUseCase(clock, userPreferencesRepository, countriesRepository, logger)
+        SyncCountriesUseCase(clock, userPreferencesRepository, countriesRepository, logger, analyticsService)
     }
 
     override val initializeParksUseCase: IInitializeParksUseCase by lazy {
@@ -672,7 +676,8 @@ class DefaultAppContainer(
             countriesRepository = countriesRepository,
             swRepository = swRepository,
             logger = logger,
-            userNotifier = userNotifier
+            userNotifier = userNotifier,
+            analyticsService = analyticsService
         )
 
     /** Factory метод для создания FriendsListViewModel */
@@ -681,7 +686,8 @@ class DefaultAppContainer(
             userDao = userDao,
             swRepository = swRepository,
             logger = logger,
-            userNotifier = userNotifier
+            userNotifier = userNotifier,
+            analyticsService = analyticsService
         )
 
     /** Factory метод для создания UserFriendsViewModel */
@@ -698,7 +704,8 @@ class DefaultAppContainer(
         BlacklistViewModel(
             swRepository = swRepository,
             logger = logger,
-            userNotifier = userNotifier
+            userNotifier = userNotifier,
+            analyticsService = analyticsService
         )
 
     /** Factory метод для создания UserTrainingParksViewModel */
@@ -732,7 +739,8 @@ class DefaultAppContainer(
             deleteJournalUseCase = deleteJournalUseCase,
             editJournalSettingsUseCase = editJournalSettingsUseCase,
             userNotifier = userNotifier,
-            resources = resourcesProvider
+            resources = resourcesProvider,
+            analyticsService = analyticsService
         )
 
     /** Factory метод для создания JournalEntriesViewModel */
@@ -754,7 +762,8 @@ class DefaultAppContainer(
                 swRepository = swRepository,
                 savedStateHandle = savedStateHandle,
                 userNotifier = userNotifier,
-                resources = resourcesProvider
+                resources = resourcesProvider,
+                analyticsService = analyticsService
             )
     )
 
@@ -774,7 +783,8 @@ class DefaultAppContainer(
             swRepository = swRepository,
             logger = logger,
             resources = resourcesProvider,
-            messageSentNotifier = messageSentNotifier
+            messageSentNotifier = messageSentNotifier,
+            analyticsService = analyticsService
         )
 
     /** Factory метод для создания ChatViewModel */
@@ -784,14 +794,16 @@ class DefaultAppContainer(
             swRepository = swRepository,
             userNotifier = userNotifier,
             logger = logger,
-            crashReporter = crashReporter
+            crashReporter = crashReporter,
+            analyticsService = analyticsService
         )
 
     /** Factory метод для создания SearchUserViewModel */
     override fun searchUserViewModelFactory() =
         SearchUserViewModel(
             swRepository = swRepository,
-            logger = logger
+            logger = logger,
+            analyticsService = analyticsService
         )
 
     /** Factory метод для создания OtherUserProfileViewModel */
@@ -802,7 +814,8 @@ class DefaultAppContainer(
             swRepository = swRepository,
             logger = logger,
             userNotifier = userNotifier,
-            resources = resourcesProvider
+            resources = resourcesProvider,
+            analyticsService = analyticsService
         )
 
     /** Factory метод для создания EditProfileViewModel */
@@ -814,7 +827,8 @@ class DefaultAppContainer(
             avatarHelper = avatarHelper,
             logger = logger,
             userNotifier = userNotifier,
-            resources = resourcesProvider
+            resources = resourcesProvider,
+            analyticsService = analyticsService
         )
 
     /** Factory метод для создания ChangePasswordViewModel */
@@ -823,7 +837,8 @@ class DefaultAppContainer(
             changePasswordUseCase = changePasswordUseCase,
             logger = logger,
             userNotifier = userNotifier,
-            resources = resourcesProvider
+            resources = resourcesProvider,
+            analyticsService = analyticsService
         )
 
     /** Factory метод для создания RegisterViewModel */
@@ -850,7 +865,8 @@ class DefaultAppContainer(
             countriesRepository = countriesRepository,
             userNotifier = userNotifier,
             logger = logger,
-            swRepository = swRepository
+            swRepository = swRepository,
+            analyticsService = analyticsService
         )
 
     /** Factory метод для создания EventDetailViewModel */
@@ -863,7 +879,8 @@ class DefaultAppContainer(
             userNotifier = userNotifier,
             logger = logger,
             deleteEventUseCase = DeleteEventUseCase(swRepository),
-            resourcesProvider = resourcesProvider
+            resourcesProvider = resourcesProvider,
+            analyticsService = analyticsService
         )
 
     /** Factory метод для создания EventFormViewModel */
@@ -874,7 +891,8 @@ class DefaultAppContainer(
             editEventUseCase = editEventUseCase,
             avatarHelper = avatarHelper,
             logger = logger,
-            userNotifier = userNotifier
+            userNotifier = userNotifier,
+            analyticsService = analyticsService
         )
 
     /** Factory метод для создания ParkFormViewModel */
@@ -887,7 +905,8 @@ class DefaultAppContainer(
             userNotifier = userNotifier,
             geocodingService = geocodingService,
             findCityByCoordinatesUseCase = findCityByCoordinatesUseCase,
-            userDao = userDao
+            userDao = userDao,
+            analyticsService = analyticsService
         )
 
     // ==================== API клиенты для разных функциональных областей ====================

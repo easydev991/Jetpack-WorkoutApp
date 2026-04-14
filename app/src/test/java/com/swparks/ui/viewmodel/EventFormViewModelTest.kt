@@ -3,6 +3,10 @@ package com.swparks.ui.viewmodel
 import android.net.Uri
 import android.util.Log
 import app.cash.turbine.test
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.model.Event
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
@@ -49,6 +53,7 @@ class EventFormViewModelTest {
     private lateinit var avatarHelper: AvatarHelper
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
+    private lateinit var analyticsService: AnalyticsService
 
     @Before
     fun setup() {
@@ -65,6 +70,7 @@ class EventFormViewModelTest {
         avatarHelper = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
+        analyticsService = mockk(relaxed = true)
     }
 
     @After
@@ -79,7 +85,8 @@ class EventFormViewModelTest {
             editEventUseCase = editEventUseCase,
             avatarHelper = avatarHelper,
             logger = logger,
-            userNotifier = userNotifier
+            userNotifier = userNotifier,
+            analyticsService = analyticsService
         )
 
     private fun createTestEvent(): Event =
@@ -1001,4 +1008,56 @@ class EventFormViewModelTest {
             uiState.form.date
         )
     }
+
+    // ==================== Аналитика ====================
+
+    @Test
+    fun onSaveClick_logsSaveEventUserAction() =
+        runTest {
+            // Given
+            val createdEvent = createTestEvent()
+            coEvery { createEventUseCase(any(), any()) } returns Result.success(createdEvent)
+
+            val viewModel = createViewModel(EventFormMode.RegularCreate)
+            advanceUntilIdle()
+
+            viewModel.onTitleChange("Test Event")
+            viewModel.onDateChange(1749916800000L)
+            viewModel.onParkSelected(1L, "Park")
+            advanceUntilIdle()
+
+            // When
+            viewModel.onSaveClick()
+            advanceUntilIdle()
+
+            // Then
+            verify { analyticsService.log(AnalyticsEvent.UserAction(UserActionType.SAVE_EVENT)) }
+        }
+
+    @Test
+    fun onSaveClick_logsEventSaveFailed_whenSaveFails() =
+        runTest {
+            // Given
+            val error = RuntimeException("Network error")
+            coEvery { createEventUseCase(any(), any()) } returns Result.failure(error)
+
+            val viewModel = createViewModel(EventFormMode.RegularCreate)
+            advanceUntilIdle()
+
+            viewModel.onTitleChange("Test Event")
+            viewModel.onDateChange(1749916800000L)
+            viewModel.onParkSelected(1L, "Park")
+            advanceUntilIdle()
+
+            // When
+            viewModel.onSaveClick()
+            advanceUntilIdle()
+
+            // Then
+            verify {
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.EVENT_SAVE_FAILED, error)
+                )
+            }
+        }
 }

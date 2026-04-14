@@ -15,6 +15,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.FakeAnalyticsProvider
 import com.swparks.data.model.User
 import com.swparks.domain.model.Journal
 import com.swparks.navigation.AppState
@@ -24,7 +26,8 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.FakeJournalsViewModel
 import com.swparks.ui.viewmodel.IJournalsViewModel
 import com.swparks.ui.viewmodel.JournalsEvent
-import com.swparks.util.FakeAnalyticsReporter
+import com.swparks.util.Logger
+import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
@@ -58,7 +61,7 @@ class JournalsListScreenTest {
     ) {
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(User(id = userId, name = "testuser", image = null))
 
             JetpackWorkoutAppTheme {
@@ -529,7 +532,7 @@ class JournalsListScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(User(id = userId, name = "testuser", image = null))
 
             JetpackWorkoutAppTheme {
@@ -568,7 +571,7 @@ class JournalsListScreenTest {
         // When - не устанавливаем currentUser в setContent
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             // currentUser остается null по умолчанию
 
             JetpackWorkoutAppTheme {
@@ -607,7 +610,7 @@ class JournalsListScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(User(id = currentUserId, name = "testuser", image = null))
 
             JetpackWorkoutAppTheme {
@@ -646,7 +649,7 @@ class JournalsListScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(User(id = userId, name = "testuser", image = null))
 
             JetpackWorkoutAppTheme {
@@ -700,7 +703,7 @@ class JournalsListScreenTest {
             // When - открываем экран с обработчиком событий
             composeTestRule.setContent {
                 val navController = rememberNavController()
-                val appState = AppState(navController, FakeAnalyticsReporter())
+                val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
                 appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
 
                 JetpackWorkoutAppTheme {
@@ -767,7 +770,7 @@ class JournalsListScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(User(id = currentUserId, name = "testuser", image = null))
 
             JetpackWorkoutAppTheme {
@@ -812,7 +815,7 @@ class JournalsListScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(User(id = currentUserId, name = "testuser", image = null))
 
             JetpackWorkoutAppTheme {
@@ -856,7 +859,7 @@ class JournalsListScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(User(id = userId, name = "testuser", image = null))
 
             JetpackWorkoutAppTheme {
@@ -900,7 +903,7 @@ class JournalsListScreenTest {
         // When
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, FakeAnalyticsReporter())
+            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(User(id = userId, name = "testuser", image = null))
 
             JetpackWorkoutAppTheme {

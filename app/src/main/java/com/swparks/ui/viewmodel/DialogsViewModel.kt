@@ -4,6 +4,9 @@ import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.event.MessageSentNotifier
 import com.swparks.domain.provider.ResourcesProvider
@@ -33,12 +36,14 @@ import kotlinx.coroutines.launch
  * @property resources Провайдер строковых ресурсов для локализации
  * @property messageSentNotifier Нотификатор события отправки сообщения
  */
+@Suppress("UnusedPrivateProperty")
 class DialogsViewModel(
     private val messagesRepository: MessagesRepository,
     private val swRepository: SWRepository,
     private val logger: Logger,
     private val resources: ResourcesProvider,
-    private val messageSentNotifier: MessageSentNotifier
+    private val messageSentNotifier: MessageSentNotifier,
+    private val analyticsService: AnalyticsService
 ) : ViewModel(),
     IDialogsViewModel {
     private companion object {
@@ -156,6 +161,12 @@ class DialogsViewModel(
                 _uiState.value = DialogsUiState.Success(dialogs = emptyList())
             }
         } else {
+            val error = result.exceptionOrNull()
+            if (error != null) {
+                analyticsService.log(
+                    AnalyticsEvent.AppError(AppErrorOperation.DIALOGS_LOAD_FAILED, error)
+                )
+            }
             val currentState = _uiState.value
             // Если кэш пустой и это первая загрузка - показываем Error
             // Проверяем Loading (первичная загрузка) или Success с пустым списком
@@ -212,8 +223,14 @@ class DialogsViewModel(
             _isDeleting.value = false
 
             if (result.isFailure) {
+                val error = result.exceptionOrNull()
+                if (error != null) {
+                    analyticsService.log(
+                        AnalyticsEvent.AppError(AppErrorOperation.DIALOG_DELETE_FAILED, error)
+                    )
+                }
                 _syncError.value = resources.getString(R.string.dialog_delete_error)
-                logger.e(TAG, "Ошибка удаления диалога: ${result.exceptionOrNull()?.message}")
+                logger.e(TAG, "Ошибка удаления диалога: ${error?.message}")
             }
             // При успехе Flow из Room обновит список автоматически
         }

@@ -47,6 +47,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AppScreen
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
@@ -650,6 +652,9 @@ private fun ProfileNavigationButtons(params: ProfileNavigationParams) {
                     friendsCount = viewedUser.friendsCount ?: 0,
                     friendRequestsCount = 0,
                     onClick = {
+                        appState.analyticsService.log(
+                            AnalyticsEvent.ScreenView(AppScreen.FRIENDS_LIST)
+                        )
                         appState.navController.navigate(
                             Screen.UserFriends.createRoute(viewedUser.id, source)
                         )
@@ -662,6 +667,9 @@ private fun ProfileNavigationButtons(params: ProfileNavigationParams) {
                 UsedParksButton(
                     parksCount = viewedUser.parksCount?.toIntOrNull() ?: 0,
                     onClick = {
+                        appState.analyticsService.log(
+                            AnalyticsEvent.ScreenView(AppScreen.PARKS_LIST_USED_BY)
+                        )
                         appState.navController.navigate(
                             Screen.UserTrainingParks.createRoute(viewedUser.id, source)
                         )
@@ -674,6 +682,9 @@ private fun ProfileNavigationButtons(params: ProfileNavigationParams) {
                 AddedParksButton(
                     addedParksCount = viewedUser.addedParks?.size ?: 0,
                     onClick = {
+                        appState.analyticsService.log(
+                            AnalyticsEvent.ScreenView(AppScreen.PARKS_ADDED_BY_USER)
+                        )
                         appState.navController.navigateToUserAddedParks(
                             userId = viewedUser.id,
                             source = source,
@@ -688,6 +699,9 @@ private fun ProfileNavigationButtons(params: ProfileNavigationParams) {
                 JournalsButton(
                     journalsCount = viewedUser.journalCount ?: 0,
                     onClick = {
+                        appState.analyticsService.log(
+                            AnalyticsEvent.ScreenView(AppScreen.JOURNALS_LIST)
+                        )
                         appState.navController.navigate(
                             Screen.JournalsList.createRoute(viewedUser.id, source)
                         )

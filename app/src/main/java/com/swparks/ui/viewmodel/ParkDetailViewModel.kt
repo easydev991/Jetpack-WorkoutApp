@@ -8,6 +8,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.AnalyticsService
+import com.swparks.analytics.AppErrorOperation
+import com.swparks.analytics.UserActionType
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Comment
 import com.swparks.data.model.Photo
@@ -39,7 +43,12 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 
-@Suppress("TooManyFunctions", "TooGenericExceptionCaught", "InstanceOfCheckForException")
+@Suppress(
+    "TooManyFunctions",
+    "TooGenericExceptionCaught",
+    "InstanceOfCheckForException",
+    "LongParameterList"
+)
 class ParkDetailViewModel(
     private val swRepository: SWRepository,
     private val countriesRepository: CountriesRepository,
@@ -48,7 +57,8 @@ class ParkDetailViewModel(
     private val userNotifier: UserNotifier,
     private val logger: Logger,
     private val deleteParkUseCase: DeleteParkUseCase,
-    private val resourcesProvider: ResourcesProvider
+    private val resourcesProvider: ResourcesProvider,
+    private val analyticsService: AnalyticsService
 ) : ViewModel(),
     IParkDetailViewModel {
     companion object {
@@ -56,6 +66,7 @@ class ParkDetailViewModel(
         private const val PARK_ID_KEY = "parkId"
         private const val UNKNOWN_COMMENT_AUTHOR = "неизвестен"
 
+        @Suppress("LongParameterList")
         fun factory(
             swRepository: SWRepository,
             countriesRepository: CountriesRepository,
@@ -63,7 +74,8 @@ class ParkDetailViewModel(
             userNotifier: UserNotifier,
             logger: Logger,
             deleteParkUseCase: DeleteParkUseCase,
-            resourcesProvider: ResourcesProvider
+            resourcesProvider: ResourcesProvider,
+            analyticsService: AnalyticsService
         ): ViewModelProvider.Factory =
             viewModelFactory {
                 initializer {
@@ -76,7 +88,8 @@ class ParkDetailViewModel(
                         userNotifier = userNotifier,
                         logger = logger,
                         deleteParkUseCase = deleteParkUseCase,
-                        resourcesProvider = resourcesProvider
+                        resourcesProvider = resourcesProvider,
+                        analyticsService = analyticsService
                     )
                 }
             }
@@ -245,6 +258,7 @@ class ParkDetailViewModel(
                                 "Ошибка загрузки площадки: ${exception.message}",
                                 exception
                             )
+                            analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.PARK_LOAD_FAILED, exception))
                             handleError(exception, "загрузке площадки")
                             _uiState.value = ParkDetailUIState.Error(exception.message)
                         }
@@ -253,6 +267,7 @@ class ParkDetailViewModel(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 logger.e(TAG, "Исключение при загрузке площадки: ${e.message}", e)
+                analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.PARK_LOAD_FAILED, e))
                 handleError(e, "загрузке площадки")
                 _uiState.value = ParkDetailUIState.Error(e.message)
             }
@@ -354,6 +369,7 @@ class ParkDetailViewModel(
                         "Ошибка обновления площадки: ${exception.message}",
                         exception
                     )
+                    analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.PARK_LOAD_FAILED, exception))
                     handleError(exception, "обновлении площадки")
                     applyRefreshFailureState(previousState, exception.message)
                 }
@@ -361,6 +377,7 @@ class ParkDetailViewModel(
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             logger.e(TAG, "Исключение при обновлении площадки: ${e.message}", e)
+            analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.PARK_LOAD_FAILED, e))
             handleError(e, "обновлении площадки")
             applyRefreshFailureState(previousState, e.message)
         }
@@ -398,6 +415,7 @@ class ParkDetailViewModel(
                     TAG,
                     "Фоновое обновление площадки не удалось: ${exception.message}"
                 )
+                analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.PARK_LOAD_FAILED, exception))
                 handleError(exception, "фоновом обновлении площадки")
             }
         )
@@ -431,6 +449,7 @@ class ParkDetailViewModel(
         if (currentState !is ParkDetailUIState.Content) return
         if (!canManagePark(ManageParkAction.DeleteParkConfirm)) return
 
+        analyticsService.log(AnalyticsEvent.UserAction(UserActionType.DELETE_PARK))
         val parkId = currentState.park.id
         logger.d(TAG, "Подтверждение удаления площадки id=$parkId")
 
@@ -451,12 +470,14 @@ class ParkDetailViewModel(
                             "Ошибка удаления площадки: ${exception.message}",
                             exception
                         )
+                        analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.PARK_DELETE_FAILED, exception))
                         handleError(exception, "удалении площадки")
                     }
                 )
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 logger.e(TAG, "Исключение при удалении площадки: ${e.message}", e)
+                analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.PARK_DELETE_FAILED, e))
                 handleError(e, "удалении площадки")
             } finally {
                 _isRefreshing.value = false
@@ -750,6 +771,12 @@ class ParkDetailViewModel(
                 ?: UNKNOWN_COMMENT_AUTHOR
         val complaintText = comment.parsedBody ?: comment.body.orEmpty()
 
+        analyticsService.log(
+            AnalyticsEvent.UserAction(
+                UserActionType.REPORT_COMMENT,
+                mapOf("source" to "park")
+            )
+        )
         viewModelScope.launch {
             _events.emit(
                 ParkDetailEvent.SendCommentComplaint(

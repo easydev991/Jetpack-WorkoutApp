@@ -89,7 +89,8 @@ class ScreenshotAppContainer(
         clock = clock,
         userPreferencesRepository = userPreferencesRepository,
         countriesRepository = countriesRepository,
-        logger = logger
+        logger = logger,
+        analyticsService = analyticsService
     )
 
     override val initializeParksUseCase: IInitializeParksUseCase = object : IInitializeParksUseCase {
@@ -128,7 +129,8 @@ class ScreenshotAppContainer(
         countriesRepository = countriesRepository,
         swRepository = swRepository,
         logger = logger,
-        userNotifier = userNotifier
+        userNotifier = userNotifier,
+        analyticsService = analyticsService
     )
 
     override fun dialogsViewModelFactory(): DialogsViewModel = DialogsViewModel(
@@ -136,12 +138,14 @@ class ScreenshotAppContainer(
         swRepository = swRepository,
         logger = logger,
         resources = resourcesProvider,
-        messageSentNotifier = messageSentNotifier
+        messageSentNotifier = messageSentNotifier,
+        analyticsService = analyticsService
     )
 
     override fun searchUserViewModelFactory(): SearchUserViewModel = SearchUserViewModel(
         swRepository = swRepository,
-        logger = logger
+        logger = logger,
+        analyticsService = analyticsService
     )
 
     override fun otherUserProfileViewModelFactory(userId: Long): OtherUserProfileViewModel =
@@ -151,7 +155,8 @@ class ScreenshotAppContainer(
             swRepository = swRepository,
             logger = logger,
             userNotifier = userNotifier,
-            resources = resourcesProvider
+            resources = resourcesProvider,
+            analyticsService = analyticsService
         )
 }
 

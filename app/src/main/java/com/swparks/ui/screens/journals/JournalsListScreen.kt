@@ -1,4 +1,4 @@
-@file:Suppress("UnusedPrivateMember")
+@file:Suppress("UnusedPrivateMember", "LongMethod")
 
 package com.swparks.ui.screens.journals
 
@@ -49,6 +49,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.window.DialogProperties
 import com.swparks.R
+import com.swparks.analytics.AnalyticsEvent
+import com.swparks.analytics.UserActionType
 import com.swparks.domain.model.Journal
 import com.swparks.navigation.AppState
 import com.swparks.ui.ds.EmptyStateView
@@ -210,6 +212,27 @@ fun JournalsListScreen(
 
     val dialogState = rememberJournalsDialogState()
     val ownerConfig = rememberOwnerConfig(isOwner, config.params.userId, dialogState)
+    val analyticsService = config.appState.analyticsService
+
+    val analyticsAwareConfig =
+        remember(isOwner, ownerConfig) {
+            OwnerDisplayConfig(
+                isOwner = isOwner,
+                onDeleteClick = ownerConfig.onDeleteClick,
+                onSetupClick = { journal ->
+                    analyticsService.log(
+                        AnalyticsEvent.UserAction(UserActionType.EDIT_JOURNAL)
+                    )
+                    ownerConfig.onSetupClick(journal)
+                },
+                onCreateJournalClick = {
+                    analyticsService.log(
+                        AnalyticsEvent.UserAction(UserActionType.CREATE_JOURNAL)
+                    )
+                    ownerConfig.onCreateJournalClick()
+                }
+            )
+        }
 
     JournalsEventHandler(
         viewModel = viewModel,
@@ -226,7 +249,7 @@ fun JournalsListScreen(
                 uiState = uiState,
                 isDeleting = isDeleting,
                 isOwner = isOwner,
-                onCreateClick = ownerConfig.onCreateJournalClick
+                onCreateClick = analyticsAwareConfig.onCreateJournalClick
             )
         }
     ) { innerPadding ->
@@ -241,7 +264,7 @@ fun JournalsListScreen(
                             uiState,
                             isRefreshing,
                             isDeleting,
-                            ownerConfig
+                            analyticsAwareConfig
                         ),
                     dialogsParams =
                         JournalsDialogsParams(
