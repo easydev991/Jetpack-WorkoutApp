@@ -1,4 +1,4 @@
-## Документ плана (черновик для `docs/screens/plan-bottom-nav-source-stability.md`)
+## Документ плана
 
 # План: стабильность BottomNavigation для source-driven навигации (TDD)
 

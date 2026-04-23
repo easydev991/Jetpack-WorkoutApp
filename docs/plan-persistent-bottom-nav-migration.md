@@ -296,7 +296,7 @@ Rollback (быстрый откат):
 
 - [ ] Обновить `docs/doc-navigation.md` с новой схемой top-level/substack.
 - [ ] Обновить `docs/plan-map-screen.md` раздел про `bottomNavigation` и re-init карты.
-- [ ] Добавить ADR-файл `docs/adr/adr-persistent-top-level-navigation.md` с решением: почему выбран persistent-host и выбран/не выбран `navigation3`.
+- [ ] Зафиксировать архитектурное решение по persistent tabs и выбору `navigation-compose`/`navigation3` прямо в этом плане и в `docs/doc-navigation.md` (без отдельного ADR-файла, так как `docs/adr` в проекте отсутствует).
 - [ ] Обновить тестовую документацию по запуску nav regression suite.
 
 ## Definition of Done (измеримый)

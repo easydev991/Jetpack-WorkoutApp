@@ -20,15 +20,15 @@
 - [x] Проверить существующий `Makefile` (команды `make release`, `make apk`)
 - [x] Проверить конфигурацию secrets (загружаются из `../android-secrets/swparks`)
 - [x] Определить текущие значения:
-  - `VERSION_NAME=1.0`, `VERSION_CODE=1`
+  - `VERSION_NAME` и `VERSION_CODE` берутся из `gradle.properties` (актуальные значения смотреть в файле)
   - `applicationId=com.swparks`
   - Пакет: `com.swparks`
 
-### Выявленные проблемы
+### Выявленные риски и текущий статус
 
-1. **В `android-secrets` отсутствует папка `swparks/`** — репозиторий содержит только `jetpackdays/`. Папку `swparks/` необходимо создать.
-2. **В `app/build.gradle.kts` отсутствует блок `signingConfigs`** — подпись настроена в Makefile, но Gradle не знает о ней.
-3. **Нет Fastlane** — папка `fastlane/` не существует.
+1. **Секреты завязаны на внешний приватный репозиторий `android-secrets`** — для новой машины требуется рабочий SSH-доступ и успешный `_load_secrets`.
+2. ✅ **`signingConfigs` уже настроен в `app/build.gradle.kts`** и подключён к `buildTypes.release`.
+3. ✅ **Fastlane уже настроен** (`fastlane/Appfile`, `fastlane/Fastfile`, `fastlane/Screengrabfile` присутствуют в репозитории).
 
 ### Что уже настроено
 
@@ -265,51 +265,17 @@ apk:
 - `sed` заменяет **полный путь** keystore: `KEYSTORE_FILE=.*` → `.secrets/keystore/swparks-release.keystore`
 - `.secrets/` должен быть в `.gitignore`
 
-### 3.3 Добавление `signingConfigs` в `app/build.gradle.kts`
+### 3.3 Проверка `signingConfigs` в `app/build.gradle.kts`
 
-> **Примечание:** ProGuard/R8 обфускация (`isMinifyEnabled = true`, `isShrinkResources = true`, `proguardFiles(...)`) **уже настроена** в WorkoutApp. Также `firebaseCrashlytics { mappingFileUploadEnabled = true }` уже добавлен. Требуется только добавить блок `signingConfigs`.
+> **Примечание:** ProGuard/R8 (`isMinifyEnabled = true`, `isShrinkResources = true`) и Crashlytics уже подключены. На текущем состоянии проекта блок `signingConfigs` уже реализован.
 
-В `app/build.gradle.kts` **отсутствует** блок `signingConfigs`. Необходимо добавить:
+В `app/build.gradle.kts` уже реализовано:
 
-1. **Чтение секретов** (после `android {`):
+1. **Чтение секретов** из `.secrets/secrets.properties`
+2. **`signingConfigs.create("release")`** с использованием `KEYSTORE_FILE`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`
+3. **Привязка подписи к `buildTypes.release`** (`signingConfig = signingConfigs.getByName("release")`)
 
-```kotlin
-val secretsProperties = Properties()
-val secretsPropertiesFile = rootProject.file(".secrets/secrets.properties")
-if (secretsPropertiesFile.exists()) {
-    secretsPropertiesFile.inputStream().use { secretsProperties.load(it) }
-}
-```
-
-2. **Блок `signingConfigs`**:
-
-```kotlin
-signingConfigs {
-    create("release") {
-        val keystoreFile = secretsProperties["KEYSTORE_FILE"] as? String ?: ".secrets/keystore/swparks-release.keystore"
-        val keystorePassword = secretsProperties["KEYSTORE_PASSWORD"] as? String ?: ""
-        val keyAlias = secretsProperties["KEY_ALIAS"] as? String ?: "upload"
-        val keyPassword = secretsProperties["KEY_PASSWORD"] as? String ?: ""
-
-        storeFile = rootProject.file(keystoreFile)
-        storePassword = keystorePassword
-        this.keyAlias = keyAlias
-        this.keyPassword = keyPassword
-    }
-}
-```
-
-3. **Применение к release buildType**:
-
-```kotlin
-release {
-    signingConfig = signingConfigs.getByName("release")
-    firebaseCrashlytics {
-        mappingFileUploadEnabled = true
-    }
-    // ...
-}
-```
+Отдельного добавления `signingConfigs` больше не требуется.
 
 ### 3.4 Проверка
 
@@ -326,24 +292,27 @@ Fastlane используется только для Crashlytics Beta (анал
 
 ### Текущее состояние
 
-Fastlane **не настроен** — папка `fastlane/` отсутствует. Makefile имеет `setup_fastlane`, но конфигурация не завершена.
+Fastlane **настроен**:
+- есть `fastlane/Appfile`
+- есть `fastlane/Fastfile`
+- есть `fastlane/Screengrabfile`
+- в Makefile есть команды `setup_fastlane`, `fastlane`, `screenshots`
 
 ### Задачи
 
-- [x] Создать `fastlane/Appfile`:
+- [x] `fastlane/Appfile` присутствует:
 
   ```ruby
+  json_key_file("") # заполняется при настройке supply / Google Play API
   package_name("com.swparks")
-  json_key_file(".secrets/google-services.json") # если используется Firebase
   ```
 
-- [x] Создать `fastlane/Fastfile` с lane-ами:
+- [x] `fastlane/Fastfile` присутствует с lane-ами:
   - `test` — запуск unit-тестов (`gradle task: "test"`)
   - `beta` — сборка release и загрузка в Crashlytics Beta
+  - `deploy` — деплой в Google Play (`upload_to_play_store`)
   - `screenshots` — генерация скриншотов
-  - `screenshots_ru` — скриншоты только для ru-RU
-  - `screenshots_en` — скриншоты только для en-US
-- [x] Создать `fastlane/Screengrabfile` для локализованных скриншотов (ru-RU, en-US)
+- [x] `fastlane/Screengrabfile` присутствует (локаль скриншотов: `ru-RU`)
 
 ### Lane `beta` (аналогично JetpackDays)
 
@@ -370,11 +339,8 @@ release:
  sed -i.tmp "s/^VERSION_CODE=.*/VERSION_CODE=$$NEW_VERSION_CODE/" gradle.properties && rm -f gradle.properties.tmp; \
  printf "$(GREEN)VERSION_CODE обновлен с $$CURRENT_VERSION_CODE на $$NEW_VERSION_CODE$(RESET)\n"
  @printf "$(YELLOW)Создаю релиз-сборку (AAB)...$(RESET)\n"
- @./gradlew bundleRelease uploadCrashlyticsMappingFileRelease
+ @./gradlew bundleRelease
  @VERSION_CODE=$$(grep "^VERSION_CODE=" gradle.properties | cut -d'=' -f2); \
- OUTPUT_FILE="swparks$$VERSION_CODE.aab"; \
- cp app/build/outputs/bundle/release/app-release.aab "$$OUTPUT_FILE"; \
- printf "$(GREEN)AAB создан и mapping files загружены в Firebase: $$OUTPUT_FILE$(RESET)\n"
  OUTPUT_FILE="swparks$$VERSION_CODE.aab"; \
  cp app/build/outputs/bundle/release/app-release.aab "$$OUTPUT_FILE"; \
  printf "$(GREEN)AAB создан: $$OUTPUT_FILE$(RESET)\n"
@@ -382,7 +348,7 @@ release:
  @printf "$(YELLOW)Для публикации используйте этот файл в RuStore или Google Play Store$(RESET)\\n"
 ```
 
-**Примечание:** Деплой в RuStore — `make release` создаёт AAB. Деплой в GitHub Releases — `make apk` создаёт два APK (arm64-v8a + armeabi-v7a). Оба процесса — ручные.
+**Примечание:** Деплой в RuStore — `make release` создаёт AAB. Деплой в GitHub Releases — `make apk` создаёт один универсальный APK с ABI-фильтрами (`arm64-v8a`, `armeabi-v7a`). Оба процесса — ручные.
 
 ---
 
@@ -393,7 +359,7 @@ release:
 - [ ] Проверить `make test` — все тесты проходят
 - [ ] Проверить `make lint` — lint проходит
 - [x] Запустить `make release` — убедиться что VERSION_CODE увеличивается и AAB подписывается ✅
-- [x] Проверить `make apk` — создаёт два подписанных APK (arm64-v8a + armeabi-v7a) ✅
+- [x] Проверить `make apk` — создаёт подписанный `swparks{VERSION_CODE}.apk` (ABI: `arm64-v8a` + `armeabi-v7a`) ✅
 - [ ] Проверить Fastlane `fastlane beta` — загружает в Crashlytics Beta
 - [ ] Проверить `fastlane screenshots` — генерирует скриншоты
 

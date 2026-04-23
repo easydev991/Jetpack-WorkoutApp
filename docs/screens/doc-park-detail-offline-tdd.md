@@ -282,9 +282,12 @@
 
 #### 4. SWRepository cache methods
 
-**Файл:** `app/src/test/java/com/swparks/data/repository/SWRepositoryParkCacheTest.kt`
+**Актуальные файлы:**
+- `app/src/test/java/com/swparks/data/repository/SWRepositoryParksTest.kt`
+- `app/src/test/java/com/swparks/data/repository/SWRepositoryCommentsTest.kt`
 
 ```kotlin
+    // SWRepositoryParksTest
     @Test
     fun getParkFromCache_whenEntityExists_thenReturnsCachedPark()
 
@@ -307,65 +310,41 @@
     fun deleteParkPhoto_whenSuccess_thenUpdatesCacheOrRefreshesFromNetwork()
 
     @Test
-    fun deleteComment_whenParkOptionAndSuccess_thenUpdatesCachedParkDetail()
+    // SWRepositoryCommentsTest
+    fun deleteComment_whenOptionIsPark_thenCallsDeleteParkComment()
 
     @Test
-    fun deleteComment_whenNonParkOption_thenDoesNotTouchParkCache()
+    fun deleteComment_whenParkCacheDoesNotContainComment_thenDoesNotTouchParkCache()
 ```
 
 #### 5. ParkDetailViewModel
 
-**Файл:** `app/src/test/java/com/swparks/ui/viewmodel/ParkDetailViewModelCacheTest.kt`
+**Актуальный файл:** `app/src/test/java/com/swparks/ui/viewmodel/ParkDetailViewModelTest.kt`
 
 ```kotlin
     @Test
-    fun loadPark_whenCacheExists_thenShowsCachedContentBeforeNetworkResult()
+    fun init_whenCacheExists_thenShowsCachedContentBeforeNetworkResult()
 
     @Test
-    fun loadPark_whenCacheExistsAndNetworkFails_thenKeepsScreenOutOfErrorState()
+    fun init_whenPartialCacheExistsAndNetworkFails_thenKeepsCachedContent()
 
     @Test
-    fun loadPark_whenCacheExistsAndNetworkSucceeds_thenUpdatesContentWithFreshData()
+    fun refresh_whenContentAlreadyShownAndNetworkFails_thenKeepsCurrentContent()
 
     @Test
-    fun loadPark_whenCachedParkIsPartial_thenShowsCacheThenRequestsNetwork()
+    fun refresh_whenFailureHappensAfterContent_thenKeepsExistingContent()
 
     @Test
-    fun loadPark_whenCachedParkHasInvalidCoordinates_thenKeepsMapActionsDisabled()
-
-    @Test
-    fun loadPark_whenNoCache_thenShowsInitialLoadingUntilNetworkResult()
-
-    @Test
-    fun loadPark_whenNoCacheAndNetworkSucceeds_thenShowsContent()
-
-    @Test
-    fun loadPark_whenNoCacheAndNetworkFails_thenShowsError()
-
-    @Test
-    fun refresh_whenContentShownAndNetworkFails_thenKeepsCurrentContent()
-
-    @Test
-    fun refresh_whenNetworkFails_thenNotifiesUserAboutError()
-
-    @Test
-    fun refresh_whenNetworkSucceeds_thenUpdatesContentAndCache()
+    fun refresh_whenCalled_thenReloadsPark()
 ```
 
-#### 6. Интеграционный тест
+#### 6. Интеграционное покрытие (статус)
 
-**Файл:** `app/src/test/java/com/swparks/data/integration/ParkCacheIntegrationTest.kt`
-
-```kotlin
-    @Test
-    fun parkDetailLoad_whenSuccessful_thenIsReadableFromRoomOnNextOpen()
-
-    @Test
-    fun cachedShortPark_whenGetParkSucceeds_thenReplacedByFullerDetailVersion()
-
-    @Test
-    fun cachedPark_whenNetworkFailureLater_thenRemainsVisible()
-```
+Отдельного файла `ParkCacheIntegrationTest.kt` в текущем проекте нет.
+Сценарии cache-first покрыты unit-тестами в:
+- `SWRepositoryParksTest`
+- `SWRepositoryCommentsTest`
+- `ParkDetailViewModelTest`
 
 ---
 
@@ -432,9 +411,9 @@
 | `app/src/test/java/com/swparks/data/database/entity/ParkEntityTest.kt` | Тесты мапперов `ParkEntity` |
 | `app/src/test/java/com/swparks/data/database/ConvertersTest.kt` | Тесты конвертеров |
 | `app/src/test/java/com/swparks/data/database/dao/ParkDaoTest.kt` | Тесты DAO |
-| `app/src/test/java/com/swparks/data/repository/SWRepositoryParkCacheTest.kt` | Тесты cache API в repository |
-| `app/src/test/java/com/swparks/ui/viewmodel/ParkDetailViewModelCacheTest.kt` | Тесты cache-first поведения экрана |
-| `app/src/test/java/com/swparks/data/integration/ParkCacheIntegrationTest.kt` | Интеграционная проверка цикла Room → Repository → ViewModel |
+| `app/src/test/java/com/swparks/data/repository/SWRepositoryParksTest.kt` | Тесты cache API в repository (`getParkFromCache`, `savePark`, `deletePark`, `changeTrainHereStatus`, `deleteParkPhoto`) |
+| `app/src/test/java/com/swparks/data/repository/SWRepositoryCommentsTest.kt` | Тесты удаления комментариев с учётом обновления park-cache |
+| `app/src/test/java/com/swparks/ui/viewmodel/ParkDetailViewModelTest.kt` | Тесты cache-first поведения и refresh/fallback на экране |
 
 ### Модифицируемые
 

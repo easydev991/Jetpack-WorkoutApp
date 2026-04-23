@@ -114,6 +114,8 @@ Box(
 
 ### Связанная документация
 
-- `docs/screens/plan-search-user-screen.md`
-- `docs/screens/plan-other-user-profile-screen.md`
-- `docs/navigation/doc-appstate-auth-state.md`
+- `docs/screens/doc-search-user-screen.md`
+- `docs/screens/doc-other-user-profile-screen.md`
+- `docs/screens/doc-myfriends-screen.md`
+- `docs/doc-searchuser-navigation.md`
+- `docs/doc-appstate-auth-state.md`
