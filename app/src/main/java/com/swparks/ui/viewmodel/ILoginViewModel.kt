@@ -34,9 +34,10 @@ interface ILoginViewModel {
     val loginEvents: Flow<LoginEvent>
 
     /**
-     * Текущие учетные данные пользователя (логин и пароль).
+     * Текущие учетные данные пользователя (логин и пароль) в виде StateFlow.
+     * Использовать для подписки в UI через collectAsStateWithLifecycle().
      */
-    val credentials: LoginCredentials
+    val credentialsState: StateFlow<LoginCredentials>
 
     /**
      * Обновляет логин пользователя.

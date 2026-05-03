@@ -265,7 +265,7 @@ class ChatViewModelTest {
 
             // When
             viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
-            viewModel.messageText.value = ""
+            viewModel.onMessageTextChange("")
             viewModel.sendMessage(userId)
             advanceUntilIdle()
 
@@ -292,7 +292,7 @@ class ChatViewModelTest {
             viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
-            viewModel.messageText.value = "Test message"
+            viewModel.onMessageTextChange("Test message")
             viewModel.sendMessage(userId)
             advanceUntilIdle()
 
@@ -320,7 +320,7 @@ class ChatViewModelTest {
             viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
-            viewModel.messageText.value = "Test message"
+            viewModel.onMessageTextChange("Test message")
             viewModel.sendMessage(userId)
             advanceUntilIdle()
 
@@ -356,7 +356,7 @@ class ChatViewModelTest {
             // Test isLoading flow
             viewModel.isLoading.test {
                 assertEquals(false, awaitItem()) // Initial state
-                viewModel.messageText.value = "Test message"
+                viewModel.onMessageTextChange("Test message")
                 viewModel.sendMessage(userId)
                 assertEquals(true, awaitItem()) // During sending
                 advanceUntilIdle()
@@ -445,7 +445,7 @@ class ChatViewModelTest {
 
             // Test events flow
             viewModel.events.test {
-                viewModel.messageText.value = "Test message"
+                viewModel.onMessageTextChange("Test message")
                 viewModel.sendMessage(userId)
                 advanceUntilIdle()
 
@@ -519,12 +519,79 @@ class ChatViewModelTest {
             viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
-            viewModel.messageText.value = "Test message"
+            viewModel.onMessageTextChange("Test message")
             viewModel.sendMessage(userId)
             advanceUntilIdle()
 
             // Then
             coVerify { userNotifier.handleError(any<AppError>()) }
+        }
+
+    // ==================== messageText StateFlow ====================
+
+    @Test
+    fun onMessageTextChange_whenCalled_thenUpdatesMessageTextFlow() =
+        runTest {
+            // Given
+            val dialogId = 1L
+            coEvery { swApi.getMessages(dialogId) } returns listOf(testMessage)
+
+            // When
+            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel.loadMessages(dialogId)
+            advanceUntilIdle()
+
+            // Then — начальное значение пустое
+            assertEquals("", viewModel.messageText.value)
+
+            // When — изменяем текст
+            viewModel.onMessageTextChange("Hello")
+
+            // Then — текст обновился
+            assertEquals("Hello", viewModel.messageText.value)
+
+            // When — заменяем текст
+            viewModel.onMessageTextChange("World")
+
+            // Then — текст обновился
+            assertEquals("World", viewModel.messageText.value)
+        }
+
+    @Test
+    fun sendMessage_withBlankText_doesNotSendAndKeepsTrimmedBehavior() =
+        runTest {
+            // Given
+            val userId = 123
+            coEvery { swApi.getMessages(any()) } returns emptyList()
+
+            // When — ввод только пробелов
+            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel.onMessageTextChange("   ")
+            viewModel.sendMessage(userId)
+            advanceUntilIdle()
+
+            // Then — сообщение не отправлено
+            coVerify(exactly = 0) { swApi.sendMessageTo(any(), any()) }
+
+            // И убедимся, что текст в поле не очистился (не было отправки)
+            assertEquals("   ", viewModel.messageText.value)
+        }
+
+    @Test
+    fun onMessageTextChange_whenCalled_doesNotTrimInput() =
+        runTest {
+            // Given
+            val dialogId = 1L
+            coEvery { swApi.getMessages(dialogId) } returns listOf(testMessage)
+
+            // When
+            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel.loadMessages(dialogId)
+            advanceUntilIdle()
+            viewModel.onMessageTextChange("  Hello  ")
+
+            // Then — значение сохраняется без trim
+            assertEquals("  Hello  ", viewModel.messageText.value)
         }
 
     // ==================== Analytics ====================
@@ -540,7 +607,7 @@ class ChatViewModelTest {
             viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
-            viewModel.messageText.value = "Test message"
+            viewModel.onMessageTextChange("Test message")
             viewModel.sendMessage(userId)
             advanceUntilIdle()
 
@@ -560,7 +627,7 @@ class ChatViewModelTest {
             viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
-            viewModel.messageText.value = "Test message"
+            viewModel.onMessageTextChange("Test message")
             viewModel.sendMessage(userId)
             advanceUntilIdle()
 

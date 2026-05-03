@@ -1,7 +1,5 @@
 package com.swparks.ui.viewmodel
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.swparks.analytics.AnalyticsEvent
@@ -58,7 +56,12 @@ class ChatViewModel(
     private val _events = MutableSharedFlow<ChatEvent>(extraBufferCapacity = 1)
     override val events: SharedFlow<ChatEvent> = _events.asSharedFlow()
 
-    override val messageText: MutableState<String> = mutableStateOf("")
+    private val _messageText = MutableStateFlow("")
+    override val messageText: StateFlow<String> = _messageText.asStateFlow()
+
+    override fun onMessageTextChange(value: String) {
+        _messageText.value = value
+    }
 
     private var currentDialogId: Long? = null
 
@@ -131,7 +134,7 @@ class ChatViewModel(
     }
 
     override fun sendMessage(userId: Int) {
-        val text = messageText.value.trim()
+        val text = _messageText.value.trim()
         if (text.isEmpty()) return
 
         val dialogId = currentDialogId ?: return
@@ -140,7 +143,7 @@ class ChatViewModel(
             _isLoading.value = true
             try {
                 swApi.sendMessageTo(userId.toLong(), text)
-                messageText.value = ""
+                _messageText.value = ""
                 refreshMessagesInternal(dialogId)
                 // Эмитим событие об успешной отправке сообщения
                 _events.emit(ChatEvent.MessageSent(dialogId))

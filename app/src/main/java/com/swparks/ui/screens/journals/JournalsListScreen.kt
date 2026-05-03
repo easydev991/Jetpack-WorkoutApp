@@ -210,9 +210,43 @@ fun JournalsListScreen(
     val isDeleting by viewModel.isDeleting.collectAsState()
     val isOwner = config.appState.currentUser?.id == config.params.userId
 
-    val dialogState = rememberJournalsDialogState()
-    val ownerConfig = rememberOwnerConfig(isOwner, config.params.userId, dialogState)
+    var dialogState by remember {
+        mutableStateOf(
+            JournalsDialogsState(
+                showDeleteDialog = false,
+                journalToDelete = null,
+                journalToEditSettings = null,
+                showTextEntrySheet = false,
+                textEntryMode = null
+            )
+        )
+    }
     val analyticsService = config.appState.analyticsService
+
+    val ownerConfig =
+        remember(isOwner, config.params.userId) {
+            val userId = config.params.userId
+            OwnerDisplayConfig(
+                isOwner = isOwner,
+                onDeleteClick = { journal ->
+                    dialogState =
+                        dialogState.copy(
+                            journalToDelete = journal,
+                            showDeleteDialog = true
+                        )
+                },
+                onSetupClick = { journal ->
+                    dialogState = dialogState.copy(journalToEditSettings = journal)
+                },
+                onCreateJournalClick = {
+                    dialogState =
+                        dialogState.copy(
+                            textEntryMode = TextEntryMode.NewJournal(userId),
+                            showTextEntrySheet = true
+                        )
+                }
+            )
+        }
 
     val analyticsAwareConfig =
         remember(isOwner, ownerConfig) {
@@ -237,7 +271,7 @@ fun JournalsListScreen(
     JournalsEventHandler(
         viewModel = viewModel,
         getJournalToEditSettings = { dialogState.journalToEditSettings },
-        onJournalSettingsSaved = { dialogState.journalToEditSettings = null }
+        onJournalSettingsSaved = { dialogState = dialogState.copy(journalToEditSettings = null) }
     )
 
     Scaffold(
@@ -268,21 +302,43 @@ fun JournalsListScreen(
                         ),
                     dialogsParams =
                         JournalsDialogsParams(
-                            dialogState.toState(),
+                            dialogState,
                             uiState,
                             viewModel
                         ),
                     dialogsActions =
                         JournalsDialogsActions(
-                            onDeleteDismiss = { dialogState.showDeleteDialog = false },
+                            onDeleteDismiss = {
+                                dialogState =
+                                    dialogState.copy(
+                                        showDeleteDialog = false,
+                                        journalToDelete = null
+                                    )
+                            },
                             onDeleteConfirm = {
                                 dialogState.journalToDelete?.let { viewModel.deleteJournal(it.id) }
-                                dialogState.showDeleteDialog = false
+                                dialogState =
+                                    dialogState.copy(
+                                        showDeleteDialog = false,
+                                        journalToDelete = null
+                                    )
                             },
-                            onSettingsDismiss = { dialogState.journalToEditSettings = null },
-                            onTextEntryDismiss = { dialogState.clearTextEntry() },
+                            onSettingsDismiss = {
+                                dialogState = dialogState.copy(journalToEditSettings = null)
+                            },
+                            onTextEntryDismiss = {
+                                dialogState =
+                                    dialogState.copy(
+                                        showTextEntrySheet = false,
+                                        textEntryMode = null
+                                    )
+                            },
                             onTextEntrySuccess = {
-                                dialogState.clearTextEntry()
+                                dialogState =
+                                    dialogState.copy(
+                                        showTextEntrySheet = false,
+                                        textEntryMode = null
+                                    )
                                 viewModel.loadJournals()
                             }
                         )
@@ -302,52 +358,6 @@ fun JournalsListScreen(
         )
     }
 }
-
-private class JournalsDialogState {
-    var showDeleteDialog by mutableStateOf(false)
-    var journalToDelete by mutableStateOf<Journal?>(null)
-    var journalToEditSettings by mutableStateOf<Journal?>(null)
-    var showTextEntrySheet by mutableStateOf(false)
-    var textEntryMode by mutableStateOf<TextEntryMode?>(null)
-
-    fun toState() =
-        JournalsDialogsState(
-            showDeleteDialog,
-            journalToDelete,
-            journalToEditSettings,
-            showTextEntrySheet,
-            textEntryMode
-        )
-
-    fun clearTextEntry() {
-        showTextEntrySheet = false
-        textEntryMode = null
-    }
-}
-
-@Composable
-private fun rememberJournalsDialogState(): JournalsDialogState = remember { JournalsDialogState() }
-
-@Composable
-private fun rememberOwnerConfig(
-    isOwner: Boolean,
-    userId: Long,
-    dialogState: JournalsDialogState
-): OwnerDisplayConfig =
-    remember(isOwner, userId) {
-        OwnerDisplayConfig(
-            isOwner = isOwner,
-            onDeleteClick = { journal ->
-                dialogState.journalToDelete = journal
-                dialogState.showDeleteDialog = true
-            },
-            onSetupClick = { journal -> dialogState.journalToEditSettings = journal },
-            onCreateJournalClick = {
-                dialogState.textEntryMode = TextEntryMode.NewJournal(userId)
-                dialogState.showTextEntrySheet = true
-            }
-        )
-    }
 
 @Composable
 private fun JournalsScaffoldContent(

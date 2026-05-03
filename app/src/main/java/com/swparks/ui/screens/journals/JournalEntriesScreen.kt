@@ -372,6 +372,15 @@ private fun AddEntryFab(onClick: () -> Unit) {
     }
 }
 
+/** Состояние overlay-элементов (dialog/sheet) экрана записей дневника. */
+private data class JournalEntriesOverlayState(
+    val showDeleteDialog: Boolean = false,
+    val entryToDelete: Long? = null,
+    val showTextEntrySheet: Boolean = false,
+    val textEntryMode: TextEntryMode? = null,
+    val showSettingsDialog: Boolean = false
+)
+
 /**
  * Экран списка записей в дневнике пользователя
  */
@@ -401,14 +410,12 @@ fun JournalEntriesScreen(
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isDeleting by viewModel.isDeleting.collectAsState()
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    var entryToDelete by remember { mutableStateOf<Long?>(null) }
-    var showTextEntrySheet by remember { mutableStateOf(false) }
-    var textEntryMode by remember { mutableStateOf<TextEntryMode?>(null) }
-    var showSettingsDialog by remember { mutableStateOf(false) }
+    var overlayState by remember { mutableStateOf(JournalEntriesOverlayState()) }
     LaunchedEffect(Unit) {
         viewModel.events.collect {
-            if (it is JournalEntriesEvent.JournalSettingsSaved) showSettingsDialog = false
+            if (it is JournalEntriesEvent.JournalSettingsSaved) {
+                overlayState = overlayState.copy(showSettingsDialog = false)
+            }
         }
     }
     val entryActionHandler =
@@ -417,12 +424,10 @@ fun JournalEntriesScreen(
             journalOwnerId = params.journalOwnerId,
             journalId = params.journalId,
             onShowDeleteDialog = { entryId ->
-                showDeleteDialog = true
-                entryToDelete = entryId
+                overlayState = overlayState.copy(showDeleteDialog = true, entryToDelete = entryId)
             },
             onShowEditSheet = { mode ->
-                textEntryMode = mode
-                showTextEntrySheet = true
+                overlayState = overlayState.copy(textEntryMode = mode, showTextEntrySheet = true)
             }
         )
     val scaffoldState =
@@ -448,15 +453,17 @@ fun JournalEntriesScreen(
                     appState.analyticsService.log(
                         AnalyticsEvent.ScreenView(AppScreen.JOURNAL_SETTINGS)
                     )
-                    showSettingsDialog = true
+                    overlayState = overlayState.copy(showSettingsDialog = true)
                 }
                 is ScaffoldAction.FabClick, is ScaffoldAction.AddEntry -> {
                     appState.analyticsService.log(
                         AnalyticsEvent.UserAction(UserActionType.CREATE_JOURNAL_ENTRY)
                     )
-                    textEntryMode =
-                        TextEntryMode.NewForJournal(params.journalOwnerId, params.journalId)
-                    showTextEntrySheet = true
+                    overlayState =
+                        overlayState.copy(
+                            textEntryMode = TextEntryMode.NewForJournal(params.journalOwnerId, params.journalId),
+                            showTextEntrySheet = true
+                        )
                 }
 
                 is ScaffoldAction.Retry -> viewModel.retry()
@@ -473,22 +480,28 @@ fun JournalEntriesScreen(
             }
         }
     )
-    if (showDeleteDialog) {
-        DeleteConfirmationDialog({ showDeleteDialog = false }) {
-            entryToDelete?.let { viewModel.deleteEntry(it) }
-            showDeleteDialog = false
+    if (overlayState.showDeleteDialog) {
+        DeleteConfirmationDialog({
+            overlayState = overlayState.copy(showDeleteDialog = false, entryToDelete = null)
+        }) {
+            overlayState.entryToDelete?.let { viewModel.deleteEntry(it) }
+            overlayState = overlayState.copy(showDeleteDialog = false, entryToDelete = null)
         }
     }
-    textEntrySheetHostContent(showTextEntrySheet, textEntryMode, { showTextEntrySheet = false }) {
-        showTextEntrySheet = false
-        if (textEntryMode is TextEntryMode.NewForJournal) viewModel.loadEntries()
+    textEntrySheetHostContent(overlayState.showTextEntrySheet, overlayState.textEntryMode, {
+        overlayState =
+            overlayState.copy(showTextEntrySheet = false, textEntryMode = null)
+    }) {
+        val mode = overlayState.textEntryMode
+        overlayState = overlayState.copy(showTextEntrySheet = false, textEntryMode = null)
+        if (mode is TextEntryMode.NewForJournal) viewModel.loadEntries()
     }
     JournalSettingsDialogSection(
-        show = showSettingsDialog,
+        show = overlayState.showSettingsDialog,
         currentJournal = (scaffoldState.uiState as? JournalEntriesUiState.Content)?.journal,
         params = params,
         viewModel = viewModel,
-        onDismiss = { showSettingsDialog = false }
+        onDismiss = { overlayState = overlayState.copy(showSettingsDialog = false) }
     )
 }
 
