@@ -30,7 +30,6 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -42,6 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.swparks.R
 import com.swparks.data.model.MessageResponse
 import com.swparks.ui.ds.AsyncImageConfig
@@ -117,9 +117,9 @@ fun ChatScreen(
     currentUserId: Int?,
     onAction: (ChatAction) -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val messageText by viewModel.messageText
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val messageText by viewModel.messageText.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -142,7 +142,7 @@ fun ChatScreen(
                 userName = userParams.userName,
                 userImage = userParams.userImage,
                 currentUserId = currentUserId,
-                onMessageTextChange = { viewModel.messageText.value = it },
+                onMessageTextChange = viewModel::onMessageTextChange,
                 onSendClick = { userId ->
                     viewModel.sendMessage(userId)
                 },

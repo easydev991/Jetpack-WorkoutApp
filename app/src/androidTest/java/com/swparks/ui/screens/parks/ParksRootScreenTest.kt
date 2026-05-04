@@ -24,6 +24,7 @@ import com.swparks.data.model.ParkType
 import com.swparks.data.model.User
 import com.swparks.navigation.AppState
 import com.swparks.ui.model.ParksTab
+import com.swparks.ui.testtags.ScreenshotTestTags
 import com.swparks.ui.viewmodel.FakeParksRootViewModel
 import com.swparks.util.Logger
 import io.mockk.mockk
@@ -441,7 +442,7 @@ class ParksRootScreenTest {
 
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithText("List")
+            .onNodeWithTag(ScreenshotTestTags.PARKS_TAB_LIST)
             .assertIsDisplayed()
     }
 
@@ -512,7 +513,7 @@ class ParksRootScreenTest {
 
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithText("Map")
+            .onNodeWithTag(ScreenshotTestTags.PARKS_TAB_MAP)
             .performClick()
 
         composeTestRule.waitForIdle()
@@ -544,7 +545,7 @@ class ParksRootScreenTest {
 
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithText("List")
+            .onNodeWithTag(ScreenshotTestTags.PARKS_TAB_LIST)
             .performClick()
 
         composeTestRule.waitForIdle()

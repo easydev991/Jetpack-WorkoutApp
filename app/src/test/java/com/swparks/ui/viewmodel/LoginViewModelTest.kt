@@ -67,7 +67,7 @@ class LoginViewModelTest {
         loginViewModel.onLoginChange(newLogin)
 
         // Then
-        assertTrue(loginViewModel.credentials.login == newLogin)
+        assertTrue(loginViewModel.credentialsState.value.login == newLogin)
         assertTrue(loginViewModel.loginErrorState.value == null)
 
         assertTrue(loginViewModel.resetErrorState.value == null)
@@ -82,7 +82,7 @@ class LoginViewModelTest {
         loginViewModel.onPasswordChange(newPassword)
 
         // Then
-        assertTrue(loginViewModel.credentials.password == newPassword)
+        assertTrue(loginViewModel.credentialsState.value.password == newPassword)
         assertTrue(loginViewModel.loginErrorState.value == null)
 
         assertTrue(loginViewModel.resetErrorState.value == null)
@@ -251,7 +251,7 @@ class LoginViewModelTest {
 
         // When
         val canLogIn =
-            loginViewModel.credentials.canLogIn(
+            loginViewModel.credentialsState.value.canLogIn(
                 isError = loginViewModel.loginErrorState.value != null
             )
 
@@ -267,7 +267,7 @@ class LoginViewModelTest {
 
         // When
         val canLogIn =
-            loginViewModel.credentials.canLogIn(
+            loginViewModel.credentialsState.value.canLogIn(
                 isError = loginViewModel.loginErrorState.value != null
             )
 
@@ -289,7 +289,7 @@ class LoginViewModelTest {
 
             // When
             val canLogIn =
-                loginViewModel.credentials.canLogIn(
+                loginViewModel.credentialsState.value.canLogIn(
                     isError = loginViewModel.loginErrorState.value != null
                 )
 
@@ -303,7 +303,7 @@ class LoginViewModelTest {
         loginViewModel.onLoginChange("user@test.com")
 
         // When
-        val canRestore = loginViewModel.credentials.canRestorePassword
+        val canRestore = loginViewModel.credentialsState.value.canRestorePassword
 
         // Then
         assertTrue(canRestore)
@@ -315,7 +315,7 @@ class LoginViewModelTest {
         loginViewModel.onLoginChange("")
 
         // When
-        val canRestore = loginViewModel.credentials.canRestorePassword
+        val canRestore = loginViewModel.credentialsState.value.canRestorePassword
 
         // Then
         assertFalse(canRestore)
@@ -363,5 +363,80 @@ class LoginViewModelTest {
             assertTrue(errorState.message == "Не найден пользователь с таким логином или e-mail")
             assertTrue(loginViewModel.resetErrorState.value == "Не найден пользователь с таким логином или e-mail")
             coVerify(exactly = 1) { resetPasswordUseCase("user@test.com") }
+        }
+
+    @Test
+    fun initialCredentials_whenCreated_thenEmpty() {
+        // Then
+        val credentials = loginViewModel.credentialsState.value
+        assertTrue(credentials.login.isEmpty())
+        assertTrue(credentials.password.isEmpty())
+    }
+
+    @Test
+    fun onLoginChange_whenCalled_thenUpdatesCredentialsStateAndClearsErrors() =
+        runTest {
+            // When
+            loginViewModel.onLoginChange("user@test.com")
+
+            // Then
+            val current = loginViewModel.credentialsState.value
+            assertTrue(current.login == "user@test.com")
+            assertTrue(current.password.isEmpty())
+            assertNull(loginViewModel.loginErrorState.value)
+            assertNull(loginViewModel.resetErrorState.value)
+        }
+
+    @Test
+    fun onPasswordChange_whenCalled_thenUpdatesCredentialsStateAndClearsErrors() =
+        runTest {
+            // When
+            loginViewModel.onPasswordChange("password123")
+
+            // Then
+            val current = loginViewModel.credentialsState.value
+            assertTrue(current.password == "password123")
+            assertTrue(current.login.isEmpty())
+            assertNull(loginViewModel.loginErrorState.value)
+            assertNull(loginViewModel.resetErrorState.value)
+        }
+
+    @Test
+    fun resetForNewSession_whenCalled_thenClearsCredentialsAndErrorsAndUiState() =
+        runTest {
+            // Given: set up non-empty state with errors
+            loginViewModel.onLoginChange("user@test.com")
+            loginViewModel.onPasswordChange("password123")
+            val loginCredentials = LoginCredentials(login = "user@test.com", password = "password123")
+            coEvery { loginUseCase(loginCredentials) } returns Result.failure(Exception("Error"))
+            loginViewModel.login()
+            advanceUntilIdle()
+            assertTrue(loginViewModel.loginErrorState.value != null)
+
+            // When
+            loginViewModel.resetForNewSession()
+
+            // Then
+            val current = loginViewModel.credentialsState.value
+            assertTrue(current.login.isEmpty())
+            assertTrue(current.password.isEmpty())
+            assertTrue(loginViewModel.uiState.value is LoginUiState.Idle)
+            assertNull(loginViewModel.loginErrorState.value)
+            assertNull(loginViewModel.resetErrorState.value)
+        }
+
+    @Test
+    fun onLoginChange_whenCalled_thenEmitsCompleteCredentialsObject() =
+        runTest {
+            // Given: set password first
+            loginViewModel.onPasswordChange("oldPassword")
+
+            // When: change only login
+            loginViewModel.onLoginChange("user@test.com")
+
+            // Then: the emitted object contains both fields (not just the changed one)
+            val current = loginViewModel.credentialsState.value
+            assertTrue(current.login == "user@test.com")
+            assertTrue(current.password == "oldPassword")
         }
 }

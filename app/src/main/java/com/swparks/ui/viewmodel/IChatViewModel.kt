@@ -1,6 +1,5 @@
 package com.swparks.ui.viewmodel
 
-import androidx.compose.runtime.MutableState
 import com.swparks.ui.state.ChatEvent
 import com.swparks.ui.state.ChatUiState
 import kotlinx.coroutines.flow.SharedFlow
@@ -31,7 +30,14 @@ interface IChatViewModel {
     /**
      * Текст сообщения для отправки.
      */
-    val messageText: MutableState<String>
+    val messageText: StateFlow<String>
+
+    /**
+     * Обновить текст сообщения при вводе пользователя.
+     *
+     * @param value Новое значение текста
+     */
+    fun onMessageTextChange(value: String)
 
     /**
      * Загрузка сообщений при открытии экрана.

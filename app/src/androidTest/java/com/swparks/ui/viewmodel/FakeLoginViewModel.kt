@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Fake-реализация LoginViewModel для UI тестов.
@@ -27,22 +28,16 @@ class FakeLoginViewModel(
     override val loginEvents: SharedFlow<LoginEvent> = eventsFlow.asSharedFlow()
 
     // Состояние учетных данных
-    private val loginFlow = MutableStateFlow(initialLogin)
-    private val passwordFlow = MutableStateFlow(initialPassword)
-
-    override val credentials: LoginCredentials
-        get() =
-            LoginCredentials(
-                login = loginFlow.value,
-                password = passwordFlow.value
-            )
+    private val _credentialsState =
+        MutableStateFlow(LoginCredentials(login = initialLogin, password = initialPassword))
+    override val credentialsState: StateFlow<LoginCredentials> = _credentialsState.asStateFlow()
 
     /**
      * Обновляет логин пользователя.
      * В тестах состояние устанавливается напрямую через конструктор.
      */
     override fun onLoginChange(value: String) {
-        loginFlow.value = value
+        _credentialsState.value = _credentialsState.value.copy(login = value)
     }
 
     /**
@@ -50,7 +45,7 @@ class FakeLoginViewModel(
      * В тестах состояние устанавливается напрямую через конструктор.
      */
     override fun onPasswordChange(value: String) {
-        passwordFlow.value = value
+        _credentialsState.value = _credentialsState.value.copy(password = value)
     }
 
     /**

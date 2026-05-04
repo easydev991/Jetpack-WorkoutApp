@@ -7,7 +7,6 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -16,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.swparks.ui.ds.disableAllGestures
 import com.swparks.ui.viewmodel.ILoginViewModel
@@ -57,7 +57,7 @@ fun LoginSheetHost(
     // Создаем ViewModel на уровне хоста с явным указанием типа
     val loginViewModel: ILoginViewModel =
         viewModel<LoginViewModel>(factory = LoginViewModel.Factory)
-    val uiState by loginViewModel.uiState.collectAsState()
+    val uiState by loginViewModel.uiState.collectAsStateWithLifecycle()
 
     // Сбрасываем состояние при каждом открытии sheet
     LaunchedEffect(show) {

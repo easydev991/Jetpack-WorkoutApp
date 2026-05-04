@@ -42,10 +42,10 @@ import com.swparks.data.model.Event
 import com.swparks.data.model.User
 import com.swparks.ui.ds.ErrorContentView
 import com.swparks.ui.ds.LoadingOverlayView
-import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.screens.common.TextEntrySheetHost
 import com.swparks.ui.screens.more.sendComplaint
 import com.swparks.ui.screens.photos.PhotoDetailSheetHost
+import com.swparks.ui.state.DetailOverlayState
 import com.swparks.ui.state.EventDetailUIState
 import com.swparks.ui.state.PhotoDetailConfig
 import com.swparks.ui.state.PhotoOwner
@@ -89,20 +89,20 @@ fun EventDetailScreen(
     val isEventAuthor by viewModel.isEventAuthor.collectAsState()
     val currentUserId by viewModel.currentUserId.collectAsState()
 
-    var showDeleteEventDialog by remember { mutableStateOf(false) }
-    var showDeletePhotoDialog by remember { mutableStateOf(false) }
-    var showDeleteCommentDialog by remember { mutableStateOf(false) }
-    var showTextEntrySheet by remember { mutableStateOf(false) }
-    var textEntryMode by remember { mutableStateOf<TextEntryMode?>(null) }
-    var showPhotoDetailSheet by remember { mutableStateOf(false) }
-    var photoDetailConfig by remember { mutableStateOf<PhotoDetailConfig?>(null) }
+    var overlayState by remember { mutableStateOf(DetailOverlayState()) }
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
-                EventDetailEvent.ShowDeleteConfirmDialog -> showDeleteEventDialog = true
-                is EventDetailEvent.ShowDeletePhotoConfirmDialog -> showDeletePhotoDialog = true
-                EventDetailEvent.ShowDeleteCommentConfirmDialog -> showDeleteCommentDialog = true
+                EventDetailEvent.ShowDeleteConfirmDialog -> {
+                    overlayState = overlayState.copy(showDeleteDialog = true)
+                }
+                is EventDetailEvent.ShowDeletePhotoConfirmDialog -> {
+                    overlayState = overlayState.copy(showDeletePhotoDialog = true)
+                }
+                EventDetailEvent.ShowDeleteCommentConfirmDialog -> {
+                    overlayState = overlayState.copy(showDeleteCommentDialog = true)
+                }
                 is EventDetailEvent.EventDeleted ->
                     onAction(
                         EventDetailAction.OnEventDeleted(event.eventId)
@@ -169,21 +169,27 @@ fun EventDetailScreen(
                 }
 
                 is EventDetailEvent.OpenCommentTextEntry -> {
-                    textEntryMode = event.mode
-                    showTextEntrySheet = true
+                    overlayState =
+                        overlayState.copy(
+                            textEntryMode = event.mode,
+                            showTextEntrySheet = true
+                        )
                 }
 
                 is EventDetailEvent.NavigateToPhotoDetail -> {
-                    photoDetailConfig =
-                        PhotoDetailConfig(
-                            photoId = event.photo.id,
-                            parentId = event.eventId,
-                            parentTitle = event.eventTitle,
-                            isAuthor = event.isEventAuthor,
-                            photoUrl = event.photo.photo,
-                            ownerType = PhotoOwner.Event
+                    overlayState =
+                        overlayState.copy(
+                            photoDetailConfig =
+                                PhotoDetailConfig(
+                                    photoId = event.photo.id,
+                                    parentId = event.eventId,
+                                    parentTitle = event.eventTitle,
+                                    isAuthor = event.isEventAuthor,
+                                    photoUrl = event.photo.photo,
+                                    ownerType = PhotoOwner.Event
+                                ),
+                            showPhotoDetailSheet = true
                         )
-                    showPhotoDetailSheet = true
                 }
             }
         }
@@ -372,10 +378,10 @@ fun EventDetailScreen(
         }
     }
 
-    if (showDeleteEventDialog) {
+    if (overlayState.showDeleteDialog) {
         AlertDialog(
             onDismissRequest = {
-                showDeleteEventDialog = false
+                overlayState = overlayState.copy(showDeleteDialog = false)
                 viewModel.onDeleteDismiss()
             },
             title = { Text(text = stringResource(R.string.event_delete_confirm_title)) },
@@ -386,7 +392,7 @@ fun EventDetailScreen(
                             contentColor = MaterialTheme.colorScheme.error
                         ),
                     onClick = {
-                        showDeleteEventDialog = false
+                        overlayState = overlayState.copy(showDeleteDialog = false)
                         viewModel.onDeleteConfirm()
                     }
                 ) {
@@ -396,7 +402,7 @@ fun EventDetailScreen(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        showDeleteEventDialog = false
+                        overlayState = overlayState.copy(showDeleteDialog = false)
                         viewModel.onDeleteDismiss()
                     }
                 ) {
@@ -406,10 +412,10 @@ fun EventDetailScreen(
         )
     }
 
-    if (showDeletePhotoDialog) {
+    if (overlayState.showDeletePhotoDialog) {
         AlertDialog(
             onDismissRequest = {
-                showDeletePhotoDialog = false
+                overlayState = overlayState.copy(showDeletePhotoDialog = false)
                 viewModel.onPhotoDeleteDismiss()
             },
             title = { Text(text = stringResource(R.string.event_delete_photo_confirm_title)) },
@@ -420,7 +426,7 @@ fun EventDetailScreen(
                             contentColor = MaterialTheme.colorScheme.error
                         ),
                     onClick = {
-                        showDeletePhotoDialog = false
+                        overlayState = overlayState.copy(showDeletePhotoDialog = false)
                         viewModel.onPhotoDeleteConfirm()
                     }
                 ) {
@@ -430,7 +436,7 @@ fun EventDetailScreen(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        showDeletePhotoDialog = false
+                        overlayState = overlayState.copy(showDeletePhotoDialog = false)
                         viewModel.onPhotoDeleteDismiss()
                     }
                 ) {
@@ -440,10 +446,10 @@ fun EventDetailScreen(
         )
     }
 
-    if (showDeleteCommentDialog) {
+    if (overlayState.showDeleteCommentDialog) {
         AlertDialog(
             onDismissRequest = {
-                showDeleteCommentDialog = false
+                overlayState = overlayState.copy(showDeleteCommentDialog = false)
                 viewModel.onCommentDeleteDismiss()
             },
             title = { Text(text = stringResource(R.string.event_delete_comment_confirm_title)) },
@@ -455,7 +461,7 @@ fun EventDetailScreen(
                             contentColor = MaterialTheme.colorScheme.error
                         ),
                     onClick = {
-                        showDeleteCommentDialog = false
+                        overlayState = overlayState.copy(showDeleteCommentDialog = false)
                         viewModel.onCommentDeleteConfirm()
                     }
                 ) {
@@ -465,7 +471,7 @@ fun EventDetailScreen(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        showDeleteCommentDialog = false
+                        overlayState = overlayState.copy(showDeleteCommentDialog = false)
                         viewModel.onCommentDeleteDismiss()
                     }
                 ) {
@@ -475,26 +481,27 @@ fun EventDetailScreen(
         )
     }
 
-    if (showTextEntrySheet && textEntryMode != null) {
+    if (overlayState.showTextEntrySheet && overlayState.textEntryMode != null) {
         TextEntrySheetHost(
             show = true,
-            mode = checkNotNull(textEntryMode),
-            onDismissed = { showTextEntrySheet = false },
+            mode = checkNotNull(overlayState.textEntryMode),
+            onDismissed = {
+                overlayState = overlayState.copy(showTextEntrySheet = false, textEntryMode = null)
+            },
             onSendSuccess = {
-                showTextEntrySheet = false
+                overlayState = overlayState.copy(showTextEntrySheet = false, textEntryMode = null)
                 viewModel.refresh()
             }
         )
     }
 
-    val config = photoDetailConfig
-    if (showPhotoDetailSheet && config != null) {
+    val config = overlayState.photoDetailConfig
+    if (overlayState.showPhotoDetailSheet && config != null) {
         PhotoDetailSheetHost(
             show = true,
             config = config,
             onDismissed = { deletedPhotoId ->
-                showPhotoDetailSheet = false
-                photoDetailConfig = null
+                overlayState = overlayState.copy(showPhotoDetailSheet = false, photoDetailConfig = null)
                 if (deletedPhotoId != null) {
                     viewModel.onPhotoDeleted(deletedPhotoId)
                 }

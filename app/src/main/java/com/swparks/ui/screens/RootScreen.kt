@@ -168,6 +168,12 @@ internal fun shouldShowBottomBar(route: String?): Boolean {
     return baseRoute !in BOTTOM_BAR_HIDDEN_BASE_ROUTES
 }
 
+/** Состояние auth-листов (Login/Register) экрана RootScreen. */
+private data class RootAuthSheetState(
+    val showLogin: Boolean = false,
+    val showRegister: Boolean = false
+)
+
 @Composable
 fun RootScreen(appState: AppState) {
     // Используем единый AppContainer из Application — иначе ProfileViewModel и LoginViewModel
@@ -216,11 +222,8 @@ fun RootScreen(appState: AppState) {
         }
     }
 
-    // Состояние для LoginSheet
-    var showLoginSheet by remember { mutableStateOf(false) }
-
-    // Состояние для RegisterSheet
-    var showRegisterSheet by remember { mutableStateOf(false) }
+    // Состояние для auth-листов (Login/Register)
+    var authSheet by remember { mutableStateOf(RootAuthSheetState()) }
 
     // Создаем ProfileViewModel ЕДИН РАЗ на уровне RootScreen
     // Это предотвращает пересоздание ViewModel при навигации между вкладками
@@ -420,11 +423,11 @@ fun RootScreen(appState: AppState) {
                                 appState.analyticsService.log(
                                     AnalyticsEvent.ScreenView(AppScreen.LOGIN)
                                 )
-                                showLoginSheet = true
+                                authSheet = RootAuthSheetState(showLogin = true)
                             }
 
                             MessagesNavigationAction.ShowRegisterSheet -> {
-                                showRegisterSheet = true
+                                authSheet = RootAuthSheetState(showRegister = true)
                             }
 
                             MessagesNavigationAction.NavigateToFriends -> {
@@ -476,9 +479,10 @@ fun RootScreen(appState: AppState) {
                                 appState.analyticsService.log(
                                     AnalyticsEvent.ScreenView(AppScreen.LOGIN)
                                 )
-                                showLoginSheet = true
+                                authSheet = RootAuthSheetState(showLogin = true)
                             }
-                            ProfileAuthAction.ShowRegisterSheet -> showRegisterSheet = true
+                            ProfileAuthAction.ShowRegisterSheet ->
+                                authSheet = RootAuthSheetState(showRegister = true)
                         }
                     }
                 )
@@ -1671,11 +1675,11 @@ fun RootScreen(appState: AppState) {
 
         // LoginSheetHost поверх NavHost
         LoginSheetHost(
-            show = showLoginSheet,
-            onDismissed = { showLoginSheet = false },
+            show = authSheet.showLogin,
+            onDismissed = { authSheet = authSheet.copy(showLogin = false) },
             onLoginSuccess = { userId ->
                 // Закрываем LoginSheet
-                showLoginSheet = false
+                authSheet = authSheet.copy(showLogin = false)
                 // Сбрасываем transient visual state в BottomNavigation сразу после успеха логина.
                 // Это закрывает короткое "окно" до обновления currentUser из ProfileViewModel.
                 appState.bumpBottomNavVisualEpoch()
@@ -1688,12 +1692,12 @@ fun RootScreen(appState: AppState) {
 
         // RegisterSheetHost поверх NavHost
         RegisterSheetHost(
-            show = showRegisterSheet,
+            show = authSheet.showRegister,
             appContainer = appContainer,
-            onDismissed = { showRegisterSheet = false },
+            onDismissed = { authSheet = authSheet.copy(showRegister = false) },
             onRegisterSuccess = { userId ->
                 // Закрываем RegisterSheet
-                showRegisterSheet = false
+                authSheet = authSheet.copy(showRegister = false)
                 // Аналогично логину: немедленный reset visual state нижней навигации.
                 appState.bumpBottomNavVisualEpoch()
                 // Успешная регистрация - загружаем профиль с сервера

@@ -23,7 +23,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +35,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.swparks.R
 import com.swparks.domain.exception.NetworkException
 import com.swparks.ui.ds.ButtonConfig
@@ -45,6 +45,7 @@ import com.swparks.ui.ds.SWButtonMode
 import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.ds.SWTextField
 import com.swparks.ui.ds.TextFieldConfig
+import com.swparks.ui.model.LoginCredentials
 import com.swparks.ui.state.LoginEvent
 import com.swparks.ui.state.LoginUiState
 import com.swparks.ui.testtags.ScreenshotTestTags
@@ -59,9 +60,10 @@ fun LoginScreen(
     onLoginSuccess: (userId: Long) -> Unit = {},
     onResetSuccess: (String) -> Unit = {}
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val loginError by viewModel.loginErrorState.collectAsState()
-    val resetError by viewModel.resetErrorState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val loginError by viewModel.loginErrorState.collectAsStateWithLifecycle()
+    val resetError by viewModel.resetErrorState.collectAsStateWithLifecycle()
+    val credentials by viewModel.credentialsState.collectAsStateWithLifecycle()
 
     val screenState = rememberLoginScreenState()
 
@@ -78,7 +80,10 @@ fun LoginScreen(
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
             LoginContent(
-                viewModel = viewModel,
+                credentials = credentials,
+                onLoginChange = viewModel::onLoginChange,
+                onPasswordChange = viewModel::onPasswordChange,
+                onLoginClick = viewModel::login,
                 state =
                     LoginContentState(
                         loginError = loginError,
@@ -86,7 +91,9 @@ fun LoginScreen(
                         isLoading = uiState.isBusy
                     ),
                 focusRequester = screenState.focusRequester,
-                onResetPasswordClick = { showForgotPasswordAlertIfNeeded(viewModel, screenState) },
+                onResetPasswordClick = {
+                    showForgotPasswordAlertIfNeeded(credentials, screenState, viewModel::resetPassword)
+                },
                 modifier = Modifier.padding(paddingValues)
             )
 
@@ -100,7 +107,8 @@ fun LoginScreen(
         viewModel = viewModel,
         screenState = screenState,
         onLoginSuccess = onLoginSuccess,
-        onResetSuccess = onResetSuccess
+        onResetSuccess = onResetSuccess,
+        uiState = uiState
     )
 }
 
@@ -109,7 +117,8 @@ private fun HandleLoginEvents(
     viewModel: ILoginViewModel,
     screenState: LoginScreenState,
     onLoginSuccess: (Long) -> Unit,
-    onResetSuccess: (String) -> Unit
+    onResetSuccess: (String) -> Unit,
+    uiState: LoginUiState
 ) {
     LaunchedEffect(Unit) {
         viewModel.loginEvents.collect { event ->
@@ -123,7 +132,7 @@ private fun HandleLoginEvents(
         }
     }
 
-    HandleLoginErrorsOnly(viewModel.uiState.collectAsState().value, screenState)
+    HandleLoginErrorsOnly(uiState, screenState)
 
     LoginScreenAlerts(
         state =
@@ -222,9 +231,13 @@ private data class LoginContentState(
 )
 
 /** Контент экрана авторизации. */
+@Suppress("LongParameterList")
 @Composable
 private fun LoginContent(
-    viewModel: ILoginViewModel,
+    credentials: LoginCredentials,
+    onLoginChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onLoginClick: () -> Unit,
     state: LoginContentState,
     focusRequester: FocusRequester,
     onResetPasswordClick: () -> Unit,
@@ -244,10 +257,11 @@ private fun LoginContent(
     ) {
         // Верхний VStack с текстовыми полями
         LoginFieldsColumn(
-            viewModel = viewModel,
-            loginError = state.loginError,
-            resetError = state.resetError,
-            isLoading = state.isLoading,
+            credentials = credentials,
+            onLoginChange = onLoginChange,
+            onPasswordChange = onPasswordChange,
+            onLoginClick = onLoginClick,
+            state = state,
             focusRequester = focusRequester
         )
 
@@ -255,47 +269,49 @@ private fun LoginContent(
 
         // Нижний VStack с кнопками
         ButtonsColumn(
-            viewModel = viewModel,
-            loginError = state.loginError,
-            isLoading = state.isLoading,
+            credentials = credentials,
+            onLoginClick = onLoginClick,
+            state = state,
             onResetPasswordClick = onResetPasswordClick
         )
     }
 }
 
 /** Колонка с текстовыми полями. */
+@Suppress("LongParameterList")
 @Composable
 private fun LoginFieldsColumn(
-    viewModel: ILoginViewModel,
-    loginError: String?,
-    resetError: String?,
-    isLoading: Boolean,
+    credentials: LoginCredentials,
+    onLoginChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onLoginClick: () -> Unit,
+    state: LoginContentState,
     focusRequester: FocusRequester
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))) {
         LoginField(
             config =
                 LoginFieldConfig(
-                    value = viewModel.credentials.login,
-                    isError = resetError != null,
-                    supportingText = resetError ?: "",
-                    enabled = !isLoading,
+                    value = credentials.login,
+                    isError = state.resetError != null,
+                    supportingText = state.resetError ?: "",
+                    enabled = !state.isLoading,
                     focusRequester = focusRequester
                 ),
-            onValueChange = if (!isLoading) viewModel::onLoginChange else { _ -> }
+            onValueChange = if (!state.isLoading) onLoginChange else { _ -> }
         )
 
         PasswordField(
             config =
                 PasswordFieldConfig(
-                    value = viewModel.credentials.password,
-                    onValueChange = if (!isLoading) viewModel::onPasswordChange else { _ -> },
-                    isError = loginError != null,
-                    supportingText = loginError ?: "",
-                    enabled = !isLoading,
+                    value = credentials.password,
+                    onValueChange = if (!state.isLoading) onPasswordChange else { _ -> },
+                    isError = state.loginError != null,
+                    supportingText = state.loginError ?: "",
+                    enabled = !state.isLoading,
                     onDone = {
-                        if (viewModel.credentials.canLogIn(isError = loginError != null) && !isLoading) {
-                            viewModel.login()
+                        if (credentials.canLogIn(isError = state.loginError != null) && !state.isLoading) {
+                            onLoginClick()
                         }
                     }
                 )
@@ -306,19 +322,19 @@ private fun LoginFieldsColumn(
 /** Колонка с кнопками. */
 @Composable
 private fun ButtonsColumn(
-    viewModel: ILoginViewModel,
-    loginError: String?,
-    isLoading: Boolean,
+    credentials: LoginCredentials,
+    onLoginClick: () -> Unit,
+    state: LoginContentState,
     onResetPasswordClick: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))) {
         LoginButton(
-            enabled = viewModel.credentials.canLogIn(isError = loginError != null) && !isLoading,
-            onClick = { viewModel.login() }
+            enabled = credentials.canLogIn(isError = state.loginError != null) && !state.isLoading,
+            onClick = onLoginClick
         )
 
         ResetPasswordButton(
-            enabled = !isLoading,
+            enabled = !state.isLoading,
             onClick = onResetPasswordClick
         )
     }
@@ -326,13 +342,14 @@ private fun ButtonsColumn(
 
 /** Обработчик клика на кнопку восстановления пароля. */
 private fun showForgotPasswordAlertIfNeeded(
-    viewModel: ILoginViewModel,
-    screenState: LoginScreenState
+    credentials: LoginCredentials,
+    screenState: LoginScreenState,
+    onResetPassword: () -> Unit
 ) {
-    if (viewModel.credentials.login.isEmpty()) {
+    if (credentials.login.isEmpty()) {
         screenState.setShowForgotPasswordAlert(true)
     } else {
-        viewModel.resetPassword()
+        onResetPassword()
     }
 }
 

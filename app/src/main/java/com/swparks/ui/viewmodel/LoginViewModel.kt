@@ -1,6 +1,5 @@
 package com.swparks.ui.viewmodel
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -58,15 +57,8 @@ class LoginViewModel(
     private val loginEventsChannel = Channel<LoginEvent>(Channel.BUFFERED)
     override val loginEvents = loginEventsChannel.receiveAsFlow()
 
-    private val loginState = mutableStateOf("")
-    private val passwordState = mutableStateOf("")
-
-    override val credentials: LoginCredentials
-        get() =
-            LoginCredentials(
-                login = loginState.value,
-                password = passwordState.value
-            )
+    private val _credentialsState = MutableStateFlow(LoginCredentials())
+    override val credentialsState: StateFlow<LoginCredentials> = _credentialsState.asStateFlow()
 
     /**
      * Обновляет логин пользователя.
@@ -75,7 +67,7 @@ class LoginViewModel(
      * @param value Новый логин пользователя
      */
     override fun onLoginChange(value: String) {
-        loginState.value = value
+        _credentialsState.value = _credentialsState.value.copy(login = value)
         clearErrors()
     }
 
@@ -86,7 +78,7 @@ class LoginViewModel(
      * @param value Новый пароль пользователя
      */
     override fun onPasswordChange(value: String) {
-        passwordState.value = value
+        _credentialsState.value = _credentialsState.value.copy(password = value)
         clearErrors()
     }
 
@@ -102,6 +94,8 @@ class LoginViewModel(
      */
     override fun login() {
         analyticsService.log(AnalyticsEvent.UserAction(UserActionType.LOGIN))
+
+        val credentials = _credentialsState.value
 
         viewModelScope.launch {
             _uiState.value = LoginUiState.Loading
@@ -135,6 +129,8 @@ class LoginViewModel(
      * При ошибке восстановления сохраняет ошибку в resetError для отображения под полем логина.
      */
     override fun resetPassword() {
+        val credentials = _credentialsState.value
+
         if (!credentials.canRestorePassword) {
             return
         }
@@ -186,8 +182,7 @@ class LoginViewModel(
      */
     override fun resetForNewSession() {
         // Сбросить учетные данные
-        loginState.value = ""
-        passwordState.value = ""
+        _credentialsState.value = LoginCredentials()
 
         // Сбросить состояние UI в Idle
         _uiState.value = LoginUiState.Idle
