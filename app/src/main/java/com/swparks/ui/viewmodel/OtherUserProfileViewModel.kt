@@ -17,7 +17,6 @@ import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.model.BlacklistAction
 import com.swparks.ui.model.toApiOption
 import com.swparks.util.AppError
-import com.swparks.util.HttpCodes
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import kotlinx.coroutines.CancellationException
@@ -48,6 +47,8 @@ class OtherUserProfileViewModel(
         private const val TAG = "OtherUserProfileViewModel"
         const val CURRENT_USER_LOAD_TIMEOUT_MS = 10_000L // Доступна в тестах
         private const val SUBSCRIPTION_TIMEOUT_MS = 5000L
+        private const val HTTP_FORBIDDEN = 403
+        private const val HTTP_NOT_FOUND = 404
     }
 
     private val _viewedUser = MutableStateFlow<User?>(null)
@@ -152,10 +153,10 @@ class OtherUserProfileViewModel(
                 }.onFailure { error ->
                     val (message, canRetry) =
                         when {
-                            error is HttpException && error.code() == HttpCodes.NOT_FOUND ->
+                            error is HttpException && error.code() == HTTP_NOT_FOUND ->
                                 "Пользователь не найден" to false
 
-                            error is HttpException && error.code() == HttpCodes.FORBIDDEN ->
+                            error is HttpException && error.code() == HTTP_FORBIDDEN ->
                                 "Доступ запрещен" to false
 
                             else -> "Ошибка загрузки профиля: ${error.message}" to true

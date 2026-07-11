@@ -180,7 +180,6 @@ fun functionName_whenCondition_thenExpectedResult()
 - `app/build.gradle.kts`
 - `config/detekt/detekt.yml`
 - `Makefile`
-- `.cursor/rules/*.mdc`
 - `docs/plan-development.md`
 
 ## Pre-Commit Checklist

@@ -309,7 +309,7 @@ app/src/androidTest/java/com/swparks/   # Интеграционные и UI т�
 ### Архитектура
 
 - **nowinandroid** - референсный проект для архитектуры, навигации, DI
-- `.cursor/rules/architecture.mdc` - MVVM, Clean Architecture, ручной DI
+- `AGENTS.md` - MVVM, Clean Architecture, ручной DI
 
 ### Функционал и экраны
 

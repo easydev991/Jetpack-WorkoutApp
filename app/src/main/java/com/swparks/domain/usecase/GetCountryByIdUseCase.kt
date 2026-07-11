@@ -4,14 +4,6 @@ import com.swparks.data.model.Country
 import com.swparks.domain.repository.CountriesRepository
 
 /**
- * Интерфейс для use case получения страны по идентификатору. Создан для удобства тестирования
- * ViewModels.
- */
-interface IGetCountryByIdUseCase {
-    suspend operator fun invoke(countryId: String): Country?
-}
-
-/**
  * Use case для получения страны по идентификатору.
  *
  * Делегирует вызов репозиторию стран и городов. Используется для загрузки информации о стране
@@ -21,12 +13,12 @@ interface IGetCountryByIdUseCase {
  */
 class GetCountryByIdUseCase(
     private val countriesRepository: CountriesRepository
-) : IGetCountryByIdUseCase {
+) {
     /**
      * Получить страну по идентификатору.
      *
      * @param countryId Идентификатор страны
      * @return Страна или null, если не найдена
      */
-    override suspend operator fun invoke(countryId: String): Country? = countriesRepository.getCountryById(countryId)
+    suspend operator fun invoke(countryId: String): Country? = countriesRepository.getCountryById(countryId)
 }

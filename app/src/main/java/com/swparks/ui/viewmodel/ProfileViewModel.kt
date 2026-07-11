@@ -13,7 +13,6 @@ import com.swparks.domain.repository.CountriesRepository
 import com.swparks.util.AppError
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
-import com.swparks.util.setValueIfChanged
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -224,7 +223,8 @@ class ProfileViewModel(
                     user.cityID?.let { cityId ->
                         countriesRepository.getCityById(cityId.toString())
                     }
-                _uiState.setValueIfChanged(ProfileUiState.Success(country, city)) {
+                if (_uiState.value != ProfileUiState.Success(country, city)) {
+                    _uiState.value = ProfileUiState.Success(country, city)
                     logger.i(TAG, "Адрес для профиля обновлен из countriesRepository")
                 }
             } catch (e: Exception) {

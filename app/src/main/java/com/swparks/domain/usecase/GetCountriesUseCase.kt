@@ -4,11 +4,6 @@ import com.swparks.data.model.Country
 import com.swparks.domain.repository.CountriesRepository
 import kotlinx.coroutines.flow.Flow
 
-/** Интерфейс для use case получения списка стран. Создан для удобства тестирования ViewModels. */
-interface IGetCountriesUseCase {
-    operator fun invoke(): Flow<List<Country>>
-}
-
 /**
  * Use case для получения списка всех стран.
  *
@@ -19,11 +14,11 @@ interface IGetCountriesUseCase {
  */
 class GetCountriesUseCase(
     private val countriesRepository: CountriesRepository
-) : IGetCountriesUseCase {
+) {
     /**
      * Получить список всех стран в виде Flow.
      *
      * @return Flow со списком всех стран
      */
-    override operator fun invoke(): Flow<List<Country>> = countriesRepository.getCountriesFlow()
+    operator fun invoke(): Flow<List<Country>> = countriesRepository.getCountriesFlow()
 }

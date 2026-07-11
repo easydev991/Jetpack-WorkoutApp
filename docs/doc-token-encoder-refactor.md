@@ -90,6 +90,6 @@
 1. Создать интерфейс `ITokenEncoder` для улучшения тестируемости
 2. Добавить логирование в `TokenEncoder` для отладки
 3. Добавить unit тесты для edge cases в `TokenEncoder` (null credentials, unicode символы)
-4. Создать документацию по использованию `TokenEncoder` и `Logger` в `.cursor/rules/`
+4. Создать документацию по использованию `TokenEncoder` и `Logger`
 5. Рассмотреть использование Logger в других ViewModels для консистентности
 6. Добавить тесты для других ViewModels, если они используют `android.util.Log` или `android.os.Bundle`

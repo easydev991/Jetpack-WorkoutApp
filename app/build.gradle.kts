@@ -110,7 +110,6 @@ dependencies {
 
     // Material Components (for View-based themes and attributes)
     implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.androidx.appcompat)
 
     // Navigation
     implementation(libs.androidx.navigation.compose)
