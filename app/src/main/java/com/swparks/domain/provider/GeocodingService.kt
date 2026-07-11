@@ -13,7 +13,9 @@ interface GeocodingService {
      *
      * @param latitude Широта
      * @param longitude Долгота
-     * @return Result с [GeocodingResult] в случае успеха
+     * @return Result с [GeocodingResult] в случае успеха.
+     * В случае ошибки — `Result.failure` с [com.swparks.data.provider.GeocodingException],
+     * содержащим [com.swparks.util.AppError.GeocodingFailed].
      */
     suspend fun reverseGeocode(
         latitude: Double,

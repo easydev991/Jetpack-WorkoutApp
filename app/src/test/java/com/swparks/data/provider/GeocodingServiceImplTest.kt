@@ -4,7 +4,6 @@ import android.content.Context
 import android.location.Address
 import android.location.Geocoder
 import com.swparks.util.AppError
-import com.swparks.util.AppErrorException
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -116,12 +115,11 @@ class GeocodingServiceImplTest {
 
             assertTrue(result.isFailure)
             val exception = result.exceptionOrNull()
-            assertTrue(exception is AppErrorException)
-            val appError = (exception as AppErrorException).appError
-            assertTrue(appError is AppError.GeocodingFailed)
+            assertTrue(exception is GeocodingException)
+            val geocodingException = exception as GeocodingException
             assertEquals(
                 AppError.GeocodingFailureKind.ADDRESS_BUILD_FAIL,
-                (appError as AppError.GeocodingFailed).kind
+                geocodingException.appError.kind
             )
         }
 
@@ -137,12 +135,11 @@ class GeocodingServiceImplTest {
 
             assertTrue(result.isFailure)
             val exception = result.exceptionOrNull()
-            assertTrue(exception is AppErrorException)
-            val appError = (exception as AppErrorException).appError
-            assertTrue(appError is AppError.GeocodingFailed)
+            assertTrue(exception is GeocodingException)
+            val geocodingException = exception as GeocodingException
             assertEquals(
                 AppError.GeocodingFailureKind.IO_ERROR,
-                (appError as AppError.GeocodingFailed).kind
+                geocodingException.appError.kind
             )
         }
 
@@ -169,12 +166,11 @@ class GeocodingServiceImplTest {
 
             assertTrue(result.isFailure)
             val exception = result.exceptionOrNull()
-            assertTrue(exception is AppErrorException)
-            val appError = (exception as AppErrorException).appError
-            assertTrue(appError is AppError.GeocodingFailed)
+            assertTrue(exception is GeocodingException)
+            val geocodingException = exception as GeocodingException
             assertEquals(
                 AppError.GeocodingFailureKind.ADDRESS_BUILD_FAIL,
-                (appError as AppError.GeocodingFailed).kind
+                geocodingException.appError.kind
             )
         }
 

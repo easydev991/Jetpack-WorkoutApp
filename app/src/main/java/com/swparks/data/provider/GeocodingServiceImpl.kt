@@ -7,7 +7,6 @@ import android.os.Build
 import com.swparks.domain.model.GeocodingResult
 import com.swparks.domain.provider.GeocodingService
 import com.swparks.util.AppError
-import com.swparks.util.AppErrorException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -45,7 +44,7 @@ class GeocodingServiceImpl(
 
                 if (addresses.isNullOrEmpty()) {
                     return@withContext Result.failure(
-                        AppErrorException(
+                        GeocodingException(
                             AppError.GeocodingFailed(
                                 message = "No placemark found",
                                 kind = AppError.GeocodingFailureKind.ADDRESS_BUILD_FAIL
@@ -59,7 +58,7 @@ class GeocodingServiceImpl(
 
                 if (formattedAddress.isBlank()) {
                     return@withContext Result.failure(
-                        AppErrorException(
+                        GeocodingException(
                             AppError.GeocodingFailed(
                                 message = "Failed to build address",
                                 kind = AppError.GeocodingFailureKind.ADDRESS_BUILD_FAIL
@@ -77,7 +76,7 @@ class GeocodingServiceImpl(
                 )
             } catch (e: IOException) {
                 Result.failure(
-                    AppErrorException(
+                    GeocodingException(
                         AppError.GeocodingFailed(
                             message = "IO error during geocoding",
                             kind = AppError.GeocodingFailureKind.IO_ERROR,
