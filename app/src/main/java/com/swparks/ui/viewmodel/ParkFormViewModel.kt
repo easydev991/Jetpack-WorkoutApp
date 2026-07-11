@@ -9,9 +9,9 @@ import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
 import com.swparks.data.database.dao.UserDao
+import com.swparks.data.provider.AvatarHelperImpl
+import com.swparks.data.provider.GeocodingServiceImpl
 import com.swparks.data.repository.SWRepository
-import com.swparks.domain.provider.AvatarHelper
-import com.swparks.domain.provider.GeocodingService
 import com.swparks.domain.usecase.FindCityByCoordinatesUseCase
 import com.swparks.ui.model.ParkForm
 import com.swparks.ui.model.ParkFormMode
@@ -35,10 +35,10 @@ import kotlinx.coroutines.launch
 class ParkFormViewModel(
     private val mode: ParkFormMode,
     private val swRepository: SWRepository,
-    private val avatarHelper: AvatarHelper,
+    private val avatarHelper: AvatarHelperImpl,
     private val logger: Logger,
     private val userNotifier: UserNotifier,
-    private val geocodingService: GeocodingService,
+    private val geocodingService: GeocodingServiceImpl,
     private val findCityByCoordinatesUseCase: FindCityByCoordinatesUseCase,
     private val userDao: UserDao,
     private val analyticsService: AnalyticsService

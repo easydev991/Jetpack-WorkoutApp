@@ -9,9 +9,9 @@ import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
 import com.swparks.data.model.User
+import com.swparks.data.provider.AvatarHelperImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.EditProfileLocations
-import com.swparks.domain.provider.AvatarHelper
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.DeleteUserUseCase
@@ -57,7 +57,7 @@ class EditProfileViewModel(
     private val swRepository: SWRepository,
     private val countriesRepository: CountriesRepository,
     private val deleteUserUseCase: DeleteUserUseCase,
-    private val avatarHelper: AvatarHelper,
+    private val avatarHelper: AvatarHelperImpl,
     private val logger: Logger,
     private val userNotifier: UserNotifier,
     private val resources: ResourcesProvider,

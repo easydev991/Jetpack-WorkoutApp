@@ -1,7 +1,7 @@
 package com.swparks.domain.usecase
 
+import com.swparks.data.repository.JournalsRepositoryImpl
 import com.swparks.domain.model.Journal
-import com.swparks.domain.repository.JournalsRepository
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
  * @param journalsRepository Репозиторий для работы с дневниками
  */
 class GetJournalsUseCase(
-    private val journalsRepository: JournalsRepository
+    private val journalsRepository: JournalsRepositoryImpl
 ) {
     /**
      * Получить поток дневников пользователя.

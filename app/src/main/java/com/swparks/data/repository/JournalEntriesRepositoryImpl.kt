@@ -6,7 +6,6 @@ import com.swparks.data.database.entity.toEntity
 import com.swparks.data.model.JournalEntryResponse
 import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.model.JournalEntry
-import com.swparks.domain.repository.JournalEntriesRepository
 import com.swparks.network.SWApi
 import com.swparks.util.CrashReporter
 import com.swparks.util.Logger
@@ -30,13 +29,13 @@ class JournalEntriesRepositoryImpl(
     private val journalEntryDao: JournalEntryDao,
     private val crashReporter: CrashReporter,
     private val logger: Logger
-) : JournalEntriesRepository {
+) {
     private companion object {
         const val TAG = "JournalEntriesRepository"
         const val HTTP_NOT_FOUND = 404
     }
 
-    override fun observeJournalEntries(
+    fun observeJournalEntries(
         userId: Long,
         journalId: Long
     ): Flow<List<JournalEntry>> {
@@ -48,7 +47,7 @@ class JournalEntriesRepositoryImpl(
             }
     }
 
-    override suspend fun refreshJournalEntries(
+    suspend fun refreshJournalEntries(
         userId: Long,
         journalId: Long
     ): Result<Unit> =
@@ -82,7 +81,7 @@ class JournalEntriesRepositoryImpl(
             Result.failure(e)
         }
 
-    override suspend fun deleteJournalEntry(
+    suspend fun deleteJournalEntry(
         userId: Long,
         journalId: Long,
         entryId: Long
@@ -124,7 +123,7 @@ class JournalEntriesRepositoryImpl(
             Result.failure(NetworkException(errorMessage, e))
         }
 
-    override suspend fun canDeleteEntry(
+    suspend fun canDeleteEntry(
         entryId: Long,
         journalId: Long
     ): Boolean {

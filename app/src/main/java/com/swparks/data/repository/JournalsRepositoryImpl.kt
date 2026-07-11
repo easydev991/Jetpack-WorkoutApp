@@ -5,7 +5,6 @@ import com.swparks.data.database.entity.toDomain
 import com.swparks.data.database.entity.toEntity
 import com.swparks.data.model.toDomain
 import com.swparks.domain.model.Journal
-import com.swparks.domain.repository.JournalsRepository
 import com.swparks.network.SWApi
 import com.swparks.util.CrashReporter
 import com.swparks.util.Logger
@@ -28,19 +27,19 @@ class JournalsRepositoryImpl(
     private val journalDao: JournalDao,
     private val crashReporter: CrashReporter,
     private val logger: Logger
-) : JournalsRepository {
+) {
     companion object {
         private const val TAG = "JournalsRepository"
     }
 
-    override fun observeJournals(userId: Long): Flow<List<Journal>> =
+    fun observeJournals(userId: Long): Flow<List<Journal>> =
         journalDao
             .getJournalsByUserId(userId)
             .map { entities ->
                 entities.map { it.toDomain() }
             }
 
-    override suspend fun refreshJournals(userId: Long): Result<Unit> =
+    suspend fun refreshJournals(userId: Long): Result<Unit> =
         try {
             logger.i(TAG, "Загружаем дневники пользователя с id: $userId")
 

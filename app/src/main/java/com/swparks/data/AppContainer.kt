@@ -40,13 +40,9 @@ import com.swparks.data.repository.SWRepositoryImp
 import com.swparks.data.serializer.EncryptedStringSerializer
 import com.swparks.data.util.SystemClock
 import com.swparks.domain.event.MessageSentNotifier
-import com.swparks.domain.provider.AvatarHelper
-import com.swparks.domain.provider.GeocodingService
 import com.swparks.domain.provider.LocationService
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
-import com.swparks.domain.repository.JournalEntriesRepository
-import com.swparks.domain.repository.JournalsRepository
 import com.swparks.domain.repository.MessagesRepository
 import com.swparks.domain.usecase.CanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.ChangePasswordUseCase
@@ -128,8 +124,8 @@ interface AppContainer {
     val swRepository: SWRepository
     val secureTokenRepository: SecureTokenRepository
     val countriesRepository: CountriesRepository
-    val journalsRepository: JournalsRepository
-    val journalEntriesRepository: JournalEntriesRepository
+    val journalsRepository: JournalsRepositoryImpl
+    val journalEntriesRepository: JournalEntriesRepositoryImpl
     val messagesRepository: MessagesRepository
     val userPreferencesRepository: UserPreferencesRepository
 
@@ -147,7 +143,7 @@ interface AppContainer {
 
     // Location & Geocoding services
     val locationService: LocationService
-    val geocodingService: GeocodingService
+    val geocodingService: GeocodingServiceImpl
     val findCityByCoordinatesUseCase: FindCityByCoordinatesUseCase
     val createParkLocationHandler: ICreateParkLocationHandler
 
@@ -310,7 +306,7 @@ class DefaultAppContainer(
         LocationServiceImpl(appContext)
     }
 
-    override val geocodingService: GeocodingService by lazy {
+    override val geocodingService: GeocodingServiceImpl by lazy {
         GeocodingServiceImpl(appContext)
     }
 
@@ -362,7 +358,7 @@ class DefaultAppContainer(
      * Хелпер для работы с аватарами (изображениями)
      * Используется в ViewModel для работы с Uri без зависимости от Context
      */
-    private val avatarHelper: AvatarHelper by lazy {
+    private val avatarHelper: AvatarHelperImpl by lazy {
         AvatarHelperImpl(appContext)
     }
 
@@ -507,7 +503,7 @@ class DefaultAppContainer(
         CountriesRepositoryImpl(context = appContext, swApi = retrofitService, logger = logger)
     }
 
-    override val journalsRepository: JournalsRepository by lazy {
+    override val journalsRepository: JournalsRepositoryImpl by lazy {
         JournalsRepositoryImpl(
             swApi = retrofitService,
             journalDao = journalDao,
@@ -526,7 +522,7 @@ class DefaultAppContainer(
      * Примечание: репозиторий не зависит от конкретных userId или journalId,
      * эти параметры передаются в методах репозитория
      */
-    override val journalEntriesRepository: JournalEntriesRepository by lazy {
+    override val journalEntriesRepository: JournalEntriesRepositoryImpl by lazy {
         JournalEntriesRepositoryImpl(
             swApi = retrofitService,
             journalEntryDao = journalEntryDao,

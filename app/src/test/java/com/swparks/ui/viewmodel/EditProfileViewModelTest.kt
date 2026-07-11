@@ -10,8 +10,8 @@ import com.swparks.analytics.UserActionType
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
+import com.swparks.data.provider.AvatarHelperImpl
 import com.swparks.data.repository.SWRepository
-import com.swparks.domain.provider.AvatarHelper
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.DeleteUserUseCase
@@ -62,7 +62,7 @@ class EditProfileViewModelTest {
     private lateinit var swRepository: SWRepository
     private lateinit var countriesRepository: CountriesRepository
     private lateinit var deleteUserUseCase: DeleteUserUseCase
-    private lateinit var avatarHelper: AvatarHelper
+    private lateinit var avatarHelper: AvatarHelperImpl
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
     private lateinit var resources: ResourcesProvider
@@ -86,7 +86,7 @@ class EditProfileViewModelTest {
         swRepository = mockk(relaxed = true)
         countriesRepository = mockk(relaxed = true)
         deleteUserUseCase = mockk(relaxed = true)
-        avatarHelper = mockk(relaxed = true)
+        avatarHelper = mockk<AvatarHelperImpl>(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
         resources = mockk(relaxed = true)

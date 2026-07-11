@@ -10,7 +10,7 @@ import com.swparks.analytics.UserActionType
 import com.swparks.data.model.Event
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
-import com.swparks.domain.provider.AvatarHelper
+import com.swparks.data.provider.AvatarHelperImpl
 import com.swparks.domain.usecase.CreateEventUseCase
 import com.swparks.domain.usecase.EditEventUseCase
 import com.swparks.ui.model.EventForm
@@ -50,7 +50,7 @@ class EventFormViewModelTest {
 
     private lateinit var createEventUseCase: CreateEventUseCase
     private lateinit var editEventUseCase: EditEventUseCase
-    private lateinit var avatarHelper: AvatarHelper
+    private lateinit var avatarHelper: AvatarHelperImpl
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
     private lateinit var analyticsService: AnalyticsService
@@ -67,7 +67,7 @@ class EventFormViewModelTest {
 
         createEventUseCase = mockk(relaxed = true)
         editEventUseCase = mockk(relaxed = true)
-        avatarHelper = mockk(relaxed = true)
+        avatarHelper = mockk<AvatarHelperImpl>(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
         analyticsService = mockk(relaxed = true)

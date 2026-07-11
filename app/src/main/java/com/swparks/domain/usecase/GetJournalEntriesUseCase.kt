@@ -1,8 +1,8 @@
 package com.swparks.domain.usecase
 
 import android.util.Log
+import com.swparks.data.repository.JournalEntriesRepositoryImpl
 import com.swparks.domain.model.JournalEntry
-import com.swparks.domain.repository.JournalEntriesRepository
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.Flow
  * @param journalEntriesRepository Репозиторий для работы с записями в дневнике
  */
 class GetJournalEntriesUseCase(
-    private val journalEntriesRepository: JournalEntriesRepository
+    private val journalEntriesRepository: JournalEntriesRepositoryImpl
 ) {
     companion object {
         private const val TAG = "GetJournalEntriesUseCase"

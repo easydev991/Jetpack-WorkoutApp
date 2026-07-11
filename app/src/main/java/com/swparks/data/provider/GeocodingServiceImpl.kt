@@ -5,7 +5,6 @@ import android.location.Address
 import android.location.Geocoder
 import android.os.Build
 import com.swparks.domain.model.GeocodingResult
-import com.swparks.domain.provider.GeocodingService
 import com.swparks.util.AppError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -22,7 +21,7 @@ class GeocodingServiceImpl(
             locale
         )
     }
-) : GeocodingService {
+) {
     private val geocoder: Geocoder by lazy {
         geocoderProvider(
             context,
@@ -34,7 +33,7 @@ class GeocodingServiceImpl(
         )
     }
 
-    override suspend fun reverseGeocode(
+    suspend fun reverseGeocode(
         latitude: Double,
         longitude: Double
     ): Result<GeocodingResult> {

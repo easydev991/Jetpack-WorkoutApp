@@ -1,6 +1,6 @@
 package com.swparks.domain.usecase
 
-import com.swparks.domain.repository.JournalEntriesRepository
+import com.swparks.data.repository.JournalEntriesRepositoryImpl
 
 /**
  * Use case для проверки возможности удаления записи из дневника.
@@ -11,7 +11,7 @@ import com.swparks.domain.repository.JournalEntriesRepository
  * @property repository Репозиторий для работы с записями в дневнике
  */
 class CanDeleteJournalEntryUseCase(
-    private val repository: JournalEntriesRepository
+    private val repository: JournalEntriesRepositoryImpl
 ) {
     suspend operator fun invoke(
         entryId: Long,

@@ -13,9 +13,9 @@ import com.swparks.data.model.Park
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
 import com.swparks.data.model.Photo
+import com.swparks.data.provider.AvatarHelperImpl
+import com.swparks.data.provider.GeocodingServiceImpl
 import com.swparks.domain.model.GeocodingResult
-import com.swparks.domain.provider.AvatarHelper
-import com.swparks.domain.provider.GeocodingService
 import com.swparks.domain.usecase.FindCityByCoordinatesUseCase
 import com.swparks.ui.model.ParkForm
 import com.swparks.ui.model.ParkFormMode
@@ -48,10 +48,10 @@ class ParkFormViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var avatarHelper: AvatarHelper
+    private lateinit var avatarHelper: AvatarHelperImpl
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
-    private lateinit var geocodingService: GeocodingService
+    private lateinit var geocodingService: GeocodingServiceImpl
     private lateinit var findCityByCoordinatesUseCase: FindCityByCoordinatesUseCase
     private lateinit var userDao: UserDao
     private lateinit var analyticsService: AnalyticsService
@@ -66,10 +66,10 @@ class ParkFormViewModelTest {
 
         mockkObject(ImageUtils)
 
-        avatarHelper = mockk(relaxed = true)
+        avatarHelper = mockk<AvatarHelperImpl>(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
-        geocodingService = mockk(relaxed = true)
+        geocodingService = mockk<GeocodingServiceImpl>(relaxed = true)
         findCityByCoordinatesUseCase = mockk(relaxed = true)
         userDao = mockk(relaxed = true)
         analyticsService = mockk(relaxed = true)
@@ -99,7 +99,7 @@ class ParkFormViewModelTest {
     private fun createViewModelWithMocks(
         mode: ParkFormMode,
         swRepository: com.swparks.data.repository.SWRepository,
-        geocodingService: GeocodingService,
+        geocodingService: GeocodingServiceImpl,
         findCityByCoordinatesUseCase: FindCityByCoordinatesUseCase,
         userDao: UserDao
     ): ParkFormViewModel =
@@ -1001,7 +1001,7 @@ class ParkFormViewModelTest {
     fun init_withCreateMode_geocodingSuccess_updatesAddressAndCityId() =
         runTest {
             // Given
-            val geocodingService = mockk<GeocodingService>()
+            val geocodingService = mockk<GeocodingServiceImpl>()
             val findCityByCoordinatesUseCase = mockk<FindCityByCoordinatesUseCase>()
             val userDao = mockk<UserDao>()
 
@@ -1048,7 +1048,7 @@ class ParkFormViewModelTest {
     fun init_withCreateMode_geocodingFailsAndUserHasCityId_fallsBackToUserCityId() =
         runTest {
             // Given
-            val geocodingService = mockk<GeocodingService>()
+            val geocodingService = mockk<GeocodingServiceImpl>()
             val findCityByCoordinatesUseCase = mockk<FindCityByCoordinatesUseCase>()
             val userDao = mockk<UserDao>()
 
@@ -1093,7 +1093,7 @@ class ParkFormViewModelTest {
     fun init_withCreateMode_geocodingFailsAndNoUserCityId_leavesCityIdNull() =
         runTest {
             // Given
-            val geocodingService = mockk<GeocodingService>()
+            val geocodingService = mockk<GeocodingServiceImpl>()
             val findCityByCoordinatesUseCase = mockk<FindCityByCoordinatesUseCase>()
             val userDao = mockk<UserDao>()
 
@@ -1136,7 +1136,7 @@ class ParkFormViewModelTest {
     fun init_withCreateMode_shouldPerformGeocodeFalse_doesNotCallGeocoding() =
         runTest {
             // Given
-            val geocodingService = mockk<GeocodingService>()
+            val geocodingService = mockk<GeocodingServiceImpl>()
             val findCityByCoordinatesUseCase = mockk<FindCityByCoordinatesUseCase>()
             val userDao = mockk<UserDao>()
 
@@ -1167,7 +1167,7 @@ class ParkFormViewModelTest {
     fun init_withCreateMode_geocodingSuccessWithNullLocality_stillUpdatesAddress() =
         runTest {
             // Given
-            val geocodingService = mockk<GeocodingService>()
+            val geocodingService = mockk<GeocodingServiceImpl>()
             val findCityByCoordinatesUseCase = mockk<FindCityByCoordinatesUseCase>()
             val userDao = mockk<UserDao>()
 
@@ -1214,7 +1214,7 @@ class ParkFormViewModelTest {
     fun init_withEditMode_doesNotPerformGeocoding() =
         runTest {
             // Given
-            val geocodingService = mockk<GeocodingService>()
+            val geocodingService = mockk<GeocodingServiceImpl>()
             val findCityByCoordinatesUseCase = mockk<FindCityByCoordinatesUseCase>()
             val userDao = mockk<UserDao>()
 

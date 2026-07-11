@@ -1,7 +1,7 @@
 package com.swparks.domain.usecase
 
 import android.util.Log
-import com.swparks.domain.repository.JournalsRepository
+import com.swparks.data.repository.JournalsRepositoryImpl
 
 /**
  * Use case для синхронизации дневников пользователя с сервера.
@@ -12,7 +12,7 @@ import com.swparks.domain.repository.JournalsRepository
  * @param journalsRepository Репозиторий для работы с дневниками
  */
 class SyncJournalsUseCase(
-    private val journalsRepository: JournalsRepository
+    private val journalsRepository: JournalsRepositoryImpl
 ) {
     /**
      * Обновить дневники пользователя с сервера.

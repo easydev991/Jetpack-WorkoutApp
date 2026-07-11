@@ -1,6 +1,6 @@
 package com.swparks.domain.usecase
 
-import com.swparks.domain.repository.JournalEntriesRepository
+import com.swparks.data.repository.JournalEntriesRepositoryImpl
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -15,7 +15,7 @@ import org.junit.Test
  * Проверяет корректность проверки возможности удаления записи
  */
 class CanDeleteJournalEntryUseCaseTest {
-    private lateinit var mockRepository: JournalEntriesRepository
+    private lateinit var mockRepository: JournalEntriesRepositoryImpl
     private lateinit var useCase: CanDeleteJournalEntryUseCase
 
     private val testJournalId = 456L

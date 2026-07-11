@@ -8,7 +8,7 @@ import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
-import com.swparks.domain.provider.AvatarHelper
+import com.swparks.data.provider.AvatarHelperImpl
 import com.swparks.domain.usecase.CreateEventUseCase
 import com.swparks.domain.usecase.EditEventUseCase
 import com.swparks.ui.model.EventForm
@@ -40,7 +40,7 @@ class EventFormViewModel(
     private val mode: EventFormMode,
     private val createEventUseCase: CreateEventUseCase,
     private val editEventUseCase: EditEventUseCase,
-    private val avatarHelper: AvatarHelper,
+    private val avatarHelper: AvatarHelperImpl,
     private val logger: Logger,
     private val userNotifier: UserNotifier,
     private val analyticsService: AnalyticsService

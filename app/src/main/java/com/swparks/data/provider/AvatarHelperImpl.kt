@@ -2,7 +2,6 @@ package com.swparks.data.provider
 
 import android.content.Context
 import android.net.Uri
-import com.swparks.domain.provider.AvatarHelper
 import com.swparks.util.ImageUtils
 import com.swparks.util.UriUtils
 
@@ -13,8 +12,8 @@ import com.swparks.util.UriUtils
  */
 class AvatarHelperImpl(
     private val context: Context
-) : AvatarHelper {
-    override fun isSupportedMimeType(uri: Uri): Boolean = ImageUtils.isSupportedMimeType(context, uri)
+) {
+    fun isSupportedMimeType(uri: Uri): Boolean = ImageUtils.isSupportedMimeType(context, uri)
 
-    override fun uriToByteArray(uri: Uri): Result<ByteArray> = UriUtils.uriToByteArray(context, uri)
+    fun uriToByteArray(uri: Uri): Result<ByteArray> = UriUtils.uriToByteArray(context, uri)
 }
