@@ -14,9 +14,9 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Unit тесты для [UserConverters]
+ * Unit тесты для [AppConverters]
  */
-class UserConvertersTest {
+class AppConvertersTest {
     @Before
     fun setup() {
         mockkStatic(Log::class)
@@ -38,7 +38,7 @@ class UserConvertersTest {
             )
 
         // When
-        val result = UserConverters.fromParksList(parks)
+        val result = AppConverters.fromParksList(parks)
 
         // Then
         assertNotNull(result)
@@ -51,7 +51,7 @@ class UserConvertersTest {
     @Test
     fun fromParksList_whenNullParks_returnsNull() {
         // When
-        val result = UserConverters.fromParksList(null)
+        val result = AppConverters.fromParksList(null)
 
         // Then
         assertNull(result)
@@ -63,7 +63,7 @@ class UserConvertersTest {
         val parks = emptyList<Park>()
 
         // When
-        val result = UserConverters.fromParksList(parks)
+        val result = AppConverters.fromParksList(parks)
 
         // Then
         assertNotNull(result)
@@ -85,7 +85,7 @@ class UserConvertersTest {
         val json = "[$park1Json,$park2Json]"
 
         // When
-        val result = UserConverters.toParksList(json)
+        val result = AppConverters.toParksList(json)
 
         // Then
         assertNotNull(result)
@@ -99,7 +99,7 @@ class UserConvertersTest {
     @Test
     fun toParksList_whenNullJson_returnsNull() {
         // When
-        val result = UserConverters.toParksList(null)
+        val result = AppConverters.toParksList(null)
 
         // Then
         assertNull(result)
@@ -111,7 +111,7 @@ class UserConvertersTest {
         val invalidJson = "invalid json"
 
         // When
-        val result = UserConverters.toParksList(invalidJson)
+        val result = AppConverters.toParksList(invalidJson)
 
         // Then
         assertNull(result)
@@ -127,7 +127,7 @@ class UserConvertersTest {
                 """"preview":"preview.jpg","unknownField":"value","anotherUnknown":123}]"""
 
         // When
-        val result = UserConverters.toParksList(jsonWithUnknownKeys)
+        val result = AppConverters.toParksList(jsonWithUnknownKeys)
 
         // Then
         assertNotNull(result)
@@ -147,8 +147,8 @@ class UserConvertersTest {
             )
 
         // When
-        val jsonString = UserConverters.fromParksList(originalParks)
-        val restoredParks = UserConverters.toParksList(jsonString)
+        val jsonString = AppConverters.fromParksList(originalParks)
+        val restoredParks = AppConverters.toParksList(jsonString)
 
         // Then
         assertNotNull(restoredParks)

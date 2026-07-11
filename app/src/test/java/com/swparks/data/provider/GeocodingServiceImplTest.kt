@@ -28,7 +28,13 @@ class GeocodingServiceImplTest {
         runTest {
             val capturedLocales = mutableListOf<Locale>()
             val address =
-                Address(Locale("ru", "RU")).apply {
+                Address(
+                    Locale
+                        .Builder()
+                        .setLanguage("ru")
+                        .setRegion("RU")
+                        .build()
+                ).apply {
                     locality = "Москва"
                     subLocality = "Москва"
                     thoroughfare = "Тверская"
@@ -50,7 +56,14 @@ class GeocodingServiceImplTest {
             service.reverseGeocode(55.751244, 37.618423)
 
             assertEquals(1, capturedLocales.size)
-            assertEquals(Locale("ru", "RU"), capturedLocales[0])
+            assertEquals(
+                Locale
+                    .Builder()
+                    .setLanguage("ru")
+                    .setRegion("RU")
+                    .build(),
+                capturedLocales[0]
+            )
         }
 
     @Test
@@ -58,7 +71,13 @@ class GeocodingServiceImplTest {
     fun reverseGeocode_whenApi33AndPlacemarkFound_thenReturnsFormattedResult() =
         runTest {
             val address =
-                Address(Locale("ru", "RU")).apply {
+                Address(
+                    Locale
+                        .Builder()
+                        .setLanguage("ru")
+                        .setRegion("RU")
+                        .build()
+                ).apply {
                     locality = "Москва"
                     subLocality = "Москва"
                     thoroughfare = "Тверская"
@@ -134,7 +153,16 @@ class GeocodingServiceImplTest {
             @Suppress("DEPRECATION")
             every {
                 geocoder.getFromLocation(any(), any(), 1)
-            } returns listOf(Address(Locale("ru", "RU")))
+            } returns
+                listOf(
+                    Address(
+                        Locale
+                            .Builder()
+                            .setLanguage("ru")
+                            .setRegion("RU")
+                            .build()
+                    )
+                )
             val service = createService()
 
             val result = service.reverseGeocode(55.751244, 37.618423)

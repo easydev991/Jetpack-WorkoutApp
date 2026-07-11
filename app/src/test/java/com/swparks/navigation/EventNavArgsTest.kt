@@ -116,9 +116,9 @@ class EventNavArgsTest {
         assertNotNull(args)
         assertEquals(77L, args!!.eventId)
         assertEquals("events", args.source)
-        assertNotNull(args.event)
-        assertEquals(77L, args.event!!.id)
-        assertEquals("Test Event", args.event!!.title)
+        val parsedEvent = requireNotNull(args.event)
+        assertEquals(77L, parsedEvent.id)
+        assertEquals("Test Event", parsedEvent.title)
     }
 
     @Test
