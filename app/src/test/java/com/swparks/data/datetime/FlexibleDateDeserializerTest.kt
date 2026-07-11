@@ -207,4 +207,44 @@ class FlexibleDateDeserializerTest {
         val result = json.decodeFromString<TestModel>(jsonString)
         assertEquals("2026-01-18T07:00:00+00:00", result.date)
     }
+
+    @Test
+    fun deserialize_whenInvalidCalendarDay_thenThrowsSerializationException() {
+        val jsonString = """{"date": "2024-02-30"}"""
+        assertThrows(SerializationException::class.java) {
+            json.decodeFromString<TestModel>(jsonString)
+        }
+    }
+
+    @Test
+    fun deserialize_whenInvalidCalendarDayWithTime_thenThrowsSerializationException() {
+        val jsonString = """{"date": "2024-01-32T10:00:00"}"""
+        assertThrows(SerializationException::class.java) {
+            json.decodeFromString<TestModel>(jsonString)
+        }
+    }
+
+    @Test
+    fun deserialize_whenInvalidHourWithMinutesAndSeconds_thenThrowsSerializationException() {
+        val jsonString = """{"date": "2024-01-15T25:00:00"}"""
+        assertThrows(SerializationException::class.java) {
+            json.decodeFromString<TestModel>(jsonString)
+        }
+    }
+
+    @Test
+    fun deserialize_whenInvalidMinuteWithSeconds_thenThrowsSerializationException() {
+        val jsonString = """{"date": "2024-01-15T10:61:00"}"""
+        assertThrows(SerializationException::class.java) {
+            json.decodeFromString<TestModel>(jsonString)
+        }
+    }
+
+    @Test
+    fun deserialize_whenInvalidSecondWithFraction_thenThrowsSerializationException() {
+        val jsonString = """{"date": "2024-01-15T10:30:70Z"}"""
+        assertThrows(SerializationException::class.java) {
+            json.decodeFromString<TestModel>(jsonString)
+        }
+    }
 }
