@@ -39,6 +39,7 @@ class ParkDetailScreenTest {
     val composeTestRule = createComposeRule()
 
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
+    private val chevronDescription = context.getString(R.string.chevron_content_description)
 
     private val testUser =
         User(
@@ -318,7 +319,7 @@ class ParkDetailScreenTest {
             .assertIsDisplayed()
 
         composeTestRule
-            .onAllNodesWithContentDescription("Chevron")
+            .onAllNodesWithContentDescription(chevronDescription)
             .assertCountEquals(0)
     }
 

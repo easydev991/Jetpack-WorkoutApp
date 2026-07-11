@@ -39,6 +39,7 @@ class ParksRootScreenTest {
     val composeTestRule = createComposeRule()
 
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
+    private val createParkDescription = context.getString(R.string.create_park_description)
     private lateinit var fakeViewModel: FakeParksRootViewModel
 
     @Before
@@ -63,7 +64,7 @@ class ParksRootScreenTest {
                     "android.permission.ACCESS_COARSE_LOCATION"
                 )
             )
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // Permission grant may fail on emulator without root, tests will handle this
         }
     }
@@ -103,7 +104,7 @@ class ParksRootScreenTest {
         }
 
         composeTestRule
-            .onNodeWithContentDescription("Создать площадку")
+            .onNodeWithContentDescription(createParkDescription)
             .assertIsDisplayed()
     }
 
@@ -124,7 +125,7 @@ class ParksRootScreenTest {
 
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithContentDescription("Создать площадку")
+            .onNodeWithContentDescription(createParkDescription)
             .assertDoesNotExist()
     }
 
@@ -145,7 +146,7 @@ class ParksRootScreenTest {
         }
 
         composeTestRule
-            .onNodeWithContentDescription("Создать площадку")
+            .onNodeWithContentDescription(createParkDescription)
             .assertIsEnabled()
     }
 

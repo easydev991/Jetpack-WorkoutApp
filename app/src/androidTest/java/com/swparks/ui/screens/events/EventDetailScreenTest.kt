@@ -34,6 +34,7 @@ class EventDetailScreenTest {
     val composeTestRule = createComposeRule()
 
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
+    private val chevronDescription = context.getString(R.string.chevron_content_description)
 
     private fun createTestEvent(
         id: Long = 1L,
@@ -161,7 +162,7 @@ class EventDetailScreenTest {
             .assertIsDisplayed()
 
         composeTestRule
-            .onAllNodesWithContentDescription("Chevron")
+            .onAllNodesWithContentDescription(chevronDescription)
             .assertCountEquals(0)
     }
 

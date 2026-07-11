@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
@@ -105,7 +106,7 @@ fun ListRowView(data: ListRowData) {
                 Image(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onSurfaceVariant),
-                    contentDescription = "Chevron"
+                    contentDescription = stringResource(R.string.chevron_content_description)
                 )
             }
         }

@@ -2,6 +2,7 @@ package com.swparks.ui.screens.themeicon
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
@@ -51,6 +52,11 @@ fun IconPreviewItem(
             MaterialTheme.colorScheme.outline
         }
     val borderWidth = if (isSelected) 4.dp else 2.dp
+    val bounceSpring: SpringSpec<Float> =
+        spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        )
     Box(
         modifier =
             modifier
@@ -83,19 +89,11 @@ fun IconPreviewItem(
             visible = isSelected,
             enter =
                 scaleIn(
-                    animationSpec =
-                        spring(
-                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness = Spring.StiffnessLow
-                        )
+                    animationSpec = bounceSpring
                 ),
             exit =
                 scaleOut(
-                    animationSpec =
-                        spring(
-                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness = Spring.StiffnessLow
-                        )
+                    animationSpec = bounceSpring
                 ),
             modifier =
                 Modifier

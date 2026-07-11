@@ -31,6 +31,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -219,7 +220,7 @@ private fun DialogRowBody(
                     ColorFilter.tint(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
-                contentDescription = "Chevron"
+                contentDescription = stringResource(R.string.chevron_content_description)
             )
         }
     }

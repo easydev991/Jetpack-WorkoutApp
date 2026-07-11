@@ -25,6 +25,7 @@ class ItemListScreenTest {
     val composeTestRule = createComposeRule()
 
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
+    private val checkmarkDescription = context.getString(R.string.checkmark_content_description)
 
     private fun setContent(
         state: ItemListUiState,
@@ -157,7 +158,7 @@ class ItemListScreenTest {
             .assertIsDisplayed()
 
         composeTestRule
-            .onAllNodesWithContentDescription("Checkmark")
+            .onAllNodesWithContentDescription(checkmarkDescription)
             .assertCountEquals(1)
     }
 

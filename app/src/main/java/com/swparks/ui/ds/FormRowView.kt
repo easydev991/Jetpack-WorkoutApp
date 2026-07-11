@@ -124,7 +124,7 @@ fun FormRowView(
                         ColorFilter.tint(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         ),
-                    contentDescription = "Chevron"
+                    contentDescription = stringResource(R.string.chevron_content_description)
                 )
             }
         }

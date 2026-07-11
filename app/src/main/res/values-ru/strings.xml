@@ -464,4 +464,9 @@
     <!-- Map -->
     <string name="see_details">Подробнее</string>
     <string name="my_location_content_description">Центрировать на мне</string>
+
+    <!-- Content descriptions -->
+    <string name="create_park_description">Создать площадку</string>
+    <string name="chevron_content_description">Шеврон</string>
+    <string name="checkmark_content_description">Галочка</string>
 </resources>

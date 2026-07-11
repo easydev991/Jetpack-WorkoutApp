@@ -564,7 +564,7 @@ fun CreateParkFab(
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
-                contentDescription = "Создать площадку"
+                contentDescription = stringResource(R.string.create_park_description)
             )
         }
     }
