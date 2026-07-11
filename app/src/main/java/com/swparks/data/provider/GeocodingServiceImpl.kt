@@ -25,7 +25,14 @@ class GeocodingServiceImpl(
     }
 ) : GeocodingService {
     private val geocoder: Geocoder by lazy {
-        geocoderProvider(context, Locale("ru", "RU"))
+        geocoderProvider(
+            context,
+            Locale
+                .Builder()
+                .setLanguage("ru")
+                .setRegion("RU")
+                .build()
+        )
     }
 
     override suspend fun reverseGeocode(

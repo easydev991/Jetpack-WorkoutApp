@@ -112,7 +112,7 @@ fun ZoomablePhotoView(config: ZoomConfig) {
         }
 
     val transformableState =
-        rememberTransformableState { zoomChange, panChange, _ ->
+        rememberTransformableState { panChange, zoomChange, _, _ ->
             scope.launch {
                 val currentScale = scale.value
                 val newScale =
