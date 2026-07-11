@@ -1,7 +1,7 @@
 package com.swparks.screenshots
 
 import android.Manifest
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
@@ -33,10 +33,11 @@ class WorkoutAppScreenshotsTest {
 
     @Rule
     @JvmField
-    val grantPermissionRule = GrantPermissionRule.grant(
-        Manifest.permission.ACCESS_FINE_LOCATION,
-        Manifest.permission.ACCESS_COARSE_LOCATION
-    )
+    val grantPermissionRule =
+        GrantPermissionRule.grant(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
 
     @Rule
     @JvmField
@@ -84,7 +85,8 @@ class WorkoutAppScreenshotsTest {
         waitForTag(ScreenshotTestTags.PARK_DETAIL_SCREEN)
         pauseForUi(8_000)
         Screengrab.screenshot("3-parkDetails")
-        androidx.test.espresso.Espresso.pressBack()
+        androidx.test.espresso.Espresso
+            .pressBack()
         waitForTag(parkRowTag(ScreenshotScenarioState.PARK_DETAIL_ID))
     }
 
@@ -104,7 +106,8 @@ class WorkoutAppScreenshotsTest {
         waitForTag(ScreenshotTestTags.EVENT_DETAIL_SCREEN)
         pauseForUi(6_000)
         Screengrab.screenshot("5-eventDetails")
-        androidx.test.espresso.Espresso.pressBack()
+        androidx.test.espresso.Espresso
+            .pressBack()
     }
 
     private fun checkProfile() {
@@ -115,12 +118,12 @@ class WorkoutAppScreenshotsTest {
         waitForTag(ScreenshotTestTags.LOGIN_FIELD)
         composeTestRule
             .onNodeWithTag(ScreenshotTestTags.LOGIN_FIELD, useUnmergedTree = true)
-            .performTextInput(DemoData.screenshotLogin)
+            .performTextInput(DemoData.SCREENSHOT_LOGIN)
 
         waitForTag(ScreenshotTestTags.PASSWORD_FIELD)
         composeTestRule
             .onNodeWithTag(ScreenshotTestTags.PASSWORD_FIELD, useUnmergedTree = true)
-            .performTextInput(DemoData.screenshotPassword)
+            .performTextInput(DemoData.SCREENSHOT_PASSWORD)
 
         clickByTag(ScreenshotTestTags.LOGIN_BUTTON)
 
@@ -130,7 +133,7 @@ class WorkoutAppScreenshotsTest {
         waitForTag(ScreenshotTestTags.SEARCH_USER_FIELD)
         composeTestRule
             .onNodeWithTag(ScreenshotTestTags.SEARCH_USER_FIELD, useUnmergedTree = true)
-            .performTextInput(DemoData.screenshotSearchQuery)
+            .performTextInput(DemoData.SCREENSHOT_SEARCH_QUERY)
         pauseForUi(800)
         composeTestRule
             .onNodeWithTag(ScreenshotTestTags.SEARCH_USER_FIELD, useUnmergedTree = true)
@@ -161,7 +164,10 @@ class WorkoutAppScreenshotsTest {
         composeTestRule.waitForIdle()
     }
 
-    private fun clickByTag(tag: String, timeoutMillis: Long = 10_000) {
+    private fun clickByTag(
+        tag: String,
+        timeoutMillis: Long = 10_000
+    ) {
         waitForTag(tag, timeoutMillis)
         composeTestRule
             .onAllNodesWithTag(tag, useUnmergedTree = true)
@@ -169,12 +175,16 @@ class WorkoutAppScreenshotsTest {
             .performClick()
     }
 
-    private fun waitForTag(tag: String, timeoutMillis: Long = 10_000) {
+    private fun waitForTag(
+        tag: String,
+        timeoutMillis: Long = 10_000
+    ) {
         composeTestRule.waitUntil(timeoutMillis) {
             runCatching {
                 composeTestRule
                     .onAllNodesWithTag(tag, useUnmergedTree = true)
-                    .fetchSemanticsNodes().isNotEmpty()
+                    .fetchSemanticsNodes()
+                    .isNotEmpty()
             }.getOrElse { false }
         }
     }
@@ -201,15 +211,17 @@ class WorkoutAppScreenshotsTest {
     private fun grantLocationPermissions() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val device = UiDevice.getInstance(instrumentation)
-        val packageNames = setOf(
-            "com.swparks",
-            instrumentation.targetContext.packageName,
-            instrumentation.context.packageName
-        )
-        val permissions = listOf(
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        )
+        val packageNames =
+            setOf(
+                "com.swparks",
+                instrumentation.targetContext.packageName,
+                instrumentation.context.packageName
+            )
+        val permissions =
+            listOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
         packageNames.forEach { packageName ->
             permissions.forEach { permission ->
                 runCatching {
@@ -230,9 +242,8 @@ class WorkoutAppScreenshotsTest {
     }
 
     private fun parkRowTag(parkId: Long): String = "${ScreenshotTestTags.PARK_ROW_PREFIX}$parkId"
-    private fun eventRowTag(eventId: Long): String =
-        "${ScreenshotTestTags.EVENT_ROW_PREFIX}$eventId"
 
-    private fun searchUserRowTag(userId: Long): String =
-        "${ScreenshotTestTags.SEARCH_USER_ROW_PREFIX}$userId"
+    private fun eventRowTag(eventId: Long): String = "${ScreenshotTestTags.EVENT_ROW_PREFIX}$eventId"
+
+    private fun searchUserRowTag(userId: Long): String = "${ScreenshotTestTags.SEARCH_USER_ROW_PREFIX}$userId"
 }

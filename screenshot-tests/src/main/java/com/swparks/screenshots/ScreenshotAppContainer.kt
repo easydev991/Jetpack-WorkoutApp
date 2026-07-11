@@ -1,9 +1,6 @@
 package com.swparks.screenshots
 
 import android.content.Context
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOf
 import com.swparks.data.AppContainer
 import com.swparks.data.DefaultAppContainer
 import com.swparks.data.model.Country
@@ -16,10 +13,10 @@ import com.swparks.data.provider.ResourcesProviderImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.exception.NotFoundException
 import com.swparks.domain.model.LocationCoordinates
-import com.swparks.domain.repository.CountriesRepository
-import com.swparks.domain.repository.MessagesRepository
 import com.swparks.domain.provider.LocationService
 import com.swparks.domain.provider.LocationSettingsCheckResult
+import com.swparks.domain.repository.CountriesRepository
+import com.swparks.domain.repository.MessagesRepository
 import com.swparks.domain.usecase.IGetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.IGetPastEventsFlowUseCase
 import com.swparks.domain.usecase.IInitializeParksUseCase
@@ -34,6 +31,9 @@ import com.swparks.ui.viewmodel.DialogsViewModel
 import com.swparks.ui.viewmodel.OtherUserProfileViewModel
 import com.swparks.ui.viewmodel.ProfileViewModel
 import com.swparks.ui.viewmodel.SearchUserViewModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 
 /**
  * Screenshot container with deterministic data.
@@ -54,48 +54,54 @@ class ScreenshotAppContainer(
     private val appContext = context.applicationContext
     private val demoParks = DemoData.loadDemoParks(appContext)
     private val demoCountries = DemoData.loadDemoCountries(appContext)
-    private val screenshotSwRepository = ScreenshotSwRepository(
-        delegate = delegate.swRepository,
-        demoParks = demoParks
-    )
-    private val screenshotCountriesRepository = ScreenshotCountriesRepository(
-        countries = demoCountries
-    )
+    private val screenshotSwRepository =
+        ScreenshotSwRepository(
+            delegate = delegate.swRepository,
+            demoParks = demoParks
+        )
+    private val screenshotCountriesRepository =
+        ScreenshotCountriesRepository(
+            countries = demoCountries
+        )
     private val screenshotMessagesRepository = ScreenshotMessagesRepository()
     private val resourcesProvider = ResourcesProviderImpl(appContext)
 
     override val swRepository: SWRepository = screenshotSwRepository
     override val countriesRepository: CountriesRepository = screenshotCountriesRepository
     override val messagesRepository: MessagesRepository = screenshotMessagesRepository
-    override val locationService: LocationService = object : LocationService {
-        override suspend fun getCurrentLocation(): Result<LocationCoordinates> =
-            Result.success(
-                LocationCoordinates(
-                    latitude = MOSCOW_LATITUDE,
-                    longitude = MOSCOW_LONGITUDE
+    override val locationService: LocationService =
+        object : LocationService {
+            override suspend fun getCurrentLocation(): Result<LocationCoordinates> =
+                Result.success(
+                    LocationCoordinates(
+                        latitude = MOSCOW_LATITUDE,
+                        longitude = MOSCOW_LONGITUDE
+                    )
                 )
-            )
 
-        override suspend fun checkLocationSettings(): Result<LocationSettingsCheckResult> =
-            Result.success(LocationSettingsCheckResult.SettingsOk)
-    }
-    override val syncParksUseCase: SyncParksUseCase = SyncParksUseCase(
-        clock = clock,
-        userPreferencesRepository = userPreferencesRepository,
-        swRepository = swRepository,
-        logger = logger
-    )
-    override val syncCountriesUseCase: SyncCountriesUseCase = SyncCountriesUseCase(
-        clock = clock,
-        userPreferencesRepository = userPreferencesRepository,
-        countriesRepository = countriesRepository,
-        logger = logger,
-        analyticsService = analyticsService
-    )
+            override suspend fun checkLocationSettings(): Result<LocationSettingsCheckResult> =
+                Result.success(LocationSettingsCheckResult.SettingsOk)
+        }
+    override val syncParksUseCase: SyncParksUseCase =
+        SyncParksUseCase(
+            clock = clock,
+            userPreferencesRepository = userPreferencesRepository,
+            swRepository = swRepository,
+            logger = logger
+        )
+    override val syncCountriesUseCase: SyncCountriesUseCase =
+        SyncCountriesUseCase(
+            clock = clock,
+            userPreferencesRepository = userPreferencesRepository,
+            countriesRepository = countriesRepository,
+            logger = logger,
+            analyticsService = analyticsService
+        )
 
-    override val initializeParksUseCase: IInitializeParksUseCase = object : IInitializeParksUseCase {
-        override suspend fun invoke(): Result<Unit> = Result.success(Unit)
-    }
+    override val initializeParksUseCase: IInitializeParksUseCase =
+        object : IInitializeParksUseCase {
+            override suspend fun invoke(): Result<Unit> = Result.success(Unit)
+        }
     override val getFutureEventsFlowUseCase: IGetFutureEventsFlowUseCase =
         object : IGetFutureEventsFlowUseCase {
             override fun invoke(): Flow<List<Event>> = screenshotSwRepository.getFutureEventsFlow()
@@ -112,41 +118,45 @@ class ScreenshotAppContainer(
         object : ISyncPastEventsUseCase {
             override suspend fun invoke(): Result<Unit> = Result.success(Unit)
         }
-    override val loginUseCase: ILoginUseCase = object : ILoginUseCase {
-        override suspend fun invoke(credentials: LoginCredentials): Result<LoginSuccess> {
-            if (credentials.login.isBlank() || credentials.password.isBlank()) {
-                return Result.failure(IllegalArgumentException("Логин и пароль обязательны"))
+    override val loginUseCase: ILoginUseCase =
+        object : ILoginUseCase {
+            override suspend fun invoke(credentials: LoginCredentials): Result<LoginSuccess> {
+                if (credentials.login.isBlank() || credentials.password.isBlank()) {
+                    return Result.failure(IllegalArgumentException("Логин и пароль обязательны"))
+                }
+                val loginResult = screenshotSwRepository.login(token = null)
+                loginResult.onSuccess { success ->
+                    userPreferencesRepository.saveCurrentUserId(success.userId)
+                }
+                return loginResult
             }
-            val loginResult = screenshotSwRepository.login(token = null)
-            loginResult.onSuccess { success ->
-                userPreferencesRepository.saveCurrentUserId(success.userId)
-            }
-            return loginResult
         }
-    }
 
-    override fun profileViewModelFactory(): ProfileViewModel = ProfileViewModel(
-        countriesRepository = countriesRepository,
-        swRepository = swRepository,
-        logger = logger,
-        userNotifier = userNotifier,
-        analyticsService = analyticsService
-    )
+    override fun profileViewModelFactory(): ProfileViewModel =
+        ProfileViewModel(
+            countriesRepository = countriesRepository,
+            swRepository = swRepository,
+            logger = logger,
+            userNotifier = userNotifier,
+            analyticsService = analyticsService
+        )
 
-    override fun dialogsViewModelFactory(): DialogsViewModel = DialogsViewModel(
-        messagesRepository = messagesRepository,
-        swRepository = swRepository,
-        logger = logger,
-        resources = resourcesProvider,
-        messageSentNotifier = messageSentNotifier,
-        analyticsService = analyticsService
-    )
+    override fun dialogsViewModelFactory(): DialogsViewModel =
+        DialogsViewModel(
+            messagesRepository = messagesRepository,
+            swRepository = swRepository,
+            logger = logger,
+            resources = resourcesProvider,
+            messageSentNotifier = messageSentNotifier,
+            analyticsService = analyticsService
+        )
 
-    override fun searchUserViewModelFactory(): SearchUserViewModel = SearchUserViewModel(
-        swRepository = swRepository,
-        logger = logger,
-        analyticsService = analyticsService
-    )
+    override fun searchUserViewModelFactory(): SearchUserViewModel =
+        SearchUserViewModel(
+            swRepository = swRepository,
+            logger = logger,
+            analyticsService = analyticsService
+        )
 
     override fun otherUserProfileViewModelFactory(userId: Long): OtherUserProfileViewModel =
         OtherUserProfileViewModel(
@@ -176,12 +186,19 @@ private class ScreenshotSwRepository(
     override val isAuthorized: Flow<Boolean> = isAuthorizedFlow
 
     override fun getCurrentUserFlow(): Flow<User?> = currentUserFlow
+
     override fun getParksFlow(): Flow<List<com.swparks.data.model.Park>> = parksFlow
+
     override fun getFutureEventsFlow(): Flow<List<Event>> = futureEventsFlow
+
     override fun getPastEventsFlow(): Flow<List<Event>> = pastEventsFlow
+
     override fun getFriendsFlow(): Flow<List<User>> = friendsFlow
+
     override fun getFriendRequestsFlow(): Flow<List<User>> = friendRequestsFlow
+
     override fun getBlacklistFlow(): Flow<List<User>> = blacklistFlow
+
     override fun getFriendsCountFlow(): Flow<Int> = flowOf(DemoData.demoAuthorizedUser.friendsCount ?: 0)
 
     override suspend fun clearUserData() {
@@ -201,20 +218,21 @@ private class ScreenshotSwRepository(
     }
 
     override suspend fun getUser(userId: Long): Result<User> {
-        val user = when (userId) {
-            DemoData.demoAuthorizedUser.id -> DemoData.demoAuthorizedUser
-            DemoData.demoUser.id -> DemoData.demoUser
-            DemoData.demoSearchUser.id -> DemoData.demoSearchUser
-            else -> null
-        } ?: return Result.failure(IllegalArgumentException("User not found: $userId"))
+        val user =
+            when (userId) {
+                DemoData.demoAuthorizedUser.id -> DemoData.demoAuthorizedUser
+                DemoData.demoUser.id -> DemoData.demoUser
+                DemoData.demoSearchUser.id -> DemoData.demoSearchUser
+                else -> null
+            } ?: return Result.failure(IllegalArgumentException("User not found: $userId"))
         return Result.success(user)
     }
 
     override suspend fun syncFutureEvents(): Result<Unit> = Result.success(Unit)
+
     override suspend fun syncPastEvents(): Result<Unit> = Result.success(Unit)
 
-    override suspend fun getAllParks(): Result<List<com.swparks.data.model.Park>> =
-        Result.success(parksFlow.value)
+    override suspend fun getAllParks(): Result<List<com.swparks.data.model.Park>> = Result.success(parksFlow.value)
 
     override suspend fun getPark(id: Long): Result<com.swparks.data.model.Park> {
         val fallback = parksFlow.value.firstOrNull { it.id == id }
@@ -230,9 +248,8 @@ private class ScreenshotSwRepository(
         return if (fallback != null) DemoData.parkDetailsById(parkId, fallback) else null
     }
 
-    override suspend fun getParksForUser(userId: Long): Result<List<com.swparks.data.model.Park>> {
-        return Result.success(DemoData.demoParksForUser(parksFlow.value))
-    }
+    override suspend fun getParksForUser(userId: Long): Result<List<com.swparks.data.model.Park>> =
+        Result.success(DemoData.demoParksForUser(parksFlow.value))
 
     override suspend fun importSeedParks(context: Context) = Unit
 
@@ -241,33 +258,31 @@ private class ScreenshotSwRepository(
     }
 
     override suspend fun cachePark(park: com.swparks.data.model.Park) {
-        parksFlow.value = parksFlow.value
-            .filterNot { it.id == park.id }
-            .plus(park)
-            .sortedBy { it.id }
+        parksFlow.value =
+            parksFlow.value
+                .filterNot { it.id == park.id }
+                .plus(park)
+                .sortedBy { it.id }
     }
 
-    override suspend fun getCachedParksForUser(userId: Long): List<com.swparks.data.model.Park>? {
-        return DemoData.demoParksForUser(parksFlow.value)
-    }
+    override suspend fun getCachedParksForUser(userId: Long): List<com.swparks.data.model.Park>? =
+        DemoData.demoParksForUser(parksFlow.value)
 
     override suspend fun hasCachedParksForUser(userId: Long): Boolean = true
 
-    override suspend fun getUpdatedParks(date: String): Result<List<com.swparks.data.model.Park>> {
-        return Result.success(parksFlow.value)
-    }
+    override suspend fun getUpdatedParks(date: String): Result<List<com.swparks.data.model.Park>> = Result.success(parksFlow.value)
 
-    override suspend fun getEvents(type: EventType): Result<List<Event>> {
-        return when (type) {
+    override suspend fun getEvents(type: EventType): Result<List<Event>> =
+        when (type) {
             EventType.FUTURE -> Result.success(futureEventsFlow.value)
             EventType.PAST -> Result.success(pastEventsFlow.value)
         }
-    }
 
     override suspend fun getEvent(id: Long): Result<Event> {
-        val event = allEvents().firstOrNull { it.id == id } ?: return Result.failure(
-            NotFoundException.EventNotFound(id)
-        )
+        val event =
+            allEvents().firstOrNull { it.id == id } ?: return Result.failure(
+                NotFoundException.EventNotFound(id)
+            )
         return Result.success(event)
     }
 
@@ -277,7 +292,10 @@ private class ScreenshotSwRepository(
         return Result.success(Unit)
     }
 
-    override suspend fun changeIsGoingToEvent(go: Boolean, eventId: Long): Result<Unit> {
+    override suspend fun changeIsGoingToEvent(
+        go: Boolean,
+        eventId: Long
+    ): Result<Unit> {
         updateEvent(eventId) { event ->
             event.copy(trainHere = go)
         }
@@ -296,19 +314,22 @@ private class ScreenshotSwRepository(
         )
     }
 
-    override suspend fun findUsers(name: String): Result<List<User>> {
-        return Result.success(DemoData.searchUsers(name))
-    }
+    override suspend fun findUsers(name: String): Result<List<User>> = Result.success(DemoData.searchUsers(name))
 
     private fun allEvents(): List<Event> = futureEventsFlow.value + pastEventsFlow.value
 
-    private fun updateEvent(eventId: Long, transform: (Event) -> Event) {
-        futureEventsFlow.value = futureEventsFlow.value.map { event ->
-            if (event.id == eventId) transform(event) else event
-        }
-        pastEventsFlow.value = pastEventsFlow.value.map { event ->
-            if (event.id == eventId) transform(event) else event
-        }
+    private fun updateEvent(
+        eventId: Long,
+        transform: (Event) -> Event
+    ) {
+        futureEventsFlow.value =
+            futureEventsFlow.value.map { event ->
+                if (event.id == eventId) transform(event) else event
+            }
+        pastEventsFlow.value =
+            pastEventsFlow.value.map { event ->
+                if (event.id == eventId) transform(event) else event
+            }
     }
 }
 
@@ -323,17 +344,12 @@ private class ScreenshotCountriesRepository(
 
     override fun getCountriesFlow(): Flow<List<com.swparks.data.model.Country>> = countriesFlow
 
-    override suspend fun getCountryById(countryId: String): com.swparks.data.model.Country? {
-        return countriesById[countryId]
-    }
+    override suspend fun getCountryById(countryId: String): com.swparks.data.model.Country? = countriesById[countryId]
 
-    override suspend fun getCityById(cityId: String): com.swparks.data.model.City? {
-        return citiesById[cityId]
-    }
+    override suspend fun getCityById(cityId: String): com.swparks.data.model.City? = citiesById[cityId]
 
-    override suspend fun getCitiesByCountry(countryId: String): List<com.swparks.data.model.City> {
-        return getCountryById(countryId)?.cities.orEmpty()
-    }
+    override suspend fun getCitiesByCountry(countryId: String): List<com.swparks.data.model.City> =
+        getCountryById(countryId)?.cities.orEmpty()
 
     override suspend fun getAllCities(): List<com.swparks.data.model.City> = citiesById.values.toList()
 

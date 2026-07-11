@@ -23,7 +23,9 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystoreFile = secretsProperties["KEYSTORE_FILE"] as? String ?: ".secrets/keystore/swparks-release.keystore"
+            val keystoreFile =
+                secretsProperties["KEYSTORE_FILE"] as? String
+                    ?: ".secrets/keystore/swparks-release.keystore"
             val keystorePassword = secretsProperties["KEYSTORE_PASSWORD"] as? String ?: ""
             val keyAlias = secretsProperties["KEY_ALIAS"] as? String ?: "upload"
             val keyPassword = secretsProperties["KEY_PASSWORD"] as? String ?: ""
