@@ -11,8 +11,8 @@ import com.swparks.data.model.Event
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.domain.provider.AvatarHelper
-import com.swparks.domain.usecase.ICreateEventUseCase
-import com.swparks.domain.usecase.IEditEventUseCase
+import com.swparks.domain.usecase.CreateEventUseCase
+import com.swparks.domain.usecase.EditEventUseCase
 import com.swparks.ui.model.EventForm
 import com.swparks.ui.model.EventFormMode
 import com.swparks.ui.state.EventFormEvent
@@ -48,8 +48,8 @@ class EventFormViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var createEventUseCase: ICreateEventUseCase
-    private lateinit var editEventUseCase: IEditEventUseCase
+    private lateinit var createEventUseCase: CreateEventUseCase
+    private lateinit var editEventUseCase: EditEventUseCase
     private lateinit var avatarHelper: AvatarHelper
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier

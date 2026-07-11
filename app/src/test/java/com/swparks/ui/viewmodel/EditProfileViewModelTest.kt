@@ -14,7 +14,7 @@ import com.swparks.data.repository.SWRepository
 import com.swparks.domain.provider.AvatarHelper
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
-import com.swparks.domain.usecase.IDeleteUserUseCase
+import com.swparks.domain.usecase.DeleteUserUseCase
 import com.swparks.ui.model.MainUserForm
 import com.swparks.util.AppError
 import com.swparks.util.ImageUtils
@@ -61,7 +61,7 @@ class EditProfileViewModelTest {
 
     private lateinit var swRepository: SWRepository
     private lateinit var countriesRepository: CountriesRepository
-    private lateinit var deleteUserUseCase: IDeleteUserUseCase
+    private lateinit var deleteUserUseCase: DeleteUserUseCase
     private lateinit var avatarHelper: AvatarHelper
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier

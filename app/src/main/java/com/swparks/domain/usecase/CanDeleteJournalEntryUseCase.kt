@@ -12,8 +12,8 @@ import com.swparks.domain.repository.JournalEntriesRepository
  */
 class CanDeleteJournalEntryUseCase(
     private val repository: JournalEntriesRepository
-) : ICanDeleteJournalEntryUseCase {
-    override suspend operator fun invoke(
+) {
+    suspend operator fun invoke(
         entryId: Long,
         journalId: Long
     ): Boolean = repository.canDeleteEntry(entryId, journalId)

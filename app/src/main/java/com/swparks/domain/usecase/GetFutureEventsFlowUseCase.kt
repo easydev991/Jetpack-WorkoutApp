@@ -6,6 +6,6 @@ import kotlinx.coroutines.flow.Flow
 
 class GetFutureEventsFlowUseCase(
     private val swRepository: SWRepository
-) : IGetFutureEventsFlowUseCase {
-    override fun invoke(): Flow<List<Event>> = swRepository.getFutureEventsFlow()
+) {
+    operator fun invoke(): Flow<List<Event>> = swRepository.getFutureEventsFlow()
 }

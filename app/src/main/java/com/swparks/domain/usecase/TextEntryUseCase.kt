@@ -17,10 +17,10 @@ import com.swparks.ui.model.TextEntryOption
  */
 class TextEntryUseCase(
     private val swRepository: SWRepository,
-    private val createJournalUseCase: ICreateJournalUseCase,
+    private val createJournalUseCase: CreateJournalUseCase,
     private val messageSentNotifier: MessageSentNotifier
-) : ITextEntryUseCase {
-    override suspend fun addJournalEntry(
+) {
+    suspend fun addJournalEntry(
         ownerId: Long,
         journalId: Long,
         text: String
@@ -33,7 +33,7 @@ class TextEntryUseCase(
         return result
     }
 
-    override suspend fun editJournalEntry(
+    suspend fun editJournalEntry(
         ownerId: Long,
         journalId: Long,
         entryId: Long,
@@ -47,7 +47,7 @@ class TextEntryUseCase(
         return result
     }
 
-    override suspend fun createJournal(
+    suspend fun createJournal(
         userId: Long,
         title: String
     ): Result<Unit> {
@@ -58,7 +58,7 @@ class TextEntryUseCase(
         return result
     }
 
-    override suspend fun addParkComment(
+    suspend fun addParkComment(
         parkId: Long,
         text: String
     ): Result<Unit> {
@@ -70,7 +70,7 @@ class TextEntryUseCase(
         return result
     }
 
-    override suspend fun editParkComment(
+    suspend fun editParkComment(
         parkId: Long,
         commentId: Long,
         text: String
@@ -83,7 +83,7 @@ class TextEntryUseCase(
         return result
     }
 
-    override suspend fun addEventComment(
+    suspend fun addEventComment(
         eventId: Long,
         text: String
     ): Result<Unit> {
@@ -95,7 +95,7 @@ class TextEntryUseCase(
         return result
     }
 
-    override suspend fun editEventComment(
+    suspend fun editEventComment(
         eventId: Long,
         commentId: Long,
         text: String
@@ -108,7 +108,7 @@ class TextEntryUseCase(
         return result
     }
 
-    override suspend fun sendMessageTo(
+    suspend fun sendMessageTo(
         userId: Long,
         message: String
     ): Result<Unit> {

@@ -8,8 +8,8 @@ import com.swparks.ui.model.JournalAccess
  */
 class EditJournalSettingsUseCase(
     private val repository: SWRepository
-) : IEditJournalSettingsUseCase {
-    override suspend operator fun invoke(
+) {
+    suspend operator fun invoke(
         journalId: Long,
         title: String,
         userId: Long?,

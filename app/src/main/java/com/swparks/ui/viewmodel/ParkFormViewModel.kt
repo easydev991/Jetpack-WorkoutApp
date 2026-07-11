@@ -12,7 +12,7 @@ import com.swparks.data.database.dao.UserDao
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.provider.AvatarHelper
 import com.swparks.domain.provider.GeocodingService
-import com.swparks.domain.usecase.IFindCityByCoordinatesUseCase
+import com.swparks.domain.usecase.FindCityByCoordinatesUseCase
 import com.swparks.ui.model.ParkForm
 import com.swparks.ui.model.ParkFormMode
 import com.swparks.ui.state.ParkFormEvent
@@ -39,7 +39,7 @@ class ParkFormViewModel(
     private val logger: Logger,
     private val userNotifier: UserNotifier,
     private val geocodingService: GeocodingService,
-    private val findCityByCoordinatesUseCase: IFindCityByCoordinatesUseCase,
+    private val findCityByCoordinatesUseCase: FindCityByCoordinatesUseCase,
     private val userDao: UserDao,
     private val analyticsService: AnalyticsService
 ) : ViewModel(),

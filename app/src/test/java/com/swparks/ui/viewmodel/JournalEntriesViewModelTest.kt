@@ -12,11 +12,11 @@ import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.JournalEntry
 import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.usecase.ICanDeleteJournalEntryUseCase
-import com.swparks.domain.usecase.IDeleteJournalEntryUseCase
-import com.swparks.domain.usecase.IEditJournalSettingsUseCase
-import com.swparks.domain.usecase.IGetJournalEntriesUseCase
-import com.swparks.domain.usecase.ISyncJournalEntriesUseCase
+import com.swparks.domain.usecase.CanDeleteJournalEntryUseCase
+import com.swparks.domain.usecase.DeleteJournalEntryUseCase
+import com.swparks.domain.usecase.EditJournalSettingsUseCase
+import com.swparks.domain.usecase.GetJournalEntriesUseCase
+import com.swparks.domain.usecase.SyncJournalEntriesUseCase
 import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalEntriesUiState
 import com.swparks.util.AppError
@@ -54,11 +54,11 @@ class JournalEntriesViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var getJournalEntriesUseCase: IGetJournalEntriesUseCase
-    private lateinit var syncJournalEntriesUseCase: ISyncJournalEntriesUseCase
-    private lateinit var deleteJournalEntryUseCase: IDeleteJournalEntryUseCase
-    private lateinit var canDeleteJournalEntryUseCase: ICanDeleteJournalEntryUseCase
-    private lateinit var editJournalSettingsUseCase: IEditJournalSettingsUseCase
+    private lateinit var getJournalEntriesUseCase: GetJournalEntriesUseCase
+    private lateinit var syncJournalEntriesUseCase: SyncJournalEntriesUseCase
+    private lateinit var deleteJournalEntryUseCase: DeleteJournalEntryUseCase
+    private lateinit var canDeleteJournalEntryUseCase: CanDeleteJournalEntryUseCase
+    private lateinit var editJournalSettingsUseCase: EditJournalSettingsUseCase
     private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var swRepository: SWRepository
     private lateinit var savedStateHandle: SavedStateHandle

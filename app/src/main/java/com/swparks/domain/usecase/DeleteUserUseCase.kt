@@ -19,7 +19,7 @@ import com.swparks.data.repository.SWRepository
 class DeleteUserUseCase(
     private val secureTokenRepository: SecureTokenRepository,
     private val swRepository: SWRepository
-) : IDeleteUserUseCase {
+) {
     private companion object {
         const val TAG = "DeleteUserUseCase"
     }
@@ -33,7 +33,7 @@ class DeleteUserUseCase(
      * @return Result.success если удаление прошло успешно,
      *         Result.failure с ошибкой в противном случае
      */
-    override suspend operator fun invoke(): Result<Unit> {
+    suspend operator fun invoke(): Result<Unit> {
         Log.i(TAG, "Начало удаления аккаунта")
 
         // Отправляем запрос на сервер для удаления профиля

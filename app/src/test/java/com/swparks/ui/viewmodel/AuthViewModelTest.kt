@@ -1,8 +1,8 @@
 package com.swparks.ui.viewmodel
 
 import com.swparks.data.model.LoginSuccess
-import com.swparks.domain.usecase.ILoginUseCase
-import com.swparks.domain.usecase.ILogoutUseCase
+import com.swparks.domain.usecase.LoginUseCase
+import com.swparks.domain.usecase.LogoutUseCase
 import com.swparks.ui.model.LoginCredentials
 import com.swparks.util.AppError
 import com.swparks.util.UserNotifier
@@ -23,8 +23,8 @@ import org.junit.Test
 /** Unit тесты для AuthViewModel */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthViewModelTest {
-    private lateinit var loginUseCase: ILoginUseCase
-    private lateinit var logoutUseCase: ILogoutUseCase
+    private lateinit var loginUseCase: LoginUseCase
+    private lateinit var logoutUseCase: LogoutUseCase
     private lateinit var userNotifier: UserNotifier
     private lateinit var authViewModel: AuthViewModel
 

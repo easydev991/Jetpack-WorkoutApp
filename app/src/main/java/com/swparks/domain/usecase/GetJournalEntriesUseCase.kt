@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.Flow
  */
 class GetJournalEntriesUseCase(
     private val journalEntriesRepository: JournalEntriesRepository
-) : IGetJournalEntriesUseCase {
+) {
     companion object {
         private const val TAG = "GetJournalEntriesUseCase"
     }
@@ -27,7 +27,7 @@ class GetJournalEntriesUseCase(
      * @param journalId Идентификатор дневника
      * @return Flow со списком записей, отсортированным по дате изменения
      */
-    override operator fun invoke(
+    operator fun invoke(
         userId: Long,
         journalId: Long
     ): Flow<List<JournalEntry>> {

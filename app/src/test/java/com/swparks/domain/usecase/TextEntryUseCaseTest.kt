@@ -19,7 +19,7 @@ import org.junit.Test
 /** Unit тесты для TextEntryUseCase */
 class TextEntryUseCaseTest {
     private lateinit var swRepository: SWRepository
-    private lateinit var createJournalUseCase: ICreateJournalUseCase
+    private lateinit var createJournalUseCase: CreateJournalUseCase
     private lateinit var messageSentNotifier: MessageSentNotifier
     private lateinit var textEntryUseCase: TextEntryUseCase
 

@@ -17,16 +17,9 @@ import com.swparks.domain.provider.LocationService
 import com.swparks.domain.provider.LocationSettingsCheckResult
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.repository.MessagesRepository
-import com.swparks.domain.usecase.IGetFutureEventsFlowUseCase
-import com.swparks.domain.usecase.IGetPastEventsFlowUseCase
-import com.swparks.domain.usecase.IInitializeParksUseCase
-import com.swparks.domain.usecase.ILoginUseCase
-import com.swparks.domain.usecase.ISyncFutureEventsUseCase
-import com.swparks.domain.usecase.ISyncPastEventsUseCase
 import com.swparks.domain.usecase.SyncCountriesUseCase
 import com.swparks.domain.usecase.SyncParksUseCase
 import com.swparks.ui.model.EventType
-import com.swparks.ui.model.LoginCredentials
 import com.swparks.ui.viewmodel.DialogsViewModel
 import com.swparks.ui.viewmodel.OtherUserProfileViewModel
 import com.swparks.ui.viewmodel.ProfileViewModel
@@ -97,40 +90,6 @@ class ScreenshotAppContainer(
             logger = logger,
             analyticsService = analyticsService
         )
-
-    override val initializeParksUseCase: IInitializeParksUseCase =
-        object : IInitializeParksUseCase {
-            override suspend fun invoke(): Result<Unit> = Result.success(Unit)
-        }
-    override val getFutureEventsFlowUseCase: IGetFutureEventsFlowUseCase =
-        object : IGetFutureEventsFlowUseCase {
-            override fun invoke(): Flow<List<Event>> = screenshotSwRepository.getFutureEventsFlow()
-        }
-    override val getPastEventsFlowUseCase: IGetPastEventsFlowUseCase =
-        object : IGetPastEventsFlowUseCase {
-            override fun invoke(): Flow<List<Event>> = screenshotSwRepository.getPastEventsFlow()
-        }
-    override val syncFutureEventsUseCase: ISyncFutureEventsUseCase =
-        object : ISyncFutureEventsUseCase {
-            override suspend fun invoke(): Result<Unit> = Result.success(Unit)
-        }
-    override val syncPastEventsUseCase: ISyncPastEventsUseCase =
-        object : ISyncPastEventsUseCase {
-            override suspend fun invoke(): Result<Unit> = Result.success(Unit)
-        }
-    override val loginUseCase: ILoginUseCase =
-        object : ILoginUseCase {
-            override suspend fun invoke(credentials: LoginCredentials): Result<LoginSuccess> {
-                if (credentials.login.isBlank() || credentials.password.isBlank()) {
-                    return Result.failure(IllegalArgumentException("Логин и пароль обязательны"))
-                }
-                val loginResult = screenshotSwRepository.login(token = null)
-                loginResult.onSuccess { success ->
-                    userPreferencesRepository.saveCurrentUserId(success.userId)
-                }
-                return loginResult
-            }
-        }
 
     override fun profileViewModelFactory(): ProfileViewModel =
         ProfileViewModel(

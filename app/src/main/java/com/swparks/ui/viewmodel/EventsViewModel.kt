@@ -15,10 +15,10 @@ import com.swparks.data.model.Event
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.repository.CountriesRepository
-import com.swparks.domain.usecase.IGetFutureEventsFlowUseCase
-import com.swparks.domain.usecase.IGetPastEventsFlowUseCase
-import com.swparks.domain.usecase.ISyncFutureEventsUseCase
-import com.swparks.domain.usecase.ISyncPastEventsUseCase
+import com.swparks.domain.usecase.GetFutureEventsFlowUseCase
+import com.swparks.domain.usecase.GetPastEventsFlowUseCase
+import com.swparks.domain.usecase.SyncFutureEventsUseCase
+import com.swparks.domain.usecase.SyncPastEventsUseCase
 import com.swparks.ui.model.EventKind
 import com.swparks.ui.state.EventsUIState
 import com.swparks.util.AppError
@@ -74,10 +74,10 @@ sealed class EventsEvent {
  */
 @Suppress("LongParameterList")
 class EventsViewModel(
-    private val getFutureEventsFlowUseCase: IGetFutureEventsFlowUseCase,
-    private val syncFutureEventsUseCase: ISyncFutureEventsUseCase,
-    private val getPastEventsFlowUseCase: IGetPastEventsFlowUseCase,
-    private val syncPastEventsUseCase: ISyncPastEventsUseCase,
+    private val getFutureEventsFlowUseCase: GetFutureEventsFlowUseCase,
+    private val syncFutureEventsUseCase: SyncFutureEventsUseCase,
+    private val getPastEventsFlowUseCase: GetPastEventsFlowUseCase,
+    private val syncPastEventsUseCase: SyncPastEventsUseCase,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val countriesRepository: CountriesRepository,
     private val userNotifier: UserNotifier,

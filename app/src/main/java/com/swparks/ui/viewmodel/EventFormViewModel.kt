@@ -9,8 +9,8 @@ import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
 import com.swparks.domain.provider.AvatarHelper
-import com.swparks.domain.usecase.ICreateEventUseCase
-import com.swparks.domain.usecase.IEditEventUseCase
+import com.swparks.domain.usecase.CreateEventUseCase
+import com.swparks.domain.usecase.EditEventUseCase
 import com.swparks.ui.model.EventForm
 import com.swparks.ui.model.EventFormMode
 import com.swparks.ui.state.EventFormEvent
@@ -38,8 +38,8 @@ import java.time.format.DateTimeFormatter
 @Suppress("TooGenericExceptionCaught")
 class EventFormViewModel(
     private val mode: EventFormMode,
-    private val createEventUseCase: ICreateEventUseCase,
-    private val editEventUseCase: IEditEventUseCase,
+    private val createEventUseCase: CreateEventUseCase,
+    private val editEventUseCase: EditEventUseCase,
     private val avatarHelper: AvatarHelper,
     private val logger: Logger,
     private val userNotifier: UserNotifier,

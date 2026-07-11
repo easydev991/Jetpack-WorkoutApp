@@ -9,14 +9,6 @@ import com.swparks.ui.model.LoginCredentials
 import com.swparks.util.CrashReporter
 
 /**
- * Интерфейс для use case авторизации.
- * Создан для удобства тестирования ViewModels.
- */
-interface ILoginUseCase {
-    suspend operator fun invoke(credentials: LoginCredentials): Result<LoginSuccess>
-}
-
-/**
  * Use case для авторизации пользователя.
  *
  * Сохраняет токен в SecureTokenRepository, затем вызывает login в SWRepository.
@@ -34,14 +26,14 @@ class LoginUseCase(
     private val swRepository: SWRepository,
     private val preferencesRepository: UserPreferencesRepository,
     private val crashReporter: CrashReporter
-) : ILoginUseCase {
+) {
     /**
      * Выполняет авторизацию пользователя.
      *
      * @param credentials Учетные данные пользователя (login и password)
      * @return Result<LoginSuccess> с userId или ошибкой
      */
-    override suspend operator fun invoke(credentials: LoginCredentials): Result<LoginSuccess> {
+    suspend operator fun invoke(credentials: LoginCredentials): Result<LoginSuccess> {
         // Сначала сохраняем токен в SecureTokenRepository
         // Токен генерируется из credentials.login и credentials.password через TokenEncoder
         val token = tokenEncoder.encode(credentials)

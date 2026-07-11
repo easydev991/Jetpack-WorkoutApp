@@ -14,11 +14,11 @@ import com.swparks.data.model.toDomain
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.JournalEntry
 import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.usecase.ICanDeleteJournalEntryUseCase
-import com.swparks.domain.usecase.IDeleteJournalEntryUseCase
-import com.swparks.domain.usecase.IEditJournalSettingsUseCase
-import com.swparks.domain.usecase.IGetJournalEntriesUseCase
-import com.swparks.domain.usecase.ISyncJournalEntriesUseCase
+import com.swparks.domain.usecase.CanDeleteJournalEntryUseCase
+import com.swparks.domain.usecase.DeleteJournalEntryUseCase
+import com.swparks.domain.usecase.EditJournalSettingsUseCase
+import com.swparks.domain.usecase.GetJournalEntriesUseCase
+import com.swparks.domain.usecase.SyncJournalEntriesUseCase
 import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.model.canCreateEntry
 import com.swparks.ui.state.JournalEntriesUiState
@@ -46,11 +46,11 @@ import kotlinx.coroutines.launch
  * Используется для уменьшения количества параметров конструктора.
  */
 data class JournalEntriesDeps(
-    val getJournalEntriesUseCase: IGetJournalEntriesUseCase,
-    val syncJournalEntriesUseCase: ISyncJournalEntriesUseCase,
-    val deleteJournalEntryUseCase: IDeleteJournalEntryUseCase,
-    val canDeleteJournalEntryUseCase: ICanDeleteJournalEntryUseCase,
-    val editJournalSettingsUseCase: IEditJournalSettingsUseCase,
+    val getJournalEntriesUseCase: GetJournalEntriesUseCase,
+    val syncJournalEntriesUseCase: SyncJournalEntriesUseCase,
+    val deleteJournalEntryUseCase: DeleteJournalEntryUseCase,
+    val canDeleteJournalEntryUseCase: CanDeleteJournalEntryUseCase,
+    val editJournalSettingsUseCase: EditJournalSettingsUseCase,
     val userPreferencesRepository: UserPreferencesRepository,
     val swRepository: SWRepository,
     val savedStateHandle: SavedStateHandle,

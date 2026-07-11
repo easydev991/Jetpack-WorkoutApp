@@ -13,8 +13,8 @@ import com.swparks.domain.repository.CountriesRepository
  */
 class FindCityByCoordinatesUseCase(
     private val countriesRepository: CountriesRepository
-) : IFindCityByCoordinatesUseCase {
-    override suspend operator fun invoke(
+) {
+    suspend operator fun invoke(
         locality: String?,
         latitude: Double,
         longitude: Double

@@ -11,10 +11,10 @@ import com.swparks.data.model.Event
 import com.swparks.data.model.User
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.repository.CountriesRepository
-import com.swparks.domain.usecase.IGetFutureEventsFlowUseCase
-import com.swparks.domain.usecase.IGetPastEventsFlowUseCase
-import com.swparks.domain.usecase.ISyncFutureEventsUseCase
-import com.swparks.domain.usecase.ISyncPastEventsUseCase
+import com.swparks.domain.usecase.GetFutureEventsFlowUseCase
+import com.swparks.domain.usecase.GetPastEventsFlowUseCase
+import com.swparks.domain.usecase.SyncFutureEventsUseCase
+import com.swparks.domain.usecase.SyncPastEventsUseCase
 import com.swparks.ui.model.EventKind
 import com.swparks.ui.state.EventsUIState
 import com.swparks.ui.viewmodel.EventsEvent
@@ -51,10 +51,10 @@ import java.io.IOException
 @OptIn(ExperimentalCoroutinesApi::class)
 class EventsViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
-    private val mockGetFutureEventsFlowUseCase = mockk<IGetFutureEventsFlowUseCase>(relaxed = true)
-    private val mockSyncFutureEventsUseCase = mockk<ISyncFutureEventsUseCase>(relaxed = true)
-    private val mockGetPastEventsFlowUseCase = mockk<IGetPastEventsFlowUseCase>(relaxed = true)
-    private val mockSyncPastEventsUseCase = mockk<ISyncPastEventsUseCase>(relaxed = true)
+    private val mockGetFutureEventsFlowUseCase = mockk<GetFutureEventsFlowUseCase>(relaxed = true)
+    private val mockSyncFutureEventsUseCase = mockk<SyncFutureEventsUseCase>(relaxed = true)
+    private val mockGetPastEventsFlowUseCase = mockk<GetPastEventsFlowUseCase>(relaxed = true)
+    private val mockSyncPastEventsUseCase = mockk<SyncPastEventsUseCase>(relaxed = true)
     private val mockUserPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
     private val mockCountriesRepository = mockk<CountriesRepository>(relaxed = true)
     private val mockUserNotifier = mockk<UserNotifier>(relaxed = true)

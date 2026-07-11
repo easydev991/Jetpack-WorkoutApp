@@ -14,7 +14,7 @@ import com.swparks.domain.model.EditProfileLocations
 import com.swparks.domain.provider.AvatarHelper
 import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
-import com.swparks.domain.usecase.IDeleteUserUseCase
+import com.swparks.domain.usecase.DeleteUserUseCase
 import com.swparks.ui.model.Gender
 import com.swparks.ui.model.MainUserForm
 import com.swparks.ui.state.EditProfileEvent
@@ -56,7 +56,7 @@ import java.time.format.DateTimeFormatter
 class EditProfileViewModel(
     private val swRepository: SWRepository,
     private val countriesRepository: CountriesRepository,
-    private val deleteUserUseCase: IDeleteUserUseCase,
+    private val deleteUserUseCase: DeleteUserUseCase,
     private val avatarHelper: AvatarHelper,
     private val logger: Logger,
     private val userNotifier: UserNotifier,

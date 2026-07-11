@@ -13,7 +13,7 @@ import com.swparks.domain.repository.JournalEntriesRepository
  */
 class SyncJournalEntriesUseCase(
     private val journalEntriesRepository: JournalEntriesRepository
-) : ISyncJournalEntriesUseCase {
+) {
     /**
      * Обновить записи дневника с сервера.
      *
@@ -21,7 +21,7 @@ class SyncJournalEntriesUseCase(
      * @param journalId Идентификатор дневника
      * @return Result успеха или ошибки операции
      */
-    override suspend operator fun invoke(
+    suspend operator fun invoke(
         userId: Long,
         journalId: Long
     ): Result<Unit> {

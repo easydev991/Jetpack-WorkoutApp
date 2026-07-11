@@ -65,31 +65,7 @@ import com.swparks.domain.usecase.GetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.GetJournalEntriesUseCase
 import com.swparks.domain.usecase.GetJournalsUseCase
 import com.swparks.domain.usecase.GetPastEventsFlowUseCase
-import com.swparks.domain.usecase.ICanDeleteJournalEntryUseCase
-import com.swparks.domain.usecase.IChangePasswordUseCase
-import com.swparks.domain.usecase.ICreateEventUseCase
-import com.swparks.domain.usecase.ICreateJournalUseCase
 import com.swparks.domain.usecase.ICreateParkLocationHandler
-import com.swparks.domain.usecase.IDeleteJournalEntryUseCase
-import com.swparks.domain.usecase.IDeleteJournalUseCase
-import com.swparks.domain.usecase.IDeleteUserUseCase
-import com.swparks.domain.usecase.IEditEventUseCase
-import com.swparks.domain.usecase.IEditJournalSettingsUseCase
-import com.swparks.domain.usecase.IFilterParksUseCase
-import com.swparks.domain.usecase.IFindCityByCoordinatesUseCase
-import com.swparks.domain.usecase.IGetFutureEventsFlowUseCase
-import com.swparks.domain.usecase.IGetJournalEntriesUseCase
-import com.swparks.domain.usecase.IGetJournalsUseCase
-import com.swparks.domain.usecase.IGetPastEventsFlowUseCase
-import com.swparks.domain.usecase.IInitializeParksUseCase
-import com.swparks.domain.usecase.ILoginUseCase
-import com.swparks.domain.usecase.ILogoutUseCase
-import com.swparks.domain.usecase.IResetPasswordUseCase
-import com.swparks.domain.usecase.ISyncFutureEventsUseCase
-import com.swparks.domain.usecase.ISyncJournalEntriesUseCase
-import com.swparks.domain.usecase.ISyncJournalsUseCase
-import com.swparks.domain.usecase.ISyncPastEventsUseCase
-import com.swparks.domain.usecase.ITextEntryUseCase
 import com.swparks.domain.usecase.InitializeParksUseCase
 import com.swparks.domain.usecase.LoginUseCase
 import com.swparks.domain.usecase.LogoutUseCase
@@ -172,11 +148,11 @@ interface AppContainer {
     // Location & Geocoding services
     val locationService: LocationService
     val geocodingService: GeocodingService
-    val findCityByCoordinatesUseCase: IFindCityByCoordinatesUseCase
+    val findCityByCoordinatesUseCase: FindCityByCoordinatesUseCase
     val createParkLocationHandler: ICreateParkLocationHandler
 
     // Parks filter
-    val filterParksUseCase: IFilterParksUseCase
+    val filterParksUseCase: FilterParksUseCase
     val parksFilterDataStore: ParksFilterDataStore
 
     // Use cases для синхронизации данных
@@ -184,33 +160,33 @@ interface AppContainer {
     val syncCountriesUseCase: SyncCountriesUseCase
 
     // Use cases для инициализации площадок
-    val initializeParksUseCase: IInitializeParksUseCase
+    val initializeParksUseCase: InitializeParksUseCase
 
     // Use cases для авторизации
-    val loginUseCase: ILoginUseCase
-    val logoutUseCase: ILogoutUseCase
-    val resetPasswordUseCase: IResetPasswordUseCase
-    val changePasswordUseCase: IChangePasswordUseCase
-    val deleteUserUseCase: IDeleteUserUseCase
+    val loginUseCase: LoginUseCase
+    val logoutUseCase: LogoutUseCase
+    val resetPasswordUseCase: ResetPasswordUseCase
+    val changePasswordUseCase: ChangePasswordUseCase
+    val deleteUserUseCase: DeleteUserUseCase
 
     // Use cases для дневников
-    val getJournalsUseCase: IGetJournalsUseCase
-    val syncJournalsUseCase: ISyncJournalsUseCase
-    val deleteJournalUseCase: IDeleteJournalUseCase
-    val editJournalSettingsUseCase: IEditJournalSettingsUseCase
-    val getJournalEntriesUseCase: IGetJournalEntriesUseCase
-    val syncJournalEntriesUseCase: ISyncJournalEntriesUseCase
-    val deleteJournalEntryUseCase: IDeleteJournalEntryUseCase
-    val canDeleteJournalEntryUseCase: ICanDeleteJournalEntryUseCase
-    val textEntryUseCase: ITextEntryUseCase
+    val getJournalsUseCase: GetJournalsUseCase
+    val syncJournalsUseCase: SyncJournalsUseCase
+    val deleteJournalUseCase: DeleteJournalUseCase
+    val editJournalSettingsUseCase: EditJournalSettingsUseCase
+    val getJournalEntriesUseCase: GetJournalEntriesUseCase
+    val syncJournalEntriesUseCase: SyncJournalEntriesUseCase
+    val deleteJournalEntryUseCase: DeleteJournalEntryUseCase
+    val canDeleteJournalEntryUseCase: CanDeleteJournalEntryUseCase
+    val textEntryUseCase: TextEntryUseCase
 
     // Use cases для мероприятий
-    val getFutureEventsFlowUseCase: IGetFutureEventsFlowUseCase
-    val syncFutureEventsUseCase: ISyncFutureEventsUseCase
-    val getPastEventsFlowUseCase: IGetPastEventsFlowUseCase
-    val syncPastEventsUseCase: ISyncPastEventsUseCase
-    val createEventUseCase: ICreateEventUseCase
-    val editEventUseCase: IEditEventUseCase
+    val getFutureEventsFlowUseCase: GetFutureEventsFlowUseCase
+    val syncFutureEventsUseCase: SyncFutureEventsUseCase
+    val getPastEventsFlowUseCase: GetPastEventsFlowUseCase
+    val syncPastEventsUseCase: SyncPastEventsUseCase
+    val createEventUseCase: CreateEventUseCase
+    val editEventUseCase: EditEventUseCase
 
     /** Фабрика для ProfileViewModel (единый контейнер обеспечивает одну БД с LoginViewModel). */
     fun profileViewModelFactory(): ProfileViewModel
@@ -338,7 +314,7 @@ class DefaultAppContainer(
         GeocodingServiceImpl(appContext)
     }
 
-    override val findCityByCoordinatesUseCase: IFindCityByCoordinatesUseCase by lazy {
+    override val findCityByCoordinatesUseCase: FindCityByCoordinatesUseCase by lazy {
         FindCityByCoordinatesUseCase(countriesRepository)
     }
 
@@ -352,7 +328,7 @@ class DefaultAppContainer(
         ParksFilterDataStore(appContext)
     }
 
-    override val filterParksUseCase: IFilterParksUseCase by lazy {
+    override val filterParksUseCase: FilterParksUseCase by lazy {
         FilterParksUseCase()
     }
 
@@ -366,7 +342,7 @@ class DefaultAppContainer(
         SyncCountriesUseCase(clock, userPreferencesRepository, countriesRepository, logger, analyticsService)
     }
 
-    override val initializeParksUseCase: IInitializeParksUseCase by lazy {
+    override val initializeParksUseCase: InitializeParksUseCase by lazy {
         InitializeParksUseCase(appContext, swRepository, logger)
     }
 
@@ -578,7 +554,7 @@ class DefaultAppContainer(
         TokenEncoder()
     }
 
-    override val loginUseCase: ILoginUseCase by lazy {
+    override val loginUseCase: LoginUseCase by lazy {
         LoginUseCase(
             tokenEncoder,
             secureTokenRepository,
@@ -588,7 +564,7 @@ class DefaultAppContainer(
         )
     }
 
-    override val logoutUseCase: ILogoutUseCase by lazy {
+    override val logoutUseCase: LogoutUseCase by lazy {
         LogoutUseCase(
             secureTokenRepository,
             swRepository,
@@ -596,25 +572,25 @@ class DefaultAppContainer(
         )
     }
 
-    override val resetPasswordUseCase: IResetPasswordUseCase by lazy {
+    override val resetPasswordUseCase: ResetPasswordUseCase by lazy {
         ResetPasswordUseCase(swRepository)
     }
 
-    override val changePasswordUseCase: IChangePasswordUseCase by lazy {
+    override val changePasswordUseCase: ChangePasswordUseCase by lazy {
         ChangePasswordUseCase(swRepository, secureTokenRepository, tokenEncoder)
     }
 
-    override val deleteUserUseCase: IDeleteUserUseCase by lazy {
+    override val deleteUserUseCase: DeleteUserUseCase by lazy {
         DeleteUserUseCase(secureTokenRepository, swRepository)
     }
 
     // ==================== Use cases для дневников ====================
 
-    override val getJournalsUseCase: IGetJournalsUseCase by lazy {
+    override val getJournalsUseCase: GetJournalsUseCase by lazy {
         GetJournalsUseCase(journalsRepository)
     }
 
-    override val syncJournalsUseCase: ISyncJournalsUseCase by lazy {
+    override val syncJournalsUseCase: SyncJournalsUseCase by lazy {
         SyncJournalsUseCase(journalsRepository)
     }
 
@@ -623,50 +599,50 @@ class DefaultAppContainer(
     // Примечание: Use Case'ы являются stateless-компонентами и не зависят от конкретных
     // userId и journalId при создании. Эти параметры передаются в методах invoke() Use Case'ов.
 
-    override val getJournalEntriesUseCase: IGetJournalEntriesUseCase by lazy {
+    override val getJournalEntriesUseCase: GetJournalEntriesUseCase by lazy {
         GetJournalEntriesUseCase(journalEntriesRepository)
     }
 
-    override val syncJournalEntriesUseCase: ISyncJournalEntriesUseCase by lazy {
+    override val syncJournalEntriesUseCase: SyncJournalEntriesUseCase by lazy {
         SyncJournalEntriesUseCase(journalEntriesRepository)
     }
-    override val deleteJournalEntryUseCase: IDeleteJournalEntryUseCase by lazy {
+    override val deleteJournalEntryUseCase: DeleteJournalEntryUseCase by lazy {
         DeleteJournalEntryUseCase(journalEntriesRepository)
     }
-    override val canDeleteJournalEntryUseCase: ICanDeleteJournalEntryUseCase by lazy {
+    override val canDeleteJournalEntryUseCase: CanDeleteJournalEntryUseCase by lazy {
         CanDeleteJournalEntryUseCase(journalEntriesRepository)
     }
-    override val deleteJournalUseCase: IDeleteJournalUseCase by lazy {
+    override val deleteJournalUseCase: DeleteJournalUseCase by lazy {
         DeleteJournalUseCase(swRepository)
     }
-    override val editJournalSettingsUseCase: IEditJournalSettingsUseCase by lazy {
+    override val editJournalSettingsUseCase: EditJournalSettingsUseCase by lazy {
         EditJournalSettingsUseCase(swRepository)
     }
-    val createJournalUseCase: ICreateJournalUseCase by lazy {
+    val createJournalUseCase: CreateJournalUseCase by lazy {
         CreateJournalUseCase(swRepository)
     }
-    override val textEntryUseCase: ITextEntryUseCase by lazy {
+    override val textEntryUseCase: TextEntryUseCase by lazy {
         TextEntryUseCase(swRepository, createJournalUseCase, messageSentNotifier)
     }
 
     // ==================== Use cases для мероприятий ====================
 
-    override val getFutureEventsFlowUseCase: IGetFutureEventsFlowUseCase by lazy {
+    override val getFutureEventsFlowUseCase: GetFutureEventsFlowUseCase by lazy {
         GetFutureEventsFlowUseCase(swRepository)
     }
-    override val syncFutureEventsUseCase: ISyncFutureEventsUseCase by lazy {
+    override val syncFutureEventsUseCase: SyncFutureEventsUseCase by lazy {
         SyncFutureEventsUseCase(swRepository)
     }
-    override val getPastEventsFlowUseCase: IGetPastEventsFlowUseCase by lazy {
+    override val getPastEventsFlowUseCase: GetPastEventsFlowUseCase by lazy {
         GetPastEventsFlowUseCase(swRepository)
     }
-    override val syncPastEventsUseCase: ISyncPastEventsUseCase by lazy {
+    override val syncPastEventsUseCase: SyncPastEventsUseCase by lazy {
         SyncPastEventsUseCase(swRepository)
     }
-    override val createEventUseCase: ICreateEventUseCase by lazy {
+    override val createEventUseCase: CreateEventUseCase by lazy {
         CreateEventUseCase(swRepository)
     }
-    override val editEventUseCase: IEditEventUseCase by lazy {
+    override val editEventUseCase: EditEventUseCase by lazy {
         EditEventUseCase(swRepository)
     }
 

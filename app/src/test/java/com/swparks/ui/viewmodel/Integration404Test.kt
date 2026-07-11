@@ -14,10 +14,10 @@ import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.DeleteEventUseCase
 import com.swparks.domain.usecase.DeleteParkUseCase
-import com.swparks.domain.usecase.IGetFutureEventsFlowUseCase
-import com.swparks.domain.usecase.IGetPastEventsFlowUseCase
-import com.swparks.domain.usecase.ISyncFutureEventsUseCase
-import com.swparks.domain.usecase.ISyncPastEventsUseCase
+import com.swparks.domain.usecase.GetFutureEventsFlowUseCase
+import com.swparks.domain.usecase.GetPastEventsFlowUseCase
+import com.swparks.domain.usecase.SyncFutureEventsUseCase
+import com.swparks.domain.usecase.SyncPastEventsUseCase
 import com.swparks.ui.state.EventsUIState
 import com.swparks.util.AppError
 import com.swparks.util.Logger
@@ -271,10 +271,10 @@ class Integration404Test {
 
             val futureEventsFlow = MutableStateFlow(listOf(testEvent1, testEvent2))
 
-            val mockGetFutureEventsFlowUseCase = mockk<IGetFutureEventsFlowUseCase>(relaxed = true)
-            val mockSyncFutureEventsUseCase = mockk<ISyncFutureEventsUseCase>(relaxed = true)
-            val mockGetPastEventsFlowUseCase = mockk<IGetPastEventsFlowUseCase>(relaxed = true)
-            val mockSyncPastEventsUseCase = mockk<ISyncPastEventsUseCase>(relaxed = true)
+            val mockGetFutureEventsFlowUseCase = mockk<GetFutureEventsFlowUseCase>(relaxed = true)
+            val mockSyncFutureEventsUseCase = mockk<SyncFutureEventsUseCase>(relaxed = true)
+            val mockGetPastEventsFlowUseCase = mockk<GetPastEventsFlowUseCase>(relaxed = true)
+            val mockSyncPastEventsUseCase = mockk<SyncPastEventsUseCase>(relaxed = true)
 
             every { mockGetFutureEventsFlowUseCase() } returns futureEventsFlow
             every { mockGetPastEventsFlowUseCase() } returns flowOf(emptyList())

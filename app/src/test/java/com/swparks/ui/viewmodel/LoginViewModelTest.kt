@@ -2,8 +2,8 @@ package com.swparks.ui.viewmodel
 
 import com.swparks.analytics.AnalyticsService
 import com.swparks.data.model.LoginSuccess
-import com.swparks.domain.usecase.ILoginUseCase
-import com.swparks.domain.usecase.IResetPasswordUseCase
+import com.swparks.domain.usecase.LoginUseCase
+import com.swparks.domain.usecase.ResetPasswordUseCase
 import com.swparks.ui.model.LoginCredentials
 import com.swparks.ui.state.LoginEvent
 import com.swparks.ui.state.LoginUiState
@@ -33,8 +33,8 @@ class LoginViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var loginUseCase: ILoginUseCase
-    private lateinit var resetPasswordUseCase: IResetPasswordUseCase
+    private lateinit var loginUseCase: LoginUseCase
+    private lateinit var resetPasswordUseCase: ResetPasswordUseCase
     private lateinit var loginViewModel: LoginViewModel
 
     private val testLoginSuccess = LoginSuccess(userId = 123L)

@@ -5,7 +5,7 @@ import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
 import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.usecase.IChangePasswordUseCase
+import com.swparks.domain.usecase.ChangePasswordUseCase
 import com.swparks.ui.state.ChangePasswordEvent
 import com.swparks.ui.state.ChangePasswordUiState
 import com.swparks.util.AppError
@@ -36,7 +36,7 @@ class ChangePasswordViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var analyticsService: AnalyticsService
-    private lateinit var changePasswordUseCase: IChangePasswordUseCase
+    private lateinit var changePasswordUseCase: ChangePasswordUseCase
     private lateinit var userNotifier: UserNotifier
     private lateinit var resourcesProvider: ResourcesProvider
     private lateinit var viewModel: ChangePasswordViewModel

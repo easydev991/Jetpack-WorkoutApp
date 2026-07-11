@@ -19,7 +19,7 @@ class LogoutUseCase(
     private val secureTokenRepository: SecureTokenRepository,
     private val swRepository: SWRepository,
     private val crashReporter: CrashReporter
-) : ILogoutUseCase {
+) {
     private companion object {
         const val TAG = "LogoutUseCase"
     }
@@ -30,7 +30,7 @@ class LogoutUseCase(
      * Очищает токен авторизации, сбрасывает флаг isAuthorized.
      * Очищает все данные пользователя из локального хранилища.
      */
-    override suspend operator fun invoke() {
+    suspend operator fun invoke() {
         // Очищаем токен авторизации
         secureTokenRepository.saveAuthToken(null)
 

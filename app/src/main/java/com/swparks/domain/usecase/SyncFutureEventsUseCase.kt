@@ -4,6 +4,6 @@ import com.swparks.data.repository.SWRepository
 
 class SyncFutureEventsUseCase(
     private val swRepository: SWRepository
-) : ISyncFutureEventsUseCase {
-    override suspend fun invoke(): Result<Unit> = swRepository.syncFutureEvents()
+) {
+    suspend operator fun invoke(): Result<Unit> = swRepository.syncFutureEvents()
 }

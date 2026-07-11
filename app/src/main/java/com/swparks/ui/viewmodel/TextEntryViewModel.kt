@@ -6,7 +6,7 @@ import android.net.NetworkCapabilities
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.swparks.R
-import com.swparks.domain.usecase.ITextEntryUseCase
+import com.swparks.domain.usecase.TextEntryUseCase
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.state.TextEntryEvent
 import com.swparks.ui.state.TextEntryUiState
@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
  * @param context Контекст приложения для проверки сетевого подключения
  */
 class TextEntryViewModel(
-    private val textEntryUseCase: ITextEntryUseCase,
+    private val textEntryUseCase: TextEntryUseCase,
     private val userNotifier: UserNotifier,
     private val mode: TextEntryMode,
     private val context: Context

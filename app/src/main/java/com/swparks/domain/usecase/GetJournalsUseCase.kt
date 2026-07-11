@@ -14,12 +14,12 @@ import kotlinx.coroutines.flow.Flow
  */
 class GetJournalsUseCase(
     private val journalsRepository: JournalsRepository
-) : IGetJournalsUseCase {
+) {
     /**
      * Получить поток дневников пользователя.
      *
      * @param userId Идентификатор пользователя
      * @return Flow со списком дневников, отсортированным по дате изменения
      */
-    override operator fun invoke(userId: Long): Flow<List<Journal>> = journalsRepository.observeJournals(userId)
+    operator fun invoke(userId: Long): Flow<List<Journal>> = journalsRepository.observeJournals(userId)
 }

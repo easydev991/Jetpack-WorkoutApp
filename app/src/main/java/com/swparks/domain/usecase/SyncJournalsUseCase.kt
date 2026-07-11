@@ -13,14 +13,14 @@ import com.swparks.domain.repository.JournalsRepository
  */
 class SyncJournalsUseCase(
     private val journalsRepository: JournalsRepository
-) : ISyncJournalsUseCase {
+) {
     /**
      * Обновить дневники пользователя с сервера.
      *
      * @param userId Идентификатор пользователя
      * @return Result успеха или ошибки операции
      */
-    override suspend operator fun invoke(userId: Long): Result<Unit> {
+    suspend operator fun invoke(userId: Long): Result<Unit> {
         Log.i("SyncJournalsUseCase", "Запуск синхронизации дневников для пользователя: $userId")
         return journalsRepository.refreshJournals(userId)
     }

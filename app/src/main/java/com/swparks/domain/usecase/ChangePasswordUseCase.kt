@@ -6,19 +6,12 @@ import com.swparks.data.repository.SWRepository
 import com.swparks.ui.model.LoginCredentials
 import kotlinx.coroutines.flow.first
 
-interface IChangePasswordUseCase {
-    suspend operator fun invoke(
-        current: String,
-        new: String
-    ): Result<Unit>
-}
-
 class ChangePasswordUseCase(
     private val swRepository: SWRepository,
     private val secureTokenRepository: SecureTokenRepository,
     private val tokenEncoder: TokenEncoder
-) : IChangePasswordUseCase {
-    override suspend operator fun invoke(
+) {
+    suspend operator fun invoke(
         current: String,
         new: String
     ): Result<Unit> {

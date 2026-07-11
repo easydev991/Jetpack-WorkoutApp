@@ -8,7 +8,7 @@ import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
 import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.usecase.IChangePasswordUseCase
+import com.swparks.domain.usecase.ChangePasswordUseCase
 import com.swparks.ui.state.ChangePasswordEvent
 import com.swparks.ui.state.ChangePasswordUiState
 import com.swparks.util.AppError
@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 
 @Suppress("TooGenericExceptionCaught", "UnusedPrivateProperty")
 class ChangePasswordViewModel(
-    private val changePasswordUseCase: IChangePasswordUseCase,
+    private val changePasswordUseCase: ChangePasswordUseCase,
     private val logger: Logger,
     private val userNotifier: UserNotifier,
     private val resources: ResourcesProvider,

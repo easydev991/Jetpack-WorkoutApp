@@ -7,8 +7,8 @@ import com.swparks.data.repository.SWRepository
  */
 class CreateJournalUseCase(
     private val repository: SWRepository
-) : ICreateJournalUseCase {
-    override suspend fun invoke(
+) {
+    suspend operator fun invoke(
         userId: Long,
         title: String
     ): Result<Unit> = repository.createJournal(title, userId)

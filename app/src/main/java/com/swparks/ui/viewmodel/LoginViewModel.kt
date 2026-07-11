@@ -10,8 +10,8 @@ import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
-import com.swparks.domain.usecase.ILoginUseCase
-import com.swparks.domain.usecase.IResetPasswordUseCase
+import com.swparks.domain.usecase.LoginUseCase
+import com.swparks.domain.usecase.ResetPasswordUseCase
 import com.swparks.ui.model.LoginCredentials
 import com.swparks.ui.state.LoginEvent
 import com.swparks.ui.state.LoginUiState
@@ -39,8 +39,8 @@ import kotlinx.coroutines.launch
  */
 class LoginViewModel(
     private val logger: Logger,
-    private val loginUseCase: ILoginUseCase,
-    private val resetPasswordUseCase: IResetPasswordUseCase,
+    private val loginUseCase: LoginUseCase,
+    private val resetPasswordUseCase: ResetPasswordUseCase,
     private val analyticsService: AnalyticsService
 ) : ViewModel(),
     ILoginViewModel {

@@ -9,7 +9,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FilterParksUseCaseTest {
-    private val filterParksUseCase: IFilterParksUseCase = FilterParksUseCase()
+    private val filterParksUseCase: FilterParksUseCase = FilterParksUseCase()
 
     private fun createPark(
         sizeID: Int,

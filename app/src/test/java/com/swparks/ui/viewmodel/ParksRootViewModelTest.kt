@@ -18,8 +18,7 @@ import com.swparks.domain.provider.LocationService
 import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.FilterParksUseCase
 import com.swparks.domain.usecase.ICreateParkLocationHandler
-import com.swparks.domain.usecase.IFilterParksUseCase
-import com.swparks.domain.usecase.IInitializeParksUseCase
+import com.swparks.domain.usecase.InitializeParksUseCase
 import com.swparks.domain.usecase.SyncParksUseCase
 import com.swparks.ui.model.ParksTab
 import com.swparks.util.Logger
@@ -51,11 +50,11 @@ import org.robolectric.RobolectricTestRunner
 class ParksRootViewModelTest {
     private lateinit var createParkLocationHandler: ICreateParkLocationHandler
     private lateinit var logger: Logger
-    private lateinit var filterParksUseCase: IFilterParksUseCase
+    private lateinit var filterParksUseCase: FilterParksUseCase
     private lateinit var parksFilterDataStore: ParksFilterDataStore
     private lateinit var countriesRepository: CountriesRepository
     private lateinit var swRepository: SWRepository
-    private lateinit var initializeParksUseCase: IInitializeParksUseCase
+    private lateinit var initializeParksUseCase: InitializeParksUseCase
     private lateinit var userNotifier: UserNotifier
     private lateinit var locationService: LocationService
     private lateinit var syncParksUseCase: SyncParksUseCase

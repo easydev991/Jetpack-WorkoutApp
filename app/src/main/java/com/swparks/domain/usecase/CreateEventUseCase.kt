@@ -6,9 +6,9 @@ import com.swparks.ui.model.EventForm
 
 class CreateEventUseCase(
     private val repository: SWRepository
-) : ICreateEventUseCase {
-    override suspend fun invoke(
+) {
+    suspend operator fun invoke(
         form: EventForm,
-        photos: List<ByteArray>?
+        photos: List<ByteArray>? = null
     ): Result<Event> = repository.saveEvent(id = null, form = form, photos = photos)
 }

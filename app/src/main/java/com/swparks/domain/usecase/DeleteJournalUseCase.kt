@@ -12,8 +12,8 @@ import com.swparks.data.repository.SWRepository
  */
 class DeleteJournalUseCase(
     private val swRepository: SWRepository
-) : IDeleteJournalUseCase {
-    override suspend operator fun invoke(
+) {
+    suspend operator fun invoke(
         userId: Long,
         journalId: Long
     ): Result<Unit> = swRepository.deleteJournal(journalId, userId)

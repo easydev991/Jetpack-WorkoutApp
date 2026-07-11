@@ -23,9 +23,9 @@ import com.swparks.data.repository.SWRepository
 import com.swparks.domain.provider.LocationService
 import com.swparks.domain.provider.LocationSettingsCheckResult
 import com.swparks.domain.repository.CountriesRepository
+import com.swparks.domain.usecase.FilterParksUseCase
 import com.swparks.domain.usecase.ICreateParkLocationHandler
-import com.swparks.domain.usecase.IFilterParksUseCase
-import com.swparks.domain.usecase.IInitializeParksUseCase
+import com.swparks.domain.usecase.InitializeParksUseCase
 import com.swparks.domain.usecase.SyncParksUseCase
 import com.swparks.ui.model.ParksTab
 import com.swparks.ui.screens.parks.map.isValidCoordinates
@@ -52,11 +52,11 @@ import kotlin.math.pow
 class ParksRootViewModel(
     private val createParkLocationHandler: ICreateParkLocationHandler,
     private val logger: Logger,
-    private val filterParksUseCase: IFilterParksUseCase,
+    private val filterParksUseCase: FilterParksUseCase,
     private val parksFilterDataStore: ParksFilterDataStore,
     private val countriesRepository: CountriesRepository,
     private val swRepository: SWRepository,
-    private val initializeParksUseCase: IInitializeParksUseCase,
+    private val initializeParksUseCase: InitializeParksUseCase,
     private val userNotifier: UserNotifier,
     private val locationService: LocationService,
     private val syncParksUseCase: SyncParksUseCase,

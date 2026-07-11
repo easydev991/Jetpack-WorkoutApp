@@ -9,10 +9,10 @@ import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
 import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.usecase.IDeleteJournalUseCase
-import com.swparks.domain.usecase.IEditJournalSettingsUseCase
-import com.swparks.domain.usecase.IGetJournalsUseCase
-import com.swparks.domain.usecase.ISyncJournalsUseCase
+import com.swparks.domain.usecase.DeleteJournalUseCase
+import com.swparks.domain.usecase.EditJournalSettingsUseCase
+import com.swparks.domain.usecase.GetJournalsUseCase
+import com.swparks.domain.usecase.SyncJournalsUseCase
 import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalsUiState
 import com.swparks.util.AppError
@@ -43,10 +43,10 @@ import kotlinx.coroutines.launch
 @Suppress("LongParameterList", "InstanceOfCheckForException")
 class JournalsViewModel(
     private val userId: Long,
-    private val getJournalsUseCase: IGetJournalsUseCase,
-    private val syncJournalsUseCase: ISyncJournalsUseCase,
-    private val deleteJournalUseCase: IDeleteJournalUseCase,
-    private val editJournalSettingsUseCase: IEditJournalSettingsUseCase,
+    private val getJournalsUseCase: GetJournalsUseCase,
+    private val syncJournalsUseCase: SyncJournalsUseCase,
+    private val deleteJournalUseCase: DeleteJournalUseCase,
+    private val editJournalSettingsUseCase: EditJournalSettingsUseCase,
     private val userNotifier: UserNotifier,
     private val resources: ResourcesProvider,
     private val analyticsService: AnalyticsService

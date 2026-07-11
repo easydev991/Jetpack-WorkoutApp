@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import com.swparks.R
-import com.swparks.domain.usecase.ITextEntryUseCase
+import com.swparks.domain.usecase.TextEntryUseCase
 import com.swparks.ui.model.EditInfo
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.state.TextEntryEvent
@@ -37,7 +37,7 @@ class TextEntryViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var textEntryUseCase: ITextEntryUseCase
+    private lateinit var textEntryUseCase: TextEntryUseCase
     private lateinit var userNotifier: UserNotifier
     private lateinit var context: Context
     private lateinit var viewModel: TextEntryViewModel

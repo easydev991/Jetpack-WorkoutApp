@@ -3,8 +3,8 @@ package com.swparks.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.swparks.data.model.LoginSuccess
-import com.swparks.domain.usecase.ILoginUseCase
-import com.swparks.domain.usecase.ILogoutUseCase
+import com.swparks.domain.usecase.LoginUseCase
+import com.swparks.domain.usecase.LogoutUseCase
 import com.swparks.ui.model.LoginCredentials
 import com.swparks.util.AppError
 import com.swparks.util.UserNotifier
@@ -41,8 +41,8 @@ sealed class AuthUiState {
  * @param userNotifier Интерфейс для обработки и отправки ошибок в UI-слой
  */
 class AuthViewModel(
-    private val loginUseCase: ILoginUseCase,
-    private val logoutUseCase: ILogoutUseCase,
+    private val loginUseCase: LoginUseCase,
+    private val logoutUseCase: LogoutUseCase,
     private val userNotifier: UserNotifier
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
