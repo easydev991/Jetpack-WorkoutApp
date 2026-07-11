@@ -1,7 +1,7 @@
 package com.swparks.domain.usecase
 
 import com.swparks.data.model.Country
-import com.swparks.domain.repository.CountriesRepository
+import com.swparks.data.repository.CountriesRepositoryImpl
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
  * @param countriesRepository Репозиторий для работы со справочником стран и городов
  */
 class GetCountriesUseCase(
-    private val countriesRepository: CountriesRepository
+    private val countriesRepository: CountriesRepositoryImpl
 ) {
     /**
      * Получить список всех стран в виде Flow.

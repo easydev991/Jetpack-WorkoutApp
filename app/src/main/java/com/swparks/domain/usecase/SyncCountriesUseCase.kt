@@ -4,7 +4,7 @@ import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.data.UserPreferencesRepository
-import com.swparks.domain.repository.CountriesRepository
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.domain.util.Clock
 import com.swparks.domain.util.isUpdateNeeded
 import com.swparks.util.Logger
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.first
 class SyncCountriesUseCase(
     private val clock: Clock,
     private val userPreferencesRepository: UserPreferencesRepository,
-    private val countriesRepository: CountriesRepository,
+    private val countriesRepository: CountriesRepositoryImpl,
     private val logger: Logger,
     private val analyticsService: AnalyticsService
 ) {

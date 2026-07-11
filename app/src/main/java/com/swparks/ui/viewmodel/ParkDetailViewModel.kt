@@ -17,10 +17,10 @@ import com.swparks.data.model.Comment
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.data.model.removePhotoById
+import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.exception.NotFoundException
-import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.DeleteParkUseCase
 import com.swparks.ui.ds.CommentAction
 import com.swparks.ui.model.EditInfo
@@ -51,13 +51,13 @@ import java.io.IOException
 )
 class ParkDetailViewModel(
     private val swRepository: SWRepository,
-    private val countriesRepository: CountriesRepository,
+    private val countriesRepository: CountriesRepositoryImpl,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val savedStateHandle: SavedStateHandle,
     private val userNotifier: UserNotifier,
     private val logger: Logger,
     private val deleteParkUseCase: DeleteParkUseCase,
-    private val resourcesProvider: ResourcesProvider,
+    private val resourcesProvider: ResourcesProviderImpl,
     private val analyticsService: AnalyticsService
 ) : ViewModel(),
     IParkDetailViewModel {
@@ -69,12 +69,12 @@ class ParkDetailViewModel(
         @Suppress("LongParameterList")
         fun factory(
             swRepository: SWRepository,
-            countriesRepository: CountriesRepository,
+            countriesRepository: CountriesRepositoryImpl,
             userPreferencesRepository: UserPreferencesRepository,
             userNotifier: UserNotifier,
             logger: Logger,
             deleteParkUseCase: DeleteParkUseCase,
-            resourcesProvider: ResourcesProvider,
+            resourcesProvider: ResourcesProviderImpl,
             analyticsService: AnalyticsService
         ): ViewModelProvider.Factory =
             viewModelFactory {

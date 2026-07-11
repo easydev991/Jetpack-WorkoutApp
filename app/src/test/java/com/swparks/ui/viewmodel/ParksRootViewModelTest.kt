@@ -12,10 +12,10 @@ import com.swparks.data.model.ParkFilter
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
 import com.swparks.data.preferences.ParksFilterDataStore
+import com.swparks.data.provider.LocationServiceImpl
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.LocationCoordinates
-import com.swparks.domain.provider.LocationService
-import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.FilterParksUseCase
 import com.swparks.domain.usecase.ICreateParkLocationHandler
 import com.swparks.domain.usecase.InitializeParksUseCase
@@ -52,11 +52,11 @@ class ParksRootViewModelTest {
     private lateinit var logger: Logger
     private lateinit var filterParksUseCase: FilterParksUseCase
     private lateinit var parksFilterDataStore: ParksFilterDataStore
-    private lateinit var countriesRepository: CountriesRepository
+    private lateinit var countriesRepository: CountriesRepositoryImpl
     private lateinit var swRepository: SWRepository
     private lateinit var initializeParksUseCase: InitializeParksUseCase
     private lateinit var userNotifier: UserNotifier
-    private lateinit var locationService: LocationService
+    private lateinit var locationService: LocationServiceImpl
     private lateinit var syncParksUseCase: SyncParksUseCase
     private lateinit var analyticsService: AnalyticsService
     private lateinit var viewModel: ParksRootViewModel

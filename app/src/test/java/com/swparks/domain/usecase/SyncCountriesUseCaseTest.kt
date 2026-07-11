@@ -4,7 +4,7 @@ import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.data.UserPreferencesRepository
-import com.swparks.domain.repository.CountriesRepository
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.domain.util.Clock
 import com.swparks.domain.util.TestClock
 import com.swparks.domain.util.isUpdateNeeded
@@ -24,7 +24,7 @@ import org.junit.Test
 class SyncCountriesUseCaseTest {
     private lateinit var clock: Clock
     private lateinit var userPreferencesRepository: UserPreferencesRepository
-    private lateinit var countriesRepository: CountriesRepository
+    private lateinit var countriesRepository: CountriesRepositoryImpl
     private lateinit var analyticsService: AnalyticsService
     private lateinit var syncCountriesUseCase: SyncCountriesUseCase
 

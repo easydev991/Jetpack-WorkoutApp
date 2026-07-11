@@ -1,7 +1,7 @@
 package com.swparks.domain.usecase
 
 import com.swparks.data.model.NewParkDraft
-import com.swparks.domain.provider.LocationService
+import com.swparks.data.provider.LocationServiceImpl
 import com.swparks.util.AppError
 import com.swparks.util.UserNotifier
 
@@ -9,7 +9,7 @@ import com.swparks.util.UserNotifier
  * Реализация обработчика create-flow после получения разрешения на геолокацию.
  */
 class DefaultCreateParkLocationHandler(
-    private val locationService: LocationService,
+    private val locationService: LocationServiceImpl,
     private val userNotifier: UserNotifier
 ) : ICreateParkLocationHandler {
     override suspend fun invoke(): Result<NewParkDraft> {

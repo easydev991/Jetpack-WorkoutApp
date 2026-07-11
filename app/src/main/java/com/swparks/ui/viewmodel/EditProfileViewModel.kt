@@ -10,10 +10,10 @@ import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
 import com.swparks.data.model.User
 import com.swparks.data.provider.AvatarHelperImpl
+import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.EditProfileLocations
-import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.DeleteUserUseCase
 import com.swparks.ui.model.Gender
 import com.swparks.ui.model.MainUserForm
@@ -55,12 +55,12 @@ import java.time.format.DateTimeFormatter
 @Suppress("TooGenericExceptionCaught", "UnusedPrivateProperty")
 class EditProfileViewModel(
     private val swRepository: SWRepository,
-    private val countriesRepository: CountriesRepository,
+    private val countriesRepository: CountriesRepositoryImpl,
     private val deleteUserUseCase: DeleteUserUseCase,
     private val avatarHelper: AvatarHelperImpl,
     private val logger: Logger,
     private val userNotifier: UserNotifier,
-    private val resources: ResourcesProvider,
+    private val resources: ResourcesProviderImpl,
     private val analyticsService: AnalyticsService
 ) : ViewModel(),
     IEditProfileViewModel {

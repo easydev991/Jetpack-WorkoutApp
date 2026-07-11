@@ -8,10 +8,10 @@ import com.swparks.data.TokenEncoder
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
+import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.RegistrationParams
-import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.model.RegisterForm
 import com.swparks.ui.state.RegisterEvent
 import com.swparks.ui.state.RegisterUiState
@@ -75,8 +75,8 @@ class RegisterViewModel(
     private val secureTokenRepository: SecureTokenRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val tokenEncoder: TokenEncoder,
-    private val countriesRepository: CountriesRepository,
-    private val resources: ResourcesProvider,
+    private val countriesRepository: CountriesRepositoryImpl,
+    private val resources: ResourcesProviderImpl,
     private val userNotifier: UserNotifier
 ) : ViewModel(),
     IRegisterViewModel {

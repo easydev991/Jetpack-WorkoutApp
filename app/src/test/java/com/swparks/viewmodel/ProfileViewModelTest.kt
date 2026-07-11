@@ -9,7 +9,7 @@ import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.SocialUpdates
 import com.swparks.data.model.User
-import com.swparks.domain.repository.CountriesRepository
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.ui.viewmodel.MainDispatcherRule
 import com.swparks.ui.viewmodel.ProfileUiState
 import com.swparks.ui.viewmodel.ProfileViewModel
@@ -43,7 +43,7 @@ class ProfileViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var countriesRepository: CountriesRepository
+    private lateinit var countriesRepository: CountriesRepositoryImpl
     private lateinit var swRepository: com.swparks.data.repository.SWRepository
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier

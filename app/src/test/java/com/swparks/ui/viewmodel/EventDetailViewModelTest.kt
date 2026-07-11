@@ -12,10 +12,10 @@ import com.swparks.data.model.Comment
 import com.swparks.data.model.Event
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
+import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.exception.NotFoundException
-import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.DeleteEventUseCase
 import com.swparks.ui.ds.CommentAction
 import com.swparks.ui.model.TextEntryMode
@@ -51,12 +51,12 @@ class EventDetailViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var swRepository: SWRepository
-    private lateinit var countriesRepository: CountriesRepository
+    private lateinit var countriesRepository: CountriesRepositoryImpl
     private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var userNotifier: UserNotifier
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var deleteEventUseCase: DeleteEventUseCase
-    private lateinit var resourcesProvider: ResourcesProvider
+    private lateinit var resourcesProvider: ResourcesProviderImpl
     private lateinit var analyticsService: AnalyticsService
     private val logger: Logger = NoOpLogger()
 

@@ -4,11 +4,11 @@ import android.util.Log
 import com.swparks.data.database.dao.DialogDao
 import com.swparks.data.database.entity.DialogEntity
 import com.swparks.data.model.toEntity
-import com.swparks.domain.repository.MessagesRepository
 import com.swparks.network.SWApi
 import com.swparks.util.CrashReporter
 import com.swparks.util.Logger
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import retrofit2.HttpException
 import java.io.IOException
 
@@ -22,21 +22,21 @@ import java.io.IOException
  * @property swApi API клиент для работы с сервером
  * @property logger Логгер для записи ошибок
  */
-class MessagesRepositoryImpl(
-    private val dialogsDao: DialogDao,
+open class MessagesRepositoryImpl(
+    private val dialogsDao: DialogDao? = null,
     private val swApi: SWApi,
     private val logger: Logger,
     private val crashReporter: CrashReporter
-) : MessagesRepository {
+) {
     companion object {
         private const val TAG = "MessagesRepository"
     }
 
     // UI подписывается на этот Flow
-    override val dialogs: Flow<List<DialogEntity>> = dialogsDao.getDialogsFlow()
+    open val dialogs: Flow<List<DialogEntity>> = dialogsDao?.getDialogsFlow() ?: flowOf(emptyList())
 
     // Вызывается при открытии экрана и pull-to-refresh
-    override suspend fun refreshDialogs(): Result<Unit> =
+    open suspend fun refreshDialogs(): Result<Unit> =
         try {
             Log.i(TAG, "Загружаем диалоги с сервера")
 
@@ -45,8 +45,9 @@ class MessagesRepositoryImpl(
             Log.i(TAG, "Получено ${remoteDialogs.size} диалогов с сервера")
 
             // Очищаем старые данные и вставляем новые
-            dialogsDao.deleteAll()
-            dialogsDao.insertAll(remoteDialogs.map { it.toEntity() })
+            val dao = checkNotNull(dialogsDao) { "DialogDao is required" }
+            dao.deleteAll()
+            dao.insertAll(remoteDialogs.map { it.toEntity() })
 
             Log.i(TAG, "Успешно сохранено ${remoteDialogs.size} диалогов в БД")
             Result.success(Unit)

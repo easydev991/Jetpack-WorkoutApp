@@ -13,8 +13,8 @@ import com.swparks.analytics.UserActionType
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Event
 import com.swparks.data.model.User
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.SWRepository
-import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.GetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.GetPastEventsFlowUseCase
 import com.swparks.domain.usecase.SyncFutureEventsUseCase
@@ -79,7 +79,7 @@ class EventsViewModel(
     private val getPastEventsFlowUseCase: GetPastEventsFlowUseCase,
     private val syncPastEventsUseCase: SyncPastEventsUseCase,
     private val userPreferencesRepository: UserPreferencesRepository,
-    private val countriesRepository: CountriesRepository,
+    private val countriesRepository: CountriesRepositoryImpl,
     private val userNotifier: UserNotifier,
     private val logger: Logger,
     private val swRepository: SWRepository,

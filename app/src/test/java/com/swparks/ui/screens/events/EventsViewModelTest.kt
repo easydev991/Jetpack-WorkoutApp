@@ -9,8 +9,8 @@ import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.Event
 import com.swparks.data.model.User
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.SWRepository
-import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.GetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.GetPastEventsFlowUseCase
 import com.swparks.domain.usecase.SyncFutureEventsUseCase
@@ -56,7 +56,7 @@ class EventsViewModelTest {
     private val mockGetPastEventsFlowUseCase = mockk<GetPastEventsFlowUseCase>(relaxed = true)
     private val mockSyncPastEventsUseCase = mockk<SyncPastEventsUseCase>(relaxed = true)
     private val mockUserPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
-    private val mockCountriesRepository = mockk<CountriesRepository>(relaxed = true)
+    private val mockCountriesRepository = mockk<CountriesRepositoryImpl>(relaxed = true)
     private val mockUserNotifier = mockk<UserNotifier>(relaxed = true)
     private val mockLogger = mockk<Logger>(relaxed = true)
     private val mockSWRepository = mockk<SWRepository>(relaxed = true)

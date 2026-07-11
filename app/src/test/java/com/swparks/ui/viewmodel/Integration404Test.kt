@@ -8,10 +8,10 @@ import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Event
 import com.swparks.data.model.Park
 import com.swparks.data.model.User
+import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.exception.NotFoundException
-import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.DeleteEventUseCase
 import com.swparks.domain.usecase.DeleteParkUseCase
 import com.swparks.domain.usecase.GetFutureEventsFlowUseCase
@@ -45,12 +45,12 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class Integration404Test {
     private lateinit var swRepository: SWRepository
-    private lateinit var countriesRepository: CountriesRepository
+    private lateinit var countriesRepository: CountriesRepositoryImpl
     private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var userNotifier: UserNotifier
     private lateinit var deleteParkUseCase: DeleteParkUseCase
     private lateinit var deleteEventUseCase: DeleteEventUseCase
-    private lateinit var resourcesProvider: ResourcesProvider
+    private lateinit var resourcesProvider: ResourcesProviderImpl
     private val logger: Logger = NoOpLogger()
     private val analyticsService: AnalyticsService = mockk(relaxed = true)
 

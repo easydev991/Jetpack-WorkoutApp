@@ -7,10 +7,10 @@ import com.swparks.R
 import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
+import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.MessagesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.event.MessageSentNotifier
-import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.repository.MessagesRepository
 import com.swparks.ui.state.DialogsUiState
 import com.swparks.util.Logger
 import kotlinx.coroutines.CancellationException
@@ -38,10 +38,10 @@ import kotlinx.coroutines.launch
  */
 @Suppress("UnusedPrivateProperty")
 class DialogsViewModel(
-    private val messagesRepository: MessagesRepository,
+    private val messagesRepository: MessagesRepositoryImpl,
     private val swRepository: SWRepository,
     private val logger: Logger,
-    private val resources: ResourcesProvider,
+    private val resources: ResourcesProviderImpl,
     private val messageSentNotifier: MessageSentNotifier,
     private val analyticsService: AnalyticsService
 ) : ViewModel(),

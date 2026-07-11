@@ -17,7 +17,6 @@ import com.google.android.gms.location.SettingsClient
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.Tasks
 import com.swparks.domain.model.LocationCoordinates
-import com.swparks.domain.provider.LocationService
 import com.swparks.domain.provider.LocationSettingsCheckResult
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CancellationException
@@ -29,7 +28,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 
-class LocationServiceImpl(
+open class LocationServiceImpl(
     private val context: Context,
     private val fusedLocationClientProvider: (Context) -> FusedLocationProviderClient = { ctx ->
         LocationServices.getFusedLocationProviderClient(ctx)
@@ -38,7 +37,7 @@ class LocationServiceImpl(
         LocationServices.getSettingsClient(ctx)
     },
     private val locationTimeoutMillis: Long = LOCATION_TIMEOUT_MILLIS
-) : LocationService {
+) {
     private val fusedLocationClient: FusedLocationProviderClient by lazy {
         fusedLocationClientProvider(context)
     }
@@ -53,7 +52,7 @@ class LocationServiceImpl(
             Manifest.permission.ACCESS_COARSE_LOCATION
         ]
     )
-    override suspend fun getCurrentLocation(): Result<LocationCoordinates> {
+    open suspend fun getCurrentLocation(): Result<LocationCoordinates> {
         if (!hasLocationPermission()) {
             return Result.failure(SecurityException("Location permission is not granted"))
         }
@@ -144,7 +143,7 @@ class LocationServiceImpl(
             else -> locationManager.allProviders.firstOrNull()
         }
 
-    override suspend fun checkLocationSettings(): Result<LocationSettingsCheckResult> {
+    open suspend fun checkLocationSettings(): Result<LocationSettingsCheckResult> {
         return withContext(Dispatchers.IO) {
             try {
                 if (!hasLocationPermission()) {

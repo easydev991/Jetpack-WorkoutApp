@@ -6,8 +6,8 @@ import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
+import com.swparks.data.provider.ResourcesProviderImpl
 import com.swparks.domain.model.Journal
-import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.usecase.DeleteJournalUseCase
 import com.swparks.domain.usecase.EditJournalSettingsUseCase
 import com.swparks.domain.usecase.GetJournalsUseCase
@@ -53,7 +53,7 @@ class JournalsViewModelTest {
     private lateinit var deleteJournalUseCase: DeleteJournalUseCase
     private lateinit var editJournalSettingsUseCase: EditJournalSettingsUseCase
     private lateinit var userNotifier: UserNotifier
-    private lateinit var resources: ResourcesProvider
+    private lateinit var resources: ResourcesProviderImpl
     private lateinit var analyticsService: AnalyticsService
     private lateinit var viewModel: JournalsViewModel
 

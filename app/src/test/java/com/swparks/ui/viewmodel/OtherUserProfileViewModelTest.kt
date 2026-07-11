@@ -10,9 +10,9 @@ import com.swparks.data.model.ApiFriendAction
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
+import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.SWRepository
-import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.repository.CountriesRepository
 import com.swparks.util.AppError
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
@@ -45,10 +45,10 @@ class OtherUserProfileViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val mockSwRepository = mockk<SWRepository>()
-    private val mockCountriesRepository = mockk<CountriesRepository>()
+    private val mockCountriesRepository = mockk<CountriesRepositoryImpl>()
     private val mockLogger = mockk<Logger>(relaxed = true)
     private val mockUserNotifier = mockk<UserNotifier>(relaxed = true)
-    private val mockResources = mockk<ResourcesProvider>(relaxed = true)
+    private val mockResources = mockk<ResourcesProviderImpl>(relaxed = true)
     private val mockAnalyticsService = mockk<AnalyticsService>(relaxed = true)
 
     private val currentUserFlow = MutableSharedFlow<User?>(replay = 1)

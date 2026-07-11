@@ -11,9 +11,9 @@ import com.swparks.data.model.ApiFriendAction
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
+import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.SWRepository
-import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.model.BlacklistAction
 import com.swparks.ui.model.toApiOption
 import com.swparks.util.AppError
@@ -35,11 +35,11 @@ import retrofit2.HttpException
 @Suppress("TooGenericExceptionCaught", "InstanceOfCheckForException", "UnusedPrivateProperty")
 class OtherUserProfileViewModel(
     private val userId: Long,
-    private val countriesRepository: CountriesRepository,
+    private val countriesRepository: CountriesRepositoryImpl,
     private val swRepository: SWRepository,
     private val logger: Logger,
     private val userNotifier: UserNotifier,
-    private val resources: ResourcesProvider,
+    private val resources: ResourcesProviderImpl,
     private val analyticsService: AnalyticsService
 ) : ViewModel(),
     IOtherUserProfileViewModel {

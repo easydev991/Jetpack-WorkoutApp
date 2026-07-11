@@ -4,7 +4,7 @@ import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
-import com.swparks.domain.provider.ResourcesProvider
+import com.swparks.data.provider.ResourcesProviderImpl
 import com.swparks.domain.usecase.ChangePasswordUseCase
 import com.swparks.ui.state.ChangePasswordEvent
 import com.swparks.ui.state.ChangePasswordUiState
@@ -38,7 +38,7 @@ class ChangePasswordViewModelTest {
     private lateinit var analyticsService: AnalyticsService
     private lateinit var changePasswordUseCase: ChangePasswordUseCase
     private lateinit var userNotifier: UserNotifier
-    private lateinit var resourcesProvider: ResourcesProvider
+    private lateinit var resourcesProvider: ResourcesProviderImpl
     private lateinit var viewModel: ChangePasswordViewModel
     private val testLogger: Logger = NoOpLogger()
 

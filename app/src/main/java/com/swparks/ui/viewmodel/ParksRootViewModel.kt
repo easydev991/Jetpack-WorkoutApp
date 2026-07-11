@@ -19,10 +19,10 @@ import com.swparks.data.model.ParkFilter
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
 import com.swparks.data.preferences.ParksFilterDataStore
+import com.swparks.data.provider.LocationServiceImpl
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.SWRepository
-import com.swparks.domain.provider.LocationService
 import com.swparks.domain.provider.LocationSettingsCheckResult
-import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.FilterParksUseCase
 import com.swparks.domain.usecase.ICreateParkLocationHandler
 import com.swparks.domain.usecase.InitializeParksUseCase
@@ -54,11 +54,11 @@ class ParksRootViewModel(
     private val logger: Logger,
     private val filterParksUseCase: FilterParksUseCase,
     private val parksFilterDataStore: ParksFilterDataStore,
-    private val countriesRepository: CountriesRepository,
+    private val countriesRepository: CountriesRepositoryImpl,
     private val swRepository: SWRepository,
     private val initializeParksUseCase: InitializeParksUseCase,
     private val userNotifier: UserNotifier,
-    private val locationService: LocationService,
+    private val locationService: LocationServiceImpl,
     private val syncParksUseCase: SyncParksUseCase,
     private val analyticsService: AnalyticsService,
     private val userLocationCameraZoom: Double = USER_LOCATION_CAMERA_ZOOM

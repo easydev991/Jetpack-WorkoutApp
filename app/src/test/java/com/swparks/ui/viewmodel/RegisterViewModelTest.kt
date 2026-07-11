@@ -7,10 +7,10 @@ import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
+import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.RegistrationParams
-import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.repository.CountriesRepository
 import com.swparks.ui.model.LoginCredentials
 import com.swparks.ui.state.RegisterEvent
 import com.swparks.ui.state.RegisterUiState
@@ -51,8 +51,8 @@ class RegisterViewModelTest {
     private lateinit var secureTokenRepository: SecureTokenRepository
     private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var tokenEncoder: TokenEncoder
-    private lateinit var countriesRepository: CountriesRepository
-    private lateinit var resourcesProvider: ResourcesProvider
+    private lateinit var countriesRepository: CountriesRepositoryImpl
+    private lateinit var resourcesProvider: ResourcesProviderImpl
     private lateinit var userNotifier: UserNotifier
     private lateinit var registerViewModel: RegisterViewModel
 

@@ -9,9 +9,9 @@ import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
 import com.swparks.data.provider.AvatarHelperImpl
+import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.SWRepository
-import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.DeleteUserUseCase
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
@@ -39,12 +39,12 @@ class EditProfileViewModelSelectionTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var swRepository: SWRepository
-    private lateinit var countriesRepository: CountriesRepository
+    private lateinit var countriesRepository: CountriesRepositoryImpl
     private lateinit var deleteUserUseCase: DeleteUserUseCase
     private lateinit var avatarHelper: AvatarHelperImpl
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
-    private lateinit var resources: ResourcesProvider
+    private lateinit var resources: ResourcesProviderImpl
     private lateinit var analyticsService: AnalyticsService
 
     private val currentUserFlow = MutableStateFlow<User?>(null)

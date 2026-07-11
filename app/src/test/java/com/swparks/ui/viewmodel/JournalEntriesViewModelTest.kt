@@ -9,9 +9,9 @@ import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.User
+import com.swparks.data.provider.ResourcesProviderImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.JournalEntry
-import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.usecase.CanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.DeleteJournalEntryUseCase
 import com.swparks.domain.usecase.EditJournalSettingsUseCase
@@ -63,7 +63,7 @@ class JournalEntriesViewModelTest {
     private lateinit var swRepository: SWRepository
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var userNotifier: UserNotifier
-    private lateinit var resources: ResourcesProvider
+    private lateinit var resources: ResourcesProviderImpl
     private lateinit var analyticsService: AnalyticsService
     private lateinit var viewModel: JournalEntriesViewModel
 

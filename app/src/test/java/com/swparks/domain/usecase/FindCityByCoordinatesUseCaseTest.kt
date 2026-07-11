@@ -1,7 +1,7 @@
 package com.swparks.domain.usecase
 
 import com.swparks.data.model.City
-import com.swparks.domain.repository.CountriesRepository
+import com.swparks.data.repository.CountriesRepositoryImpl
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -11,7 +11,7 @@ import org.junit.Before
 import org.junit.Test
 
 class FindCityByCoordinatesUseCaseTest {
-    private lateinit var countriesRepository: CountriesRepository
+    private lateinit var countriesRepository: CountriesRepositoryImpl
     private lateinit var useCase: FindCityByCoordinatesUseCase
 
     @Before

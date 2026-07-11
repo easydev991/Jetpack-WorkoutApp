@@ -1,7 +1,7 @@
 package com.swparks.domain.usecase
 
+import com.swparks.data.provider.LocationServiceImpl
 import com.swparks.domain.model.LocationCoordinates
-import com.swparks.domain.provider.LocationService
 import com.swparks.util.AppError
 import com.swparks.util.UserNotifier
 import io.mockk.coEvery
@@ -15,7 +15,7 @@ import org.junit.Before
 import org.junit.Test
 
 class CreateParkLocationHandlerTest {
-    private lateinit var locationService: LocationService
+    private lateinit var locationService: LocationServiceImpl
     private lateinit var userNotifier: UserNotifier
     private lateinit var handler: DefaultCreateParkLocationHandler
 

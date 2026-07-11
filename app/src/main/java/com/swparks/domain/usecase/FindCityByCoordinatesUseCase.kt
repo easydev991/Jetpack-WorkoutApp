@@ -1,6 +1,6 @@
 package com.swparks.domain.usecase
 
-import com.swparks.domain.repository.CountriesRepository
+import com.swparks.data.repository.CountriesRepositoryImpl
 
 /**
  * Use case для поиска города по названию населённого пункта из геокодирования.
@@ -12,7 +12,7 @@ import com.swparks.domain.repository.CountriesRepository
  * @param countriesRepository Репозиторий для работы со справочником стран и городов
  */
 class FindCityByCoordinatesUseCase(
-    private val countriesRepository: CountriesRepository
+    private val countriesRepository: CountriesRepositoryImpl
 ) {
     suspend operator fun invoke(
         locality: String?,

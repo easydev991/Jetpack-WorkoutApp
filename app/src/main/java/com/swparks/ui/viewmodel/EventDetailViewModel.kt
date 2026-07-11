@@ -18,10 +18,10 @@ import com.swparks.data.model.Event
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.data.model.removePhotoById
+import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.exception.NotFoundException
-import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.repository.CountriesRepository
 import com.swparks.domain.usecase.DeleteEventUseCase
 import com.swparks.ui.ds.CommentAction
 import com.swparks.ui.model.EditInfo
@@ -190,13 +190,13 @@ sealed class EventDetailEvent {
 )
 class EventDetailViewModel(
     private val swRepository: SWRepository,
-    private val countriesRepository: CountriesRepository,
+    private val countriesRepository: CountriesRepositoryImpl,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val savedStateHandle: SavedStateHandle,
     private val userNotifier: UserNotifier,
     private val logger: Logger,
     private val deleteEventUseCase: DeleteEventUseCase,
-    private val resourcesProvider: ResourcesProvider,
+    private val resourcesProvider: ResourcesProviderImpl,
     private val analyticsService: AnalyticsService
 ) : ViewModel(),
     IEventDetailViewModel {
@@ -209,12 +209,12 @@ class EventDetailViewModel(
         @Suppress("LongParameterList")
         fun factory(
             swRepository: SWRepository,
-            countriesRepository: CountriesRepository,
+            countriesRepository: CountriesRepositoryImpl,
             userPreferencesRepository: UserPreferencesRepository,
             userNotifier: UserNotifier,
             logger: Logger,
             deleteEventUseCase: DeleteEventUseCase,
-            resourcesProvider: ResourcesProvider,
+            resourcesProvider: ResourcesProviderImpl,
             analyticsService: AnalyticsService
         ): ViewModelProvider.Factory =
             viewModelFactory {

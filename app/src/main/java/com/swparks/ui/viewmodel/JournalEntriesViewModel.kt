@@ -11,9 +11,9 @@ import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.toDomain
+import com.swparks.data.provider.ResourcesProviderImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.JournalEntry
-import com.swparks.domain.provider.ResourcesProvider
 import com.swparks.domain.usecase.CanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.DeleteJournalEntryUseCase
 import com.swparks.domain.usecase.EditJournalSettingsUseCase
@@ -55,7 +55,7 @@ data class JournalEntriesDeps(
     val swRepository: SWRepository,
     val savedStateHandle: SavedStateHandle,
     val userNotifier: UserNotifier,
-    val resources: ResourcesProvider,
+    val resources: ResourcesProviderImpl,
     val analyticsService: AnalyticsService
 )
 

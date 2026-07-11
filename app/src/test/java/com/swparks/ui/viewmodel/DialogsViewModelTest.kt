@@ -7,10 +7,10 @@ import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.data.database.entity.DialogEntity
+import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.MessagesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.event.MessageSentNotifier
-import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.repository.MessagesRepository
 import com.swparks.ui.state.DialogsUiState
 import com.swparks.util.Logger
 import io.mockk.coEvery
@@ -43,10 +43,10 @@ class DialogsViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var messagesRepository: MessagesRepository
+    private lateinit var messagesRepository: MessagesRepositoryImpl
     private lateinit var swRepository: SWRepository
     private lateinit var logger: Logger
-    private lateinit var resources: ResourcesProvider
+    private lateinit var resources: ResourcesProviderImpl
     private lateinit var messageSentNotifier: MessageSentNotifier
     private lateinit var viewModel: DialogsViewModel
     private lateinit var analyticsService: AnalyticsService

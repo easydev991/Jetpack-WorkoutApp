@@ -5,7 +5,6 @@ import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.exception.ServerException
-import com.swparks.domain.repository.CountriesRepository
 import com.swparks.network.SWApi
 import com.swparks.util.Logger
 import com.swparks.util.readJSONFromAssets
@@ -29,11 +28,11 @@ import java.io.IOException
  * @param swApi API клиент для запросов к серверу
  * @param logger Логгер для записи сообщений
  */
-class CountriesRepositoryImpl(
+open class CountriesRepositoryImpl(
     private val context: Context,
     private val swApi: SWApi,
     private val logger: Logger
-) : CountriesRepository {
+) {
     companion object {
         private const val TAG = "CountriesRepository"
         private const val LOCAL_FILENAME = "countries.json"
@@ -178,7 +177,7 @@ class CountriesRepositoryImpl(
      * Метод должен вызываться перед использованием getCountriesFlow(),
      * чтобы убедиться что данные загружены в кэш.
      */
-    override fun ensureCountriesLoaded() {
+    open fun ensureCountriesLoaded() {
         if (!isLoaded) {
             loadCountriesFromLocalFile()
         }
@@ -189,7 +188,7 @@ class CountriesRepositoryImpl(
      *
      * @return Flow со списком всех стран
      */
-    override fun getCountriesFlow(): Flow<List<Country>> = cachedCountries.map { it }
+    open fun getCountriesFlow(): Flow<List<Country>> = cachedCountries.map { it }
 
     /**
      * Получить страну по идентификатору
@@ -197,7 +196,7 @@ class CountriesRepositoryImpl(
      * @param countryId идентификатор страны
      * @return страна или null, если не найдена
      */
-    override suspend fun getCountryById(countryId: String): Country? {
+    open suspend fun getCountryById(countryId: String): Country? {
         if (!isLoaded) {
             loadCountriesFromLocalFile()
         }
@@ -210,7 +209,7 @@ class CountriesRepositoryImpl(
      * @param cityId идентификатор города
      * @return город или null, если не найден
      */
-    override suspend fun getCityById(cityId: String): City? {
+    open suspend fun getCityById(cityId: String): City? {
         if (!isLoaded) {
             loadCountriesFromLocalFile()
         }
@@ -223,7 +222,7 @@ class CountriesRepositoryImpl(
      * @param countryId идентификатор страны
      * @return список городов страны
      */
-    override suspend fun getCitiesByCountry(countryId: String): List<City> {
+    open suspend fun getCitiesByCountry(countryId: String): List<City> {
         if (!isLoaded) {
             loadCountriesFromLocalFile()
         }
@@ -235,7 +234,7 @@ class CountriesRepositoryImpl(
      *
      * @return список всех городов
      */
-    override suspend fun getAllCities(): List<City> {
+    open suspend fun getAllCities(): List<City> {
         if (!isLoaded) {
             loadCountriesFromLocalFile()
         }
@@ -248,7 +247,7 @@ class CountriesRepositoryImpl(
      * @param cityId идентификатор города
      * @return страна или null, если город не найден
      */
-    override suspend fun getCountryForCity(cityId: String): Country? {
+    open suspend fun getCountryForCity(cityId: String): Country? {
         if (!isLoaded) {
             loadCountriesFromLocalFile()
         }
@@ -263,7 +262,7 @@ class CountriesRepositoryImpl(
      *
      * @return Result<Unit> с результатом операции
      */
-    override suspend fun updateCountriesFromServer(): Result<Unit> =
+    open suspend fun updateCountriesFromServer(): Result<Unit> =
         try {
             logger.i(TAG, "Загрузка справочника стран с сервера")
             val countries = swApi.getCountries()

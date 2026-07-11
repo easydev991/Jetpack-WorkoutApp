@@ -1,7 +1,7 @@
 package com.swparks.domain.usecase
 
 import com.swparks.data.model.City
-import com.swparks.domain.repository.CountriesRepository
+import com.swparks.data.repository.CountriesRepositoryImpl
 
 /**
  * Use case для получения списка городов для конкретной страны.
@@ -12,7 +12,7 @@ import com.swparks.domain.repository.CountriesRepository
  * @param countriesRepository Репозиторий для работы со справочником стран и городов
  */
 class GetCitiesByCountryUseCase(
-    private val countriesRepository: CountriesRepository
+    private val countriesRepository: CountriesRepositoryImpl
 ) {
     /**
      * Получить список городов для страны по идентификатору.

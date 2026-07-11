@@ -8,7 +8,7 @@ import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
-import com.swparks.domain.provider.ResourcesProvider
+import com.swparks.data.provider.ResourcesProviderImpl
 import com.swparks.domain.usecase.DeleteJournalUseCase
 import com.swparks.domain.usecase.EditJournalSettingsUseCase
 import com.swparks.domain.usecase.GetJournalsUseCase
@@ -48,7 +48,7 @@ class JournalsViewModel(
     private val deleteJournalUseCase: DeleteJournalUseCase,
     private val editJournalSettingsUseCase: EditJournalSettingsUseCase,
     private val userNotifier: UserNotifier,
-    private val resources: ResourcesProvider,
+    private val resources: ResourcesProviderImpl,
     private val analyticsService: AnalyticsService
 ) : ViewModel(),
     IJournalsViewModel {

@@ -40,10 +40,6 @@ import com.swparks.data.repository.SWRepositoryImp
 import com.swparks.data.serializer.EncryptedStringSerializer
 import com.swparks.data.util.SystemClock
 import com.swparks.domain.event.MessageSentNotifier
-import com.swparks.domain.provider.LocationService
-import com.swparks.domain.provider.ResourcesProvider
-import com.swparks.domain.repository.CountriesRepository
-import com.swparks.domain.repository.MessagesRepository
 import com.swparks.domain.usecase.CanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.ChangePasswordUseCase
 import com.swparks.domain.usecase.CreateEventUseCase
@@ -123,10 +119,10 @@ private object NetworkTimeouts {
 interface AppContainer {
     val swRepository: SWRepository
     val secureTokenRepository: SecureTokenRepository
-    val countriesRepository: CountriesRepository
+    val countriesRepository: CountriesRepositoryImpl
     val journalsRepository: JournalsRepositoryImpl
     val journalEntriesRepository: JournalEntriesRepositoryImpl
-    val messagesRepository: MessagesRepository
+    val messagesRepository: MessagesRepositoryImpl
     val userPreferencesRepository: UserPreferencesRepository
 
     // Сервисы для обработки ошибок
@@ -142,7 +138,7 @@ interface AppContainer {
     val clock: com.swparks.domain.util.Clock
 
     // Location & Geocoding services
-    val locationService: LocationService
+    val locationService: LocationServiceImpl
     val geocodingService: GeocodingServiceImpl
     val findCityByCoordinatesUseCase: FindCityByCoordinatesUseCase
     val createParkLocationHandler: ICreateParkLocationHandler
@@ -302,7 +298,7 @@ class DefaultAppContainer(
 
     // ==================== Location & Geocoding Services ====================
 
-    override val locationService: LocationService by lazy {
+    override val locationService: LocationServiceImpl by lazy {
         LocationServiceImpl(appContext)
     }
 
@@ -348,7 +344,7 @@ class DefaultAppContainer(
      * Провайдер для доступа к строковым ресурсам
      * Используется в ViewModel для локализации без зависимости от Context
      */
-    private val resourcesProvider: ResourcesProvider by lazy {
+    private val resourcesProvider: ResourcesProviderImpl by lazy {
         ResourcesProviderImpl(appContext)
     }
 
@@ -499,7 +495,7 @@ class DefaultAppContainer(
 
 // ==================== Справочник стран и городов ====================
 
-    override val countriesRepository: CountriesRepository by lazy {
+    override val countriesRepository: CountriesRepositoryImpl by lazy {
         CountriesRepositoryImpl(context = appContext, swApi = retrofitService, logger = logger)
     }
 
@@ -534,7 +530,7 @@ class DefaultAppContainer(
     /**
      * Репозиторий для работы с диалогами
      */
-    override val messagesRepository: MessagesRepository by lazy {
+    override val messagesRepository: MessagesRepositoryImpl by lazy {
         MessagesRepositoryImpl(
             dialogsDao = dialogDao,
             swApi = retrofitService,

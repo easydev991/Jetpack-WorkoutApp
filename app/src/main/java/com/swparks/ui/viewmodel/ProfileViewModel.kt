@@ -8,8 +8,8 @@ import com.swparks.analytics.AppErrorOperation
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
+import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.SWRepository
-import com.swparks.domain.repository.CountriesRepository
 import com.swparks.util.AppError
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
@@ -55,7 +55,7 @@ sealed class ProfileUiState {
     "InstanceOfCheckForException"
 )
 class ProfileViewModel(
-    private val countriesRepository: CountriesRepository,
+    private val countriesRepository: CountriesRepositoryImpl,
     private val swRepository: SWRepository,
     private val logger: Logger,
     private val userNotifier: UserNotifier,

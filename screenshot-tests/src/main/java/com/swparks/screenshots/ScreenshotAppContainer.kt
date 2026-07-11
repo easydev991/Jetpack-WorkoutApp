@@ -9,21 +9,24 @@ import com.swparks.data.model.LoginSuccess
 import com.swparks.data.model.Park
 import com.swparks.data.model.SocialUpdates
 import com.swparks.data.model.User
+import com.swparks.data.provider.LocationServiceImpl
 import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.CountriesRepositoryImpl
+import com.swparks.data.repository.MessagesRepositoryImpl
 import com.swparks.data.repository.SWRepository
 import com.swparks.domain.exception.NotFoundException
 import com.swparks.domain.model.LocationCoordinates
-import com.swparks.domain.provider.LocationService
 import com.swparks.domain.provider.LocationSettingsCheckResult
-import com.swparks.domain.repository.CountriesRepository
-import com.swparks.domain.repository.MessagesRepository
 import com.swparks.domain.usecase.SyncCountriesUseCase
 import com.swparks.domain.usecase.SyncParksUseCase
+import com.swparks.network.SWApi
 import com.swparks.ui.model.EventType
 import com.swparks.ui.viewmodel.DialogsViewModel
 import com.swparks.ui.viewmodel.OtherUserProfileViewModel
 import com.swparks.ui.viewmodel.ProfileViewModel
 import com.swparks.ui.viewmodel.SearchUserViewModel
+import com.swparks.util.CrashReporter
+import com.swparks.util.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -37,7 +40,7 @@ import kotlinx.coroutines.flow.flowOf
  */
 class ScreenshotAppContainer(
     context: Context,
-    private val delegate: AppContainer = DefaultAppContainer(context)
+    private val delegate: DefaultAppContainer = DefaultAppContainer(context)
 ) : AppContainer by delegate {
     private companion object {
         private const val MOSCOW_LATITUDE = 55.7558
@@ -54,16 +57,23 @@ class ScreenshotAppContainer(
         )
     private val screenshotCountriesRepository =
         ScreenshotCountriesRepository(
-            countries = demoCountries
+            appContext = appContext,
+            countries = demoCountries,
+            delegate = delegate
         )
-    private val screenshotMessagesRepository = ScreenshotMessagesRepository()
+    private val screenshotMessagesRepository =
+        ScreenshotMessagesRepository(
+            swApi = delegate.provideMessagesApi(),
+            logger = delegate.logger,
+            crashReporter = delegate.crashReporter
+        )
     private val resourcesProvider = ResourcesProviderImpl(appContext)
 
     override val swRepository: SWRepository = screenshotSwRepository
-    override val countriesRepository: CountriesRepository = screenshotCountriesRepository
-    override val messagesRepository: MessagesRepository = screenshotMessagesRepository
-    override val locationService: LocationService =
-        object : LocationService {
+    override val countriesRepository: CountriesRepositoryImpl = screenshotCountriesRepository
+    override val messagesRepository: MessagesRepositoryImpl = screenshotMessagesRepository
+    override val locationService: LocationServiceImpl =
+        object : LocationServiceImpl(appContext) {
             override suspend fun getCurrentLocation(): Result<LocationCoordinates> =
                 Result.success(
                     LocationCoordinates(
@@ -293,8 +303,14 @@ private class ScreenshotSwRepository(
 }
 
 private class ScreenshotCountriesRepository(
-    private val countries: List<Country>
-) : CountriesRepository {
+    appContext: Context,
+    private val countries: List<Country>,
+    delegate: DefaultAppContainer
+) : CountriesRepositoryImpl(
+        context = appContext,
+        swApi = delegate.provideMessagesApi(),
+        logger = delegate.logger
+    ) {
     private val countriesFlow = MutableStateFlow(countries)
     private val citiesById = countries.flatMap { it.cities }.associateBy { it.id }
     private val countriesById = countries.associateBy { it.id }
@@ -322,7 +338,15 @@ private class ScreenshotCountriesRepository(
     override suspend fun updateCountriesFromServer(): Result<Unit> = Result.success(Unit)
 }
 
-private class ScreenshotMessagesRepository : MessagesRepository {
+private class ScreenshotMessagesRepository(
+    swApi: SWApi,
+    logger: Logger,
+    crashReporter: CrashReporter
+) : MessagesRepositoryImpl(
+        swApi = swApi,
+        logger = logger,
+        crashReporter = crashReporter
+    ) {
     override val dialogs: Flow<List<com.swparks.data.database.entity.DialogEntity>> =
         MutableStateFlow(emptyList())
 
