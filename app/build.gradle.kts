@@ -19,7 +19,7 @@ if (secretsPropertiesFile.exists()) {
 
 android {
     namespace = "com.swparks"
-    compileSdk = 36
+    compileSdk = 37
 
     signingConfigs {
         create("release") {
