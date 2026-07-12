@@ -23,4 +23,9 @@ interface IUserTrainingParksViewModel {
      * Обновляет список площадок для pull-to-refresh.
      */
     fun refreshParks()
+
+    /**
+     * Перезагружает список площадок пользователя из локального кэша при возврате на экран.
+     */
+    fun reloadFromCache()
 }

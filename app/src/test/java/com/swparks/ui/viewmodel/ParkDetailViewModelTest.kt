@@ -835,6 +835,70 @@ class ParkDetailViewModelTest {
             }
         }
 
+    // ==================== reloadFromCache tests ====================
+
+    @Test
+    fun reloadFromCache_whenCacheChanged_thenUpdatesTrainHere() =
+        runTest {
+            coEvery { parksEventsRepository.getParkFromCache(TEST_PARK_ID) } returns
+                createPark(trainHere = true)
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns
+                Result.success(createPark(trainHere = true))
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            val initialContent = viewModel.uiState.value as ParkDetailUIState.Content
+            assertTrue(initialContent.park.trainHere == true)
+
+            coEvery { parksEventsRepository.getParkFromCache(TEST_PARK_ID) } returns
+                createPark(trainHere = false)
+            viewModel.reloadFromCache()
+            advanceUntilIdle()
+
+            val updatedContent = viewModel.uiState.value as ParkDetailUIState.Content
+            assertEquals(false, updatedContent.park.trainHere)
+        }
+
+    @Test
+    fun reloadFromCache_whenCacheUnchanged_thenUiStateNotReplaced() =
+        runTest {
+            val park =
+                createPark(
+                    trainHere = true,
+                    trainingUsers = listOf(User(id = 1L, name = "User", image = null))
+                )
+            coEvery { parksEventsRepository.getParkFromCache(TEST_PARK_ID) } returns park
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns Result.success(park)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            val stateBefore = viewModel.uiState.value
+            viewModel.reloadFromCache()
+            advanceUntilIdle()
+
+            val stateAfter = viewModel.uiState.value
+            assertEquals(stateBefore, stateAfter)
+        }
+
+    @Test
+    fun reloadFromCache_whenErrorState_thenLoadsFromCache() =
+        runTest {
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns
+                Result.failure(RuntimeException("Ошибка загрузки"))
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+            assertTrue(viewModel.uiState.value is ParkDetailUIState.Error)
+
+            coEvery { parksEventsRepository.getParkFromCache(TEST_PARK_ID) } returns
+                createPark()
+            viewModel.reloadFromCache()
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertTrue(state is ParkDetailUIState.Content)
+            assertEquals(TEST_PARK_ID, (state as ParkDetailUIState.Content).park.id)
+        }
+
     private fun createViewModel(): ParkDetailViewModel =
         ParkDetailViewModel(
             parksEventsRepository = parksEventsRepository,

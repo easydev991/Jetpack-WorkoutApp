@@ -629,6 +629,17 @@ open class ParksEventsRepository(
             }
         }
 
+        if (currentUserId != null && userTrainingParkDao != null) {
+            if (trainHere) {
+                userTrainingParkDao.insertForUser(
+                    listOf(UserTrainingParkEntity(userId = currentUserId, parkId = parkId))
+                )
+            } else {
+                userTrainingParkDao.deleteRelation(currentUserId, parkId)
+            }
+            logger.d(TAG, "Синхронизирована связь trainHere для пользователя $currentUserId и площадки $parkId")
+        }
+
         logger.d(TAG, "Обновлён кэш trainHere для площадки $parkId")
     }
 

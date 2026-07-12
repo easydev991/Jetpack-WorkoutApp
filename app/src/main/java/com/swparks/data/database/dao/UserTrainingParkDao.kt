@@ -23,6 +23,12 @@ interface UserTrainingParkDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertCacheState(state: UserTrainingParkCacheStateEntity)
 
+    @Query("DELETE FROM user_training_parks WHERE user_id = :userId AND park_id = :parkId")
+    suspend fun deleteRelation(
+        userId: Long,
+        parkId: Long
+    )
+
     @Query("DELETE FROM user_training_parks WHERE user_id = :userId")
     suspend fun clearForUser(userId: Long)
 

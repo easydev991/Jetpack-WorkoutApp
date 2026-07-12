@@ -5,6 +5,7 @@ import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.database.dao.EventDao
 import com.swparks.data.database.dao.ParkDao
 import com.swparks.data.database.dao.UserDao
+import com.swparks.data.database.dao.UserTrainingParkDao
 import com.swparks.data.database.entity.ParkEntity
 import com.swparks.data.database.entity.UserEntity
 import com.swparks.data.database.entity.toEntity
@@ -1264,6 +1265,143 @@ class ParksEventsRepositoryParksTest {
                     }
                 )
             }
+        }
+
+    @Test
+    fun changeTrainHereStatus_whenTrainHereTrue_thenParkAddedToUserTrainingParksCache() =
+        runTest {
+            // Given
+            val currentUserId = 1L
+            val parkId = 10L
+            val mockApi = mockk<SWApi>()
+            val mockUserTrainingParkDao = mockk<UserTrainingParkDao>(relaxed = true)
+            coEvery { mockApi.postTrainHere(parkId) } returns Response.success(Unit)
+            coEvery { mockParkDao.getParkById(parkId) } returns createParkEntity(id = parkId, trainingUsersCount = null)
+            val mockUser =
+                UserEntity(
+                    id = currentUserId,
+                    name = "test",
+                    parksCount = "0",
+                    isCurrentUser = true
+                )
+
+            every { mockPreferencesRepository.getCurrentUserIdSync() } returns currentUserId
+            every { mockUserDao.getUserByIdFlow(currentUserId) } returns flowOf(mockUser)
+            coEvery { mockUserDao.insert(any()) } returns Unit
+
+            val repository =
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
+                )
+
+            // When
+            val result = repository.changeTrainHereStatus(true, parkId)
+
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify {
+                mockUserTrainingParkDao.insertForUser(
+                    match { it.size == 1 && it.first().userId == currentUserId && it.first().parkId == parkId }
+                )
+            }
+            coVerify(exactly = 0) { mockUserTrainingParkDao.deleteRelation(any(), any()) }
+        }
+
+    @Test
+    fun changeTrainHereStatus_whenTrainHereFalse_thenParkRemovedFromUserTrainingParksCache() =
+        runTest {
+            // Given
+            val currentUserId = 1L
+            val parkId = 10L
+            val mockApi = mockk<SWApi>()
+            val mockUserTrainingParkDao = mockk<UserTrainingParkDao>(relaxed = true)
+            coEvery { mockApi.deleteTrainHere(parkId) } returns Response.success(Unit)
+            coEvery {
+                mockParkDao.getParkById(parkId)
+            } returns createParkEntity(id = parkId, trainingUsersCount = 1)
+            val mockUser =
+                UserEntity(
+                    id = currentUserId,
+                    name = "test",
+                    parksCount = "1",
+                    isCurrentUser = true
+                )
+
+            every { mockPreferencesRepository.getCurrentUserIdSync() } returns currentUserId
+            every { mockUserDao.getUserByIdFlow(currentUserId) } returns flowOf(mockUser)
+            coEvery { mockUserDao.insert(any()) } returns Unit
+
+            val repository =
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
+                )
+
+            // When
+            val result = repository.changeTrainHereStatus(false, parkId)
+
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify { mockUserTrainingParkDao.deleteRelation(currentUserId, parkId) }
+            coVerify(exactly = 0) { mockUserTrainingParkDao.insertForUser(any()) }
+        }
+
+    @Test
+    fun changeTrainHereStatus_whenTrainHereFalse_thenCacheStateRowStillExists() =
+        runTest {
+            // Given
+            val currentUserId = 1L
+            val parkId = 10L
+            val mockApi = mockk<SWApi>()
+            val mockUserTrainingParkDao = mockk<UserTrainingParkDao>(relaxed = true)
+            coEvery { mockApi.deleteTrainHere(parkId) } returns Response.success(Unit)
+            coEvery {
+                mockParkDao.getParkById(parkId)
+            } returns createParkEntity(id = parkId, trainingUsersCount = 1)
+            val mockUser =
+                UserEntity(
+                    id = currentUserId,
+                    name = "test",
+                    parksCount = "1",
+                    isCurrentUser = true
+                )
+
+            every { mockPreferencesRepository.getCurrentUserIdSync() } returns currentUserId
+            every { mockUserDao.getUserByIdFlow(currentUserId) } returns flowOf(mockUser)
+            coEvery { mockUserDao.insert(any()) } returns Unit
+
+            val repository =
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
+                )
+
+            // When
+            repository.changeTrainHereStatus(false, parkId)
+
+            // Then - cache state row should NOT be touched, only the relation is deleted
+            coVerify(exactly = 0) { mockUserTrainingParkDao.clearForUser(any()) }
+            coVerify(exactly = 0) { mockUserTrainingParkDao.replaceForUser(any(), any()) }
+            coVerify { mockUserTrainingParkDao.deleteRelation(currentUserId, parkId) }
         }
 
     private fun createParkEntity(

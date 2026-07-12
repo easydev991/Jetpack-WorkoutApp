@@ -182,4 +182,37 @@ class UserTrainingParksViewModel(
             }
         }
     }
+
+    /**
+     * Перезагружает список площадок пользователя из локального кэша при возврате на экран.
+     *
+     * Не делает ничего, если кэш пуст или если текущий список идентичен кэшированному.
+     */
+    override fun reloadFromCache() {
+        viewModelScope.launch {
+            try {
+                val cachedParks =
+                    parksEventsRepository.getCachedParksForUser(userId)
+                        ?: return@launch
+
+                val currentState = _uiState.value
+                if (currentState is UserTrainingParksUiState.Success &&
+                    currentState.parks == cachedParks
+                ) {
+                    return@launch
+                }
+
+                _uiState.update { UserTrainingParksUiState.Success(cachedParks) }
+                logger.i(TAG, "Перезагружено из кэша: ${cachedParks.size} площадок")
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                logger.e(TAG, "Ошибка перезагрузки из кэша: ${e.message}", e)
+                val currentState = _uiState.value
+                if (currentState !is UserTrainingParksUiState.Success) {
+                    val errorMessage = "Ошибка загрузки площадок из кэша: ${e.message}"
+                    _uiState.update { UserTrainingParksUiState.Error(errorMessage) }
+                }
+            }
+        }
+    }
 }

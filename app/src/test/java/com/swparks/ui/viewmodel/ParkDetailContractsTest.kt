@@ -304,5 +304,7 @@ class ParkDetailContractsTest {
         override fun refresh() {
             methodsCalled = true
         }
+
+        override fun reloadFromCache() = Unit
     }
 }

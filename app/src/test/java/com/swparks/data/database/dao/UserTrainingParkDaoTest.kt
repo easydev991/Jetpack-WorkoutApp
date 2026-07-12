@@ -172,6 +172,40 @@ class UserTrainingParkDaoTest {
         }
 
     @Test
+    fun deleteRelation_whenExists_thenRemovesOnlyThatRelation() =
+        runTest {
+            val relations =
+                listOf(
+                    UserTrainingParkEntity(userId = 1L, parkId = 100L),
+                    UserTrainingParkEntity(userId = 1L, parkId = 200L)
+                )
+            userTrainingParkDao.insertForUser(relations)
+
+            userTrainingParkDao.deleteRelation(1L, 100L)
+
+            val storedIds = userTrainingParkDao.getParkIdsForUser(1L)
+            assertEquals(1, storedIds.size)
+            assertTrue(storedIds.contains(200L))
+            assertFalse(storedIds.contains(100L))
+        }
+
+    @Test
+    fun deleteRelation_whenNotExists_thenDoesNothing() =
+        runTest {
+            val relations =
+                listOf(
+                    UserTrainingParkEntity(userId = 1L, parkId = 100L)
+                )
+            userTrainingParkDao.insertForUser(relations)
+
+            userTrainingParkDao.deleteRelation(1L, 999L)
+
+            val storedIds = userTrainingParkDao.getParkIdsForUser(1L)
+            assertEquals(1, storedIds.size)
+            assertTrue(storedIds.contains(100L))
+        }
+
+    @Test
     fun getParksForUserFromCache_whenRelationsAndParksExist_thenReturnsJoinedParks() =
         runTest {
             val park1 = createParkEntity(id = 100L, name = "Park One")

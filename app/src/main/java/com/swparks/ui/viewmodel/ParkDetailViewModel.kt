@@ -881,6 +881,68 @@ class ParkDetailViewModel(
         loadPark()
     }
 
+    override fun reloadFromCache() {
+        val parkId = getParkId()
+        if (parkId == null) {
+            logger.w(TAG, "reloadFromCache: parkId отсутствует")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val cachedPark = parksEventsRepository.getParkFromCache(parkId)
+                if (cachedPark != null) {
+                    val currentState = _uiState.value
+
+                    when (currentState) {
+                        is ParkDetailUIState.Content -> {
+                            val currentPark = currentState.park
+                            val trainHereChanged = currentPark.trainHere != cachedPark.trainHere
+                            val trainingUsersChanged = currentPark.trainingUsers != cachedPark.trainingUsers
+                            val trainingUsersCountChanged = currentPark.trainingUsersCount != cachedPark.trainingUsersCount
+
+                            if (trainHereChanged || trainingUsersChanged || trainingUsersCountChanged) {
+                                _uiState.value = currentState.copy(park = cachedPark)
+                                logger.d(TAG, "reloadFromCache: кэш обновлён, trainHere=${cachedPark.trainHere}")
+                            }
+                        }
+
+                        is ParkDetailUIState.Error -> {
+                            val address =
+                                buildAddress(
+                                    cachedPark.countryID,
+                                    cachedPark.cityID,
+                                    cachedPark.address
+                                )
+                            val authorAddress = buildAuthorAddress(cachedPark.author)
+                            _uiState.value =
+                                ParkDetailUIState.Content(
+                                    park = cachedPark,
+                                    address = address,
+                                    authorAddress = authorAddress
+                                )
+                            logger.d(TAG, "reloadFromCache: восстановление из кэша после ошибки")
+                        }
+
+                        else -> {
+                            logger.d(TAG, "reloadFromCache: текущее состояние ${currentState::class.simpleName}, пропуск")
+                        }
+                    }
+                    updateIsParkAuthor()
+                } else {
+                    logger.d(TAG, "reloadFromCache: кэш пуст для площадки id=$parkId")
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.e(TAG, "reloadFromCache: исключение: ${e.message}", e)
+                if (_uiState.value !is ParkDetailUIState.Content) {
+                    _uiState.value = ParkDetailUIState.Error(e.message)
+                }
+            }
+        }
+    }
+
     private fun handleError(
         exception: Throwable,
         operation: String

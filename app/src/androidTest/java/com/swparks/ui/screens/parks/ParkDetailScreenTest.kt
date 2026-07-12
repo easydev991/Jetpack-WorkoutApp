@@ -1007,6 +1007,8 @@ private class FakeParkDetailViewModel(
 
     override fun refresh() = refreshAction()
 
+    override fun reloadFromCache() {}
+
     suspend fun emitEvent(event: ParkDetailEvent) {
         mutableEvents.emit(event)
     }

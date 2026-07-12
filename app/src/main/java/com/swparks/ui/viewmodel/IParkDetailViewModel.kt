@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
  * Создан для возможности тестирования UI компонентов Compose без бизнес-логики.
  * Позволяет создавать mock/fake реализации для UI тестов.
  */
+@Suppress("TooManyFunctions")
 interface IParkDetailViewModel {
     /**
      * Состояние UI экрана детальной информации о площадке.
@@ -173,4 +174,9 @@ interface IParkDetailViewModel {
      * Обновление данных площадки (pull-to-refresh).
      */
     fun refresh()
+
+    /**
+     * Перезагружает площадку из локального кэша при возврате на экран.
+     */
+    fun reloadFromCache()
 }

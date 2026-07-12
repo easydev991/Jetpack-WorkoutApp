@@ -365,4 +365,89 @@ class UserTrainingParksViewModelTest {
 
             coVerify { userNotifier.handleError(any()) }
         }
+
+    @Test
+    fun reloadFromCache_whenParkRemoved_thenUpdatesList() =
+        runTest {
+            coEvery { parksEventsRepository.getParksForUser(testUserId) } returns Result.success(testParks)
+            viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = awaitItem()
+                assertTrue(state is UserTrainingParksUiState.Success)
+                assertEquals(2, (state as UserTrainingParksUiState.Success).parks.size)
+            }
+
+            val reducedParks = listOf(testParks[0])
+            coEvery { parksEventsRepository.getCachedParksForUser(testUserId) } returns reducedParks
+
+            viewModel.reloadFromCache()
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = awaitItem()
+                assertTrue(state is UserTrainingParksUiState.Success)
+                assertEquals(1, (state as UserTrainingParksUiState.Success).parks.size)
+                assertEquals(reducedParks, state.parks)
+            }
+        }
+
+    @Test
+    fun reloadFromCache_whenParkAdded_thenUpdatesList() =
+        runTest {
+            coEvery { parksEventsRepository.getParksForUser(testUserId) } returns Result.success(testParks)
+            viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = awaitItem()
+                assertTrue(state is UserTrainingParksUiState.Success)
+                assertEquals(2, (state as UserTrainingParksUiState.Success).parks.size)
+            }
+
+            val expandedParks =
+                testParks +
+                    Park(
+                        id = 3L,
+                        name = "Парк 3",
+                        sizeID = 1,
+                        typeID = 1,
+                        longitude = "37.64",
+                        latitude = "55.77",
+                        address = "Москва, ул. Примерная, 3",
+                        cityID = 1,
+                        countryID = 1,
+                        preview = "https://example.com/preview3.jpg"
+                    )
+            coEvery { parksEventsRepository.getCachedParksForUser(testUserId) } returns expandedParks
+
+            viewModel.reloadFromCache()
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = awaitItem()
+                assertTrue(state is UserTrainingParksUiState.Success)
+                assertEquals(3, (state as UserTrainingParksUiState.Success).parks.size)
+                assertEquals(expandedParks, state.parks)
+            }
+        }
+
+    @Test
+    fun reloadFromCache_whenCacheSame_thenKeepsCurrentState() =
+        runTest {
+            coEvery { parksEventsRepository.getParksForUser(testUserId) } returns Result.success(testParks)
+            viewModel = createViewModel()
+            advanceUntilIdle()
+
+            coEvery { parksEventsRepository.getCachedParksForUser(testUserId) } returns testParks
+
+            viewModel.reloadFromCache()
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                assertEquals(testParks, (awaitItem() as UserTrainingParksUiState.Success).parks)
+                expectNoEvents()
+            }
+        }
 }
