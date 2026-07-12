@@ -4,8 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -17,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -49,7 +49,7 @@ private data class ImageTransformParams(
     val offsetY: Float
 )
 
-private fun clampOffset(
+internal fun clampOffset(
     rawOffset: Offset,
     currentScale: Float,
     minScale: Float,
@@ -64,6 +64,23 @@ private fun clampOffset(
         x = rawOffset.x.coerceIn(-maxX, maxX),
         y = rawOffset.y.coerceIn(-maxY, maxY)
     )
+}
+
+internal fun calculateZoomOffset(
+    currentOffset: Offset,
+    currentScale: Float,
+    newScale: Float,
+    minScale: Float,
+    centroid: Offset,
+    pan: Offset,
+    containerSize: IntSize
+): Offset {
+    val center = Offset(containerSize.width / 2f, containerSize.height / 2f)
+    val centroidOffset = centroid - center
+    val scaleRatio = if (currentScale == 0f) 1f else newScale / currentScale
+    val zoomAdjustment = centroidOffset * (1f - scaleRatio)
+    val rawOffset = currentOffset * scaleRatio + zoomAdjustment + pan
+    return clampOffset(rawOffset, newScale, minScale, containerSize)
 }
 
 private val zoomAnimationSpec =
@@ -111,35 +128,6 @@ fun ZoomablePhotoView(config: ZoomConfig) {
             ZoomState(scale, offsetX, offsetY, config.minScale, config.maxScale)
         }
 
-    val transformableState =
-        rememberTransformableState { panChange, zoomChange, _, _ ->
-            scope.launch {
-                val currentScale = scale.value
-                val newScale =
-                    (currentScale * zoomChange).coerceIn(
-                        config.minScale,
-                        config.maxScale
-                    )
-                val scaleRatio = if (currentScale == 0f) 1f else newScale / currentScale
-                val rawOffset =
-                    if (newScale > config.minScale) {
-                        Offset(offsetX.value, offsetY.value) * scaleRatio + panChange
-                    } else {
-                        Offset.Zero
-                    }
-                val clamped =
-                    clampOffset(
-                        rawOffset,
-                        newScale,
-                        config.minScale,
-                        containerSize
-                    )
-                scale.snapTo(newScale)
-                offsetX.snapTo(clamped.x)
-                offsetY.snapTo(clamped.y)
-            }
-        }
-
     Box(
         modifier =
             config.modifier
@@ -162,7 +150,30 @@ fun ZoomablePhotoView(config: ZoomConfig) {
                             )
                         }
                     )
-                }.transformable(state = transformableState),
+                }.pointerInput(containerSize, config.minScale, config.maxScale) {
+                    detectTransformGestures { centroid, pan, zoom, _ ->
+                        scope.launch {
+                            val newScale =
+                                (scale.value * zoom).coerceIn(
+                                    config.minScale,
+                                    config.maxScale
+                                )
+                            val calculatedOffset =
+                                calculateZoomOffset(
+                                    currentOffset = Offset(offsetX.value, offsetY.value),
+                                    currentScale = scale.value,
+                                    newScale = newScale,
+                                    minScale = config.minScale,
+                                    centroid = centroid,
+                                    pan = pan,
+                                    containerSize = containerSize
+                                )
+                            scale.snapTo(newScale)
+                            offsetX.snapTo(calculatedOffset.x)
+                            offsetY.snapTo(calculatedOffset.y)
+                        }
+                    }
+                },
         contentAlignment = Alignment.Center
     ) {
         TransformableImage(
@@ -202,7 +213,7 @@ private fun handleDoubleTap(
     }
 }
 
-private fun calculateTargetOffset(
+internal fun calculateTargetOffset(
     containerSize: IntSize,
     tapOffset: Offset,
     targetScale: Float,
@@ -233,7 +244,8 @@ private fun TransformableImage(
                             scaleX = params.scale,
                             scaleY = params.scale,
                             translationX = params.offsetX,
-                            translationY = params.offsetY
+                            translationY = params.offsetY,
+                            transformOrigin = TransformOrigin.Center
                         ),
                 imageStringURL = params.imageUrl,
                 size = params.imageSize,
