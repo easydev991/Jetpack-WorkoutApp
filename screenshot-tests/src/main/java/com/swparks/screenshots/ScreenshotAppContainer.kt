@@ -3,6 +3,7 @@ package com.swparks.screenshots
 import android.content.Context
 import com.swparks.data.AppContainer
 import com.swparks.data.DefaultAppContainer
+import com.swparks.data.TokenEncoder
 import com.swparks.data.model.Country
 import com.swparks.data.model.Event
 import com.swparks.data.model.LoginSuccess
@@ -17,8 +18,14 @@ import com.swparks.data.repository.SWRepository
 import com.swparks.domain.exception.NotFoundException
 import com.swparks.domain.model.LocationCoordinates
 import com.swparks.domain.provider.LocationSettingsCheckResult
+import com.swparks.domain.usecase.GetFutureEventsFlowUseCase
+import com.swparks.domain.usecase.GetPastEventsFlowUseCase
+import com.swparks.domain.usecase.InitializeParksUseCase
+import com.swparks.domain.usecase.LoginUseCase
 import com.swparks.domain.usecase.SyncCountriesUseCase
+import com.swparks.domain.usecase.SyncFutureEventsUseCase
 import com.swparks.domain.usecase.SyncParksUseCase
+import com.swparks.domain.usecase.SyncPastEventsUseCase
 import com.swparks.network.SWApi
 import com.swparks.ui.model.EventType
 import com.swparks.ui.viewmodel.DialogsViewModel
@@ -99,6 +106,30 @@ class ScreenshotAppContainer(
             countriesRepository = countriesRepository,
             logger = logger,
             analyticsService = analyticsService
+        )
+
+    override val getFutureEventsFlowUseCase: GetFutureEventsFlowUseCase =
+        GetFutureEventsFlowUseCase(swRepository)
+
+    override val getPastEventsFlowUseCase: GetPastEventsFlowUseCase =
+        GetPastEventsFlowUseCase(swRepository)
+
+    override val syncFutureEventsUseCase: SyncFutureEventsUseCase =
+        SyncFutureEventsUseCase(swRepository)
+
+    override val syncPastEventsUseCase: SyncPastEventsUseCase =
+        SyncPastEventsUseCase(swRepository)
+
+    override val initializeParksUseCase: InitializeParksUseCase =
+        InitializeParksUseCase(appContext, swRepository, logger)
+
+    override val loginUseCase: LoginUseCase =
+        LoginUseCase(
+            TokenEncoder(),
+            secureTokenRepository,
+            swRepository,
+            userPreferencesRepository,
+            crashReporter
         )
 
     override fun profileViewModelFactory(): ProfileViewModel =
