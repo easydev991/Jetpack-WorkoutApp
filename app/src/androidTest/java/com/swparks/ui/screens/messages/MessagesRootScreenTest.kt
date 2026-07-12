@@ -14,7 +14,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.analytics.AnalyticsService
-import com.swparks.analytics.FakeAnalyticsProvider
+import com.swparks.analytics.fakeAnalyticsLogger
 import com.swparks.data.database.entity.DialogEntity
 import com.swparks.data.model.User
 import com.swparks.navigation.AppState
@@ -312,7 +312,7 @@ class MessagesRootScreenTest {
 
         composeTestRule.setContent {
             val navController = rememberNavController()
-            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(currentUser)
             val currentVersion = actionVersionState.value
 

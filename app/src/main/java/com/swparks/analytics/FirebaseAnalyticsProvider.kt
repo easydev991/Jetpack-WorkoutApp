@@ -10,11 +10,11 @@ class FirebaseAnalyticsProvider(
     context: Context,
     private val logger: Logger,
     private val crashReporter: CrashReporter
-) : AnalyticsProvider {
+) {
     private val appContext = context.applicationContext
 
     @Suppress("TooGenericExceptionCaught")
-    override fun log(event: AnalyticsEvent) {
+    fun log(event: AnalyticsEvent) {
         try {
             when (event) {
                 is AnalyticsEvent.ScreenView -> logScreenView(event)

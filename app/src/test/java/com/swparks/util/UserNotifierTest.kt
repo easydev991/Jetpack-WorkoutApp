@@ -10,19 +10,19 @@ import org.junit.Test
 import java.io.IOException
 
 /**
- * Unit-тесты для UserNotifierImpl.
+ * Unit-тесты для UserNotifier.
  *
  * Проверяют логирование и отправку ошибок в SharedFlow.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class UserNotifierImplTest {
+class UserNotifierTest {
     private lateinit var mockLogger: Logger
-    private lateinit var userNotifier: UserNotifierImpl
+    private lateinit var userNotifier: UserNotifier
 
     @Before
     fun setUp() {
         mockLogger = mockk(relaxed = true)
-        userNotifier = UserNotifierImpl(mockLogger)
+        userNotifier = UserNotifier(mockLogger)
     }
 
     @Test

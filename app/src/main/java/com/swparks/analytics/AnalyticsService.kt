@@ -3,18 +3,18 @@ package com.swparks.analytics
 import com.swparks.util.Logger
 
 class AnalyticsService(
-    private val providers: List<AnalyticsProvider>,
+    private val loggers: List<(AnalyticsEvent) -> Unit>,
     private val logger: Logger
 ) {
     @Suppress("TooGenericExceptionCaught")
     fun log(event: AnalyticsEvent) {
-        for (provider in providers) {
+        for ((index, logAction) in loggers.withIndex()) {
             try {
-                provider.log(event)
+                logAction(event)
             } catch (e: Exception) {
                 logger.e(
                     TAG,
-                    "Ошибка в провайдере ${provider::class.simpleName}: ${e.message}",
+                    "Ошибка в логгере #${index + 1}: ${e.message}",
                     e
                 )
             }

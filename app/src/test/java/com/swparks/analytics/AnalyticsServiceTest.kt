@@ -1,7 +1,6 @@
 package com.swparks.analytics
 
 import com.swparks.util.Logger
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Before
@@ -19,49 +18,46 @@ class AnalyticsServiceTest {
     }
 
     @Test
-    fun log_whenMultipleProviders_thenEventSentToAll() {
-        val provider1: AnalyticsProvider = mockk(relaxed = true)
-        val provider2: AnalyticsProvider = mockk(relaxed = true)
+    fun log_whenMultipleLoggers_thenEventSentToAll() {
+        val events1 = mutableListOf<AnalyticsEvent>()
+        val events2 = mutableListOf<AnalyticsEvent>()
+        val logger1: (AnalyticsEvent) -> Unit = { events1.add(it) }
+        val logger2: (AnalyticsEvent) -> Unit = { events2.add(it) }
 
-        val analyticsService = AnalyticsService(listOf(provider1, provider2), logger)
+        val analyticsService = AnalyticsService(listOf(logger1, logger2), logger)
         analyticsService.log(testEvent)
 
-        verify { provider1.log(testEvent) }
-        verify { provider2.log(testEvent) }
+        assert(events1 == listOf(testEvent))
+        assert(events2 == listOf(testEvent))
     }
 
     @Test
-    fun log_whenEmptyProvidersList_thenNoError() {
+    fun log_whenEmptyLoggersList_thenNoError() {
         service.log(testEvent)
     }
 
     @Test
-    fun log_whenProviderThrows_thenOtherProvidersStillReceiveEvent() {
-        val failingProvider: AnalyticsProvider =
-            mockk {
-                every { log(any()) } throws RuntimeException("Provider crashed")
-            }
-        val workingProvider: AnalyticsProvider = mockk(relaxed = true)
+    fun log_whenLoggerThrows_thenOtherLoggersStillReceiveEvent() {
+        val failingLogger: (AnalyticsEvent) -> Unit = { throw IllegalStateException("Provider crashed") }
+        val received = mutableListOf<AnalyticsEvent>()
+        val workingLogger: (AnalyticsEvent) -> Unit = { received.add(it) }
 
         val analyticsService =
             AnalyticsService(
-                listOf(failingProvider, workingProvider),
+                listOf(failingLogger, workingLogger),
                 logger
             )
         analyticsService.log(testEvent)
 
-        verify { workingProvider.log(testEvent) }
+        assert(received == listOf(testEvent))
     }
 
     @Test
-    fun log_whenProviderThrows_thenErrorLogged() {
-        val error = RuntimeException("Provider crashed")
-        val failingProvider: AnalyticsProvider =
-            mockk {
-                every { log(any()) } throws error
-            }
+    fun log_whenLoggerThrows_thenErrorLogged() {
+        val error = IllegalStateException("Provider crashed")
+        val failingLogger: (AnalyticsEvent) -> Unit = { throw error }
 
-        val analyticsService = AnalyticsService(listOf(failingProvider), logger)
+        val analyticsService = AnalyticsService(listOf(failingLogger), logger)
         analyticsService.log(testEvent)
 
         verify {
@@ -74,19 +70,16 @@ class AnalyticsServiceTest {
     }
 
     @Test
-    fun log_whenFirstProviderFails_thenSecondProviderStillReceivesEvent() {
+    fun log_whenFirstLoggerFails_thenSecondLoggerStillReceivesEvent() {
         val error = IllegalStateException("fail")
-        val provider1: AnalyticsProvider =
-            mockk {
-                every { log(any()) } throws error
-            }
-        val provider2: AnalyticsProvider = mockk(relaxed = true)
+        val failingLogger: (AnalyticsEvent) -> Unit = { throw error }
+        val received = mutableListOf<AnalyticsEvent>()
+        val workingLogger: (AnalyticsEvent) -> Unit = { received.add(it) }
 
-        val analyticsService = AnalyticsService(listOf(provider1, provider2), logger)
+        val analyticsService = AnalyticsService(listOf(failingLogger, workingLogger), logger)
         analyticsService.log(testEvent)
 
-        verify { provider1.log(testEvent) }
-        verify { provider2.log(testEvent) }
+        assert(received == listOf(testEvent))
         verify { logger.e("AnalyticsService", any(), error) }
     }
 }

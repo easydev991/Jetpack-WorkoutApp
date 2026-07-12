@@ -108,7 +108,7 @@
 **Реализованный функционал:**
 1. Создан `AppNotification` sealed class для информационных сообщений
 2. Расширен `UserNotifier` - добавлен `notificationFlow` и метод `showInfo()`
-3. Обновлен `UserNotifierImpl` - реализация `showInfo()` с логированием
+3. Обновлен `UserNotifier` - реализация `showInfo()` с логированием
 4. Обновлен `RootScreen` - подписка на `notificationFlow` для показа Snackbar
 5. Убран `ShowSnackbar` из `JournalsEvent` и `JournalEntriesEvent`
 6. ViewModels используют `userNotifier.showInfo()` вместо emit событий
@@ -116,8 +116,8 @@
 
 **Измененные файлы:**
 - **Созданные:** `AppNotification.kt`
-- **Измененные:** `UserNotifier.kt`, `UserNotifierImpl.kt`, `AppError.kt`, `RootScreen.kt`, `IJournalsViewModel.kt`, `JournalsViewModel.kt`, `IJournalEntriesViewModel.kt`, `JournalEntriesViewModel.kt`, `JournalsListScreen.kt`, `JournalEntriesScreen.kt`, `strings.xml` (добавлена строка `info`), `strings-ru/strings.xml`
-- **Тесты:** `UserNotifierImplTest.kt`, `JournalsViewModelTest.kt`, `JournalEntriesViewModelTest.kt`
+- **Измененные:** `UserNotifier.kt`, `AppError.kt`, `RootScreen.kt`, `IJournalsViewModel.kt`, `JournalsViewModel.kt`, `IJournalEntriesViewModel.kt`, `JournalEntriesViewModel.kt`, `JournalsListScreen.kt`, `JournalEntriesScreen.kt`, `strings.xml` (добавлена строка `info`), `strings-ru/strings.xml`
+- **Тесты:** `UserNotifierTest.kt`, `JournalsViewModelTest.kt`, `JournalEntriesViewModelTest.kt`
 
 ---
 

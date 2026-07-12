@@ -14,7 +14,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.analytics.AnalyticsService
-import com.swparks.analytics.FakeAnalyticsProvider
+import com.swparks.analytics.fakeAnalyticsLogger
 import com.swparks.data.model.City
 import com.swparks.data.model.NewParkDraft
 import com.swparks.data.model.Park
@@ -91,7 +91,7 @@ class ParksRootScreenTest {
     fun whenUserIsAuthorized_fabIsDisplayed() {
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
 
             Surface {
@@ -112,7 +112,7 @@ class ParksRootScreenTest {
     fun whenUserIsNotAuthorized_fabIsNotDisplayed() {
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
 
             Surface {
                 ParksRootScreen(
@@ -133,7 +133,7 @@ class ParksRootScreenTest {
     fun whenUserIsAuthorized_fabIsEnabled() {
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
 
             Surface {
@@ -159,7 +159,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
 
             Surface {
@@ -190,7 +190,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
 
             Surface {
@@ -221,7 +221,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
 
             Surface {
@@ -258,7 +258,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
             appState.updateCurrentUser(User(id = 1L, name = "testuser", image = null))
 
             Surface {
@@ -290,7 +290,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
 
             Surface {
                 ParksRootScreen(
@@ -317,7 +317,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
 
             Surface {
                 ParksRootScreen(
@@ -346,7 +346,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
 
             Surface {
                 ParksRootScreen(
@@ -379,7 +379,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
 
             Surface {
                 ParksRootScreen(
@@ -407,7 +407,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
 
             Surface {
                 ParksRootScreen(
@@ -430,7 +430,7 @@ class ParksRootScreenTest {
     fun whenTabSelectedIsList_listTabIsSelected() {
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
 
             Surface {
                 ParksRootScreen(
@@ -453,7 +453,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
 
             Surface {
                 ParksRootScreen(
@@ -480,7 +480,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
 
             Surface {
                 ParksRootScreen(
@@ -501,7 +501,7 @@ class ParksRootScreenTest {
     fun whenTabChangedToMap_mapPlaceholderIsDisplayed() {
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
 
             Surface {
                 ParksRootScreen(
@@ -533,7 +533,7 @@ class ParksRootScreenTest {
 
         composeTestRule.setContent {
             val navController = androidx.navigation.compose.rememberNavController()
-            val appState = AppState(navController, AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true)))
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
 
             Surface {
                 ParksRootScreen(

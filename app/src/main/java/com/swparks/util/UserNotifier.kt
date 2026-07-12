@@ -1,56 +1,127 @@
 package com.swparks.util
 
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 /**
- * Интерфейс для обработки и отправки ошибок и уведомлений в UI-слой.
+ * Класс для обработки и отправки ошибок и уведомлений в UI-слой.
  *
  * Используется во всех ViewModels для централизованной обработки ошибок
  * и информационных сообщений.
- * Реализация (UserNotifierImpl) логирует и отправляет их в SharedFlow
+ * Логирует и отправляет их в SharedFlow
  * для отображения пользователю через Snackbar/Toast/Alert.
  *
- * @see UserNotifierImpl
+ * @property logger Логгер для записи ошибок и уведомлений
  * @see AppError
  * @see AppNotification
  */
-interface UserNotifier {
+class UserNotifier(
+    private val logger: Logger
+) {
+    private companion object {
+        private const val TAG = "UserNotifier"
+        private const val ERROR_BUFFER_CAPACITY = 10
+        private const val NOTIFICATION_BUFFER_CAPACITY = 10
+    }
+
     /**
      * Поток ошибок для подписки из UI-слоя.
-     *
-     * Используется в RootScreen для отображения ошибок пользователю
-     * через Snackbar или другой UI компонент.
+     * Использует SharedFlow для поддержки множества подписчиков.
      */
-    val errorFlow: SharedFlow<AppError>
+    private val _errorFlow =
+        MutableSharedFlow<AppError>(
+            extraBufferCapacity = ERROR_BUFFER_CAPACITY,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+
+    /**
+     * Публичный поток ошибок для подписки из UI-слоя.
+     */
+    val errorFlow: SharedFlow<AppError> = _errorFlow.asSharedFlow()
 
     /**
      * Поток уведомлений для подписки из UI-слоя.
-     *
-     * Используется в RootScreen для отображения информационных сообщений
-     * (например, об успешных операциях) пользователю через Snackbar.
+     * Использует SharedFlow для поддержки множества подписчиков.
      */
-    val notificationFlow: SharedFlow<AppNotification>
+    private val _notificationFlow =
+        MutableSharedFlow<AppNotification>(
+            extraBufferCapacity = NOTIFICATION_BUFFER_CAPACITY,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+
+    /**
+     * Публичный поток уведомлений для подписки из UI-слоя.
+     */
+    val notificationFlow: SharedFlow<AppNotification> = _notificationFlow.asSharedFlow()
 
     /**
      * Обрабатывает ошибку: логирует и отправляет в поток.
      *
-     * Метод предназначен для вызова из ViewModels при возникновении ошибок.
-     * Логирует ошибку через Logger и отправляет её в errorFlow для отображения в UI.
+     * Использует tryEmit для неблокирующей отправки без необходимости в launch.
+     * Если буфер переполнен, старые ошибки отбрасываются (DROP_OLDEST).
+     *
+     * Логирует ошибки в соответствии с их типом:
+     * - Network: ERROR уровень с throwable
+     * - Validation: WARN уровень
+     * - Server: ERROR уровень с кодом статуса
+     * - Generic: ERROR уровень с throwable
      *
      * @param error Ошибка для обработки
-     * @return true если ошибка успешно отправлена в поток, false если буфер переполнен
+     * @return true если ошибка успешно отправлена, false если буфер переполнен
      */
-    fun handleError(error: AppError): Boolean
+    fun handleError(error: AppError): Boolean {
+        // Логируем ошибку
+        when (error) {
+            is AppError.Network -> {
+                logger.e(TAG, "Сетевая ошибка: ${error.message}", error.throwable)
+            }
+
+            is AppError.Validation -> {
+                logger.w(TAG, "Ошибка валидации: ${error.message}")
+            }
+
+            is AppError.Server -> {
+                logger.e(TAG, "Ошибка сервера (${error.code}): ${error.message}")
+            }
+
+            is AppError.Generic -> {
+                logger.e(TAG, "Общая ошибка: ${error.message}", error.throwable)
+            }
+
+            is AppError.LocationFailed -> {
+                logger.e(TAG, "Ошибка геолокации: ${error.message}")
+            }
+
+            is AppError.LocationDisabled -> {
+                logger.e(TAG, "Геолокация устройства отключена: ${error.message}")
+            }
+
+            is AppError.GeocodingFailed -> {
+                logger.e(TAG, "Ошибка геокодирования: ${error.message}")
+            }
+
+            is AppError.ResourceNotFound -> {
+                logger.w(TAG, "Ресурс не найден: ${error.message}")
+            }
+        }
+
+        // Отправляем в поток (неблокирующая операция)
+        return _errorFlow.tryEmit(error)
+    }
 
     /**
      * Показывает информационное уведомление.
      *
-     * Метод предназначен для вызова из ViewModels при успешных операциях
-     * или других событиях, о которых нужно уведомить пользователя.
-     * Логирует уведомление через Logger и отправляет его в notificationFlow.
+     * Использует tryEmit для неблокирующей отправки без необходимости в launch.
+     * Если буфер переполнен, старые уведомления отбрасываются (DROP_OLDEST).
      *
      * @param message Сообщение для отображения пользователю
-     * @return true если уведомление успешно отправлено в поток, false если буфер переполнен
+     * @return true если уведомление успешно отправлено, false если буфер переполнен
      */
-    fun showInfo(message: String): Boolean
+    fun showInfo(message: String): Boolean {
+        logger.i(TAG, "Инфо: $message")
+        return _notificationFlow.tryEmit(AppNotification.Info(message))
+    }
 }

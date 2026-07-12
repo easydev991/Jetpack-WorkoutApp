@@ -9,7 +9,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swparks.R
 import com.swparks.analytics.AnalyticsService
-import com.swparks.analytics.FakeAnalyticsProvider
+import com.swparks.analytics.fakeAnalyticsLogger
 import com.swparks.data.AppContainer
 import com.swparks.navigation.rememberAppState
 import com.swparks.util.AppError
@@ -50,7 +50,7 @@ class RootScreenTest {
             RootScreen(
                 appState =
                     rememberAppState(
-                        analyticsService = AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true))
+                        analyticsService = AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true))
                     )
             )
         }
@@ -84,7 +84,7 @@ class RootScreenTest {
             RootScreen(
                 appState =
                     rememberAppState(
-                        analyticsService = AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true))
+                        analyticsService = AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true))
                     )
             )
         }
@@ -118,7 +118,7 @@ class RootScreenTest {
             RootScreen(
                 appState =
                     rememberAppState(
-                        analyticsService = AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true))
+                        analyticsService = AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true))
                     )
             )
         }
@@ -151,7 +151,7 @@ class RootScreenTest {
             RootScreen(
                 appState =
                     rememberAppState(
-                        analyticsService = AnalyticsService(listOf(FakeAnalyticsProvider()), mockk<Logger>(relaxed = true))
+                        analyticsService = AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true))
                     )
             )
         }

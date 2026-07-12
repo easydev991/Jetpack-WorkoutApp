@@ -6,8 +6,7 @@
 |----------------------------|------------------------------------------------------------|
 | `util/AppError.kt`         | sealed класс ошибок (Network, Validation, Server, Generic) |
 | `util/AppErrorExt.kt`      | extension `toUiText()` для локализации                     |
-| `util/UserNotifier.kt`     | Интерфейс с `errorFlow: SharedFlow<AppError>`              |
-| `util/UserNotifierImpl.kt` | Реализация (buffer=10, DROP_OLDEST)                        |
+| `util/UserNotifier.kt`     | Класс с `errorFlow: SharedFlow<AppError>` и `notificationFlow` |
 | `util/AppNotification.kt`  | sealed класс уведомлений (Info)                            |
 | `ui/screens/RootScreen.kt` | Сбор ошибок через `LaunchedEffect`, показ Snackbar         |
 
@@ -17,7 +16,7 @@
 
 - ✅ `AppError` — модель ошибок (Network, Validation, Server, Generic)
 - ✅ `AppNotification` — модель уведомлений (Info)
-- ✅ `UserNotifier` + `UserNotifierImpl` — SharedFlow для отправки ошибок и уведомлений
+- ✅ `UserNotifier` — SharedFlow для отправки ошибок и уведомлений
 - ✅ DI в `AppContainer`, все ViewModels обновлены
 - ✅ Snackbar в `RootScreen` через `LaunchedEffect`
 - ✅ Локализация сообщений через `toUiText(context)`
@@ -32,7 +31,7 @@
 ### Тестирование
 
 - ✅ Unit-тесты `AppErrorTest` (12 тестов)
-- ✅ Unit-тесты `UserNotifierImplTest` (10 тестов)
+- ✅ Unit-тесты `UserNotifierTest` (10 тестов)
 - ✅ Инструментальные тесты `RootScreenTest` (4 теста)
   - Network error с IOException
   - Validation error (password)

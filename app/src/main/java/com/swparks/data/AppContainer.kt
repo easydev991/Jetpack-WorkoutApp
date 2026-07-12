@@ -10,7 +10,6 @@ import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFact
 import com.swparks.BuildConfig
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.FirebaseAnalyticsProvider
-import com.swparks.analytics.NoopAnalyticsProvider
 import com.swparks.data.crypto.CryptoManagerImpl
 import com.swparks.data.database.SWDatabase
 import com.swparks.data.database.dao.DialogDao
@@ -97,7 +96,6 @@ import com.swparks.util.CrashReporter
 import com.swparks.util.Logger
 import com.swparks.util.NoOpLogger
 import com.swparks.util.UserNotifier
-import com.swparks.util.UserNotifierImpl
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -280,16 +278,14 @@ class DefaultAppContainer(
         }
 
     override val logger: Logger = if (BuildConfig.DEBUG) AndroidLogger() else NoOpLogger()
-    override val userNotifier: UserNotifier = UserNotifierImpl(logger)
+    override val userNotifier: UserNotifier = UserNotifier(logger)
     override val crashReporter: CrashReporter = com.swparks.util.crash.FirebaseCrashReporter
     override val analyticsService: AnalyticsService by lazy {
         if (BuildConfig.DEBUG) {
-            AnalyticsService(listOf(NoopAnalyticsProvider()), logger)
+            AnalyticsService(emptyList(), logger)
         } else {
-            AnalyticsService(
-                listOf(FirebaseAnalyticsProvider(appContext, logger, crashReporter)),
-                logger
-            )
+            val firebase = FirebaseAnalyticsProvider(appContext, logger, crashReporter)
+            AnalyticsService(listOf(firebase::log), logger)
         }
     }
     override val messageSentNotifier: MessageSentNotifier = MessageSentNotifier()
