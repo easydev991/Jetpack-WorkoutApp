@@ -4,11 +4,14 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.swparks.util.DateFormatter.parseIsoDate
-import java.text.SimpleDateFormat
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import java.util.Date
-import java.util.Locale
 
 /**
  * Утилита для форматирования дат
@@ -49,7 +52,7 @@ object DateFormatter {
 
         return try {
             val date = parseIsoDate(dateString)
-            val localDate = date.toLocalDate()
+            val localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
             val locale =
                 context.resources.configuration.locales
                     .get(0)
@@ -57,36 +60,32 @@ object DateFormatter {
 
             when {
                 localDate.isToday() -> {
-                    // Сегодня: показываем только время
-                    val timeFormatter = SimpleDateFormat(MEDIUM_TIME, locale)
-                    timeFormatter.format(date)
+                    val formatter = DateTimeFormatter.ofPattern(MEDIUM_TIME, locale)
+                    date.toInstant().atZone(ZoneId.systemDefault()).format(formatter)
                 }
 
                 localDate.isYesterday() -> {
-                    // Вчера: показываем локализованную строку и время
-                    val timeFormatter = SimpleDateFormat(MEDIUM_TIME, locale)
-                    "$yesterdayString, ${timeFormatter.format(date)}"
+                    val formatter = DateTimeFormatter.ofPattern(MEDIUM_TIME, locale)
+                    "$yesterdayString, ${date.toInstant().atZone(ZoneId.systemDefault()).format(formatter)}"
                 }
 
                 localDate.isThisYear() -> {
-                    // В этом году: показываем дату и (опционально) время
                     if (showTimeInThisYear) {
-                        val dateTimeFormatter = SimpleDateFormat(DAY_MONTH_MEDIUM_TIME, locale)
-                        dateTimeFormatter.format(date)
+                        val formatter = DateTimeFormatter.ofPattern(DAY_MONTH_MEDIUM_TIME, locale)
+                        date.toInstant().atZone(ZoneId.systemDefault()).format(formatter)
                     } else {
-                        val dateOnlyFormatter = SimpleDateFormat(DAY_MONTH, locale)
-                        dateOnlyFormatter.format(date)
+                        val formatter = DateTimeFormatter.ofPattern(DAY_MONTH, locale)
+                        date.toInstant().atZone(ZoneId.systemDefault()).format(formatter)
                     }
                 }
 
                 else -> {
-                    // Другой год: показываем полную дату
-                    val formatter = SimpleDateFormat(DAY_MONTH_YEAR, locale)
-                    formatter.format(date)
+                    val formatter = DateTimeFormatter.ofPattern(DAY_MONTH_YEAR, locale)
+                    date.toInstant().atZone(ZoneId.systemDefault()).format(formatter)
                 }
             }
         } catch (e: Exception) {
-            Log.w("DateFormatter", "Failed to format date: ${e.message}")
+            Log.w("DateFormatter", "Не удалось отформатировать дату: ${e.message}")
             ""
         }
     }
@@ -109,48 +108,22 @@ object DateFormatter {
      */
     @VisibleForTesting
     internal fun parseIsoDate(dateString: String): Date {
-        // Пробуем разные форматы ISO8601
-        val formats =
-            listOf(
-                SimpleDateFormat(
-                    "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-                    Locale.forLanguageTag("en-US")
-                ).apply {
-                    timeZone = java.util.TimeZone.getTimeZone("UTC")
-                },
-                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.forLanguageTag("en-US")).apply {
-                    timeZone = java.util.TimeZone.getTimeZone("UTC")
-                },
-                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.forLanguageTag("en-US")).apply {
-                    timeZone = java.util.TimeZone.getTimeZone("UTC")
-                },
-                SimpleDateFormat(
-                    "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
-                    Locale.forLanguageTag("en-US")
-                ).apply {
-                    timeZone = java.util.TimeZone.getTimeZone("UTC")
-                },
-                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.forLanguageTag("en-US")).apply {
-                    timeZone = java.util.TimeZone.getTimeZone("UTC")
-                },
-                SimpleDateFormat("yyyy-MM-dd", Locale.forLanguageTag("en-US")).apply {
-                    timeZone = java.util.TimeZone.getTimeZone("UTC")
-                }
-            )
-
-        for (format in formats) {
+        val instant =
             try {
-                format.isLenient = false
-                val parsedDate = format.parse(dateString)
-                if (parsedDate != null) {
-                    return parsedDate
+                Instant.parse(dateString)
+            } catch (_: DateTimeParseException) {
+                try {
+                    LocalDateTime.parse(dateString).toInstant(ZoneOffset.UTC)
+                } catch (_: DateTimeParseException) {
+                    try {
+                        LocalDate.parse(dateString).atStartOfDay(ZoneOffset.UTC).toInstant()
+                    } catch (_: DateTimeParseException) {
+                        throw IllegalArgumentException("Не удалось распарсить дату: $dateString")
+                    }
                 }
-            } catch (_: Exception) {
-                // Игнорируем исключение и пробуем следующий формат
             }
-        }
 
-        throw IllegalArgumentException("Не удалось распарсить дату: $dateString")
+        return Date.from(instant)
     }
 
     /**
@@ -172,8 +145,6 @@ object DateFormatter {
 /**
  * Расширения для работы с датами
  */
-private fun Date.toLocalDate(): LocalDate = this.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
-
 private fun LocalDate.isToday(): Boolean = this == LocalDate.now()
 
 private fun LocalDate.isYesterday(): Boolean = this == LocalDate.now().minusDays(1)

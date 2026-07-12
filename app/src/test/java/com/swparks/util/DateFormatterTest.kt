@@ -84,6 +84,28 @@ class DateFormatterTest {
         // Then - Ожидается IllegalArgumentException
     }
 
+    @Test(expected = IllegalArgumentException::class)
+    fun parseIsoDate_whenInvalidDayOfMonth_thenThrowsException() {
+        // Given
+        val dateString = "2024-02-30"
+
+        // When
+        DateFormatter.parseIsoDate(dateString)
+
+        // Then - Ожидается IllegalArgumentException
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun parseIsoDate_whenInvalidHour_thenThrowsException() {
+        // Given
+        val dateString = "2024-01-15T25:00:00"
+
+        // When
+        DateFormatter.parseIsoDate(dateString)
+
+        // Then - Ожидается IllegalArgumentException
+    }
+
     @Test
     fun parseIsoDateToMillis_whenIso8601WithSeconds_thenReturnsMillis() {
         // Given
