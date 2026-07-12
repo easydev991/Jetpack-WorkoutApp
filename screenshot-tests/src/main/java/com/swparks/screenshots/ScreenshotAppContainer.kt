@@ -1,7 +1,6 @@
 package com.swparks.screenshots
 
 import android.content.Context
-import com.swparks.data.AppContainer
 import com.swparks.data.DefaultAppContainer
 import com.swparks.data.TokenEncoder
 import com.swparks.data.model.Country
@@ -46,9 +45,8 @@ import kotlinx.coroutines.flow.flowOf
  * 2) Стартовые nav-state константы для detail-экранов вынесены в [ScreenshotScenarioState].
  */
 class ScreenshotAppContainer(
-    context: Context,
-    private val delegate: DefaultAppContainer = DefaultAppContainer(context)
-) : AppContainer by delegate {
+    context: Context
+) : DefaultAppContainer(context) {
     private companion object {
         private const val MOSCOW_LATITUDE = 55.7558
         private const val MOSCOW_LONGITUDE = 37.6173
@@ -59,20 +57,20 @@ class ScreenshotAppContainer(
     private val demoCountries = DemoData.loadDemoCountries(appContext)
     private val screenshotSwRepository =
         ScreenshotSwRepository(
-            delegate = delegate.swRepository,
+            delegate = super.swRepository,
             demoParks = demoParks
         )
     private val screenshotCountriesRepository =
         ScreenshotCountriesRepository(
             appContext = appContext,
             countries = demoCountries,
-            delegate = delegate
+            delegate = this
         )
     private val screenshotMessagesRepository =
         ScreenshotMessagesRepository(
-            swApi = delegate.provideMessagesApi(),
-            logger = delegate.logger,
-            crashReporter = delegate.crashReporter
+            swApi = super.provideMessagesApi(),
+            logger = super.logger,
+            crashReporter = super.crashReporter
         )
     private val resourcesProvider = ResourcesProviderImpl(appContext)
 

@@ -1,7 +1,6 @@
 package com.swparks
 
 import android.app.Application
-import com.swparks.data.AppContainer
 import com.swparks.data.DefaultAppContainer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -9,7 +8,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 open class JetpackWorkoutApplication : Application() {
-    lateinit var container: AppContainer
+    lateinit var container: DefaultAppContainer
 
     // Scope для операций при старте приложения
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)

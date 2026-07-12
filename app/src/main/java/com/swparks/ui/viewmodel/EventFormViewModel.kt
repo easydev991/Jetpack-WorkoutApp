@@ -53,7 +53,7 @@ class EventFormViewModel(
 
         fun factory(
             mode: EventFormMode,
-            appContainer: com.swparks.data.AppContainer
+            appContainer: com.swparks.data.DefaultAppContainer
         ): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {

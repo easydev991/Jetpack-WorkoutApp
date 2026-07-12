@@ -176,7 +176,7 @@ private data class RootAuthSheetState(
 
 @Composable
 fun RootScreen(appState: AppState) {
-    // Используем единый AppContainer из Application — иначе ProfileViewModel и LoginViewModel
+    // Используем единый DefaultAppContainer из Application — иначе ProfileViewModel и LoginViewModel
     // работают с разными экземплярами БД/DataStore, и после авторизации UI профиля не обновляется
     val context = LocalContext.current
     val appContainer =

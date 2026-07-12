@@ -112,163 +112,14 @@ private object NetworkTimeouts {
     const val CALL_SECONDS = 60L
 }
 
-@Suppress("TooManyFunctions")
-interface AppContainer {
-    val swRepository: SWRepository
-    val secureTokenRepository: SecureTokenRepository
-    val countriesRepository: CountriesRepositoryImpl
-    val journalsRepository: JournalsRepositoryImpl
-    val journalEntriesRepository: JournalEntriesRepositoryImpl
-    val messagesRepository: MessagesRepositoryImpl
-    val userPreferencesRepository: UserPreferencesRepository
-
-    // Сервисы для обработки ошибок
-    val logger: Logger
-    val userNotifier: UserNotifier
-    val crashReporter: CrashReporter
-    val analyticsService: AnalyticsService
-
-    // Event notifiers
-    val messageSentNotifier: MessageSentNotifier
-
-    // Clock for time operations (testing)
-    val clock: com.swparks.domain.util.Clock
-
-    // Location & Geocoding services
-    val locationService: LocationServiceImpl
-    val geocodingService: GeocodingServiceImpl
-    val findCityByCoordinatesUseCase: FindCityByCoordinatesUseCase
-    val createParkLocationHandler: ICreateParkLocationHandler
-
-    // Parks filter
-    val filterParksUseCase: FilterParksUseCase
-    val parksFilterDataStore: ParksFilterDataStore
-
-    // Use cases для синхронизации данных
-    val syncParksUseCase: SyncParksUseCase
-    val syncCountriesUseCase: SyncCountriesUseCase
-
-    // Use cases для инициализации площадок
-    val initializeParksUseCase: InitializeParksUseCase
-
-    // Use cases для авторизации
-    val loginUseCase: LoginUseCase
-    val logoutUseCase: LogoutUseCase
-    val resetPasswordUseCase: ResetPasswordUseCase
-    val changePasswordUseCase: ChangePasswordUseCase
-    val deleteUserUseCase: DeleteUserUseCase
-
-    // Use cases для дневников
-    val getJournalsUseCase: GetJournalsUseCase
-    val syncJournalsUseCase: SyncJournalsUseCase
-    val deleteJournalUseCase: DeleteJournalUseCase
-    val editJournalSettingsUseCase: EditJournalSettingsUseCase
-    val getJournalEntriesUseCase: GetJournalEntriesUseCase
-    val syncJournalEntriesUseCase: SyncJournalEntriesUseCase
-    val deleteJournalEntryUseCase: DeleteJournalEntryUseCase
-    val canDeleteJournalEntryUseCase: CanDeleteJournalEntryUseCase
-    val textEntryUseCase: TextEntryUseCase
-
-    // Use cases для мероприятий
-    val getFutureEventsFlowUseCase: GetFutureEventsFlowUseCase
-    val syncFutureEventsUseCase: SyncFutureEventsUseCase
-    val getPastEventsFlowUseCase: GetPastEventsFlowUseCase
-    val syncPastEventsUseCase: SyncPastEventsUseCase
-    val createEventUseCase: CreateEventUseCase
-    val editEventUseCase: EditEventUseCase
-
-    /** Фабрика для ProfileViewModel (единый контейнер обеспечивает одну БД с LoginViewModel). */
-    fun profileViewModelFactory(): ProfileViewModel
-
-    /** Фабрика для FriendsListViewModel */
-    fun friendsListViewModelFactory(): FriendsListViewModel
-
-    /** Фабрика для UserFriendsViewModel */
-    fun userFriendsViewModelFactory(userId: Long): UserFriendsViewModel
-
-    /** Фабрика для BlacklistViewModel */
-    fun blacklistViewModelFactory(): BlacklistViewModel
-
-    /** Фабрика для UserTrainingParksViewModel */
-    fun userTrainingParksViewModelFactory(userId: Long): UserTrainingParksViewModel
-
-    /** Фабрика для UserAddedParksViewModel */
-    fun userAddedParksViewModelFactory(
-        userId: Long,
-        seedParks: List<Park>?,
-        requiresFetch: Boolean
-    ): UserAddedParksViewModel
-
-    /** Фабрика для JournalsViewModel */
-    fun journalsViewModelFactory(userId: Long): JournalsViewModel
-
-    /** Фабрика для JournalEntriesViewModel */
-    fun journalEntriesViewModelFactory(
-        journalOwnerId: Long,
-        journalId: Long,
-        savedStateHandle: SavedStateHandle
-    ): JournalEntriesViewModel
-
-    /** Фабрика для TextEntryViewModel */
-    fun textEntryViewModelFactory(mode: TextEntryMode): TextEntryViewModel
-
-    /** Фабрика для DialogsViewModel */
-    fun dialogsViewModelFactory(): DialogsViewModel
-
-    /** Фабрика для ChatViewModel */
-    fun chatViewModelFactory(): ChatViewModel
-
-    /** Фабрика для SearchUserViewModel */
-    fun searchUserViewModelFactory(): SearchUserViewModel
-
-    /** Фабрика для OtherUserProfileViewModel */
-    fun otherUserProfileViewModelFactory(userId: Long): OtherUserProfileViewModel
-
-    /** Фабрика для EditProfileViewModel */
-    fun editProfileViewModelFactory(): EditProfileViewModel
-
-    /** Фабрика для ChangePasswordViewModel */
-    fun changePasswordViewModelFactory(): ChangePasswordViewModel
-
-    /** Фабрика для RegisterViewModel */
-    fun registerViewModelFactory(): RegisterViewModel
-
-    /** Фабрика для EventsViewModel */
-    fun eventsViewModelFactory(): EventsViewModel
-
-    /** Фабрика для EventDetailViewModel */
-    fun eventDetailViewModelFactory(savedStateHandle: SavedStateHandle): EventDetailViewModel
-
-    /** Фабрика для EventFormViewModel */
-    fun eventFormViewModelFactory(mode: EventFormMode): EventFormViewModel
-
-    /** Фабрика для ParkFormViewModel */
-    fun parkFormViewModelFactory(mode: com.swparks.ui.model.ParkFormMode): ParkFormViewModel
-
-    // API клиенты для разных функциональных областей
-    fun provideAuthApi(): SWApi
-
-    fun provideProfileApi(): SWApi
-
-    fun provideFriendsApi(): SWApi
-
-    fun provideParksApi(): SWApi
-
-    fun provideEventsApi(): SWApi
-
-    fun provideMessagesApi(): SWApi
-
-    fun provideJournalsApi(): SWApi
-}
-
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
     name = "user_preferences"
 )
 
 @Suppress("TooManyFunctions")
-class DefaultAppContainer(
+open class DefaultAppContainer(
     context: Context
-) : AppContainer {
+) {
     private val appContext: Context = context.applicationContext
     private val baseUrl = "https://workout.su/api/v3/"
     private val jsonFactory =
@@ -277,10 +128,10 @@ class DefaultAppContainer(
             ignoreUnknownKeys = true
         }
 
-    override val logger: Logger = if (BuildConfig.DEBUG) AndroidLogger() else NoOpLogger()
-    override val userNotifier: UserNotifier = UserNotifier(logger)
-    override val crashReporter: CrashReporter = com.swparks.util.crash.FirebaseCrashReporter
-    override val analyticsService: AnalyticsService by lazy {
+    val logger: Logger = if (BuildConfig.DEBUG) AndroidLogger() else NoOpLogger()
+    val userNotifier: UserNotifier = UserNotifier(logger)
+    val crashReporter: CrashReporter = com.swparks.util.crash.FirebaseCrashReporter
+    val analyticsService: AnalyticsService by lazy {
         if (BuildConfig.DEBUG) {
             AnalyticsService(emptyList(), logger)
         } else {
@@ -288,48 +139,48 @@ class DefaultAppContainer(
             AnalyticsService(listOf(firebase::log), logger)
         }
     }
-    override val messageSentNotifier: MessageSentNotifier = MessageSentNotifier()
-    override val clock: com.swparks.domain.util.Clock by lazy { SystemClock() }
+    val messageSentNotifier: MessageSentNotifier = MessageSentNotifier()
+    val clock: com.swparks.domain.util.Clock by lazy { SystemClock() }
 
     // ==================== Location & Geocoding Services ====================
 
-    override val locationService: LocationServiceImpl by lazy {
+    open val locationService: LocationServiceImpl by lazy {
         LocationServiceImpl(appContext)
     }
 
-    override val geocodingService: GeocodingServiceImpl by lazy {
+    val geocodingService: GeocodingServiceImpl by lazy {
         GeocodingServiceImpl(appContext)
     }
 
-    override val findCityByCoordinatesUseCase: FindCityByCoordinatesUseCase by lazy {
+    val findCityByCoordinatesUseCase: FindCityByCoordinatesUseCase by lazy {
         FindCityByCoordinatesUseCase(countriesRepository)
     }
 
-    override val createParkLocationHandler: ICreateParkLocationHandler by lazy {
+    val createParkLocationHandler: ICreateParkLocationHandler by lazy {
         DefaultCreateParkLocationHandler(locationService, userNotifier)
     }
 
     // ==================== Parks Filter ====================
 
-    override val parksFilterDataStore: ParksFilterDataStore by lazy {
+    val parksFilterDataStore: ParksFilterDataStore by lazy {
         ParksFilterDataStore(appContext)
     }
 
-    override val filterParksUseCase: FilterParksUseCase by lazy {
+    val filterParksUseCase: FilterParksUseCase by lazy {
         FilterParksUseCase()
     }
 
     // ==================== Sync Use Cases ====================
 
-    override val syncParksUseCase: SyncParksUseCase by lazy {
+    open val syncParksUseCase: SyncParksUseCase by lazy {
         SyncParksUseCase(clock, userPreferencesRepository, swRepository, logger)
     }
 
-    override val syncCountriesUseCase: SyncCountriesUseCase by lazy {
+    open val syncCountriesUseCase: SyncCountriesUseCase by lazy {
         SyncCountriesUseCase(clock, userPreferencesRepository, countriesRepository, logger, analyticsService)
     }
 
-    override val initializeParksUseCase: InitializeParksUseCase by lazy {
+    open val initializeParksUseCase: InitializeParksUseCase by lazy {
         InitializeParksUseCase(appContext, swRepository, logger)
     }
 
@@ -412,12 +263,12 @@ class DefaultAppContainer(
     }
 
     // Создаем SecureTokenRepository для безопасного хранения токена
-    override val secureTokenRepository: SecureTokenRepository by lazy {
+    val secureTokenRepository: SecureTokenRepository by lazy {
         SecureTokenRepository(appContext.dataStore, encryptedStringSerializer)
     }
 
     // Создаем UserPreferencesRepository для использования в AuthInterceptor
-    override val userPreferencesRepository: UserPreferencesRepository by lazy {
+    val userPreferencesRepository: UserPreferencesRepository by lazy {
         UserPreferencesRepository(appContext.dataStore)
     }
 
@@ -472,7 +323,7 @@ class DefaultAppContainer(
         retrofit.create(SWApi::class.java)
     }
 
-    override val swRepository: SWRepository by lazy {
+    open val swRepository: SWRepository by lazy {
         SWRepositoryImp(
             swApi = retrofitService,
             dataStore = appContext.dataStore,
@@ -490,11 +341,11 @@ class DefaultAppContainer(
 
 // ==================== Справочник стран и городов ====================
 
-    override val countriesRepository: CountriesRepositoryImpl by lazy {
+    open val countriesRepository: CountriesRepositoryImpl by lazy {
         CountriesRepositoryImpl(context = appContext, swApi = retrofitService, logger = logger)
     }
 
-    override val journalsRepository: JournalsRepositoryImpl by lazy {
+    val journalsRepository: JournalsRepositoryImpl by lazy {
         JournalsRepositoryImpl(
             swApi = retrofitService,
             journalDao = journalDao,
@@ -513,7 +364,7 @@ class DefaultAppContainer(
      * Примечание: репозиторий не зависит от конкретных userId или journalId,
      * эти параметры передаются в методах репозитория
      */
-    override val journalEntriesRepository: JournalEntriesRepositoryImpl by lazy {
+    val journalEntriesRepository: JournalEntriesRepositoryImpl by lazy {
         JournalEntriesRepositoryImpl(
             swApi = retrofitService,
             journalEntryDao = journalEntryDao,
@@ -525,7 +376,7 @@ class DefaultAppContainer(
     /**
      * Репозиторий для работы с диалогами
      */
-    override val messagesRepository: MessagesRepositoryImpl by lazy {
+    open val messagesRepository: MessagesRepositoryImpl by lazy {
         MessagesRepositoryImpl(
             dialogsDao = dialogDao,
             swApi = retrofitService,
@@ -541,7 +392,7 @@ class DefaultAppContainer(
         TokenEncoder()
     }
 
-    override val loginUseCase: LoginUseCase by lazy {
+    open val loginUseCase: LoginUseCase by lazy {
         LoginUseCase(
             tokenEncoder,
             secureTokenRepository,
@@ -551,7 +402,7 @@ class DefaultAppContainer(
         )
     }
 
-    override val logoutUseCase: LogoutUseCase by lazy {
+    val logoutUseCase: LogoutUseCase by lazy {
         LogoutUseCase(
             secureTokenRepository,
             swRepository,
@@ -559,25 +410,25 @@ class DefaultAppContainer(
         )
     }
 
-    override val resetPasswordUseCase: ResetPasswordUseCase by lazy {
+    val resetPasswordUseCase: ResetPasswordUseCase by lazy {
         ResetPasswordUseCase(swRepository)
     }
 
-    override val changePasswordUseCase: ChangePasswordUseCase by lazy {
+    val changePasswordUseCase: ChangePasswordUseCase by lazy {
         ChangePasswordUseCase(swRepository, secureTokenRepository, tokenEncoder)
     }
 
-    override val deleteUserUseCase: DeleteUserUseCase by lazy {
+    val deleteUserUseCase: DeleteUserUseCase by lazy {
         DeleteUserUseCase(secureTokenRepository, swRepository)
     }
 
     // ==================== Use cases для дневников ====================
 
-    override val getJournalsUseCase: GetJournalsUseCase by lazy {
+    val getJournalsUseCase: GetJournalsUseCase by lazy {
         GetJournalsUseCase(journalsRepository)
     }
 
-    override val syncJournalsUseCase: SyncJournalsUseCase by lazy {
+    val syncJournalsUseCase: SyncJournalsUseCase by lazy {
         SyncJournalsUseCase(journalsRepository)
     }
 
@@ -586,55 +437,55 @@ class DefaultAppContainer(
     // Примечание: Use Case'ы являются stateless-компонентами и не зависят от конкретных
     // userId и journalId при создании. Эти параметры передаются в методах invoke() Use Case'ов.
 
-    override val getJournalEntriesUseCase: GetJournalEntriesUseCase by lazy {
+    val getJournalEntriesUseCase: GetJournalEntriesUseCase by lazy {
         GetJournalEntriesUseCase(journalEntriesRepository)
     }
 
-    override val syncJournalEntriesUseCase: SyncJournalEntriesUseCase by lazy {
+    val syncJournalEntriesUseCase: SyncJournalEntriesUseCase by lazy {
         SyncJournalEntriesUseCase(journalEntriesRepository)
     }
-    override val deleteJournalEntryUseCase: DeleteJournalEntryUseCase by lazy {
+    val deleteJournalEntryUseCase: DeleteJournalEntryUseCase by lazy {
         DeleteJournalEntryUseCase(journalEntriesRepository)
     }
-    override val canDeleteJournalEntryUseCase: CanDeleteJournalEntryUseCase by lazy {
+    val canDeleteJournalEntryUseCase: CanDeleteJournalEntryUseCase by lazy {
         CanDeleteJournalEntryUseCase(journalEntriesRepository)
     }
-    override val deleteJournalUseCase: DeleteJournalUseCase by lazy {
+    val deleteJournalUseCase: DeleteJournalUseCase by lazy {
         DeleteJournalUseCase(swRepository)
     }
-    override val editJournalSettingsUseCase: EditJournalSettingsUseCase by lazy {
+    val editJournalSettingsUseCase: EditJournalSettingsUseCase by lazy {
         EditJournalSettingsUseCase(swRepository)
     }
     val createJournalUseCase: CreateJournalUseCase by lazy {
         CreateJournalUseCase(swRepository)
     }
-    override val textEntryUseCase: TextEntryUseCase by lazy {
+    val textEntryUseCase: TextEntryUseCase by lazy {
         TextEntryUseCase(swRepository, createJournalUseCase, messageSentNotifier)
     }
 
     // ==================== Use cases для мероприятий ====================
 
-    override val getFutureEventsFlowUseCase: GetFutureEventsFlowUseCase by lazy {
+    open val getFutureEventsFlowUseCase: GetFutureEventsFlowUseCase by lazy {
         GetFutureEventsFlowUseCase(swRepository)
     }
-    override val syncFutureEventsUseCase: SyncFutureEventsUseCase by lazy {
+    open val syncFutureEventsUseCase: SyncFutureEventsUseCase by lazy {
         SyncFutureEventsUseCase(swRepository)
     }
-    override val getPastEventsFlowUseCase: GetPastEventsFlowUseCase by lazy {
+    open val getPastEventsFlowUseCase: GetPastEventsFlowUseCase by lazy {
         GetPastEventsFlowUseCase(swRepository)
     }
-    override val syncPastEventsUseCase: SyncPastEventsUseCase by lazy {
+    open val syncPastEventsUseCase: SyncPastEventsUseCase by lazy {
         SyncPastEventsUseCase(swRepository)
     }
-    override val createEventUseCase: CreateEventUseCase by lazy {
+    val createEventUseCase: CreateEventUseCase by lazy {
         CreateEventUseCase(swRepository)
     }
-    override val editEventUseCase: EditEventUseCase by lazy {
+    val editEventUseCase: EditEventUseCase by lazy {
         EditEventUseCase(swRepository)
     }
 
     /** Factory метод для создания ProfileViewModel */
-    override fun profileViewModelFactory() =
+    open fun profileViewModelFactory() =
         ProfileViewModel(
             countriesRepository = countriesRepository,
             swRepository = swRepository,
@@ -644,7 +495,7 @@ class DefaultAppContainer(
         )
 
     /** Factory метод для создания FriendsListViewModel */
-    override fun friendsListViewModelFactory() =
+    fun friendsListViewModelFactory() =
         FriendsListViewModel(
             userDao = userDao,
             swRepository = swRepository,
@@ -654,7 +505,7 @@ class DefaultAppContainer(
         )
 
     /** Factory метод для создания UserFriendsViewModel */
-    override fun userFriendsViewModelFactory(userId: Long) =
+    fun userFriendsViewModelFactory(userId: Long) =
         UserFriendsViewModel(
             userId = userId,
             swRepository = swRepository,
@@ -663,7 +514,7 @@ class DefaultAppContainer(
         )
 
     /** Factory метод для создания BlacklistViewModel */
-    override fun blacklistViewModelFactory() =
+    fun blacklistViewModelFactory() =
         BlacklistViewModel(
             swRepository = swRepository,
             logger = logger,
@@ -672,7 +523,7 @@ class DefaultAppContainer(
         )
 
     /** Factory метод для создания UserTrainingParksViewModel */
-    override fun userTrainingParksViewModelFactory(userId: Long) =
+    fun userTrainingParksViewModelFactory(userId: Long) =
         UserTrainingParksViewModel(
             swRepository = swRepository,
             userId = userId,
@@ -680,7 +531,7 @@ class DefaultAppContainer(
             userNotifier = userNotifier
         )
 
-    override fun userAddedParksViewModelFactory(
+    fun userAddedParksViewModelFactory(
         userId: Long,
         seedParks: List<Park>?,
         requiresFetch: Boolean
@@ -694,7 +545,7 @@ class DefaultAppContainer(
     )
 
     /** Factory метод для создания JournalsViewModel */
-    override fun journalsViewModelFactory(userId: Long) =
+    fun journalsViewModelFactory(userId: Long) =
         JournalsViewModel(
             userId = userId,
             getJournalsUseCase = getJournalsUseCase,
@@ -707,7 +558,7 @@ class DefaultAppContainer(
         )
 
     /** Factory метод для создания JournalEntriesViewModel */
-    override fun journalEntriesViewModelFactory(
+    fun journalEntriesViewModelFactory(
         journalOwnerId: Long,
         journalId: Long,
         savedStateHandle: SavedStateHandle
@@ -731,7 +582,7 @@ class DefaultAppContainer(
     )
 
     /** Factory метод для создания TextEntryViewModel */
-    override fun textEntryViewModelFactory(mode: TextEntryMode) =
+    fun textEntryViewModelFactory(mode: TextEntryMode) =
         TextEntryViewModel(
             textEntryUseCase = textEntryUseCase,
             userNotifier = userNotifier,
@@ -740,7 +591,7 @@ class DefaultAppContainer(
         )
 
     /** Factory метод для создания DialogsViewModel */
-    override fun dialogsViewModelFactory() =
+    open fun dialogsViewModelFactory() =
         DialogsViewModel(
             messagesRepository = messagesRepository,
             swRepository = swRepository,
@@ -751,7 +602,7 @@ class DefaultAppContainer(
         )
 
     /** Factory метод для создания ChatViewModel */
-    override fun chatViewModelFactory() =
+    fun chatViewModelFactory() =
         ChatViewModel(
             swApi = provideMessagesApi(),
             swRepository = swRepository,
@@ -762,7 +613,7 @@ class DefaultAppContainer(
         )
 
     /** Factory метод для создания SearchUserViewModel */
-    override fun searchUserViewModelFactory() =
+    open fun searchUserViewModelFactory() =
         SearchUserViewModel(
             swRepository = swRepository,
             logger = logger,
@@ -770,7 +621,7 @@ class DefaultAppContainer(
         )
 
     /** Factory метод для создания OtherUserProfileViewModel */
-    override fun otherUserProfileViewModelFactory(userId: Long) =
+    open fun otherUserProfileViewModelFactory(userId: Long) =
         OtherUserProfileViewModel(
             userId = userId,
             countriesRepository = countriesRepository,
@@ -782,7 +633,7 @@ class DefaultAppContainer(
         )
 
     /** Factory метод для создания EditProfileViewModel */
-    override fun editProfileViewModelFactory() =
+    fun editProfileViewModelFactory() =
         EditProfileViewModel(
             swRepository = swRepository,
             countriesRepository = countriesRepository,
@@ -795,7 +646,7 @@ class DefaultAppContainer(
         )
 
     /** Factory метод для создания ChangePasswordViewModel */
-    override fun changePasswordViewModelFactory() =
+    fun changePasswordViewModelFactory() =
         ChangePasswordViewModel(
             changePasswordUseCase = changePasswordUseCase,
             logger = logger,
@@ -805,7 +656,7 @@ class DefaultAppContainer(
         )
 
     /** Factory метод для создания RegisterViewModel */
-    override fun registerViewModelFactory() =
+    fun registerViewModelFactory() =
         RegisterViewModel(
             logger = logger,
             swRepository = swRepository,
@@ -818,7 +669,7 @@ class DefaultAppContainer(
         )
 
     /** Factory метод для создания EventsViewModel */
-    override fun eventsViewModelFactory() =
+    fun eventsViewModelFactory() =
         EventsViewModel(
             getFutureEventsFlowUseCase = getFutureEventsFlowUseCase,
             syncFutureEventsUseCase = syncFutureEventsUseCase,
@@ -833,7 +684,7 @@ class DefaultAppContainer(
         )
 
     /** Factory метод для создания EventDetailViewModel */
-    override fun eventDetailViewModelFactory(savedStateHandle: SavedStateHandle) =
+    fun eventDetailViewModelFactory(savedStateHandle: SavedStateHandle) =
         EventDetailViewModel(
             swRepository = swRepository,
             countriesRepository = countriesRepository,
@@ -847,7 +698,7 @@ class DefaultAppContainer(
         )
 
     /** Factory метод для создания EventFormViewModel */
-    override fun eventFormViewModelFactory(mode: EventFormMode) =
+    fun eventFormViewModelFactory(mode: EventFormMode) =
         EventFormViewModel(
             mode = mode,
             createEventUseCase = createEventUseCase,
@@ -859,7 +710,7 @@ class DefaultAppContainer(
         )
 
     /** Factory метод для создания ParkFormViewModel */
-    override fun parkFormViewModelFactory(mode: com.swparks.ui.model.ParkFormMode) =
+    fun parkFormViewModelFactory(mode: com.swparks.ui.model.ParkFormMode) =
         ParkFormViewModel(
             mode = mode,
             swRepository = swRepository,
@@ -876,17 +727,17 @@ class DefaultAppContainer(
     // Все фабричные методы возвращают один и тот же экземпляр SWApi для консистентности
     // Разделение по областям обеспечивает лучшую организацию кода и гибкость для будущего рефакторинга
 
-    override fun provideAuthApi(): SWApi = retrofitService
+    fun provideAuthApi(): SWApi = retrofitService
 
-    override fun provideProfileApi(): SWApi = retrofitService
+    fun provideProfileApi(): SWApi = retrofitService
 
-    override fun provideFriendsApi(): SWApi = retrofitService
+    fun provideFriendsApi(): SWApi = retrofitService
 
-    override fun provideParksApi(): SWApi = retrofitService
+    fun provideParksApi(): SWApi = retrofitService
 
-    override fun provideEventsApi(): SWApi = retrofitService
+    fun provideEventsApi(): SWApi = retrofitService
 
-    override fun provideMessagesApi(): SWApi = retrofitService
+    fun provideMessagesApi(): SWApi = retrofitService
 
-    override fun provideJournalsApi(): SWApi = retrofitService
+    fun provideJournalsApi(): SWApi = retrofitService
 }

@@ -27,7 +27,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.swparks.data.AppContainer
+import com.swparks.data.DefaultAppContainer
 import com.swparks.ui.ds.disableAllGestures
 import com.swparks.ui.state.RegisterUiState
 import com.swparks.ui.viewmodel.IRegisterViewModel
@@ -47,7 +47,7 @@ private object RegisterRoutes {
 @Composable
 fun RegisterSheetHost(
     show: Boolean,
-    appContainer: AppContainer,
+    appContainer: DefaultAppContainer,
     onDismissed: () -> Unit,
     onRegisterSuccess: (userId: Long) -> Unit
 ) {

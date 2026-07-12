@@ -10,7 +10,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swparks.R
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.fakeAnalyticsLogger
-import com.swparks.data.AppContainer
+import com.swparks.data.DefaultAppContainer
 import com.swparks.navigation.rememberAppState
 import com.swparks.util.AppError
 import com.swparks.util.Logger
@@ -31,7 +31,7 @@ class RootScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private lateinit var appContainer: AppContainer
+    private lateinit var appContainer: DefaultAppContainer
     private lateinit var context: Context
 
     @Before

@@ -40,7 +40,7 @@ import com.swparks.R
 import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AppScreen
 import com.swparks.analytics.UserActionType
-import com.swparks.data.AppContainer
+import com.swparks.data.DefaultAppContainer
 import com.swparks.data.model.User
 import com.swparks.navigation.AppState
 import com.swparks.navigation.Screen
@@ -65,7 +65,7 @@ import com.swparks.ui.viewmodel.ProfileUiState
 import kotlinx.coroutines.launch
 
 data class ProfileRootConfig(
-    val appContainer: AppContainer? = null,
+    val appContainer: DefaultAppContainer? = null,
     val appState: AppState? = null
 )
 

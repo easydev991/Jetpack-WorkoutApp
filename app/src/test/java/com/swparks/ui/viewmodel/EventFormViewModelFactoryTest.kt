@@ -1,7 +1,7 @@
 package com.swparks.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.swparks.data.AppContainer
+import com.swparks.data.DefaultAppContainer
 import com.swparks.ui.model.EventFormMode
 import io.mockk.every
 import io.mockk.mockk
@@ -15,7 +15,7 @@ class EventFormViewModelFactoryTest {
     @Test
     fun create_whenExpectedModelClass_thenReturnsEventFormViewModel() {
         val appContainer =
-            mockk<AppContainer>(relaxed = true) {
+            mockk<DefaultAppContainer>(relaxed = true) {
                 every { eventFormViewModelFactory(any()) } returns mockk<EventFormViewModel>(relaxed = true)
             }
         val mode = EventFormMode.RegularCreate
@@ -30,7 +30,7 @@ class EventFormViewModelFactoryTest {
     @Test
     fun create_whenUnexpectedModelClass_thenThrowsIllegalArgumentException() {
         val appContainer =
-            mockk<AppContainer>(relaxed = true) {
+            mockk<DefaultAppContainer>(relaxed = true) {
                 every { eventFormViewModelFactory(any()) } returns mockk<EventFormViewModel>(relaxed = true)
             }
         val mode = EventFormMode.RegularCreate
