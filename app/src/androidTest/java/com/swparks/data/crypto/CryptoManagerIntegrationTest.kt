@@ -12,7 +12,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Интеграционные тесты для [CryptoManager] с реальным Android Keystore.
+ * Интеграционные тесты для [CryptoManagerImpl] с реальным Android Keystore.
  *
  * Тестирует работу CryptoManager с настоящим Android Keystore для проверки
  * правильности шифрования и дешифрования данных.
@@ -20,7 +20,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class CryptoManagerIntegrationTest {
     private lateinit var context: Context
-    private lateinit var cryptoManager: CryptoManager
+    private lateinit var cryptoManager: CryptoManagerImpl
 
     private companion object {
         private const val KEYSET_PREFS_NAME = "test_crypto_prefs"

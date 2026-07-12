@@ -1,7 +1,7 @@
 package com.swparks.data.serializer
 
 import android.util.Log
-import com.swparks.data.crypto.CryptoManager
+import com.swparks.data.crypto.CryptoManagerImpl
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -32,7 +32,7 @@ class EncryptedStringSerializerTest {
     @Test
     fun deserialize_whenEncryptedData_thenReturnsDecryptedString() {
         // Given
-        val mockCryptoManager = mockk<CryptoManager>()
+        val mockCryptoManager = mockk<CryptoManagerImpl>()
         val plainText = "test_token_12345"
         val encryptedData = "encrypted_data_base64".toByteArray()
 
@@ -50,7 +50,7 @@ class EncryptedStringSerializerTest {
     @Test
     fun deserialize_whenNullData_thenReturnsNull() {
         // Given
-        val mockCryptoManager = mockk<CryptoManager>()
+        val mockCryptoManager = mockk<CryptoManagerImpl>()
         val serializer = EncryptedStringSerializer(mockCryptoManager)
 
         // When
@@ -63,7 +63,7 @@ class EncryptedStringSerializerTest {
     @Test
     fun serialize_whenValidString_thenReturnsEncryptedByteArray() {
         // Given
-        val mockCryptoManager = mockk<CryptoManager>()
+        val mockCryptoManager = mockk<CryptoManagerImpl>()
         val plainText = "test_token_12345"
         val plainTextBytes = plainText.toByteArray()
         val encryptedData = "encrypted_data_base64".toByteArray()
@@ -82,7 +82,7 @@ class EncryptedStringSerializerTest {
     @Test
     fun serialize_whenNullString_thenReturnsEmptyByteArray() {
         // Given
-        val mockCryptoManager = mockk<CryptoManager>()
+        val mockCryptoManager = mockk<CryptoManagerImpl>()
         val serializer = EncryptedStringSerializer(mockCryptoManager)
 
         // When
@@ -95,7 +95,7 @@ class EncryptedStringSerializerTest {
     @Test
     fun serializeAndDeserialize_whenValidToken_thenReturnsOriginalToken() {
         // Given
-        val mockCryptoManager = mockk<CryptoManager>()
+        val mockCryptoManager = mockk<CryptoManagerImpl>()
         val plainText = "test_token_67890"
         val plainTextBytes = plainText.toByteArray()
         val encryptedData = "encrypted_token_base64".toByteArray()
@@ -116,7 +116,7 @@ class EncryptedStringSerializerTest {
     @Test
     fun serializeAndDeserialize_whenNullToken_thenReturnsNull() {
         // Given
-        val mockCryptoManager = mockk<CryptoManager>()
+        val mockCryptoManager = mockk<CryptoManagerImpl>()
         val serializer = EncryptedStringSerializer(mockCryptoManager)
 
         // When

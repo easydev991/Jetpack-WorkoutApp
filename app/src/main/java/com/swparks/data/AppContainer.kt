@@ -11,7 +11,6 @@ import com.swparks.BuildConfig
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.FirebaseAnalyticsProvider
 import com.swparks.analytics.NoopAnalyticsProvider
-import com.swparks.data.crypto.CryptoManager
 import com.swparks.data.crypto.CryptoManagerImpl
 import com.swparks.data.database.SWDatabase
 import com.swparks.data.database.dao.DialogDao
@@ -407,7 +406,7 @@ class DefaultAppContainer(
     // ==================== Криптография и хранение токена ====================
 
     // Создаем CryptoManager для шифрования токена
-    private val cryptoManager: CryptoManager by lazy {
+    private val cryptoManager: CryptoManagerImpl by lazy {
         CryptoManagerImpl(appContext)
     }
 

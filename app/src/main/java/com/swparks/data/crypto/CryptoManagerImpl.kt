@@ -11,7 +11,7 @@ class CryptoManagerImpl(
     private val context: Context,
     private val keysetName: String = "auth_token_keyset",
     private val prefFileName: String = "tink_prefs"
-) : CryptoManager {
+) {
     private companion object {
         private const val TAG = "CryptoManager"
     }
@@ -29,13 +29,13 @@ class CryptoManagerImpl(
             .getPrimitive(Aead::class.java)
     }
 
-    override fun encrypt(data: ByteArray): ByteArray {
+    fun encrypt(data: ByteArray): ByteArray {
         val encrypted = aead.encrypt(data, null)
         Log.d(TAG, "Encrypted ${data.size} -> ${encrypted.size} bytes")
         return encrypted
     }
 
-    override fun decrypt(ciphertext: ByteArray): ByteArray =
+    fun decrypt(ciphertext: ByteArray): ByteArray =
         try {
             val decrypted = aead.decrypt(ciphertext, null)
             Log.d(TAG, "Decrypted ${ciphertext.size} -> ${decrypted.size} bytes")

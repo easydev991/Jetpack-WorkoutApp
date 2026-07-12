@@ -6,7 +6,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.preferencesOf
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.swparks.data.crypto.CryptoManager
+import com.swparks.data.crypto.CryptoManagerImpl
 import com.swparks.data.serializer.EncryptedStringSerializer
 import io.mockk.coVerify
 import io.mockk.every
@@ -28,7 +28,7 @@ import org.junit.Test
  */
 class SecureTokenRepositoryTest {
     private lateinit var mockDataStore: DataStore<Preferences>
-    private lateinit var mockCryptoManager: CryptoManager
+    private lateinit var mockCryptoManager: CryptoManagerImpl
     private lateinit var serializer: EncryptedStringSerializer
 
     private val encryptedTokenKey = stringPreferencesKey("encrypted_token")

@@ -1,7 +1,7 @@
 package com.swparks.data.serializer
 
 import android.util.Log
-import com.swparks.data.crypto.CryptoManager
+import com.swparks.data.crypto.CryptoManagerImpl
 
 /**
  * Вспомогательный класс для шифрования/дешифрования строк с помощью Tink.
@@ -21,7 +21,7 @@ import com.swparks.data.crypto.CryptoManager
  * ```
  */
 class EncryptedStringSerializer(
-    private val cryptoManager: CryptoManager
+    private val cryptoManager: CryptoManagerImpl
 ) {
     private companion object {
         private const val TAG = "EncryptedStringSerializer"
