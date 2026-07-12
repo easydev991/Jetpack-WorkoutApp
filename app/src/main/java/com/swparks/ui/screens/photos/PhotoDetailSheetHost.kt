@@ -50,7 +50,7 @@ fun PhotoDetailSheetHost(
             factory =
                 PhotoDetailViewModel.factoryWithConfig(
                     config = config,
-                    swRepository = appContainer.swRepository,
+                    parksEventsRepository = appContainer.parksEventsRepository,
                     userPreferencesRepository = appContainer.userPreferencesRepository,
                     logger = appContainer.logger,
                     userNotifier = appContainer.userNotifier

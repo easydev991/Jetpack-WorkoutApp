@@ -2,7 +2,8 @@ package com.swparks.domain.usecase
 
 import android.util.Log
 import com.swparks.data.SecureTokenRepository
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.AuthRepository
+import com.swparks.data.repository.UserProfileRepository
 
 /**
  * Use case для удаления аккаунта пользователя.
@@ -10,15 +11,17 @@ import com.swparks.data.repository.SWRepository
  * Выполняет следующие действия:
  * 1. Вызывает API для удаления профиля на сервере
  * 2. Очищает токен авторизации в SecureTokenRepository
- * 3. Очищает все локальные данные пользователя через SWRepository.clearUserData()
- * 4. Сбрасывает флаг isAuthorized через SWRepository.forceLogout()
+ * 3. Очищает все локальные данные пользователя через AuthRepository.clearUserData()
+ * 4. Сбрасывает флаг isAuthorized через AuthRepository.forceLogout()
  *
  * @param secureTokenRepository Репозиторий для безопасного хранения токена
- * @param swRepository Репозиторий для работы с API и локальными данными
+ * @param userProfileRepository Репозиторий для работы с профилем пользователя
+ * @param authRepository Репозиторий для работы с API авторизации
  */
 class DeleteUserUseCase(
     private val secureTokenRepository: SecureTokenRepository,
-    private val swRepository: SWRepository
+    private val userProfileRepository: UserProfileRepository,
+    private val authRepository: AuthRepository
 ) {
     private companion object {
         const val TAG = "DeleteUserUseCase"
@@ -36,19 +39,15 @@ class DeleteUserUseCase(
     suspend operator fun invoke(): Result<Unit> {
         Log.i(TAG, "Начало удаления аккаунта")
 
-        // Отправляем запрос на сервер для удаления профиля
-        val apiResult = swRepository.deleteUser()
+        val apiResult = userProfileRepository.deleteUser()
 
         return apiResult.fold(
             onSuccess = {
-                // Очищаем токен авторизации
                 secureTokenRepository.saveAuthToken(null)
 
-                // Очищаем все данные пользователя (профиль, друзья, заявки, черный список, диалоги)
-                swRepository.clearUserData()
+                authRepository.clearUserData()
 
-                // Сбрасываем флаг isAuthorized
-                swRepository.forceLogout()
+                authRepository.forceLogout()
 
                 Log.i(TAG, "Аккаунт успешно удален")
                 Result.success(Unit)

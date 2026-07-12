@@ -1,20 +1,20 @@
 package com.swparks.domain.usecase
 
 import android.content.Context
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.util.Logger
 import kotlinx.coroutines.CancellationException
 
 class InitializeParksUseCase(
     private val context: Context,
-    private val swRepository: SWRepository,
+    private val parksEventsRepository: ParksEventsRepository,
     private val logger: Logger
 ) {
     suspend operator fun invoke(): Result<Unit> =
         kotlin
             .runCatching {
                 logger.d(TAG, "Импорт seed parks в Room")
-                swRepository.importSeedParks(context)
+                parksEventsRepository.importSeedParks(context)
             }.onFailure { error ->
                 if (error is CancellationException) {
                     throw error

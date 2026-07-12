@@ -2,12 +2,12 @@ package com.swparks.domain.usecase
 
 import com.swparks.data.SecureTokenRepository
 import com.swparks.data.TokenEncoder
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.AuthRepository
 import com.swparks.ui.model.LoginCredentials
 import kotlinx.coroutines.flow.first
 
 class ChangePasswordUseCase(
-    private val swRepository: SWRepository,
+    private val authRepository: AuthRepository,
     private val secureTokenRepository: SecureTokenRepository,
     private val tokenEncoder: TokenEncoder
 ) {
@@ -15,13 +15,11 @@ class ChangePasswordUseCase(
         current: String,
         new: String
     ): Result<Unit> {
-        val result = swRepository.changePassword(current, new)
+        val result = authRepository.changePassword(current, new)
 
         result.onSuccess {
-            // Получаем логин текущего пользователя
-            val currentUser = swRepository.getCurrentUserFlow().first()
+            val currentUser = authRepository.getCurrentUserFlow().first()
             if (currentUser != null) {
-                // Генерируем и сохраняем новый токен с новым паролем
                 val newToken = tokenEncoder.encode(LoginCredentials(currentUser.name, new))
                 if (newToken != null) {
                     secureTokenRepository.saveAuthToken(newToken)

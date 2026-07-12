@@ -3,7 +3,7 @@ package com.swparks.domain.usecase
 import com.swparks.data.SecureTokenRepository
 import com.swparks.data.TokenEncoder
 import com.swparks.data.model.User
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.AuthRepository
 import com.swparks.domain.exception.ServerException
 import com.swparks.ui.model.LoginCredentials
 import io.mockk.coEvery
@@ -22,19 +22,19 @@ import org.junit.Test
 import java.io.IOException
 
 class ChangePasswordUseCaseTest {
-    private lateinit var swRepository: SWRepository
+    private lateinit var authRepository: AuthRepository
     private lateinit var secureTokenRepository: SecureTokenRepository
     private lateinit var tokenEncoder: TokenEncoder
     private lateinit var changePasswordUseCase: ChangePasswordUseCase
 
     @Before
     fun setup() {
-        swRepository = mockk(relaxed = true)
+        authRepository = mockk(relaxed = true)
         secureTokenRepository = mockk(relaxed = true)
         tokenEncoder = mockk(relaxed = true)
         changePasswordUseCase =
             ChangePasswordUseCase(
-                swRepository,
+                authRepository,
                 secureTokenRepository,
                 tokenEncoder
             )
@@ -55,12 +55,12 @@ class ChangePasswordUseCaseTest {
             val newToken = "newEncodedToken"
 
             coEvery {
-                swRepository.changePassword(
+                authRepository.changePassword(
                     currentPassword,
                     newPassword
                 )
             } returns Result.success(Unit)
-            every { swRepository.getCurrentUserFlow() } returns flowOf(user)
+            every { authRepository.getCurrentUserFlow() } returns flowOf(user)
             every {
                 tokenEncoder.encode(
                     LoginCredentials(
@@ -75,7 +75,7 @@ class ChangePasswordUseCaseTest {
 
             // Then
             assertTrue(result.isSuccess)
-            coVerify(exactly = 1) { swRepository.changePassword(currentPassword, newPassword) }
+            coVerify(exactly = 1) { authRepository.changePassword(currentPassword, newPassword) }
         }
 
     @Test
@@ -86,7 +86,7 @@ class ChangePasswordUseCaseTest {
             val newPassword = "newPassword456"
             val ioException = IOException("Нет соединения с интернетом")
             coEvery {
-                swRepository.changePassword(
+                authRepository.changePassword(
                     currentPassword,
                     newPassword
                 )
@@ -97,7 +97,7 @@ class ChangePasswordUseCaseTest {
 
             // Then
             assertTrue(result.isFailure)
-            coVerify(exactly = 1) { swRepository.changePassword(currentPassword, newPassword) }
+            coVerify(exactly = 1) { authRepository.changePassword(currentPassword, newPassword) }
         }
 
     @Test
@@ -108,7 +108,7 @@ class ChangePasswordUseCaseTest {
             val newPassword = "newPassword456"
             val serverException = ServerException("Неверный текущий пароль", null)
             coEvery {
-                swRepository.changePassword(
+                authRepository.changePassword(
                     currentPassword,
                     newPassword
                 )
@@ -119,7 +119,7 @@ class ChangePasswordUseCaseTest {
 
             // Then
             assertTrue(result.isFailure)
-            coVerify(exactly = 1) { swRepository.changePassword(currentPassword, newPassword) }
+            coVerify(exactly = 1) { authRepository.changePassword(currentPassword, newPassword) }
         }
 
     @Test
@@ -130,7 +130,7 @@ class ChangePasswordUseCaseTest {
             val newPassword = "newPassword456"
             val serverException = ServerException("Ошибка авторизации", null)
             coEvery {
-                swRepository.changePassword(
+                authRepository.changePassword(
                     currentPassword,
                     newPassword
                 )
@@ -141,7 +141,7 @@ class ChangePasswordUseCaseTest {
 
             // Then
             assertTrue(result.isFailure)
-            coVerify(exactly = 1) { swRepository.changePassword(currentPassword, newPassword) }
+            coVerify(exactly = 1) { authRepository.changePassword(currentPassword, newPassword) }
         }
 
     // ==================== Тесты обновления токена ====================
@@ -156,12 +156,12 @@ class ChangePasswordUseCaseTest {
             val newToken = "newEncodedToken"
 
             coEvery {
-                swRepository.changePassword(
+                authRepository.changePassword(
                     currentPassword,
                     newPassword
                 )
             } returns Result.success(Unit)
-            every { swRepository.getCurrentUserFlow() } returns flowOf(user)
+            every { authRepository.getCurrentUserFlow() } returns flowOf(user)
             every {
                 tokenEncoder.encode(
                     LoginCredentials(
@@ -188,12 +188,12 @@ class ChangePasswordUseCaseTest {
             val newPassword = "newPassword456"
 
             coEvery {
-                swRepository.changePassword(
+                authRepository.changePassword(
                     currentPassword,
                     newPassword
                 )
             } returns Result.success(Unit)
-            every { swRepository.getCurrentUserFlow() } returns flowOf(null)
+            every { authRepository.getCurrentUserFlow() } returns flowOf(null)
 
             // When
             val result = changePasswordUseCase(currentPassword, newPassword)
@@ -213,12 +213,12 @@ class ChangePasswordUseCaseTest {
             val user = User(id = 1, name = "testuser", image = null)
 
             coEvery {
-                swRepository.changePassword(
+                authRepository.changePassword(
                     currentPassword,
                     newPassword
                 )
             } returns Result.success(Unit)
-            every { swRepository.getCurrentUserFlow() } returns flowOf(user)
+            every { authRepository.getCurrentUserFlow() } returns flowOf(user)
             every { tokenEncoder.encode(any<LoginCredentials>()) } returns null
 
             // When
@@ -239,7 +239,7 @@ class ChangePasswordUseCaseTest {
             val error = IOException("Network error")
 
             coEvery {
-                swRepository.changePassword(
+                authRepository.changePassword(
                     currentPassword,
                     newPassword
                 )

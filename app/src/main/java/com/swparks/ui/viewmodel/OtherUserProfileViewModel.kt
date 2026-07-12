@@ -12,8 +12,10 @@ import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
 import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.AuthRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.FriendsRepository
+import com.swparks.data.repository.UserProfileRepository
 import com.swparks.ui.model.BlacklistAction
 import com.swparks.ui.model.toApiOption
 import com.swparks.util.AppError
@@ -36,7 +38,9 @@ import retrofit2.HttpException
 class OtherUserProfileViewModel(
     private val userId: Long,
     private val countriesRepository: CountriesRepositoryImpl,
-    private val swRepository: SWRepository,
+    private val authRepository: AuthRepository,
+    private val userProfileRepository: UserProfileRepository,
+    private val friendsRepository: FriendsRepository,
     private val logger: Logger,
     private val userNotifier: UserNotifier,
     private val resources: ResourcesProviderImpl,
@@ -55,12 +59,12 @@ class OtherUserProfileViewModel(
     override val viewedUser: StateFlow<User?> = _viewedUser.asStateFlow()
 
     override val currentUser: StateFlow<User?> =
-        swRepository
+        authRepository
             .getCurrentUserFlow()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(SUBSCRIPTION_TIMEOUT_MS), null)
 
     override val friends: StateFlow<List<User>> =
-        swRepository
+        friendsRepository
             .getFriendsFlow()
             .stateIn(
                 viewModelScope,
@@ -69,7 +73,7 @@ class OtherUserProfileViewModel(
             )
 
     override val blacklist: StateFlow<List<User>> =
-        swRepository
+        friendsRepository
             .getBlacklistFlow()
             .stateIn(
                 viewModelScope,
@@ -144,7 +148,7 @@ class OtherUserProfileViewModel(
             _uiState.update { OtherUserProfileUiState.Loading }
             logger.i(TAG, "Загрузка профиля пользователя: $userId")
 
-            swRepository
+            userProfileRepository
                 .getUser(userId)
                 .onSuccess { viewedUser ->
                     _viewedUser.update { viewedUser }
@@ -177,7 +181,7 @@ class OtherUserProfileViewModel(
             _isRefreshing.update { true }
             logger.i(TAG, "Обновление профиля: $userId")
 
-            swRepository
+            userProfileRepository
                 .getUser(userId)
                 .onSuccess { viewedUser ->
                     _viewedUser.update { viewedUser }
@@ -261,7 +265,7 @@ class OtherUserProfileViewModel(
         viewModelScope.launch {
             _isFriendActionLoading.update { true }
             logger.i(TAG, "Действие с друзьями: $action для $viewedUserId")
-            swRepository
+            friendsRepository
                 .friendAction(viewedUserId, action)
                 .onSuccess {
                     logger.i(TAG, "Действие с друзьями выполнено успешно")
@@ -294,7 +298,7 @@ class OtherUserProfileViewModel(
 
         viewModelScope.launch {
             logger.i(TAG, "Действие с черным списком: $action для ${viewedUser.id}")
-            swRepository
+            friendsRepository
                 .blacklistAction(viewedUser, action.toApiOption())
                 .onSuccess {
                     logger.i(TAG, "Действие с черным списком выполнено успешно: $action")

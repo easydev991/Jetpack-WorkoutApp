@@ -1,14 +1,14 @@
 package com.swparks.domain.usecase
 
 import com.swparks.data.model.Event
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.ui.model.EventForm
 
 class CreateEventUseCase(
-    private val repository: SWRepository
+    private val parksEventsRepository: ParksEventsRepository
 ) {
     suspend operator fun invoke(
         form: EventForm,
         photos: List<ByteArray>? = null
-    ): Result<Event> = repository.saveEvent(id = null, form = form, photos = photos)
+    ): Result<Event> = parksEventsRepository.saveEvent(id = null, form = form, photos = photos)
 }

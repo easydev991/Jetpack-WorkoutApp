@@ -2,22 +2,22 @@ package com.swparks.domain.usecase
 
 import android.util.Log
 import com.swparks.data.SecureTokenRepository
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.AuthRepository
 import com.swparks.util.CrashReporter
 
 /**
  * Use case для выхода из учётной записи.
  *
  * Очищает токен авторизации в SecureTokenRepository, сбрасывает флаг isAuthorized
- * через SWRepository.forceLogout() и очищает userId в UserPreferencesRepository.
- * Очищает все данные пользователя из локального хранилища (через SWRepository.clearUserData()).
+ * через AuthRepository.forceLogout() и очищает userId в UserPreferencesRepository.
+ * Очищает все данные пользователя из локального хранилища (через AuthRepository.clearUserData()).
  *
  * @param secureTokenRepository Репозиторий для безопасного хранения токена
- * @param swRepository Репозиторий для работы с API
+ * @param authRepository Репозиторий для работы с API авторизации
  */
 class LogoutUseCase(
     private val secureTokenRepository: SecureTokenRepository,
-    private val swRepository: SWRepository,
+    private val authRepository: AuthRepository,
     private val crashReporter: CrashReporter
 ) {
     private companion object {
@@ -31,16 +31,12 @@ class LogoutUseCase(
      * Очищает все данные пользователя из локального хранилища.
      */
     suspend operator fun invoke() {
-        // Очищаем токен авторизации
         secureTokenRepository.saveAuthToken(null)
 
-        // Очищаем все данные пользователя (профиль, друзья, заявки, черный список)
-        swRepository.clearUserData()
+        authRepository.clearUserData()
 
-        // Сбрасываем флаг isAuthorized
-        swRepository.forceLogout()
+        authRepository.forceLogout()
 
-        // Сбрасываем userId в Crashlytics
         crashReporter.setUserId(null)
 
         Log.i(TAG, "Текущий пользователь очищен")

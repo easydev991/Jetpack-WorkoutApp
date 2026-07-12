@@ -14,7 +14,7 @@ import com.swparks.data.model.ParkType
 import com.swparks.data.preferences.ParksFilterDataStore
 import com.swparks.data.provider.LocationServiceImpl
 import com.swparks.data.repository.CountriesRepositoryImpl
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.domain.model.LocationCoordinates
 import com.swparks.domain.usecase.FilterParksUseCase
 import com.swparks.domain.usecase.ICreateParkLocationHandler
@@ -53,7 +53,7 @@ class ParksRootViewModelTest {
     private lateinit var filterParksUseCase: FilterParksUseCase
     private lateinit var parksFilterDataStore: ParksFilterDataStore
     private lateinit var countriesRepository: CountriesRepositoryImpl
-    private lateinit var swRepository: SWRepository
+    private lateinit var parksEventsRepository: ParksEventsRepository
     private lateinit var initializeParksUseCase: InitializeParksUseCase
     private lateinit var userNotifier: UserNotifier
     private lateinit var locationService: LocationServiceImpl
@@ -94,7 +94,7 @@ class ParksRootViewModelTest {
         countriesRepository = mockk(relaxed = true)
         coEvery { countriesRepository.getAllCities() } returns emptyList()
         parksFlow = MutableStateFlow(emptyList())
-        swRepository =
+        parksEventsRepository =
             mockk(relaxed = true) {
                 every { getParksFlow() } returns parksFlow
             }
@@ -117,7 +117,7 @@ class ParksRootViewModelTest {
                 filterParksUseCase = filterParksUseCase,
                 parksFilterDataStore = parksFilterDataStore,
                 countriesRepository = countriesRepository,
-                swRepository = swRepository,
+                parksEventsRepository = parksEventsRepository,
                 initializeParksUseCase = initializeParksUseCase,
                 userNotifier = userNotifier,
                 locationService = locationService,
@@ -315,7 +315,7 @@ class ParksRootViewModelTest {
                     filterParksUseCase = filterParksUseCase,
                     parksFilterDataStore = parksFilterDataStore,
                     countriesRepository = countriesRepository,
-                    swRepository = swRepository,
+                    parksEventsRepository = parksEventsRepository,
                     initializeParksUseCase = initializeParksUseCase,
                     userNotifier = userNotifier,
                     locationService = locationService,
@@ -357,7 +357,7 @@ class ParksRootViewModelTest {
                     filterParksUseCase = filterParksUseCase,
                     parksFilterDataStore = parksFilterDataStore,
                     countriesRepository = countriesRepository,
-                    swRepository = swRepository,
+                    parksEventsRepository = parksEventsRepository,
                     initializeParksUseCase = initializeParksUseCase,
                     userNotifier = userNotifier,
                     locationService = locationService,
@@ -544,7 +544,7 @@ class ParksRootViewModelTest {
                     filterParksUseCase = filterParksUseCase,
                     parksFilterDataStore = parksFilterDataStore,
                     countriesRepository = countriesRepository,
-                    swRepository = swRepository,
+                    parksEventsRepository = parksEventsRepository,
                     initializeParksUseCase = initializeParksUseCase,
                     userNotifier = userNotifier,
                     locationService = locationService,
@@ -599,7 +599,7 @@ class ParksRootViewModelTest {
                     filterParksUseCase = realFilterParksUseCase,
                     parksFilterDataStore = parksFilterDataStore,
                     countriesRepository = countriesRepository,
-                    swRepository = swRepository,
+                    parksEventsRepository = parksEventsRepository,
                     initializeParksUseCase = initializeParksUseCase,
                     userNotifier = userNotifier,
                     locationService = locationService,
@@ -683,7 +683,7 @@ class ParksRootViewModelTest {
                     filterParksUseCase = realFilterParksUseCase,
                     parksFilterDataStore = parksFilterDataStore,
                     countriesRepository = countriesRepository,
-                    swRepository = swRepository,
+                    parksEventsRepository = parksEventsRepository,
                     initializeParksUseCase = initializeParksUseCase,
                     userNotifier = userNotifier,
                     locationService = locationService,
@@ -742,7 +742,7 @@ class ParksRootViewModelTest {
                     filterParksUseCase = realFilterParksUseCase,
                     parksFilterDataStore = restoringDataStore,
                     countriesRepository = countriesRepository,
-                    swRepository = swRepository,
+                    parksEventsRepository = parksEventsRepository,
                     initializeParksUseCase = initializeParksUseCase,
                     userNotifier = userNotifier,
                     locationService = locationService,
@@ -1002,7 +1002,7 @@ class ParksRootViewModelTest {
                     filterParksUseCase = filterParksUseCase,
                     parksFilterDataStore = parksFilterDataStore,
                     countriesRepository = countriesRepository,
-                    swRepository = swRepository,
+                    parksEventsRepository = parksEventsRepository,
                     initializeParksUseCase = initializeParksUseCase,
                     userNotifier = userNotifier,
                     locationService = locationService,
@@ -1095,7 +1095,7 @@ class ParksRootViewModelTest {
                     filterParksUseCase = filterParksUseCase,
                     parksFilterDataStore = parksFilterDataStore,
                     countriesRepository = countriesRepository,
-                    swRepository = swRepository,
+                    parksEventsRepository = parksEventsRepository,
                     initializeParksUseCase = initializeParksUseCase,
                     userNotifier = userNotifier,
                     locationService = locationService,

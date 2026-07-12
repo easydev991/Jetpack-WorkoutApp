@@ -9,7 +9,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Photo
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.ui.state.PhotoDetailAction
 import com.swparks.ui.state.PhotoDetailConfig
 import com.swparks.ui.state.PhotoDetailEvent
@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 
 class PhotoDetailViewModel(
     private val savedStateHandle: SavedStateHandle,
-    private val swRepository: SWRepository,
+    private val parksEventsRepository: ParksEventsRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val logger: Logger,
     private val userNotifier: UserNotifier
@@ -44,7 +44,7 @@ class PhotoDetailViewModel(
 
         @Deprecated("Use factoryWithConfig instead", ReplaceWith("factoryWithConfig"))
         fun factory(
-            swRepository: SWRepository,
+            parksEventsRepository: ParksEventsRepository,
             userPreferencesRepository: UserPreferencesRepository,
             logger: Logger,
             userNotifier: UserNotifier
@@ -54,7 +54,7 @@ class PhotoDetailViewModel(
                     val savedStateHandle = createSavedStateHandle()
                     PhotoDetailViewModel(
                         savedStateHandle = savedStateHandle,
-                        swRepository = swRepository,
+                        parksEventsRepository = parksEventsRepository,
                         userPreferencesRepository = userPreferencesRepository,
                         logger = logger,
                         userNotifier = userNotifier
@@ -64,7 +64,7 @@ class PhotoDetailViewModel(
 
         fun factoryWithConfig(
             config: PhotoDetailConfig,
-            swRepository: SWRepository,
+            parksEventsRepository: ParksEventsRepository,
             userPreferencesRepository: UserPreferencesRepository,
             logger: Logger,
             userNotifier: UserNotifier
@@ -80,7 +80,7 @@ class PhotoDetailViewModel(
                     savedStateHandle[OWNER_TYPE_KEY] = config.ownerType.name
                     PhotoDetailViewModel(
                         savedStateHandle = savedStateHandle,
-                        swRepository = swRepository,
+                        parksEventsRepository = parksEventsRepository,
                         userPreferencesRepository = userPreferencesRepository,
                         logger = logger,
                         userNotifier = userNotifier
@@ -250,8 +250,8 @@ class PhotoDetailViewModel(
             try {
                 val result =
                     when (ownerType) {
-                        PhotoOwner.Park -> swRepository.deleteParkPhoto(parentId, photoId)
-                        PhotoOwner.Event -> swRepository.deleteEventPhoto(parentId, photoId)
+                        PhotoOwner.Park -> parksEventsRepository.deleteParkPhoto(parentId, photoId)
+                        PhotoOwner.Event -> parksEventsRepository.deleteEventPhoto(parentId, photoId)
                     }
                 result.fold(
                     onSuccess = {

@@ -35,6 +35,7 @@ class JournalEntriesRepositoryImpl(
         const val HTTP_NOT_FOUND = 404
     }
 
+    @Suppress("UnusedParameter")
     fun observeJournalEntries(
         userId: Long,
         journalId: Long

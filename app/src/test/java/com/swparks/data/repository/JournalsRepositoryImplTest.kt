@@ -2,9 +2,12 @@ package com.swparks.data.repository
 
 import android.util.Log
 import com.swparks.data.database.dao.JournalDao
-import com.swparks.data.database.entity.JournalEntity
+import com.swparks.data.database.dao.UserDao
+import com.swparks.data.model.JournalEntryResponse
 import com.swparks.data.model.JournalResponse
+import com.swparks.domain.exception.NetworkException
 import com.swparks.network.SWApi
+import com.swparks.ui.model.JournalAccess
 import com.swparks.util.NoOpCrashReporter
 import com.swparks.util.NoOpLogger
 import io.mockk.coEvery
@@ -13,43 +16,35 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
 
 /**
- * Unit тесты для JournalsRepositoryImpl
- *
- * Проверяет корректность работы репозитория для дневников,
- * включая кэширование в БД и синхронизацию с сервером
+ * Unit тесты для методов дневников в JournalsRepositoryImpl
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class JournalsRepositoryImplTest {
-    private lateinit var mockApi: SWApi
-    private lateinit var mockJournalDao: JournalDao
-    private lateinit var repository: JournalsRepositoryImpl
+    private val testDispatcher = StandardTestDispatcher()
+    private val mockUserDao = mockk<UserDao>(relaxed = true)
+    private val mockJournalDao = mockk<JournalDao>(relaxed = true)
     private val crashReporter = NoOpCrashReporter()
     private val logger = NoOpLogger()
 
-    private val testUserId = 123L
-
     @Before
     fun setup() {
-        mockApi = mockk()
-        mockJournalDao = mockk(relaxed = true)
-        repository = JournalsRepositoryImpl(mockApi, mockJournalDao, crashReporter, logger)
-
-        // Мокаем статический класс Log для тестов
+        Dispatchers.setMain(testDispatcher)
         mockkStatic(Log::class)
         every { Log.i(any(), any()) } returns 0
-        every { Log.e(any(), any(), any()) } returns 0
         every { Log.e(any(), any()) } returns 0
     }
 
@@ -58,172 +53,392 @@ class JournalsRepositoryImplTest {
         unmockkAll()
     }
 
-    private fun createMockJournalResponse(
-        id: Long = 1L,
-        title: String? = "Test Journal",
-        ownerId: Int? = 1,
-        viewAccess: Int? = 0,
-        commentAccess: Int? = 0,
-        count: Int? = 0,
-        lastMessageText: String? = null,
-        lastMessageImage: String? = null,
-        lastMessageDate: String? = null,
-        createDate: String? = null,
-        modifyDate: String? = null
-    ): JournalResponse =
+    private fun createMockJournal(id: Long = 1L): JournalResponse =
         JournalResponse(
             id = id,
-            title = title,
-            lastMessageImage = lastMessageImage,
-            createDate = createDate,
-            modifyDate = modifyDate,
-            lastMessageDate = lastMessageDate,
-            lastMessageText = lastMessageText,
-            count = count,
-            ownerId = ownerId,
-            viewAccess = viewAccess,
-            commentAccess = commentAccess
+            title = "Test Journal",
+            lastMessageImage = null,
+            createDate = "2024-01-01",
+            modifyDate = "2024-01-01",
+            lastMessageDate = "2024-01-01",
+            lastMessageText = "Last entry",
+            count = null,
+            ownerId = 1,
+            viewAccess = 0,
+            commentAccess = 0
         )
 
-    private fun createMockJournalEntity(
-        id: Long = 1L,
-        title: String? = "Test Journal",
-        ownerId: Long? = 1L,
-        viewAccess: Int? = 0,
-        commentAccess: Int? = 0,
-        entriesCount: Int? = 0,
-        lastMessageText: String? = null,
-        lastMessageImage: String? = null,
-        lastMessageDate: String? = null,
-        createDate: String? = null,
-        modifyDate: Long = 0L
-    ): JournalEntity =
-        JournalEntity(
+    private fun createMockJournalEntry(id: Long = 1L): JournalEntryResponse =
+        JournalEntryResponse(
             id = id,
-            title = title,
-            lastMessageImage = lastMessageImage,
-            createDate = createDate,
-            modifyDate = modifyDate,
-            lastMessageDate = lastMessageDate,
-            lastMessageText = lastMessageText,
-            entriesCount = entriesCount,
-            ownerId = ownerId,
-            viewAccess = viewAccess,
-            commentAccess = commentAccess
+            journalId = 1,
+            authorId = 1,
+            name = null,
+            message = "Test entry",
+            createDate = "2024-01-01",
+            modifyDate = "2024-01-01",
+            image = null
         )
 
     @Test
-    fun observeJournals_returnsFlowFromDao() =
+    fun getJournals_whenApiReturnsJournals_thenReturnsJournals() =
         runTest {
             // Given
-            val mockEntities =
+            val mockJournalsList =
                 listOf(
-                    createMockJournalEntity(id = 1L),
-                    createMockJournalEntity(id = 2L)
+                    createMockJournal(1L),
+                    createMockJournal(2L),
+                    createMockJournal(3L)
                 )
-            every { mockJournalDao.getJournalsByUserId(testUserId) } returns flowOf(mockEntities)
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.getJournals(1L) } returns mockJournalsList
+
+            val repository =
+                JournalsRepositoryImpl(
+                    mockApi,
+                    mockJournalDao,
+                    mockUserDao,
+                    logger,
+                    crashReporter
+                )
 
             // When
-            val resultFlow = repository.observeJournals(testUserId)
-            val result = resultFlow.first()
-
-            // Then
-            assertEquals(2, result.size)
-            assertEquals(1L, result[0].id)
-            assertEquals(2L, result[1].id)
-        }
-
-    @Test
-    fun refreshJournals_onSuccess_savesToDb() =
-        runTest {
-            // Given
-            val mockResponses =
-                listOf(
-                    createMockJournalResponse(id = 1L),
-                    createMockJournalResponse(id = 2L)
-                )
-            coEvery { mockApi.getJournals(testUserId) } returns mockResponses
-            coEvery { mockJournalDao.deleteByUserId(testUserId) } returns Unit
-            coEvery { mockJournalDao.insertAll(any<List<JournalEntity>>()) } returns Unit
-
-            // When
-            val result = repository.refreshJournals(testUserId)
+            val result = repository.getJournals(1L)
 
             // Then
             assertTrue(result.isSuccess)
-            coVerify { mockApi.getJournals(testUserId) }
-            coVerify { mockJournalDao.deleteByUserId(testUserId) }
-            coVerify { mockJournalDao.insertAll(any<List<JournalEntity>>()) }
+            assertEquals(mockJournalsList, result.getOrNull())
+            coVerify { mockApi.getJournals(1L) }
         }
 
     @Test
-    fun refreshJournals_onIOException_returnsFailure() =
+    fun getJournals_whenApiThrowsException_thenReturnsFailure() =
         runTest {
             // Given
-            val exception = IOException("Network error")
-            coEvery { mockApi.getJournals(testUserId) } throws exception
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.getJournals(any()) } throws IOException("Network error")
+
+            val repository =
+                JournalsRepositoryImpl(
+                    mockApi,
+                    mockJournalDao,
+                    mockUserDao,
+                    logger,
+                    crashReporter
+                )
 
             // When
-            val result = repository.refreshJournals(testUserId)
+            val result = repository.getJournals(1L)
 
             // Then
             assertTrue(result.isFailure)
-            assertEquals(exception, result.exceptionOrNull())
+            assertTrue(result.exceptionOrNull() is NetworkException)
         }
 
     @Test
-    fun refreshJournals_onEmptyList_savesEmpty() =
+    fun getJournal_whenApiReturnsJournal_thenReturnsJournal() =
         runTest {
             // Given
-            coEvery { mockApi.getJournals(testUserId) } returns emptyList()
-            coEvery { mockJournalDao.deleteByUserId(testUserId) } returns Unit
-            coEvery { mockJournalDao.insertAll(any<List<JournalEntity>>()) } returns Unit
+            val mockJournal = createMockJournal(123L)
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.getJournal(1L, 123L) } returns mockJournal
+
+            val repository =
+                JournalsRepositoryImpl(
+                    mockApi,
+                    mockJournalDao,
+                    mockUserDao,
+                    logger,
+                    crashReporter
+                )
 
             // When
-            val result = repository.refreshJournals(testUserId)
+            val result = repository.getJournal(1L, 123L)
 
             // Then
             assertTrue(result.isSuccess)
-            coVerify { mockJournalDao.deleteByUserId(testUserId) }
-            coVerify { mockJournalDao.insertAll(emptyList()) }
-        }
-
-    // ==================== HttpException Tests ====================
-
-    @Test
-    fun refreshJournals_onHttpException_returnsFailure() =
-        runTest {
-            // Given
-            val mockResponse = mockk<Response<*>>(relaxed = true)
-            every { mockResponse.code() } returns 500
-            every { mockResponse.message() } returns "Server Error"
-            val httpException = HttpException(mockResponse)
-            coEvery { mockApi.getJournals(testUserId) } throws httpException
-
-            // When
-            val result = repository.refreshJournals(testUserId)
-
-            // Then
-            assertTrue("Expected Result.failure but got $result", result.isFailure)
-            // DAO не должен вызываться при ошибке
-            coVerify(exactly = 0) { mockJournalDao.deleteByUserId(any()) }
-            coVerify(exactly = 0) { mockJournalDao.insertAll(any()) }
+            assertEquals(mockJournal, result.getOrNull())
+            coVerify { mockApi.getJournal(1L, 123L) }
         }
 
     @Test
-    fun refreshJournals_onHttpException401_returnsFailure() =
+    fun getJournal_whenApiThrowsException_thenReturnsFailure() =
         runTest {
             // Given
-            val mockResponse = mockk<Response<*>>(relaxed = true)
-            every { mockResponse.code() } returns 401
-            every { mockResponse.message() } returns "Unauthorized"
-            val httpException = HttpException(mockResponse)
-            coEvery { mockApi.getJournals(testUserId) } throws httpException
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.getJournal(any(), any()) } throws IOException("Network error")
+
+            val repository =
+                JournalsRepositoryImpl(
+                    mockApi,
+                    mockJournalDao,
+                    mockUserDao,
+                    logger,
+                    crashReporter
+                )
 
             // When
-            val result = repository.refreshJournals(testUserId)
+            val result = repository.getJournal(1L, 123L)
 
             // Then
-            assertTrue("Expected Result.failure but got $result", result.isFailure)
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is NetworkException)
+        }
+
+    @Test
+    fun getJournalEntries_whenApiReturnsEntries_thenReturnsEntries() =
+        runTest {
+            // Given
+            val mockEntriesList =
+                listOf(
+                    createMockJournalEntry(1L),
+                    createMockJournalEntry(2L),
+                    createMockJournalEntry(3L)
+                )
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.getJournalEntries(1L, 123L) } returns mockEntriesList
+
+            val repository =
+                JournalsRepositoryImpl(
+                    mockApi,
+                    mockJournalDao,
+                    mockUserDao,
+                    logger,
+                    crashReporter
+                )
+
+            // When
+            val result = repository.getJournalEntries(1L, 123L)
+
+            // Then
+            assertTrue(result.isSuccess)
+            assertEquals(mockEntriesList, result.getOrNull())
+            coVerify { mockApi.getJournalEntries(1L, 123L) }
+        }
+
+    @Test
+    fun getJournalEntries_whenApiThrowsException_thenReturnsFailure() =
+        runTest {
+            // Given
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.getJournalEntries(any(), any()) } throws IOException("Network error")
+
+            val repository =
+                JournalsRepositoryImpl(
+                    mockApi,
+                    mockJournalDao,
+                    mockUserDao,
+                    logger,
+                    crashReporter
+                )
+
+            // When
+            val result = repository.getJournalEntries(1L, 123L)
+
+            // Then
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is NetworkException)
+        }
+
+    @Test
+    fun editJournalSettings_whenApiReturnsSuccess_thenReturnsSuccess() =
+        runTest {
+            // Given
+            val mockApi = mockk<SWApi>()
+            coEvery {
+                mockApi.editJournalSettings(
+                    userId = any(),
+                    journalId = any(),
+                    title = any(),
+                    viewAccess = any(),
+                    commentAccess = any()
+                )
+            } returns Response.success(Unit)
+
+            val repository =
+                JournalsRepositoryImpl(
+                    mockApi,
+                    mockJournalDao,
+                    mockUserDao,
+                    logger,
+                    crashReporter
+                )
+
+            // When
+            val result =
+                repository.editJournalSettings(
+                    journalId = 123L,
+                    title = "New Title",
+                    userId = 1L,
+                    viewAccess = JournalAccess.ALL,
+                    commentAccess = JournalAccess.FRIENDS
+                )
+
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify {
+                mockApi.editJournalSettings(
+                    userId = any(),
+                    journalId = 123L,
+                    title = any(),
+                    viewAccess = any(),
+                    commentAccess = any()
+                )
+            }
+        }
+
+    @Test
+    fun editJournalSettings_whenApiThrowsException_thenReturnsFailure() =
+        runTest {
+            // Given
+            val mockApi = mockk<SWApi>()
+            coEvery {
+                mockApi.editJournalSettings(
+                    userId = any(),
+                    journalId = any(),
+                    title = any(),
+                    viewAccess = any(),
+                    commentAccess = any()
+                )
+            } throws IOException("Network error")
+
+            val repository =
+                JournalsRepositoryImpl(
+                    mockApi,
+                    mockJournalDao,
+                    mockUserDao,
+                    logger,
+                    crashReporter
+                )
+
+            // When
+            val result =
+                repository.editJournalSettings(
+                    journalId = 123L,
+                    title = "New Title",
+                    userId = 1L,
+                    viewAccess = JournalAccess.ALL,
+                    commentAccess = JournalAccess.FRIENDS
+                )
+
+            // Then
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is NetworkException)
+        }
+
+    @Test
+    fun createJournal_whenApiReturnsSuccess_thenReturnsSuccess() =
+        runTest {
+            // Given
+            val mockApi = mockk<SWApi>()
+            coEvery {
+                mockApi.createJournal(
+                    userId = any(),
+                    title = any()
+                )
+            } returns Response.success(Unit)
+
+            val repository =
+                JournalsRepositoryImpl(
+                    mockApi,
+                    mockJournalDao,
+                    mockUserDao,
+                    logger,
+                    crashReporter
+                )
+
+            // When
+            val result = repository.createJournal("New Journal", 1L)
+
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify { mockApi.createJournal(userId = 1L, title = "New Journal") }
+        }
+
+    @Test
+    fun createJournal_whenApiThrowsException_thenReturnsFailure() =
+        runTest {
+            // Given
+            val mockApi = mockk<SWApi>()
+            coEvery {
+                mockApi.createJournal(
+                    userId = any(),
+                    title = any()
+                )
+            } throws IOException("Network error")
+
+            val repository =
+                JournalsRepositoryImpl(
+                    mockApi,
+                    mockJournalDao,
+                    mockUserDao,
+                    logger,
+                    crashReporter
+                )
+
+            // When
+            val result = repository.createJournal("New Journal", 1L)
+
+            // Then
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is NetworkException)
+        }
+
+    @Test
+    fun deleteJournal_whenApiReturnsSuccess_thenReturnsSuccess() =
+        runTest {
+            // Given
+            val mockApi = mockk<SWApi>()
+            coEvery {
+                mockApi.deleteJournal(
+                    userId = any(),
+                    journalId = any()
+                )
+            } returns Response.success(Unit)
+
+            val repository =
+                JournalsRepositoryImpl(
+                    mockApi,
+                    mockJournalDao,
+                    mockUserDao,
+                    logger,
+                    crashReporter
+                )
+
+            // When
+            val result = repository.deleteJournal(123L, 1L)
+
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify { mockApi.deleteJournal(userId = 1L, journalId = 123L) }
+        }
+
+    @Test
+    fun deleteJournal_whenApiThrowsException_thenReturnsFailure() =
+        runTest {
+            // Given
+            val mockApi = mockk<SWApi>()
+            coEvery {
+                mockApi.deleteJournal(
+                    userId = any(),
+                    journalId = any()
+                )
+            } throws IOException("Network error")
+
+            val repository =
+                JournalsRepositoryImpl(
+                    mockApi,
+                    mockJournalDao,
+                    mockUserDao,
+                    logger,
+                    crashReporter
+                )
+
+            // When
+            val result = repository.deleteJournal(123L, 1L)
+
+            // Then
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is NetworkException)
         }
 }

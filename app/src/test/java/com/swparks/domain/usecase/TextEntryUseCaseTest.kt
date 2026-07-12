@@ -1,7 +1,8 @@
 package com.swparks.domain.usecase
 
 import android.util.Log
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.CommentsRepository
+import com.swparks.data.repository.MessagesRepositoryImpl
 import com.swparks.domain.event.MessageSentNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -18,7 +19,8 @@ import org.junit.Test
 
 /** Unit тесты для TextEntryUseCase */
 class TextEntryUseCaseTest {
-    private lateinit var swRepository: SWRepository
+    private lateinit var commentsRepository: CommentsRepository
+    private lateinit var messagesRepository: MessagesRepositoryImpl
     private lateinit var createJournalUseCase: CreateJournalUseCase
     private lateinit var messageSentNotifier: MessageSentNotifier
     private lateinit var textEntryUseCase: TextEntryUseCase
@@ -35,10 +37,17 @@ class TextEntryUseCaseTest {
     fun setup() {
         mockkStatic(Log::class)
         every { Log.i(any(), any()) } returns 0
-        swRepository = mockk()
+        commentsRepository = mockk()
+        messagesRepository = mockk()
         createJournalUseCase = mockk(relaxed = true)
         messageSentNotifier = mockk(relaxed = true)
-        textEntryUseCase = TextEntryUseCase(swRepository, createJournalUseCase, messageSentNotifier)
+        textEntryUseCase =
+            TextEntryUseCase(
+                commentsRepository,
+                messagesRepository,
+                createJournalUseCase,
+                messageSentNotifier
+            )
     }
 
     @After
@@ -50,7 +59,7 @@ class TextEntryUseCaseTest {
     fun addJournalEntry_whenSuccess_thenReturnsSuccess() =
         runTest {
             // Given
-            coEvery { swRepository.addComment(any(), any()) } returns Result.success(Unit)
+            coEvery { commentsRepository.addComment(any(), any()) } returns Result.success(Unit)
 
             // When
             val result = textEntryUseCase.addJournalEntry(testOwnerId, testJournalId, testText)
@@ -58,7 +67,7 @@ class TextEntryUseCaseTest {
             // Then
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) {
-                swRepository.addComment(
+                commentsRepository.addComment(
                     match { it is com.swparks.ui.model.TextEntryOption.Journal },
                     testText
                 )
@@ -70,7 +79,7 @@ class TextEntryUseCaseTest {
         runTest {
             // Given
             val exception = Exception("Network error")
-            coEvery { swRepository.addComment(any(), any()) } returns Result.failure(exception)
+            coEvery { commentsRepository.addComment(any(), any()) } returns Result.failure(exception)
 
             // When
             val result = textEntryUseCase.addJournalEntry(testOwnerId, testJournalId, testText)
@@ -78,7 +87,7 @@ class TextEntryUseCaseTest {
             // Then
             assertTrue(result.isFailure)
             coVerify(exactly = 1) {
-                swRepository.addComment(
+                commentsRepository.addComment(
                     match { it is com.swparks.ui.model.TextEntryOption.Journal },
                     testText
                 )
@@ -89,7 +98,7 @@ class TextEntryUseCaseTest {
     fun editJournalEntry_whenSuccess_thenReturnsSuccess() =
         runTest {
             // Given
-            coEvery { swRepository.editComment(any(), any(), any()) } returns Result.success(Unit)
+            coEvery { commentsRepository.editComment(any(), any(), any()) } returns Result.success(Unit)
 
             // When
             val result =
@@ -98,7 +107,7 @@ class TextEntryUseCaseTest {
             // Then
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) {
-                swRepository.editComment(
+                commentsRepository.editComment(
                     match { it is com.swparks.ui.model.TextEntryOption.Journal },
                     testEntryId,
                     testText
@@ -110,7 +119,7 @@ class TextEntryUseCaseTest {
     fun addParkComment_whenSuccess_thenReturnsSuccess() =
         runTest {
             // Given
-            coEvery { swRepository.addComment(any(), any()) } returns Result.success(Unit)
+            coEvery { commentsRepository.addComment(any(), any()) } returns Result.success(Unit)
 
             // When
             val result = textEntryUseCase.addParkComment(testParkId, testText)
@@ -118,7 +127,7 @@ class TextEntryUseCaseTest {
             // Then
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) {
-                swRepository.addComment(
+                commentsRepository.addComment(
                     match { it is com.swparks.ui.model.TextEntryOption.Park },
                     testText
                 )
@@ -129,7 +138,7 @@ class TextEntryUseCaseTest {
     fun editParkComment_whenSuccess_thenReturnsSuccess() =
         runTest {
             // Given
-            coEvery { swRepository.editComment(any(), any(), any()) } returns Result.success(Unit)
+            coEvery { commentsRepository.editComment(any(), any(), any()) } returns Result.success(Unit)
 
             // When
             val result = textEntryUseCase.editParkComment(testParkId, testCommentId, testText)
@@ -137,7 +146,7 @@ class TextEntryUseCaseTest {
             // Then
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) {
-                swRepository.editComment(
+                commentsRepository.editComment(
                     match { it is com.swparks.ui.model.TextEntryOption.Park },
                     testCommentId,
                     testText
@@ -149,7 +158,7 @@ class TextEntryUseCaseTest {
     fun addEventComment_whenSuccess_thenReturnsSuccess() =
         runTest {
             // Given
-            coEvery { swRepository.addComment(any(), any()) } returns Result.success(Unit)
+            coEvery { commentsRepository.addComment(any(), any()) } returns Result.success(Unit)
 
             // When
             val result = textEntryUseCase.addEventComment(testEventId, testText)
@@ -157,7 +166,7 @@ class TextEntryUseCaseTest {
             // Then
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) {
-                swRepository.addComment(
+                commentsRepository.addComment(
                     match { it is com.swparks.ui.model.TextEntryOption.Event },
                     testText
                 )
@@ -168,7 +177,7 @@ class TextEntryUseCaseTest {
     fun editEventComment_whenSuccess_thenReturnsSuccess() =
         runTest {
             // Given
-            coEvery { swRepository.editComment(any(), any(), any()) } returns Result.success(Unit)
+            coEvery { commentsRepository.editComment(any(), any(), any()) } returns Result.success(Unit)
 
             // When
             val result = textEntryUseCase.editEventComment(testEventId, testCommentId, testText)
@@ -176,7 +185,7 @@ class TextEntryUseCaseTest {
             // Then
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) {
-                swRepository.editComment(
+                commentsRepository.editComment(
                     match { it is com.swparks.ui.model.TextEntryOption.Event },
                     testCommentId,
                     testText
@@ -190,14 +199,14 @@ class TextEntryUseCaseTest {
             // Given
             val userId = 123L
             val message = "Hello!"
-            coEvery { swRepository.sendMessage(message, userId) } returns Result.success(Unit)
+            coEvery { messagesRepository.sendMessage(message, userId) } returns Result.success(Unit)
 
             // When
             val result = textEntryUseCase.sendMessageTo(userId, message)
 
             // Then
             assertTrue(result.isSuccess)
-            coVerify(exactly = 1) { swRepository.sendMessage(message, userId) }
+            coVerify(exactly = 1) { messagesRepository.sendMessage(message, userId) }
         }
 
     @Test
@@ -207,14 +216,14 @@ class TextEntryUseCaseTest {
             val userId = 123L
             val message = "Hello!"
             val exception = Exception("Network error")
-            coEvery { swRepository.sendMessage(message, userId) } returns Result.failure(exception)
+            coEvery { messagesRepository.sendMessage(message, userId) } returns Result.failure(exception)
 
             // When
             val result = textEntryUseCase.sendMessageTo(userId, message)
 
             // Then
             assertTrue(result.isFailure)
-            coVerify(exactly = 1) { swRepository.sendMessage(message, userId) }
+            coVerify(exactly = 1) { messagesRepository.sendMessage(message, userId) }
         }
 
     @Test
@@ -223,7 +232,7 @@ class TextEntryUseCaseTest {
             // Given
             val userId = 123L
             val message = "Hello!"
-            coEvery { swRepository.sendMessage(message, userId) } returns Result.success(Unit)
+            coEvery { messagesRepository.sendMessage(message, userId) } returns Result.success(Unit)
 
             // When
             textEntryUseCase.sendMessageTo(userId, message)
@@ -239,7 +248,7 @@ class TextEntryUseCaseTest {
             val userId = 123L
             val message = "Hello!"
             coEvery {
-                swRepository.sendMessage(
+                messagesRepository.sendMessage(
                     message,
                     userId
                 )

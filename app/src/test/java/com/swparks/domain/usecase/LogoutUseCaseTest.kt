@@ -2,7 +2,7 @@ package com.swparks.domain.usecase
 
 import android.util.Log
 import com.swparks.data.SecureTokenRepository
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.AuthRepository
 import com.swparks.util.CrashReporter
 import com.swparks.util.NoOpCrashReporter
 import io.mockk.coVerify
@@ -19,7 +19,7 @@ import org.junit.Test
 /** Unit тесты для LogoutUseCase */
 class LogoutUseCaseTest {
     private lateinit var secureTokenRepository: SecureTokenRepository
-    private lateinit var swRepository: SWRepository
+    private lateinit var authRepository: AuthRepository
     private lateinit var crashReporter: CrashReporter
     private lateinit var logoutUseCase: LogoutUseCase
 
@@ -28,9 +28,9 @@ class LogoutUseCaseTest {
         mockkStatic(Log::class)
         every { Log.i(any(), any()) } returns 0
         secureTokenRepository = mockk(relaxed = true)
-        swRepository = mockk(relaxed = true)
+        authRepository = mockk(relaxed = true)
         crashReporter = NoOpCrashReporter()
-        logoutUseCase = LogoutUseCase(secureTokenRepository, swRepository, crashReporter)
+        logoutUseCase = LogoutUseCase(secureTokenRepository, authRepository, crashReporter)
     }
 
     @After
@@ -46,8 +46,8 @@ class LogoutUseCaseTest {
 
             // Then
             coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(null) }
-            coVerify(exactly = 1) { swRepository.clearUserData() }
-            coVerify(exactly = 1) { swRepository.forceLogout() }
+            coVerify(exactly = 1) { authRepository.clearUserData() }
+            coVerify(exactly = 1) { authRepository.forceLogout() }
         }
 
     @Test

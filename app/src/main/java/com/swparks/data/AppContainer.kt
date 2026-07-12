@@ -29,12 +29,15 @@ import com.swparks.data.provider.AvatarHelperImpl
 import com.swparks.data.provider.GeocodingServiceImpl
 import com.swparks.data.provider.LocationServiceImpl
 import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.AuthRepository
+import com.swparks.data.repository.CommentsRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
+import com.swparks.data.repository.FriendsRepository
 import com.swparks.data.repository.JournalEntriesRepositoryImpl
 import com.swparks.data.repository.JournalsRepositoryImpl
 import com.swparks.data.repository.MessagesRepositoryImpl
-import com.swparks.data.repository.SWRepository
-import com.swparks.data.repository.SWRepositoryImp
+import com.swparks.data.repository.ParksEventsRepository
+import com.swparks.data.repository.UserProfileRepository
 import com.swparks.data.serializer.EncryptedStringSerializer
 import com.swparks.data.util.SystemClock
 import com.swparks.domain.event.MessageSentNotifier
@@ -173,7 +176,7 @@ open class DefaultAppContainer(
     // ==================== Sync Use Cases ====================
 
     open val syncParksUseCase: SyncParksUseCase by lazy {
-        SyncParksUseCase(clock, userPreferencesRepository, swRepository, logger)
+        SyncParksUseCase(clock, userPreferencesRepository, parksEventsRepository, logger)
     }
 
     open val syncCountriesUseCase: SyncCountriesUseCase by lazy {
@@ -181,7 +184,7 @@ open class DefaultAppContainer(
     }
 
     open val initializeParksUseCase: InitializeParksUseCase by lazy {
-        InitializeParksUseCase(appContext, swRepository, logger)
+        InitializeParksUseCase(appContext, parksEventsRepository, logger)
     }
 
     // ==================== Resources Provider ====================
@@ -233,12 +236,12 @@ open class DefaultAppContainer(
     /**
      * DAO для работы с диалогами
      */
-    private val dialogDao: DialogDao by lazy { database.dialogDao() }
+    val dialogDao: DialogDao by lazy { database.dialogDao() }
 
     /**
      * DAO для работы с мероприятиями
      */
-    private val eventDao: EventDao by lazy { database.eventDao() }
+    val eventDao: EventDao by lazy { database.eventDao() }
 
     /**
      * DAO для работы с площадками
@@ -323,19 +326,56 @@ open class DefaultAppContainer(
         retrofit.create(SWApi::class.java)
     }
 
-    open val swRepository: SWRepository by lazy {
-        SWRepositoryImp(
+    open val authRepository: AuthRepository by lazy {
+        AuthRepository(
             swApi = retrofitService,
-            dataStore = appContext.dataStore,
+            preferencesRepository = userPreferencesRepository,
             userDao = userDao,
-            journalDao = journalDao,
-            journalEntryDao = journalEntryDao,
             dialogDao = dialogDao,
+            logger = logger,
+            crashReporter = crashReporter
+        )
+    }
+
+    open val userProfileRepository: UserProfileRepository by lazy {
+        UserProfileRepository(
+            swApi = retrofitService,
+            preferencesRepository = userPreferencesRepository,
+            userDao = userDao,
+            logger = logger,
+            crashReporter = crashReporter
+        )
+    }
+
+    open val friendsRepository: FriendsRepository by lazy {
+        FriendsRepository(
+            swApi = retrofitService,
+            userDao = userDao,
+            logger = logger,
+            crashReporter = crashReporter
+        )
+    }
+
+    open val commentsRepository: CommentsRepository by lazy {
+        CommentsRepository(
+            swApi = retrofitService,
+            parkDao = parkDao,
+            journalEntryDao = journalEntryDao,
+            logger = logger,
+            crashReporter = crashReporter
+        )
+    }
+
+    open val parksEventsRepository: ParksEventsRepository by lazy {
+        ParksEventsRepository(
+            swApi = retrofitService,
+            preferencesRepository = userPreferencesRepository,
             eventDao = eventDao,
             parkDao = parkDao,
-            crashReporter = crashReporter,
+            userDao = userDao,
+            userTrainingParkDao = userTrainingParkDao,
             logger = logger,
-            userTrainingParkDao = userTrainingParkDao
+            crashReporter = crashReporter
         )
     }
 
@@ -349,8 +389,9 @@ open class DefaultAppContainer(
         JournalsRepositoryImpl(
             swApi = retrofitService,
             journalDao = journalDao,
-            crashReporter = crashReporter,
-            logger = logger
+            userDao = userDao,
+            logger = logger,
+            crashReporter = crashReporter
         )
     }
 
@@ -396,7 +437,7 @@ open class DefaultAppContainer(
         LoginUseCase(
             tokenEncoder,
             secureTokenRepository,
-            swRepository,
+            authRepository,
             userPreferencesRepository,
             crashReporter
         )
@@ -405,21 +446,21 @@ open class DefaultAppContainer(
     val logoutUseCase: LogoutUseCase by lazy {
         LogoutUseCase(
             secureTokenRepository,
-            swRepository,
+            authRepository,
             crashReporter
         )
     }
 
     val resetPasswordUseCase: ResetPasswordUseCase by lazy {
-        ResetPasswordUseCase(swRepository)
+        ResetPasswordUseCase(authRepository)
     }
 
     val changePasswordUseCase: ChangePasswordUseCase by lazy {
-        ChangePasswordUseCase(swRepository, secureTokenRepository, tokenEncoder)
+        ChangePasswordUseCase(authRepository, secureTokenRepository, tokenEncoder)
     }
 
     val deleteUserUseCase: DeleteUserUseCase by lazy {
-        DeleteUserUseCase(secureTokenRepository, swRepository)
+        DeleteUserUseCase(secureTokenRepository, userProfileRepository, authRepository)
     }
 
     // ==================== Use cases для дневников ====================
@@ -451,44 +492,46 @@ open class DefaultAppContainer(
         CanDeleteJournalEntryUseCase(journalEntriesRepository)
     }
     val deleteJournalUseCase: DeleteJournalUseCase by lazy {
-        DeleteJournalUseCase(swRepository)
+        DeleteJournalUseCase(journalsRepository)
     }
     val editJournalSettingsUseCase: EditJournalSettingsUseCase by lazy {
-        EditJournalSettingsUseCase(swRepository)
+        EditJournalSettingsUseCase(journalsRepository)
     }
     val createJournalUseCase: CreateJournalUseCase by lazy {
-        CreateJournalUseCase(swRepository)
+        CreateJournalUseCase(journalsRepository)
     }
     val textEntryUseCase: TextEntryUseCase by lazy {
-        TextEntryUseCase(swRepository, createJournalUseCase, messageSentNotifier)
+        TextEntryUseCase(commentsRepository, messagesRepository, createJournalUseCase, messageSentNotifier)
     }
 
     // ==================== Use cases для мероприятий ====================
 
     open val getFutureEventsFlowUseCase: GetFutureEventsFlowUseCase by lazy {
-        GetFutureEventsFlowUseCase(swRepository)
+        GetFutureEventsFlowUseCase(parksEventsRepository)
     }
     open val syncFutureEventsUseCase: SyncFutureEventsUseCase by lazy {
-        SyncFutureEventsUseCase(swRepository)
+        SyncFutureEventsUseCase(parksEventsRepository)
     }
     open val getPastEventsFlowUseCase: GetPastEventsFlowUseCase by lazy {
-        GetPastEventsFlowUseCase(swRepository)
+        GetPastEventsFlowUseCase(parksEventsRepository)
     }
     open val syncPastEventsUseCase: SyncPastEventsUseCase by lazy {
-        SyncPastEventsUseCase(swRepository)
+        SyncPastEventsUseCase(parksEventsRepository)
     }
     val createEventUseCase: CreateEventUseCase by lazy {
-        CreateEventUseCase(swRepository)
+        CreateEventUseCase(parksEventsRepository)
     }
     val editEventUseCase: EditEventUseCase by lazy {
-        EditEventUseCase(swRepository)
+        EditEventUseCase(parksEventsRepository)
     }
 
     /** Factory метод для создания ProfileViewModel */
     open fun profileViewModelFactory() =
         ProfileViewModel(
             countriesRepository = countriesRepository,
-            swRepository = swRepository,
+            authRepository = authRepository,
+            userProfileRepository = userProfileRepository,
+            friendsRepository = friendsRepository,
             logger = logger,
             userNotifier = userNotifier,
             analyticsService = analyticsService
@@ -498,7 +541,8 @@ open class DefaultAppContainer(
     fun friendsListViewModelFactory() =
         FriendsListViewModel(
             userDao = userDao,
-            swRepository = swRepository,
+            userProfileRepository = userProfileRepository,
+            friendsRepository = friendsRepository,
             logger = logger,
             userNotifier = userNotifier,
             analyticsService = analyticsService
@@ -508,7 +552,7 @@ open class DefaultAppContainer(
     fun userFriendsViewModelFactory(userId: Long) =
         UserFriendsViewModel(
             userId = userId,
-            swRepository = swRepository,
+            friendsRepository = friendsRepository,
             logger = logger,
             userNotifier = userNotifier
         )
@@ -516,7 +560,7 @@ open class DefaultAppContainer(
     /** Factory метод для создания BlacklistViewModel */
     fun blacklistViewModelFactory() =
         BlacklistViewModel(
-            swRepository = swRepository,
+            friendsRepository = friendsRepository,
             logger = logger,
             userNotifier = userNotifier,
             analyticsService = analyticsService
@@ -525,7 +569,7 @@ open class DefaultAppContainer(
     /** Factory метод для создания UserTrainingParksViewModel */
     fun userTrainingParksViewModelFactory(userId: Long) =
         UserTrainingParksViewModel(
-            swRepository = swRepository,
+            parksEventsRepository = parksEventsRepository,
             userId = userId,
             logger = logger,
             userNotifier = userNotifier
@@ -536,7 +580,7 @@ open class DefaultAppContainer(
         seedParks: List<Park>?,
         requiresFetch: Boolean
     ) = UserAddedParksViewModel(
-        swRepository = swRepository,
+        userProfileRepository = userProfileRepository,
         userId = userId,
         seedParks = seedParks,
         requiresFetch = requiresFetch,
@@ -573,7 +617,8 @@ open class DefaultAppContainer(
                 canDeleteJournalEntryUseCase = canDeleteJournalEntryUseCase,
                 editJournalSettingsUseCase = editJournalSettingsUseCase,
                 userPreferencesRepository = userPreferencesRepository,
-                swRepository = swRepository,
+                journalsRepository = journalsRepository,
+                friendsRepository = friendsRepository,
                 savedStateHandle = savedStateHandle,
                 userNotifier = userNotifier,
                 resources = resourcesProvider,
@@ -594,7 +639,6 @@ open class DefaultAppContainer(
     open fun dialogsViewModelFactory() =
         DialogsViewModel(
             messagesRepository = messagesRepository,
-            swRepository = swRepository,
             logger = logger,
             resources = resourcesProvider,
             messageSentNotifier = messageSentNotifier,
@@ -605,7 +649,7 @@ open class DefaultAppContainer(
     fun chatViewModelFactory() =
         ChatViewModel(
             swApi = provideMessagesApi(),
-            swRepository = swRepository,
+            messagesRepository = messagesRepository,
             userNotifier = userNotifier,
             logger = logger,
             crashReporter = crashReporter,
@@ -615,7 +659,7 @@ open class DefaultAppContainer(
     /** Factory метод для создания SearchUserViewModel */
     open fun searchUserViewModelFactory() =
         SearchUserViewModel(
-            swRepository = swRepository,
+            userProfileRepository = userProfileRepository,
             logger = logger,
             analyticsService = analyticsService
         )
@@ -625,7 +669,9 @@ open class DefaultAppContainer(
         OtherUserProfileViewModel(
             userId = userId,
             countriesRepository = countriesRepository,
-            swRepository = swRepository,
+            authRepository = authRepository,
+            userProfileRepository = userProfileRepository,
+            friendsRepository = friendsRepository,
             logger = logger,
             userNotifier = userNotifier,
             resources = resourcesProvider,
@@ -635,7 +681,8 @@ open class DefaultAppContainer(
     /** Factory метод для создания EditProfileViewModel */
     fun editProfileViewModelFactory() =
         EditProfileViewModel(
-            swRepository = swRepository,
+            authRepository = authRepository,
+            userProfileRepository = userProfileRepository,
             countriesRepository = countriesRepository,
             deleteUserUseCase = deleteUserUseCase,
             avatarHelper = avatarHelper,
@@ -659,7 +706,7 @@ open class DefaultAppContainer(
     fun registerViewModelFactory() =
         RegisterViewModel(
             logger = logger,
-            swRepository = swRepository,
+            authRepository = authRepository,
             secureTokenRepository = secureTokenRepository,
             userPreferencesRepository = userPreferencesRepository,
             tokenEncoder = tokenEncoder,
@@ -679,20 +726,23 @@ open class DefaultAppContainer(
             countriesRepository = countriesRepository,
             userNotifier = userNotifier,
             logger = logger,
-            swRepository = swRepository,
+            authRepository = authRepository,
+            parksEventsRepository = parksEventsRepository,
             analyticsService = analyticsService
         )
 
     /** Factory метод для создания EventDetailViewModel */
     fun eventDetailViewModelFactory(savedStateHandle: SavedStateHandle) =
         EventDetailViewModel(
-            swRepository = swRepository,
+            parksEventsRepository = parksEventsRepository,
+            commentsRepository = commentsRepository,
+            authRepository = authRepository,
             countriesRepository = countriesRepository,
             userPreferencesRepository = userPreferencesRepository,
             savedStateHandle = savedStateHandle,
             userNotifier = userNotifier,
             logger = logger,
-            deleteEventUseCase = DeleteEventUseCase(swRepository),
+            deleteEventUseCase = DeleteEventUseCase(parksEventsRepository),
             resourcesProvider = resourcesProvider,
             analyticsService = analyticsService
         )
@@ -713,7 +763,7 @@ open class DefaultAppContainer(
     fun parkFormViewModelFactory(mode: com.swparks.ui.model.ParkFormMode) =
         ParkFormViewModel(
             mode = mode,
-            swRepository = swRepository,
+            parksEventsRepository = parksEventsRepository,
             avatarHelper = avatarHelper,
             logger = logger,
             userNotifier = userNotifier,

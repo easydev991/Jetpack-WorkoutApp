@@ -1,14 +1,8 @@
 package com.swparks.data.repository
 
 import android.util.Log
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.emptyPreferences
+import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.database.dao.DialogDao
-import com.swparks.data.database.dao.EventDao
-import com.swparks.data.database.dao.JournalDao
-import com.swparks.data.database.dao.JournalEntryDao
-import com.swparks.data.database.dao.ParkDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.model.LoginSuccess
 import com.swparks.data.model.User
@@ -26,7 +20,6 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -43,17 +36,13 @@ import retrofit2.Response
 import java.io.IOException
 
 /**
- * Unit тесты для методов авторизации в SWRepository
+ * Unit тесты для методов авторизации в AuthRepository
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class SWRepositoryAuthTest {
+class AuthRepositoryTest {
     private val testDispatcher = StandardTestDispatcher()
     private val mockUserDao = mockk<UserDao>(relaxed = true)
-    private val mockJournalDao = mockk<JournalDao>(relaxed = true)
-    private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
     private val mockDialogDao = mockk<DialogDao>(relaxed = true)
-    private val mockEventDao = mockk<EventDao>(relaxed = true)
-    private val mockParkDao = mockk<ParkDao>(relaxed = true)
     private val crashReporter = NoOpCrashReporter()
     private val logger = NoOpLogger()
 
@@ -81,21 +70,16 @@ class SWRepositoryAuthTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.login() } returns mockSuccess
 
-            val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                AuthRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    userDao = mockUserDao,
+                    dialogDao = mockDialogDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -114,21 +98,16 @@ class SWRepositoryAuthTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.login() } throws IOException("Network error")
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>()
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                AuthRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    userDao = mockUserDao,
+                    dialogDao = mockDialogDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -147,21 +126,16 @@ class SWRepositoryAuthTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.login() } returns mockSuccess
 
-            val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                AuthRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    userDao = mockUserDao,
+                    dialogDao = mockDialogDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -180,21 +154,16 @@ class SWRepositoryAuthTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.resetPassword(any()) } returns mockSuccess
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>()
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                AuthRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    userDao = mockUserDao,
+                    dialogDao = mockDialogDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -212,21 +181,16 @@ class SWRepositoryAuthTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.resetPassword(any()) } throws IOException("Network error")
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>()
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                AuthRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    userDao = mockUserDao,
+                    dialogDao = mockDialogDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -249,21 +213,16 @@ class SWRepositoryAuthTest {
                 mockApi.changePassword(any(), any())
             } returns mockResponse
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>()
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                AuthRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    userDao = mockUserDao,
+                    dialogDao = mockDialogDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -283,21 +242,16 @@ class SWRepositoryAuthTest {
                 mockApi.changePassword(any(), any())
             } throws IOException("Network error")
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>()
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                AuthRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    userDao = mockUserDao,
+                    dialogDao = mockDialogDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -327,21 +281,16 @@ class SWRepositoryAuthTest {
                 mockApi.changePassword(any(), any())
             } returns mockResponse
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>()
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                AuthRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    userDao = mockUserDao,
+                    dialogDao = mockDialogDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -371,19 +320,14 @@ class SWRepositoryAuthTest {
                 )
             } returns mockSuccess
 
-            val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
+                AuthRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    userDao = mockUserDao,
+                    dialogDao = mockDialogDao,
                     crashReporter = crashReporter,
                     logger = logger
                 )
@@ -439,21 +383,16 @@ class SWRepositoryAuthTest {
                 )
             } throws IOException("Network error")
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>()
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                AuthRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    userDao = mockUserDao,
+                    dialogDao = mockDialogDao,
+                    crashReporter = crashReporter,
+                    logger = logger
                 )
 
             // When
@@ -488,19 +427,14 @@ class SWRepositoryAuthTest {
                 )
             coEvery { mockApi.resetPassword(any()) } throws HttpException(errorResponse)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>()
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
+                AuthRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    userDao = mockUserDao,
+                    dialogDao = mockDialogDao,
                     crashReporter = crashReporter,
                     logger = logger
                 )
@@ -527,19 +461,14 @@ class SWRepositoryAuthTest {
                 )
             coEvery { mockApi.resetPassword(any()) } throws HttpException(errorResponse)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>()
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
+                AuthRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    userDao = mockUserDao,
+                    dialogDao = mockDialogDao,
                     crashReporter = crashReporter,
                     logger = logger
                 )
@@ -567,19 +496,14 @@ class SWRepositoryAuthTest {
                 )
             coEvery { mockApi.resetPassword(any()) } throws HttpException(errorResponse)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>()
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
+                AuthRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    userDao = mockUserDao,
+                    dialogDao = mockDialogDao,
                     crashReporter = crashReporter,
                     logger = logger
                 )
@@ -606,19 +530,14 @@ class SWRepositoryAuthTest {
                 )
             coEvery { mockApi.resetPassword(any()) } throws HttpException(errorResponse)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>()
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
+                AuthRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    userDao = mockUserDao,
+                    dialogDao = mockDialogDao,
                     crashReporter = crashReporter,
                     logger = logger
                 )
@@ -644,19 +563,14 @@ class SWRepositoryAuthTest {
                 )
             coEvery { mockApi.resetPassword(any()) } throws HttpException(errorResponse)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>()
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
+                AuthRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    userDao = mockUserDao,
+                    dialogDao = mockDialogDao,
                     crashReporter = crashReporter,
                     logger = logger
                 )
@@ -683,19 +597,14 @@ class SWRepositoryAuthTest {
                 )
             coEvery { mockApi.login() } throws HttpException(errorResponse)
 
-            val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
+                AuthRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    userDao = mockUserDao,
+                    dialogDao = mockDialogDao,
                     crashReporter = crashReporter,
                     logger = logger
                 )
@@ -733,21 +642,16 @@ class SWRepositoryAuthTest {
                 )
             } throws HttpException(errorResponse)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>()
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                AuthRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    userDao = mockUserDao,
+                    dialogDao = mockDialogDao,
+                    crashReporter = crashReporter,
+                    logger = logger
                 )
 
             // When
@@ -784,19 +688,14 @@ class SWRepositoryAuthTest {
                 )
             coEvery { mockApi.resetPassword(any()) } throws HttpException(errorResponse)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
+            val mockPreferencesRepository = mockk<UserPreferencesRepository>()
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
+                AuthRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    userDao = mockUserDao,
+                    dialogDao = mockDialogDao,
                     crashReporter = crashReporter,
                     logger = logger
                 )

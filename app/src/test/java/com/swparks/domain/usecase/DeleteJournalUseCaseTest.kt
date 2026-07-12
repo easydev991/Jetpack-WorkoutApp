@@ -1,6 +1,6 @@
 package com.swparks.domain.usecase
 
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.JournalsRepositoryImpl
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -17,7 +17,7 @@ import org.junit.Test
  * включая прокидывание результатов из репозитория без изменений
  */
 class DeleteJournalUseCaseTest {
-    private lateinit var mockRepository: SWRepository
+    private lateinit var mockRepository: JournalsRepositoryImpl
     private lateinit var deleteJournalUseCase: DeleteJournalUseCase
 
     private val testUserId = 123L

@@ -3,7 +3,7 @@ package com.swparks.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.swparks.data.model.Park
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.util.AppError
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
@@ -32,14 +32,14 @@ sealed class UserTrainingParksUiState {
  *
  * Управляет списком площадок, на которых тренируется пользователь
  *
- * @param swRepository Репозиторий для работы с данными площадок
+ * @param parksEventsRepository Репозиторий для работы с данными площадок
  * @param userId ID пользователя, для которого загружаются площадки
  * @param logger Логгер для записи сообщений
  * @param userNotifier Обработчик ошибок для отправки ошибок в UI
  */
 @Suppress("TooGenericExceptionCaught", "MaxLineLength", "InstanceOfCheckForException")
 class UserTrainingParksViewModel(
-    private val swRepository: SWRepository,
+    private val parksEventsRepository: ParksEventsRepository,
     private val userId: Long,
     private val logger: Logger,
     private val userNotifier: UserNotifier
@@ -68,9 +68,9 @@ class UserTrainingParksViewModel(
     private fun loadParks() {
         viewModelScope.launch {
             try {
-                val hasCache = swRepository.hasCachedParksForUser(userId)
+                val hasCache = parksEventsRepository.hasCachedParksForUser(userId)
                 if (hasCache) {
-                    val cachedParks = swRepository.getCachedParksForUser(userId)
+                    val cachedParks = parksEventsRepository.getCachedParksForUser(userId)
                     if (cachedParks != null) {
                         _uiState.update { UserTrainingParksUiState.Success(cachedParks) }
                         logger.i(TAG, "Показаны кэшированные площадки: ${cachedParks.size}")
@@ -96,7 +96,7 @@ class UserTrainingParksViewModel(
     private fun refreshInBackground() {
         viewModelScope.launch {
             try {
-                swRepository
+                parksEventsRepository
                     .getParksForUser(userId)
                     .onSuccess { parks ->
                         _uiState.update { UserTrainingParksUiState.Success(parks) }
@@ -119,7 +119,7 @@ class UserTrainingParksViewModel(
      * Загружает данные с сервера (используется при отсутствии кэша)
      */
     private suspend fun loadFromNetwork() {
-        swRepository
+        parksEventsRepository
             .getParksForUser(userId)
             .onSuccess { parks ->
                 _uiState.update { UserTrainingParksUiState.Success(parks) }
@@ -141,7 +141,7 @@ class UserTrainingParksViewModel(
                 _isRefreshing.update { true }
                 logger.i(TAG, "Начало обновления площадок пользователя: $userId")
 
-                swRepository
+                parksEventsRepository
                     .getParksForUser(userId)
                     .onSuccess { parks ->
                         _uiState.update { UserTrainingParksUiState.Success(parks) }

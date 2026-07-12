@@ -12,7 +12,8 @@ import com.swparks.analytics.UserActionType
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.toDomain
 import com.swparks.data.provider.ResourcesProviderImpl
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.FriendsRepository
+import com.swparks.data.repository.JournalsRepositoryImpl
 import com.swparks.domain.model.JournalEntry
 import com.swparks.domain.usecase.CanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.DeleteJournalEntryUseCase
@@ -52,7 +53,8 @@ data class JournalEntriesDeps(
     val canDeleteJournalEntryUseCase: CanDeleteJournalEntryUseCase,
     val editJournalSettingsUseCase: EditJournalSettingsUseCase,
     val userPreferencesRepository: UserPreferencesRepository,
-    val swRepository: SWRepository,
+    val journalsRepository: JournalsRepositoryImpl,
+    val friendsRepository: FriendsRepository,
     val savedStateHandle: SavedStateHandle,
     val userNotifier: UserNotifier,
     val resources: ResourcesProviderImpl,
@@ -131,17 +133,17 @@ class JournalEntriesViewModel(
         viewModelScope.launch {
             try {
                 // Проверяем кэш перед загрузкой с сервера
-                val cachedJournal = deps.swRepository.observeJournalById(journalId).first()
+                val cachedJournal = deps.journalsRepository.observeJournalById(journalId).first()
                 if (cachedJournal != null) {
                     Log.i(TAG, "Дневник уже в кэше: journalId=$journalId, пропускаем загрузку")
                     return@launch
                 }
 
-                val result = deps.swRepository.getJournal(journalOwnerId, journalId)
+                val result = deps.journalsRepository.getJournal(journalOwnerId, journalId)
                 result.fold(
                     onSuccess = { journalResponse ->
                         val journal = journalResponse.toDomain()
-                        deps.swRepository.saveJournalToCache(journal)
+                        deps.journalsRepository.saveJournalToCache(journal)
                         Log.i(TAG, "Дневник загружен и сохранён в кэш: journalId=$journalId")
                     },
                     onFailure = { error ->
@@ -162,7 +164,7 @@ class JournalEntriesViewModel(
      * Обновляет UI State при изменении дневника в кэше.
      */
     private fun observeJournal() {
-        deps.swRepository
+        deps.journalsRepository
             .observeJournalById(journalId)
             .onEach { journal ->
                 _uiState.update { state ->
@@ -239,7 +241,7 @@ class JournalEntriesViewModel(
 
         return combine(
             deps.userPreferencesRepository.currentUserId,
-            deps.swRepository.getFriendsFlow().map { friends -> friends.map { it.id } }
+            deps.friendsRepository.getFriendsFlow().map { friends -> friends.map { it.id } }
         ) { currentUserIdParam, friendsIds ->
             // Логирование для отладки FAB
             Log.d(TAG, "=== computeCanCreateEntry DEBUG ===")
@@ -338,7 +340,9 @@ class JournalEntriesViewModel(
                     .onSuccess {
                         deps.userNotifier.showInfo(deps.resources.getString(R.string.entry_deleted))
                     }.onFailure { error ->
-                        deps.analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.JOURNAL_DELETE_FAILED, error))
+                        deps.analyticsService.log(
+                            AnalyticsEvent.AppError(AppErrorOperation.JOURNAL_DELETE_FAILED, error)
+                        )
                         deps.userNotifier.handleError(
                             AppError.Generic(
                                 error.message
@@ -524,13 +528,13 @@ class JournalEntriesViewModel(
      * Обновляет локальный кэш и эмитит событие об успехе.
      */
     private suspend fun loadJournalAfterSettingsUpdate(journalId: Long) {
-        deps.swRepository
+        deps.journalsRepository
             .getJournal(journalOwnerId, journalId)
             .fold(
                 onSuccess = { journalResponse ->
                     val journal = journalResponse.toDomain()
                     // Обновляем кэш через Repository
-                    deps.swRepository.saveJournalToCache(journal)
+                    deps.journalsRepository.saveJournalToCache(journal)
 
                     // Эмитим событие об успехе
                     _events.emit(JournalEntriesEvent.JournalSettingsSaved(journal))

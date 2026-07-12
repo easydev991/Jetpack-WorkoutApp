@@ -13,8 +13,10 @@ import com.swparks.data.model.Event
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.AuthRepository
+import com.swparks.data.repository.CommentsRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.domain.exception.NotFoundException
 import com.swparks.domain.usecase.DeleteEventUseCase
 import com.swparks.ui.ds.CommentAction
@@ -50,7 +52,9 @@ class EventDetailViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var swRepository: SWRepository
+    private lateinit var parksEventsRepository: ParksEventsRepository
+    private lateinit var commentsRepository: CommentsRepository
+    private lateinit var authRepository: AuthRepository
     private lateinit var countriesRepository: CountriesRepositoryImpl
     private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var userNotifier: UserNotifier
@@ -62,7 +66,9 @@ class EventDetailViewModelTest {
 
     @Before
     fun setUp() {
-        swRepository = mockk(relaxed = true)
+        parksEventsRepository = mockk(relaxed = true)
+        commentsRepository = mockk(relaxed = true)
+        authRepository = mockk(relaxed = true)
         countriesRepository = mockk(relaxed = true)
         userPreferencesRepository = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
@@ -76,7 +82,7 @@ class EventDetailViewModelTest {
 
         coEvery { countriesRepository.getCountryById(any()) } returns null
         coEvery { countriesRepository.getCityById(any()) } returns null
-        coEvery { swRepository.getEventFromCache(any()) } returns null
+        coEvery { parksEventsRepository.getEventFromCache(any()) } returns null
 
         every { resourcesProvider.getString(R.string.error_server_not_found) } returns "Ресурс не найден на сервере"
     }
@@ -92,7 +98,7 @@ class EventDetailViewModelTest {
                     date = "2026-03-13 12:00:00",
                     user = User(id = 7L, name = "Автор", image = null)
                 )
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.success(
                     createEvent(comments = listOf(comment))
                 )
@@ -125,7 +131,7 @@ class EventDetailViewModelTest {
                     date = "2026-03-13 12:00:00",
                     user = null
                 )
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.success(
                     createEvent(comments = listOf(comment))
                 )
@@ -150,7 +156,7 @@ class EventDetailViewModelTest {
     fun onAddCommentClick_whenContentLoaded_thenEmitsOpenTextEntryForNewComment() =
         runTest {
             // Given
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.success(
                     createEvent(comments = emptyList())
                 )
@@ -182,7 +188,7 @@ class EventDetailViewModelTest {
                     date = "2026-03-13 12:00:00",
                     user = User(id = 1L, name = "Автор", image = null)
                 )
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.success(
                     createEvent(comments = listOf(comment))
                 )
@@ -217,7 +223,7 @@ class EventDetailViewModelTest {
                     date = "2026-03-13 12:00:00",
                     user = User(id = 1L, name = "Автор", image = null)
                 )
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.success(
                     createEvent(comments = listOf(comment))
                 )
@@ -246,12 +252,12 @@ class EventDetailViewModelTest {
                     date = "2026-03-13 12:00:00",
                     user = User(id = 1L, name = "Автор", image = null)
                 )
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.success(
                     createEvent(comments = listOf(comment))
                 )
             coEvery {
-                swRepository.deleteComment(
+                commentsRepository.deleteComment(
                     option = TextEntryOption.Event(TEST_EVENT_ID),
                     commentId = TEST_COMMENT_ID
                 )
@@ -269,7 +275,7 @@ class EventDetailViewModelTest {
 
             // Then
             coVerify {
-                swRepository.deleteComment(
+                commentsRepository.deleteComment(
                     option = TextEntryOption.Event(TEST_EVENT_ID),
                     commentId = TEST_COMMENT_ID
                 )
@@ -278,7 +284,9 @@ class EventDetailViewModelTest {
 
     private fun createViewModel(): EventDetailViewModel =
         EventDetailViewModel(
-            swRepository = swRepository,
+            parksEventsRepository = parksEventsRepository,
+            commentsRepository = commentsRepository,
+            authRepository = authRepository,
             countriesRepository = countriesRepository,
             userPreferencesRepository = userPreferencesRepository,
             savedStateHandle = savedStateHandle,
@@ -329,7 +337,7 @@ class EventDetailViewModelTest {
     fun loadEvent_whenSuccess_thenShowsContent() =
         runTest {
             // Given
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
 
             // When
             val viewModel = createViewModel()
@@ -364,14 +372,14 @@ class EventDetailViewModelTest {
                         )
                 )
 
-            coEvery { swRepository.getEventFromCache(TEST_EVENT_ID) } returns cachedEvent
+            coEvery { parksEventsRepository.getEventFromCache(TEST_EVENT_ID) } returns cachedEvent
             coEvery {
-                swRepository.getEvent(TEST_EVENT_ID)
+                parksEventsRepository.getEvent(TEST_EVENT_ID)
             } coAnswers {
                 refreshGate.await()
                 Result.success(refreshedEvent)
             }
-            coEvery { swRepository.saveEventFull(refreshedEvent) } returns Unit
+            coEvery { parksEventsRepository.saveEventFull(refreshedEvent) } returns Unit
 
             val viewModel = createViewModel()
             runCurrent()
@@ -398,9 +406,9 @@ class EventDetailViewModelTest {
                     .first()
                     .photo
             )
-            coVerify { swRepository.getEventFromCache(TEST_EVENT_ID) }
-            coVerify { swRepository.getEvent(TEST_EVENT_ID) }
-            coVerify { swRepository.saveEventFull(refreshedEvent) }
+            coVerify { parksEventsRepository.getEventFromCache(TEST_EVENT_ID) }
+            coVerify { parksEventsRepository.getEvent(TEST_EVENT_ID) }
+            coVerify { parksEventsRepository.saveEventFull(refreshedEvent) }
         }
 
     @Test
@@ -408,8 +416,9 @@ class EventDetailViewModelTest {
         runTest {
             val cachedEvent =
                 createEvent(isCurrent = false, photos = listOf(Photo(1L, "cached.jpg")))
-            coEvery { swRepository.getEventFromCache(TEST_EVENT_ID) } returns cachedEvent
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.failure(Exception("Ошибка обновления"))
+            coEvery { parksEventsRepository.getEventFromCache(TEST_EVENT_ID) } returns cachedEvent
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
+                Result.failure(Exception("Ошибка обновления"))
 
             val viewModel = createViewModel()
             advanceUntilIdle()
@@ -429,21 +438,21 @@ class EventDetailViewModelTest {
     fun loadEvent_whenFutureEventLoaded_thenDoesNotSaveToPastCache() =
         runTest {
             val futureEvent = createEvent(isCurrent = true)
-            coEvery { swRepository.getEventFromCache(TEST_EVENT_ID) } returns null
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(futureEvent)
+            coEvery { parksEventsRepository.getEventFromCache(TEST_EVENT_ID) } returns null
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns Result.success(futureEvent)
 
             val viewModel = createViewModel()
             advanceUntilIdle()
 
             assertTrue(viewModel.uiState.value is EventDetailUIState.Content)
-            coVerify(exactly = 0) { swRepository.saveEventFull(any()) }
+            coVerify(exactly = 0) { parksEventsRepository.saveEventFull(any()) }
         }
 
     @Test
     fun refresh_whenSuccess_thenUpdatesContent() =
         runTest {
             // Given
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
             val viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -452,7 +461,7 @@ class EventDetailViewModelTest {
             advanceUntilIdle()
 
             // Then
-            coVerify(exactly = 2) { swRepository.getEvent(TEST_EVENT_ID) }
+            coVerify(exactly = 2) { parksEventsRepository.getEvent(TEST_EVENT_ID) }
             assertTrue(viewModel.uiState.value is EventDetailUIState.Content)
         }
 
@@ -460,9 +469,9 @@ class EventDetailViewModelTest {
     fun refresh_whenPastEventSuccess_thenUpdatesCache() =
         runTest {
             val pastEvent = createEvent(isCurrent = false)
-            coEvery { swRepository.getEventFromCache(TEST_EVENT_ID) } returns null
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(pastEvent)
-            coEvery { swRepository.saveEventFull(pastEvent) } returns Unit
+            coEvery { parksEventsRepository.getEventFromCache(TEST_EVENT_ID) } returns null
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns Result.success(pastEvent)
+            coEvery { parksEventsRepository.saveEventFull(pastEvent) } returns Unit
 
             val viewModel = createViewModel()
             advanceUntilIdle()
@@ -470,7 +479,7 @@ class EventDetailViewModelTest {
             viewModel.refresh()
             advanceUntilIdle()
 
-            coVerify(atLeast = 1) { swRepository.saveEventFull(pastEvent) }
+            coVerify(atLeast = 1) { parksEventsRepository.saveEventFull(pastEvent) }
         }
 
     @Test
@@ -478,7 +487,7 @@ class EventDetailViewModelTest {
         runTest {
             val retryGate = CompletableDeferred<Unit>()
             var callCount = 0
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } coAnswers {
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } coAnswers {
                 callCount += 1
                 if (callCount == 1) {
                     Result.failure(Exception("Первичная ошибка"))
@@ -508,7 +517,7 @@ class EventDetailViewModelTest {
             val retryError = "Повторная ошибка"
             val retryGate = CompletableDeferred<Unit>()
             var callCount = 0
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } coAnswers {
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } coAnswers {
                 callCount += 1
                 if (callCount == 1) {
                     Result.failure(Exception("Первичная ошибка"))
@@ -538,7 +547,7 @@ class EventDetailViewModelTest {
     fun refresh_whenFailureHappensAfterContent_thenKeepsExistingContent() =
         runTest {
             val existingEvent = createEvent().copy(title = "Уже загруженное мероприятие")
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.success(existingEvent) andThen
                 Result.failure(Exception("Ошибка обновления"))
 
@@ -562,15 +571,15 @@ class EventDetailViewModelTest {
     fun onParticipantToggle_whenSuccess_thenUpdatesTrainHere() =
         runTest {
             // Given
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.success(
                     createEvent(trainHere = false)
                 )
-            coEvery { swRepository.changeIsGoingToEvent(true, TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.changeIsGoingToEvent(true, TEST_EVENT_ID) } returns
                 Result.success(
                     Unit
                 )
-            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(null)
+            coEvery { authRepository.getCurrentUserFlow() } returns flowOf(null)
             val viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -587,11 +596,11 @@ class EventDetailViewModelTest {
     fun onParticipantToggle_whenError_thenRevertsToOriginal() =
         runTest {
             // Given
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.success(
                     createEvent(trainHere = false)
                 )
-            coEvery { swRepository.changeIsGoingToEvent(true, TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.changeIsGoingToEvent(true, TEST_EVENT_ID) } returns
                 Result.failure(
                     RuntimeException("Network error")
                 )
@@ -613,7 +622,7 @@ class EventDetailViewModelTest {
     fun onOpenMapClick_whenContentLoaded_thenEmitsOpenMapEvent() =
         runTest {
             // Given
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
             val viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -631,7 +640,7 @@ class EventDetailViewModelTest {
     fun onRouteClick_whenContentLoaded_thenEmitsBuildRouteEvent() =
         runTest {
             // Given
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
             val viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -652,12 +661,12 @@ class EventDetailViewModelTest {
         runTest {
             // Given
             val photo = Photo(id = 1L, photo = "http://example.com/photo.jpg")
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.success(
                     createEvent(photos = listOf(photo))
                 )
             coEvery {
-                swRepository.deleteEventPhoto(
+                parksEventsRepository.deleteEventPhoto(
                     TEST_EVENT_ID,
                     1L
                 )
@@ -677,7 +686,7 @@ class EventDetailViewModelTest {
                 assertEquals(EventDetailEvent.PhotoDeleted(1L), awaitItem())
                 cancelAndIgnoreRemainingEvents()
             }
-            coVerify { swRepository.deleteEventPhoto(TEST_EVENT_ID, 1L) }
+            coVerify { parksEventsRepository.deleteEventPhoto(TEST_EVENT_ID, 1L) }
         }
 
     // === Delete event success test ===
@@ -686,8 +695,8 @@ class EventDetailViewModelTest {
     fun onDeleteConfirm_whenSuccess_thenEmitsEventDeletedEvent() =
         runTest {
             // Given
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
-            coEvery { swRepository.deleteEvent(TEST_EVENT_ID) } returns Result.success(Unit)
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
+            coEvery { parksEventsRepository.deleteEvent(TEST_EVENT_ID) } returns Result.success(Unit)
             val viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -703,7 +712,7 @@ class EventDetailViewModelTest {
                 assertEquals(EventDetailEvent.EventDeleted(TEST_EVENT_ID), awaitItem())
                 cancelAndIgnoreRemainingEvents()
             }
-            coVerify { swRepository.deleteEvent(TEST_EVENT_ID) }
+            coVerify { parksEventsRepository.deleteEvent(TEST_EVENT_ID) }
         }
 
     // === Participants navigation test ===
@@ -714,7 +723,7 @@ class EventDetailViewModelTest {
             // Given
             val user1 = User(id = 1L, name = "User 1", image = null)
             val user2 = User(id = 2L, name = "User 2", image = null)
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.success(
                     createEvent(trainingUsers = listOf(user1, user2))
                 )
@@ -741,7 +750,7 @@ class EventDetailViewModelTest {
     fun onAddToCalendarClick_whenCurrentEvent_thenEmitsOpenCalendarEvent() =
         runTest {
             // Given
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.success(
                     createEvent(isCurrent = true)
                 )
@@ -766,7 +775,7 @@ class EventDetailViewModelTest {
     fun onAddToCalendarClick_whenPastEvent_thenDoesNotEmitEvent() =
         runTest {
             // Given
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.success(
                     createEvent(isCurrent = false)
                 )
@@ -789,7 +798,7 @@ class EventDetailViewModelTest {
     fun loadEvent_whenRuntimeException_thenShowsError() =
         runTest {
             // Given - мокируем выброс RuntimeException
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } throws RuntimeException("Unexpected error")
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } throws RuntimeException("Unexpected error")
 
             // When
             val viewModel = createViewModel()
@@ -803,12 +812,12 @@ class EventDetailViewModelTest {
     fun onDeleteConfirm_whenRuntimeException_thenHandlesError() =
         runTest {
             // Given - загружаем мероприятие
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
             val viewModel = createViewModel()
             advanceUntilIdle()
 
             // Мокируем выброс RuntimeException при удалении
-            coEvery { swRepository.deleteEvent(TEST_EVENT_ID) } throws RuntimeException("Unexpected error")
+            coEvery { parksEventsRepository.deleteEvent(TEST_EVENT_ID) } throws RuntimeException("Unexpected error")
 
             // When
             viewModel.onDeleteClick()
@@ -825,7 +834,7 @@ class EventDetailViewModelTest {
         runTest {
             // Given - загружаем мероприятие с фото
             val photo = Photo(id = 1L, photo = "http://example.com/photo.jpg")
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.success(
                     createEvent(photos = listOf(photo))
                 )
@@ -834,7 +843,7 @@ class EventDetailViewModelTest {
 
             // Мокируем выброс RuntimeException при удалении фото
             coEvery {
-                swRepository.deleteEventPhoto(
+                parksEventsRepository.deleteEventPhoto(
                     TEST_EVENT_ID,
                     1L
                 )
@@ -854,7 +863,7 @@ class EventDetailViewModelTest {
     fun onEventUpdated_whenContentState_thenUpdatesEventInState() =
         runTest {
             // Given
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
             val viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -874,7 +883,7 @@ class EventDetailViewModelTest {
     fun onEventUpdated_whenErrorState_thenUpdatesToContent() =
         runTest {
             // Given
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.failure(Exception("Error"))
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns Result.failure(Exception("Error"))
             val viewModel = createViewModel()
             advanceUntilIdle()
             assertTrue(viewModel.uiState.value is EventDetailUIState.Error)
@@ -894,7 +903,7 @@ class EventDetailViewModelTest {
     @Test
     fun onEventUpdated_whenLoadingState_thenUpdatesToContent() =
         runTest {
-            // Given - не мокаем swRepository.getEvent чтобы остаться в Loading
+            // Given - не мокаем parksEventsRepository.getEvent чтобы остаться в Loading
             val viewModel = createViewModel()
             // Не вызываем advanceUntilIdle() чтобы остаться в Loading
 
@@ -918,7 +927,7 @@ class EventDetailViewModelTest {
             val testDispatcher = StandardTestDispatcher(testScheduler)
             Dispatchers.setMain(testDispatcher)
 
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.failure(
                     NotFoundException.EventNotFound(TEST_EVENT_ID)
                 )
@@ -947,7 +956,7 @@ class EventDetailViewModelTest {
     @Test
     fun loadEvent_whenEventNotFound_thenUiStateShowsError() =
         runTest {
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.failure(
                     NotFoundException.EventNotFound(TEST_EVENT_ID)
                 )
@@ -965,8 +974,8 @@ class EventDetailViewModelTest {
     @Test
     fun onDeleteConfirm_whenSuccess_thenLogsDeleteEventAnalytics() =
         runTest {
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
-            coEvery { swRepository.deleteEvent(TEST_EVENT_ID) } returns Result.success(Unit)
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
+            coEvery { parksEventsRepository.deleteEvent(TEST_EVENT_ID) } returns Result.success(Unit)
             val viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -983,8 +992,8 @@ class EventDetailViewModelTest {
     @Test
     fun onDeleteConfirm_whenFailure_thenLogsEventDeleteFailedAnalytics() =
         runTest {
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
-            coEvery { swRepository.deleteEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns Result.success(createEvent())
+            coEvery { parksEventsRepository.deleteEvent(TEST_EVENT_ID) } returns
                 Result.failure(Exception("Delete error"))
             val viewModel = createViewModel()
             advanceUntilIdle()
@@ -1007,7 +1016,7 @@ class EventDetailViewModelTest {
     @Test
     fun loadEvent_whenFailure_thenLogsEventLoadFailedAnalytics() =
         runTest {
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.failure(Exception("Load error"))
 
             val viewModel = createViewModel()
@@ -1033,7 +1042,7 @@ class EventDetailViewModelTest {
                     date = "2026-03-13 12:00:00",
                     user = User(id = 7L, name = "Автор", image = null)
                 )
-            coEvery { swRepository.getEvent(TEST_EVENT_ID) } returns
+            coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.success(createEvent(comments = listOf(comment)))
             val viewModel = createViewModel()
             advanceUntilIdle()

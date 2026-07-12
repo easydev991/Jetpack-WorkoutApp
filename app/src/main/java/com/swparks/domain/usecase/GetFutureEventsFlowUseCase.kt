@@ -1,11 +1,11 @@
 package com.swparks.domain.usecase
 
 import com.swparks.data.model.Event
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import kotlinx.coroutines.flow.Flow
 
 class GetFutureEventsFlowUseCase(
-    private val swRepository: SWRepository
+    private val parksEventsRepository: ParksEventsRepository
 ) {
-    operator fun invoke(): Flow<List<Event>> = swRepository.getFutureEventsFlow()
+    operator fun invoke(): Flow<List<Event>> = parksEventsRepository.getFutureEventsFlow()
 }

@@ -4,7 +4,7 @@ import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.data.model.User
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.UserProfileRepository
 import com.swparks.ui.state.SearchUserUiState
 import com.swparks.util.Logger
 import com.swparks.util.NoOpLogger
@@ -31,7 +31,7 @@ class SearchUserViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var swRepository: SWRepository
+    private lateinit var userProfileRepository: UserProfileRepository
     private lateinit var viewModel: SearchUserViewModel
     private lateinit var analyticsService: AnalyticsService
     private val testLogger: Logger = NoOpLogger()
@@ -45,11 +45,11 @@ class SearchUserViewModelTest {
 
     @Before
     fun setup() {
-        swRepository = mockk(relaxed = true)
+        userProfileRepository = mockk(relaxed = true)
         analyticsService = mockk(relaxed = true)
         viewModel =
             SearchUserViewModel(
-                swRepository = swRepository,
+                userProfileRepository = userProfileRepository,
                 logger = testLogger,
                 analyticsService = analyticsService
             )
@@ -78,7 +78,7 @@ class SearchUserViewModelTest {
 
             // Then
             assertTrue(viewModel.uiState.value is SearchUserUiState.Initial)
-            coVerify(exactly = 0) { swRepository.findUsers(any()) }
+            coVerify(exactly = 0) { userProfileRepository.findUsers(any()) }
         }
 
     @Test
@@ -93,7 +93,7 @@ class SearchUserViewModelTest {
 
             // Then
             assertTrue(viewModel.uiState.value is SearchUserUiState.Initial)
-            coVerify(exactly = 0) { swRepository.findUsers(any()) }
+            coVerify(exactly = 0) { userProfileRepository.findUsers(any()) }
         }
 
     @Test
@@ -103,7 +103,7 @@ class SearchUserViewModelTest {
             val query = "test"
             val users = listOf(testUser)
             viewModel.searchQuery.value = query
-            coEvery { swRepository.findUsers(query) } returns Result.success(users)
+            coEvery { userProfileRepository.findUsers(query) } returns Result.success(users)
 
             // When
             viewModel.onSearch()
@@ -114,7 +114,7 @@ class SearchUserViewModelTest {
             assertTrue(state is SearchUserUiState.Success)
             assertEquals(1, (state as SearchUserUiState.Success).users.size)
             assertEquals(testUser.id, state.users.first().id)
-            coVerify(exactly = 1) { swRepository.findUsers(query) }
+            coVerify(exactly = 1) { userProfileRepository.findUsers(query) }
         }
 
     @Test
@@ -123,7 +123,7 @@ class SearchUserViewModelTest {
             // Given
             val query = "notfound"
             viewModel.searchQuery.value = query
-            coEvery { swRepository.findUsers(query) } returns Result.success(emptyList())
+            coEvery { userProfileRepository.findUsers(query) } returns Result.success(emptyList())
 
             // When
             viewModel.onSearch()
@@ -131,7 +131,7 @@ class SearchUserViewModelTest {
 
             // Then
             assertTrue(viewModel.uiState.value is SearchUserUiState.Empty)
-            coVerify(exactly = 1) { swRepository.findUsers(query) }
+            coVerify(exactly = 1) { userProfileRepository.findUsers(query) }
         }
 
     @Test
@@ -140,7 +140,7 @@ class SearchUserViewModelTest {
             // Given
             val query = "test"
             viewModel.searchQuery.value = query
-            coEvery { swRepository.findUsers(query) } returns Result.failure(Exception("Network error"))
+            coEvery { userProfileRepository.findUsers(query) } returns Result.failure(Exception("Network error"))
 
             // When
             viewModel.onSearch()
@@ -148,7 +148,7 @@ class SearchUserViewModelTest {
 
             // Then
             assertTrue(viewModel.uiState.value is SearchUserUiState.NetworkError)
-            coVerify(exactly = 1) { swRepository.findUsers(query) }
+            coVerify(exactly = 1) { userProfileRepository.findUsers(query) }
         }
 
     @Test
@@ -157,7 +157,7 @@ class SearchUserViewModelTest {
             // Given
             val query = "test"
             viewModel.searchQuery.value = query
-            coEvery { swRepository.findUsers(query) } coAnswers {
+            coEvery { userProfileRepository.findUsers(query) } coAnswers {
                 // Проверяем состояние во время выполнения запроса
                 assertTrue(viewModel.uiState.value is SearchUserUiState.Loading)
                 Result.success(listOf(testUser))
@@ -179,7 +179,7 @@ class SearchUserViewModelTest {
             var callCount = 0
 
             viewModel.searchQuery.value = query1
-            coEvery { swRepository.findUsers(any()) } coAnswers {
+            coEvery { userProfileRepository.findUsers(any()) } coAnswers {
                 callCount++
                 if (callCount == 1) {
                     // Первый запрос - меняем query и вызываем onSearch снова
@@ -205,7 +205,7 @@ class SearchUserViewModelTest {
             // Given
             val query = "test"
             viewModel.searchQuery.value = query
-            coEvery { swRepository.findUsers(query) } returns Result.success(listOf(testUser))
+            coEvery { userProfileRepository.findUsers(query) } returns Result.success(listOf(testUser))
 
             // First search
             viewModel.onSearch()
@@ -217,7 +217,7 @@ class SearchUserViewModelTest {
             advanceUntilIdle()
 
             // Then - API вызван только один раз
-            coVerify(exactly = 1) { swRepository.findUsers(query) }
+            coVerify(exactly = 1) { userProfileRepository.findUsers(query) }
         }
 
     @Test
@@ -227,8 +227,8 @@ class SearchUserViewModelTest {
             val query1 = "test1"
             val query2 = "test2"
             viewModel.searchQuery.value = query1
-            coEvery { swRepository.findUsers(query1) } returns Result.success(listOf(testUser))
-            coEvery { swRepository.findUsers(query2) } returns
+            coEvery { userProfileRepository.findUsers(query1) } returns Result.success(listOf(testUser))
+            coEvery { userProfileRepository.findUsers(query2) } returns
                 Result.success(
                     listOf(testUser.copy(id = 2L, name = "test2"))
                 )
@@ -244,8 +244,8 @@ class SearchUserViewModelTest {
             advanceUntilIdle()
 
             // Then - API вызван дважды
-            coVerify(exactly = 1) { swRepository.findUsers(query1) }
-            coVerify(exactly = 1) { swRepository.findUsers(query2) }
+            coVerify(exactly = 1) { userProfileRepository.findUsers(query1) }
+            coVerify(exactly = 1) { userProfileRepository.findUsers(query2) }
         }
 
     @Test
@@ -268,7 +268,7 @@ class SearchUserViewModelTest {
             val query = "test"
             val exception = Exception("Ошибка поиска")
             viewModel.searchQuery.value = query
-            coEvery { swRepository.findUsers(query) } returns Result.failure(exception)
+            coEvery { userProfileRepository.findUsers(query) } returns Result.failure(exception)
 
             viewModel.onSearch()
             advanceUntilIdle()

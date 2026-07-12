@@ -1,15 +1,8 @@
 package com.swparks.data.repository
 
 import android.util.Log
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.emptyPreferences
-import com.swparks.data.database.dao.DialogDao
-import com.swparks.data.database.dao.EventDao
-import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.ParkDao
-import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.ParkEntity
 import com.swparks.data.model.Comment
 import com.swparks.data.model.User
@@ -26,7 +19,6 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -40,16 +32,12 @@ import retrofit2.Response
 import java.io.IOException
 
 /**
- * Unit тесты для методов комментариев в SWRepository
+ * Unit тесты для методов комментариев в CommentsRepository
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class SWRepositoryCommentsTest {
+class CommentsRepositoryTest {
     private val testDispatcher = StandardTestDispatcher()
-    private val mockUserDao = mockk<UserDao>(relaxed = true)
-    private val mockJournalDao = mockk<JournalDao>(relaxed = true)
     private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
-    private val mockDialogDao = mockk<DialogDao>(relaxed = true)
-    private val mockEventDao = mockk<EventDao>(relaxed = true)
     private val mockParkDao = mockk<ParkDao>(relaxed = true)
     private val crashReporter = NoOpCrashReporter()
     private val logger = NoOpLogger()
@@ -77,21 +65,13 @@ class SWRepositoryCommentsTest {
                 )
             } returns Response.success(Unit)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                CommentsRepository(
+                    swApi = mockApi,
+                    parkDao = mockParkDao,
+                    journalEntryDao = mockJournalEntryDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val option = TextEntryOption.Park(id = 123L)
 
@@ -112,21 +92,13 @@ class SWRepositoryCommentsTest {
                 )
             } returns Response.success(Unit)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                CommentsRepository(
+                    swApi = mockApi,
+                    parkDao = mockParkDao,
+                    journalEntryDao = mockJournalEntryDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val option = TextEntryOption.Event(id = 456L)
 
@@ -148,21 +120,13 @@ class SWRepositoryCommentsTest {
                 )
             } returns Response.success(Unit)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                CommentsRepository(
+                    swApi = mockApi,
+                    parkDao = mockParkDao,
+                    journalEntryDao = mockJournalEntryDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L)
 
@@ -189,21 +153,13 @@ class SWRepositoryCommentsTest {
                 )
             } throws IOException("Network error")
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                CommentsRepository(
+                    swApi = mockApi,
+                    parkDao = mockParkDao,
+                    journalEntryDao = mockJournalEntryDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val option = TextEntryOption.Park(id = 123L)
 
@@ -228,21 +184,13 @@ class SWRepositoryCommentsTest {
                     "bad request".toResponseBody("text/plain".toMediaType())
                 )
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                CommentsRepository(
+                    swApi = mockApi,
+                    parkDao = mockParkDao,
+                    journalEntryDao = mockJournalEntryDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val option = TextEntryOption.Event(id = 456L)
 
@@ -263,21 +211,13 @@ class SWRepositoryCommentsTest {
                 )
             } returns Response.success(Unit)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                CommentsRepository(
+                    swApi = mockApi,
+                    parkDao = mockParkDao,
+                    journalEntryDao = mockJournalEntryDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val option = TextEntryOption.Park(id = 123L)
 
@@ -305,21 +245,13 @@ class SWRepositoryCommentsTest {
                 )
             } returns Response.success(Unit)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                CommentsRepository(
+                    swApi = mockApi,
+                    parkDao = mockParkDao,
+                    journalEntryDao = mockJournalEntryDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val option = TextEntryOption.Event(id = 456L)
 
@@ -348,9 +280,6 @@ class SWRepositoryCommentsTest {
                 )
             } returns Response.success(Unit)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val existingEntry =
                 com.swparks.data.database.entity.JournalEntryEntity(
                     id = 999L,
@@ -365,17 +294,12 @@ class SWRepositoryCommentsTest {
             coEvery { mockJournalEntryDao.getById(999L) } returns existingEntry
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                CommentsRepository(
+                    swApi = mockApi,
+                    parkDao = mockParkDao,
+                    journalEntryDao = mockJournalEntryDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L)
 
@@ -412,21 +336,13 @@ class SWRepositoryCommentsTest {
                 )
             } throws IOException("Network error")
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter = crashReporter,
-                    logger = logger
+                CommentsRepository(
+                    swApi = mockApi,
+                    parkDao = mockParkDao,
+                    journalEntryDao = mockJournalEntryDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val option = TextEntryOption.Park(id = 123L)
 
@@ -452,21 +368,13 @@ class SWRepositoryCommentsTest {
                     "bad request".toResponseBody("text/plain".toMediaType())
                 )
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter = crashReporter,
-                    logger = logger
+                CommentsRepository(
+                    swApi = mockApi,
+                    parkDao = mockParkDao,
+                    journalEntryDao = mockJournalEntryDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val option = TextEntryOption.Event(id = 456L)
 
@@ -511,21 +419,13 @@ class SWRepositoryCommentsTest {
                     comments = cachedComments
                 )
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter = crashReporter,
-                    logger = logger
+                CommentsRepository(
+                    swApi = mockApi,
+                    parkDao = mockParkDao,
+                    journalEntryDao = mockJournalEntryDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val option = TextEntryOption.Park(id = 123L)
 
@@ -572,21 +472,13 @@ class SWRepositoryCommentsTest {
                         )
                 )
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter = crashReporter,
-                    logger = logger
+                CommentsRepository(
+                    swApi = mockApi,
+                    parkDao = mockParkDao,
+                    journalEntryDao = mockJournalEntryDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val option = TextEntryOption.Park(id = 123L)
 
@@ -608,21 +500,13 @@ class SWRepositoryCommentsTest {
                 )
             } returns Response.success(Unit)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter = crashReporter,
-                    logger = logger
+                CommentsRepository(
+                    swApi = mockApi,
+                    parkDao = mockParkDao,
+                    journalEntryDao = mockJournalEntryDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val option = TextEntryOption.Event(id = 456L)
 
@@ -645,21 +529,13 @@ class SWRepositoryCommentsTest {
                 )
             } returns Response.success(Unit)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter = crashReporter,
-                    logger = logger
+                CommentsRepository(
+                    swApi = mockApi,
+                    parkDao = mockParkDao,
+                    journalEntryDao = mockJournalEntryDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val option = TextEntryOption.Journal(ownerId = 1L, journalId = 789L)
 
@@ -684,21 +560,13 @@ class SWRepositoryCommentsTest {
                     "Network error"
                 )
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter = crashReporter,
-                    logger = logger
+                CommentsRepository(
+                    swApi = mockApi,
+                    parkDao = mockParkDao,
+                    journalEntryDao = mockJournalEntryDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val option = TextEntryOption.Park(id = 123L)
 

@@ -9,8 +9,9 @@ import com.swparks.data.model.Event
 import com.swparks.data.model.Park
 import com.swparks.data.model.User
 import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.AuthRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.domain.exception.NotFoundException
 import com.swparks.domain.usecase.DeleteEventUseCase
 import com.swparks.domain.usecase.DeleteParkUseCase
@@ -44,7 +45,8 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class Integration404Test {
-    private lateinit var swRepository: SWRepository
+    private lateinit var authRepository: AuthRepository
+    private lateinit var parksEventsRepository: ParksEventsRepository
     private lateinit var countriesRepository: CountriesRepositoryImpl
     private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var userNotifier: UserNotifier
@@ -159,7 +161,8 @@ class Integration404Test {
 
     @Before
     fun setUp() {
-        swRepository = mockk(relaxed = true)
+        authRepository = mockk(relaxed = true)
+        parksEventsRepository = mockk(relaxed = true)
         countriesRepository = mockk(relaxed = true)
         userPreferencesRepository = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
@@ -194,8 +197,8 @@ class Integration404Test {
             val userParksFlow =
                 MutableStateFlow(testUser.copy(addedParks = listOf(testPark1, testPark2)))
 
-            every { swRepository.getCurrentUserFlow() } returns userParksFlow
-            coEvery { swRepository.getPark(testPark1.id) } returns
+            every { authRepository.getCurrentUserFlow() } returns userParksFlow
+            coEvery { parksEventsRepository.getPark(testPark1.id) } returns
                 Result.failure(
                     NotFoundException.ParkNotFound(testPark1.id)
                 )
@@ -207,7 +210,9 @@ class Integration404Test {
             val parksViewModel =
                 ProfileViewModel(
                     countriesRepository = countriesRepository,
-                    swRepository = swRepository,
+                    authRepository = authRepository,
+                    userProfileRepository = mockk(relaxed = true),
+                    friendsRepository = mockk(relaxed = true),
                     logger = logger,
                     userNotifier = userNotifier,
                     analyticsService = analyticsService
@@ -218,7 +223,9 @@ class Integration404Test {
             val savedStateHandle = SavedStateHandle(mapOf("parkId" to testPark1.id))
             val parkDetailViewModel =
                 ParkDetailViewModel(
-                    swRepository = swRepository,
+                    parksEventsRepository = parksEventsRepository,
+                    commentsRepository = mockk(relaxed = true),
+                    authRepository = authRepository,
                     countriesRepository = countriesRepository,
                     userPreferencesRepository = userPreferencesRepository,
                     savedStateHandle = savedStateHandle,
@@ -282,7 +289,7 @@ class Integration404Test {
             coEvery { mockSyncPastEventsUseCase() } returns Result.success(Unit)
             every { userPreferencesRepository.isAuthorized } returns flowOf(false)
 
-            coEvery { swRepository.getEvent(testEvent1.id) } returns
+            coEvery { parksEventsRepository.getEvent(testEvent1.id) } returns
                 Result.failure(
                     NotFoundException.EventNotFound(testEvent1.id)
                 )
@@ -301,7 +308,8 @@ class Integration404Test {
                     countriesRepository = countriesRepository,
                     userNotifier = userNotifier,
                     logger = logger,
-                    swRepository = swRepository,
+                    authRepository = authRepository,
+                    parksEventsRepository = parksEventsRepository,
                     analyticsService = mockk<AnalyticsService>(relaxed = true)
                 )
 
@@ -318,7 +326,9 @@ class Integration404Test {
             val savedStateHandle = SavedStateHandle(mapOf("eventId" to testEvent1.id))
             val eventDetailViewModel =
                 EventDetailViewModel(
-                    swRepository = swRepository,
+                    parksEventsRepository = parksEventsRepository,
+                    commentsRepository = mockk(relaxed = true),
+                    authRepository = authRepository,
                     countriesRepository = countriesRepository,
                     userPreferencesRepository = userPreferencesRepository,
                     savedStateHandle = savedStateHandle,

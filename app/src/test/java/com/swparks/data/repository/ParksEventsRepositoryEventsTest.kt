@@ -1,15 +1,11 @@
 package com.swparks.data.repository
 
 import android.util.Log
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.emptyPreferences
-import com.swparks.data.database.dao.DialogDao
+import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.database.dao.EventDao
-import com.swparks.data.database.dao.JournalDao
-import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.ParkDao
 import com.swparks.data.database.dao.UserDao
+import com.swparks.data.database.dao.UserTrainingParkDao
 import com.swparks.data.model.Comment
 import com.swparks.data.model.Event
 import com.swparks.data.model.User
@@ -46,17 +42,16 @@ import retrofit2.Response
 import java.io.IOException
 
 /**
- * Unit тесты для методов мероприятий в SWRepository
+ * Unit тесты для методов мероприятий в ParksEventsRepository
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class SWRepositoryEventsTest {
+class ParksEventsRepositoryEventsTest {
     private val testDispatcher = StandardTestDispatcher()
     private val mockUserDao = mockk<UserDao>(relaxed = true)
-    private val mockJournalDao = mockk<JournalDao>(relaxed = true)
-    private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
-    private val mockDialogDao = mockk<DialogDao>(relaxed = true)
     private val mockEventDao = mockk<EventDao>(relaxed = true)
     private val mockParkDao = mockk<ParkDao>(relaxed = true)
+    private val mockUserTrainingParkDao = mockk<UserTrainingParkDao>(relaxed = true)
+    private val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
     private val crashReporter = NoOpCrashReporter()
     private val logger = NoOpLogger()
 
@@ -106,21 +101,16 @@ class SWRepositoryEventsTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.getFutureEvents() } returns mockEventsList
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -140,21 +130,16 @@ class SWRepositoryEventsTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.getPastEvents() } returns mockEventsList
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -173,21 +158,16 @@ class SWRepositoryEventsTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.getFutureEvents() } throws IOException("Network error")
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -206,21 +186,16 @@ class SWRepositoryEventsTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.getEvent(123L) } returns mockEvent
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -239,21 +214,16 @@ class SWRepositoryEventsTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.getEvent(any()) } throws IOException("Network error")
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -275,21 +245,16 @@ class SWRepositoryEventsTest {
             every { mockResponse.message() } returns "HTTP 404"
             coEvery { mockApi.getEvent(eventId) } throws HttpException(mockResponse)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -325,21 +290,16 @@ class SWRepositoryEventsTest {
                 )
             } returns mockEvent
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val form =
                 EventForm(
@@ -382,21 +342,16 @@ class SWRepositoryEventsTest {
                 )
             } returns mockEvent
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val form =
                 EventForm(
@@ -437,21 +392,16 @@ class SWRepositoryEventsTest {
                 )
             } throws IOException("Network error")
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter = crashReporter,
-                    logger = logger
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val form =
                 EventForm(
@@ -476,21 +426,16 @@ class SWRepositoryEventsTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.postGoToEvent(1L) } returns Response.success(Unit)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter = crashReporter,
-                    logger = logger
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -509,21 +454,16 @@ class SWRepositoryEventsTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.deleteGoToEvent(1L) } returns Response.success(Unit)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter = crashReporter,
-                    logger = logger
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -542,21 +482,16 @@ class SWRepositoryEventsTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.postGoToEvent(any()) } throws IOException("Network error")
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter = crashReporter,
-                    logger = logger
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -585,21 +520,16 @@ class SWRepositoryEventsTest {
                 )
             } returns mockEvent
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter = crashReporter,
-                    logger = logger
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val form =
                 EventForm(
@@ -653,21 +583,16 @@ class SWRepositoryEventsTest {
                 )
             } returns mockEvent
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter = crashReporter,
-                    logger = logger
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
             val form =
                 EventForm(
@@ -700,21 +625,16 @@ class SWRepositoryEventsTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.deleteEvent(1L) } returns Response.success(Unit)
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter = crashReporter,
-                    logger = logger
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -732,21 +652,16 @@ class SWRepositoryEventsTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.deleteEvent(any()) } throws IOException("Network error")
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter = crashReporter,
-                    logger = logger
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -768,21 +683,17 @@ class SWRepositoryEventsTest {
             every { mockEventDao.getAllPastEvents() } returns flowOf(listOf(eventInRoom))
 
             val mockApi = mockk<SWApi>()
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -803,21 +714,16 @@ class SWRepositoryEventsTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.getPastEvents() } returns mockEvents
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
             val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    userTrainingParkDao = mockUserTrainingParkDao,
+                    logger = logger,
+                    crashReporter = crashReporter
                 )
 
             // When
@@ -847,23 +753,6 @@ class SWRepositoryEventsTest {
         assertTrue(
             "EventDao должен иметь insertEventsPartial(events) для merge-синхронизации past list",
             methodNames.contains("insertEventsPartial")
-        )
-    }
-
-    @Test
-    fun swRepository_contract_exposesPastEventCacheMethods() {
-        val methodNames =
-            SWRepository::class.java.methods
-                .map { it.name }
-                .toSet()
-
-        assertTrue(
-            "SWRepository должен иметь getEventFromCache(eventId) для cache-first details",
-            methodNames.contains("getEventFromCache")
-        )
-        assertTrue(
-            "SWRepository должен иметь saveEventFull(event) для записи full past event snapshot",
-            methodNames.contains("saveEventFull")
         )
     }
 
@@ -943,23 +832,17 @@ class SWRepositoryEventsTest {
 
     // ========== Helper Methods ==========
 
-    private fun createRepository(mockApi: SWApi): SWRepositoryImp {
-        val mockDataStore = mockk<DataStore<Preferences>>()
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-        return SWRepositoryImp(
-            mockApi,
-            mockDataStore,
-            mockUserDao,
-            mockJournalDao,
-            mockJournalEntryDao,
-            mockDialogDao,
-            mockEventDao,
-            mockParkDao,
-            crashReporter,
-            logger
+    private fun createRepository(mockApi: SWApi): ParksEventsRepository =
+        ParksEventsRepository(
+            swApi = mockApi,
+            preferencesRepository = mockPreferencesRepository,
+            eventDao = mockEventDao,
+            parkDao = mockParkDao,
+            userDao = mockUserDao,
+            userTrainingParkDao = mockUserTrainingParkDao,
+            logger = logger,
+            crashReporter = crashReporter
         )
-    }
 
     private fun createMockEventEntity(id: Long): com.swparks.data.database.entity.EventEntity =
         com.swparks.data.database.entity.EventEntity(

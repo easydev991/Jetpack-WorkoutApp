@@ -1,13 +1,7 @@
 package com.swparks.data.repository
 
 import android.util.Log
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.emptyPreferences
-import com.swparks.data.database.dao.DialogDao
 import com.swparks.data.database.dao.EventDao
-import com.swparks.data.database.dao.JournalDao
-import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.ParkDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.dao.UserTrainingParkDao
@@ -24,7 +18,6 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -39,12 +32,9 @@ import org.junit.Test
 import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class SWRepositoryUserTrainingParksTest {
+class ParksEventsRepositoryUserTrainingParksTest {
     private val testDispatcher = StandardTestDispatcher()
     private val mockUserDao = mockk<UserDao>(relaxed = true)
-    private val mockJournalDao = mockk<JournalDao>(relaxed = true)
-    private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
-    private val mockDialogDao = mockk<DialogDao>(relaxed = true)
     private val mockEventDao = mockk<EventDao>(relaxed = true)
     private val mockParkDao = mockk<ParkDao>(relaxed = true)
     private val mockUserTrainingParkDao = mockk<UserTrainingParkDao>(relaxed = true)
@@ -80,21 +70,17 @@ class SWRepositoryUserTrainingParksTest {
 
     private fun createRepository(
         mockApi: SWApi,
-        mockDataStore: DataStore<Preferences>,
         userTrainingParkDao: UserTrainingParkDao = mockUserTrainingParkDao
-    ): SWRepositoryImp =
-        SWRepositoryImp(
+    ): ParksEventsRepository =
+        ParksEventsRepository(
             swApi = mockApi,
-            dataStore = mockDataStore,
-            userDao = mockUserDao,
-            journalDao = mockJournalDao,
-            journalEntryDao = mockJournalEntryDao,
-            dialogDao = mockDialogDao,
+            preferencesRepository = mockk(relaxed = true),
             eventDao = mockEventDao,
             parkDao = mockParkDao,
+            userDao = mockUserDao,
             userTrainingParkDao = userTrainingParkDao,
-            crashReporter = crashReporter,
-            logger = logger
+            logger = logger,
+            crashReporter = crashReporter
         )
 
     @Test
@@ -105,10 +91,7 @@ class SWRepositoryUserTrainingParksTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.getParksForUser(userId) } returns mockParksList
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-            val repository = createRepository(mockApi, mockDataStore)
+            val repository = createRepository(mockApi)
 
             repository.getParksForUser(userId)
 
@@ -130,10 +113,7 @@ class SWRepositoryUserTrainingParksTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.getParksForUser(userId) } returns mockParksList
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-            val repository = createRepository(mockApi, mockDataStore)
+            val repository = createRepository(mockApi)
 
             repository.getParksForUser(userId)
 
@@ -155,10 +135,7 @@ class SWRepositoryUserTrainingParksTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.getParksForUser(userId) } returns emptyList()
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-            val repository = createRepository(mockApi, mockDataStore)
+            val repository = createRepository(mockApi)
 
             val result = repository.getParksForUser(userId)
 
@@ -182,10 +159,8 @@ class SWRepositoryUserTrainingParksTest {
             coEvery { mockUserTrainingParkDao.getParksForUserFromCache(userId) } returns cachedParks
 
             val mockApi = mockk<SWApi>()
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-            val repository = createRepository(mockApi, mockDataStore)
+            val repository = createRepository(mockApi)
 
             val result = repository.getCachedParksForUser(userId)
 
@@ -203,10 +178,8 @@ class SWRepositoryUserTrainingParksTest {
             coEvery { mockUserTrainingParkDao.hasCachedParksForUser(userId) } returns false
 
             val mockApi = mockk<SWApi>()
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-            val repository = createRepository(mockApi, mockDataStore)
+            val repository = createRepository(mockApi)
 
             val result = repository.getCachedParksForUser(userId)
 
@@ -221,10 +194,8 @@ class SWRepositoryUserTrainingParksTest {
             coEvery { mockUserTrainingParkDao.hasCachedParksForUser(userId) } returns false
 
             val mockApi = mockk<SWApi>()
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-            val repository = createRepository(mockApi, mockDataStore)
+            val repository = createRepository(mockApi)
 
             val result = repository.getCachedParksForUser(userId)
 
@@ -241,10 +212,8 @@ class SWRepositoryUserTrainingParksTest {
             coEvery { mockUserTrainingParkDao.getParksForUserFromCache(userId) } returns emptyList()
 
             val mockApi = mockk<SWApi>()
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-            val repository = createRepository(mockApi, mockDataStore)
+            val repository = createRepository(mockApi)
 
             val result = repository.getCachedParksForUser(userId)
 
@@ -260,10 +229,8 @@ class SWRepositoryUserTrainingParksTest {
             coEvery { mockUserTrainingParkDao.hasCachedParksForUser(userId) } returns true
 
             val mockApi = mockk<SWApi>()
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-            val repository = createRepository(mockApi, mockDataStore)
+            val repository = createRepository(mockApi)
 
             val result = repository.hasCachedParksForUser(userId)
 
@@ -278,10 +245,8 @@ class SWRepositoryUserTrainingParksTest {
             coEvery { mockUserTrainingParkDao.hasCachedParksForUser(userId) } returns false
 
             val mockApi = mockk<SWApi>()
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
 
-            val repository = createRepository(mockApi, mockDataStore)
+            val repository = createRepository(mockApi)
 
             val result = repository.hasCachedParksForUser(userId)
 
@@ -303,10 +268,7 @@ class SWRepositoryUserTrainingParksTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.getParksForUser(userId) } returns mockParksList
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-            val repository = createRepository(mockApi, mockDataStore)
+            val repository = createRepository(mockApi)
 
             val result = repository.getParksForUser(userId)
 
@@ -341,10 +303,7 @@ class SWRepositoryUserTrainingParksTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.getParksForUser(userId) } throws IOException("Network error")
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-            val repository = createRepository(mockApi, mockDataStore)
+            val repository = createRepository(mockApi)
 
             val result = repository.getParksForUser(userId)
 

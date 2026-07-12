@@ -1,7 +1,7 @@
 package com.swparks.domain.usecase
 
 import com.swparks.data.UserPreferencesRepository
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.domain.util.Clock
 import com.swparks.domain.util.TestClock
 import com.swparks.domain.util.isUpdateNeeded
@@ -20,16 +20,16 @@ import org.junit.Test
 class SyncParksUseCaseTest {
     private lateinit var clock: Clock
     private lateinit var userPreferencesRepository: UserPreferencesRepository
-    private lateinit var swRepository: SWRepository
+    private lateinit var parksEventsRepository: ParksEventsRepository
     private lateinit var syncParksUseCase: SyncParksUseCase
 
     @Before
     fun setup() {
         clock = TestClock("2025-10-27T12:00:00Z")
         userPreferencesRepository = mockk(relaxed = true)
-        swRepository = mockk(relaxed = true)
+        parksEventsRepository = mockk(relaxed = true)
         syncParksUseCase =
-            SyncParksUseCase(clock, userPreferencesRepository, swRepository, NoOpLogger())
+            SyncParksUseCase(clock, userPreferencesRepository, parksEventsRepository, NoOpLogger())
     }
 
     @Test
@@ -51,27 +51,27 @@ class SyncParksUseCaseTest {
 
             syncParksUseCase()
 
-            coVerify(exactly = 0) { swRepository.getUpdatedParks(any()) }
+            coVerify(exactly = 0) { parksEventsRepository.getUpdatedParks(any()) }
         }
 
     @Test
     fun invoke_whenForceTrue_thenCallsGetUpdatedParks() =
         runTest {
             every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-27T10:00:00Z")
-            coEvery { swRepository.getUpdatedParks(any()) } returns Result.success(emptyList())
-            coEvery { swRepository.upsertParks(any()) } returns Unit
+            coEvery { parksEventsRepository.getUpdatedParks(any()) } returns Result.success(emptyList())
+            coEvery { parksEventsRepository.upsertParks(any()) } returns Unit
 
             syncParksUseCase(force = true)
 
-            coVerify { swRepository.getUpdatedParks("2025-10-27") }
+            coVerify { parksEventsRepository.getUpdatedParks("2025-10-27") }
         }
 
     @Test
     fun invoke_whenSuccessfulUpdateWithNonEmptyList_thenSavesDate() =
         runTest {
             every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
-            coEvery { swRepository.getUpdatedParks(any()) } returns Result.success(emptyList())
-            coEvery { swRepository.upsertParks(any()) } returns Unit
+            coEvery { parksEventsRepository.getUpdatedParks(any()) } returns Result.success(emptyList())
+            coEvery { parksEventsRepository.upsertParks(any()) } returns Unit
 
             syncParksUseCase()
 
@@ -82,8 +82,8 @@ class SyncParksUseCaseTest {
     fun invoke_whenSuccessfulUpdateWithEmptyList_thenSavesDate() =
         runTest {
             every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
-            coEvery { swRepository.getUpdatedParks(any()) } returns Result.success(emptyList())
-            coEvery { swRepository.upsertParks(any()) } returns Unit
+            coEvery { parksEventsRepository.getUpdatedParks(any()) } returns Result.success(emptyList())
+            coEvery { parksEventsRepository.upsertParks(any()) } returns Unit
 
             syncParksUseCase()
 
@@ -94,7 +94,7 @@ class SyncParksUseCaseTest {
     fun invoke_whenNetworkError_thenDoesNotSaveDate() =
         runTest {
             every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-25T00:00:00Z")
-            coEvery { swRepository.getUpdatedParks(any()) } returns Result.failure(Exception("Network error"))
+            coEvery { parksEventsRepository.getUpdatedParks(any()) } returns Result.failure(Exception("Network error"))
 
             syncParksUseCase()
 
@@ -105,11 +105,11 @@ class SyncParksUseCaseTest {
     fun invoke_whenForceTrue_withDateTimeFormat_thenExtractsDateOnly() =
         runTest {
             every { userPreferencesRepository.lastParksUpdateDate } returns flowOf("2025-10-27T15:30:45Z")
-            coEvery { swRepository.getUpdatedParks(any()) } returns Result.success(emptyList())
-            coEvery { swRepository.upsertParks(any()) } returns Unit
+            coEvery { parksEventsRepository.getUpdatedParks(any()) } returns Result.success(emptyList())
+            coEvery { parksEventsRepository.upsertParks(any()) } returns Unit
 
             syncParksUseCase(force = true)
 
-            coVerify { swRepository.getUpdatedParks("2025-10-27") }
+            coVerify { parksEventsRepository.getUpdatedParks("2025-10-27") }
         }
 }

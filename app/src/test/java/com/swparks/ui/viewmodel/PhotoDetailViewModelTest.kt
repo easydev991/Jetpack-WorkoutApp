@@ -2,7 +2,7 @@ package com.swparks.ui.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import com.swparks.data.UserPreferencesRepository
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.ui.state.PhotoDetailAction
 import com.swparks.ui.state.PhotoDetailEvent
 import com.swparks.ui.state.PhotoDetailUIState
@@ -39,7 +39,7 @@ class PhotoDetailViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var savedStateHandle: SavedStateHandle
-    private lateinit var swRepository: SWRepository
+    private lateinit var parksEventsRepository: ParksEventsRepository
     private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
@@ -62,7 +62,7 @@ class PhotoDetailViewModelTest {
         every { android.util.Log.w(any(), any<String>(), any()) } returns 0
 
         savedStateHandle = SavedStateHandle()
-        swRepository = mockk()
+        parksEventsRepository = mockk()
         userPreferencesRepository = mockk()
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
@@ -96,13 +96,13 @@ class PhotoDetailViewModelTest {
                 this["ownerType"] = ownerType.name
             }
         every { userPreferencesRepository.isAuthorized } returns flowOf(isAuthorized)
-        coEvery { swRepository.deleteEventPhoto(any(), any()) } returns deleteEventResult
-        coEvery { swRepository.deleteParkPhoto(any(), any()) } returns deleteParkResult
+        coEvery { parksEventsRepository.deleteEventPhoto(any(), any()) } returns deleteEventResult
+        coEvery { parksEventsRepository.deleteParkPhoto(any(), any()) } returns deleteParkResult
 
         viewModel =
             PhotoDetailViewModel(
                 savedStateHandle = savedStateHandle,
-                swRepository = swRepository,
+                parksEventsRepository = parksEventsRepository,
                 userPreferencesRepository = userPreferencesRepository,
                 logger = logger,
                 userNotifier = userNotifier
@@ -130,7 +130,7 @@ class PhotoDetailViewModelTest {
         viewModel =
             PhotoDetailViewModel(
                 savedStateHandle = savedStateHandle,
-                swRepository = swRepository,
+                parksEventsRepository = parksEventsRepository,
                 userPreferencesRepository = userPreferencesRepository,
                 logger = logger,
                 userNotifier = userNotifier
@@ -304,7 +304,7 @@ class PhotoDetailViewModelTest {
         viewModel =
             PhotoDetailViewModel(
                 savedStateHandle = savedStateHandle,
-                swRepository = swRepository,
+                parksEventsRepository = parksEventsRepository,
                 userPreferencesRepository = userPreferencesRepository,
                 logger = logger,
                 userNotifier = userNotifier
@@ -330,7 +330,7 @@ class PhotoDetailViewModelTest {
             var state = viewModel.uiState.value as? PhotoDetailUIState.Content
             assertFalse(state!!.isLoading)
 
-            coEvery { swRepository.deleteEventPhoto(any(), any()) } returns Result.success(Unit)
+            coEvery { parksEventsRepository.deleteEventPhoto(any(), any()) } returns Result.success(Unit)
             viewModel.onAction(PhotoDetailAction.DeleteConfirm)
 
             state = viewModel.uiState.value as? PhotoDetailUIState.Content
@@ -354,7 +354,7 @@ class PhotoDetailViewModelTest {
             viewModel.onAction(PhotoDetailAction.DeleteConfirm)
             advanceUntilIdle()
 
-            coVerify { swRepository.deleteParkPhoto(testParkId, testPhotoId) }
+            coVerify { parksEventsRepository.deleteParkPhoto(testParkId, testPhotoId) }
             val event = viewModel.events.receiveAsFlow().first()
             assertTrue(event is PhotoDetailEvent.PhotoDeleted)
             assertEquals(testPhotoId, (event as PhotoDetailEvent.PhotoDeleted).photoId)
@@ -374,7 +374,7 @@ class PhotoDetailViewModelTest {
             viewModel.onAction(PhotoDetailAction.DeleteConfirm)
             advanceUntilIdle()
 
-            coVerify { swRepository.deleteEventPhoto(testEventId, testPhotoId) }
+            coVerify { parksEventsRepository.deleteEventPhoto(testEventId, testPhotoId) }
             val event = viewModel.events.receiveAsFlow().first()
             assertTrue(event is PhotoDetailEvent.PhotoDeleted)
         }

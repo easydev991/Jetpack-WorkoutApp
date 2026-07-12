@@ -10,8 +10,9 @@ import com.swparks.data.model.Country
 import com.swparks.data.model.User
 import com.swparks.data.provider.AvatarHelperImpl
 import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.AuthRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.UserProfileRepository
 import com.swparks.domain.usecase.DeleteUserUseCase
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
@@ -38,7 +39,8 @@ import org.junit.Test
 class EditProfileViewModelSelectionTest {
     private val testDispatcher = StandardTestDispatcher()
 
-    private lateinit var swRepository: SWRepository
+    private lateinit var authRepository: AuthRepository
+    private lateinit var userProfileRepository: UserProfileRepository
     private lateinit var countriesRepository: CountriesRepositoryImpl
     private lateinit var deleteUserUseCase: DeleteUserUseCase
     private lateinit var avatarHelper: AvatarHelperImpl
@@ -54,7 +56,8 @@ class EditProfileViewModelSelectionTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
 
-        swRepository = mockk(relaxed = true)
+        authRepository = mockk(relaxed = true)
+        userProfileRepository = mockk(relaxed = true)
         countriesRepository = mockk(relaxed = true)
         deleteUserUseCase = mockk(relaxed = true)
         avatarHelper = mockk<AvatarHelperImpl>(relaxed = true)
@@ -63,7 +66,7 @@ class EditProfileViewModelSelectionTest {
         resources = mockk(relaxed = true)
         analyticsService = mockk(relaxed = true)
 
-        every { swRepository.getCurrentUserFlow() } returns currentUserFlow
+        every { authRepository.getCurrentUserFlow() } returns currentUserFlow
         every { countriesRepository.getCountriesFlow() } returns countriesFlow
         every { resources.getString(R.string.email_invalid) } returns "Enter a valid email"
         every { resources.getString(R.string.avatar_error_unsupported_type) } returns "Unsupported image format"
@@ -321,7 +324,8 @@ class EditProfileViewModelSelectionTest {
 
     private fun createViewModel(): EditProfileViewModel =
         EditProfileViewModel(
-            swRepository = swRepository,
+            authRepository = authRepository,
+            userProfileRepository = userProfileRepository,
             countriesRepository = countriesRepository,
             deleteUserUseCase = deleteUserUseCase,
             avatarHelper = avatarHelper,

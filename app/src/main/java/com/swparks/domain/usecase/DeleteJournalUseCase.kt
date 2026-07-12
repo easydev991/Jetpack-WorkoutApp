@@ -1,6 +1,6 @@
 package com.swparks.domain.usecase
 
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.JournalsRepositoryImpl
 
 /**
  * Use case для удаления дневника.
@@ -8,13 +8,13 @@ import com.swparks.data.repository.SWRepository
  * Делегирует удаление дневника репозиторию, который выполняет
  * запрос к API и обновляет локальный кэш в БД.
  *
- * @property swRepository Репозиторий для работы с дневниками
+ * @property journalsRepository Репозиторий для работы с дневниками
  */
 class DeleteJournalUseCase(
-    private val swRepository: SWRepository
+    private val journalsRepository: JournalsRepositoryImpl
 ) {
     suspend operator fun invoke(
         userId: Long,
         journalId: Long
-    ): Result<Unit> = swRepository.deleteJournal(journalId, userId)
+    ): Result<Unit> = journalsRepository.deleteJournal(journalId, userId)
 }

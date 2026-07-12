@@ -19,8 +19,10 @@ import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.data.model.removePhotoById
 import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.AuthRepository
+import com.swparks.data.repository.CommentsRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.domain.exception.NotFoundException
 import com.swparks.domain.usecase.DeleteEventUseCase
 import com.swparks.ui.ds.CommentAction
@@ -175,7 +177,8 @@ sealed class EventDetailEvent {
  * Управляет загрузкой и отображением данных мероприятия,
  * обрабатывает пользовательские действия.
  *
- * @param swRepository Репозиторий для работы с сервером
+ * @param parksEventsRepository Репозиторий для работы с сервером (площадки и мероприятия)
+ * @param commentsRepository Репозиторий для работы с комментариями
  * @param countriesRepository Репозиторий для работы со странами и городами
  * @param userPreferencesRepository Репозиторий настроек пользователя
  * @param savedStateHandle Для получения eventId из аргументов навигации
@@ -189,7 +192,9 @@ sealed class EventDetailEvent {
     "LongParameterList"
 )
 class EventDetailViewModel(
-    private val swRepository: SWRepository,
+    private val parksEventsRepository: ParksEventsRepository,
+    private val commentsRepository: CommentsRepository,
+    private val authRepository: AuthRepository,
     private val countriesRepository: CountriesRepositoryImpl,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val savedStateHandle: SavedStateHandle,
@@ -208,7 +213,9 @@ class EventDetailViewModel(
 
         @Suppress("LongParameterList")
         fun factory(
-            swRepository: SWRepository,
+            parksEventsRepository: ParksEventsRepository,
+            commentsRepository: CommentsRepository,
+            authRepository: AuthRepository,
             countriesRepository: CountriesRepositoryImpl,
             userPreferencesRepository: UserPreferencesRepository,
             userNotifier: UserNotifier,
@@ -221,7 +228,9 @@ class EventDetailViewModel(
                 initializer {
                     val savedStateHandle = createSavedStateHandle()
                     EventDetailViewModel(
-                        swRepository = swRepository,
+                        parksEventsRepository = parksEventsRepository,
+                        commentsRepository = commentsRepository,
+                        authRepository = authRepository,
                         countriesRepository = countriesRepository,
                         userPreferencesRepository = userPreferencesRepository,
                         savedStateHandle = savedStateHandle,
@@ -363,7 +372,7 @@ class EventDetailViewModel(
         logger.d(TAG, "Загрузка мероприятия id=$eventId")
         viewModelScope.launch {
             try {
-                val cachedEvent = swRepository.getEventFromCache(eventId)
+                val cachedEvent = parksEventsRepository.getEventFromCache(eventId)
                 if (cachedEvent != null) {
                     logger.d(TAG, "Кэш найден для мероприятия id=$eventId, показываем контент")
                     showEventContent(cachedEvent)
@@ -371,7 +380,7 @@ class EventDetailViewModel(
                     return@launch
                 }
 
-                val result = swRepository.getEvent(eventId)
+                val result = parksEventsRepository.getEvent(eventId)
                 result.fold(
                     onSuccess = { event ->
                         logger.i(TAG, "Мероприятие загружено: ${event.title}")
@@ -429,7 +438,7 @@ class EventDetailViewModel(
 
     private suspend fun cacheEventIfNeeded(event: Event) {
         if (!event.isCurrent && event.isFull) {
-            swRepository.saveEventFull(event)
+            parksEventsRepository.saveEventFull(event)
         }
     }
 
@@ -492,7 +501,7 @@ class EventDetailViewModel(
         previousState: EventDetailUIState
     ) {
         try {
-            val result = swRepository.getEvent(eventId)
+            val result = parksEventsRepository.getEvent(eventId)
             result.fold(
                 onSuccess = { event ->
                     logger.i(TAG, "Мероприятие обновлено: ${event.title}")
@@ -529,7 +538,7 @@ class EventDetailViewModel(
     }
 
     private suspend fun refreshEventContentInBackground(eventId: Long) {
-        val result = swRepository.getEvent(eventId)
+        val result = parksEventsRepository.getEvent(eventId)
         result.fold(
             onSuccess = { event ->
                 logger.i(TAG, "Фоновое обновление мероприятия: ${event.title}")
@@ -584,7 +593,7 @@ class EventDetailViewModel(
         viewModelScope.launch {
             _isRefreshing.value = true
             try {
-                val result = swRepository.deleteEvent(eventId)
+                val result = parksEventsRepository.deleteEvent(eventId)
                 result.fold(
                     onSuccess = {
                         logger.i(TAG, "Мероприятие id=$eventId успешно удалено")
@@ -660,7 +669,7 @@ class EventDetailViewModel(
 
             viewModelScope.launch {
                 try {
-                    val result = swRepository.deleteEventPhoto(eventId, photoId)
+                    val result = parksEventsRepository.deleteEventPhoto(eventId, photoId)
                     result.fold(
                         onSuccess = {
                             logger.i(TAG, "Фото id=$photoId успешно удалено")
@@ -725,11 +734,11 @@ class EventDetailViewModel(
 
         viewModelScope.launch {
             try {
-                val result = swRepository.changeIsGoingToEvent(newValue, eventId)
+                val result = parksEventsRepository.changeIsGoingToEvent(newValue, eventId)
                 _isRefreshing.value = false
 
                 if (result.isSuccess) {
-                    val currentUser = swRepository.getCurrentUserFlow().first()
+                    val currentUser = authRepository.getCurrentUserFlow().first()
                     val updatedUsers =
                         if (newValue && currentUser != null) {
                             (currentState.event.trainingUsers.orEmpty() + currentUser)
@@ -959,7 +968,7 @@ class EventDetailViewModel(
             _isRefreshing.value = true
             try {
                 val result =
-                    swRepository.deleteComment(
+                    commentsRepository.deleteComment(
                         option = TextEntryOption.Event(currentState.event.id),
                         commentId = commentId
                     )

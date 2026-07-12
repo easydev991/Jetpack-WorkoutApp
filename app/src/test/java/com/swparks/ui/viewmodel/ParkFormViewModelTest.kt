@@ -82,11 +82,11 @@ class ParkFormViewModelTest {
 
     private fun createViewModel(
         mode: ParkFormMode,
-        swRepository: com.swparks.data.repository.SWRepository
+        parksEventsRepository: com.swparks.data.repository.ParksEventsRepository
     ): ParkFormViewModel =
         ParkFormViewModel(
             mode = mode,
-            swRepository = swRepository,
+            parksEventsRepository = parksEventsRepository,
             avatarHelper = avatarHelper,
             logger = logger,
             userNotifier = userNotifier,
@@ -98,14 +98,14 @@ class ParkFormViewModelTest {
 
     private fun createViewModelWithMocks(
         mode: ParkFormMode,
-        swRepository: com.swparks.data.repository.SWRepository,
+        parksEventsRepository: com.swparks.data.repository.ParksEventsRepository,
         geocodingService: GeocodingServiceImpl,
         findCityByCoordinatesUseCase: FindCityByCoordinatesUseCase,
         userDao: UserDao
     ): ParkFormViewModel =
         ParkFormViewModel(
             mode = mode,
-            swRepository = swRepository,
+            parksEventsRepository = parksEventsRepository,
             avatarHelper = avatarHelper,
             logger = logger,
             userNotifier = userNotifier,
@@ -147,10 +147,10 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.62",
                     initialCityId = 1
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
 
             // When
-            val viewModel = createViewModel(mode, swRepository)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // Then
@@ -174,10 +174,10 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
 
             // When
-            val viewModel = createViewModel(mode, swRepository)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // Then
@@ -192,10 +192,10 @@ class ParkFormViewModelTest {
             // Given
             val park = createTestPark()
             val mode = ParkFormMode.Edit(parkId = 1L, park = park)
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
 
             // When
-            val viewModel = createViewModel(mode, swRepository)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // Then
@@ -223,8 +223,8 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // When
@@ -246,8 +246,8 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // When
@@ -269,8 +269,8 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // When
@@ -299,8 +299,8 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // When
@@ -322,8 +322,8 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // When
@@ -354,8 +354,8 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // When
@@ -385,8 +385,8 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             viewModel.onPhotoSelected(listOf(uri))
@@ -418,8 +418,8 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // Then
@@ -432,8 +432,8 @@ class ParkFormViewModelTest {
             // Given
             val park = createTestPark()
             val mode = ParkFormMode.Edit(parkId = 1L, park = park)
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // Then
@@ -451,8 +451,8 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // Then
@@ -465,8 +465,8 @@ class ParkFormViewModelTest {
             // Given
             val park = createTestPark().copy(photos = List(5) { Photo(it.toLong(), "photo$it") })
             val mode = ParkFormMode.Edit(parkId = 1L, park = park)
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // Then
@@ -479,8 +479,8 @@ class ParkFormViewModelTest {
             // Given
             val park = createTestPark().copy(photos = List(15) { Photo(it.toLong(), "photo$it") })
             val mode = ParkFormMode.Edit(parkId = 1L, park = park)
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // Then
@@ -496,8 +496,8 @@ class ParkFormViewModelTest {
             val uri = mockk<Uri>()
             every { avatarHelper.isSupportedMimeType(uri) } returns true
 
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // When - try to add 5 photos but only 3 slots available
@@ -518,8 +518,8 @@ class ParkFormViewModelTest {
             val uri = mockk<Uri>()
             every { avatarHelper.isSupportedMimeType(uri) } returns true
 
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // When
@@ -547,8 +547,8 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // Then
@@ -566,8 +566,8 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // When
@@ -592,8 +592,8 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // When
@@ -617,8 +617,8 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // Then - isReadyToCreate requires selectedPhotos.isNotEmpty(), so initially false
@@ -639,8 +639,8 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // When - add photos (isReadyToCreate requires selectedPhotos.isNotEmpty())
@@ -657,8 +657,8 @@ class ParkFormViewModelTest {
             // Given
             val park = createTestPark()
             val mode = ParkFormMode.Edit(parkId = 1L, park = park)
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // Then - no changes, no photos added
@@ -674,8 +674,8 @@ class ParkFormViewModelTest {
             every { avatarHelper.isSupportedMimeType(uri) } returns true
 
             val mode = ParkFormMode.Edit(parkId = 1L, park = park)
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // When - only add photos, no form changes
@@ -695,8 +695,8 @@ class ParkFormViewModelTest {
             // Given
             val park = createTestPark()
             val mode = ParkFormMode.Edit(parkId = 1L, park = park)
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // When - change address
@@ -722,8 +722,8 @@ class ParkFormViewModelTest {
             every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
 
             val createdPark = createTestPark()
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            coEvery { swRepository.savePark(any(), any(), any()) } returns
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            coEvery { parksEventsRepository.savePark(any(), any(), any()) } returns
                 Result.success(
                     createdPark
                 )
@@ -735,7 +735,7 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val viewModel = createViewModel(mode, swRepository)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             viewModel.onPhotoSelected(listOf(uri))
@@ -746,7 +746,7 @@ class ParkFormViewModelTest {
             advanceUntilIdle()
 
             // Then
-            coVerify { swRepository.savePark(any(), any<ParkForm>(), any()) }
+            coVerify { parksEventsRepository.savePark(any(), any<ParkForm>(), any()) }
         }
 
     @Test
@@ -755,14 +755,14 @@ class ParkFormViewModelTest {
             // Given
             val park = createTestPark()
             val updatedPark = park.copy(address = "Updated Address")
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            coEvery { swRepository.savePark(any(), any(), any()) } returns
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            coEvery { parksEventsRepository.savePark(any(), any(), any()) } returns
                 Result.success(
                     updatedPark
                 )
 
             val mode = ParkFormMode.Edit(parkId = 1L, park = park)
-            val viewModel = createViewModel(mode, swRepository)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             viewModel.onAddressChange("Updated Address")
@@ -773,7 +773,7 @@ class ParkFormViewModelTest {
             advanceUntilIdle()
 
             // Then
-            coVerify { swRepository.savePark(eq(1L), any<ParkForm>(), any()) }
+            coVerify { parksEventsRepository.savePark(eq(1L), any<ParkForm>(), any()) }
         }
 
     @Test
@@ -787,8 +787,8 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // When - no photos, so cannot save
@@ -796,7 +796,7 @@ class ParkFormViewModelTest {
             advanceUntilIdle()
 
             // Then
-            coVerify(exactly = 0) { swRepository.savePark(any(), any(), any()) }
+            coVerify(exactly = 0) { parksEventsRepository.savePark(any(), any(), any()) }
         }
 
     @Test
@@ -812,8 +812,8 @@ class ParkFormViewModelTest {
             every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
 
             val createdPark = createTestPark()
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            coEvery { swRepository.savePark(any(), any(), any()) } returns
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            coEvery { parksEventsRepository.savePark(any(), any(), any()) } returns
                 Result.success(
                     createdPark
                 )
@@ -825,7 +825,7 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val viewModel = createViewModel(mode, swRepository)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             viewModel.onPhotoSelected(listOf(uri))
@@ -855,8 +855,8 @@ class ParkFormViewModelTest {
             every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
 
             val error = RuntimeException("Network error")
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            coEvery { swRepository.savePark(any(), any(), any()) } returns Result.failure(error)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            coEvery { parksEventsRepository.savePark(any(), any(), any()) } returns Result.failure(error)
 
             val mode =
                 ParkFormMode.Create(
@@ -865,7 +865,7 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val viewModel = createViewModel(mode, swRepository)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             viewModel.onPhotoSelected(listOf(uri))
@@ -893,8 +893,8 @@ class ParkFormViewModelTest {
             every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
 
             val createdPark = createTestPark()
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            coEvery { swRepository.savePark(any(), any(), any()) } returns
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            coEvery { parksEventsRepository.savePark(any(), any(), any()) } returns
                 Result.success(
                     createdPark
                 )
@@ -906,7 +906,7 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val viewModel = createViewModel(mode, swRepository)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             viewModel.onPhotoSelected(listOf(uri))
@@ -924,7 +924,7 @@ class ParkFormViewModelTest {
                 )
             }
 
-            coVerify { swRepository.savePark(any(), any(), any()) }
+            coVerify { parksEventsRepository.savePark(any(), any(), any()) }
             assertFalse("isSaving should be false after success", viewModel.uiState.value.isSaving)
         }
 
@@ -941,8 +941,8 @@ class ParkFormViewModelTest {
             every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
 
             val createdPark = createTestPark()
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            coEvery { swRepository.savePark(any(), any(), any()) } returns
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            coEvery { parksEventsRepository.savePark(any(), any(), any()) } returns
                 Result.success(
                     createdPark
                 )
@@ -954,7 +954,7 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val viewModel = createViewModel(mode, swRepository)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             viewModel.onPhotoSelected(listOf(uri))
@@ -965,7 +965,7 @@ class ParkFormViewModelTest {
             advanceUntilIdle()
 
             // Then
-            coVerify { swRepository.savePark(any(), any(), eq(listOf(imageBytes))) }
+            coVerify { parksEventsRepository.savePark(any(), any(), eq(listOf(imageBytes))) }
         }
 
     // ==================== onAddPhotoClick ====================
@@ -981,8 +981,8 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            val viewModel = createViewModel(mode, swRepository)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             // When & Then
@@ -1012,7 +1012,7 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.62",
                     initialCityId = null
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
 
             val geocodingResult =
                 GeocodingResult(
@@ -1029,7 +1029,7 @@ class ParkFormViewModelTest {
             val viewModel =
                 createViewModelWithMocks(
                     mode,
-                    swRepository,
+                    parksEventsRepository,
                     geocodingService,
                     findCityByCoordinatesUseCase,
                     userDao
@@ -1059,7 +1059,7 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.62",
                     initialCityId = null
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
 
             coEvery {
                 geocodingService.reverseGeocode(
@@ -1075,7 +1075,7 @@ class ParkFormViewModelTest {
             val viewModel =
                 createViewModelWithMocks(
                     mode,
-                    swRepository,
+                    parksEventsRepository,
                     geocodingService,
                     findCityByCoordinatesUseCase,
                     userDao
@@ -1104,7 +1104,7 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.62",
                     initialCityId = null
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
 
             coEvery {
                 geocodingService.reverseGeocode(
@@ -1120,7 +1120,7 @@ class ParkFormViewModelTest {
             val viewModel =
                 createViewModelWithMocks(
                     mode,
-                    swRepository,
+                    parksEventsRepository,
                     geocodingService,
                     findCityByCoordinatesUseCase,
                     userDao
@@ -1147,11 +1147,11 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.62",
                     initialCityId = 3
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
 
             createViewModelWithMocks(
                 mode,
-                swRepository,
+                parksEventsRepository,
                 geocodingService,
                 findCityByCoordinatesUseCase,
                 userDao
@@ -1178,7 +1178,7 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.62",
                     initialCityId = null
                 )
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
 
             val geocodingResult =
                 GeocodingResult(
@@ -1195,7 +1195,7 @@ class ParkFormViewModelTest {
             val viewModel =
                 createViewModelWithMocks(
                     mode,
-                    swRepository,
+                    parksEventsRepository,
                     geocodingService,
                     findCityByCoordinatesUseCase,
                     userDao
@@ -1220,11 +1220,11 @@ class ParkFormViewModelTest {
 
             val park = createTestPark()
             val mode = ParkFormMode.Edit(parkId = 1L, park = park)
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
 
             createViewModelWithMocks(
                 mode,
-                swRepository,
+                parksEventsRepository,
                 geocodingService,
                 findCityByCoordinatesUseCase,
                 userDao
@@ -1250,8 +1250,8 @@ class ParkFormViewModelTest {
             every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
 
             val createdPark = createTestPark()
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            coEvery { swRepository.savePark(any(), any(), any()) } returns
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            coEvery { parksEventsRepository.savePark(any(), any(), any()) } returns
                 Result.success(
                     createdPark
                 )
@@ -1263,7 +1263,7 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val viewModel = createViewModel(mode, swRepository)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             viewModel.onPhotoSelected(listOf(uri))
@@ -1289,8 +1289,8 @@ class ParkFormViewModelTest {
             every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
 
             val error = RuntimeException("Network error")
-            val swRepository = mockk<com.swparks.data.repository.SWRepository>(relaxed = true)
-            coEvery { swRepository.savePark(any(), any(), any()) } returns Result.failure(error)
+            val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
+            coEvery { parksEventsRepository.savePark(any(), any(), any()) } returns Result.failure(error)
 
             val mode =
                 ParkFormMode.Create(
@@ -1299,7 +1299,7 @@ class ParkFormViewModelTest {
                     initialLongitude = "37.0",
                     initialCityId = 1
                 )
-            val viewModel = createViewModel(mode, swRepository)
+            val viewModel = createViewModel(mode, parksEventsRepository)
             advanceUntilIdle()
 
             viewModel.onPhotoSelected(listOf(uri))

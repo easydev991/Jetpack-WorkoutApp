@@ -13,8 +13,9 @@ import com.swparks.analytics.UserActionType
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.Event
 import com.swparks.data.model.User
+import com.swparks.data.repository.AuthRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.domain.usecase.GetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.GetPastEventsFlowUseCase
 import com.swparks.domain.usecase.SyncFutureEventsUseCase
@@ -82,7 +83,8 @@ class EventsViewModel(
     private val countriesRepository: CountriesRepositoryImpl,
     private val userNotifier: UserNotifier,
     private val logger: Logger,
-    private val swRepository: SWRepository,
+    private val authRepository: AuthRepository,
+    private val parksEventsRepository: ParksEventsRepository,
     private val analyticsService: AnalyticsService,
     private val initialTab: EventKind = EventKind.FUTURE
 ) : ViewModel(),
@@ -115,7 +117,8 @@ class EventsViewModel(
                         countriesRepository = container.countriesRepository,
                         userNotifier = container.userNotifier,
                         logger = container.logger,
-                        swRepository = container.swRepository,
+                        authRepository = container.authRepository,
+                        parksEventsRepository = container.parksEventsRepository,
                         analyticsService = container.analyticsService,
                         initialTab = initialTab
                     )
@@ -205,7 +208,7 @@ class EventsViewModel(
     private fun observeCurrentUser() {
         viewModelScope.launch {
             logger.d(TAG, "Подписка на Flow текущего пользователя")
-            swRepository.getCurrentUserFlow().collect { user ->
+            authRepository.getCurrentUserFlow().collect { user ->
                 _currentUser.value = user
                 logger.d(
                     TAG,

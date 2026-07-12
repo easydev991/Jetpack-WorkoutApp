@@ -6,7 +6,7 @@ import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.FriendsRepository
 import com.swparks.ui.model.toApiOption
 import com.swparks.ui.state.BlacklistAction
 import com.swparks.ui.state.BlacklistUiState
@@ -26,13 +26,13 @@ import com.swparks.ui.model.BlacklistAction as ApiBlacklistAction
  *
  * Управляет отображением черного списка пользователей
  *
- * @param swRepository Репозиторий для работы с API и загрузки данных
+ * @param friendsRepository Репозиторий для работы с API и загрузки данных
  * @param logger Логгер для записи сообщений
  * @param userNotifier Обработчик ошибок для отправки ошибок в UI
  */
 @Suppress("TooGenericExceptionCaught", "InstanceOfCheckForException", "UnusedPrivateProperty")
 class BlacklistViewModel(
-    private val swRepository: SWRepository,
+    private val friendsRepository: FriendsRepository,
     private val logger: Logger,
     private val userNotifier: UserNotifier,
     private val analyticsService: AnalyticsService
@@ -47,7 +47,7 @@ class BlacklistViewModel(
 
     init {
         viewModelScope.launch {
-            swRepository
+            friendsRepository
                 .getBlacklistFlow()
                 .catch { error ->
                     val message = "Ошибка при загрузке черного списка: ${error.message}"
@@ -104,7 +104,7 @@ class BlacklistViewModel(
                     )
 
                 val result =
-                    swRepository.blacklistAction(user, ApiBlacklistAction.UNBLOCK.toApiOption())
+                    friendsRepository.blacklistAction(user, ApiBlacklistAction.UNBLOCK.toApiOption())
                 result.fold(
                     onSuccess = {
                         logger.i(TAG, "Пользователь удален из черного списка: userId=${user.id}")

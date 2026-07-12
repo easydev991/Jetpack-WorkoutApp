@@ -2,7 +2,7 @@ package com.swparks.ui.viewmodel
 
 import com.swparks.data.model.Park
 import com.swparks.data.model.User
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.UserProfileRepository
 import com.swparks.util.AppError
 import com.swparks.util.AppNotification
 import com.swparks.util.Logger
@@ -28,7 +28,7 @@ class UserAddedParksViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val swRepository: SWRepository = mockk<SWRepository>()
+    private val userProfileRepository: UserProfileRepository = mockk<UserProfileRepository>()
     private val logger: Logger = mockk<Logger>(relaxed = true)
     private val userNotifier: UserNotifier =
         mockk<UserNotifier>(relaxed = true).also {
@@ -43,7 +43,7 @@ class UserAddedParksViewModelTest {
 
             val viewModel =
                 UserAddedParksViewModel(
-                    swRepository = swRepository,
+                    userProfileRepository = userProfileRepository,
                     userId = 10L,
                     seedParks = seedParks,
                     requiresFetch = false,
@@ -54,18 +54,18 @@ class UserAddedParksViewModelTest {
             val state = viewModel.uiState.value
             assertTrue(state is UserAddedParksUiState.Success)
             assertEquals(seedParks, (state as UserAddedParksUiState.Success).parks)
-            coVerify(exactly = 0) { swRepository.getUser(any()) }
+            coVerify(exactly = 0) { userProfileRepository.getUser(any()) }
         }
 
     @Test
     fun init_withoutSeed_thenLoadsUserAndEmitsSuccess() =
         runTest {
             val loadedParks = listOf(createPark(3))
-            coEvery { swRepository.getUser(11L) } returns Result.success(createUser(loadedParks))
+            coEvery { userProfileRepository.getUser(11L) } returns Result.success(createUser(loadedParks))
 
             val viewModel =
                 UserAddedParksViewModel(
-                    swRepository = swRepository,
+                    userProfileRepository = userProfileRepository,
                     userId = 11L,
                     seedParks = null,
                     requiresFetch = false,
@@ -77,17 +77,17 @@ class UserAddedParksViewModelTest {
             val state = viewModel.uiState.value
             assertTrue(state is UserAddedParksUiState.Success)
             assertEquals(loadedParks, (state as UserAddedParksUiState.Success).parks)
-            coVerify(exactly = 1) { swRepository.getUser(11L) }
+            coVerify(exactly = 1) { userProfileRepository.getUser(11L) }
         }
 
     @Test
     fun init_whenRepositoryFailure_thenEmitsError() =
         runTest {
-            coEvery { swRepository.getUser(12L) } returns Result.failure(Exception("network"))
+            coEvery { userProfileRepository.getUser(12L) } returns Result.failure(Exception("network"))
 
             val viewModel =
                 UserAddedParksViewModel(
-                    swRepository = swRepository,
+                    userProfileRepository = userProfileRepository,
                     userId = 12L,
                     seedParks = null,
                     requiresFetch = true,
@@ -97,7 +97,7 @@ class UserAddedParksViewModelTest {
             advanceUntilIdle()
 
             assertTrue(viewModel.uiState.value is UserAddedParksUiState.Error)
-            coVerify(exactly = 1) { swRepository.getUser(12L) }
+            coVerify(exactly = 1) { userProfileRepository.getUser(12L) }
         }
 
     @Test
@@ -105,11 +105,11 @@ class UserAddedParksViewModelTest {
         runTest {
             val seedParks = listOf(createPark(1))
             val refreshedParks = listOf(createPark(10), createPark(11))
-            coEvery { swRepository.getUser(13L) } returns Result.success(createUser(refreshedParks))
+            coEvery { userProfileRepository.getUser(13L) } returns Result.success(createUser(refreshedParks))
 
             val viewModel =
                 UserAddedParksViewModel(
-                    swRepository = swRepository,
+                    userProfileRepository = userProfileRepository,
                     userId = 13L,
                     seedParks = seedParks,
                     requiresFetch = false,
@@ -124,7 +124,7 @@ class UserAddedParksViewModelTest {
             assertTrue(state is UserAddedParksUiState.Success)
             assertEquals(refreshedParks, (state as UserAddedParksUiState.Success).parks)
             assertFalse(viewModel.isRefreshing.value)
-            coVerify(exactly = 1) { swRepository.getUser(13L) }
+            coVerify(exactly = 1) { userProfileRepository.getUser(13L) }
         }
 
     @Test
@@ -133,7 +133,7 @@ class UserAddedParksViewModelTest {
             val retryResult = CompletableDeferred<Result<User>>()
             var requestCount = 0
 
-            coEvery { swRepository.getUser(14L) } coAnswers {
+            coEvery { userProfileRepository.getUser(14L) } coAnswers {
                 requestCount++
                 when (requestCount) {
                     1 -> Result.failure(Exception("initial failure"))
@@ -143,7 +143,7 @@ class UserAddedParksViewModelTest {
 
             val viewModel =
                 UserAddedParksViewModel(
-                    swRepository = swRepository,
+                    userProfileRepository = userProfileRepository,
                     userId = 14L,
                     seedParks = null,
                     requiresFetch = true,
@@ -173,7 +173,7 @@ class UserAddedParksViewModelTest {
             val retryResult = CompletableDeferred<Result<User>>()
             var requestCount = 0
 
-            coEvery { swRepository.getUser(15L) } coAnswers {
+            coEvery { userProfileRepository.getUser(15L) } coAnswers {
                 requestCount++
                 when (requestCount) {
                     1 -> Result.failure(Exception("initial failure"))
@@ -183,7 +183,7 @@ class UserAddedParksViewModelTest {
 
             val viewModel =
                 UserAddedParksViewModel(
-                    swRepository = swRepository,
+                    userProfileRepository = userProfileRepository,
                     userId = 15L,
                     seedParks = null,
                     requiresFetch = true,
@@ -206,11 +206,11 @@ class UserAddedParksViewModelTest {
         runTest {
             val seedParks = listOf(createPark(1))
             val refreshResult = CompletableDeferred<Result<User>>()
-            coEvery { swRepository.getUser(16L) } coAnswers { refreshResult.await() }
+            coEvery { userProfileRepository.getUser(16L) } coAnswers { refreshResult.await() }
 
             val viewModel =
                 UserAddedParksViewModel(
-                    swRepository = swRepository,
+                    userProfileRepository = userProfileRepository,
                     userId = 16L,
                     seedParks = seedParks,
                     requiresFetch = false,

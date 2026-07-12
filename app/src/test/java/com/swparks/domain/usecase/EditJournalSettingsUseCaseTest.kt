@@ -1,6 +1,6 @@
 package com.swparks.domain.usecase
 
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.JournalsRepositoryImpl
 import com.swparks.ui.model.JournalAccess
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -18,7 +18,7 @@ import org.junit.Test
  * включая прокидывание результатов из репозитория без изменений
  */
 class EditJournalSettingsUseCaseTest {
-    private lateinit var mockRepository: SWRepository
+    private lateinit var mockRepository: JournalsRepositoryImpl
     private lateinit var editJournalSettingsUseCase: EditJournalSettingsUseCase
 
     private val testJournalId = 456L

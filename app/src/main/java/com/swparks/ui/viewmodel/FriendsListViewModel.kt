@@ -9,7 +9,8 @@ import com.swparks.analytics.UserActionType
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.UserEntity
 import com.swparks.data.database.entity.toDomain
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.FriendsRepository
+import com.swparks.data.repository.UserProfileRepository
 import com.swparks.ui.state.FriendsListUiState
 import com.swparks.util.AppError
 import com.swparks.util.Logger
@@ -28,14 +29,16 @@ import kotlinx.coroutines.launch
  * Управляет отображением списка друзей и заявок на добавление в друзья
  *
  * @param userDao DAO для работы с пользователями в локальной БД
- * @param swRepository Репозиторий для работы с API и загрузки социальных данных
+ * @param userProfileRepository Репозиторий для работы с API и загрузки социальных данных
+ * @param friendsRepository Репозиторий для работы с друзьями и заявками
  * @param logger Логгер для записи сообщений
  * @param userNotifier Обработчик ошибок для отправки ошибок в UI
  */
 @Suppress("UnusedPrivateProperty")
 class FriendsListViewModel(
     private val userDao: UserDao,
-    private val swRepository: SWRepository,
+    private val userProfileRepository: UserProfileRepository,
+    private val friendsRepository: FriendsRepository,
     private val logger: Logger,
     private val userNotifier: UserNotifier,
     private val analyticsService: AnalyticsService
@@ -86,7 +89,7 @@ class FriendsListViewModel(
                         TAG,
                         "Загрузка социальных данных для экрана друзей: ${currentUser.toDomain().id}"
                     )
-                    swRepository
+                    userProfileRepository
                         .getSocialUpdates(currentUser.toDomain().id)
                         .onSuccess {
                             logger.i(TAG, "Социальные данные успешно загружены из кэша")
@@ -114,7 +117,7 @@ class FriendsListViewModel(
             isProcessingFlow.value = true
 
             logger.i(TAG, "Принятие заявки на добавление в друга: userId=$userId")
-            swRepository
+            friendsRepository
                 .respondToFriendRequest(userId, accept = true)
                 .onSuccess {
                     logger.i(TAG, "Заявка успешно принята: userId=$userId")
@@ -147,7 +150,7 @@ class FriendsListViewModel(
             isProcessingFlow.value = true
 
             logger.i(TAG, "Отклонение заявки на добавление в друга: userId=$userId")
-            swRepository
+            friendsRepository
                 .respondToFriendRequest(userId, accept = false)
                 .onSuccess {
                     logger.i(TAG, "Заявка успешно отклонена: userId=$userId")

@@ -11,8 +11,9 @@ import com.swparks.analytics.UserActionType
 import com.swparks.data.model.User
 import com.swparks.data.provider.AvatarHelperImpl
 import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.AuthRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.UserProfileRepository
 import com.swparks.domain.model.EditProfileLocations
 import com.swparks.domain.usecase.DeleteUserUseCase
 import com.swparks.ui.model.Gender
@@ -44,7 +45,8 @@ import java.time.format.DateTimeFormatter
  *
  * Управляет данными формы пользователя и справочником стран/городов.
  *
- * @param swRepository Репозиторий для работы с данными пользователя и API
+ * @param authRepository Репозиторий для работы с текущим пользователем
+ * @param userProfileRepository Репозиторий для работы с профилем пользователя
  * @param countriesRepository Репозиторий для работы с данными стран и городов
  * @param deleteUserUseCase Use case для удаления аккаунта пользователя
  * @param avatarHelper Хелпер для работы с аватарами (Uri → ByteArray)
@@ -54,7 +56,8 @@ import java.time.format.DateTimeFormatter
  */
 @Suppress("TooGenericExceptionCaught", "UnusedPrivateProperty")
 class EditProfileViewModel(
-    private val swRepository: SWRepository,
+    private val authRepository: AuthRepository,
+    private val userProfileRepository: UserProfileRepository,
     private val countriesRepository: CountriesRepositoryImpl,
     private val deleteUserUseCase: DeleteUserUseCase,
     private val avatarHelper: AvatarHelperImpl,
@@ -71,7 +74,7 @@ class EditProfileViewModel(
 
     // Текущий пользователь из репозитория
     private val currentUser: StateFlow<User?> =
-        swRepository
+        authRepository
             .getCurrentUserFlow()
             .stateIn(
                 scope = viewModelScope,
@@ -339,7 +342,7 @@ class EditProfileViewModel(
         imageBytes: ByteArray?
     ) {
         val result =
-            swRepository.editUser(
+            userProfileRepository.editUser(
                 userId = userId,
                 form = currentState.userForm,
                 image = imageBytes

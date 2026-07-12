@@ -18,11 +18,15 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 /** Unit тесты для AuthViewModel */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthViewModelTest {
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
     private lateinit var loginUseCase: LoginUseCase
     private lateinit var logoutUseCase: LogoutUseCase
     private lateinit var userNotifier: UserNotifier

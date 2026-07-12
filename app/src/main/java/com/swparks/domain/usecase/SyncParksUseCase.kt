@@ -1,7 +1,7 @@
 package com.swparks.domain.usecase
 
 import com.swparks.data.UserPreferencesRepository
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.domain.util.Clock
 import com.swparks.domain.util.isUpdateNeeded
 import com.swparks.util.Logger
@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.first
 class SyncParksUseCase(
     private val clock: Clock,
     private val userPreferencesRepository: UserPreferencesRepository,
-    private val swRepository: SWRepository,
+    private val parksEventsRepository: ParksEventsRepository,
     private val logger: Logger
 ) {
     companion object {
@@ -28,7 +28,7 @@ class SyncParksUseCase(
             logger.i(TAG, "Проверка необходимости обновления площадок")
 
             val dateOnly = lastUpdateDate.take(ISO_DATE_LENGTH)
-            val result = swRepository.getUpdatedParks(dateOnly)
+            val result = parksEventsRepository.getUpdatedParks(dateOnly)
             if (result.isFailure) {
                 logger.e(TAG, "Ошибка обновления площадок", result.exceptionOrNull())
                 return Result.failure(result.exceptionOrNull() ?: Exception("Unknown error"))
@@ -36,7 +36,7 @@ class SyncParksUseCase(
 
             val parks = result.getOrNull() ?: emptyList()
             if (parks.isNotEmpty()) {
-                swRepository.upsertParks(parks)
+                parksEventsRepository.upsertParks(parks)
                 logger.i(TAG, "Обновлено ${parks.size} площадок с сервера")
             } else {
                 logger.i(TAG, "Обновление площадок с сервера: изменений нет")

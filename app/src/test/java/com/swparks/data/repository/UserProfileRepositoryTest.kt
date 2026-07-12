@@ -4,11 +4,7 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
-import com.swparks.data.database.dao.DialogDao
-import com.swparks.data.database.dao.EventDao
-import com.swparks.data.database.dao.JournalDao
-import com.swparks.data.database.dao.JournalEntryDao
-import com.swparks.data.database.dao.ParkDao
+import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.model.User
 import com.swparks.domain.exception.NetworkException
@@ -38,17 +34,12 @@ import retrofit2.Response
 import java.io.IOException
 
 /**
- * Unit тесты для методов профиля в SWRepository
+ * Unit тесты для методов профиля в UserProfileRepository
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class SWRepositoryProfileTest {
+class UserProfileRepositoryTest {
     private val testDispatcher = StandardTestDispatcher()
     private val mockUserDao = mockk<UserDao>(relaxed = true)
-    private val mockJournalDao = mockk<JournalDao>(relaxed = true)
-    private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
-    private val mockDialogDao = mockk<DialogDao>(relaxed = true)
-    private val mockEventDao = mockk<EventDao>(relaxed = true)
-    private val mockParkDao = mockk<ParkDao>(relaxed = true)
     private val crashReporter = NoOpCrashReporter()
     private val logger = NoOpLogger()
 
@@ -74,6 +65,15 @@ class SWRepositoryProfileTest {
             countryID = 1
         )
 
+    private fun createRepository(
+        mockApi: SWApi,
+        mockDataStore: DataStore<Preferences> = mockk(relaxed = true)
+    ): UserProfileRepository {
+        every { mockDataStore.data } returns flowOf(emptyPreferences())
+        val prefsRepo = UserPreferencesRepository(mockDataStore)
+        return UserProfileRepository(mockApi, prefsRepo, mockUserDao, logger, crashReporter)
+    }
+
     @Test
     fun getUser_whenApiReturnsUser_thenReturnsUser() =
         runTest {
@@ -82,25 +82,9 @@ class SWRepositoryProfileTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.getUser(123L) } returns mockUser
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-            // Mock userDao to return null (no existing cached user)
             every { mockUserDao.getUserByIdFlow(any()) } returns flowOf(null)
 
-            val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
-                )
+            val repository = createRepository(mockApi)
 
             // When
             val result = repository.getUser(123L)
@@ -130,22 +114,7 @@ class SWRepositoryProfileTest {
                 )
             } throws IOException("Network error")
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-            val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
-                )
+            val repository = createRepository(mockApi)
             val form =
                 MainUserForm(
                     name = "testuser",
@@ -179,19 +148,7 @@ class SWRepositoryProfileTest {
                 firstArg<suspend (Preferences) -> Preferences>().invoke(emptyPreferences())
             }
 
-            val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
-                )
+            val repository = createRepository(mockApi, mockDataStore)
 
             // When
             val result = repository.deleteUser()
@@ -209,22 +166,7 @@ class SWRepositoryProfileTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.deleteUser() } throws IOException("Network error")
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-            val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
-                )
+            val repository = createRepository(mockApi)
 
             // When
             val result = repository.deleteUser()
@@ -252,22 +194,7 @@ class SWRepositoryProfileTest {
 
             coEvery { mockApi.getBlacklist() } returns listOf(createMockUser(5L))
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-            val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
-                )
+            val repository = createRepository(mockApi)
 
             // When
             val result = repository.getSocialUpdates(1L)
@@ -301,29 +228,12 @@ class SWRepositoryProfileTest {
 
             coEvery { mockApi.getBlacklist() } throws IOException("Network error")
 
-            val mockDataStore = mockk<DataStore<Preferences>>(relaxed = true)
-
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-            // Mock userDao to return null for current user and empty lists for others (no cached data)
             every { mockUserDao.getCurrentUserFlow() } returns flowOf(null)
             every { mockUserDao.getFriendsFlow() } returns flowOf(emptyList())
             every { mockUserDao.getFriendRequestsFlow() } returns flowOf(emptyList())
             every { mockUserDao.getBlacklistFlow() } returns flowOf(emptyList())
 
-            val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
-                )
+            val repository = createRepository(mockApi)
 
             // When
             val result = repository.getSocialUpdates(1L)
@@ -343,22 +253,7 @@ class SWRepositoryProfileTest {
             coEvery { mockApi.getFriendRequests() } returns emptyList()
             coEvery { mockApi.getBlacklist() } returns emptyList()
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-            val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
-                )
+            val repository = createRepository(mockApi)
 
             // When
             val result = repository.getSocialUpdates(1L)
@@ -383,22 +278,7 @@ class SWRepositoryProfileTest {
             coEvery { mockApi.getFriendRequests() } returns emptyList()
             coEvery { mockApi.getBlacklist() } returns emptyList()
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-            val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
-                )
+            val repository = createRepository(mockApi)
 
             // When
             val result = repository.getSocialUpdates(1L)
@@ -424,22 +304,7 @@ class SWRepositoryProfileTest {
             coEvery { mockApi.getFriendRequests() } returns emptyList()
             coEvery { mockApi.getBlacklist() } returns emptyList()
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-            val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
-                )
+            val repository = createRepository(mockApi)
 
             // When
             val result = repository.getSocialUpdates(1L)
@@ -462,22 +327,7 @@ class SWRepositoryProfileTest {
             // API возвращает ПУСТОЙ черный список
             coEvery { mockApi.getBlacklist() } returns emptyList()
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-            val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
-                )
+            val repository = createRepository(mockApi)
 
             // When
             val result = repository.getSocialUpdates(1L)
@@ -497,22 +347,7 @@ class SWRepositoryProfileTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.findUsers("search") } returns mockUsers
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-            val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
-                )
+            val repository = createRepository(mockApi)
 
             // When
             val result = repository.findUsers("search")
@@ -530,22 +365,7 @@ class SWRepositoryProfileTest {
             val mockApi = mockk<SWApi>()
             coEvery { mockApi.findUsers(any()) } throws IOException("Network error")
 
-            val mockDataStore = mockk<DataStore<Preferences>>()
-            every { mockDataStore.data } returns flowOf(emptyPreferences())
-
-            val repository =
-                SWRepositoryImp(
-                    mockApi,
-                    mockDataStore,
-                    mockUserDao,
-                    mockJournalDao,
-                    mockJournalEntryDao,
-                    mockDialogDao,
-                    mockEventDao,
-                    mockParkDao,
-                    crashReporter,
-                    logger
-                )
+            val repository = createRepository(mockApi)
 
             // When
             val result = repository.findUsers("search")

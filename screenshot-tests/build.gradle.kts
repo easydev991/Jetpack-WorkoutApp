@@ -46,4 +46,5 @@ dependencies {
     implementation(libs.androidx.test.uiautomator)
     implementation(libs.kotlinx.serialization.json)
     implementation("tools.fastlane:screengrab:2.1.1")
+    implementation(libs.androidx.room.runtime)
 }

@@ -18,8 +18,10 @@ import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.data.model.removePhotoById
 import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.AuthRepository
+import com.swparks.data.repository.CommentsRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.domain.exception.NotFoundException
 import com.swparks.domain.usecase.DeleteParkUseCase
 import com.swparks.ui.ds.CommentAction
@@ -50,7 +52,9 @@ import java.io.IOException
     "LongParameterList"
 )
 class ParkDetailViewModel(
-    private val swRepository: SWRepository,
+    private val parksEventsRepository: ParksEventsRepository,
+    private val commentsRepository: CommentsRepository,
+    private val authRepository: AuthRepository,
     private val countriesRepository: CountriesRepositoryImpl,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val savedStateHandle: SavedStateHandle,
@@ -68,7 +72,9 @@ class ParkDetailViewModel(
 
         @Suppress("LongParameterList")
         fun factory(
-            swRepository: SWRepository,
+            parksEventsRepository: ParksEventsRepository,
+            commentsRepository: CommentsRepository,
+            authRepository: AuthRepository,
             countriesRepository: CountriesRepositoryImpl,
             userPreferencesRepository: UserPreferencesRepository,
             userNotifier: UserNotifier,
@@ -81,7 +87,9 @@ class ParkDetailViewModel(
                 initializer {
                     val savedStateHandle = createSavedStateHandle()
                     ParkDetailViewModel(
-                        swRepository = swRepository,
+                        parksEventsRepository = parksEventsRepository,
+                        commentsRepository = commentsRepository,
+                        authRepository = authRepository,
                         countriesRepository = countriesRepository,
                         userPreferencesRepository = userPreferencesRepository,
                         savedStateHandle = savedStateHandle,
@@ -214,7 +222,7 @@ class ParkDetailViewModel(
         logger.d(TAG, "Загрузка площадки id=$parkId")
         viewModelScope.launch {
             try {
-                val cachedPark = swRepository.getParkFromCache(parkId)
+                val cachedPark = parksEventsRepository.getParkFromCache(parkId)
                 if (cachedPark != null) {
                     logger.d(TAG, "Кэш найден для площадки id=$parkId, показываем контент")
                     val address =
@@ -238,7 +246,7 @@ class ParkDetailViewModel(
                 } else {
                     logger.d(TAG, "Кэш не найден для площадки id=$parkId, загружаем с сервера")
                     _uiState.value = ParkDetailUIState.InitialLoading
-                    val result = swRepository.getPark(parkId)
+                    val result = parksEventsRepository.getPark(parkId)
                     result.fold(
                         onSuccess = { park ->
                             logger.i(TAG, "Площадка загружена с сервера: ${park.name}")
@@ -349,7 +357,7 @@ class ParkDetailViewModel(
         previousState: ParkDetailUIState
     ) {
         try {
-            val result = swRepository.getPark(parkId)
+            val result = parksEventsRepository.getPark(parkId)
             result.fold(
                 onSuccess = { park ->
                     logger.i(TAG, "Площадка обновлена: ${park.name}")
@@ -393,7 +401,7 @@ class ParkDetailViewModel(
     }
 
     private suspend fun refreshParkContentInBackground(parkId: Long) {
-        val result = swRepository.getPark(parkId)
+        val result = parksEventsRepository.getPark(parkId)
         result.fold(
             onSuccess = { park ->
                 logger.i(TAG, "Фоновое обновление площадки: ${park.name}")
@@ -456,7 +464,7 @@ class ParkDetailViewModel(
         viewModelScope.launch {
             _isRefreshing.value = true
             try {
-                val result = swRepository.deletePark(parkId)
+                val result = parksEventsRepository.deletePark(parkId)
                 result.fold(
                     onSuccess = {
                         logger.i(TAG, "Площадка id=$parkId успешно удалена")
@@ -530,7 +538,7 @@ class ParkDetailViewModel(
 
             viewModelScope.launch {
                 try {
-                    val result = swRepository.deleteParkPhoto(parkId, photoId)
+                    val result = parksEventsRepository.deleteParkPhoto(parkId, photoId)
                     result.fold(
                         onSuccess = {
                             logger.i(TAG, "Фото id=$photoId успешно удалено")
@@ -596,11 +604,11 @@ class ParkDetailViewModel(
 
         viewModelScope.launch {
             try {
-                val result = swRepository.changeTrainHereStatus(newValue, parkId)
+                val result = parksEventsRepository.changeTrainHereStatus(newValue, parkId)
                 _isRefreshing.value = false
 
                 if (result.isSuccess) {
-                    val currentUser = swRepository.getCurrentUserFlow().first()
+                    val currentUser = authRepository.getCurrentUserFlow().first()
                     val updatedUsers =
                         if (newValue && currentUser != null) {
                             (currentState.park.trainingUsers.orEmpty() + currentUser)
@@ -817,7 +825,7 @@ class ParkDetailViewModel(
             _isRefreshing.value = true
             try {
                 val result =
-                    swRepository.deleteComment(
+                    commentsRepository.deleteComment(
                         option =
                             com.swparks.ui.model.TextEntryOption
                                 .Park(currentState.park.id),

@@ -1,6 +1,6 @@
 package com.swparks.domain.usecase
 
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -11,7 +11,7 @@ import org.junit.Before
 import org.junit.Test
 
 class DeleteEventUseCaseTest {
-    private lateinit var mockRepository: SWRepository
+    private lateinit var mockRepository: ParksEventsRepository
     private lateinit var deleteEventUseCase: DeleteEventUseCase
 
     private val testEventId = 123L

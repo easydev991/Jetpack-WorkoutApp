@@ -5,7 +5,7 @@ import com.swparks.data.SecureTokenRepository
 import com.swparks.data.TokenEncoder
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.LoginSuccess
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.AuthRepository
 import com.swparks.ui.model.LoginCredentials
 import com.swparks.util.CrashReporter
 import com.swparks.util.NoOpCrashReporter
@@ -26,7 +26,7 @@ import org.junit.Test
 class LoginUseCaseTest {
     private lateinit var tokenEncoder: TokenEncoder
     private lateinit var secureTokenRepository: SecureTokenRepository
-    private lateinit var swRepository: SWRepository
+    private lateinit var authRepository: AuthRepository
     private lateinit var preferencesRepository: UserPreferencesRepository
     private lateinit var crashReporter: CrashReporter
     private lateinit var loginUseCase: LoginUseCase
@@ -43,14 +43,14 @@ class LoginUseCaseTest {
         every { Log.i(any(), any()) } returns 0
         tokenEncoder = mockk(relaxed = true)
         secureTokenRepository = mockk(relaxed = true)
-        swRepository = mockk()
+        authRepository = mockk()
         preferencesRepository = mockk(relaxed = true)
         crashReporter = NoOpCrashReporter()
         loginUseCase =
             LoginUseCase(
                 tokenEncoder,
                 secureTokenRepository,
-                swRepository,
+                authRepository,
                 preferencesRepository,
                 crashReporter
             )
@@ -66,7 +66,7 @@ class LoginUseCaseTest {
         runTest {
             // Given
             coEvery {
-                swRepository.login(any())
+                authRepository.login(any())
             } returns Result.success(LoginSuccess(testUserId))
 
             coEvery { tokenEncoder.encode(testCredentials) } returns testToken
@@ -78,7 +78,7 @@ class LoginUseCaseTest {
             assertTrue(result.isSuccess)
             assertEquals(testUserId, result.getOrNull()?.userId)
             coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(testToken) }
-            coVerify(exactly = 1) { swRepository.login(testToken) }
+            coVerify(exactly = 1) { authRepository.login(testToken) }
             coVerify(exactly = 1) { tokenEncoder.encode(testCredentials) }
             coVerify(exactly = 1) { preferencesRepository.saveCurrentUserId(testUserId) }
         }
@@ -89,7 +89,7 @@ class LoginUseCaseTest {
             // Given
             val emptyCredentials = LoginCredentials(login = "", password = "")
             coEvery {
-                swRepository.login(any())
+                authRepository.login(any())
             } returns Result.success(LoginSuccess(testUserId))
 
             coEvery { tokenEncoder.encode(emptyCredentials) } returns null
@@ -100,7 +100,7 @@ class LoginUseCaseTest {
             // Then
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(null) }
-            coVerify(exactly = 1) { swRepository.login(null) }
+            coVerify(exactly = 1) { authRepository.login(null) }
             coVerify(exactly = 1) { tokenEncoder.encode(emptyCredentials) }
             coVerify(exactly = 1) { preferencesRepository.saveCurrentUserId(testUserId) }
         }
@@ -111,7 +111,7 @@ class LoginUseCaseTest {
             // Given
             val nullTokenCredentials = LoginCredentials(login = "test", password = " ")
             coEvery {
-                swRepository.login(any())
+                authRepository.login(any())
             } returns Result.success(LoginSuccess(testUserId))
 
             coEvery { tokenEncoder.encode(nullTokenCredentials) } returns null
@@ -122,7 +122,7 @@ class LoginUseCaseTest {
             // Then
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(null) }
-            coVerify(exactly = 1) { swRepository.login(null) }
+            coVerify(exactly = 1) { authRepository.login(null) }
             coVerify(exactly = 1) { tokenEncoder.encode(nullTokenCredentials) }
             coVerify(exactly = 1) { preferencesRepository.saveCurrentUserId(testUserId) }
         }

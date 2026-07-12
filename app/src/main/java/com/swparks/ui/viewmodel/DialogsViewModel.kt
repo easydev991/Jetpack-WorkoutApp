@@ -9,7 +9,6 @@ import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.data.provider.ResourcesProviderImpl
 import com.swparks.data.repository.MessagesRepositoryImpl
-import com.swparks.data.repository.SWRepository
 import com.swparks.domain.event.MessageSentNotifier
 import com.swparks.ui.state.DialogsUiState
 import com.swparks.util.Logger
@@ -31,7 +30,6 @@ import kotlinx.coroutines.launch
  * и обрабатывает действия пользователя.
  *
  * @property messagesRepository Репозиторий для работы с диалогами
- * @property swRepository Репозиторий для работы с сервером (удаление диалога)
  * @property logger Логгер для записи ошибок и отладочной информации
  * @property resources Провайдер строковых ресурсов для локализации
  * @property messageSentNotifier Нотификатор события отправки сообщения
@@ -39,7 +37,6 @@ import kotlinx.coroutines.launch
 @Suppress("UnusedPrivateProperty")
 class DialogsViewModel(
     private val messagesRepository: MessagesRepositoryImpl,
-    private val swRepository: SWRepository,
     private val logger: Logger,
     private val resources: ResourcesProviderImpl,
     private val messageSentNotifier: MessageSentNotifier,
@@ -219,7 +216,7 @@ class DialogsViewModel(
     override fun deleteDialog(dialogId: Long) {
         viewModelScope.launch {
             _isDeleting.value = true
-            val result = swRepository.deleteDialog(dialogId)
+            val result = messagesRepository.deleteDialog(dialogId)
             _isDeleting.value = false
 
             if (result.isFailure) {
@@ -244,7 +241,7 @@ class DialogsViewModel(
             _isMarkingAsRead.value = true
             _syncError.value = null
 
-            val result = swRepository.markDialogAsRead(dialogId, userId)
+            val result = messagesRepository.markDialogAsRead(dialogId, userId)
             _isMarkingAsRead.value = false
 
             if (result.isFailure) {

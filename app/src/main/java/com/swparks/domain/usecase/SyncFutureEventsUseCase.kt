@@ -1,9 +1,9 @@
 package com.swparks.domain.usecase
 
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 
 class SyncFutureEventsUseCase(
-    private val swRepository: SWRepository
+    private val parksEventsRepository: ParksEventsRepository
 ) {
-    suspend operator fun invoke(): Result<Unit> = swRepository.syncFutureEvents()
+    suspend operator fun invoke(): Result<Unit> = parksEventsRepository.syncFutureEvents()
 }

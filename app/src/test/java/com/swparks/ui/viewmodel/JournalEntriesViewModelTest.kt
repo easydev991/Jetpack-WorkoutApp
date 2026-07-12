@@ -10,7 +10,8 @@ import com.swparks.analytics.UserActionType
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.User
 import com.swparks.data.provider.ResourcesProviderImpl
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.FriendsRepository
+import com.swparks.data.repository.JournalsRepositoryImpl
 import com.swparks.domain.model.JournalEntry
 import com.swparks.domain.usecase.CanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.DeleteJournalEntryUseCase
@@ -60,7 +61,8 @@ class JournalEntriesViewModelTest {
     private lateinit var canDeleteJournalEntryUseCase: CanDeleteJournalEntryUseCase
     private lateinit var editJournalSettingsUseCase: EditJournalSettingsUseCase
     private lateinit var userPreferencesRepository: UserPreferencesRepository
-    private lateinit var swRepository: SWRepository
+    private lateinit var friendsRepository: FriendsRepository
+    private lateinit var journalsRepository: JournalsRepositoryImpl
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var userNotifier: UserNotifier
     private lateinit var resources: ResourcesProviderImpl
@@ -100,8 +102,8 @@ class JournalEntriesViewModelTest {
         // Настраиваем моки для userPreferencesRepository
         every { userPreferencesRepository.currentUserId } returns MutableStateFlow(currentUserId)
 
-        // Настраиваем моки для swRepository
-        every { swRepository.getFriendsFlow() } returns flowOf(friends)
+        // Настраиваем моки для friendsRepository
+        every { friendsRepository.getFriendsFlow() } returns flowOf(friends)
 
         // Настраиваем моки для savedStateHandle
         every { savedStateHandle.get<String>("commentAccess") } returns commentAccess.name
@@ -114,7 +116,8 @@ class JournalEntriesViewModelTest {
                 canDeleteJournalEntryUseCase = canDeleteJournalEntryUseCase,
                 editJournalSettingsUseCase = editJournalSettingsUseCase,
                 userPreferencesRepository = userPreferencesRepository,
-                swRepository = swRepository,
+                friendsRepository = friendsRepository,
+                journalsRepository = journalsRepository,
                 savedStateHandle = savedStateHandle,
                 userNotifier = userNotifier,
                 resources = resources,
@@ -139,7 +142,8 @@ class JournalEntriesViewModelTest {
         canDeleteJournalEntryUseCase = mockk(relaxed = true)
         editJournalSettingsUseCase = mockk(relaxed = true)
         userPreferencesRepository = mockk(relaxed = true)
-        swRepository = mockk(relaxed = true)
+        friendsRepository = mockk(relaxed = true)
+        journalsRepository = mockk(relaxed = true)
         savedStateHandle = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
         resources = mockk(relaxed = true)
@@ -1153,7 +1157,7 @@ class JournalEntriesViewModelTest {
                     testJournalId
                 )
             } returns Result.success(Unit)
-            every { swRepository.observeJournalById(testJournalId) } returns flowOf(testJournal)
+            every { journalsRepository.observeJournalById(testJournalId) } returns flowOf(testJournal)
 
             // When
             viewModel = createViewModel()
@@ -1204,7 +1208,7 @@ class JournalEntriesViewModelTest {
                 )
 
             // Настраиваем моки - дневник уже в кэше
-            every { swRepository.observeJournalById(testJournalId) } returns flowOf(testJournal)
+            every { journalsRepository.observeJournalById(testJournalId) } returns flowOf(testJournal)
             coEvery { getJournalEntriesUseCase(testUserId, testJournalId) } returns emptyFlow()
             coEvery {
                 syncJournalEntriesUseCase(
@@ -1218,7 +1222,7 @@ class JournalEntriesViewModelTest {
             advanceUntilIdle()
 
             // Then - getJournal НЕ должен быть вызван, т.к. дневник уже в кэше
-            coVerify(exactly = 0) { swRepository.getJournal(any(), any()) }
+            coVerify(exactly = 0) { journalsRepository.getJournal(any(), any()) }
         }
 
     // ==================== ТЕСТЫ ДЛЯ РЕДАКТИРОВАНИЯ/УДАЛЕНИЯ СВОИХ ЗАПИСЕЙ В ЧУЖИХ ДНЕВНИКАХ ====================

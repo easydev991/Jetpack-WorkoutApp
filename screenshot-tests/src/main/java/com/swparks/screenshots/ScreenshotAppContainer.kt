@@ -11,9 +11,12 @@ import com.swparks.data.model.SocialUpdates
 import com.swparks.data.model.User
 import com.swparks.data.provider.LocationServiceImpl
 import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.AuthRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
+import com.swparks.data.repository.FriendsRepository
 import com.swparks.data.repository.MessagesRepositoryImpl
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
+import com.swparks.data.repository.UserProfileRepository
 import com.swparks.domain.exception.NotFoundException
 import com.swparks.domain.model.LocationCoordinates
 import com.swparks.domain.provider.LocationSettingsCheckResult
@@ -55,11 +58,6 @@ class ScreenshotAppContainer(
     private val appContext = context.applicationContext
     private val demoParks = DemoData.loadDemoParks(appContext)
     private val demoCountries = DemoData.loadDemoCountries(appContext)
-    private val screenshotSwRepository =
-        ScreenshotSwRepository(
-            delegate = super.swRepository,
-            demoParks = demoParks
-        )
     private val screenshotCountriesRepository =
         ScreenshotCountriesRepository(
             appContext = appContext,
@@ -72,9 +70,47 @@ class ScreenshotAppContainer(
             logger = super.logger,
             crashReporter = super.crashReporter
         )
+    private val screenshotAuthRepository =
+        ScreenshotAuthRepository(
+            swApi = super.provideAuthApi(),
+            logger = super.logger,
+            crashReporter = super.crashReporter,
+            preferencesRepository = super.userPreferencesRepository,
+            userDao = super.userDao,
+            dialogDao = super.dialogDao
+        )
+    private val screenshotUserProfileRepository =
+        ScreenshotUserProfileRepository(
+            swApi = super.provideProfileApi(),
+            logger = super.logger,
+            crashReporter = super.crashReporter,
+            preferencesRepository = super.userPreferencesRepository,
+            userDao = super.userDao
+        )
+    private val screenshotFriendsRepository =
+        ScreenshotFriendsRepository(
+            swApi = super.provideFriendsApi(),
+            logger = super.logger,
+            crashReporter = super.crashReporter,
+            userDao = super.userDao
+        )
+    private val screenshotParksEventsRepository =
+        ScreenshotParksEventsRepository(
+            swApi = super.provideParksApi(),
+            logger = super.logger,
+            crashReporter = super.crashReporter,
+            preferencesRepository = super.userPreferencesRepository,
+            eventDao = super.eventDao,
+            parkDao = super.parkDao,
+            userDao = super.userDao,
+            demoParks = demoParks
+        )
     private val resourcesProvider = ResourcesProviderImpl(appContext)
 
-    override val swRepository: SWRepository = screenshotSwRepository
+    override val authRepository: AuthRepository = screenshotAuthRepository
+    override val userProfileRepository: UserProfileRepository = screenshotUserProfileRepository
+    override val friendsRepository: FriendsRepository = screenshotFriendsRepository
+    override val parksEventsRepository: ParksEventsRepository = screenshotParksEventsRepository
     override val countriesRepository: CountriesRepositoryImpl = screenshotCountriesRepository
     override val messagesRepository: MessagesRepositoryImpl = screenshotMessagesRepository
     override val locationService: LocationServiceImpl =
@@ -94,7 +130,7 @@ class ScreenshotAppContainer(
         SyncParksUseCase(
             clock = clock,
             userPreferencesRepository = userPreferencesRepository,
-            swRepository = swRepository,
+            parksEventsRepository = parksEventsRepository,
             logger = logger
         )
     override val syncCountriesUseCase: SyncCountriesUseCase =
@@ -107,25 +143,25 @@ class ScreenshotAppContainer(
         )
 
     override val getFutureEventsFlowUseCase: GetFutureEventsFlowUseCase =
-        GetFutureEventsFlowUseCase(swRepository)
+        GetFutureEventsFlowUseCase(parksEventsRepository)
 
     override val getPastEventsFlowUseCase: GetPastEventsFlowUseCase =
-        GetPastEventsFlowUseCase(swRepository)
+        GetPastEventsFlowUseCase(parksEventsRepository)
 
     override val syncFutureEventsUseCase: SyncFutureEventsUseCase =
-        SyncFutureEventsUseCase(swRepository)
+        SyncFutureEventsUseCase(parksEventsRepository)
 
     override val syncPastEventsUseCase: SyncPastEventsUseCase =
-        SyncPastEventsUseCase(swRepository)
+        SyncPastEventsUseCase(parksEventsRepository)
 
     override val initializeParksUseCase: InitializeParksUseCase =
-        InitializeParksUseCase(appContext, swRepository, logger)
+        InitializeParksUseCase(appContext, parksEventsRepository, logger)
 
     override val loginUseCase: LoginUseCase =
         LoginUseCase(
             TokenEncoder(),
             secureTokenRepository,
-            swRepository,
+            authRepository,
             userPreferencesRepository,
             crashReporter
         )
@@ -133,7 +169,9 @@ class ScreenshotAppContainer(
     override fun profileViewModelFactory(): ProfileViewModel =
         ProfileViewModel(
             countriesRepository = countriesRepository,
-            swRepository = swRepository,
+            authRepository = authRepository,
+            userProfileRepository = userProfileRepository,
+            friendsRepository = friendsRepository,
             logger = logger,
             userNotifier = userNotifier,
             analyticsService = analyticsService
@@ -142,7 +180,6 @@ class ScreenshotAppContainer(
     override fun dialogsViewModelFactory(): DialogsViewModel =
         DialogsViewModel(
             messagesRepository = messagesRepository,
-            swRepository = swRepository,
             logger = logger,
             resources = resourcesProvider,
             messageSentNotifier = messageSentNotifier,
@@ -151,7 +188,7 @@ class ScreenshotAppContainer(
 
     override fun searchUserViewModelFactory(): SearchUserViewModel =
         SearchUserViewModel(
-            swRepository = swRepository,
+            userProfileRepository = userProfileRepository,
             logger = logger,
             analyticsService = analyticsService
         )
@@ -160,7 +197,9 @@ class ScreenshotAppContainer(
         OtherUserProfileViewModel(
             userId = userId,
             countriesRepository = countriesRepository,
-            swRepository = swRepository,
+            authRepository = authRepository,
+            userProfileRepository = userProfileRepository,
+            friendsRepository = friendsRepository,
             logger = logger,
             userNotifier = userNotifier,
             resources = resourcesProvider,
@@ -168,46 +207,35 @@ class ScreenshotAppContainer(
         )
 }
 
-private class ScreenshotSwRepository(
-    private val delegate: SWRepository,
-    demoParks: List<Park>
-) : SWRepository by delegate {
-    private val currentUserFlow = MutableStateFlow<User?>(null)
-    private val parksFlow = MutableStateFlow(demoParks)
-    private val futureEventsFlow = MutableStateFlow(DemoData.demoFutureEvents)
-    private val pastEventsFlow = MutableStateFlow(DemoData.demoPastEvents)
-    private val friendsFlow = MutableStateFlow<List<User>>(emptyList())
-    private val friendRequestsFlow = MutableStateFlow<List<User>>(emptyList())
-    private val blacklistFlow = MutableStateFlow<List<User>>(emptyList())
-    private val isAuthorizedFlow = MutableStateFlow(false)
+private class ScreenshotAuthRepository(
+    swApi: SWApi,
+    logger: Logger,
+    crashReporter: CrashReporter,
+    preferencesRepository: com.swparks.data.UserPreferencesRepository,
+    userDao: com.swparks.data.database.dao.UserDao,
+    dialogDao: com.swparks.data.database.dao.DialogDao
+) : AuthRepository(
+        swApi = swApi,
+        preferencesRepository = preferencesRepository,
+        userDao = userDao,
+        dialogDao = dialogDao,
+        logger = logger,
+        crashReporter = crashReporter
+    ) {
+    private val currentUserFlow = kotlinx.coroutines.flow.MutableStateFlow<com.swparks.data.model.User?>(null)
+    private val isAuthorizedFlow = kotlinx.coroutines.flow.MutableStateFlow(false)
 
-    override val isAuthorized: Flow<Boolean> = isAuthorizedFlow
+    override val isAuthorized = isAuthorizedFlow as kotlinx.coroutines.flow.Flow<Boolean>
 
-    override fun getCurrentUserFlow(): Flow<User?> = currentUserFlow
+    override fun getCurrentUserFlow() = currentUserFlow
 
-    override fun getParksFlow(): Flow<List<com.swparks.data.model.Park>> = parksFlow
-
-    override fun getFutureEventsFlow(): Flow<List<Event>> = futureEventsFlow
-
-    override fun getPastEventsFlow(): Flow<List<Event>> = pastEventsFlow
-
-    override fun getFriendsFlow(): Flow<List<User>> = friendsFlow
-
-    override fun getFriendRequestsFlow(): Flow<List<User>> = friendRequestsFlow
-
-    override fun getBlacklistFlow(): Flow<List<User>> = blacklistFlow
-
-    override fun getFriendsCountFlow(): Flow<Int> = flowOf(DemoData.demoAuthorizedUser.friendsCount ?: 0)
-
-    override suspend fun clearUserData() {
-        currentUserFlow.value = null
-        isAuthorizedFlow.value = false
-    }
-
-    override suspend fun login(token: String?): Result<LoginSuccess> {
+    override suspend fun login(token: String?): Result<com.swparks.data.model.LoginSuccess> {
         currentUserFlow.value = DemoData.demoAuthorizedUser
         isAuthorizedFlow.value = true
-        return Result.success(LoginSuccess(userId = DemoData.demoAuthorizedUser.id))
+        return Result.success(
+            com.swparks.data.model
+                .LoginSuccess(userId = DemoData.demoAuthorizedUser.id)
+        )
     }
 
     override suspend fun forceLogout() {
@@ -215,7 +243,26 @@ private class ScreenshotSwRepository(
         isAuthorizedFlow.value = false
     }
 
-    override suspend fun getUser(userId: Long): Result<User> {
+    override suspend fun clearUserData() {
+        currentUserFlow.value = null
+        isAuthorizedFlow.value = false
+    }
+}
+
+private class ScreenshotUserProfileRepository(
+    swApi: SWApi,
+    logger: Logger,
+    crashReporter: CrashReporter,
+    preferencesRepository: com.swparks.data.UserPreferencesRepository,
+    userDao: com.swparks.data.database.dao.UserDao
+) : UserProfileRepository(
+        swApi = swApi,
+        preferencesRepository = preferencesRepository,
+        userDao = userDao,
+        logger = logger,
+        crashReporter = crashReporter
+    ) {
+    override suspend fun getUser(userId: Long): Result<com.swparks.data.model.User> {
         val user =
             when (userId) {
                 DemoData.demoAuthorizedUser.id -> DemoData.demoAuthorizedUser
@@ -226,9 +273,72 @@ private class ScreenshotSwRepository(
         return Result.success(user)
     }
 
-    override suspend fun syncFutureEvents(): Result<Unit> = Result.success(Unit)
+    override suspend fun getSocialUpdates(userId: Long): Result<com.swparks.data.model.SocialUpdates> {
+        val user = DemoData.demoAuthorizedUser
+        return Result.success(
+            com.swparks.data.model.SocialUpdates(
+                user = user,
+                friends = emptyList(),
+                friendRequests = emptyList(),
+                blacklist = emptyList()
+            )
+        )
+    }
 
-    override suspend fun syncPastEvents(): Result<Unit> = Result.success(Unit)
+    override suspend fun findUsers(name: String): Result<List<com.swparks.data.model.User>> = Result.success(DemoData.searchUsers(name))
+}
+
+private class ScreenshotFriendsRepository(
+    swApi: SWApi,
+    logger: Logger,
+    crashReporter: CrashReporter,
+    userDao: com.swparks.data.database.dao.UserDao
+) : FriendsRepository(
+        swApi = swApi,
+        userDao = userDao,
+        logger = logger,
+        crashReporter = crashReporter
+    ) {
+    private val friendsFlow = kotlinx.coroutines.flow.MutableStateFlow<List<com.swparks.data.model.User>>(emptyList())
+    private val friendRequestsFlow = kotlinx.coroutines.flow.MutableStateFlow<List<com.swparks.data.model.User>>(emptyList())
+    private val blacklistFlow = kotlinx.coroutines.flow.MutableStateFlow<List<com.swparks.data.model.User>>(emptyList())
+
+    override fun getFriendsFlow() = friendsFlow
+
+    override fun getFriendRequestsFlow() = friendRequestsFlow
+
+    override fun getBlacklistFlow() = blacklistFlow
+
+    override fun getFriendsCountFlow() = kotlinx.coroutines.flow.flowOf(DemoData.demoAuthorizedUser.friendsCount ?: 0)
+}
+
+private class ScreenshotParksEventsRepository(
+    swApi: SWApi,
+    logger: Logger,
+    crashReporter: CrashReporter,
+    preferencesRepository: com.swparks.data.UserPreferencesRepository,
+    eventDao: com.swparks.data.database.dao.EventDao,
+    parkDao: com.swparks.data.database.dao.ParkDao,
+    userDao: com.swparks.data.database.dao.UserDao,
+    demoParks: List<com.swparks.data.model.Park>
+) : ParksEventsRepository(
+        swApi = swApi,
+        preferencesRepository = preferencesRepository,
+        eventDao = eventDao,
+        parkDao = parkDao,
+        userDao = userDao,
+        logger = logger,
+        crashReporter = crashReporter
+    ) {
+    private val parksFlow = kotlinx.coroutines.flow.MutableStateFlow(demoParks)
+    private val futureEventsFlow = kotlinx.coroutines.flow.MutableStateFlow(DemoData.demoFutureEvents)
+    private val pastEventsFlow = kotlinx.coroutines.flow.MutableStateFlow(DemoData.demoPastEvents)
+
+    override fun getParksFlow() = parksFlow
+
+    override fun getFutureEventsFlow() = futureEventsFlow
+
+    override fun getPastEventsFlow() = pastEventsFlow
 
     override suspend fun getAllParks(): Result<List<com.swparks.data.model.Park>> = Result.success(parksFlow.value)
 
@@ -236,7 +346,10 @@ private class ScreenshotSwRepository(
         val fallback = parksFlow.value.firstOrNull { it.id == id }
         val park = DemoData.parkDetailsById(id, fallback)
         if (fallback == null && park.id != id) {
-            return Result.failure(NotFoundException.ParkNotFound(id))
+            return Result.failure(
+                com.swparks.domain.exception.NotFoundException
+                    .ParkNotFound(id)
+            )
         }
         return Result.success(park)
     }
@@ -249,7 +362,7 @@ private class ScreenshotSwRepository(
     override suspend fun getParksForUser(userId: Long): Result<List<com.swparks.data.model.Park>> =
         Result.success(DemoData.demoParksForUser(parksFlow.value))
 
-    override suspend fun importSeedParks(context: Context) = Unit
+    override suspend fun importSeedParks(context: android.content.Context) = Unit
 
     override suspend fun upsertParks(parks: List<com.swparks.data.model.Park>) {
         parksFlow.value = if (parks.isEmpty()) parksFlow.value else parks
@@ -270,17 +383,20 @@ private class ScreenshotSwRepository(
 
     override suspend fun getUpdatedParks(date: String): Result<List<com.swparks.data.model.Park>> = Result.success(parksFlow.value)
 
-    override suspend fun getEvents(type: EventType): Result<List<Event>> =
+    override suspend fun getEvents(type: com.swparks.ui.model.EventType): Result<List<com.swparks.data.model.Event>> =
         when (type) {
-            EventType.FUTURE -> Result.success(futureEventsFlow.value)
-            EventType.PAST -> Result.success(pastEventsFlow.value)
+            com.swparks.ui.model.EventType.FUTURE -> Result.success(futureEventsFlow.value)
+            com.swparks.ui.model.EventType.PAST -> Result.success(pastEventsFlow.value)
         }
 
-    override suspend fun getEvent(id: Long): Result<Event> {
+    override suspend fun getEvent(id: Long): Result<com.swparks.data.model.Event> {
+        val allEvents = futureEventsFlow.value + pastEventsFlow.value
         val event =
-            allEvents().firstOrNull { it.id == id } ?: return Result.failure(
-                NotFoundException.EventNotFound(id)
-            )
+            allEvents.firstOrNull { it.id == id }
+                ?: return Result.failure(
+                    com.swparks.domain.exception.NotFoundException
+                        .EventNotFound(id)
+                )
         return Result.success(event)
     }
 
@@ -294,41 +410,17 @@ private class ScreenshotSwRepository(
         go: Boolean,
         eventId: Long
     ): Result<Unit> {
-        updateEvent(eventId) { event ->
-            event.copy(trainHere = go)
+        val update = { event: com.swparks.data.model.Event ->
+            if (event.id == eventId) event.copy(trainHere = go) else event
         }
+        futureEventsFlow.value = futureEventsFlow.value.map(update)
+        pastEventsFlow.value = pastEventsFlow.value.map(update)
         return Result.success(Unit)
     }
 
-    override suspend fun getSocialUpdates(userId: Long): Result<SocialUpdates> {
-        val user = currentUserFlow.value ?: DemoData.demoAuthorizedUser
-        return Result.success(
-            SocialUpdates(
-                user = user,
-                friends = emptyList(),
-                friendRequests = emptyList(),
-                blacklist = emptyList()
-            )
-        )
-    }
+    override suspend fun syncFutureEvents(): Result<Unit> = Result.success(Unit)
 
-    override suspend fun findUsers(name: String): Result<List<User>> = Result.success(DemoData.searchUsers(name))
-
-    private fun allEvents(): List<Event> = futureEventsFlow.value + pastEventsFlow.value
-
-    private fun updateEvent(
-        eventId: Long,
-        transform: (Event) -> Event
-    ) {
-        futureEventsFlow.value =
-            futureEventsFlow.value.map { event ->
-                if (event.id == eventId) transform(event) else event
-            }
-        pastEventsFlow.value =
-            pastEventsFlow.value.map { event ->
-                if (event.id == eventId) transform(event) else event
-            }
-    }
+    override suspend fun syncPastEvents(): Result<Unit> = Result.success(Unit)
 }
 
 private class ScreenshotCountriesRepository(

@@ -21,7 +21,7 @@ import com.swparks.data.model.ParkType
 import com.swparks.data.preferences.ParksFilterDataStore
 import com.swparks.data.provider.LocationServiceImpl
 import com.swparks.data.repository.CountriesRepositoryImpl
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.domain.provider.LocationSettingsCheckResult
 import com.swparks.domain.usecase.FilterParksUseCase
 import com.swparks.domain.usecase.ICreateParkLocationHandler
@@ -55,7 +55,7 @@ class ParksRootViewModel(
     private val filterParksUseCase: FilterParksUseCase,
     private val parksFilterDataStore: ParksFilterDataStore,
     private val countriesRepository: CountriesRepositoryImpl,
-    private val swRepository: SWRepository,
+    private val parksEventsRepository: ParksEventsRepository,
     private val initializeParksUseCase: InitializeParksUseCase,
     private val userNotifier: UserNotifier,
     private val locationService: LocationServiceImpl,
@@ -105,7 +105,7 @@ class ParksRootViewModel(
 
     private fun observeParks() {
         viewModelScope.launch {
-            swRepository.getParksFlow().collect { parks ->
+            parksEventsRepository.getParksFlow().collect { parks ->
                 updateParks(parks)
             }
         }
@@ -247,7 +247,7 @@ class ParksRootViewModel(
                         filterParksUseCase = container.filterParksUseCase,
                         parksFilterDataStore = container.parksFilterDataStore,
                         countriesRepository = container.countriesRepository,
-                        swRepository = container.swRepository,
+                        parksEventsRepository = container.parksEventsRepository,
                         initializeParksUseCase = container.initializeParksUseCase,
                         userNotifier = container.userNotifier,
                         locationService = container.locationService,

@@ -6,7 +6,8 @@ import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.UserEntity
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.FriendsRepository
+import com.swparks.data.repository.UserProfileRepository
 import com.swparks.ui.state.FriendsListUiState
 import com.swparks.ui.viewmodel.FriendsListViewModel
 import com.swparks.ui.viewmodel.MainDispatcherRule
@@ -39,7 +40,8 @@ class FriendsListViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var userDao: UserDao
-    private lateinit var swRepository: SWRepository
+    private lateinit var userProfileRepository: UserProfileRepository
+    private lateinit var friendsRepository: FriendsRepository
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
     private lateinit var friendsListViewModel: FriendsListViewModel
@@ -50,14 +52,16 @@ class FriendsListViewModelTest {
         userDao = mockk(relaxed = true)
         coEvery { userDao.getCurrentUserFlow() } returns flowOf(null)
 
-        swRepository = mockk(relaxed = true)
+        userProfileRepository = mockk(relaxed = true)
+        friendsRepository = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
         analyticsService = mockk(relaxed = true)
         friendsListViewModel =
             FriendsListViewModel(
                 userDao,
-                swRepository,
+                userProfileRepository,
+                friendsRepository,
                 logger,
                 userNotifier,
                 analyticsService
@@ -94,7 +98,8 @@ class FriendsListViewModelTest {
             val viewModel =
                 FriendsListViewModel(
                     userDao,
-                    swRepository,
+                    userProfileRepository,
+                    friendsRepository,
                     logger,
                     userNotifier,
                     analyticsService
@@ -118,10 +123,8 @@ class FriendsListViewModelTest {
         runTest {
             // Given
             val testUserId = 123L
-            coEvery { swRepository.respondToFriendRequest(testUserId, accept = true) } returns
-                mockk(
-                    relaxed = true
-                )
+            coEvery { friendsRepository.respondToFriendRequest(testUserId, accept = true) } returns
+                Result.success(Unit)
 
             // When
             friendsListViewModel.onAcceptFriendRequest(testUserId)
@@ -129,7 +132,7 @@ class FriendsListViewModelTest {
 
             // Then
             coVerify(exactly = 1) {
-                swRepository.respondToFriendRequest(testUserId, accept = true)
+                friendsRepository.respondToFriendRequest(testUserId, accept = true)
             }
         }
 
@@ -138,10 +141,8 @@ class FriendsListViewModelTest {
         runTest {
             // Given
             val testUserId = 456L
-            coEvery { swRepository.respondToFriendRequest(testUserId, accept = false) } returns
-                mockk(
-                    relaxed = true
-                )
+            coEvery { friendsRepository.respondToFriendRequest(testUserId, accept = false) } returns
+                Result.success(Unit)
 
             // When
             friendsListViewModel.onDeclineFriendRequest(testUserId)
@@ -149,7 +150,7 @@ class FriendsListViewModelTest {
 
             // Then
             coVerify(exactly = 1) {
-                swRepository.respondToFriendRequest(testUserId, accept = false)
+                friendsRepository.respondToFriendRequest(testUserId, accept = false)
             }
         }
 
@@ -159,7 +160,7 @@ class FriendsListViewModelTest {
             // Given
             val testUserId = 123L
             coEvery {
-                swRepository.respondToFriendRequest(
+                friendsRepository.respondToFriendRequest(
                     testUserId,
                     accept = true
                 )
@@ -182,7 +183,7 @@ class FriendsListViewModelTest {
             val testUserId = 123L
             val testError = IOException("Нет подключения к сети")
             coEvery {
-                swRepository.respondToFriendRequest(
+                friendsRepository.respondToFriendRequest(
                     testUserId,
                     accept = true
                 )
@@ -223,7 +224,7 @@ class FriendsListViewModelTest {
             val testUserId = 456L
             val testError = IOException("Нет подключения к сети")
             coEvery {
-                swRepository.respondToFriendRequest(
+                friendsRepository.respondToFriendRequest(
                     testUserId,
                     accept = false
                 )
@@ -248,8 +249,8 @@ class FriendsListViewModelTest {
         runTest {
             val testUserId = 123L
             coEvery {
-                swRepository.respondToFriendRequest(testUserId, accept = true)
-            } returns mockk(relaxed = true)
+                friendsRepository.respondToFriendRequest(testUserId, accept = true)
+            } returns Result.success(Unit)
 
             friendsListViewModel.onAcceptFriendRequest(testUserId)
 
@@ -266,7 +267,7 @@ class FriendsListViewModelTest {
             val testUserId = 123L
             val testError = IOException("Нет подключения к сети")
             coEvery {
-                swRepository.respondToFriendRequest(testUserId, accept = true)
+                friendsRepository.respondToFriendRequest(testUserId, accept = true)
             } returns Result.failure(testError)
 
             friendsListViewModel.onAcceptFriendRequest(testUserId)
@@ -284,8 +285,8 @@ class FriendsListViewModelTest {
         runTest {
             val testUserId = 456L
             coEvery {
-                swRepository.respondToFriendRequest(testUserId, accept = false)
-            } returns mockk(relaxed = true)
+                friendsRepository.respondToFriendRequest(testUserId, accept = false)
+            } returns Result.success(Unit)
 
             friendsListViewModel.onDeclineFriendRequest(testUserId)
 
@@ -302,7 +303,7 @@ class FriendsListViewModelTest {
             val testUserId = 456L
             val testError = IOException("Нет подключения к сети")
             coEvery {
-                swRepository.respondToFriendRequest(testUserId, accept = false)
+                friendsRepository.respondToFriendRequest(testUserId, accept = false)
             } returns Result.failure(testError)
 
             friendsListViewModel.onDeclineFriendRequest(testUserId)

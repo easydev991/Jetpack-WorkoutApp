@@ -36,7 +36,7 @@ class ScreenshotAppBootstrapTest {
                     as JetpackWorkoutApplication
             val container = app.container
 
-            val parks = container.swRepository.getParksFlow().first()
+            val parks = container.parksEventsRepository.getParksFlow().first()
             assertFalse("Demo parks must not be empty", parks.isEmpty())
             assertTrue(
                 "Scenario park id must exist in demo data",

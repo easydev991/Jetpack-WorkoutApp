@@ -6,7 +6,7 @@ import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.MessagesRepositoryImpl
 import com.swparks.network.SWApi
 import com.swparks.ui.state.ChatEvent
 import com.swparks.ui.state.ChatUiState
@@ -31,12 +31,12 @@ import java.io.IOException
  * и отметкой диалога как прочитанного.
  *
  * @property swApi API клиент для работы с сервером
- * @property swRepository Репозиторий для работы с данными (включая обновление локальной БД)
+ * @property messagesRepository Репозиторий для работы с данными (включая обновление локальной БД)
  * @property userNotifier Нотификатор для отображения ошибок в UI
  */
 class ChatViewModel(
     private val swApi: SWApi,
-    private val swRepository: SWRepository,
+    private val messagesRepository: MessagesRepositoryImpl,
     private val userNotifier: UserNotifier,
     private val logger: Logger,
     private val crashReporter: CrashReporter,
@@ -180,7 +180,7 @@ class ChatViewModel(
     override fun markAsRead(userId: Int) {
         val dialogId = currentDialogId ?: return
         viewModelScope.launch {
-            val result = swRepository.markDialogAsRead(dialogId, userId)
+            val result = messagesRepository.markDialogAsRead(dialogId, userId)
             if (result.isSuccess) {
                 logger.i(TAG, "Диалог помечен как прочитанный: dialogId=$dialogId, userId=$userId")
             } else {

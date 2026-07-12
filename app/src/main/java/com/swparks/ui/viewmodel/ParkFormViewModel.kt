@@ -11,7 +11,7 @@ import com.swparks.analytics.UserActionType
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.provider.AvatarHelperImpl
 import com.swparks.data.provider.GeocodingServiceImpl
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.domain.usecase.FindCityByCoordinatesUseCase
 import com.swparks.ui.model.ParkForm
 import com.swparks.ui.model.ParkFormMode
@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
 @Suppress("TooGenericExceptionCaught", "LongParameterList")
 class ParkFormViewModel(
     private val mode: ParkFormMode,
-    private val swRepository: SWRepository,
+    private val parksEventsRepository: ParksEventsRepository,
     private val avatarHelper: AvatarHelperImpl,
     private val logger: Logger,
     private val userNotifier: UserNotifier,
@@ -311,7 +311,7 @@ class ParkFormViewModel(
             }
 
         val result =
-            swRepository.savePark(
+            parksEventsRepository.savePark(
                 id = parkId,
                 form = currentState.form,
                 photos = photos.takeIf { it.isNotEmpty() }

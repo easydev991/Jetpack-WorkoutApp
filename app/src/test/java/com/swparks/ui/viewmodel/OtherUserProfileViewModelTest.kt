@@ -11,8 +11,10 @@ import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
 import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.AuthRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.FriendsRepository
+import com.swparks.data.repository.UserProfileRepository
 import com.swparks.util.AppError
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
@@ -44,7 +46,9 @@ class OtherUserProfileViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val mockSwRepository = mockk<SWRepository>()
+    private val mockAuthRepository = mockk<AuthRepository>()
+    private val mockUserProfileRepository = mockk<UserProfileRepository>()
+    private val mockFriendsRepository = mockk<FriendsRepository>()
     private val mockCountriesRepository = mockk<CountriesRepositoryImpl>()
     private val mockLogger = mockk<Logger>(relaxed = true)
     private val mockUserNotifier = mockk<UserNotifier>(relaxed = true)
@@ -58,9 +62,9 @@ class OtherUserProfileViewModelTest {
 
     @Before
     fun setup() {
-        every { mockSwRepository.getCurrentUserFlow() } returns currentUserFlow
-        every { mockSwRepository.getFriendsFlow() } returns friendsFlow
-        every { mockSwRepository.getBlacklistFlow() } returns blacklistFlow
+        every { mockAuthRepository.getCurrentUserFlow() } returns currentUserFlow
+        every { mockFriendsRepository.getFriendsFlow() } returns friendsFlow
+        every { mockFriendsRepository.getBlacklistFlow() } returns blacklistFlow
         every { mockUserNotifier.errorFlow } returns errorFlow
 
         // Мокируем getString для локализованных строк
@@ -85,13 +89,15 @@ class OtherUserProfileViewModelTest {
         runTest {
             val userId = 123L
             val user = User(id = userId, name = "test", image = null)
-            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.success(user)
 
             val viewModel =
                 OtherUserProfileViewModel(
                     userId,
                     mockCountriesRepository,
-                    mockSwRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
                     mockLogger,
                     mockUserNotifier,
                     mockResources,
@@ -100,7 +106,7 @@ class OtherUserProfileViewModelTest {
             advanceUntilIdle()
 
             assertEquals(user, viewModel.viewedUser.value)
-            coVerify { mockSwRepository.getUser(userId) }
+            coVerify { mockUserProfileRepository.getUser(userId) }
         }
 
     @Test
@@ -108,13 +114,15 @@ class OtherUserProfileViewModelTest {
         runTest {
             val userId = 999L
             val error = HttpException(Response.error<Any>(404, "".toResponseBody()))
-            coEvery { mockSwRepository.getUser(userId) } returns Result.failure(error)
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.failure(error)
 
             val viewModel =
                 OtherUserProfileViewModel(
                     userId,
                     mockCountriesRepository,
-                    mockSwRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
                     mockLogger,
                     mockUserNotifier,
                     mockResources,
@@ -129,13 +137,15 @@ class OtherUserProfileViewModelTest {
     fun loadUser_whenNetworkError_thenShowsErrorWithRetry() =
         runTest {
             val userId = 999L
-            coEvery { mockSwRepository.getUser(userId) } returns Result.failure(Exception("Network error"))
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.failure(Exception("Network error"))
 
             val viewModel =
                 OtherUserProfileViewModel(
                     userId,
                     mockCountriesRepository,
-                    mockSwRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
                     mockLogger,
                     mockUserNotifier,
                     mockResources,
@@ -155,14 +165,16 @@ class OtherUserProfileViewModelTest {
         runTest {
             val userId = 123L
             val user = User(id = userId, name = "test", image = null)
-            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user) andThen
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.success(user) andThen
                 Result.failure(Exception("Network error"))
 
             val viewModel =
                 OtherUserProfileViewModel(
                     userId,
                     mockCountriesRepository,
-                    mockSwRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
                     mockLogger,
                     mockUserNotifier,
                     mockResources,
@@ -188,13 +200,15 @@ class OtherUserProfileViewModelTest {
             val userId = 123L
             val user =
                 User(id = userId, name = "test", image = null, countryID = null, cityID = null)
-            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.success(user)
 
             val viewModel =
                 OtherUserProfileViewModel(
                     userId,
                     mockCountriesRepository,
-                    mockSwRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
                     mockLogger,
                     mockUserNotifier,
                     mockResources,
@@ -220,7 +234,7 @@ class OtherUserProfileViewModelTest {
             val city = City(id = "100", name = "Moscow", lat = "0", lon = "0")
             val user = User(id = userId, name = "test", image = null, countryID = 1, cityID = 100)
 
-            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.success(user)
             coEvery { mockCountriesRepository.getCountryById("1") } returns country
             coEvery { mockCountriesRepository.getCityById("100") } returns city
 
@@ -228,7 +242,9 @@ class OtherUserProfileViewModelTest {
                 OtherUserProfileViewModel(
                     userId,
                     mockCountriesRepository,
-                    mockSwRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
                     mockLogger,
                     mockUserNotifier,
                     mockResources,
@@ -254,9 +270,9 @@ class OtherUserProfileViewModelTest {
         runTest {
             val userId = 123L
             val user = User(id = userId, name = "test", image = null)
-            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.success(user)
             coEvery {
-                mockSwRepository.friendAction(
+                mockFriendsRepository.friendAction(
                     userId,
                     ApiFriendAction.ADD
                 )
@@ -266,7 +282,9 @@ class OtherUserProfileViewModelTest {
                 OtherUserProfileViewModel(
                     userId,
                     mockCountriesRepository,
-                    mockSwRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
                     mockLogger,
                     mockUserNotifier,
                     mockResources,
@@ -277,7 +295,7 @@ class OtherUserProfileViewModelTest {
             viewModel.performFriendAction()
             advanceUntilIdle()
 
-            coVerify { mockSwRepository.friendAction(userId, ApiFriendAction.ADD) }
+            coVerify { mockFriendsRepository.friendAction(userId, ApiFriendAction.ADD) }
         }
 
     @Test
@@ -285,13 +303,15 @@ class OtherUserProfileViewModelTest {
         runTest {
             val userId = 123L
             val user = User(id = userId, name = "test", image = null)
-            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.success(user)
 
             val viewModel =
                 OtherUserProfileViewModel(
                     userId,
                     mockCountriesRepository,
-                    mockSwRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
                     mockLogger,
                     mockUserNotifier,
                     mockResources,
@@ -308,9 +328,9 @@ class OtherUserProfileViewModelTest {
         runTest {
             val userId = 123L
             val user = User(id = userId, name = "test", image = null)
-            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.success(user)
             coEvery {
-                mockSwRepository.friendAction(
+                mockFriendsRepository.friendAction(
                     userId,
                     ApiFriendAction.ADD
                 )
@@ -320,7 +340,9 @@ class OtherUserProfileViewModelTest {
                 OtherUserProfileViewModel(
                     userId,
                     mockCountriesRepository,
-                    mockSwRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
                     mockLogger,
                     mockUserNotifier,
                     mockResources,
@@ -339,9 +361,9 @@ class OtherUserProfileViewModelTest {
         runTest {
             val userId = 123L
             val user = User(id = userId, name = "test", image = null)
-            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.success(user)
             coEvery {
-                mockSwRepository.friendAction(
+                mockFriendsRepository.friendAction(
                     userId,
                     ApiFriendAction.ADD
                 )
@@ -351,7 +373,9 @@ class OtherUserProfileViewModelTest {
                 OtherUserProfileViewModel(
                     userId,
                     mockCountriesRepository,
-                    mockSwRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
                     mockLogger,
                     mockUserNotifier,
                     mockResources,
@@ -372,9 +396,9 @@ class OtherUserProfileViewModelTest {
         runTest {
             val userId = 123L
             val user = User(id = userId, name = "test", image = null)
-            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.success(user)
             coEvery {
-                mockSwRepository.blacklistAction(
+                mockFriendsRepository.blacklistAction(
                     user,
                     ApiBlacklistOption.ADD
                 )
@@ -384,7 +408,9 @@ class OtherUserProfileViewModelTest {
                 OtherUserProfileViewModel(
                     userId,
                     mockCountriesRepository,
-                    mockSwRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
                     mockLogger,
                     mockUserNotifier,
                     mockResources,
@@ -396,7 +422,7 @@ class OtherUserProfileViewModelTest {
             viewModel.performBlacklistAction { onBlockedCalled = true }
             advanceUntilIdle()
 
-            coVerify { mockSwRepository.blacklistAction(user, ApiBlacklistOption.ADD) }
+            coVerify { mockFriendsRepository.blacklistAction(user, ApiBlacklistOption.ADD) }
             assertTrue(onBlockedCalled) // После блокировки вызывается callback
         }
 
@@ -408,13 +434,15 @@ class OtherUserProfileViewModelTest {
             val userId = 123L
             // currentUser всегда null (эмуляция ошибки авторизации)
             currentUserFlow.tryEmit(null)
-            every { mockSwRepository.getCurrentUserFlow() } returns flowOf(null)
+            every { mockAuthRepository.getCurrentUserFlow() } returns flowOf(null)
 
             val viewModel =
                 OtherUserProfileViewModel(
                     userId,
                     mockCountriesRepository,
-                    mockSwRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
                     mockLogger,
                     mockUserNotifier,
                     mockResources,
@@ -438,7 +466,7 @@ class OtherUserProfileViewModelTest {
         runTest {
             val userId = 123L
             val user = User(id = userId, name = "test", image = null, countryID = 1, cityID = 100)
-            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.success(user)
 
             // Мокируем выброс RuntimeException при загрузке страны
             coEvery { mockCountriesRepository.getCountryById("1") } throws RuntimeException("Unexpected error")
@@ -446,7 +474,9 @@ class OtherUserProfileViewModelTest {
             OtherUserProfileViewModel(
                 userId,
                 mockCountriesRepository,
-                mockSwRepository,
+                mockAuthRepository,
+                mockUserProfileRepository,
+                mockFriendsRepository,
                 mockLogger,
                 mockUserNotifier,
                 mockResources,
@@ -466,16 +496,18 @@ class OtherUserProfileViewModelTest {
         runTest {
             val userId = 123L
             val user = User(id = userId, name = "test", image = null)
-            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.success(user)
             coEvery {
-                mockSwRepository.friendAction(userId, ApiFriendAction.ADD)
+                mockFriendsRepository.friendAction(userId, ApiFriendAction.ADD)
             } returns Result.success(Unit)
 
             val viewModel =
                 OtherUserProfileViewModel(
                     userId,
                     mockCountriesRepository,
-                    mockSwRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
                     mockLogger,
                     mockUserNotifier,
                     mockResources,
@@ -496,17 +528,19 @@ class OtherUserProfileViewModelTest {
         runTest {
             val userId = 123L
             val user = User(id = userId, name = "test", image = null)
-            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
-            every { mockSwRepository.getFriendsFlow() } returns flowOf(listOf(user))
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.success(user)
+            every { mockFriendsRepository.getFriendsFlow() } returns flowOf(listOf(user))
             coEvery {
-                mockSwRepository.friendAction(userId, ApiFriendAction.REMOVE)
+                mockFriendsRepository.friendAction(userId, ApiFriendAction.REMOVE)
             } returns Result.success(Unit)
 
             val viewModel =
                 OtherUserProfileViewModel(
                     userId,
                     mockCountriesRepository,
-                    mockSwRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
                     mockLogger,
                     mockUserNotifier,
                     mockResources,
@@ -531,16 +565,18 @@ class OtherUserProfileViewModelTest {
             val userId = 123L
             val user = User(id = userId, name = "test", image = null)
             val error = Exception("Network error")
-            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.success(user)
             coEvery {
-                mockSwRepository.friendAction(userId, ApiFriendAction.ADD)
+                mockFriendsRepository.friendAction(userId, ApiFriendAction.ADD)
             } returns Result.failure(error)
 
             val viewModel =
                 OtherUserProfileViewModel(
                     userId,
                     mockCountriesRepository,
-                    mockSwRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
                     mockLogger,
                     mockUserNotifier,
                     mockResources,
@@ -563,16 +599,18 @@ class OtherUserProfileViewModelTest {
         runTest {
             val userId = 123L
             val user = User(id = userId, name = "test", image = null)
-            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.success(user)
             coEvery {
-                mockSwRepository.blacklistAction(user, ApiBlacklistOption.ADD)
+                mockFriendsRepository.blacklistAction(user, ApiBlacklistOption.ADD)
             } returns Result.success(Unit)
 
             val viewModel =
                 OtherUserProfileViewModel(
                     userId,
                     mockCountriesRepository,
-                    mockSwRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
                     mockLogger,
                     mockUserNotifier,
                     mockResources,
@@ -593,17 +631,19 @@ class OtherUserProfileViewModelTest {
         runTest {
             val userId = 123L
             val user = User(id = userId, name = "test", image = null)
-            coEvery { mockSwRepository.getUser(userId) } returns Result.success(user)
-            every { mockSwRepository.getBlacklistFlow() } returns flowOf(listOf(user))
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.success(user)
+            every { mockFriendsRepository.getBlacklistFlow() } returns flowOf(listOf(user))
             coEvery {
-                mockSwRepository.blacklistAction(user, ApiBlacklistOption.REMOVE)
+                mockFriendsRepository.blacklistAction(user, ApiBlacklistOption.REMOVE)
             } returns Result.success(Unit)
 
             val viewModel =
                 OtherUserProfileViewModel(
                     userId,
                     mockCountriesRepository,
-                    mockSwRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
                     mockLogger,
                     mockUserNotifier,
                     mockResources,

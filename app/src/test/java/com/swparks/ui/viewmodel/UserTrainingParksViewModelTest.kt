@@ -3,7 +3,7 @@ package com.swparks.ui.viewmodel
 import android.util.Log
 import app.cash.turbine.test
 import com.swparks.data.model.Park
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import io.mockk.coEvery
@@ -32,7 +32,7 @@ class UserTrainingParksViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var swRepository: SWRepository
+    private lateinit var parksEventsRepository: ParksEventsRepository
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
     private lateinit var viewModel: UserTrainingParksViewModel
@@ -71,7 +71,7 @@ class UserTrainingParksViewModelTest {
         mockkStatic(Log::class)
         every { Log.e(any<String>(), any<String>(), any()) } returns 0
 
-        swRepository = mockk(relaxed = true)
+        parksEventsRepository = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
     }
@@ -83,7 +83,7 @@ class UserTrainingParksViewModelTest {
 
     private fun createViewModel(userId: Long = testUserId): UserTrainingParksViewModel =
         UserTrainingParksViewModel(
-            swRepository = swRepository,
+            parksEventsRepository = parksEventsRepository,
             userId = userId,
             logger = logger,
             userNotifier = userNotifier
@@ -92,7 +92,7 @@ class UserTrainingParksViewModelTest {
     @Test
     fun loadParks_whenRepositoryReturnsSuccess_thenUpdatesUiStateToSuccess() =
         runTest {
-            coEvery { swRepository.getParksForUser(testUserId) } returns Result.success(testParks)
+            coEvery { parksEventsRepository.getParksForUser(testUserId) } returns Result.success(testParks)
             viewModel = createViewModel()
 
             advanceUntilIdle()
@@ -104,7 +104,7 @@ class UserTrainingParksViewModelTest {
                 assertEquals(testParks, successState.parks)
             }
 
-            coVerify { swRepository.getParksForUser(testUserId) }
+            coVerify { parksEventsRepository.getParksForUser(testUserId) }
         }
 
     @Test
@@ -112,7 +112,7 @@ class UserTrainingParksViewModelTest {
         runTest {
             val errorMessage = "Ошибка загрузки площадок"
             val error = IOException(errorMessage)
-            coEvery { swRepository.getParksForUser(testUserId) } returns Result.failure(error)
+            coEvery { parksEventsRepository.getParksForUser(testUserId) } returns Result.failure(error)
             viewModel = createViewModel()
 
             advanceUntilIdle()
@@ -124,13 +124,13 @@ class UserTrainingParksViewModelTest {
                 assertTrue(errorState.message.isNotEmpty())
             }
 
-            coVerify { swRepository.getParksForUser(testUserId) }
+            coVerify { parksEventsRepository.getParksForUser(testUserId) }
         }
 
     @Test
     fun refreshParks_whenCalled_thenSetsIsRefreshingCorrectly() =
         runTest {
-            coEvery { swRepository.getParksForUser(testUserId) } returns Result.success(testParks)
+            coEvery { parksEventsRepository.getParksForUser(testUserId) } returns Result.success(testParks)
             viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -158,11 +158,11 @@ class UserTrainingParksViewModelTest {
                         preview = "https://example.com/preview3.jpg"
                     )
                 )
-            coEvery { swRepository.getParksForUser(testUserId) } returns Result.success(testParks)
+            coEvery { parksEventsRepository.getParksForUser(testUserId) } returns Result.success(testParks)
             viewModel = createViewModel()
             advanceUntilIdle()
 
-            coEvery { swRepository.getParksForUser(testUserId) } returns Result.success(updatedParks)
+            coEvery { parksEventsRepository.getParksForUser(testUserId) } returns Result.success(updatedParks)
             viewModel.refreshParks()
             advanceUntilIdle()
 
@@ -177,13 +177,13 @@ class UserTrainingParksViewModelTest {
     @Test
     fun init_whenViewModelCreated_thenLoadsParksAutomatically() =
         runTest {
-            coEvery { swRepository.hasCachedParksForUser(testUserId) } returns false
-            coEvery { swRepository.getParksForUser(testUserId) } returns Result.success(testParks)
+            coEvery { parksEventsRepository.hasCachedParksForUser(testUserId) } returns false
+            coEvery { parksEventsRepository.getParksForUser(testUserId) } returns Result.success(testParks)
 
             viewModel = createViewModel()
             advanceUntilIdle()
 
-            coVerify { swRepository.getParksForUser(testUserId) }
+            coVerify { parksEventsRepository.getParksForUser(testUserId) }
             viewModel.uiState.test {
                 val state = awaitItem()
                 assertTrue(state is UserTrainingParksUiState.Success)
@@ -193,9 +193,9 @@ class UserTrainingParksViewModelTest {
     @Test
     fun init_whenCacheExists_thenShowsCachedParksBeforeNetworkResult() =
         runTest {
-            coEvery { swRepository.hasCachedParksForUser(testUserId) } returns true
-            coEvery { swRepository.getCachedParksForUser(testUserId) } returns testParks
-            coEvery { swRepository.getParksForUser(testUserId) } returns Result.success(testParks)
+            coEvery { parksEventsRepository.hasCachedParksForUser(testUserId) } returns true
+            coEvery { parksEventsRepository.getCachedParksForUser(testUserId) } returns testParks
+            coEvery { parksEventsRepository.getParksForUser(testUserId) } returns Result.success(testParks)
 
             viewModel = createViewModel()
 
@@ -207,9 +207,9 @@ class UserTrainingParksViewModelTest {
 
             advanceUntilIdle()
 
-            coVerify { swRepository.hasCachedParksForUser(testUserId) }
-            coVerify { swRepository.getCachedParksForUser(testUserId) }
-            coVerify { swRepository.getParksForUser(testUserId) }
+            coVerify { parksEventsRepository.hasCachedParksForUser(testUserId) }
+            coVerify { parksEventsRepository.getCachedParksForUser(testUserId) }
+            coVerify { parksEventsRepository.getParksForUser(testUserId) }
         }
 
     @Test
@@ -230,9 +230,9 @@ class UserTrainingParksViewModelTest {
                         preview = "https://example.com/preview3.jpg"
                     )
                 )
-            coEvery { swRepository.hasCachedParksForUser(testUserId) } returns true
-            coEvery { swRepository.getCachedParksForUser(testUserId) } returns testParks
-            coEvery { swRepository.getParksForUser(testUserId) } returns Result.success(updatedParks)
+            coEvery { parksEventsRepository.hasCachedParksForUser(testUserId) } returns true
+            coEvery { parksEventsRepository.getCachedParksForUser(testUserId) } returns testParks
+            coEvery { parksEventsRepository.getParksForUser(testUserId) } returns Result.success(updatedParks)
 
             viewModel = createViewModel()
             advanceUntilIdle()
@@ -247,9 +247,9 @@ class UserTrainingParksViewModelTest {
     @Test
     fun init_whenCacheExistsAndRefreshFails_thenKeepsCurrentContent() =
         runTest {
-            coEvery { swRepository.hasCachedParksForUser(testUserId) } returns true
-            coEvery { swRepository.getCachedParksForUser(testUserId) } returns testParks
-            coEvery { swRepository.getParksForUser(testUserId) } returns
+            coEvery { parksEventsRepository.hasCachedParksForUser(testUserId) } returns true
+            coEvery { parksEventsRepository.getCachedParksForUser(testUserId) } returns testParks
+            coEvery { parksEventsRepository.getParksForUser(testUserId) } returns
                 Result.failure(
                     IOException(
                         "Network error"
@@ -269,8 +269,8 @@ class UserTrainingParksViewModelTest {
     @Test
     fun init_whenNoCache_thenShowsLoadingUntilNetworkResult() =
         runTest {
-            coEvery { swRepository.hasCachedParksForUser(testUserId) } returns false
-            coEvery { swRepository.getParksForUser(testUserId) } returns Result.success(testParks)
+            coEvery { parksEventsRepository.hasCachedParksForUser(testUserId) } returns false
+            coEvery { parksEventsRepository.getParksForUser(testUserId) } returns Result.success(testParks)
 
             viewModel = createViewModel()
             advanceUntilIdle()
@@ -285,8 +285,8 @@ class UserTrainingParksViewModelTest {
     @Test
     fun init_whenNoCacheAndNetworkFails_thenShowsError() =
         runTest {
-            coEvery { swRepository.hasCachedParksForUser(testUserId) } returns false
-            coEvery { swRepository.getParksForUser(testUserId) } returns
+            coEvery { parksEventsRepository.hasCachedParksForUser(testUserId) } returns false
+            coEvery { parksEventsRepository.getParksForUser(testUserId) } returns
                 Result.failure(
                     IOException(
                         "Network error"
@@ -305,7 +305,7 @@ class UserTrainingParksViewModelTest {
     @Test
     fun init_whenCacheLookupThrows_thenShowsError() =
         runTest {
-            coEvery { swRepository.hasCachedParksForUser(testUserId) } throws IOException("Cache error")
+            coEvery { parksEventsRepository.hasCachedParksForUser(testUserId) } throws IOException("Cache error")
 
             viewModel = createViewModel()
             advanceUntilIdle()
@@ -320,8 +320,8 @@ class UserTrainingParksViewModelTest {
     @Test
     fun refresh_whenContentAlreadyShownAndNetworkFails_thenKeepsContent() =
         runTest {
-            coEvery { swRepository.hasCachedParksForUser(testUserId) } returns false
-            coEvery { swRepository.getParksForUser(testUserId) } returns Result.success(testParks)
+            coEvery { parksEventsRepository.hasCachedParksForUser(testUserId) } returns false
+            coEvery { parksEventsRepository.getParksForUser(testUserId) } returns Result.success(testParks)
             viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -330,7 +330,7 @@ class UserTrainingParksViewModelTest {
                 assertTrue(state is UserTrainingParksUiState.Success)
             }
 
-            coEvery { swRepository.getParksForUser(testUserId) } returns
+            coEvery { parksEventsRepository.getParksForUser(testUserId) } returns
                 Result.failure(
                     IOException(
                         "Network error"
@@ -349,12 +349,12 @@ class UserTrainingParksViewModelTest {
     @Test
     fun refresh_whenNetworkFails_thenNotifiesUserAboutError() =
         runTest {
-            coEvery { swRepository.hasCachedParksForUser(testUserId) } returns false
-            coEvery { swRepository.getParksForUser(testUserId) } returns Result.success(testParks)
+            coEvery { parksEventsRepository.hasCachedParksForUser(testUserId) } returns false
+            coEvery { parksEventsRepository.getParksForUser(testUserId) } returns Result.success(testParks)
             viewModel = createViewModel()
             advanceUntilIdle()
 
-            coEvery { swRepository.getParksForUser(testUserId) } returns
+            coEvery { parksEventsRepository.getParksForUser(testUserId) } returns
                 Result.failure(
                     IOException(
                         "Network error"

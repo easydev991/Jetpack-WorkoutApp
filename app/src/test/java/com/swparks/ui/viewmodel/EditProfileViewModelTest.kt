@@ -12,8 +12,9 @@ import com.swparks.data.model.Country
 import com.swparks.data.model.User
 import com.swparks.data.provider.AvatarHelperImpl
 import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.AuthRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.UserProfileRepository
 import com.swparks.domain.usecase.DeleteUserUseCase
 import com.swparks.ui.model.MainUserForm
 import com.swparks.util.AppError
@@ -59,7 +60,8 @@ class EditProfileViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var swRepository: SWRepository
+    private lateinit var authRepository: AuthRepository
+    private lateinit var userProfileRepository: UserProfileRepository
     private lateinit var countriesRepository: CountriesRepositoryImpl
     private lateinit var deleteUserUseCase: DeleteUserUseCase
     private lateinit var avatarHelper: AvatarHelperImpl
@@ -83,7 +85,8 @@ class EditProfileViewModelTest {
 
         mockkObject(ImageUtils)
 
-        swRepository = mockk(relaxed = true)
+        authRepository = mockk(relaxed = true)
+        userProfileRepository = mockk(relaxed = true)
         countriesRepository = mockk(relaxed = true)
         deleteUserUseCase = mockk(relaxed = true)
         avatarHelper = mockk<AvatarHelperImpl>(relaxed = true)
@@ -93,7 +96,7 @@ class EditProfileViewModelTest {
         analyticsService = mockk(relaxed = true)
 
         // Настройка базовых моков
-        every { swRepository.getCurrentUserFlow() } returns userFlow
+        every { authRepository.getCurrentUserFlow() } returns userFlow
         every { countriesRepository.getCountriesFlow() } returns flowOf(listOf(testCountry))
         coEvery { countriesRepository.getCitiesByCountry(any()) } returns listOf(testCity)
         every { resources.getString(R.string.email_invalid) } returns "Введите корректный email"
@@ -115,7 +118,8 @@ class EditProfileViewModelTest {
      */
     private fun createViewModel(): EditProfileViewModel =
         EditProfileViewModel(
-            swRepository = swRepository,
+            authRepository = authRepository,
+            userProfileRepository = userProfileRepository,
             countriesRepository = countriesRepository,
             deleteUserUseCase = deleteUserUseCase,
             avatarHelper = avatarHelper,
@@ -354,7 +358,7 @@ class EditProfileViewModelTest {
             every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
             every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
             coEvery {
-                swRepository.editUser(
+                userProfileRepository.editUser(
                     any(),
                     any<MainUserForm>(),
                     any<ByteArray>()
@@ -377,7 +381,7 @@ class EditProfileViewModelTest {
 
             // Then
             coVerify {
-                swRepository.editUser(
+                userProfileRepository.editUser(
                     userId = testUser.id,
                     form = any(),
                     image = imageBytes
@@ -397,7 +401,7 @@ class EditProfileViewModelTest {
             advanceUntilIdle()
 
             // Then
-            coVerify(exactly = 0) { swRepository.editUser(any(), any<MainUserForm>(), any()) }
+            coVerify(exactly = 0) { userProfileRepository.editUser(any(), any<MainUserForm>(), any()) }
         }
 
     @Test
@@ -441,7 +445,7 @@ class EditProfileViewModelTest {
         runTest {
             // Given
             userFlow.value = null
-            every { swRepository.getCurrentUserFlow() } returns flowOf(null)
+            every { authRepository.getCurrentUserFlow() } returns flowOf(null)
 
             val viewModel = createViewModel()
             advanceUntilIdle()
@@ -471,7 +475,7 @@ class EditProfileViewModelTest {
             every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
             every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
             coEvery {
-                swRepository.editUser(
+                userProfileRepository.editUser(
                     any(),
                     any<MainUserForm>(),
                     any<ByteArray>()
@@ -969,7 +973,7 @@ class EditProfileViewModelTest {
             every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
             every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
             coEvery {
-                swRepository.editUser(any(), any<MainUserForm>(), any<ByteArray>())
+                userProfileRepository.editUser(any(), any<MainUserForm>(), any<ByteArray>())
             } returns Result.success(testUser)
 
             val viewModel = createViewModel()
@@ -994,7 +998,7 @@ class EditProfileViewModelTest {
             every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
             every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
             coEvery {
-                swRepository.editUser(any(), any<MainUserForm>(), any<ByteArray>())
+                userProfileRepository.editUser(any(), any<MainUserForm>(), any<ByteArray>())
             } returns Result.failure(error)
 
             val viewModel = createViewModel()

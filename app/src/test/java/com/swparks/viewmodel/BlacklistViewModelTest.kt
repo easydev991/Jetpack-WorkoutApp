@@ -6,7 +6,7 @@ import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
 import com.swparks.data.model.ApiBlacklistOption
 import com.swparks.data.model.User
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.FriendsRepository
 import com.swparks.ui.state.BlacklistAction
 import com.swparks.ui.state.BlacklistUiState
 import com.swparks.ui.viewmodel.BlacklistViewModel
@@ -34,7 +34,7 @@ class BlacklistViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var swRepository: SWRepository
+    private lateinit var friendsRepository: FriendsRepository
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
     private lateinit var blacklistViewModel: BlacklistViewModel
@@ -42,13 +42,13 @@ class BlacklistViewModelTest {
 
     @Before
     fun setup() {
-        swRepository = mockk(relaxed = true)
+        friendsRepository = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
         analyticsService = mockk(relaxed = true)
         blacklistViewModel =
             BlacklistViewModel(
-                swRepository,
+                friendsRepository,
                 logger,
                 userNotifier,
                 analyticsService
@@ -73,11 +73,11 @@ class BlacklistViewModelTest {
             val testUser2 = User(id = 2L, name = "user2", image = null)
             val testList = listOf(testUser1, testUser2)
 
-            coEvery { swRepository.getBlacklistFlow() } returns flowOf(testList)
+            coEvery { friendsRepository.getBlacklistFlow() } returns flowOf(testList)
 
             val viewModel =
                 BlacklistViewModel(
-                    swRepository,
+                    friendsRepository,
                     logger,
                     userNotifier,
                     analyticsService
@@ -98,8 +98,8 @@ class BlacklistViewModelTest {
     fun showRemoveDialog_shouldSetItemToRemoveAndShowDialog() =
         runTest {
             val testUser = User(id = 789L, name = "test", image = null)
-            coEvery { swRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
-            val viewModel = BlacklistViewModel(swRepository, logger, userNotifier, analyticsService)
+            coEvery { friendsRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
+            val viewModel = BlacklistViewModel(friendsRepository, logger, userNotifier, analyticsService)
             advanceUntilIdle()
 
             viewModel.onAction(BlacklistAction.ShowRemoveDialog(testUser))
@@ -114,12 +114,12 @@ class BlacklistViewModelTest {
     fun removeFromBlacklist_shouldCallRepositoryAndClearState() =
         runTest {
             val testUser = User(id = 101L, name = "test", image = null)
-            coEvery { swRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
+            coEvery { friendsRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
             coEvery {
-                swRepository.blacklistAction(any<User>(), any<ApiBlacklistOption>())
+                friendsRepository.blacklistAction(any<User>(), any<ApiBlacklistOption>())
             } returns Result.success(Unit)
 
-            val viewModel = BlacklistViewModel(swRepository, logger, userNotifier, analyticsService)
+            val viewModel = BlacklistViewModel(friendsRepository, logger, userNotifier, analyticsService)
             advanceUntilIdle()
 
             viewModel.onAction(BlacklistAction.ShowRemoveDialog(testUser))
@@ -140,7 +140,7 @@ class BlacklistViewModelTest {
             }
 
             coVerify(exactly = 1) {
-                swRepository.blacklistAction(testUser, ApiBlacklistOption.REMOVE)
+                friendsRepository.blacklistAction(testUser, ApiBlacklistOption.REMOVE)
             }
             assertEquals("itemToRemove должен быть null после удаления", null, state.itemToRemove)
             assertEquals(
@@ -158,12 +158,12 @@ class BlacklistViewModelTest {
         runTest {
             val testUser = User(id = 202L, name = "test", image = null)
             val testException = Exception("API Error")
-            coEvery { swRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
+            coEvery { friendsRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
             coEvery {
-                swRepository.blacklistAction(any<User>(), any<ApiBlacklistOption>())
+                friendsRepository.blacklistAction(any<User>(), any<ApiBlacklistOption>())
             } returns Result.failure(testException)
 
-            val viewModel = BlacklistViewModel(swRepository, logger, userNotifier, analyticsService)
+            val viewModel = BlacklistViewModel(friendsRepository, logger, userNotifier, analyticsService)
             advanceUntilIdle()
 
             viewModel.onAction(BlacklistAction.ShowRemoveDialog(testUser))
@@ -173,7 +173,7 @@ class BlacklistViewModelTest {
             advanceUntilIdle()
 
             coVerify(exactly = 1) {
-                swRepository.blacklistAction(testUser, ApiBlacklistOption.REMOVE)
+                friendsRepository.blacklistAction(testUser, ApiBlacklistOption.REMOVE)
             }
             val state = viewModel.uiState.value as BlacklistUiState.Success
             assertEquals(
@@ -193,9 +193,9 @@ class BlacklistViewModelTest {
     fun cancelRemove_shouldClearState() =
         runTest {
             val testUser = User(id = 303L, name = "test", image = null)
-            coEvery { swRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
+            coEvery { friendsRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
 
-            val viewModel = BlacklistViewModel(swRepository, logger, userNotifier, analyticsService)
+            val viewModel = BlacklistViewModel(friendsRepository, logger, userNotifier, analyticsService)
             advanceUntilIdle()
 
             viewModel.onAction(BlacklistAction.ShowRemoveDialog(testUser))
@@ -213,12 +213,12 @@ class BlacklistViewModelTest {
         runTest {
             val testName = "Test User"
             val testUser = User(id = 404L, name = testName, image = null)
-            coEvery { swRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
+            coEvery { friendsRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
             coEvery {
-                swRepository.blacklistAction(any<User>(), any<ApiBlacklistOption>())
+                friendsRepository.blacklistAction(any<User>(), any<ApiBlacklistOption>())
             } returns Result.success(Unit)
 
-            val viewModel = BlacklistViewModel(swRepository, logger, userNotifier, analyticsService)
+            val viewModel = BlacklistViewModel(friendsRepository, logger, userNotifier, analyticsService)
             advanceUntilIdle()
 
             viewModel.onAction(BlacklistAction.ShowRemoveDialog(testUser))
@@ -244,12 +244,12 @@ class BlacklistViewModelTest {
         runTest {
             val testName = "Test User"
             val testUser = User(id = 505L, name = testName, image = null)
-            coEvery { swRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
+            coEvery { friendsRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
             coEvery {
-                swRepository.blacklistAction(any<User>(), ApiBlacklistOption.REMOVE)
+                friendsRepository.blacklistAction(any<User>(), ApiBlacklistOption.REMOVE)
             } returns Result.success(Unit)
 
-            val viewModel = BlacklistViewModel(swRepository, logger, userNotifier, analyticsService)
+            val viewModel = BlacklistViewModel(friendsRepository, logger, userNotifier, analyticsService)
             advanceUntilIdle()
 
             viewModel.onAction(BlacklistAction.ShowRemoveDialog(testUser))
@@ -269,12 +269,12 @@ class BlacklistViewModelTest {
     fun removeFromBlacklist_whenCalled_thenLogsUserActionUnblockUser() =
         runTest {
             val testUser = User(id = 606L, name = "test", image = null)
-            coEvery { swRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
+            coEvery { friendsRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
             coEvery {
-                swRepository.blacklistAction(any<User>(), any<ApiBlacklistOption>())
+                friendsRepository.blacklistAction(any<User>(), any<ApiBlacklistOption>())
             } returns Result.success(Unit)
 
-            val viewModel = BlacklistViewModel(swRepository, logger, userNotifier, analyticsService)
+            val viewModel = BlacklistViewModel(friendsRepository, logger, userNotifier, analyticsService)
             advanceUntilIdle()
 
             viewModel.onAction(BlacklistAction.Remove(testUser))
@@ -292,12 +292,12 @@ class BlacklistViewModelTest {
         runTest {
             val testUser = User(id = 707L, name = "test", image = null)
             val exception = Exception("Ошибка разблокировки")
-            coEvery { swRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
+            coEvery { friendsRepository.getBlacklistFlow() } returns flowOf(listOf(testUser))
             coEvery {
-                swRepository.blacklistAction(any<User>(), any<ApiBlacklistOption>())
+                friendsRepository.blacklistAction(any<User>(), any<ApiBlacklistOption>())
             } returns Result.failure(exception)
 
-            val viewModel = BlacklistViewModel(swRepository, logger, userNotifier, analyticsService)
+            val viewModel = BlacklistViewModel(friendsRepository, logger, userNotifier, analyticsService)
             advanceUntilIdle()
 
             viewModel.onAction(BlacklistAction.Remove(testUser))

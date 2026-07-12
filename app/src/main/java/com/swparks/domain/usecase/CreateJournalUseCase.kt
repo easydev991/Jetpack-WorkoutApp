@@ -1,15 +1,15 @@
 package com.swparks.domain.usecase
 
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.JournalsRepositoryImpl
 
 /**
  * Use case для создания дневника
  */
 class CreateJournalUseCase(
-    private val repository: SWRepository
+    private val journalsRepository: JournalsRepositoryImpl
 ) {
     suspend operator fun invoke(
         userId: Long,
         title: String
-    ): Result<Unit> = repository.createJournal(title, userId)
+    ): Result<Unit> = journalsRepository.createJournal(title, userId)
 }

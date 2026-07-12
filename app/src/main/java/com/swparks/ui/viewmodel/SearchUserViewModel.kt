@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.UserProfileRepository
 import com.swparks.ui.state.SearchUserUiState
 import com.swparks.util.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,12 +19,12 @@ import kotlinx.coroutines.launch
  * Управляет состоянием UI экрана поиска, включая поисковый запрос,
  * выполнение поиска и отображение результатов.
  *
- * @param swRepository Репозиторий для вызова API поиска пользователей
+ * @param userProfileRepository Репозиторий для поиска пользователей
  * @param logger Логгер для записи сообщений
  */
 @Suppress("UnusedPrivateProperty")
 class SearchUserViewModel(
-    private val swRepository: SWRepository,
+    private val userProfileRepository: UserProfileRepository,
     private val logger: Logger,
     private val analyticsService: AnalyticsService
 ) : ViewModel(),
@@ -65,7 +65,7 @@ class SearchUserViewModel(
         viewModelScope.launch {
             _uiState.value = SearchUserUiState.Loading
 
-            swRepository
+            userProfileRepository
                 .findUsers(query)
                 .onSuccess { users ->
                     // Устанавливаем последний запрос ТОЛЬКО после успешного завершения

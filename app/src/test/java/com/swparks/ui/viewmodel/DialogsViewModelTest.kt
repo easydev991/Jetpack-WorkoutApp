@@ -9,7 +9,6 @@ import com.swparks.analytics.AppErrorOperation
 import com.swparks.data.database.entity.DialogEntity
 import com.swparks.data.provider.ResourcesProviderImpl
 import com.swparks.data.repository.MessagesRepositoryImpl
-import com.swparks.data.repository.SWRepository
 import com.swparks.domain.event.MessageSentNotifier
 import com.swparks.ui.state.DialogsUiState
 import com.swparks.util.Logger
@@ -44,7 +43,6 @@ class DialogsViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var messagesRepository: MessagesRepositoryImpl
-    private lateinit var swRepository: SWRepository
     private lateinit var logger: Logger
     private lateinit var resources: ResourcesProviderImpl
     private lateinit var messageSentNotifier: MessageSentNotifier
@@ -71,7 +69,6 @@ class DialogsViewModelTest {
         every { Log.w(any<String>(), any<String>()) } returns 0
 
         messagesRepository = mockk(relaxed = true)
-        swRepository = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         resources = mockk(relaxed = true)
         messageSentNotifier = MessageSentNotifier()
@@ -97,7 +94,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -121,7 +117,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -146,7 +141,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -174,7 +168,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -200,7 +193,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -224,7 +216,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -257,7 +248,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -281,7 +271,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -306,7 +295,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -346,7 +334,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -393,7 +380,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -412,7 +398,7 @@ class DialogsViewModelTest {
     // ==================== Тесты для deleteDialog ====================
 
     /**
-     * Тест: успешное удаление диалога вызывает swRepository.deleteDialog.
+     * Тест: успешное удаление диалога вызывает messagesRepository.deleteDialog.
      */
     @Test
     fun deleteDialog_whenSuccess_callsRepositoryDeleteDialog() =
@@ -421,13 +407,12 @@ class DialogsViewModelTest {
             val dialogId = 1L
             coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
             coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-            coEvery { swRepository.deleteDialog(dialogId) } returns Result.success(Unit)
+            coEvery { messagesRepository.deleteDialog(dialogId) } returns Result.success(Unit)
 
             // When
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -438,7 +423,7 @@ class DialogsViewModelTest {
             advanceUntilIdle()
 
             // Then
-            coVerify { swRepository.deleteDialog(dialogId) }
+            coVerify { messagesRepository.deleteDialog(dialogId) }
         }
 
     /**
@@ -452,7 +437,7 @@ class DialogsViewModelTest {
             coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
             coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
             // Добавляем небольшую задержку, чтобы успеть проверить состояние isDeleting = true
-            coEvery { swRepository.deleteDialog(dialogId) } coAnswers {
+            coEvery { messagesRepository.deleteDialog(dialogId) } coAnswers {
                 kotlinx.coroutines.delay(100)
                 Result.success(Unit)
             }
@@ -461,7 +446,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -489,13 +473,12 @@ class DialogsViewModelTest {
             val dialogId = 1L
             coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
             coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-            coEvery { swRepository.deleteDialog(dialogId) } returns Result.failure(Exception("Network error"))
+            coEvery { messagesRepository.deleteDialog(dialogId) } returns Result.failure(Exception("Network error"))
 
             // When
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -519,13 +502,12 @@ class DialogsViewModelTest {
             val dialogId = 1L
             coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
             coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-            coEvery { swRepository.deleteDialog(dialogId) } returns Result.failure(Exception("Network error"))
+            coEvery { messagesRepository.deleteDialog(dialogId) } returns Result.failure(Exception("Network error"))
 
             // When
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -542,7 +524,7 @@ class DialogsViewModelTest {
     // ==================== Тесты для markDialogAsRead ====================
 
     /**
-     * Тест: успешная отметка диалога вызывает swRepository.markDialogAsRead.
+     * Тест: успешная отметка диалога вызывает messagesRepository.markDialogAsRead.
      */
     @Test
     fun markDialogAsRead_whenSuccess_callsRepositoryMarkAsRead() =
@@ -552,13 +534,12 @@ class DialogsViewModelTest {
             val userId = 123
             coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
             coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-            coEvery { swRepository.markDialogAsRead(dialogId, userId) } returns Result.success(Unit)
+            coEvery { messagesRepository.markDialogAsRead(dialogId, userId) } returns Result.success(Unit)
 
             // When
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -569,7 +550,7 @@ class DialogsViewModelTest {
             advanceUntilIdle()
 
             // Then
-            coVerify { swRepository.markDialogAsRead(dialogId, userId) }
+            coVerify { messagesRepository.markDialogAsRead(dialogId, userId) }
         }
 
     /**
@@ -583,7 +564,7 @@ class DialogsViewModelTest {
             val userId = 123
             coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
             coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-            coEvery { swRepository.markDialogAsRead(dialogId, userId) } coAnswers {
+            coEvery { messagesRepository.markDialogAsRead(dialogId, userId) } coAnswers {
                 kotlinx.coroutines.delay(100)
                 Result.success(Unit)
             }
@@ -592,7 +573,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -622,7 +602,7 @@ class DialogsViewModelTest {
             coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
             coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
             coEvery {
-                swRepository.markDialogAsRead(
+                messagesRepository.markDialogAsRead(
                     dialogId,
                     userId
                 )
@@ -632,7 +612,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -658,7 +637,7 @@ class DialogsViewModelTest {
             coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
             coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
             coEvery {
-                swRepository.markDialogAsRead(
+                messagesRepository.markDialogAsRead(
                     dialogId,
                     userId
                 )
@@ -668,7 +647,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -708,7 +686,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -774,7 +751,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -813,7 +789,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -842,11 +817,11 @@ class DialogsViewModelTest {
             val userId = 123
             coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
             coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-            coEvery { swRepository.deleteDialog(dialogId) } coAnswers {
+            coEvery { messagesRepository.deleteDialog(dialogId) } coAnswers {
                 kotlinx.coroutines.delay(100)
                 Result.success(Unit)
             }
-            coEvery { swRepository.markDialogAsRead(dialogId, userId) } coAnswers {
+            coEvery { messagesRepository.markDialogAsRead(dialogId, userId) } coAnswers {
                 kotlinx.coroutines.delay(100)
                 Result.success(Unit)
             }
@@ -855,7 +830,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -883,7 +857,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -905,12 +878,11 @@ class DialogsViewModelTest {
             val error = Exception("Network error")
             coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
             coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
-            coEvery { swRepository.deleteDialog(dialogId) } returns Result.failure(error)
+            coEvery { messagesRepository.deleteDialog(dialogId) } returns Result.failure(error)
 
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,
@@ -939,7 +911,6 @@ class DialogsViewModelTest {
             viewModel =
                 DialogsViewModel(
                     messagesRepository,
-                    swRepository,
                     logger,
                     resources,
                     messageSentNotifier,

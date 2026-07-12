@@ -4,6 +4,7 @@ import android.util.Log
 import com.swparks.data.database.dao.DialogDao
 import com.swparks.data.database.entity.DialogEntity
 import com.swparks.data.model.DialogResponse
+import com.swparks.domain.exception.NetworkException
 import com.swparks.network.SWApi
 import com.swparks.util.Logger
 import com.swparks.util.NoOpCrashReporter
@@ -66,6 +67,7 @@ class MessagesRepositoryTest {
         unmockkAll()
     }
 
+    @Suppress("LongParameterList")
     private fun createMockDialogResponse(
         id: Long = 1L,
         anotherUserId: Int? = 123,
@@ -85,6 +87,7 @@ class MessagesRepositoryTest {
             count = count
         )
 
+    @Suppress("LongParameterList")
     private fun createMockDialogEntity(
         id: Long = 1L,
         anotherUserId: Int? = 123,
@@ -165,7 +168,7 @@ class MessagesRepositoryTest {
 
             // Then
             assertTrue(result.isFailure)
-            assertEquals(exception, result.exceptionOrNull())
+            assertTrue(result.exceptionOrNull() is NetworkException)
         }
 
     @Test

@@ -9,7 +9,10 @@ import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.SocialUpdates
 import com.swparks.data.model.User
+import com.swparks.data.repository.AuthRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
+import com.swparks.data.repository.FriendsRepository
+import com.swparks.data.repository.UserProfileRepository
 import com.swparks.ui.viewmodel.MainDispatcherRule
 import com.swparks.ui.viewmodel.ProfileUiState
 import com.swparks.ui.viewmodel.ProfileViewModel
@@ -44,7 +47,9 @@ class ProfileViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var countriesRepository: CountriesRepositoryImpl
-    private lateinit var swRepository: com.swparks.data.repository.SWRepository
+    private lateinit var authRepository: AuthRepository
+    private lateinit var userProfileRepository: UserProfileRepository
+    private lateinit var friendsRepository: FriendsRepository
     private lateinit var logger: Logger
     private lateinit var userNotifier: UserNotifier
     private lateinit var profileViewModel: ProfileViewModel
@@ -59,7 +64,9 @@ class ProfileViewModelTest {
         every { Log.e(any<String>(), any<String>(), any()) } returns 0
 
         countriesRepository = mockk(relaxed = true)
-        swRepository = mockk(relaxed = true)
+        authRepository = mockk(relaxed = true)
+        userProfileRepository = mockk(relaxed = true)
+        friendsRepository = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
         analyticsService = mockk(relaxed = true)
@@ -76,7 +83,9 @@ class ProfileViewModelTest {
     private fun createViewModel(): ProfileViewModel =
         ProfileViewModel(
             countriesRepository,
-            swRepository,
+            authRepository,
+            userProfileRepository,
+            friendsRepository,
             logger,
             userNotifier,
             analyticsService
@@ -99,7 +108,7 @@ class ProfileViewModelTest {
     fun refreshProfile_whenUserNull_shouldDoNothing() =
         runTest {
             // Given
-            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(null)
+            coEvery { authRepository.getCurrentUserFlow() } returns flowOf(null)
             profileViewModel = createViewModel()
 
             // When
@@ -125,8 +134,8 @@ class ProfileViewModelTest {
                     blacklist = emptyList()
                 )
 
-            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
-            coEvery { swRepository.getSocialUpdates(testUser.id) } returns
+            coEvery { authRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery { userProfileRepository.getSocialUpdates(testUser.id) } returns
                 Result.success(
                     socialUpdates
                 )
@@ -164,8 +173,8 @@ class ProfileViewModelTest {
                     blacklist = emptyList()
                 )
 
-            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
-            coEvery { swRepository.getSocialUpdates(testUser.id) } returns
+            coEvery { authRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery { userProfileRepository.getSocialUpdates(testUser.id) } returns
                 Result.success(
                     socialUpdates
                 )
@@ -193,9 +202,9 @@ class ProfileViewModelTest {
             // Given
             val testUser = createTestUser()
 
-            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery { authRepository.getCurrentUserFlow() } returns flowOf(testUser)
             coEvery {
-                swRepository.getSocialUpdates(testUser.id)
+                userProfileRepository.getSocialUpdates(testUser.id)
             } returns Result.failure(IOException("Нет подключения к сети"))
 
             profileViewModel = createViewModel()
@@ -221,9 +230,9 @@ class ProfileViewModelTest {
             // Given
             val testUser = createTestUser()
 
-            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery { authRepository.getCurrentUserFlow() } returns flowOf(testUser)
             coEvery {
-                swRepository.getSocialUpdates(testUser.id)
+                userProfileRepository.getSocialUpdates(testUser.id)
             } returns Result.failure(IOException("Нет подключения к сети"))
 
             profileViewModel = createViewModel()
@@ -250,8 +259,8 @@ class ProfileViewModelTest {
                     blacklist = emptyList()
                 )
 
-            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
-            coEvery { swRepository.getSocialUpdates(testUser.id) } returns
+            coEvery { authRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery { userProfileRepository.getSocialUpdates(testUser.id) } returns
                 Result.success(
                     socialUpdates
                 )
@@ -289,8 +298,8 @@ class ProfileViewModelTest {
                     blacklist = emptyList()
                 )
 
-            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
-            coEvery { swRepository.getSocialUpdates(testUser.id) } returns
+            coEvery { authRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery { userProfileRepository.getSocialUpdates(testUser.id) } returns
                 Result.success(
                     socialUpdates
                 )
@@ -340,8 +349,8 @@ class ProfileViewModelTest {
 
             // Используем MutableStateFlow для эмуляции обновлений
             val blacklistFlow = kotlinx.coroutines.flow.MutableStateFlow(initialBlacklist)
-            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
-            coEvery { swRepository.getBlacklistFlow() } returns blacklistFlow
+            coEvery { authRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery { friendsRepository.getBlacklistFlow() } returns blacklistFlow
 
             profileViewModel = createViewModel()
 
@@ -366,8 +375,8 @@ class ProfileViewModelTest {
         runTest {
             // Given
             val testUser = createTestUser()
-            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
-            coEvery { swRepository.getBlacklistFlow() } returns flowOf(emptyList())
+            coEvery { authRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery { friendsRepository.getBlacklistFlow() } returns flowOf(emptyList())
 
             // When
             profileViewModel = createViewModel()
@@ -390,9 +399,9 @@ class ProfileViewModelTest {
         runTest {
             val testUser = createTestUser()
 
-            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery { authRepository.getCurrentUserFlow() } returns flowOf(testUser)
             coEvery {
-                swRepository.getSocialUpdates(testUser.id)
+                userProfileRepository.getSocialUpdates(testUser.id)
             } returns Result.failure(IOException("Нет подключения к сети"))
 
             profileViewModel = createViewModel()
@@ -423,8 +432,8 @@ class ProfileViewModelTest {
                     blacklist = emptyList()
                 )
 
-            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
-            coEvery { swRepository.getSocialUpdates(testUser.id) } returns
+            coEvery { authRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery { userProfileRepository.getSocialUpdates(testUser.id) } returns
                 Result.success(socialUpdates)
             coEvery {
                 countriesRepository.getCountryById(testUser.countryID.toString())
@@ -458,9 +467,9 @@ class ProfileViewModelTest {
                     blacklist = emptyList()
                 )
 
-            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(testUser)
+            coEvery { authRepository.getCurrentUserFlow() } returns flowOf(testUser)
             coEvery {
-                swRepository.getSocialUpdates(testUser.id)
+                userProfileRepository.getSocialUpdates(testUser.id)
             } returns Result.failure(IOException("Нет подключения к сети"))
 
             profileViewModel = createViewModel()

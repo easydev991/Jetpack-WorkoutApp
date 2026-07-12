@@ -8,8 +8,10 @@ import com.swparks.analytics.AppErrorOperation
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
+import com.swparks.data.repository.AuthRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.FriendsRepository
+import com.swparks.data.repository.UserProfileRepository
 import com.swparks.util.AppError
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
@@ -44,7 +46,9 @@ sealed class ProfileUiState {
  * Управляет данными пользователя и справочником стран/городов
  *
  * @param countriesRepository Репозиторий для работы с данными стран и городов
- * @param swRepository Репозиторий для работы с данными пользователя и API
+ * @param authRepository Репозиторий для работы с текущим пользователем
+ * @param userProfileRepository Репозиторий для работы с профилем пользователя
+ * @param friendsRepository Репозиторий для работы с друзьями
  * @param logger Логгер для записи сообщений
  * @param userNotifier Обработчик ошибок для отправки ошибок в UI
  */
@@ -56,7 +60,9 @@ sealed class ProfileUiState {
 )
 class ProfileViewModel(
     private val countriesRepository: CountriesRepositoryImpl,
-    private val swRepository: SWRepository,
+    private val authRepository: AuthRepository,
+    private val userProfileRepository: UserProfileRepository,
+    private val friendsRepository: FriendsRepository,
     private val logger: Logger,
     private val userNotifier: UserNotifier,
     private val analyticsService: AnalyticsService
@@ -69,7 +75,7 @@ class ProfileViewModel(
 
     // Подписываемся на текущего пользователя из кэша
     override val currentUser: StateFlow<User?> =
-        swRepository
+        authRepository
             .getCurrentUserFlow()
             .stateIn(
                 scope = viewModelScope,
@@ -91,7 +97,7 @@ class ProfileViewModel(
 
     // Черный список пользователя
     override val blacklist: StateFlow<List<User>> =
-        swRepository
+        friendsRepository
             .getBlacklistFlow()
             .stateIn(
                 scope = viewModelScope,
@@ -176,10 +182,10 @@ class ProfileViewModel(
         userId: Long,
         updateUiState: Boolean
     ) {
-        swRepository
+        userProfileRepository
             .getSocialUpdates(userId)
             .onSuccess { socialUpdates ->
-                // Данные сохранены в кэше через SWRepository.getSocialUpdates()
+                // Данные сохранены в кэше через UserProfileRepository.getSocialUpdates()
                 // Черный список обновляется автоматически через Flow
                 // Теперь загружаем страну и город
                 loadProfileAddress(socialUpdates.user)

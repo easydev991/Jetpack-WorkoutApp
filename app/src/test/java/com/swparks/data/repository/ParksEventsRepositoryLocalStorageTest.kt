@@ -2,16 +2,13 @@ package com.swparks.data.repository
 
 import android.content.Context
 import android.util.Log
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.emptyPreferences
-import com.swparks.data.database.dao.DialogDao
+import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.database.dao.EventDao
-import com.swparks.data.database.dao.JournalDao
-import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.ParkDao
 import com.swparks.data.database.dao.UserDao
+import com.swparks.data.database.dao.UserTrainingParkDao
 import com.swparks.data.model.Park
+import com.swparks.network.SWApi
 import com.swparks.util.NoOpCrashReporter
 import com.swparks.util.NoOpLogger
 import io.mockk.coEvery
@@ -35,20 +32,19 @@ import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class SWRepositoryParksLocalStorageTest {
+class ParksEventsRepositoryLocalStorageTest {
     private val testDispatcher = StandardTestDispatcher()
+    private val mockSwApi = mockk<SWApi>(relaxed = true)
+    private val mockPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
     private val mockUserDao = mockk<UserDao>(relaxed = true)
-    private val mockJournalDao = mockk<JournalDao>(relaxed = true)
-    private val mockJournalEntryDao = mockk<JournalEntryDao>(relaxed = true)
-    private val mockDialogDao = mockk<DialogDao>(relaxed = true)
     private val mockEventDao = mockk<EventDao>(relaxed = true)
     private val mockParkDao = mockk<ParkDao>(relaxed = true)
+    private val mockUserTrainingParkDao = mockk<UserTrainingParkDao>(relaxed = true)
     private val crashReporter = NoOpCrashReporter()
     private val logger = NoOpLogger()
 
     private lateinit var mockContext: Context
-    private lateinit var mockDataStore: DataStore<Preferences>
-    private lateinit var repository: SWRepositoryImp
+    private lateinit var repository: ParksEventsRepository
 
     private val parksJson =
         """
@@ -93,23 +89,19 @@ class SWRepositoryParksLocalStorageTest {
         every { Log.i(any(), any()) } returns 0
 
         mockContext = mockk(relaxed = true)
-        mockDataStore = mockk(relaxed = true)
-        every { mockDataStore.data } returns flowOf(emptyPreferences())
 
         every { mockContext.assets.open("parks.json") } returns parksJson.byteInputStream()
 
         repository =
-            SWRepositoryImp(
-                mockk(relaxed = true),
-                mockDataStore,
-                mockUserDao,
-                mockJournalDao,
-                mockJournalEntryDao,
-                mockDialogDao,
-                mockEventDao,
-                mockParkDao,
-                crashReporter,
-                logger
+            ParksEventsRepository(
+                swApi = mockSwApi,
+                preferencesRepository = mockPreferencesRepository,
+                eventDao = mockEventDao,
+                parkDao = mockParkDao,
+                userDao = mockUserDao,
+                userTrainingParkDao = mockUserTrainingParkDao,
+                logger = logger,
+                crashReporter = crashReporter
             )
     }
 

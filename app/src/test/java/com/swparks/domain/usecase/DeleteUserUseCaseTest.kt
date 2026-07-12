@@ -2,7 +2,8 @@ package com.swparks.domain.usecase
 
 import android.util.Log
 import com.swparks.data.SecureTokenRepository
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.AuthRepository
+import com.swparks.data.repository.UserProfileRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -27,7 +28,8 @@ import java.io.IOException
  */
 class DeleteUserUseCaseTest {
     private lateinit var secureTokenRepository: SecureTokenRepository
-    private lateinit var swRepository: SWRepository
+    private lateinit var userProfileRepository: UserProfileRepository
+    private lateinit var authRepository: AuthRepository
     private lateinit var deleteUserUseCase: DeleteUserUseCase
 
     @Before
@@ -38,8 +40,9 @@ class DeleteUserUseCaseTest {
         every { Log.e(any(), any<String>(), any()) } returns 0
 
         secureTokenRepository = mockk(relaxed = true)
-        swRepository = mockk(relaxed = true)
-        deleteUserUseCase = DeleteUserUseCase(secureTokenRepository, swRepository)
+        userProfileRepository = mockk(relaxed = true)
+        authRepository = mockk(relaxed = true)
+        deleteUserUseCase = DeleteUserUseCase(secureTokenRepository, userProfileRepository, authRepository)
     }
 
     @After
@@ -51,34 +54,34 @@ class DeleteUserUseCaseTest {
     fun invoke_whenApiSuccess_thenReturnsSuccessAndClearsData() =
         runTest {
             // Given
-            coEvery { swRepository.deleteUser() } returns Result.success(Unit)
+            coEvery { userProfileRepository.deleteUser() } returns Result.success(Unit)
 
             // When
             val result = deleteUserUseCase()
 
             // Then
             assertTrue(result.isSuccess)
-            coVerify(exactly = 1) { swRepository.deleteUser() }
+            coVerify(exactly = 1) { userProfileRepository.deleteUser() }
             coVerify(exactly = 1) { secureTokenRepository.saveAuthToken(null) }
-            coVerify(exactly = 1) { swRepository.clearUserData() }
-            coVerify(exactly = 1) { swRepository.forceLogout() }
+            coVerify(exactly = 1) { authRepository.clearUserData() }
+            coVerify(exactly = 1) { authRepository.forceLogout() }
         }
 
     @Test
     fun invoke_whenApiSuccess_thenClearsTokenBeforeClearingData() =
         runTest {
             // Given
-            coEvery { swRepository.deleteUser() } returns Result.success(Unit)
+            coEvery { userProfileRepository.deleteUser() } returns Result.success(Unit)
 
             // When
             deleteUserUseCase()
 
             // Then - проверяем порядок вызовов через последовательность verify
             coVerify {
-                swRepository.deleteUser()
+                userProfileRepository.deleteUser()
                 secureTokenRepository.saveAuthToken(null)
-                swRepository.clearUserData()
-                swRepository.forceLogout()
+                authRepository.clearUserData()
+                authRepository.forceLogout()
             }
         }
 
@@ -87,7 +90,7 @@ class DeleteUserUseCaseTest {
         runTest {
             // Given
             val error = IOException("Network error")
-            coEvery { swRepository.deleteUser() } returns Result.failure(error)
+            coEvery { userProfileRepository.deleteUser() } returns Result.failure(error)
 
             // When
             val result = deleteUserUseCase()
@@ -95,10 +98,10 @@ class DeleteUserUseCaseTest {
             // Then
             assertTrue(result.isFailure)
             assertEquals("Network error", result.exceptionOrNull()?.message)
-            coVerify(exactly = 1) { swRepository.deleteUser() }
+            coVerify(exactly = 1) { userProfileRepository.deleteUser() }
             coVerify(exactly = 0) { secureTokenRepository.saveAuthToken(null) }
-            coVerify(exactly = 0) { swRepository.clearUserData() }
-            coVerify(exactly = 0) { swRepository.forceLogout() }
+            coVerify(exactly = 0) { authRepository.clearUserData() }
+            coVerify(exactly = 0) { authRepository.forceLogout() }
         }
 
     @Test
@@ -106,7 +109,7 @@ class DeleteUserUseCaseTest {
         runTest {
             // Given
             val error = RuntimeException("Server error 500")
-            coEvery { swRepository.deleteUser() } returns Result.failure(error)
+            coEvery { userProfileRepository.deleteUser() } returns Result.failure(error)
 
             // When
             val result = deleteUserUseCase()

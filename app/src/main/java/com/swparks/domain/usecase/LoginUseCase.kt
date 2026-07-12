@@ -4,26 +4,26 @@ import com.swparks.data.SecureTokenRepository
 import com.swparks.data.TokenEncoder
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.LoginSuccess
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.AuthRepository
 import com.swparks.ui.model.LoginCredentials
 import com.swparks.util.CrashReporter
 
 /**
  * Use case для авторизации пользователя.
  *
- * Сохраняет токен в SecureTokenRepository, затем вызывает login в SWRepository.
+ * Сохраняет токен в SecureTokenRepository, затем вызывает login в AuthRepository.
  * Токен автоматически добавляется в заголовок Authorization через TokenInterceptor.
  * После успешной авторизации сохраняет userId в UserPreferencesRepository для использования в кэше.
  *
  * @param tokenEncoder Кодировщик токена для генерации токена из учетных данных
  * @param secureTokenRepository Репозиторий для безопасного хранения токена
- * @param swRepository Репозиторий для работы с API
+ * @param authRepository Репозиторий для работы с API авторизации
  * @param preferencesRepository Репозиторий для хранения настроек и userId
  */
 class LoginUseCase(
     private val tokenEncoder: TokenEncoder,
     private val secureTokenRepository: SecureTokenRepository,
-    private val swRepository: SWRepository,
+    private val authRepository: AuthRepository,
     private val preferencesRepository: UserPreferencesRepository,
     private val crashReporter: CrashReporter
 ) {
@@ -34,16 +34,12 @@ class LoginUseCase(
      * @return Result<LoginSuccess> с userId или ошибкой
      */
     suspend operator fun invoke(credentials: LoginCredentials): Result<LoginSuccess> {
-        // Сначала сохраняем токен в SecureTokenRepository
-        // Токен генерируется из credentials.login и credentials.password через TokenEncoder
         val token = tokenEncoder.encode(credentials)
         secureTokenRepository.saveAuthToken(token)
 
-        // Затем вызываем login в SWRepository и передаем токен для сохранения флага авторизации
-        // Токен будет автоматически добавлен в заголовок Authorization через TokenInterceptor
-        val result = swRepository.login(token)
+        // Вызываем login в AuthRepository и передаем токен для сохранения флага авторизации
+        val result = authRepository.login(token)
 
-        // Сохраняем userId после успешной авторизации
         result.onSuccess { loginSuccess ->
             preferencesRepository.saveCurrentUserId(loginSuccess.userId)
             crashReporter.setUserId(loginSuccess.userId.toString())

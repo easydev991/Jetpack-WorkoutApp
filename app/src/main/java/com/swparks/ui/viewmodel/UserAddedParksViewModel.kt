@@ -3,7 +3,7 @@ package com.swparks.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.swparks.data.model.Park
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.UserProfileRepository
 import com.swparks.util.AppError
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
@@ -28,7 +28,7 @@ sealed class UserAddedParksUiState {
 
 @Suppress("TooGenericExceptionCaught", "InstanceOfCheckForException")
 class UserAddedParksViewModel(
-    private val swRepository: SWRepository,
+    private val userProfileRepository: UserProfileRepository,
     private val userId: Long,
     private val seedParks: List<Park>?,
     private val requiresFetch: Boolean,
@@ -84,7 +84,7 @@ class UserAddedParksViewModel(
             }
 
             try {
-                swRepository
+                userProfileRepository
                     .getUser(userId)
                     .onSuccess { user ->
                         val parks = user.addedParks.orEmpty()

@@ -518,12 +518,14 @@ fun RootScreen(appState: AppState) {
                     viewModel<ParkDetailViewModel>(
                         factory =
                             ParkDetailViewModel.factory(
-                                swRepository = appContainer.swRepository,
+                                parksEventsRepository = appContainer.parksEventsRepository,
+                                commentsRepository = appContainer.commentsRepository,
+                                authRepository = appContainer.authRepository,
                                 countriesRepository = appContainer.countriesRepository,
                                 userPreferencesRepository = appContainer.userPreferencesRepository,
                                 userNotifier = appContainer.userNotifier,
                                 logger = appContainer.logger,
-                                deleteParkUseCase = DeleteParkUseCase(appContainer.swRepository),
+                                deleteParkUseCase = DeleteParkUseCase(appContainer.parksEventsRepository),
                                 resourcesProvider = ResourcesProviderImpl(context.applicationContext),
                                 analyticsService = appContainer.analyticsService
                             )
@@ -778,12 +780,14 @@ fun RootScreen(appState: AppState) {
                     viewModel<EventDetailViewModel>(
                         factory =
                             EventDetailViewModel.factory(
-                                swRepository = appContainer.swRepository,
+                                parksEventsRepository = appContainer.parksEventsRepository,
+                                commentsRepository = appContainer.commentsRepository,
+                                authRepository = appContainer.authRepository,
                                 countriesRepository = appContainer.countriesRepository,
                                 userPreferencesRepository = appContainer.userPreferencesRepository,
                                 userNotifier = appContainer.userNotifier,
                                 logger = appContainer.logger,
-                                deleteEventUseCase = DeleteEventUseCase(appContainer.swRepository),
+                                deleteEventUseCase = DeleteEventUseCase(appContainer.parksEventsRepository),
                                 resourcesProvider = ResourcesProviderImpl(context.applicationContext),
                                 analyticsService = appContainer.analyticsService
                             )

@@ -9,8 +9,8 @@ import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.AuthRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
-import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.RegistrationParams
 import com.swparks.ui.model.RegisterForm
 import com.swparks.ui.state.RegisterEvent
@@ -60,7 +60,7 @@ sealed class RegisterContentAction {
  * валидацию полей и отправку запроса на сервер.
  *
  * @param logger Логгер для записи сообщений
- * @param swRepository Репозиторий для работы с API
+ * @param authRepository Репозиторий для работы с API аутентификации
  * @param secureTokenRepository Репозиторий для безопасного хранения токена
  * @param userPreferencesRepository Репозиторий для хранения настроек
  * @param tokenEncoder Кодировщик токена
@@ -71,7 +71,7 @@ sealed class RegisterContentAction {
 @Suppress("LongParameterList")
 class RegisterViewModel(
     private val logger: Logger,
-    private val swRepository: SWRepository,
+    private val authRepository: AuthRepository,
     private val secureTokenRepository: SecureTokenRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val tokenEncoder: TokenEncoder,
@@ -255,7 +255,7 @@ class RegisterViewModel(
             _uiState.value = RegisterUiState.Loading
 
             val currentForm = _form.value
-            swRepository
+            authRepository
                 .register(
                     RegistrationParams(
                         name = currentForm.login,

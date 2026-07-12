@@ -1,22 +1,26 @@
 package com.swparks.domain.usecase
 
 import android.util.Log
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.CommentsRepository
+import com.swparks.data.repository.MessagesRepositoryImpl
 import com.swparks.domain.event.MessageSentNotifier
 import com.swparks.ui.model.TextEntryOption
 
 /**
  * Use case для добавления/редактирования комментариев и записей в дневнике.
  *
- * Делегирует вызовы в SWRepository, используя TextEntryOption для определения типа операции.
+ * Делегирует вызовы в CommentsRepository и MessagesRepositoryImpl, используя TextEntryOption для
+ * определения типа операции.
  * Добавляет логирование операций.
  *
- * @param swRepository Репозиторий для работы с API
+ * @param commentsRepository Репозиторий для работы с комментариями
+ * @param messagesRepository Репозиторий для работы с сообщениями
  * @param createJournalUseCase Use case для создания дневника
  * @param messageSentNotifier Нотификатор события отправки сообщения
  */
 class TextEntryUseCase(
-    private val swRepository: SWRepository,
+    private val commentsRepository: CommentsRepository,
+    private val messagesRepository: MessagesRepositoryImpl,
     private val createJournalUseCase: CreateJournalUseCase,
     private val messageSentNotifier: MessageSentNotifier
 ) {
@@ -26,7 +30,7 @@ class TextEntryUseCase(
         text: String
     ): Result<Unit> {
         val option = TextEntryOption.Journal(ownerId, journalId, null)
-        val result = swRepository.addComment(option, text)
+        val result = commentsRepository.addComment(option, text)
         result.onSuccess {
             Log.i("TextEntryUseCase", "Запись добавлена в дневник $journalId")
         }
@@ -40,7 +44,7 @@ class TextEntryUseCase(
         text: String
     ): Result<Unit> {
         val option = TextEntryOption.Journal(ownerId, journalId, entryId)
-        val result = swRepository.editComment(option, entryId, text)
+        val result = commentsRepository.editComment(option, entryId, text)
         result.onSuccess {
             Log.i("TextEntryUseCase", "Запись $entryId обновлена в дневнике $journalId")
         }
@@ -63,7 +67,7 @@ class TextEntryUseCase(
         text: String
     ): Result<Unit> {
         val option = TextEntryOption.Park(parkId)
-        val result = swRepository.addComment(option, text)
+        val result = commentsRepository.addComment(option, text)
         result.onSuccess {
             Log.i("TextEntryUseCase", "Комментарий добавлен к площадке $parkId")
         }
@@ -76,7 +80,7 @@ class TextEntryUseCase(
         text: String
     ): Result<Unit> {
         val option = TextEntryOption.Park(parkId)
-        val result = swRepository.editComment(option, commentId, text)
+        val result = commentsRepository.editComment(option, commentId, text)
         result.onSuccess {
             Log.i("TextEntryUseCase", "Комментарий $commentId обновлен на площадке $parkId")
         }
@@ -88,7 +92,7 @@ class TextEntryUseCase(
         text: String
     ): Result<Unit> {
         val option = TextEntryOption.Event(eventId)
-        val result = swRepository.addComment(option, text)
+        val result = commentsRepository.addComment(option, text)
         result.onSuccess {
             Log.i("TextEntryUseCase", "Комментарий добавлен к мероприятию $eventId")
         }
@@ -101,7 +105,7 @@ class TextEntryUseCase(
         text: String
     ): Result<Unit> {
         val option = TextEntryOption.Event(eventId)
-        val result = swRepository.editComment(option, commentId, text)
+        val result = commentsRepository.editComment(option, commentId, text)
         result.onSuccess {
             Log.i("TextEntryUseCase", "Комментарий $commentId обновлен на мероприятии $eventId")
         }
@@ -112,7 +116,7 @@ class TextEntryUseCase(
         userId: Long,
         message: String
     ): Result<Unit> {
-        val result = swRepository.sendMessage(message, userId)
+        val result = messagesRepository.sendMessage(message, userId)
         result.onSuccess {
             Log.i("TextEntryUseCase", "Сообщение отправлено пользователю $userId")
             messageSentNotifier.notifyMessageSent(userId)

@@ -2,7 +2,7 @@ package com.swparks.domain.usecase
 
 import com.swparks.data.model.Event
 import com.swparks.data.model.User
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.ui.model.EventForm
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -14,7 +14,7 @@ import org.junit.Before
 import org.junit.Test
 
 class CreateEventUseCaseTest {
-    private lateinit var mockRepository: SWRepository
+    private lateinit var mockRepository: ParksEventsRepository
     private lateinit var createEventUseCase: CreateEventUseCase
 
     private val testForm =

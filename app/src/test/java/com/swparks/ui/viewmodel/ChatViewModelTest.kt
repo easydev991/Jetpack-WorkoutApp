@@ -6,7 +6,7 @@ import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
 import com.swparks.data.model.MessageResponse
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.MessagesRepositoryImpl
 import com.swparks.network.SWApi
 import com.swparks.ui.state.ChatEvent
 import com.swparks.ui.state.ChatUiState
@@ -43,7 +43,7 @@ class ChatViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var swApi: SWApi
-    private lateinit var swRepository: SWRepository
+    private lateinit var messagesRepository: MessagesRepositoryImpl
     private lateinit var userNotifier: UserNotifier
     private lateinit var logger: Logger
     private lateinit var crashReporter: CrashReporter
@@ -62,7 +62,7 @@ class ChatViewModelTest {
     @Before
     fun setup() {
         swApi = mockk(relaxed = true)
-        swRepository = mockk(relaxed = true)
+        messagesRepository = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
         logger = mockk(relaxed = true)
         crashReporter = mockk(relaxed = true)
@@ -77,7 +77,7 @@ class ChatViewModelTest {
             // Given - нет предварительных условий
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
 
             // Then
             assertTrue(viewModel.uiState.value is ChatUiState.Loading)
@@ -94,7 +94,7 @@ class ChatViewModelTest {
             coEvery { swApi.getMessages(dialogId) } returns messages
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
 
@@ -137,7 +137,7 @@ class ChatViewModelTest {
             coEvery { swApi.getMessages(dialogId) } returns listOf(message3, message1, message2)
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
 
@@ -160,7 +160,7 @@ class ChatViewModelTest {
             coEvery { swApi.getMessages(dialogId) } throws exception
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
 
@@ -189,7 +189,7 @@ class ChatViewModelTest {
             coEvery { swApi.getMessages(dialogId) } returns messages
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
             viewModel.refreshMessages()
@@ -210,7 +210,7 @@ class ChatViewModelTest {
                 )
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
             viewModel.refreshMessages()
@@ -240,7 +240,7 @@ class ChatViewModelTest {
             }
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
 
@@ -264,7 +264,7 @@ class ChatViewModelTest {
             coEvery { swApi.getMessages(any()) } returns emptyList()
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.onMessageTextChange("")
             viewModel.sendMessage(userId)
             advanceUntilIdle()
@@ -289,7 +289,7 @@ class ChatViewModelTest {
             } returns mockk(relaxed = true)
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
             viewModel.onMessageTextChange("Test message")
@@ -317,7 +317,7 @@ class ChatViewModelTest {
             } throws IOException("Network error")
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
             viewModel.onMessageTextChange("Test message")
@@ -349,7 +349,7 @@ class ChatViewModelTest {
             }
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
 
@@ -373,17 +373,17 @@ class ChatViewModelTest {
             val dialogId = 1L
             val userId = 123
             coEvery { swApi.getMessages(dialogId) } returns listOf(testMessage)
-            coEvery { swRepository.markDialogAsRead(dialogId, userId) } returns Result.success(Unit)
+            coEvery { messagesRepository.markDialogAsRead(dialogId, userId) } returns Result.success(Unit)
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
             viewModel.markAsRead(userId)
             advanceUntilIdle()
 
             // Then
-            coVerify { swRepository.markDialogAsRead(dialogId, userId) }
+            coVerify { messagesRepository.markDialogAsRead(dialogId, userId) }
         }
 
     @Test
@@ -394,13 +394,13 @@ class ChatViewModelTest {
             // No dialogId loaded
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             // Don't call loadMessages, so currentDialogId is null
             viewModel.markAsRead(userId)
             advanceUntilIdle()
 
             // Then - should not call repository
-            coVerify(exactly = 0) { swRepository.markDialogAsRead(any(), any()) }
+            coVerify(exactly = 0) { messagesRepository.markDialogAsRead(any(), any()) }
         }
 
     @Test
@@ -411,11 +411,11 @@ class ChatViewModelTest {
             val userId = 123
             coEvery { swApi.getMessages(dialogId) } returns listOf(testMessage)
             coEvery {
-                swRepository.markDialogAsRead(dialogId, userId)
+                messagesRepository.markDialogAsRead(dialogId, userId)
             } returns Result.failure(Exception("Network error"))
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
             viewModel.markAsRead(userId)
@@ -439,7 +439,7 @@ class ChatViewModelTest {
             coEvery { swApi.sendMessageTo(userId.toLong(), any()) } returns mockk(relaxed = true)
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
 
@@ -470,7 +470,7 @@ class ChatViewModelTest {
             coEvery { swApi.getMessages(dialogId) } throws httpException
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
 
@@ -492,7 +492,7 @@ class ChatViewModelTest {
             coEvery { swApi.getMessages(dialogId) } returns listOf(testMessage) andThenThrows httpException
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
             viewModel.refreshMessages()
@@ -516,7 +516,7 @@ class ChatViewModelTest {
             coEvery { swApi.sendMessageTo(userId.toLong(), any()) } throws httpException
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
             viewModel.onMessageTextChange("Test message")
@@ -537,7 +537,7 @@ class ChatViewModelTest {
             coEvery { swApi.getMessages(dialogId) } returns listOf(testMessage)
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
 
@@ -565,7 +565,7 @@ class ChatViewModelTest {
             coEvery { swApi.getMessages(any()) } returns emptyList()
 
             // When — ввод только пробелов
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.onMessageTextChange("   ")
             viewModel.sendMessage(userId)
             advanceUntilIdle()
@@ -585,7 +585,7 @@ class ChatViewModelTest {
             coEvery { swApi.getMessages(dialogId) } returns listOf(testMessage)
 
             // When
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
             viewModel.onMessageTextChange("  Hello  ")
@@ -604,7 +604,7 @@ class ChatViewModelTest {
             coEvery { swApi.getMessages(dialogId) } returns listOf(testMessage)
             coEvery { swApi.sendMessageTo(userId.toLong(), any()) } returns mockk(relaxed = true)
 
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
             viewModel.onMessageTextChange("Test message")
@@ -624,7 +624,7 @@ class ChatViewModelTest {
             coEvery { swApi.getMessages(dialogId) } returns listOf(testMessage)
             coEvery { swApi.sendMessageTo(userId.toLong(), any()) } throws IOException("Network error")
 
-            viewModel = ChatViewModel(swApi, swRepository, userNotifier, logger, crashReporter, analyticsService)
+            viewModel = ChatViewModel(swApi, messagesRepository, userNotifier, logger, crashReporter, analyticsService)
             viewModel.loadMessages(dialogId)
             advanceUntilIdle()
             viewModel.onMessageTextChange("Test message")

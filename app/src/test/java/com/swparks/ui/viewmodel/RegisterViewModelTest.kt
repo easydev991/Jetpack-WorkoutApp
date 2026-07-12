@@ -8,8 +8,8 @@ import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.User
 import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.AuthRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
-import com.swparks.data.repository.SWRepository
 import com.swparks.domain.model.RegistrationParams
 import com.swparks.ui.model.LoginCredentials
 import com.swparks.ui.state.RegisterEvent
@@ -47,7 +47,7 @@ class RegisterViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var swRepository: SWRepository
+    private lateinit var authRepository: AuthRepository
     private lateinit var secureTokenRepository: SecureTokenRepository
     private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var tokenEncoder: TokenEncoder
@@ -63,7 +63,7 @@ class RegisterViewModelTest {
 
     @Before
     fun setup() {
-        swRepository = mockk(relaxed = true)
+        authRepository = mockk(relaxed = true)
         secureTokenRepository = mockk(relaxed = true)
         userPreferencesRepository = mockk(relaxed = true)
         tokenEncoder = mockk(relaxed = true)
@@ -89,7 +89,7 @@ class RegisterViewModelTest {
         registerViewModel =
             RegisterViewModel(
                 logger = testLogger,
-                swRepository = swRepository,
+                authRepository = authRepository,
                 secureTokenRepository = secureTokenRepository,
                 userPreferencesRepository = userPreferencesRepository,
                 tokenEncoder = tokenEncoder,
@@ -516,7 +516,7 @@ class RegisterViewModelTest {
             // Given
             fillValidForm()
             coEvery {
-                swRepository.register(any<RegistrationParams>())
+                authRepository.register(any<RegistrationParams>())
             } returns Result.success(testUser)
 
             // When
@@ -532,7 +532,7 @@ class RegisterViewModelTest {
             assertEquals(testUser.id, (event as RegisterEvent.Success).userId)
 
             coVerify(exactly = 1) {
-                swRepository.register(any<RegistrationParams>())
+                authRepository.register(any<RegistrationParams>())
             }
             coVerify(exactly = 1) { secureTokenRepository.saveAuthToken("test-token") }
             coVerify(exactly = 1) { userPreferencesRepository.saveCurrentUserId(testUser.id) }
@@ -545,7 +545,7 @@ class RegisterViewModelTest {
             fillValidForm()
             val errorMessage = "Пользователь с таким email уже существует"
             coEvery {
-                swRepository.register(any<RegistrationParams>())
+                authRepository.register(any<RegistrationParams>())
             } returns Result.failure(Exception(errorMessage))
 
             // When
@@ -578,7 +578,7 @@ class RegisterViewModelTest {
 
             // Then
             coVerify(exactly = 0) {
-                swRepository.register(any<RegistrationParams>())
+                authRepository.register(any<RegistrationParams>())
             }
         }
 

@@ -13,8 +13,10 @@ import com.swparks.data.model.Park
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.data.repository.AuthRepository
+import com.swparks.data.repository.CommentsRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
-import com.swparks.data.repository.SWRepository
+import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.domain.exception.NotFoundException
 import com.swparks.domain.usecase.DeleteParkUseCase
 import com.swparks.ui.ds.CommentAction
@@ -52,7 +54,9 @@ class ParkDetailViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var swRepository: SWRepository
+    private lateinit var parksEventsRepository: ParksEventsRepository
+    private lateinit var commentsRepository: CommentsRepository
+    private lateinit var authRepository: AuthRepository
     private lateinit var countriesRepository: CountriesRepositoryImpl
     private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var userNotifier: UserNotifier
@@ -64,7 +68,9 @@ class ParkDetailViewModelTest {
 
     @Before
     fun setUp() {
-        swRepository = mockk(relaxed = true)
+        parksEventsRepository = mockk(relaxed = true)
+        commentsRepository = mockk(relaxed = true)
+        authRepository = mockk(relaxed = true)
         countriesRepository = mockk(relaxed = true)
         userPreferencesRepository = mockk(relaxed = true)
         userNotifier = mockk(relaxed = true)
@@ -75,7 +81,7 @@ class ParkDetailViewModelTest {
 
         every { userPreferencesRepository.isAuthorized } returns flowOf(true)
         every { userPreferencesRepository.currentUserId } returns flowOf(1L)
-        coEvery { swRepository.getParkFromCache(any()) } returns null
+        coEvery { parksEventsRepository.getParkFromCache(any()) } returns null
 
         coEvery { countriesRepository.getCountryById(any()) } returns null
         coEvery { countriesRepository.getCityById(any()) } returns null
@@ -86,7 +92,7 @@ class ParkDetailViewModelTest {
     @Test
     fun init_whenParkLoaded_thenUiStateContent() =
         runTest {
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
 
             val viewModel = createViewModel()
             advanceUntilIdle()
@@ -103,8 +109,8 @@ class ParkDetailViewModelTest {
         runTest {
             val cachedPark = createPark().copy(name = "Кэш")
             val freshPark = createPark().copy(name = "Сервер")
-            coEvery { swRepository.getParkFromCache(TEST_PARK_ID) } returns cachedPark
-            coEvery { swRepository.getPark(TEST_PARK_ID) } coAnswers {
+            coEvery { parksEventsRepository.getParkFromCache(TEST_PARK_ID) } returns cachedPark
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } coAnswers {
                 delay(1_000)
                 Result.success(freshPark)
             }
@@ -133,8 +139,8 @@ class ParkDetailViewModelTest {
                     createDate = null,
                     author = null
                 )
-            coEvery { swRepository.getParkFromCache(TEST_PARK_ID) } returns cachedPark
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.failure(IOException("offline"))
+            coEvery { parksEventsRepository.getParkFromCache(TEST_PARK_ID) } returns cachedPark
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns Result.failure(IOException("offline"))
 
             val viewModel = createViewModel()
             advanceUntilIdle()
@@ -148,7 +154,7 @@ class ParkDetailViewModelTest {
     @Test
     fun init_whenLoadFails_thenUiStateError() =
         runTest {
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns
                 Result.failure(
                     RuntimeException("Network error")
                 )
@@ -163,14 +169,14 @@ class ParkDetailViewModelTest {
     @Test
     fun refresh_whenCalled_thenReloadsPark() =
         runTest {
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
             val viewModel = createViewModel()
             advanceUntilIdle()
 
             viewModel.refresh()
             advanceUntilIdle()
 
-            coVerify(exactly = 2) { swRepository.getPark(TEST_PARK_ID) }
+            coVerify(exactly = 2) { parksEventsRepository.getPark(TEST_PARK_ID) }
             assertTrue(viewModel.uiState.value is ParkDetailUIState.Content)
         }
 
@@ -178,7 +184,7 @@ class ParkDetailViewModelTest {
     fun refresh_whenRetryStartsFromError_thenShowsInitialLoadingBeforeSuccess() =
         runTest {
             var callCount = 0
-            coEvery { swRepository.getPark(TEST_PARK_ID) } coAnswers {
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } coAnswers {
                 callCount++
                 if (callCount == 1) {
                     Result.failure(Exception("Первичная ошибка"))
@@ -207,7 +213,7 @@ class ParkDetailViewModelTest {
         runTest {
             val retryError = "Повторная ошибка"
             var callCount = 0
-            coEvery { swRepository.getPark(TEST_PARK_ID) } coAnswers {
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } coAnswers {
                 callCount++
                 if (callCount == 1) {
                     Result.failure(Exception("Первичная ошибка"))
@@ -237,8 +243,8 @@ class ParkDetailViewModelTest {
     fun refresh_whenContentAlreadyShownAndNetworkFails_thenKeepsCurrentContent() =
         runTest {
             val cachedPark = createPark().copy(name = "Кэш")
-            coEvery { swRepository.getParkFromCache(TEST_PARK_ID) } returns cachedPark
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returnsMany
+            coEvery { parksEventsRepository.getParkFromCache(TEST_PARK_ID) } returns cachedPark
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returnsMany
                 listOf(
                     Result.success(createPark().copy(name = "Сервер")),
                     Result.failure(IOException("offline"))
@@ -260,7 +266,7 @@ class ParkDetailViewModelTest {
     fun refresh_whenFailureHappensAfterContent_thenKeepsExistingContent() =
         runTest {
             val existingPark = createPark().copy(name = "Уже загруженная площадка")
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns
                 Result.success(existingPark) andThen
                 Result.failure(IOException("offline"))
 
@@ -278,16 +284,16 @@ class ParkDetailViewModelTest {
     @Test
     fun onTrainHereToggle_whenSuccess_thenUpdatesTrainHereAndUsers() =
         runTest {
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns
                 Result.success(
                     createPark(trainHere = false)
                 )
-            coEvery { swRepository.changeTrainHereStatus(true, TEST_PARK_ID) } returns
+            coEvery { parksEventsRepository.changeTrainHereStatus(true, TEST_PARK_ID) } returns
                 Result.success(
                     Unit
                 )
             val currentUser = User(id = 1L, name = "Текущий пользователь", image = null)
-            coEvery { swRepository.getCurrentUserFlow() } returns flowOf(currentUser)
+            coEvery { authRepository.getCurrentUserFlow() } returns flowOf(currentUser)
             val viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -302,11 +308,11 @@ class ParkDetailViewModelTest {
     @Test
     fun onTrainHereToggle_whenFailure_thenRevertsOptimisticState() =
         runTest {
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns
                 Result.success(
                     createPark(trainHere = false)
                 )
-            coEvery { swRepository.changeTrainHereStatus(true, TEST_PARK_ID) } returns
+            coEvery { parksEventsRepository.changeTrainHereStatus(true, TEST_PARK_ID) } returns
                 Result.failure(
                     RuntimeException("Network error")
                 )
@@ -325,7 +331,7 @@ class ParkDetailViewModelTest {
         runTest {
             val user1 = User(id = 1L, name = "User 1", image = null)
             val user2 = User(id = 2L, name = "User 2", image = null)
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns
                 Result.success(
                     createPark(trainingUsers = listOf(user1, user2))
                 )
@@ -347,7 +353,7 @@ class ParkDetailViewModelTest {
     @Test
     fun onCreateEventClick_thenEmitsNavigateToCreateEvent() =
         runTest {
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
             val viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -366,8 +372,8 @@ class ParkDetailViewModelTest {
     @Test
     fun onDeleteConfirm_whenSuccess_thenEmitsParkDeleted() =
         runTest {
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
-            coEvery { swRepository.deletePark(TEST_PARK_ID) } returns Result.success(Unit)
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            coEvery { parksEventsRepository.deletePark(TEST_PARK_ID) } returns Result.success(Unit)
             val viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -381,13 +387,13 @@ class ParkDetailViewModelTest {
                 assertEquals(ParkDetailEvent.ParkDeleted(TEST_PARK_ID), awaitItem())
                 cancelAndIgnoreRemainingEvents()
             }
-            coVerify { swRepository.deletePark(TEST_PARK_ID) }
+            coVerify { parksEventsRepository.deletePark(TEST_PARK_ID) }
         }
 
     @Test
     fun onOpenMapClick_thenEmitsOpenMap() =
         runTest {
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
             val viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -402,7 +408,7 @@ class ParkDetailViewModelTest {
     @Test
     fun onRouteClick_thenEmitsBuildRoute() =
         runTest {
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
             val viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -418,7 +424,7 @@ class ParkDetailViewModelTest {
     fun onEditClick_thenEmitsNavigateToEditPark() =
         runTest {
             val park = createPark()
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(park)
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns Result.success(park)
             val viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -435,17 +441,17 @@ class ParkDetailViewModelTest {
     @Test
     fun onParkUpdated_whenCalled_thenReloadsPark() =
         runTest {
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
             val viewModel = createViewModel()
             advanceUntilIdle()
 
             val updatedPark = createPark().copy(name = "Обновленное название")
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(updatedPark)
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns Result.success(updatedPark)
 
             viewModel.onParkUpdated(TEST_PARK_ID)
             advanceUntilIdle()
 
-            coVerify(exactly = 2) { swRepository.getPark(TEST_PARK_ID) }
+            coVerify(exactly = 2) { parksEventsRepository.getPark(TEST_PARK_ID) }
             val state = viewModel.uiState.value as ParkDetailUIState.Content
             assertEquals("Обновленное название", state.park.name)
         }
@@ -457,7 +463,7 @@ class ParkDetailViewModelTest {
                 createPark().copy(
                     author = User(id = 999L, name = "Другой автор", image = null)
                 )
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(otherUserPark)
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns Result.success(otherUserPark)
             val viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -473,7 +479,7 @@ class ParkDetailViewModelTest {
     fun onPhotoClick_thenEmitsNavigateToPhotoDetail() =
         runTest {
             val photo = Photo(id = 1L, photo = "http://example.com/photo.jpg")
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns
                 Result.success(
                     createPark(photos = listOf(photo))
                 )
@@ -498,11 +504,11 @@ class ParkDetailViewModelTest {
     fun onPhotoDeleteConfirm_whenSuccess_thenEmitsPhotoDeleted() =
         runTest {
             val photo = Photo(id = 1L, photo = "http://example.com/photo.jpg")
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns
                 Result.success(
                     createPark(photos = listOf(photo))
                 )
-            coEvery { swRepository.deleteParkPhoto(TEST_PARK_ID, 1L) } returns Result.success(Unit)
+            coEvery { parksEventsRepository.deleteParkPhoto(TEST_PARK_ID, 1L) } returns Result.success(Unit)
             val viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -516,13 +522,13 @@ class ParkDetailViewModelTest {
                 assertEquals(ParkDetailEvent.PhotoDeleted(1L), awaitItem())
                 cancelAndIgnoreRemainingEvents()
             }
-            coVerify { swRepository.deleteParkPhoto(TEST_PARK_ID, 1L) }
+            coVerify { parksEventsRepository.deleteParkPhoto(TEST_PARK_ID, 1L) }
         }
 
     @Test
     fun init_whenRuntimeException_thenShowsError() =
         runTest {
-            coEvery { swRepository.getPark(TEST_PARK_ID) } throws RuntimeException("Unexpected error")
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } throws RuntimeException("Unexpected error")
 
             val viewModel = createViewModel()
             advanceUntilIdle()
@@ -533,11 +539,11 @@ class ParkDetailViewModelTest {
     @Test
     fun onDeleteConfirm_whenRuntimeException_thenHandlesError() =
         runTest {
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
             val viewModel = createViewModel()
             advanceUntilIdle()
 
-            coEvery { swRepository.deletePark(TEST_PARK_ID) } throws RuntimeException("Unexpected error")
+            coEvery { parksEventsRepository.deletePark(TEST_PARK_ID) } throws RuntimeException("Unexpected error")
 
             viewModel.onDeleteClick()
             advanceUntilIdle()
@@ -551,14 +557,14 @@ class ParkDetailViewModelTest {
     fun onPhotoDeleteConfirm_whenRuntimeException_thenHandlesError() =
         runTest {
             val photo = Photo(id = 1L, photo = "http://example.com/photo.jpg")
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns
                 Result.success(
                     createPark(photos = listOf(photo))
                 )
             val viewModel = createViewModel()
             advanceUntilIdle()
 
-            coEvery { swRepository.deleteParkPhoto(TEST_PARK_ID, 1L) } throws
+            coEvery { parksEventsRepository.deleteParkPhoto(TEST_PARK_ID, 1L) } throws
                 RuntimeException(
                     "Unexpected error"
                 )
@@ -574,7 +580,7 @@ class ParkDetailViewModelTest {
     @Test
     fun onAddCommentClick_thenEmitsOpenCommentTextEntryNewForPark() =
         runTest {
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
             val viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -600,7 +606,7 @@ class ParkDetailViewModelTest {
                     date = "2026-03-13 12:00:00",
                     user = User(id = 1L, name = "Автор", image = null)
                 )
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns
                 Result.success(
                     createPark(comments = listOf(comment))
                 )
@@ -632,7 +638,7 @@ class ParkDetailViewModelTest {
                     date = "2026-03-13 12:00:00",
                     user = User(id = 7L, name = "Автор", image = null)
                 )
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns
                 Result.success(
                     createPark(comments = listOf(comment))
                 )
@@ -663,12 +669,12 @@ class ParkDetailViewModelTest {
                     date = "2026-03-13 12:00:00",
                     user = User(id = 1L, name = "Автор", image = null)
                 )
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns
                 Result.success(
                     createPark(comments = listOf(comment))
                 )
             coEvery {
-                swRepository.deleteComment(
+                commentsRepository.deleteComment(
                     option = TextEntryOption.Park(TEST_PARK_ID),
                     commentId = TEST_COMMENT_ID
                 )
@@ -683,7 +689,7 @@ class ParkDetailViewModelTest {
             advanceUntilIdle()
 
             coVerify {
-                swRepository.deleteComment(
+                commentsRepository.deleteComment(
                     option = TextEntryOption.Park(TEST_PARK_ID),
                     commentId = TEST_COMMENT_ID
                 )
@@ -698,7 +704,7 @@ class ParkDetailViewModelTest {
             val testDispatcher = StandardTestDispatcher(testScheduler)
             Dispatchers.setMain(testDispatcher)
 
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns
                 Result.failure(
                     NotFoundException.ParkNotFound(TEST_PARK_ID)
                 )
@@ -727,7 +733,7 @@ class ParkDetailViewModelTest {
     @Test
     fun loadPark_whenParkNotFound_thenUiStateShowsError() =
         runTest {
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns
                 Result.failure(
                     NotFoundException.ParkNotFound(TEST_PARK_ID)
                 )
@@ -745,8 +751,8 @@ class ParkDetailViewModelTest {
     @Test
     fun onDeleteConfirm_whenSuccess_logsDeletePark() =
         runTest {
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
-            coEvery { swRepository.deletePark(TEST_PARK_ID) } returns Result.success(Unit)
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            coEvery { parksEventsRepository.deletePark(TEST_PARK_ID) } returns Result.success(Unit)
             val viewModel = createViewModel()
             advanceUntilIdle()
 
@@ -761,8 +767,8 @@ class ParkDetailViewModelTest {
     @Test
     fun onDeleteConfirm_whenFailure_logsParkDeleteFailed() =
         runTest {
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
-            coEvery { swRepository.deletePark(TEST_PARK_ID) } returns
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns Result.success(createPark())
+            coEvery { parksEventsRepository.deletePark(TEST_PARK_ID) } returns
                 Result.failure(RuntimeException("Delete failed"))
             val viewModel = createViewModel()
             advanceUntilIdle()
@@ -785,7 +791,7 @@ class ParkDetailViewModelTest {
     @Test
     fun init_whenLoadFails_logsParkLoadFailed() =
         runTest {
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns
                 Result.failure(RuntimeException("Network error"))
 
             createViewModel()
@@ -811,7 +817,7 @@ class ParkDetailViewModelTest {
                     date = "2026-03-13 12:00:00",
                     user = User(id = 7L, name = "Автор", image = null)
                 )
-            coEvery { swRepository.getPark(TEST_PARK_ID) } returns
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns
                 Result.success(createPark(comments = listOf(comment)))
             val viewModel = createViewModel()
             advanceUntilIdle()
@@ -831,7 +837,9 @@ class ParkDetailViewModelTest {
 
     private fun createViewModel(): ParkDetailViewModel =
         ParkDetailViewModel(
-            swRepository = swRepository,
+            parksEventsRepository = parksEventsRepository,
+            commentsRepository = commentsRepository,
+            authRepository = authRepository,
             countriesRepository = countriesRepository,
             userPreferencesRepository = userPreferencesRepository,
             savedStateHandle = savedStateHandle,
