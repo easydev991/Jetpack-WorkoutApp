@@ -1,6 +1,5 @@
 [versions]
 agp = "9.2.1"
-appcompat = "1.7.1"
 coilCompose = "2.7.0"
 kotlin = "2.4.0"
 coreKtx = "1.19.0"
@@ -35,7 +34,6 @@ detekt = "1.23.8"
 ktlint = "14.2.0"
 
 [libraries]
-androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 androidx-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
