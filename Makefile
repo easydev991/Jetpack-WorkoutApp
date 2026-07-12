@@ -125,18 +125,19 @@ _load_secrets:
 	sed -i.tmp 's|^KEYSTORE_FILE=.*|KEYSTORE_FILE=.secrets/keystore/swparks-release.keystore|' .secrets/secrets.properties && rm -f .secrets/secrets.properties.tmp; \
 	printf "$(GREEN)Секреты загружены успешно$(RESET)\n"
 
-## apk: Создать подписанный APK для GitHub Releases (arm64-v8a + armeabi-v7a, без повышения версии)
+## apk: Создать подписанные APK для GitHub Releases (arm64-v8a и armeabi-v7a, без повышения версии)
 apk:
 	@printf "$(YELLOW)Проверка секретов для подписи...$(RESET)\n"
 	@if [ ! -d ".secrets" ]; then \
 		$(MAKE) _load_secrets; \
 	fi
-	@printf "$(YELLOW)Создаю релизный APK (arm64-v8a + armeabi-v7a)...$(RESET)\n"
-	@./gradlew assembleRelease --console=plain
+	@printf "$(YELLOW)Создаю релизные APK (arm64-v8a + armeabi-v7a)...$(RESET)\n"
+	@./gradlew assembleRelease -PenableSplits=true --console=plain
 	@VERSION_NAME=$$(grep "^VERSION_NAME=" gradle.properties | cut -d'=' -f2); \
 	VERSION_CODE=$$(grep "^VERSION_CODE=" gradle.properties | cut -d'=' -f2); \
-	cp app/build/outputs/apk/release/app-release.apk "swparks$$VERSION_CODE.apk"; \
-	printf "$(GREEN)APK создан: swparks$$VERSION_CODE.apk (arm64-v8a + armeabi-v7a)$(RESET)\n"; \
+	cp app/build/outputs/apk/release/app-arm64-v8a-release.apk "swparks$$VERSION_CODE-arm64-v8a.apk"; \
+	cp app/build/outputs/apk/release/app-armeabi-v7a-release.apk "swparks$$VERSION_CODE-armeabi-v7a.apk"; \
+	printf "$(GREEN)APK созданы: swparks$$VERSION_CODE-arm64-v8a.apk и swparks$$VERSION_CODE-armeabi-v7a.apk$(RESET)\n"; \
 	printf "$(YELLOW)Версия: $$VERSION_NAME (build $$VERSION_CODE)$(RESET)\n"
 
 # Настройка окружения

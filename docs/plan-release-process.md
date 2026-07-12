@@ -242,24 +242,26 @@ _load_secrets:
  sed -i.tmp 's|^KEYSTORE_FILE=.*|KEYSTORE_FILE=.secrets/keystore/swparks-release.keystore|' .secrets/secrets.properties && rm -f .secrets/secrets.properties.tmp; \
  printf "$(GREEN)Секреты загружены успешно$(RESET)\\n"
 
-## apk: Создать подписанный APK для GitHub Releases (arm64-v8a + armeabi-v7a, без повышения версии)
+## apk: Создать подписанные APK для GitHub Releases (arm64-v8a и armeabi-v7a, без повышения версии)
 apk:
  @printf "$(YELLOW)Проверка секретов для подписи...$(RESET)\n"
  @if [ ! -d ".secrets" ]; then \
   $(MAKE) _load_secrets; \
  fi
- @printf "$(YELLOW)Создаю релизный APK (arm64-v8a + armeabi-v7a)...$(RESET)\n"
+ @printf "$(YELLOW)Создаю релизные APK (arm64-v8a + armeabi-v7a)...$(RESET)\n"
  @./gradlew assembleRelease
  @VERSION_NAME=$$(grep "^VERSION_NAME=" gradle.properties | cut -d'=' -f2); \
  VERSION_CODE=$$(grep "^VERSION_CODE=" gradle.properties | cut -d'=' -f2); \
- cp app/build/outputs/apk/release/app-release.apk "swparks$$VERSION_CODE.apk"; \
- printf "$(GREEN)APK создан: swparks$$VERSION_CODE.apk (arm64-v8a + armeabi-v7a)$(RESET)\n"; \
+ cp app/build/outputs/apk/release/app-arm64-v8a-release.apk "swparks$$VERSION_CODE-arm64-v8a.apk"; \
+ cp app/build/outputs/apk/release/app-armeabi-v7a-release.apk "swparks$$VERSION_CODE-armeabi-v7a.apk"; \
+ printf "$(GREEN)APK созданы: swparks$$VERSION_CODE-arm64-v8a.apk и swparks$$VERSION_CODE-armeabi-v7a.apk$(RESET)\n"; \
  printf "$(YELLOW)Версия: $$VERSION_NAME (build $$VERSION_CODE)$(RESET)\n"
 ```
 
 **Ключевые моменты:**
-- APK содержит только `arm64-v8a` и `armeabi-v7a` ABI (благодаря `ndk.abiFilters`)
-- Размер APK ~30MB вместо ~60MB (без x86/x86_64 нативных библиотек)
+- APK собираются отдельно для каждой архитектуры: `arm64-v8a` и `armeabi-v7a`
+- Каждый APK содержит только нативные библиотеки под свою ABI (нет x86/x86_64)
+- Размер одного APK снижается примерно на 30% по сравнению с универсальным APK (~26 MB)
 - `TEMP_DIR=$$(mktemp -d)` с `trap "rm -rf $$TEMP_DIR" EXIT` — безопасная очистка
 - `git clone --depth 1` — shallow clone для скорости
 - `sed` заменяет **полный путь** keystore: `KEYSTORE_FILE=.*` → `.secrets/keystore/swparks-release.keystore`
@@ -280,7 +282,7 @@ apk:
 ### 3.4 Проверка
 
 - [x] Запустить `make release` — убедиться что AAB подписывается корректно ✅
-- [x] Запустить `make apk` — убедиться что APK подписывается корректно (arm64-v8a + armeabi-v7a) ✅
+- [x] Запустить `make apk` — убедиться что APK подписываются корректно (два файла: `arm64-v8a` и `armeabi-v7a`) ✅
 - [x] Добавить ABI-фильтры для release: `arm64-v8a` + `armeabi-v7a` (isShrinkResources=true, isMinifyEnabled=true) ✅
 
 ---
@@ -348,7 +350,7 @@ release:
  @printf "$(YELLOW)Для публикации используйте этот файл в RuStore или Google Play Store$(RESET)\\n"
 ```
 
-**Примечание:** Деплой в RuStore — `make release` создаёт AAB. Деплой в GitHub Releases — `make apk` создаёт один универсальный APK с ABI-фильтрами (`arm64-v8a`, `armeabi-v7a`). Оба процесса — ручные.
+**Примечание:** Деплой в RuStore — `make release` создаёт AAB. Деплой в GitHub Releases — `make apk` создаёт два APK (раздельно по ABI: `arm64-v8a` и `armeabi-v7a`). Оба процесса — ручные.
 
 ---
 
@@ -359,7 +361,7 @@ release:
 - [ ] Проверить `make test` — все тесты проходят
 - [ ] Проверить `make lint` — lint проходит
 - [x] Запустить `make release` — убедиться что VERSION_CODE увеличивается и AAB подписывается ✅
-- [x] Проверить `make apk` — создаёт подписанный `swparks{VERSION_CODE}.apk` (ABI: `arm64-v8a` + `armeabi-v7a`) ✅
+- [x] Проверить `make apk` — создаёт подписанные `swparks{VERSION_CODE}-arm64-v8a.apk` и `swparks{VERSION_CODE}-armeabi-v7a.apk` ✅
 - [ ] Проверить Fastlane `fastlane beta` — загружает в Crashlytics Beta
 - [ ] Проверить `fastlane screenshots` — генерирует скриншоты
 
@@ -382,7 +384,7 @@ release:
 1. Централизованное управление версиями в `gradle.properties`
 2. Автоматический инкремент VERSION_CODE при `make release`
 3. Настроенную подпись release-сборок
-4. ABI-фильтры для release: `arm64-v8a` + `armeabi-v7a` (сокращение размера APK с 60MB до ~30MB)
-5. Один универсальный APK для GitHub Releases (с filtered ABIs, не split)
+4. ABI-фильтры для release: `arm64-v8a` + `armeabi-v7a` (сокращение размера APK с ~26MB до ~14-17MB на файл)
+5. Два APK для GitHub Releases (раздельно по ABI: `arm64-v8a` и `armeabi-v7a`)
 6. Fastlane с lane-ами `test`, `beta`, `screenshots`, `screenshots_ru`, `screenshots_en`
-7. Ручной процесс публикации: `make release` → AAB файл → RuStore / GitHub Releases
+7. Ручной процесс публикации: `make release` → AAB файл → RuStore / Google Play; `make apk` → два APK → GitHub Releases
