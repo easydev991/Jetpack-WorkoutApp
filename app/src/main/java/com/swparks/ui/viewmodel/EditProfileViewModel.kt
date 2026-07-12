@@ -21,7 +21,6 @@ import com.swparks.ui.model.MainUserForm
 import com.swparks.ui.state.EditProfileEvent
 import com.swparks.ui.state.EditProfileUiState
 import com.swparks.util.AppError
-import com.swparks.util.ImageUtils
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -314,8 +313,8 @@ class EditProfileViewModel(
         val uriResult = avatarHelper.uriToByteArray(uri)
         return uriResult.fold(
             onSuccess = { bytes ->
-                val compressed = ImageUtils.compressIfNeeded(bytes)
-                logger.d(TAG, "Image prepared: ${bytes.size} -> ${compressed.size} bytes")
+                val compressed = avatarHelper.compressImage(bytes)
+                logger.d(TAG, "Изображение подготовлено: ${bytes.size} -> ${compressed.size} bytes")
                 compressed
             },
             onFailure = { error ->

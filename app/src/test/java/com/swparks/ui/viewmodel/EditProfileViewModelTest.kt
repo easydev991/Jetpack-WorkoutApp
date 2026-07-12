@@ -18,14 +18,12 @@ import com.swparks.data.repository.UserProfileRepository
 import com.swparks.domain.usecase.DeleteUserUseCase
 import com.swparks.ui.model.MainUserForm
 import com.swparks.util.AppError
-import com.swparks.util.ImageUtils
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
@@ -82,8 +80,6 @@ class EditProfileViewModelTest {
         every { Log.w(any<String>(), any<String>(), any()) } returns 0
         every { Log.d(any<String>(), any<String>()) } returns 0
         every { Log.i(any<String>(), any<String>()) } returns 0
-
-        mockkObject(ImageUtils)
 
         authRepository = mockk(relaxed = true)
         userProfileRepository = mockk(relaxed = true)
@@ -356,7 +352,7 @@ class EditProfileViewModelTest {
 
             every { avatarHelper.isSupportedMimeType(uri) } returns true
             every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
-            every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
+            every { avatarHelper.compressImage(imageBytes) } returns imageBytes
             coEvery {
                 userProfileRepository.editUser(
                     any(),
@@ -473,7 +469,7 @@ class EditProfileViewModelTest {
 
             every { avatarHelper.isSupportedMimeType(uri) } returns true
             every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
-            every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
+            every { avatarHelper.compressImage(imageBytes) } returns imageBytes
             coEvery {
                 userProfileRepository.editUser(
                     any(),
@@ -971,7 +967,7 @@ class EditProfileViewModelTest {
             val imageBytes = byteArrayOf(1, 2, 3)
             every { avatarHelper.isSupportedMimeType(uri) } returns true
             every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
-            every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
+            every { avatarHelper.compressImage(imageBytes) } returns imageBytes
             coEvery {
                 userProfileRepository.editUser(any(), any<MainUserForm>(), any<ByteArray>())
             } returns Result.success(testUser)
@@ -996,7 +992,7 @@ class EditProfileViewModelTest {
             val error = RuntimeException("Save failed")
             every { avatarHelper.isSupportedMimeType(uri) } returns true
             every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
-            every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
+            every { avatarHelper.compressImage(imageBytes) } returns imageBytes
             coEvery {
                 userProfileRepository.editUser(any(), any<MainUserForm>(), any<ByteArray>())
             } returns Result.failure(error)

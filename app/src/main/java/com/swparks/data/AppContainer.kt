@@ -96,6 +96,7 @@ import com.swparks.ui.viewmodel.UserFriendsViewModel
 import com.swparks.ui.viewmodel.UserTrainingParksViewModel
 import com.swparks.util.AndroidLogger
 import com.swparks.util.CrashReporter
+import com.swparks.util.ImageProcessor
 import com.swparks.util.Logger
 import com.swparks.util.NoOpLogger
 import com.swparks.util.UserNotifier
@@ -200,11 +201,16 @@ open class DefaultAppContainer(
     // ==================== Avatar Helper ====================
 
     /**
+     * Процессор изображений для конвертации и сжатия
+     */
+    private val imageProcessor: ImageProcessor by lazy { ImageProcessor() }
+
+    /**
      * Хелпер для работы с аватарами (изображениями)
      * Используется в ViewModel для работы с Uri без зависимости от Context
      */
     private val avatarHelper: AvatarHelperImpl by lazy {
-        AvatarHelperImpl(appContext)
+        AvatarHelperImpl(appContext, imageProcessor)
     }
 
     // ==================== Room Database ====================

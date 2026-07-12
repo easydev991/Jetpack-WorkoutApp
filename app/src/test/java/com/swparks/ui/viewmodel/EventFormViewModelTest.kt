@@ -17,14 +17,12 @@ import com.swparks.ui.model.EventForm
 import com.swparks.ui.model.EventFormMode
 import com.swparks.ui.state.EventFormEvent
 import com.swparks.util.AppError
-import com.swparks.util.ImageUtils
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
@@ -62,8 +60,6 @@ class EventFormViewModelTest {
         every { Log.w(any<String>(), any<String>(), any()) } returns 0
         every { Log.d(any<String>(), any<String>()) } returns 0
         every { Log.i(any<String>(), any<String>()) } returns 0
-
-        mockkObject(ImageUtils)
 
         createEventUseCase = mockk(relaxed = true)
         editEventUseCase = mockk(relaxed = true)
@@ -897,9 +893,7 @@ class EventFormViewModelTest {
             val imageBytes = byteArrayOf(1, 2, 3, 4, 5)
 
             every { avatarHelper.isSupportedMimeType(uri) } returns true
-            every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
-            every { ImageUtils.convertToJpeg(imageBytes) } returns imageBytes
-            every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
+            every { avatarHelper.processImage(uri) } returns Result.success(imageBytes)
 
             val createdEvent = createTestEvent()
             coEvery { createEventUseCase(any(), any()) } returns Result.success(createdEvent)

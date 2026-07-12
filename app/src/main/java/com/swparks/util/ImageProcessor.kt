@@ -7,25 +7,29 @@ import android.net.Uri
 import java.io.ByteArrayOutputStream
 
 /**
- * Утилиты для работы с изображениями.
+ * Класс для работы с изображениями.
+ *
+ * Предоставляет методы для проверки MIME-типов, сжатия и конвертации изображений.
  */
-object ImageUtils {
-    /**
-     * Максимальный размер изображения в байтах (5 MB).
-     */
-    const val MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
+class ImageProcessor {
+    companion object {
+        /**
+         * Максимальный размер изображения в байтах (5 MB).
+         */
+        const val MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
 
-    /**
-     * Поддерживаемые MIME-типы изображений.
-     */
-    val SUPPORTED_MIME_TYPES = listOf("image/jpeg", "image/png", "image/webp")
+        /**
+         * Поддерживаемые MIME-типы изображений.
+         */
+        val SUPPORTED_MIME_TYPES = listOf("image/jpeg", "image/png", "image/webp")
 
-    // Константы для сжатия
-    private const val INITIAL_QUALITY = 90
-    private const val QUALITY_STEP = 10
-    private const val MIN_QUALITY = 10
-    private const val SCALE_FACTOR = 0.5f
-    private const val FALLBACK_QUALITY = 80
+        // Константы для сжатия
+        private const val INITIAL_QUALITY = 90
+        private const val QUALITY_STEP = 10
+        private const val MIN_QUALITY = 10
+        private const val SCALE_FACTOR = 0.5f
+        private const val FALLBACK_QUALITY = 80
+    }
 
     /**
      * Проверяет, поддерживается ли MIME-тип изображения.

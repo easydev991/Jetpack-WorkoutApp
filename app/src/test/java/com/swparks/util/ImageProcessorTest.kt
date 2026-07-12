@@ -12,9 +12,10 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Тесты для ImageUtils.
+ * Тесты для ImageProcessor.
  */
-class ImageUtilsTest {
+class ImageProcessorTest {
+    private val imageProcessor = ImageProcessor()
     private lateinit var context: Context
     private lateinit var contentResolver: ContentResolver
 
@@ -39,7 +40,7 @@ class ImageUtilsTest {
         every { contentResolver.getType(uri) } returns "image/jpeg"
 
         // Act
-        val result = ImageUtils.isSupportedMimeType(context, uri)
+        val result = imageProcessor.isSupportedMimeType(context, uri)
 
         // Assert
         Assert.assertTrue(result)
@@ -52,7 +53,7 @@ class ImageUtilsTest {
         every { contentResolver.getType(uri) } returns "image/png"
 
         // Act
-        val result = ImageUtils.isSupportedMimeType(context, uri)
+        val result = imageProcessor.isSupportedMimeType(context, uri)
 
         // Assert
         Assert.assertTrue(result)
@@ -65,7 +66,7 @@ class ImageUtilsTest {
         every { contentResolver.getType(uri) } returns "image/webp"
 
         // Act
-        val result = ImageUtils.isSupportedMimeType(context, uri)
+        val result = imageProcessor.isSupportedMimeType(context, uri)
 
         // Assert
         Assert.assertTrue(result)
@@ -78,7 +79,7 @@ class ImageUtilsTest {
         every { contentResolver.getType(uri) } returns "image/gif"
 
         // Act
-        val result = ImageUtils.isSupportedMimeType(context, uri)
+        val result = imageProcessor.isSupportedMimeType(context, uri)
 
         // Assert
         Assert.assertFalse(result)
@@ -91,7 +92,7 @@ class ImageUtilsTest {
         every { contentResolver.getType(uri) } returns null
 
         // Act
-        val result = ImageUtils.isSupportedMimeType(context, uri)
+        val result = imageProcessor.isSupportedMimeType(context, uri)
 
         // Assert
         Assert.assertFalse(result)
@@ -104,7 +105,7 @@ class ImageUtilsTest {
         every { contentResolver.getType(uri) } returns "video/mp4"
 
         // Act
-        val result = ImageUtils.isSupportedMimeType(context, uri)
+        val result = imageProcessor.isSupportedMimeType(context, uri)
 
         // Assert
         Assert.assertFalse(result)
@@ -118,7 +119,7 @@ class ImageUtilsTest {
         val smallData = ByteArray(1000) { it.toByte() }
 
         // Act
-        val result = ImageUtils.compressIfNeeded(smallData)
+        val result = imageProcessor.compressIfNeeded(smallData)
 
         // Assert
         Assert.assertSame(smallData, result)
@@ -131,7 +132,7 @@ class ImageUtilsTest {
         val exactMaxData = ByteArray(maxSize) { it.toByte() }
 
         // Act
-        val result = ImageUtils.compressIfNeeded(exactMaxData, maxSize)
+        val result = imageProcessor.compressIfNeeded(exactMaxData, maxSize)
 
         // Assert
         Assert.assertSame(exactMaxData, result)
@@ -144,7 +145,7 @@ class ImageUtilsTest {
         val belowMaxData = ByteArray(maxSize - 1) { it.toByte() }
 
         // Act
-        val result = ImageUtils.compressIfNeeded(belowMaxData, maxSize)
+        val result = imageProcessor.compressIfNeeded(belowMaxData, maxSize)
 
         // Assert
         Assert.assertSame(belowMaxData, result)
@@ -154,26 +155,26 @@ class ImageUtilsTest {
 
     @Test
     fun maxImageSizeBytes_is5MB() {
-        Assert.assertEquals(5 * 1024 * 1024, ImageUtils.MAX_IMAGE_SIZE_BYTES)
+        Assert.assertEquals(5 * 1024 * 1024, ImageProcessor.MAX_IMAGE_SIZE_BYTES)
     }
 
     @Test
     fun supportedMimeTypes_containsJpeg() {
-        Assert.assertTrue(ImageUtils.SUPPORTED_MIME_TYPES.contains("image/jpeg"))
+        Assert.assertTrue(ImageProcessor.SUPPORTED_MIME_TYPES.contains("image/jpeg"))
     }
 
     @Test
     fun supportedMimeTypes_containsPng() {
-        Assert.assertTrue(ImageUtils.SUPPORTED_MIME_TYPES.contains("image/png"))
+        Assert.assertTrue(ImageProcessor.SUPPORTED_MIME_TYPES.contains("image/png"))
     }
 
     @Test
     fun supportedMimeTypes_containsWebp() {
-        Assert.assertTrue(ImageUtils.SUPPORTED_MIME_TYPES.contains("image/webp"))
+        Assert.assertTrue(ImageProcessor.SUPPORTED_MIME_TYPES.contains("image/webp"))
     }
 
     @Test
     fun supportedMimeTypes_doesNotContainGif() {
-        Assert.assertFalse(ImageUtils.SUPPORTED_MIME_TYPES.contains("image/gif"))
+        Assert.assertFalse(ImageProcessor.SUPPORTED_MIME_TYPES.contains("image/gif"))
     }
 }

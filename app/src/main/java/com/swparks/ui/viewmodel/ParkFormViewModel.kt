@@ -18,7 +18,6 @@ import com.swparks.ui.model.ParkFormMode
 import com.swparks.ui.state.ParkFormEvent
 import com.swparks.ui.state.ParkFormUiState
 import com.swparks.util.AppError
-import com.swparks.util.ImageUtils
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -280,15 +279,10 @@ class ParkFormViewModel(
 
     private fun prepareImageBytes(uris: List<Uri>): List<ByteArray> =
         uris.mapNotNull { uri ->
-            avatarHelper.uriToByteArray(uri).fold(
+            avatarHelper.processImage(uri).fold(
                 onSuccess = { bytes ->
-                    val jpegBytes = ImageUtils.convertToJpeg(bytes)
-                    val compressed = ImageUtils.compressIfNeeded(jpegBytes)
-                    logger.d(
-                        TAG,
-                        "Фото подготовлено: ${bytes.size} -> ${jpegBytes.size} -> ${compressed.size} bytes"
-                    )
-                    compressed
+                    logger.d(TAG, "Фото подготовлено: ${bytes.size} bytes")
+                    bytes
                 },
                 onFailure = { error ->
                     logger.e(TAG, "Ошибка чтения фото: ${error.message}", error)

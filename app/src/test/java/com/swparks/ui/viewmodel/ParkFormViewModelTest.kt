@@ -21,14 +21,12 @@ import com.swparks.ui.model.ParkForm
 import com.swparks.ui.model.ParkFormMode
 import com.swparks.ui.state.ParkFormEvent
 import com.swparks.util.AppError
-import com.swparks.util.ImageUtils
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
@@ -63,8 +61,6 @@ class ParkFormViewModelTest {
         every { Log.w(any<String>(), any<String>(), any()) } returns 0
         every { Log.d(any<String>(), any<String>()) } returns 0
         every { Log.i(any<String>(), any<String>()) } returns 0
-
-        mockkObject(ImageUtils)
 
         avatarHelper = mockk<AvatarHelperImpl>(relaxed = true)
         logger = mockk(relaxed = true)
@@ -717,9 +713,7 @@ class ParkFormViewModelTest {
             val imageBytes = byteArrayOf(1, 2, 3, 4, 5)
 
             every { avatarHelper.isSupportedMimeType(uri) } returns true
-            every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
-            every { ImageUtils.convertToJpeg(imageBytes) } returns imageBytes
-            every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
+            every { avatarHelper.processImage(uri) } returns Result.success(imageBytes)
 
             val createdPark = createTestPark()
             val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
@@ -807,9 +801,7 @@ class ParkFormViewModelTest {
             val imageBytes = byteArrayOf(1, 2, 3, 4, 5)
 
             every { avatarHelper.isSupportedMimeType(uri) } returns true
-            every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
-            every { ImageUtils.convertToJpeg(imageBytes) } returns imageBytes
-            every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
+            every { avatarHelper.processImage(uri) } returns Result.success(imageBytes)
 
             val createdPark = createTestPark()
             val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
@@ -850,9 +842,7 @@ class ParkFormViewModelTest {
             val imageBytes = byteArrayOf(1, 2, 3, 4, 5)
 
             every { avatarHelper.isSupportedMimeType(uri) } returns true
-            every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
-            every { ImageUtils.convertToJpeg(imageBytes) } returns imageBytes
-            every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
+            every { avatarHelper.processImage(uri) } returns Result.success(imageBytes)
 
             val error = RuntimeException("Network error")
             val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
@@ -888,9 +878,7 @@ class ParkFormViewModelTest {
             val imageBytes = byteArrayOf(1, 2, 3, 4, 5)
 
             every { avatarHelper.isSupportedMimeType(uri) } returns true
-            every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
-            every { ImageUtils.convertToJpeg(imageBytes) } returns imageBytes
-            every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
+            every { avatarHelper.processImage(uri) } returns Result.success(imageBytes)
 
             val createdPark = createTestPark()
             val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
@@ -936,9 +924,7 @@ class ParkFormViewModelTest {
             val imageBytes = byteArrayOf(1, 2, 3, 4, 5)
 
             every { avatarHelper.isSupportedMimeType(uri) } returns true
-            every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
-            every { ImageUtils.convertToJpeg(imageBytes) } returns imageBytes
-            every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
+            every { avatarHelper.processImage(uri) } returns Result.success(imageBytes)
 
             val createdPark = createTestPark()
             val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
@@ -1245,9 +1231,7 @@ class ParkFormViewModelTest {
             val imageBytes = byteArrayOf(1, 2, 3, 4, 5)
 
             every { avatarHelper.isSupportedMimeType(uri) } returns true
-            every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
-            every { ImageUtils.convertToJpeg(imageBytes) } returns imageBytes
-            every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
+            every { avatarHelper.processImage(uri) } returns Result.success(imageBytes)
 
             val createdPark = createTestPark()
             val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
@@ -1284,9 +1268,7 @@ class ParkFormViewModelTest {
             val imageBytes = byteArrayOf(1, 2, 3, 4, 5)
 
             every { avatarHelper.isSupportedMimeType(uri) } returns true
-            every { avatarHelper.uriToByteArray(uri) } returns Result.success(imageBytes)
-            every { ImageUtils.convertToJpeg(imageBytes) } returns imageBytes
-            every { ImageUtils.compressIfNeeded(imageBytes) } returns imageBytes
+            every { avatarHelper.processImage(uri) } returns Result.success(imageBytes)
 
             val error = RuntimeException("Network error")
             val parksEventsRepository = mockk<com.swparks.data.repository.ParksEventsRepository>(relaxed = true)
