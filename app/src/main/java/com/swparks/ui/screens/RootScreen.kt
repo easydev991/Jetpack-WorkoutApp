@@ -1496,7 +1496,7 @@ fun RootScreen(appState: AppState) {
                             appContainer.otherUserProfileViewModelFactory(args.userId)
                         }
                     OtherUserProfileScreen(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize().padding(paddingValues),
                         viewModel = viewModel,
                         appState = appState,
                         source = args.source,
