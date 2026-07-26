@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -303,5 +304,27 @@ class ItemListScreenTest {
             .performClick()
 
         assertEquals(true, backClicked)
+    }
+
+    @Test
+    fun itemListScreen_dividers_renderedBetweenElements_only() {
+        setContent(
+            state =
+                ItemListUiState(
+                    mode = ItemListMode.CITY,
+                    items =
+                        listOf(
+                            SelectableItem("1", "Москва"),
+                            SelectableItem("2", "Санкт-Петербург"),
+                            SelectableItem("3", "Казань")
+                        ),
+                    selectedItem = null
+                )
+        )
+
+        // Для 3 элементов — 2 разделителя (между 1-2 и 2-3), не после последнего.
+        composeTestRule
+            .onAllNodesWithTag("item_divider")
+            .assertCountEquals(2)
     }
 }
