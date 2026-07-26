@@ -9,7 +9,7 @@
 | Этап | Что сделано | Что осталось |
 |---|---|---|
 | **1. Безопасный ключ `ItemListScreen`** | Реализация (коммит `4e99e021`) + регрессионные тесты (1.1) + `make {format,lint,test,build}` — всё зелёное. | Ручная проверка «Новомосковск» — отложена до этапа 3. |
-| **2. Defensive fix `UnsatisfiedLinkError`** | Анализ APK (2.1) закрыт; defensive fallback в `ParkMapView` (2.2a) с локализованной заглушкой; `splits.abi` под флагом `-PenableSplits=true` (2.3); docs/AGENTS/strings обновлены; регресс-тест отсутствия заглушки в happy-path в `ParksRootScreenTest`; `make {format,lint,test,build}` — зелёные (1925/1925 unit). **Поправка:** после первой реализации флаг был ошибочно удалён — это ломало `make release` (`:app:buildReleasePreBundle` не собирает AAB с включёнными ABI-сплитами, https://issuetracker.google.com/402800800). Флаг возвращён, `make apk` снова передаёт `-PenableSplits=true`, `make release` работает. | Финальная регрессия 3.1, мониторинг Crashlytics 3.4. |
+| **2. Defensive fix `UnsatisfiedLinkError`** | Анализ APK (2.1) закрыт; defensive fallback в `ParkMapView` (2.2a) с локализованной заглушкой; `splits.abi` под флагом `-PenableSplits=true` (2.3); strings/`ParkMapView`/`ParksRootScreenTest` обновлены; `make {format,lint,test,build}` — зелёные (1925/1925 unit). **Поправка:** флаг был ошибочно удалён в первом коммите — это ломало `make release` (`:app:buildReleasePreBundle` не собирает AAB с включёнными ABI-сплитами, https://issuetracker.google.com/402800800). Флаг возвращён, `make apk` снова передаёт `-PenableSplits=true`, `make release` работает. **Замечание:** AGENTS.md, `docs/plan-map-screen.md` и `docs/plan-release-process.md` всё ещё содержат формулировку «splits.abi включён безусловно» — это устаревший текст, см. «Несогласованности, обнаруженные при верификации». | Финальная регрессия 3.1, мониторинг Crashlytics 3.4, **корректировка устаревших формулировок в 3.2**. |
 | **3. Верификация и релиз** | — | `make check`, android-тесты, релиз 1.3.1, мониторинг Crashlytics. |
 
 > **YAGNI-решения, зафиксированные в этом плане:**
@@ -85,23 +85,20 @@
 - подтверждают, что `key = item.id` обрабатывает дубликаты имён без краша;
 - блокируют откат к `key = item` (или `key = { _, item -> item.name }`) в будущем.
 
-- [x] Добавлены регрессионные тесты: 3 android-теста в `ItemListScreenTest` (дубликаты имён, выбор второго по id) и 1 unit-тест `onCitySelected_duplicateNames_selectsByUniqueId` в `EditProfileViewModelSelectionTest`.
-- [~] Тест `EditProfileLocationsTest.selectCity_duplicateNames` — отложен (покрыт через ViewModel).
+- [x] Регресс-тесты добавлены: 3 android-теста в `ItemListScreenTest` (дубликаты имён, выбор по id) + 1 unit-тест `onCitySelected_duplicateNames_selectsByUniqueId` в `EditProfileViewModelSelectionTest`.
+- [~] `EditProfileLocationsTest.selectCity_duplicateNames` — отложен (покрыт через ViewModel).
 
 ### 1.2 Реализация (GREEN)
 
-- [x] Внедрён `SelectableItem(id, label)` с `key = item.id`, VM-сигнатуры и `EditProfileLocations` переведены на id-выбор. Обновлены 4 wrapper-экрана, `RootScreen`, `FakeParksRootViewModel`, 7 тест-файлов. Коммит `4e99e021`, 1924/1924 зелёные.
-  - **Ревью-фикс**: shadowing `cityId: Int?` → `numericCityId` в `ParksRootViewModel:623` и `FakeParksRootViewModel:202`.
+- [x] Внедрён `SelectableItem(id, label)` с `key = item.id` (коммит `4e99e021`, 1924/1924 зелёные). Ревью-фикс: shadowing `cityId` → `numericCityId` в `ParksRootViewModel:623` и `FakeParksRootViewModel:202`.
 
 ### 1.3 Рефакторинг
 
-- [x] `SelectableItemMapper.kt` — отклонён по YAGNI (inline-маппинг в 5 местах, новый файл не оправдан).
-- [x] `make {test,format,lint,build}` — все зелёные.
+- [x] YAGNI: `SelectableItemMapper.kt` не извлекался (inline-маппинг в 5 местах). `make {test,format,lint,build}` — зелёные.
 - [ ] Убедиться, что `Divider` (последний элемент в `ItemsList`) отрисовывается только между элементами на новых `SelectableItem`-ах — ручная проверка в `androidTest` или визуально. До выхода версии 1.3.1.
 
 ### 1.4 Критерии завершения этапа 1
 
-- [x] Тесты обновлены (1924/1924), регрессионные тесты написаны (1.1).
 - [ ] Ручная проверка на устройстве/эмуляторе: ввод «Новомосковск» в обоих режимах (профиль, регистрация) показывает обе записи, выбор любой возвращает корректный `id`. Отложено до этапа 3.
 
 ---
@@ -132,18 +129,15 @@ val mapView =
     }
 ```
 
-План: обернуть `MapLibre.getInstance(appContext)` в `runCatching { ... }`. При неудаче:
+План: обернуть `MapLibre.getInstance(appContext)` в `try { ... } catch (e: UnsatisfiedLinkError) { ... }`. При неудаче:
 
-- Логировать устройство и ОС через `Build.MANUFACTURER`, `Build.MODEL`, `Build.VERSION.RELEASE` (без PII) на уровне `Log.w`.
+- Логировать устройство и ОС через `Build.MANUFACTURER`, `Build.MODEL`, `Build.VERSION.RELEASE`, `Build.VERSION.SDK_INT` (без PII) на уровне `Log.e` через существующий `TAG = "ParkMapView"`. (Изначально план указывал `Log.w` и `runCatching`; в реализации выбрано `Log.e` для единичного OEM-кейса и `try/catch` вместо `runCatching` — функционально эквивалентно, но без лишнего `Result`-оборачивания.)
 - В UI показать **только заглушку с текстом** «Карта недоступна на этом устройстве». **Без кнопки «Попробовать снова»** — корень сбоя в системном loader'е OxygenOS, повторный вызов `MapLibre.getInstance()` с той же вероятностью упадёт; кнопка создаёт ложное ожидание.
 - Не крашить приложение — пользователь остаётся в приложении, может пользоваться остальным функционалом.
 
 Сопутствующее:
 
-- [x] Локализация строки заглушки — `R.string.map_not_available` в `values/strings.xml` и `values-ru/strings.xml` (русский: «Карта недоступна на этом устройстве: %s»).
-- [x] Логи `Log.e` (через существующий `TAG = "ParkMapView"`) с устройством/ОС без PII (см. `ParkMapView.kt:134`).
-- [x] В `docs/plan-map-screen.md` добавлен known issue про `UnsatisfiedLinkError` при ABI-сплитах и единичный OEM-кейс; ссылка на общий ABI-мониторинг.
-- [x] В `AGENTS.md` раздел «ABI splits & UnsatisfiedLinkError» фиксирует правила тестирования карты на arm64-эмуляторе и приоритет проверки ABI при новых кейсах.
+- [x] Локализация `R.string.map_not_available` (ru: «Карта недоступна на этом устройстве: %s»); логи `Log.e` через существующий `TAG = "ParkMapView"` (без PII: `MANUFACTURER`/`MODEL`/`VERSION.RELEASE`/`SDK_INT`); known issue в `docs/plan-map-screen.md` и правила тестирования карты на arm64-эмуляторе в `AGENTS.md`.
 
 #### 2.2b Альтернативы и почему они отклонены
 
@@ -160,14 +154,11 @@ val mapView =
 
 `splits.abi` не лечит краш B, но это хорошая практика по уменьшению размера APK. Делаем независимо:
 
-- [x] `splits { abi { ... } }` остаётся под `if (project.findProperty("enableSplits") == "true")` в `buildTypes.release` (`app/build.gradle.kts`). Снимать флаг нельзя: AGP запрещает `splits.abi` при сборке AAB (`bundleRelease`) — `:app:buildReleasePreBundle` падает с «Multiple shrunk-resources files found» (https://issuetracker.google.com/402800800). Флаг — это функциональный переключатель «APK для GitHub Releases vs AAB для магазинов», а не переходная страховка.
-- [x] `Makefile`: `make apk` передаёт `-PenableSplits=true`; `make release` (`bundleRelease`) — без флага.
-- [x] В `docs/plan-release-process.md` описано: `make apk` → 2× split-APK; `make release` → 1× AAB; нельзя делать splits безусловными.
+- [x] `splits.abi` под флагом `-PenableSplits=true` (`app/build.gradle.kts:62-71`); `make apk` передаёт флаг, `make release` — нет (AGP запрещает splits при `bundleRelease`, https://issuetracker.google.com/402800800). Оба сценария (APK vs AAB) задокументированы в `docs/plan-release-process.md`.
 
 ### 2.4 Тесты (для defensive fix)
 
-- [x] Android-тест: `ParksRootScreenTest.whenMapTabIsSelected_errorPlaceholderTextIsNotShown` подтверждает, что в happy-path (`MapLibre.getInstance()` не падает) текст заглушки **не** отображается; тот же `testTag("park_map")` гарантирует, что и в случае краша placeholder остаётся под тегом. Полный mockkStatic-флоу на `UnsatisfiedLinkError` под arm64-эмулятором не воспроизводим, отложен до момента появления реального OEM-устройства для ручной проверки.
-- [x] Существующие android-тесты `ParkMapViewTest` — отсутствуют; unit-тесты (`./gradlew :app:testDebugUnitTest`) — 1925/1925 зелёные.
+- [x] Регресс-тест `ParksRootScreenTest.whenMapTabIsSelected_errorPlaceholderTextIsNotShown` (happy-path: `map_not_available` не показывается, `testTag("park_map")` сохранён). Полный mockkStatic на `UnsatisfiedLinkError` под arm64-эмулятором не воспроизводим — отложен до ручной проверки на реальном OEM-устройстве. Unit-тесты 1925/1925 зелёные.
 
 ### 2.5 Критерии завершения этапа 2
 
@@ -195,8 +186,8 @@ val mapView =
 ### 3.2 Документация
 
 - [ ] В `docs/plan-map-screen.md` добавить пункт в раздел «Известные баги/Решения»: результат расследования краша `UnsatisfiedLinkError libmaplibre.so` и применённый фикс.
-- [ ] В `AGENTS.md` отметить, что релизный APK собирается с безусловными `splits.abi` (arm64-v8a + armeabi-v7a) — два APK вместо одного universal.
-- [ ] В `README.md` (через `./gradlew updateReadmeVersions` либо вручную) поднять версию и при необходимости — перечень ABI.
+- [ ] В `AGENTS.md` в разделе «ABI splits & UnsatisfiedLinkError» заменить «`splits.abi` включён безусловно в `buildTypes.release`» на корректную формулировку: «`splits.abi` включается через флаг `-PenableSplits=true` (передаётся `make apk`); `make release` (`bundleRelease`) запускается без флага, иначе AGP падает на `:app:buildReleasePreBundle` (https://issuetracker.google.com/402800800)».
+- [ ] В `README.md` (через `./gradlew updateReadmeVersions` либо вручную) поднять версию и при необходимости — перечень ABI. **Уточнение:** таска `updateReadmeVersions` (`build.gradle.kts:12`) обновляет только технические бейджи (Kotlin, AGP, Gradle, Android SDK) — версия приложения (`VERSION_NAME`/`VERSION_CODE` из `gradle.properties`) в README не выводится. Если требуется упоминать версию приложения и ABI-состав релизного APK в README — это отдельный пункт, не покрывается существующей таской.
 
 ### 3.3 Релиз
 
@@ -216,23 +207,29 @@ val mapView =
 
 - **Этап 1, смена типа `items`**: сигнатура `ItemListScreen` публичная и используется минимум в 4 экранах + в `ItemListScreenTest`. Любая правка затрагивает несколько мест — тесты обязательны до изменений.
 - **Этап 1, отображение имён-дубликатов**: после фикса в UI останутся две одинаковые строки «Новомосковск». Если UX требует различимости — добавить суффикс с регионом/страной (через `City.region` или склейку с `Country.name`). Делать только если поступит явный запрос от продукта; в текущем плане не предполагается.
-- **Этап 2, единичный OEM-кейс**: краш B зафиксирован у одного пользователя на конкретной связке OnePlus 8 Pro / OxygenOS 11 / Android 11. Полноценный фикс невозможен на стороне приложения (баг системного loader'а OnePlus). Defensive fix через `runCatching` + заглушку — компромисс: приложение не падает, но карта у этого пользователя не работает. Приемлемо для единичного кейса, неприемлемо если кейсов станет >5% пользователей.
-- **Этап 2, безусловные splits**: ломают сценарий «один universal APK», если таковой используется в CI. Делать только если это никем не используется.
-- **Этап 2, логирование OEM-устройств**: писать `Build.MANUFACTURER`/`MODEL`/`VERSION.RELEASE` — это не PII, но проверить совместимость с политикой приватности в `docs/`. Если запрещено — ограничиться `Log.w` без полей устройства.
+- **Этап 2, единичный OEM-кейс**: краш B зафиксирован у одного пользователя на конкретной связке OnePlus 8 Pro / OxygenOS 11 / Android 11. Полноценный фикс невозможен на стороне приложения (баг системного loader'а OnePlus). Defensive fix через `try { } catch` + заглушку — компромисс: приложение не падает, но карта у этого пользователя не работает. Приемлемо для единичного кейса, неприемлемо если кейсов станет >5% пользователей.
+- **Этап 2, splits.abi под флагом**: режим «один universal APK» остаётся доступным через `./gradlew assembleRelease` без флага (по умолчанию AGP собирает universal APK со всеми ABI) — это не ломает никакой сценарий, а флаг `enableSplits` существует исключительно как переключатель «APK для GitHub Releases vs AAB для магазинов». См. https://issuetracker.google.com/402800800 — почему splits нельзя включать при `bundleRelease`.
+- **Этап 2, логирование OEM-устройств**: писать `Build.MANUFACTURER`/`MODEL`/`VERSION.RELEASE`/`SDK_INT` — это не PII, но проверить совместимость с политикой приватности в `docs/`. Если запрещено — ограничиться `Log.e` без полей устройства.
 - **Этап 2, AGP 9.x**: API `packagingOptions`/`splits` может отличаться от AGP 8.x. Перед коммитом свериться с актуальной версией AGP в `gradle/libs.versions.toml`.
+
+## Несогласованности, обнаруженные при верификации (26.07.2026)
+
+После реализации этапа 2 выявлены устаревшие формулировки в сопутствующих документах — все они утверждают, что `splits.abi` «включён безусловно», хотя в `app/build.gradle.kts:62-71` блок `splits` обёрнут в `if (project.findProperty("enableSplits") == "true")` и фактически включается только при сборке через `make apk`. Это технический долг, который должен быть закрыт в рамках этапа 3.2:
+
+- `AGENTS.md:84` — раздел «ABI splits & UnsatisfiedLinkError», первый пункт: «`splits.abi` включён безусловно в `buildTypes.release`» → заменить на flag-based формулировку (см. обновлённый текст в 3.2).
+- `docs/plan-map-screen.md:864` — заголовок «Известная проблема: UnsatisfiedLinkError для MapLibre native lib при ABI-сплитах», первое предложение: «С момента этапа 2 `splits.abi` включён безусловно в `buildTypes.release`» → заменить на flag-based формулировку.
+- `docs/plan-map-screen.md:877` — упоминается несуществующий флаг `assembleRelease -Psplits.universal=true`. С `splits.abi` под `if`-флагом universal APK получается простым `./gradlew assembleRelease` (без `-PenableSplits=true`); специальный флаг не нужен.
+- `docs/plan-release-process.md:389` — пункт 4 перечня итогов: «ABI-фильтры для release: `arm64-v8a` + `armeabi-v7a`, включены безусловно в `buildTypes.release`» → заменить на flag-based формулировку.
+
+> **Происхождение долга:** эти строки были написаны/обновлены в коммите `f78bc78`, где я ошибочно посчитал флаг `enableSplits` «переходной страховкой» и удалил его. Регрессия была исправлена в `557fcbb8` (флаг возвращён, `make release` снова работает), но три сопутствующих документа и AGENTS.md остались с устаревшими формулировками.
 
 ---
 
 ## Чек-лист готовности
 
-- [x] **1.1** — 3 android-теста в `ItemListScreenTest` + 1 unit-тест в `EditProfileViewModelSelectionTest`.
-- [x] **1.2** — реализация зелёная (коммит `4e99e021`, 1924/1924). Ревью-фикс: shadowing `cityId` → `numericCityId`.
-- [x] **1.3** — `make {test,format,lint,build}` зелёные. `SelectableItemMapper` отклонён (YAGNI). Divider — отложен до 3.1.
+- [x] **Этапы 1–2** — завершены: регресс-тесты (3 android + 1 unit) + реализация (`4e99e021`, 1924/1924) + defensive fix MapLibre (try/catch + заглушка) + `splits.abi` под флагом. Все сборки зелёные (1925/1925 unit, регресс Android). Детали — в секциях 1.1–2.4.
 - [~] **1.4** — ручная проверка отложена до 3.1.
-- [x] **2.1** — расследование завершено (5/5).
-- [x] **2.2** — defensive fix внедрён (try/catch + заглушка), регресс-тест в `ParksRootScreenTest` зелёный, unit/format/lint/build зелёные (1925/1925).
-- [x] **2.3** — `splits.abi` остались под флагом `-PenableSplits=true` (`app/build.gradle.kts`, `Makefile`); после ошибочного удаления флага был возвращён из-за регрессии `bundleRelease` (`make release`). `docs/plan-release-process.md` отражает оба сценария (APK vs AAB). ABI-мониторинг задокументирован в `plan-map-screen.md` и `AGENTS.md`.
 - [ ] **3.1** — `make check` зелёный, android-тесты пройдены, ручной smoke-test успешен.
-- [ ] **3.2** — документация обновлена (`plan-map-screen.md`, `AGENTS.md`, `README.md`).
+- [ ] **3.2** — документация обновлена (`plan-map-screen.md`, `AGENTS.md`, `README.md`); **дополнительно:** закрыть технический долг из «Несогласованности, обнаруженные при верификации» — поправить устаревшие «безусловно» в `AGENTS.md`, `docs/plan-map-screen.md`, `docs/plan-release-process.md` (см. соответствующую секцию).
 - [ ] **3.3** — релиз 1.3.1, проверка `libmaplibre.so` в APK, заливка в GitHub Releases.
 - [ ] **3.4** — в Crashlytics 0 событий по обоим issue после 7 дней с релиза.
