@@ -244,25 +244,25 @@ _load_secrets:
 
 ## apk: Создать подписанные APK для GitHub Releases (arm64-v8a и armeabi-v7a, без повышения версии)
 apk:
-	@printf "$(YELLOW)Проверка секретов для подписи...$(RESET)\n"
-	@if [ ! -d ".secrets" ]; then \
-		$(MAKE) _load_secrets; \
-	fi
-	@printf "$(YELLOW)Создаю релизные APK (arm64-v8a + armeabi-v7a)...$(RESET)\n"
-	@# ABI-сплиты включаются через -PenableSplits=true; для bundleRelease (AAB) splits нужно отключать
-	@./gradlew assembleRelease -PenableSplits=true --console=plain
-	@VERSION_NAME=$$(grep "^VERSION_NAME=" gradle.properties | cut -d'=' -f2); \
-	VERSION_CODE=$$(grep "^VERSION_CODE=" gradle.properties | cut -d'=' -f2); \
-	cp app/build/outputs/apk/release/app-arm64-v8a-release.apk "swparks$$VERSION_CODE-arm64-v8a.apk"; \
-	cp app/build/outputs/apk/release/app-armeabi-v7a-release.apk "swparks$$VERSION_CODE-armeabi-v7a.apk"; \
-	printf "$(GREEN)APK созданы: swparks$$VERSION_CODE-arm64-v8a.apk и swparks$$VERSION_CODE-armeabi-v7a.apk$(RESET)\n"; \
-	printf "$(YELLOW)Версия: $$VERSION_NAME (build $$VERSION_CODE)$(RESET)\n"
+ @printf "$(YELLOW)Проверка секретов для подписи...$(RESET)\n"
+ @if [ ! -d ".secrets" ]; then \
+  $(MAKE) _load_secrets; \
+ fi
+ @printf "$(YELLOW)Создаю релизные APK (arm64-v8a + armeabi-v7a)...$(RESET)\n"
+ @# ABI-сплиты включаются через -PenableSplits=true; для bundleRelease (AAB) splits нужно отключать
+ @./gradlew assembleRelease -PenableSplits=true --console=plain
+ @VERSION_NAME=$$(grep "^VERSION_NAME=" gradle.properties | cut -d'=' -f2); \
+ VERSION_CODE=$$(grep "^VERSION_CODE=" gradle.properties | cut -d'=' -f2); \
+ cp app/build/outputs/apk/release/app-arm64-v8a-release.apk "swparks$$VERSION_CODE-arm64-v8a.apk"; \
+ cp app/build/outputs/apk/release/app-armeabi-v7a-release.apk "swparks$$VERSION_CODE-armeabi-v7a.apk"; \
+ printf "$(GREEN)APK созданы: swparks$$VERSION_CODE-arm64-v8a.apk и swparks$$VERSION_CODE-armeabi-v7a.apk$(RESET)\n"; \
+ printf "$(YELLOW)Версия: $$VERSION_NAME (build $$VERSION_CODE)$(RESET)\n"
 ```
 
 **Ключевые моменты:**
 - APK собираются отдельно для каждой архитектуры: `arm64-v8a` и `armeabi-v7a`
 - Каждый APK содержит только нативные библиотеки под свою ABI (нет x86/x86_64)
-- ABI-сплиты включаются через `-PenableSplits=true` в `make apk`; `bundleRelease` (AAB) запускается без флага, чтобы AGP не ругался на множественные shrunk-resources (https://issuetracker.google.com/402800800)
+- ABI-сплиты включаются через `-PenableSplits=true` в `make apk`; `bundleRelease` (AAB) запускается без флага, чтобы AGP не ругался на множественные shrunk-resources (<https://issuetracker.google.com/402800800>)
 - Размер одного APK снижается примерно на 30% по сравнению с универсальным APK (~26 MB)
 - `TEMP_DIR=$$(mktemp -d)` с `trap "rm -rf $$TEMP_DIR" EXIT` — безопасная очистка
 - `git clone --depth 1` — shallow clone для скорости
@@ -285,7 +285,7 @@ apk:
 
 - [x] Запустить `make release` — убедиться что AAB подписывается корректно ✅
 - [x] Запустить `make apk` — убедиться что APK подписываются корректно (два файла: `arm64-v8a` и `armeabi-v7a`) ✅
-- [x] ABI-фильтры для release: `arm64-v8a` + `armeabi-v7a` (isShrinkResources=true, isMinifyEnabled=true), включаются флагом `-PenableSplits=true` для `make apk`; для `bundleRelease` флаг не передаётся, чтобы AAB собрался (см. этап 2.3 и ссылку https://issuetracker.google.com/402800800) ✅
+- [x] ABI-фильтры для release: `arm64-v8a` + `armeabi-v7a` (isShrinkResources=true, isMinifyEnabled=true), включаются флагом `-PenableSplits=true` для `make apk`; для `bundleRelease` флаг не передаётся, чтобы AAB собрался (см. этап 2.3 и ссылку <https://issuetracker.google.com/402800800>) ✅
 
 ---
 
@@ -386,7 +386,7 @@ release:
 1. Централизованное управление версиями в `gradle.properties`
 2. Автоматический инкремент VERSION_CODE при `make release`
 3. Настроенную подпись release-сборок
-4. ABI-фильтры для release: `arm64-v8a` + `armeabi-v7a`, включены безусловно в `buildTypes.release` (сокращение размера APK с ~26MB до ~14-17MB на файл)
+4. ABI-фильтры для release: `arm64-v8a` + `armeabi-v7a`, включаются через флаг `-PenableSplits=true` (передаётся `make apk`); `make release` (`bundleRelease`) запускается без флага, иначе AGP падает на `:app:buildReleasePreBundle` (<https://issuetracker.google.com/402800800>) — сокращение размера APK с ~26MB до ~14-17MB на файл
 5. Два APK для GitHub Releases (раздельно по ABI: `arm64-v8a` и `armeabi-v7a`)
 6. Fastlane с lane-ами `test`, `beta`, `screenshots`, `screenshots_ru`, `screenshots_en`
 7. Ручной процесс публикации: `make release` → AAB файл → RuStore / Google Play; `make apk` → два APK → GitHub Releases

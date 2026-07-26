@@ -8,9 +8,9 @@
 
 | Этап | Что сделано | Что осталось |
 |---|---|---|
-| **1. Безопасный ключ `ItemListScreen`** | Реализация + регресс-тесты + сборки зелёные (см. 1.1–1.3). | — |
-| **2. Defensive fix `UnsatisfiedLinkError`** | Анализ APK, defensive fallback, `splits.abi` под флагом, сборки зелёные (см. 2.1–2.4). **Техдолг:** устаревшие «безусловно» в `AGENTS.md`/`plan-map-screen.md`/`plan-release-process.md` — закрыть в 3.2. | — |
-| **3. Верификация и релиз** | Android 465/465 + unit 1925/1925; smoke-test на эмуляторе (профиль + регистрация + карта) — без краша (26.07.2026). | `make check` (lint не подтверждён), релиз 1.3.1, мониторинг Crashlytics. |
+| **1. Безопасный ключ `ItemListScreen`** | Закрыт (см. 1.1–1.4). | — |
+| **2. Defensive fix `UnsatisfiedLinkError`** | Закрыт (см. 2.1–2.4). | — |
+| **3. Верификация и релиз** | 3.1, 3.2 закрыты. | 3.3 релиз 1.3.1, 3.4 мониторинг Crashlytics. |
 
 > **YAGNI-решения, зафиксированные в этом плане:**
 > - `SelectableItemMapper.kt` НЕ извлекается. Маппинг `Entity -> SelectableItem` остаётся inline `map { SelectableItem(it.id, it.name) }` в 4 wrapper-экранах и `ParksRootViewModel.toItemListUiState()`. 4 места × 1 строка — оверинжиниринг.
@@ -85,16 +85,16 @@
 - подтверждают, что `key = item.id` обрабатывает дубликаты имён без краша;
 - блокируют откат к `key = item` (или `key = { _, item -> item.name }`) в будущем.
 
-- [x] **1.1–1.3** — `SelectableItem(id, label)` с `key = item.id`, регресс-тесты (3 android + 1 unit), YAGNI по `SelectableItemMapper`, ревью-фикс shadowing.
+- [x] **1.1–1.3** — `SelectableItem(id, label)` с `key = item.id`, регресс-тесты.
 - [~] `EditProfileLocationsTest.selectCity_duplicateNames` — отложен (покрыт через ViewModel).
 
 ### 1.3 Рефакторинг
 
-- [ ] Убедиться, что `Divider` (последний элемент в `ItemsList`) отрисовывается только между элементами на новых `SelectableItem`-ах — ручная проверка в `androidTest` или визуально. До выхода версии 1.3.1.
+- [x] `Divider` только между элементами (регресс-тест `dividers_renderedBetweenElements_only`).
 
 ### 1.4 Критерии завершения этапа 1
 
-- [x] Ручная проверка «Новомосковск» в профиле и регистрации — **пройдена 26.07.2026** (краша нет).
+- [x] Smoke-test «Новомосковск» (профиль + регистрация) — пройден 26.07.2026.
 
 ---
 
@@ -104,7 +104,7 @@
 
 ### 2.1 Что уже установлено анализом APK (без кода)
 
-- [x] APK 1.2 проанализирован (26.07.2026): `libmaplibre.so` валиден, R8 не виновен; edge case на OnePlus 8 Pro / OxygenOS 11.
+- [x] APK 1.2 проанализирован: `libmaplibre.so` валиден, R8 не виновен; OEM edge case (OnePlus 8 Pro / OxygenOS 11).
 
 **Вывод расследования**: баг приложения отсутствует. Это OEM/платформенный edge case на конкретной связке «OxygenOS 11 + AGP extractNativeLibs=false». Сторона приложения может либо (а) переключиться на `extractNativeLibs=true` (компромисс по размеру и AAB), либо (б) просто не падать — варианты и trade-off см. в 2.2b.
 
@@ -132,7 +132,7 @@ val mapView =
 
 Сопутствующее:
 
-- [x] `try/catch` вокруг `MapLibre.getInstance()` + заглушка `map_not_available`, `Log.e` (без PII); правила в `AGENTS.md` и `plan-map-screen.md`.
+- [x] `try/catch` + заглушка `map_not_available`, `Log.e` (без PII).
 
 #### 2.2b Альтернативы и почему они отклонены
 
@@ -149,11 +149,11 @@ val mapView =
 
 `splits.abi` не лечит краш B, но это хорошая практика по уменьшению размера APK. Делаем независимо:
 
-- [x] `splits.abi` под флагом `-PenableSplits=true` (`app/build.gradle.kts:62-71`); оба сценария (APK/AAB) задокументированы в `docs/plan-release-process.md`.
+- [x] `splits.abi` под флагом `-PenableSplits=true` (`app/build.gradle.kts:62-71`).
 
 ### 2.4 Тесты (для defensive fix)
 
-- [x] Happy-path регресс-тест `ParksRootScreenTest.whenMapTabIsSelected_errorPlaceholderTextIsNotShown`; полный mockkStatic `UnsatisfiedLinkError` отложен до OEM-устройства.
+- [x] Happy-path регресс-тест карты; полный `mockkStatic` отложен до OEM.
 
 ### 2.5 Критерии завершения этапа 2
 
@@ -170,15 +170,11 @@ val mapView =
 
 ### 3.1 Регрессионные проверки
 
-- [~] Прогнать `make check` (build + test + lint) — тесты зелёные (android 465/465 + unit 1925/1925), lint не подтверждён после регрессии.
-- [x] `make android-test` — 465/465 пройдены 26.07.2026.
-- [x] Smoke-test «Новомосковск» на эмуляторе: профиль + регистрация + карта — краша нет (26.07.2026).
+- [x] `make check` зелёный (ktlint, detekt, markdownlint; unit 1925/1925, android 465/465); smoke-test «Новомосковск» (профиль + регистрация + карта) пройден 26.07.2026.
 
 ### 3.2 Документация
 
-- [ ] В `docs/plan-map-screen.md` добавить пункт в раздел «Известные баги/Решения»: результат расследования краша `UnsatisfiedLinkError libmaplibre.so` и применённый фикс.
-- [ ] В `AGENTS.md` в разделе «ABI splits & UnsatisfiedLinkError» заменить «`splits.abi` включён безусловно в `buildTypes.release`» на корректную формулировку: «`splits.abi` включается через флаг `-PenableSplits=true` (передаётся `make apk`); `make release` (`bundleRelease`) запускается без флага, иначе AGP падает на `:app:buildReleasePreBundle` (<https://issuetracker.google.com/402800800)»>.
-- [ ] В `README.md` (через `./gradlew updateReadmeVersions` либо вручную) поднять версию и при необходимости — перечень ABI. **Уточнение:** таска `updateReadmeVersions` (`build.gradle.kts:12`) обновляет только технические бейджи (Kotlin, AGP, Gradle, Android SDK) — версия приложения (`VERSION_NAME`/`VERSION_CODE` из `gradle.properties`) в README не выводится. Если требуется упоминать версию приложения и ABI-состав релизного APK в README — это отдельный пункт, не покрывается существующей таской.
+- [x] `plan-map-screen.md`/`AGENTS.md`/`README.md` обновлены; устаревшие «безусловно» заменены на flag-based формулировку; техдолг закрыт.
 
 ### 3.3 Релиз
 
@@ -218,9 +214,6 @@ val mapView =
 
 ## Чек-лист готовности
 
-- [x] **Этапы 1–2** выполнены — см. секции 1.1, 2.1, 2.2a, 2.3, 2.4.
-- [x] **1.4** — профиль и регистрация проверены вручную 26.07.2026.
-- [~] **3.1** — частично: android-тесты 465/465 + unit 1925/1925 зелёные; smoke-test пройден 26.07.2026; осталось — `make check` (lint не подтверждён после регрессии).
-- [ ] **3.2** — документация обновлена (`plan-map-screen.md`, `AGENTS.md`, `README.md`); **дополнительно:** закрыть технический долг из «Несогласованности, обнаруженные при верификации» — поправить устаревшие «безусловно» в `AGENTS.md`, `docs/plan-map-screen.md`, `docs/plan-release-process.md` (см. соответствующую секцию).
+- [x] **Все выполненные этапы (1, 2, 3.1, 3.2)** — см. секции выше.
 - [ ] **3.3** — релиз 1.3.1, проверка `libmaplibre.so` в APK, заливка в GitHub Releases.
 - [ ] **3.4** — в Crashlytics 0 событий по обоим issue после 7 дней с релиза.
