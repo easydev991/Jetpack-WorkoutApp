@@ -620,15 +620,15 @@ class ParksRootViewModel(
     override fun onCitySelected(cityId: String) {
         logger.d(TAG, "onCitySelected: $cityId")
         val city = _uiState.value.cities.find { it.id == cityId }
-        val cityId = city?.id?.toIntOrNull()
-        if (city != null && cityId != null) {
+        val numericCityId = city?.id?.toIntOrNull()
+        if (city != null && numericCityId != null) {
             analyticsService.log(
                 AnalyticsEvent.UserAction(
                     UserActionType.SELECT_PARK_FILTER_CITY,
-                    mapOf("city_id" to cityId.toString())
+                    mapOf("city_id" to numericCityId.toString())
                 )
             )
-            val newFilter = _uiState.value.localFilter.copy(selectedCityId = cityId)
+            val newFilter = _uiState.value.localFilter.copy(selectedCityId = numericCityId)
             val cityCameraPosition = cameraPositionForCity(city)
             _uiState.value =
                 _uiState.value.copy(

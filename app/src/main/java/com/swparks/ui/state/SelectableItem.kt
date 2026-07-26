@@ -6,4 +6,7 @@ package com.swparks.ui.state
  * @property id Стабильный идентификатор (используется как LazyColumn key)
  * @property label Отображаемый текст
  */
-data class SelectableItem(val id: String, val label: String)
+data class SelectableItem(
+    val id: String,
+    val label: String
+)

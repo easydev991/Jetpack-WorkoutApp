@@ -149,11 +149,12 @@ class ItemListScreenTest {
             state =
                 ItemListUiState(
                     mode = ItemListMode.CITY,
-                    items = listOf(
-                        SelectableItem("1", "Москва"),
-                        SelectableItem("2", "Минск"),
-                        SelectableItem("3", "Казань")
-                    ),
+                    items =
+                        listOf(
+                            SelectableItem("1", "Москва"),
+                            SelectableItem("2", "Минск"),
+                            SelectableItem("3", "Казань")
+                        ),
                     selectedItem = "2"
                 )
         )
@@ -208,6 +209,78 @@ class ItemListScreenTest {
             .performClick()
 
         assertEquals(true, contactUsClicked)
+    }
+
+    @Test
+    fun itemListScreen_cityMode_duplicateNames_rendersBothWithoutCrash() {
+        setContent(
+            state =
+                ItemListUiState(
+                    mode = ItemListMode.CITY,
+                    items =
+                        listOf(
+                            SelectableItem("1", "Новомосковск"),
+                            SelectableItem("2", "Новомосковск"),
+                            SelectableItem("3", "Тула")
+                        ),
+                    selectedItem = null
+                )
+        )
+
+        composeTestRule
+            .onAllNodesWithText("Новомосковск")
+            .assertCountEquals(2)
+
+        composeTestRule
+            .onNodeWithText("Тула")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun itemListScreen_cityMode_duplicateNames_selectSecondReturnsItsId() {
+        var selectedItem: SelectableItem? = null
+
+        setContent(
+            state =
+                ItemListUiState(
+                    mode = ItemListMode.CITY,
+                    items =
+                        listOf(
+                            SelectableItem("1", "Новомосковск"),
+                            SelectableItem("2", "Новомосковск")
+                        ),
+                    selectedItem = null
+                ),
+            onItemSelected = { selectedItem = it }
+        )
+
+        // Кликаем второй «Новомосковск» — должен вернуть id="2"
+        composeTestRule
+            .onAllNodesWithText("Новомосковск")[1]
+            .performClick()
+
+        assertEquals("2", selectedItem?.id)
+        assertEquals("Новомосковск", selectedItem?.label)
+    }
+
+    @Test
+    fun itemListScreen_countryMode_duplicateNames_rendersBoth() {
+        setContent(
+            state =
+                ItemListUiState(
+                    mode = ItemListMode.COUNTRY,
+                    items =
+                        listOf(
+                            SelectableItem("1", "Россия"),
+                            SelectableItem("2", "Россия")
+                        ),
+                    selectedItem = null
+                )
+        )
+
+        composeTestRule
+            .onAllNodesWithText("Россия")
+            .assertCountEquals(2)
     }
 
     @Test

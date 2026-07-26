@@ -259,12 +259,13 @@ fun ItemListScreenCountryPreview() {
                 state =
                     ItemListUiState(
                         mode = ItemListMode.COUNTRY,
-                        items = listOf(
-                            SelectableItem("1", "Россия"),
-                            SelectableItem("2", "США"),
-                            SelectableItem("3", "Франция"),
-                            SelectableItem("4", "Германия")
-                        ),
+                        items =
+                            listOf(
+                                SelectableItem("1", "Россия"),
+                                SelectableItem("2", "США"),
+                                SelectableItem("3", "Франция"),
+                                SelectableItem("4", "Германия")
+                            ),
                         selectedItem = "1",
                         searchQuery = "",
                         isEmpty = false
@@ -292,11 +293,12 @@ fun ItemListScreenCityPreview() {
                 state =
                     ItemListUiState(
                         mode = ItemListMode.CITY,
-                        items = listOf(
-                            SelectableItem("1", "Москва"),
-                            SelectableItem("2", "Санкт-Петербург"),
-                            SelectableItem("3", "Казань")
-                        ),
+                        items =
+                            listOf(
+                                SelectableItem("1", "Москва"),
+                                SelectableItem("2", "Санкт-Петербург"),
+                                SelectableItem("3", "Казань")
+                            ),
                         selectedItem = "1",
                         searchQuery = "",
                         isEmpty = false

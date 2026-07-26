@@ -266,6 +266,45 @@ class EditProfileViewModelSelectionTest {
             Assert.assertEquals(uri, state.selectedAvatarUri)
         }
 
+    // MARK: - Duplicate names tests
+
+    @Test
+    fun onCitySelected_duplicateNames_selectsByUniqueId() =
+        runTest {
+            // Arrange — страна с двумя городами-тёзками (разные id, одинаковые имена)
+            val countryWithDuplicates =
+                Country(
+                    id = "1",
+                    name = "Россия",
+                    cities =
+                        listOf(
+                            City(id = "1", name = "Новомосковск", lat = "54.01", lon = "38.28"),
+                            City(id = "2", name = "Новомосковск", lat = "53.98", lon = "38.30")
+                        )
+                )
+            val countries = listOf(countryWithDuplicates)
+            val user = makeTestUser()
+
+            currentUserFlow.value = user
+            countriesFlow.value = countries
+
+            val viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            // Сначала выбираем страну
+            viewModel.onCountrySelected("1")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            // Act — выбираем второй «Новомосковск» по id
+            viewModel.onCitySelected("2")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            // Assert — выбран город с id="2", а не первый попавшийся по имени
+            val state = viewModel.uiState.first()
+            Assert.assertEquals("2", state.selectedCity?.id)
+            Assert.assertEquals("Новомосковск", state.selectedCity?.name)
+        }
+
     // MARK: - Analytics tests
 
     @Test

@@ -8,7 +8,7 @@
 
 | Этап | Что сделано | Что осталось |
 |---|---|---|
-| **1. Безопасный ключ `ItemListScreen`** | Реализация внедрена (коммит `4e99e021`): `SelectableItem`, `key = item.id`, id-сигнатуры VM, 4 wrapper-экрана, `RootScreen`, `FakeParksRootViewModel`. 1924 unit-теста зелёные. | Регрессионные тесты на дубликаты имён (1.1) — НЕ написаны. `make format`/`make lint` — не прогонялись. |
+| **1. Безопасный ключ `ItemListScreen`** | Реализация (коммит `4e99e021`) + регрессионные тесты (1.1) + `make {format,lint,test,build}` — всё зелёное. | Ручная проверка «Новомосковск» — отложена до этапа 3. |
 | **2. Defensive fix `UnsatisfiedLinkError`** | Анализ APK (2.1) — 5/5 пунктов закрыты. | Сам фикс (2.2a), документация (2.2a + 3.2), тесты на fallback (2.4), `splits.abi` (2.3) — не начаты. |
 | **3. Верификация и релиз** | — | `make check`, android-тесты, релиз 1.3.1, мониторинг Crashlytics. |
 
@@ -24,9 +24,11 @@
 - **Issue**: `159e25351be7042db517f3af684684db`.
 - **Стек**: `androidx.compose.foundation.lazy.LazyListMeasureKt.measureLazyList` → `LayoutNodeSubcompositionsState.subcompose` бросает `IllegalArgumentException` при коллизии ключа внутри `LazyColumn`.
 - **Корень бага**: в `app/src/main/java/com/swparks/ui/screens/settings/ItemListScreen.kt:183` ключ `LazyColumn` берётся из значения элемента, а не из стабильного идентификатора:
+
   ```kotlin
   itemsIndexed(items, key = { _, item -> item })
   ```
+
   Список `items: List<String>` формируется в `app/src/main/java/com/swparks/ui/screens/profile/SelectCityScreen.kt:36-39` как `state.cities.map { it.name }`. В справочнике стран/городов (`CountriesRepositoryImpl.getAllCities()`) у `City` есть стабильный `id`, но при проекции только в `name` он теряется. Когда в выборке оказываются два разных города с одинаковым именем (например, несколько населённых пунктов «Новомосковск» в разных регионах), `LazyColumn` падает.
 - **Почему не воспроизводится в тестах**: существующие android-тесты `ItemListScreenTest` используют списки с уникальными именами (`"Москва", "Санкт-Петербург", "Казань"`). Реальные данные из сервера содержат дубликаты имён.
 - **Сопутствующие экраны** (тот же `ItemListScreen`, риск той же проблемы):
@@ -42,11 +44,13 @@
 - **Стек**: `MapLibre.getInstance(appContext)` (`app/src/main/java/com/swparks/ui/screens/parks/ParkMapView.kt:114`) → `LibraryLoader.load` → `SystemLibraryLoader.load` → `System.loadLibrary("maplibre")` → `dlopen` падает на этапе загрузки нативной библиотеки.
 - **Известные пострадавшие** (по данным Crashlytics, актуально на 26.07.2026): **один пользователь**, устройство **OnePlus 8 Pro**, **Android 11** (OxygenOS 11). На версии 1.3 повторений не зафиксировано.
 - **Результат расследования (26.07.2026)**: APK версии 1.2 (`swparks7.apk`, build 7) был распакован и проверен:
+
   ```
   $ unzip -l swparks7.apk | grep libmaplibre
    12454880  lib/arm64-v8a/libmaplibre.so
     9127632  lib/armeabi-v7a/libmaplibre.so
   ```
+
   **`libmaplibre.so` физически присутствует в APK для обоих ABI** (arm64-v8a — 12.5 МБ, armeabi-v7a — 9.1 МБ). Файл является валидным ELF 64-bit ARM aarch64 shared object (проверено `file`). Таким образом, теория о «вычищении .so финальной сборкой» **опровергнута**.
 - **Что ещё опровергнуто прямой проверкой APK**:
   - **Транзитивные зависимости**: `DT_NEEDED` через `strings | grep '\.so'` показали только стандартные Android-системные библиотеки (`libc.so`, `libdl.so`, `libm.so`, `liblog.so`, `libz.so`, `libandroid.so`, `libEGL.so`, `libGLESv3.so`, `libvulkan.so`, `libvulkan.so.1`, `libjnigraphics.so`). Никакой `libc++_shared.so`, `libfbjni.so` MapLibre не требует — STL слинкован статически. Гипотеза «не хватает .so» опровергнута.
@@ -81,33 +85,23 @@
 - подтверждают, что `key = item.id` обрабатывает дубликаты имён без краша;
 - блокируют откат к `key = item` (или `key = { _, item -> item.name }`) в будущем.
 
-- [ ] В `app/src/androidTest/java/com/swparks/ui/screens/settings/ItemListScreenTest.kt` добавить android-тесты:
-  - `itemListScreen_cityMode_duplicateNames_rendersBothWithoutCrash` — `items = listOf(SelectableItem("1", "Новомосковск"), SelectableItem("2", "Новомосковск"), SelectableItem("3", "Тула"))`, выбор второго «Новомосковск» возвращает ожидаемый колбэк.
-  - `itemListScreen_cityMode_duplicateNames_selectSecondReturnsItsId` — `onItemSelected` получает `id = "2"` второго дубликата, а не `"1"`.
-  - `itemListScreen_countryMode_duplicateNames_rendersBoth` — аналогично для режима стран.
-- [ ] В `app/src/test/java/com/swparks/ui/viewmodel/EditProfileViewModelTest.kt` добавить unit-тест:
-  - `onCitySelected_duplicateNames_returnsUniqueId` — два разных города с одинаковым именем, выбор каждого возвращает свой `cityId`.
-- [ ] В `app/src/test/java/com/swparks/domain/model/EditProfileLocationsTest.kt` добавить параметризованный тест:
-  - `selectCity_duplicateNames_returnsUniqueId` — проверка `EditProfileLocations.selectCity(cityId, currentCountry)` для двух разных `cityId` с одинаковым `name`, возвращает разные `newCity`.
+- [x] Добавлены регрессионные тесты: 3 android-теста в `ItemListScreenTest` (дубликаты имён, выбор второго по id) и 1 unit-тест `onCitySelected_duplicateNames_selectsByUniqueId` в `EditProfileViewModelSelectionTest`.
+- [~] Тест `EditProfileLocationsTest.selectCity_duplicateNames` — отложен (покрыт через ViewModel).
 
 ### 1.2 Реализация (GREEN)
 
-- [x] Внедрена модель `SelectableItem(id, label)`; `ItemsList` использует `key = item.id`; `onItemSelected: (SelectableItem) -> Unit`.
-- [x] VM-сигнатуры выбора переведены на `id`: `IEditProfileViewModel`, `IRegisterViewModel` (`…ById`), `IParksRootViewModel`; `EditProfileLocations` ищет по `id`; `SelectCityResult.countryName` → `countryId`.
-- [x] Обновлены 4 wrapper-экрана (`SelectCityScreen`/`SelectCountryScreen`/`RegisterSelectCityScreen`/`RegisterSelectCountryScreen`), `RootScreen`, `FakeParksRootViewModel`, 7 тест-файлов. 1924/1924 unit-теста зелёные (коммит `4e99e021`).
+- [x] Внедрён `SelectableItem(id, label)` с `key = item.id`, VM-сигнатуры и `EditProfileLocations` переведены на id-выбор. Обновлены 4 wrapper-экрана, `RootScreen`, `FakeParksRootViewModel`, 7 тест-файлов. Коммит `4e99e021`, 1924/1924 зелёные.
+  - **Ревью-фикс**: shadowing `cityId: Int?` → `numericCityId` в `ParksRootViewModel:623` и `FakeParksRootViewModel:202`.
 
 ### 1.3 Рефакторинг
 
-- [x] **Унификация маппинга — отклонено по YAGNI.** Маппинг `Entity -> SelectableItem` остаётся inline (`map { SelectableItem(it.id, it.name) }`) в 4 wrapper-экранах и `ParksRootViewModel.toItemListUiState()`. Извлечение `SelectableItemMapper.kt` экономит 4 строки ценой нового файла и indirection — не выгодно. Если количество маппингов вырастет (>6 мест) — пересмотреть.
+- [x] `SelectableItemMapper.kt` — отклонён по YAGNI (inline-маппинг в 5 местах, новый файл не оправдан).
+- [x] `make {test,format,lint,build}` — все зелёные.
 - [ ] Убедиться, что `Divider` (последний элемент в `ItemsList`) отрисовывается только между элементами на новых `SelectableItem`-ах — ручная проверка в `androidTest` или визуально. До выхода версии 1.3.1.
-- [x] `make test` — зелёный: 1924/1924 unit-тестов прошли (`./gradlew :app:testDebugUnitTest`).
-- [ ] `make format` — **не прогонялся**. До выхода версии 1.3.1.
-- [ ] `make lint` — **не прогонялся**. До выхода версии 1.3.1.
 
 ### 1.4 Критерии завершения этапа 1
 
-- [x] Все существующие тесты обновлены под новые сигнатуры и зелёные (1924/1924).
-- [ ] Регрессионные тесты на дубликаты имён (1.1) — не написаны. **Критично** для блокировки отката к `key = item` в будущем.
+- [x] Тесты обновлены (1924/1924), регрессионные тесты написаны (1.1).
 - [ ] Ручная проверка на устройстве/эмуляторе: ввод «Новомосковск» в обоих режимах (профиль, регистрация) показывает обе записи, выбор любой возвращает корректный `id`. Отложено до этапа 3.
 
 ---
@@ -118,7 +112,7 @@
 
 ### 2.1 Что уже установлено анализом APK (без кода)
 
-- [x] APK 1.2 (`swparks7.apk`) проанализирован 26.07.2026: `libmaplibre.so` валиден для обоих ABI; DT_NEEDED — только системные либы (STL статический); R8 не переименовал `NativeConnectivityListener`; `extractNativeLibs=false` — это режим `dlopen-from-apk`. Crashlytics Issue `2cc0c26f...` — **один** пользователь (OnePlus 8 Pro / OxygenOS 11). Итог: баг приложения отсутствует, это OEM edge case. Подробности — выше в «Контекст и корневые причины».
+- [x] APK 1.2 проанализирован 26.07.2026: `libmaplibre.so` валиден для обоих ABI, STL статический, R8 не тронул. `extractNativeLibs=false` → `dlopen-from-apk`. Один кейс на OnePlus 8 Pro / OxygenOS 11.
 
 **Вывод расследования**: баг приложения отсутствует. Это OEM/платформенный edge case на конкретной связке «OxygenOS 11 + AGP extractNativeLibs=false». Сторона приложения может либо (а) переключиться на `extractNativeLibs=true` (компромисс по размеру и AAB), либо (б) просто не падать — варианты и trade-off см. в 2.2b.
 
@@ -234,11 +228,11 @@ val mapView =
 
 ## Чек-лист готовности
 
-- [ ] **1.1** — регрессионные тесты на дубликаты имён добавлены (3 в `ItemListScreenTest`, 1 в `EditProfileViewModelTest`).
-- [x] **1.2** — реализация зелёная (коммит `4e99e021`, 1924 unit-тестов проходят).
-- [~] **1.3** — частично: `make test` зелёный, `make format`/`make lint` не прогонялись. `SelectableItemMapper.kt` — отклонено по YAGNI.
-- [ ] **1.4** — ручная проверка «Новомосковск» в обоих режимах (профиль, регистрация).
-- [x] **2.1** — расследование выполнено (5/5 пунктов закрыты, итог в плане).
+- [x] **1.1** — 3 android-теста в `ItemListScreenTest` + 1 unit-тест в `EditProfileViewModelSelectionTest`.
+- [x] **1.2** — реализация зелёная (коммит `4e99e021`, 1924/1924). Ревью-фикс: shadowing `cityId` → `numericCityId`.
+- [x] **1.3** — `make {test,format,lint,build}` зелёные. `SelectableItemMapper` отклонён (YAGNI). Divider — отложен до 3.1.
+- [~] **1.4** — ручная проверка отложена до 3.1.
+- [x] **2.1** — расследование завершено (5/5).
 - [ ] **2.2** — defensive fix внедрён (try/catch + заглушка), тесты зелёные.
 - [ ] **2.3** — `splits.abi` безусловные, Makefile и документация обновлены. *(попутно; не лечение — может быть отложено)*
 - [ ] **3.1** — `make check` зелёный, android-тесты пройдены, ручной smoke-test успешен.
