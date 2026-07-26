@@ -41,6 +41,7 @@ import com.swparks.ui.ds.SWButton
 import com.swparks.ui.ds.SWButtonMode
 import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.state.ItemListUiState
+import com.swparks.ui.state.SelectableItem
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 /**
@@ -57,7 +58,7 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
 fun ItemListScreen(
     state: ItemListUiState,
     onSearchQueryChange: (String) -> Unit,
-    onItemSelected: (String) -> Unit,
+    onItemSelected: (SelectableItem) -> Unit,
     onContactUs: () -> Unit,
     onBackClick: () -> Unit
 ) {
@@ -110,7 +111,7 @@ private fun ItemListContent(
     state: ItemListUiState,
     paddingValues: androidx.compose.foundation.layout.PaddingValues,
     onSearchQueryChange: (String) -> Unit,
-    onItemSelected: (String) -> Unit,
+    onItemSelected: (SelectableItem) -> Unit,
     onContactUs: () -> Unit
 ) {
     Column(
@@ -175,16 +176,16 @@ private fun SearchBar(
 
 @Composable
 private fun ItemsList(
-    items: List<String>,
+    items: List<SelectableItem>,
     selectedItem: String?,
-    onItemSelected: (String) -> Unit
+    onItemSelected: (SelectableItem) -> Unit
 ) {
     LazyColumn {
-        itemsIndexed(items, key = { _, item -> item }) { index, item ->
-            val isSelected = item == selectedItem
+        itemsIndexed(items, key = { _, item -> item.id }) { index, item ->
+            val isSelected = item.id == selectedItem
 
             CheckmarkRowView(
-                text = item,
+                text = item.label,
                 isChecked = isSelected,
                 modifier =
                     Modifier
@@ -258,8 +259,13 @@ fun ItemListScreenCountryPreview() {
                 state =
                     ItemListUiState(
                         mode = ItemListMode.COUNTRY,
-                        items = listOf("Россия", "США", "Франция", "Германия"),
-                        selectedItem = "Россия",
+                        items = listOf(
+                            SelectableItem("1", "Россия"),
+                            SelectableItem("2", "США"),
+                            SelectableItem("3", "Франция"),
+                            SelectableItem("4", "Германия")
+                        ),
+                        selectedItem = "1",
                         searchQuery = "",
                         isEmpty = false
                     ),
@@ -286,8 +292,12 @@ fun ItemListScreenCityPreview() {
                 state =
                     ItemListUiState(
                         mode = ItemListMode.CITY,
-                        items = listOf("Москва", "Санкт-Петербург", "Казань"),
-                        selectedItem = "Москва",
+                        items = listOf(
+                            SelectableItem("1", "Москва"),
+                            SelectableItem("2", "Санкт-Петербург"),
+                            SelectableItem("3", "Казань")
+                        ),
+                        selectedItem = "1",
                         searchQuery = "",
                         isEmpty = false
                     ),

@@ -197,8 +197,8 @@ class FakeParksRootViewModel : IParksRootViewModel {
         _uiState.value = _uiState.value.copy(citySearchQuery = query)
     }
 
-    override fun onCitySelected(cityName: String) {
-        val city = _uiState.value.cities.find { it.name == cityName }
+    override fun onCitySelected(cityId: String) {
+        val city = _uiState.value.cities.find { it.id == cityId }
         val cityId = city?.id?.toIntOrNull()
         if (city != null && cityId != null) {
             _uiState.value =

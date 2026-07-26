@@ -12,6 +12,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.ui.state.ItemListUiState
+import com.swparks.ui.state.SelectableItem
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -30,7 +31,7 @@ class ItemListScreenTest {
     private fun setContent(
         state: ItemListUiState,
         onSearchQueryChange: (String) -> Unit = {},
-        onItemSelected: (String) -> Unit = {},
+        onItemSelected: (SelectableItem) -> Unit = {},
         onContactUs: () -> Unit = {},
         onBackClick: () -> Unit = {}
     ) {
@@ -53,7 +54,7 @@ class ItemListScreenTest {
             state =
                 ItemListUiState(
                     mode = ItemListMode.COUNTRY,
-                    items = listOf("Россия", "Беларусь"),
+                    items = listOf(SelectableItem("1", "Россия"), SelectableItem("2", "Беларусь")),
                     selectedItem = null
                 )
         )
@@ -69,7 +70,7 @@ class ItemListScreenTest {
             state =
                 ItemListUiState(
                     mode = ItemListMode.CITY,
-                    items = listOf("Москва", "Минск"),
+                    items = listOf(SelectableItem("1", "Москва"), SelectableItem("2", "Минск")),
                     selectedItem = null
                 )
         )
@@ -108,7 +109,7 @@ class ItemListScreenTest {
             state =
                 ItemListUiState(
                     mode = ItemListMode.CITY,
-                    items = listOf("Москва", "Минск"),
+                    items = listOf(SelectableItem("1", "Москва"), SelectableItem("2", "Минск")),
                     selectedItem = null
                 ),
             onSearchQueryChange = { searchQuery = it }
@@ -129,10 +130,10 @@ class ItemListScreenTest {
             state =
                 ItemListUiState(
                     mode = ItemListMode.CITY,
-                    items = listOf("Москва", "Минск"),
+                    items = listOf(SelectableItem("1", "Москва"), SelectableItem("2", "Минск")),
                     selectedItem = null
                 ),
-            onItemSelected = { selectedItem = it }
+            onItemSelected = { selectedItem = it.label }
         )
 
         composeTestRule
@@ -148,8 +149,12 @@ class ItemListScreenTest {
             state =
                 ItemListUiState(
                     mode = ItemListMode.CITY,
-                    items = listOf("Москва", "Минск", "Казань"),
-                    selectedItem = "Минск"
+                    items = listOf(
+                        SelectableItem("1", "Москва"),
+                        SelectableItem("2", "Минск"),
+                        SelectableItem("3", "Казань")
+                    ),
+                    selectedItem = "2"
                 )
         )
 
@@ -170,10 +175,10 @@ class ItemListScreenTest {
             state =
                 ItemListUiState(
                     mode = ItemListMode.COUNTRY,
-                    items = listOf("Россия", "Беларусь"),
-                    selectedItem = "Россия"
+                    items = listOf(SelectableItem("1", "Россия"), SelectableItem("2", "Беларусь")),
+                    selectedItem = "1"
                 ),
-            onItemSelected = { selectedItem = it }
+            onItemSelected = { selectedItem = it.label }
         )
 
         composeTestRule
@@ -213,7 +218,7 @@ class ItemListScreenTest {
             state =
                 ItemListUiState(
                     mode = ItemListMode.COUNTRY,
-                    items = listOf("Россия"),
+                    items = listOf(SelectableItem("1", "Россия")),
                     selectedItem = null
                 ),
             onBackClick = { backClicked = true }

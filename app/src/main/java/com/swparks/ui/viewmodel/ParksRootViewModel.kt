@@ -617,9 +617,9 @@ class ParksRootViewModel(
         _uiState.value = _uiState.value.copy(citySearchQuery = query)
     }
 
-    override fun onCitySelected(cityName: String) {
-        logger.d(TAG, "onCitySelected: $cityName")
-        val city = _uiState.value.cities.find { it.name == cityName }
+    override fun onCitySelected(cityId: String) {
+        logger.d(TAG, "onCitySelected: $cityId")
+        val city = _uiState.value.cities.find { it.id == cityId }
         val cityId = city?.id?.toIntOrNull()
         if (city != null && cityId != null) {
             analyticsService.log(

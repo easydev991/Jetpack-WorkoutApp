@@ -378,10 +378,10 @@ class EditProfileViewModel(
         )
     }
 
-    override fun onCountrySelected(countryName: String) {
+    override fun onCountrySelected(countryId: String) {
         try {
             val locations = EditProfileLocations.fromCountries(_uiState.value.countries)
-            val result = locations.selectCountry(countryName, _uiState.value.selectedCity)
+            val result = locations.selectCountry(countryId, _uiState.value.selectedCity)
 
             analyticsService.log(
                 AnalyticsEvent.UserAction(
@@ -406,7 +406,7 @@ class EditProfileViewModel(
                 )
             }
 
-            logger.d(TAG, "Выбрана страна: $countryName, город: ${result.newCity?.name ?: "сброшен"}")
+            logger.d(TAG, "Выбрана страна: ${result.newCountry?.name ?: "?"} (id=$countryId), город: ${result.newCity?.name ?: "сброшен"}")
         } catch (e: Exception) {
             analyticsService.log(
                 AnalyticsEvent.AppError(AppErrorOperation.SELECT_COUNTRY_FAILED, e)
@@ -415,10 +415,10 @@ class EditProfileViewModel(
         }
     }
 
-    override fun onCitySelected(cityName: String) {
+    override fun onCitySelected(cityId: String) {
         try {
             val locations = EditProfileLocations.fromCountries(_uiState.value.countries)
-            val result = locations.selectCity(cityName, _uiState.value.selectedCountry)
+            val result = locations.selectCity(cityId, _uiState.value.selectedCountry)
 
             analyticsService.log(
                 AnalyticsEvent.UserAction(
@@ -430,8 +430,8 @@ class EditProfileViewModel(
                 )
             )
 
-            if (result.countryName != null) {
-                val countryResult = locations.selectCountry(result.countryName, null)
+            if (result.countryId != null) {
+                val countryResult = locations.selectCountry(result.countryId, null)
                 _uiState.update {
                     it.copy(
                         selectedCountry = countryResult.newCountry,
@@ -446,7 +446,7 @@ class EditProfileViewModel(
                 }
                 logger.d(
                     TAG,
-                    "Выбран город: $cityName из другой страны: ${result.countryName}"
+                    "Выбран город: ${result.newCity?.name} (id=$cityId) из другой страны: ${countryResult.newCountry?.name ?: "?"} (id=${result.countryId})"
                 )
             } else {
                 _uiState.update {
@@ -458,7 +458,7 @@ class EditProfileViewModel(
                             )
                     )
                 }
-                logger.d(TAG, "Выбран город: $cityName")
+                logger.d(TAG, "Выбран город: ${result.newCity?.name ?: "?"} (id=$cityId)")
             }
         } catch (e: Exception) {
             analyticsService.log(

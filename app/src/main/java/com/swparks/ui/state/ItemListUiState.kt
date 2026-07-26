@@ -7,11 +7,12 @@ import com.swparks.ui.screens.settings.ItemListMode
  *
  * Note: filteredItems и isEmpty вычисляются в Composable, а не в data class,
  * чтобы следовать принципам State Hoisting и разделения ответственности.
+ * В items используются [SelectableItem] с уникальным id для безопасных ключей LazyColumn.
  */
 data class ItemListUiState(
     val mode: ItemListMode,
-    // Уже отфильтрованный список
-    val items: List<String>,
+    // Уже отфильтрованный список элементов с уникальным id
+    val items: List<SelectableItem>,
     val selectedItem: String?,
     val searchQuery: String = "",
     // Вычисляется в Composable
