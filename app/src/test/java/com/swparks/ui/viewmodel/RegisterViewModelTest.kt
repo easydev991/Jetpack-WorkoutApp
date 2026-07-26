@@ -284,16 +284,16 @@ class RegisterViewModelTest {
     }
 
     @Test
-    fun onCountrySelectedByName_WhenCalled_thenUpdatesCountryAndClearsCity() =
+    fun onCountrySelectedById_WhenCalled_thenUpdatesCountryAndClearsCity() =
         runTest {
             // Given - first select city
-            registerViewModel.onCountrySelectedByName("Россия")
+            registerViewModel.onCountrySelectedById("1")
             advanceUntilIdle()
-            registerViewModel.onCitySelectedByName("Москва")
+            registerViewModel.onCitySelectedById("1")
             advanceUntilIdle()
 
             // When - select different country
-            registerViewModel.onCountrySelectedByName("Россия")
+            registerViewModel.onCountrySelectedById("1")
             advanceUntilIdle()
 
             // Then
@@ -303,14 +303,14 @@ class RegisterViewModelTest {
         }
 
     @Test
-    fun onCitySelectedByName_WhenCalled_thenUpdatesCity() =
+    fun onCitySelectedById_WhenCalled_thenUpdatesCity() =
         runTest {
             // Given
-            registerViewModel.onCountrySelectedByName("Россия")
+            registerViewModel.onCountrySelectedById("1")
             advanceUntilIdle()
 
             // When
-            registerViewModel.onCitySelectedByName("Москва")
+            registerViewModel.onCitySelectedById("1")
             advanceUntilIdle()
 
             // Then
@@ -358,9 +358,9 @@ class RegisterViewModelTest {
             registerViewModel.onFullNameChange("Ivan Ivanov")
             registerViewModel.onGenderChange(0)
             registerViewModel.onBirthDateChange(LocalDate.of(2000, 1, 15))
-            registerViewModel.onCountrySelectedByName("Россия")
+            registerViewModel.onCountrySelectedById("1")
             advanceUntilIdle()
-            registerViewModel.onCitySelectedByName("Москва")
+            registerViewModel.onCitySelectedById("1")
             advanceUntilIdle()
             registerViewModel.onPolicyAcceptedChange(true)
 
@@ -380,9 +380,9 @@ class RegisterViewModelTest {
             registerViewModel.onFullNameChange("Ivan Ivanov")
             registerViewModel.onGenderChange(0)
             registerViewModel.onBirthDateChange(LocalDate.of(2000, 1, 15))
-            registerViewModel.onCountrySelectedByName("Россия")
+            registerViewModel.onCountrySelectedById("1")
             advanceUntilIdle()
-            registerViewModel.onCitySelectedByName("Москва")
+            registerViewModel.onCitySelectedById("1")
             advanceUntilIdle()
             registerViewModel.onPolicyAcceptedChange(true)
 
@@ -403,9 +403,9 @@ class RegisterViewModelTest {
             registerViewModel.onFullNameChange("Ivan Ivanov")
             registerViewModel.onGenderChange(0)
             registerViewModel.onBirthDateChange(LocalDate.of(2000, 1, 15))
-            registerViewModel.onCountrySelectedByName("Россия")
+            registerViewModel.onCountrySelectedById("1")
             advanceUntilIdle()
-            registerViewModel.onCitySelectedByName("Москва")
+            registerViewModel.onCitySelectedById("1")
             advanceUntilIdle()
             registerViewModel.onPolicyAcceptedChange(true)
 
@@ -426,9 +426,9 @@ class RegisterViewModelTest {
             registerViewModel.onFullNameChange("Ivan Ivanov")
             registerViewModel.onGenderChange(0)
             registerViewModel.onBirthDateChange(LocalDate.of(2000, 1, 15))
-            registerViewModel.onCountrySelectedByName("Россия")
+            registerViewModel.onCountrySelectedById("1")
             advanceUntilIdle()
-            registerViewModel.onCitySelectedByName("Москва")
+            registerViewModel.onCitySelectedById("1")
             advanceUntilIdle()
             registerViewModel.onPolicyAcceptedChange(true)
 
@@ -450,9 +450,9 @@ class RegisterViewModelTest {
             registerViewModel.onFullNameChange("Ivan Ivanov")
             registerViewModel.onGenderChange(0)
             registerViewModel.onBirthDateChange(futureDate)
-            registerViewModel.onCountrySelectedByName("Россия")
+            registerViewModel.onCountrySelectedById("1")
             advanceUntilIdle()
-            registerViewModel.onCitySelectedByName("Москва")
+            registerViewModel.onCitySelectedById("1")
             advanceUntilIdle()
             registerViewModel.onPolicyAcceptedChange(true)
 
@@ -474,9 +474,9 @@ class RegisterViewModelTest {
             registerViewModel.onFullNameChange("Ivan Ivanov")
             registerViewModel.onGenderChange(0)
             registerViewModel.onBirthDateChange(youngDate)
-            registerViewModel.onCountrySelectedByName("Россия")
+            registerViewModel.onCountrySelectedById("1")
             advanceUntilIdle()
-            registerViewModel.onCitySelectedByName("Москва")
+            registerViewModel.onCitySelectedById("1")
             advanceUntilIdle()
             registerViewModel.onPolicyAcceptedChange(true)
 
@@ -497,9 +497,9 @@ class RegisterViewModelTest {
             registerViewModel.onFullNameChange("Ivan Ivanov")
             registerViewModel.onGenderChange(0)
             registerViewModel.onBirthDateChange(LocalDate.of(2000, 1, 15))
-            registerViewModel.onCountrySelectedByName("Россия")
+            registerViewModel.onCountrySelectedById("1")
             advanceUntilIdle()
-            registerViewModel.onCitySelectedByName("Москва")
+            registerViewModel.onCitySelectedById("1")
             advanceUntilIdle()
             registerViewModel.onPolicyAcceptedChange(false)
 
@@ -607,13 +607,13 @@ class RegisterViewModelTest {
         }
 
     @Test
-    fun onCitySelectedByName_WhenCountryNotSelected_thenSelectsCountryAutomatically() =
+    fun onCitySelectedById_WhenCountryNotSelected_thenSelectsCountryAutomatically() =
         runTest {
             // Given - country not selected
             assertNull(registerViewModel.selectedCountry.value)
 
             // When - select city without selecting country first
-            registerViewModel.onCitySelectedByName("Москва")
+            registerViewModel.onCitySelectedById("1")
             advanceUntilIdle()
 
             // Then - city and country are selected
@@ -640,8 +640,8 @@ class RegisterViewModelTest {
         registerViewModel.onFullNameChange("Ivan Ivanov")
         registerViewModel.onGenderChange(0)
         registerViewModel.onBirthDateChange(LocalDate.of(2000, 1, 15))
-        registerViewModel.onCountrySelectedByName("Россия")
-        registerViewModel.onCitySelectedByName("Москва")
+        registerViewModel.onCountrySelectedById("1")
+        registerViewModel.onCitySelectedById("1")
         registerViewModel.onPolicyAcceptedChange(true)
     }
 }

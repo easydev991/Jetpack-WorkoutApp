@@ -464,6 +464,7 @@
     <!-- Map -->
     <string name="see_details">Подробнее</string>
     <string name="my_location_content_description">Центрировать на мне</string>
+    <string name="map_not_available">Карта недоступна на этом устройстве: %s</string>
 
     <!-- Content descriptions -->
     <string name="create_park_description">Создать площадку</string>

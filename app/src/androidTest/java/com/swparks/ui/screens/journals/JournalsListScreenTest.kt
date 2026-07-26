@@ -7,7 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -698,8 +698,6 @@ class JournalsListScreenTest {
                     isRefreshing = MutableStateFlow(false)
                 )
 
-            var onJournalSettingsSavedCalled = false
-
             // When - открываем экран с обработчиком событий
             composeTestRule.setContent {
                 val navController = rememberNavController()
@@ -719,7 +717,6 @@ class JournalsListScreenTest {
                                     // Закрыть диалог только если это был наш journal
                                     if (journalToEditSettings?.id == event.journal.id) {
                                         journalToEditSettings = null
-                                        onJournalSettingsSavedCalled = true
                                     }
                                 }
                             }

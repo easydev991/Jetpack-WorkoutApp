@@ -93,7 +93,7 @@ class EditProfileViewModelSelectionTest {
             testDispatcher.scheduler.advanceUntilIdle()
 
             // Act
-            viewModel.onCountrySelected("Россия")
+            viewModel.onCountrySelected("1")
             testDispatcher.scheduler.advanceUntilIdle()
 
             // Assert
@@ -115,13 +115,13 @@ class EditProfileViewModelSelectionTest {
             testDispatcher.scheduler.advanceUntilIdle()
 
             // Сначала выбираем Россию и Москву
-            viewModel.onCountrySelected("Россия")
+            viewModel.onCountrySelected("1")
             testDispatcher.scheduler.advanceUntilIdle()
-            viewModel.onCitySelected("Москва")
+            viewModel.onCitySelected("1")
             testDispatcher.scheduler.advanceUntilIdle()
 
             // Act - выбираем ту же страну
-            viewModel.onCountrySelected("Россия")
+            viewModel.onCountrySelected("1")
             testDispatcher.scheduler.advanceUntilIdle()
 
             // Assert - город должен сохраниться
@@ -143,13 +143,13 @@ class EditProfileViewModelSelectionTest {
             testDispatcher.scheduler.advanceUntilIdle()
 
             // Сначала выбираем Россию и Москву
-            viewModel.onCountrySelected("Россия")
+            viewModel.onCountrySelected("1")
             testDispatcher.scheduler.advanceUntilIdle()
-            viewModel.onCitySelected("Москва")
+            viewModel.onCitySelected("1")
             testDispatcher.scheduler.advanceUntilIdle()
 
             // Act - выбираем США (где нет Москвы)
-            viewModel.onCountrySelected("США")
+            viewModel.onCountrySelected("2")
             testDispatcher.scheduler.advanceUntilIdle()
 
             // Assert - должен выбраться первый город из США (так как сервер требует city_id)
@@ -172,11 +172,11 @@ class EditProfileViewModelSelectionTest {
             testDispatcher.scheduler.advanceUntilIdle()
 
             // Сначала выбираем Россию
-            viewModel.onCountrySelected("Россия")
+            viewModel.onCountrySelected("1")
             testDispatcher.scheduler.advanceUntilIdle()
 
             // Act
-            viewModel.onCitySelected("Москва")
+            viewModel.onCitySelected("1")
             testDispatcher.scheduler.advanceUntilIdle()
 
             // Assert
@@ -198,11 +198,11 @@ class EditProfileViewModelSelectionTest {
             testDispatcher.scheduler.advanceUntilIdle()
 
             // Сначала выбираем Россию
-            viewModel.onCountrySelected("Россия")
+            viewModel.onCountrySelected("1")
             testDispatcher.scheduler.advanceUntilIdle()
 
             // Act - выбираем город из США
-            viewModel.onCitySelected("Нью-Йорк")
+            viewModel.onCitySelected("3")
             testDispatcher.scheduler.advanceUntilIdle()
 
             // Assert - страна должна обновиться на США
@@ -266,6 +266,45 @@ class EditProfileViewModelSelectionTest {
             Assert.assertEquals(uri, state.selectedAvatarUri)
         }
 
+    // MARK: - Duplicate names tests
+
+    @Test
+    fun onCitySelected_duplicateNames_selectsByUniqueId() =
+        runTest {
+            // Arrange — страна с двумя городами-тёзками (разные id, одинаковые имена)
+            val countryWithDuplicates =
+                Country(
+                    id = "1",
+                    name = "Россия",
+                    cities =
+                        listOf(
+                            City(id = "1", name = "Новомосковск", lat = "54.01", lon = "38.28"),
+                            City(id = "2", name = "Новомосковск", lat = "53.98", lon = "38.30")
+                        )
+                )
+            val countries = listOf(countryWithDuplicates)
+            val user = makeTestUser()
+
+            currentUserFlow.value = user
+            countriesFlow.value = countries
+
+            val viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            // Сначала выбираем страну
+            viewModel.onCountrySelected("1")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            // Act — выбираем второй «Новомосковск» по id
+            viewModel.onCitySelected("2")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            // Assert — выбран город с id="2", а не первый попавшийся по имени
+            val state = viewModel.uiState.first()
+            Assert.assertEquals("2", state.selectedCity?.id)
+            Assert.assertEquals("Новомосковск", state.selectedCity?.name)
+        }
+
     // MARK: - Analytics tests
 
     @Test
@@ -279,7 +318,7 @@ class EditProfileViewModelSelectionTest {
             val viewModel = createViewModel()
             testDispatcher.scheduler.advanceUntilIdle()
 
-            viewModel.onCountrySelected("Россия")
+            viewModel.onCountrySelected("1")
             testDispatcher.scheduler.advanceUntilIdle()
 
             verify {
@@ -304,9 +343,9 @@ class EditProfileViewModelSelectionTest {
             val viewModel = createViewModel()
             testDispatcher.scheduler.advanceUntilIdle()
 
-            viewModel.onCountrySelected("Россия")
+            viewModel.onCountrySelected("1")
             testDispatcher.scheduler.advanceUntilIdle()
-            viewModel.onCitySelected("Москва")
+            viewModel.onCitySelected("1")
             testDispatcher.scheduler.advanceUntilIdle()
 
             verify {

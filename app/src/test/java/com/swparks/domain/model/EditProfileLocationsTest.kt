@@ -32,11 +32,11 @@ class EditProfileLocationsTest {
     fun selectCountry_keepsCurrentCity_whenCityInNewCountry() {
         val locations = makeLocations()
         val currentCity = makeCity(id = "1", name = "Москва", lat = "55.75", lon = "37.61")
-        val countryName = "Россия"
+        val countryId = "1"
 
-        val result = locations.selectCountry(countryName, currentCity)
+        val result = locations.selectCountry(countryId, currentCity)
 
-        assertStringsEqual(result.newCountry?.name, countryName)
+        assertStringsEqual(result.newCountry?.name, "Россия")
         assertCitiesEqual(result.newCity, currentCity)
         assertTrue(result.newCities.isNotEmpty())
     }
@@ -45,11 +45,11 @@ class EditProfileLocationsTest {
     fun selectCountry_selectsFirstCity_whenCityNotInNewCountry() {
         val locations = makeLocations()
         val currentCity = makeCity(id = "999", name = "Неизвестный город", lat = "0.0", lon = "0.0")
-        val countryName = "Россия"
+        val countryId = "1"
 
-        val result = locations.selectCountry(countryName, currentCity)
+        val result = locations.selectCountry(countryId, currentCity)
 
-        assertStringsEqual(result.newCountry?.name, countryName)
+        assertStringsEqual(result.newCountry?.name, "Россия")
         // При смене страны выбирается первый город из новой страны
         assertStringsEqual(result.newCity?.name, "Москва")
         assertTrue(result.newCities.isNotEmpty())
@@ -58,11 +58,11 @@ class EditProfileLocationsTest {
     @Test
     fun selectCountry_selectsFirstCity_whenCurrentCityIsNull() {
         val locations = makeLocations()
-        val countryName = "Россия"
+        val countryId = "1"
 
-        val result = locations.selectCountry(countryName, null)
+        val result = locations.selectCountry(countryId, null)
 
-        assertStringsEqual(result.newCountry?.name, countryName)
+        assertStringsEqual(result.newCountry?.name, "Россия")
         // При выборе страны без текущего города выбирается первый город
         assertStringsEqual(result.newCity?.name, "Москва")
         assertTrue(result.newCities.isNotEmpty())
@@ -72,9 +72,9 @@ class EditProfileLocationsTest {
     fun selectCountry_returnsNull_whenCountryNotFound() {
         val locations = makeLocations()
         val currentCity = makeCity(id = "1", name = "Москва", lat = "55.75", lon = "37.61")
-        val countryName = "Несуществующая страна"
+        val countryId = "999"
 
-        val result = locations.selectCountry(countryName, currentCity)
+        val result = locations.selectCountry(countryId, currentCity)
 
         assertNull(result.newCountry)
         assertCitiesEqual(result.newCity, currentCity)
@@ -84,9 +84,9 @@ class EditProfileLocationsTest {
     @Test
     fun selectCountry_updatesCitiesList() {
         val locations = makeLocations()
-        val countryName = "Россия"
+        val countryId = "1"
 
-        val result = locations.selectCountry(countryName, null)
+        val result = locations.selectCountry(countryId, null)
 
         assertIntsEqual(result.newCities.size, 2)
     }
@@ -97,47 +97,47 @@ class EditProfileLocationsTest {
     fun selectCity_sameCountry_whenCityFromCurrentCountry() {
         val locations = makeLocations()
         val currentCountry = locations.countries.find { it.name == "Россия" }
-        val cityName = "Москва"
+        val cityId = "1"
 
-        val result = locations.selectCity(cityName, currentCountry)
+        val result = locations.selectCity(cityId, currentCountry)
 
-        assertStringsEqual(result.newCity?.name, cityName)
-        assertNull(result.countryName)
+        assertStringsEqual(result.newCity?.name, "Москва")
+        assertNull(result.countryId)
     }
 
     @Test
     fun selectCity_differentCountry_whenCityFromAnotherCountry() {
         val locations = makeLocations()
         val currentCountry = locations.countries.find { it.name == "Россия" }
-        val cityName = "Нью-Йорк"
+        val cityId = "3"
 
-        val result = locations.selectCity(cityName, currentCountry)
+        val result = locations.selectCity(cityId, currentCountry)
 
-        assertStringsEqual(result.newCity?.name, cityName)
-        assertStringsEqual(result.countryName, "США")
+        assertStringsEqual(result.newCity?.name, "Нью-Йорк")
+        assertStringsEqual(result.countryId, "2")
     }
 
     @Test
     fun selectCity_returnsNull_whenCityNotFound() {
         val locations = makeLocations()
         val currentCountry = locations.countries.find { it.name == "Россия" }
-        val cityName = "Несуществующий город"
+        val cityId = "999"
 
-        val result = locations.selectCity(cityName, currentCountry)
+        val result = locations.selectCity(cityId, currentCountry)
 
         assertNull(result.newCity)
-        assertNull(result.countryName)
+        assertNull(result.countryId)
     }
 
     @Test
     fun selectCity_returnsCountryName_whenCurrentCountryIsNull() {
         val locations = makeLocations()
-        val cityName = "Москва"
+        val cityId = "1"
 
-        val result = locations.selectCity(cityName, null)
+        val result = locations.selectCity(cityId, null)
 
-        assertStringsEqual(result.newCity?.name, cityName)
-        assertStringsEqual(result.countryName, "Россия")
+        assertStringsEqual(result.newCity?.name, "Москва")
+        assertStringsEqual(result.countryId, "1")
     }
 
     // MARK: - Helper methods

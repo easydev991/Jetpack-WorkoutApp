@@ -79,6 +79,14 @@ make install        # installDebug
 - Enable with `make setup` (sets `git config core.hooksPath .githooks`).
 - If not configured, run `./gradlew updateReadmeVersions` manually before committing.
 
+## ABI splits & UnsatisfiedLinkError
+
+- `splits.abi` включается через флаг `-PenableSplits=true` (передаётся `make apk`); `make release` (`bundleRelease`) запускается без флага, иначе AGP падает на `:app:buildReleasePreBundle` (<https://issuetracker.google.com/402800800>). При включённом флаге релизные APK содержат только `arm64-v8a` и `armeabi-v7a` — x86/x86_64 исключены.
+- Debug-сборки (`make build`) универсальны и работают на любой архитектуре.
+- MapLibre (`libmaplibre.so`) — основной кандидат на `UnsatisfiedLinkError` при установке релизного APK на эмулятор x86_64.
+- Обязательное правило: карту (`ParkMapView`) тестировать только через `make build`/`make install` на arm64-эмуляторе (например, `Pixel 9 Pro API 36`). Релизные APK предназначены для arm64-устройств.
+- При появлении crash по `UnsatisfiedLinkError` из любой native-библиотеки — первым делом проверять ABI-состав APK.
+
 ## Pre-commit checklist
 
 - `make format`

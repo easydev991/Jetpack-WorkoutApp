@@ -13,6 +13,7 @@ import com.swparks.ui.screens.settings.ItemListMode
 import com.swparks.ui.state.ItemListUiState
 import com.swparks.ui.state.MapEvent
 import com.swparks.ui.state.MapUiState
+import com.swparks.ui.state.SelectableItem
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -58,7 +59,12 @@ interface IParksRootViewModel {
 
     fun onCitySearchQueryChange(query: String)
 
-    fun onCitySelected(cityName: String)
+    /**
+     * Обрабатывает выбор города для фильтрации.
+     *
+     * @param cityId идентификатор выбранного города
+     */
+    fun onCitySelected(cityId: String)
 
     fun onClearCityFilter()
 
@@ -121,8 +127,8 @@ fun ParksRootUiState.toItemListUiState(): ItemListUiState =
         items =
             cities
                 .filter { it.name.contains(citySearchQuery, ignoreCase = true) }
-                .map { it.name },
-        selectedItem = selectedCity?.name,
+                .map { SelectableItem(it.id, it.name) },
+        selectedItem = selectedCity?.id,
         searchQuery = citySearchQuery,
         isEmpty = false
     )

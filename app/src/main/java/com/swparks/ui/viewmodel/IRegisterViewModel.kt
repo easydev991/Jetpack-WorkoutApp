@@ -108,14 +108,18 @@ interface IRegisterViewModel {
     fun onBirthDateChange(date: LocalDate?)
 
     /**
-     * Выбирает страну по имени.
+     * Выбирает страну по идентификатору.
+     *
+     * @param countryId идентификатор выбранной страны. Выбирает страну по идентификатору
      */
-    fun onCountrySelectedByName(countryName: String)
+    fun onCountrySelectedById(countryId: String)
 
     /**
-     * Выбирает город по имени.
+     * Выбирает город по идентификатору.
+     *
+     * @param cityId идентификатор выбранного города. Выбирает город по идентификатору
      */
-    fun onCitySelectedByName(cityName: String)
+    fun onCitySelectedById(cityId: String)
 
     /**
      * Обновляет флаг принятия соглашения.

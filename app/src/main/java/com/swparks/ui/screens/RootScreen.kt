@@ -1640,8 +1640,8 @@ fun RootScreen(appState: AppState) {
                 ItemListScreen(
                     state = parksRootUiState.toItemListUiState(),
                     onSearchQueryChange = parksRootViewModel::onCitySearchQueryChange,
-                    onItemSelected = { cityName ->
-                        parksRootViewModel.onCitySelected(cityName)
+                    onItemSelected = { item ->
+                        parksRootViewModel.onCitySelected(item.id)
                         appState.navController.popBackStack()
                     },
                     onContactUs = {

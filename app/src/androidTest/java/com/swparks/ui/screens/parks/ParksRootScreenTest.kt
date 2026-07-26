@@ -3,7 +3,7 @@ package com.swparks.ui.screens.parks
 import androidx.compose.material3.Surface
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -553,5 +553,33 @@ class ParksRootScreenTest {
         composeTestRule
             .onNodeWithText("Park1")
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun whenMapTabIsSelected_errorPlaceholderTextIsNotShown() {
+        fakeViewModel.onTabSelected(ParksTab.MAP)
+
+        composeTestRule.setContent {
+            val navController = androidx.navigation.compose.rememberNavController()
+            val appState = AppState(navController, AnalyticsService(listOf(fakeAnalyticsLogger()), mockk<Logger>(relaxed = true)))
+
+            Surface {
+                ParksRootScreen(
+                    appState = appState,
+                    onCreateParkClick = {},
+                    viewModel = fakeViewModel
+                )
+            }
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule
+            .onNodeWithTag("park_map")
+            .assertIsDisplayed()
+
+        val mapNotAvailableText = context.getString(R.string.map_not_available, "")
+        assert(
+            composeTestRule.onAllNodesWithText(mapNotAvailableText).fetchSemanticsNodes().isEmpty()
+        ) { "Error placeholder text should not be shown when map is available" }
     }
 }

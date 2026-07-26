@@ -2,8 +2,10 @@ package com.swparks.ui.screens.settings
 
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -12,6 +14,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.ui.state.ItemListUiState
+import com.swparks.ui.state.SelectableItem
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -30,7 +33,7 @@ class ItemListScreenTest {
     private fun setContent(
         state: ItemListUiState,
         onSearchQueryChange: (String) -> Unit = {},
-        onItemSelected: (String) -> Unit = {},
+        onItemSelected: (SelectableItem) -> Unit = {},
         onContactUs: () -> Unit = {},
         onBackClick: () -> Unit = {}
     ) {
@@ -53,7 +56,7 @@ class ItemListScreenTest {
             state =
                 ItemListUiState(
                     mode = ItemListMode.COUNTRY,
-                    items = listOf("Россия", "Беларусь"),
+                    items = listOf(SelectableItem("1", "Россия"), SelectableItem("2", "Беларусь")),
                     selectedItem = null
                 )
         )
@@ -69,7 +72,7 @@ class ItemListScreenTest {
             state =
                 ItemListUiState(
                     mode = ItemListMode.CITY,
-                    items = listOf("Москва", "Минск"),
+                    items = listOf(SelectableItem("1", "Москва"), SelectableItem("2", "Минск")),
                     selectedItem = null
                 )
         )
@@ -108,7 +111,7 @@ class ItemListScreenTest {
             state =
                 ItemListUiState(
                     mode = ItemListMode.CITY,
-                    items = listOf("Москва", "Минск"),
+                    items = listOf(SelectableItem("1", "Москва"), SelectableItem("2", "Минск")),
                     selectedItem = null
                 ),
             onSearchQueryChange = { searchQuery = it }
@@ -129,10 +132,10 @@ class ItemListScreenTest {
             state =
                 ItemListUiState(
                     mode = ItemListMode.CITY,
-                    items = listOf("Москва", "Минск"),
+                    items = listOf(SelectableItem("1", "Москва"), SelectableItem("2", "Минск")),
                     selectedItem = null
                 ),
-            onItemSelected = { selectedItem = it }
+            onItemSelected = { selectedItem = it.label }
         )
 
         composeTestRule
@@ -148,8 +151,13 @@ class ItemListScreenTest {
             state =
                 ItemListUiState(
                     mode = ItemListMode.CITY,
-                    items = listOf("Москва", "Минск", "Казань"),
-                    selectedItem = "Минск"
+                    items =
+                        listOf(
+                            SelectableItem("1", "Москва"),
+                            SelectableItem("2", "Минск"),
+                            SelectableItem("3", "Казань")
+                        ),
+                    selectedItem = "2"
                 )
         )
 
@@ -170,10 +178,10 @@ class ItemListScreenTest {
             state =
                 ItemListUiState(
                     mode = ItemListMode.COUNTRY,
-                    items = listOf("Россия", "Беларусь"),
-                    selectedItem = "Россия"
+                    items = listOf(SelectableItem("1", "Россия"), SelectableItem("2", "Беларусь")),
+                    selectedItem = "1"
                 ),
-            onItemSelected = { selectedItem = it }
+            onItemSelected = { selectedItem = it.label }
         )
 
         composeTestRule
@@ -206,6 +214,78 @@ class ItemListScreenTest {
     }
 
     @Test
+    fun itemListScreen_cityMode_duplicateNames_rendersBothWithoutCrash() {
+        setContent(
+            state =
+                ItemListUiState(
+                    mode = ItemListMode.CITY,
+                    items =
+                        listOf(
+                            SelectableItem("1", "Новомосковск"),
+                            SelectableItem("2", "Новомосковск"),
+                            SelectableItem("3", "Тула")
+                        ),
+                    selectedItem = null
+                )
+        )
+
+        composeTestRule
+            .onAllNodesWithText("Новомосковск")
+            .assertCountEquals(2)
+
+        composeTestRule
+            .onNodeWithText("Тула")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun itemListScreen_cityMode_duplicateNames_selectSecondReturnsItsId() {
+        var selectedItem: SelectableItem? = null
+
+        setContent(
+            state =
+                ItemListUiState(
+                    mode = ItemListMode.CITY,
+                    items =
+                        listOf(
+                            SelectableItem("1", "Новомосковск"),
+                            SelectableItem("2", "Новомосковск")
+                        ),
+                    selectedItem = null
+                ),
+            onItemSelected = { selectedItem = it }
+        )
+
+        // Кликаем второй «Новомосковск» — должен вернуть id="2"
+        composeTestRule
+            .onAllNodesWithText("Новомосковск")[1]
+            .performClick()
+
+        assertEquals("2", selectedItem?.id)
+        assertEquals("Новомосковск", selectedItem?.label)
+    }
+
+    @Test
+    fun itemListScreen_countryMode_duplicateNames_rendersBoth() {
+        setContent(
+            state =
+                ItemListUiState(
+                    mode = ItemListMode.COUNTRY,
+                    items =
+                        listOf(
+                            SelectableItem("1", "Россия"),
+                            SelectableItem("2", "Россия")
+                        ),
+                    selectedItem = null
+                )
+        )
+
+        composeTestRule
+            .onAllNodesWithText("Россия")
+            .assertCountEquals(2)
+    }
+
+    @Test
     fun itemListScreen_whenBackClicked_callsOnBackClick() {
         var backClicked = false
 
@@ -213,7 +293,7 @@ class ItemListScreenTest {
             state =
                 ItemListUiState(
                     mode = ItemListMode.COUNTRY,
-                    items = listOf("Россия"),
+                    items = listOf(SelectableItem("1", "Россия")),
                     selectedItem = null
                 ),
             onBackClick = { backClicked = true }
@@ -224,5 +304,27 @@ class ItemListScreenTest {
             .performClick()
 
         assertEquals(true, backClicked)
+    }
+
+    @Test
+    fun itemListScreen_dividers_renderedBetweenElements_only() {
+        setContent(
+            state =
+                ItemListUiState(
+                    mode = ItemListMode.CITY,
+                    items =
+                        listOf(
+                            SelectableItem("1", "Москва"),
+                            SelectableItem("2", "Санкт-Петербург"),
+                            SelectableItem("3", "Казань")
+                        ),
+                    selectedItem = null
+                )
+        )
+
+        // Для 3 элементов — 2 разделителя (между 1-2 и 2-3), не после последнего.
+        composeTestRule
+            .onAllNodesWithTag("item_divider")
+            .assertCountEquals(2)
     }
 }

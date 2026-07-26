@@ -200,8 +200,8 @@ class RegisterViewModel(
         }
     }
 
-    override fun onCountrySelectedByName(countryName: String) {
-        val country = _countries.value.find { it.name == countryName }
+    override fun onCountrySelectedById(countryId: String) {
+        val country = _countries.value.find { it.id == countryId }
         if (country != null) {
             _form.value = _form.value.copy(countryId = country.id, cityId = null)
             _selectedCountry.value = country
@@ -213,13 +213,13 @@ class RegisterViewModel(
         }
     }
 
-    override fun onCitySelectedByName(cityName: String) {
+    override fun onCitySelectedById(cityId: String) {
         // Сначала ищем в городах для выбранной страны
-        var city = _cities.value.find { it.name == cityName }
+        var city = _cities.value.find { it.id == cityId }
 
         // Если не найден и страна не выбрана - ищем во всех городах
         if (city == null && _selectedCountry.value == null) {
-            city = _allCities.value.find { it.name == cityName }
+            city = _allCities.value.find { it.id == cityId }
         }
 
         if (city != null) {

@@ -334,7 +334,7 @@ class ParksRootViewModelTest {
                     )
                 )
             )
-            viewModel.onCitySelected("Moscow")
+            viewModel.onCitySelected("1")
 
             val cameraPosition = viewModel.uiState.value.mapState.cameraPosition
             assertEquals(55.75, cameraPosition?.target?.latitude ?: 0.0, 0.0)
@@ -366,7 +366,7 @@ class ParksRootViewModelTest {
                 )
             advanceUntilIdle()
 
-            viewModel.onCitySelected("Moscow")
+            viewModel.onCitySelected("1")
             val cityCamera = viewModel.uiState.value.mapState.cameraPosition
             viewModel.onClearCityFilter()
 
@@ -560,7 +560,7 @@ class ParksRootViewModelTest {
                     types = ParkType.entries.toSet()
                 )
             )
-            viewModel.onCitySelected("Moscow")
+            viewModel.onCitySelected("1")
             viewModel.onLocalFilterChange(
                 ParkFilter(
                     sizes = setOf(ParkSize.SMALL, ParkSize.LARGE),
@@ -608,7 +608,7 @@ class ParksRootViewModelTest {
                 )
             advanceUntilIdle()
 
-            viewModel.onCitySelected("Moscow")
+            viewModel.onCitySelected("1")
             advanceUntilIdle()
 
             viewModel.onShowFilterDialog()
@@ -693,7 +693,7 @@ class ParksRootViewModelTest {
             advanceUntilIdle()
 
             viewModel.updateParks(allParks)
-            viewModel.onCitySelected("Moscow")
+            viewModel.onCitySelected("1")
             advanceUntilIdle()
 
             val filteredIds =
@@ -947,7 +947,7 @@ class ParksRootViewModelTest {
 
         val result = state.toItemListUiState()
 
-        assertEquals("Moscow", result.selectedItem)
+        assertEquals("1", result.selectedItem)
     }
 
     @Test
@@ -1104,7 +1104,7 @@ class ParksRootViewModelTest {
                 )
             advanceUntilIdle()
 
-            vm.onCitySelected("Moscow")
+            vm.onCitySelected("1")
 
             verify {
                 analyticsService.log(

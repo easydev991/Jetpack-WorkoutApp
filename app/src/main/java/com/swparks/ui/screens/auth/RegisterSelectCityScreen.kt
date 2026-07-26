@@ -12,6 +12,7 @@ import com.swparks.ui.screens.more.sendLocationFeedback
 import com.swparks.ui.screens.settings.ItemListMode
 import com.swparks.ui.screens.settings.ItemListScreen
 import com.swparks.ui.state.ItemListUiState
+import com.swparks.ui.state.SelectableItem
 import com.swparks.ui.viewmodel.IRegisterViewModel
 import com.swparks.util.LocationFeedback
 
@@ -42,9 +43,9 @@ fun RegisterSelectCityScreen(
     val displayCities =
         remember(selectedCountry, cities, allCities) {
             if (selectedCountry != null) {
-                cities.map { it.name }
+                cities.map { SelectableItem(it.id, it.name) }
             } else {
-                allCities.map { it.name }
+                allCities.map { SelectableItem(it.id, it.name) }
             }
         }
 
@@ -53,7 +54,7 @@ fun RegisterSelectCityScreen(
             if (searchQuery.isEmpty()) {
                 displayCities
             } else {
-                displayCities.filter { it.contains(searchQuery, ignoreCase = true) }
+                displayCities.filter { it.label.contains(searchQuery, ignoreCase = true) }
             }
         }
 
@@ -64,13 +65,13 @@ fun RegisterSelectCityScreen(
             ItemListUiState(
                 mode = ItemListMode.CITY,
                 items = filteredItems,
-                selectedItem = selectedCity?.name,
+                selectedItem = selectedCity?.id,
                 searchQuery = searchQuery,
                 isEmpty = isEmpty
             ),
         onSearchQueryChange = { searchQuery = it },
-        onItemSelected = { cityName ->
-            viewModel.onCitySelectedByName(cityName)
+        onItemSelected = { item ->
+            viewModel.onCitySelectedById(item.id)
             onBackClick()
         },
         onContactUs = {

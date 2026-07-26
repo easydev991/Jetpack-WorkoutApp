@@ -1024,7 +1024,7 @@ class EditProfileViewModelTest {
             val viewModel = createViewModel()
             advanceUntilIdle()
 
-            viewModel.onCountrySelected("Россия")
+            viewModel.onCountrySelected("1")
             advanceUntilIdle()
 
             verify {
@@ -1044,9 +1044,9 @@ class EditProfileViewModelTest {
             val viewModel = createViewModel()
             advanceUntilIdle()
 
-            viewModel.onCountrySelected("Россия")
+            viewModel.onCountrySelected("1")
             advanceUntilIdle()
-            viewModel.onCitySelected("Москва")
+            viewModel.onCitySelected("1")
             advanceUntilIdle()
 
             verify {

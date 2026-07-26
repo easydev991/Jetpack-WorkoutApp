@@ -85,16 +85,16 @@ interface IEditProfileViewModel {
     /**
      * Обрабатывает выбор страны.
      *
-     * @param countryName Имя выбранной страны
+     * @param countryId идентификатор выбранной страны
      */
-    fun onCountrySelected(countryName: String)
+    fun onCountrySelected(countryId: String)
 
     /**
      * Обрабатывает выбор города.
      *
-     * @param cityName Имя выбранного города
+     * @param cityId идентификатор выбранного города
      */
-    fun onCitySelected(cityName: String)
+    fun onCitySelected(cityId: String)
 
     /**
      * Сбрасывает несохранённые изменения к исходным значениям.

@@ -132,6 +132,7 @@ apk:
 		$(MAKE) _load_secrets; \
 	fi
 	@printf "$(YELLOW)Создаю релизные APK (arm64-v8a + armeabi-v7a)...$(RESET)\n"
+	@# ABI-сплиты включаются через -PenableSplits=true; для bundleRelease (AAB) splits нужно отключать
 	@./gradlew assembleRelease -PenableSplits=true --console=plain
 	@VERSION_NAME=$$(grep "^VERSION_NAME=" gradle.properties | cut -d'=' -f2); \
 	VERSION_CODE=$$(grep "^VERSION_CODE=" gradle.properties | cut -d'=' -f2); \

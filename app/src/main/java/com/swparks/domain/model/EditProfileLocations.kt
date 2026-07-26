@@ -32,7 +32,11 @@ data class EditProfileLocations(
      */
     data class SelectCityResult(
         val newCity: City?,
-        val countryName: String?
+        /**
+         * Идентификатор страны, которой принадлежит выбранный город,
+         * если она отличается от currentCountry. null если страна не меняется.
+         */
+        val countryId: String?
     )
 
     /**
@@ -41,15 +45,15 @@ data class EditProfileLocations(
      * При смене страны автоматически выбирается первый город из новой страны,
      * так как сервер не принимает country_id без city_id.
      *
-     * @param countryName Имя выбранной страны
+     * @param countryId идентификатор выбранной страны
      * @param currentCity Текущий выбранный город
      * @return SelectCountryResult с новой страной, новым городом и списком городов
      */
     fun selectCountry(
-        countryName: String,
+        countryId: String,
         currentCity: City?
     ): SelectCountryResult {
-        val newCountry = countries.find { it.name == countryName }
+        val newCountry = countries.find { it.id == countryId }
         var newCity: City? = currentCity
         var newCities: List<City> = cities
 
@@ -69,27 +73,28 @@ data class EditProfileLocations(
     /**
      * Выбирает город и возвращает результат.
      *
-     * @param cityName Имя выбранного города
+     * @param cityId идентификатор выбранного города
      * @param currentCountry Текущая выбранная страна
-     * @return SelectCityResult с новым городом и именем страны (если нужно выбрать другую страну)
+     * @return SelectCityResult с новым городом и идентификатором страны,
+     *         если выбранный город принадлежит другой стране
      */
     fun selectCity(
-        cityName: String,
+        cityId: String,
         currentCountry: Country?
     ): SelectCityResult {
-        val newCity = cities.find { it.name == cityName }
-        var countryName: String? = null
+        val newCity = cities.find { it.id == cityId }
+        var countryId: String? = null
 
         if (newCity != null) {
             val countryContainingCity = countries.find { it.cities.contains(newCity) }
             if (countryContainingCity != null && currentCountry != countryContainingCity) {
-                countryName = countryContainingCity.name
+                countryId = countryContainingCity.id
             }
         }
 
         return SelectCityResult(
             newCity = newCity,
-            countryName = countryName
+            countryId = countryId
         )
     }
 
