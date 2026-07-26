@@ -8,9 +8,9 @@
 
 | Этап | Что сделано | Что осталось |
 |---|---|---|
-| **1. Безопасный ключ `ItemListScreen`** | Реализация (коммит `4e99e021`) + регрессионные тесты (1.1) + `make {format,lint,test,build}` — всё зелёное. | Ручная проверка «Новомосковск» — отложена до этапа 3. |
-| **2. Defensive fix `UnsatisfiedLinkError`** | Анализ APK (2.1) закрыт; defensive fallback в `ParkMapView` (2.2a) с локализованной заглушкой; `splits.abi` под флагом `-PenableSplits=true` (2.3); strings/`ParkMapView`/`ParksRootScreenTest` обновлены; `make {format,lint,test,build}` — зелёные (1925/1925 unit). **Поправка:** флаг был ошибочно удалён в первом коммите — это ломало `make release` (`:app:buildReleasePreBundle` не собирает AAB с включёнными ABI-сплитами, <https://issuetracker.google.com/402800800>). Флаг возвращён, `make apk` снова передаёт `-PenableSplits=true`, `make release` работает. **Замечание:** AGENTS.md, `docs/plan-map-screen.md` и `docs/plan-release-process.md` всё ещё содержат формулировку «splits.abi включён безусловно» — это устаревший текст, см. «Несогласованности, обнаруженные при верификации». | Финальная регрессия 3.1, мониторинг Crashlytics 3.4, **корректировка устаревших формулировок в 3.2**. |
-| **3. Верификация и релиз** | Android-тесты 465/465 + unit-тесты 1925/1925 — зелёные; **ручной smoke-test на эмуляторе 26.07.2026 — профиль + регистрация + карта, выбор «Новомосковск», краша нет**. | `make check` (lint не подтверждён), релиз 1.3.1, мониторинг Crashlytics. |
+| **1. Безопасный ключ `ItemListScreen`** | Реализация + регресс-тесты + сборки зелёные (см. 1.1–1.3). | — |
+| **2. Defensive fix `UnsatisfiedLinkError`** | Анализ APK, defensive fallback, `splits.abi` под флагом, сборки зелёные (см. 2.1–2.4). **Техдолг:** устаревшие «безусловно» в `AGENTS.md`/`plan-map-screen.md`/`plan-release-process.md` — закрыть в 3.2. | — |
+| **3. Верификация и релиз** | Android 465/465 + unit 1925/1925; smoke-test на эмуляторе (профиль + регистрация + карта) — без краша (26.07.2026). | `make check` (lint не подтверждён), релиз 1.3.1, мониторинг Crashlytics. |
 
 > **YAGNI-решения, зафиксированные в этом плане:**
 > - `SelectableItemMapper.kt` НЕ извлекается. Маппинг `Entity -> SelectableItem` остаётся inline `map { SelectableItem(it.id, it.name) }` в 4 wrapper-экранах и `ParksRootViewModel.toItemListUiState()`. 4 места × 1 строка — оверинжиниринг.
@@ -85,7 +85,7 @@
 - подтверждают, что `key = item.id` обрабатывает дубликаты имён без краша;
 - блокируют откат к `key = item` (или `key = { _, item -> item.name }`) в будущем.
 
-- [x] **1.1–1.3** — `SelectableItem(id, label)` с `key = item.id` (коммит `4e99e021`); регресс-тесты (3 android + 1 unit); YAGNI: `SelectableItemMapper.kt` не извлекался; ревью-фикс shadowing `cityId` → `numericCityId`.
+- [x] **1.1–1.3** — `SelectableItem(id, label)` с `key = item.id`, регресс-тесты (3 android + 1 unit), YAGNI по `SelectableItemMapper`, ревью-фикс shadowing.
 - [~] `EditProfileLocationsTest.selectCity_duplicateNames` — отложен (покрыт через ViewModel).
 
 ### 1.3 Рефакторинг
@@ -94,7 +94,7 @@
 
 ### 1.4 Критерии завершения этапа 1
 
-- [x] Ручная проверка на устройстве/эмуляторе: ввод «Новомосковск» в обоих режимах (профиль, регистрация) показывает обе записи, выбор любой возвращает корректный `id`. **Профиль и регистрация проверены 26.07.2026** (краша нет, выбор возвращает корректный id).
+- [x] Ручная проверка «Новомосковск» в профиле и регистрации — **пройдена 26.07.2026** (краша нет).
 
 ---
 
@@ -132,7 +132,7 @@ val mapView =
 
 Сопутствующее:
 
-- [x] `try/catch` вокруг `MapLibre.getInstance()` + локализованная заглушка (`map_not_available`); `Log.e` с `MANUFACTURER/MODEL/RELEASE/SDK_INT` (без PII); known issue в `docs/plan-map-screen.md` и правила arm64 в `AGENTS.md`.
+- [x] `try/catch` вокруг `MapLibre.getInstance()` + заглушка `map_not_available`, `Log.e` (без PII); правила в `AGENTS.md` и `plan-map-screen.md`.
 
 #### 2.2b Альтернативы и почему они отклонены
 
@@ -171,10 +171,8 @@ val mapView =
 ### 3.1 Регрессионные проверки
 
 - [~] Прогнать `make check` (build + test + lint) — тесты зелёные (android 465/465 + unit 1925/1925), lint не подтверждён после регрессии.
-- [x] `make android-test` — 465/465 пройдены (включая `ItemListScreenTest`, `SelectCityScreenTest`/`RegisterSelectCityScreenTest`, `ParkMapScreenTest` (или эквивалент), `EditProfileViewModelTest`, screenshot-tests); 26.07.2026.
-- [x] Регистрация: выбор страны → выбор города с дубликатом имени → сохранение профиля — **проверено 26.07.2026** (краша нет, выбор возвращает корректный `id`).
-- [x] Профиль: смена города с дубликатом имени → переход на карту — **проверено 26.07.2026** (краша нет, обе записи отображаются, выбор возвращает корректный `id`).
-- [x] Экран карты (`ParksRootScreen` → `ParkMapView`): открытие карты, переход на выбор города и возврат — **проверено 26.07.2026** (карта не падает, заглушка не показывается на эмуляторе).
+- [x] `make android-test` — 465/465 пройдены 26.07.2026.
+- [x] Smoke-test «Новомосковск» на эмуляторе: профиль + регистрация + карта — краша нет (26.07.2026).
 
 ### 3.2 Документация
 
@@ -220,8 +218,8 @@ val mapView =
 
 ## Чек-лист готовности
 
-- [x] **Этапы 1–2** выполнены: регресс-тесты (3 android + 1 unit), `SelectableItem`, defensive fix MapLibre (try/catch + заглушка), `splits.abi` под флагом — см. секции 1.1, 2.1, 2.2a, 2.3, 2.4.
-- [x] **1.4** — профиль и регистрация проверены вручную на эмуляторе 26.07.2026.
+- [x] **Этапы 1–2** выполнены — см. секции 1.1, 2.1, 2.2a, 2.3, 2.4.
+- [x] **1.4** — профиль и регистрация проверены вручную 26.07.2026.
 - [~] **3.1** — частично: android-тесты 465/465 + unit 1925/1925 зелёные; smoke-test пройден 26.07.2026; осталось — `make check` (lint не подтверждён после регрессии).
 - [ ] **3.2** — документация обновлена (`plan-map-screen.md`, `AGENTS.md`, `README.md`); **дополнительно:** закрыть технический долг из «Несогласованности, обнаруженные при верификации» — поправить устаревшие «безусловно» в `AGENTS.md`, `docs/plan-map-screen.md`, `docs/plan-release-process.md` (см. соответствующую секцию).
 - [ ] **3.3** — релиз 1.3.1, проверка `libmaplibre.so` в APK, заливка в GitHub Releases.
