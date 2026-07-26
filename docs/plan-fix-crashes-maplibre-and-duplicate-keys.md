@@ -4,6 +4,18 @@
 
 Документ описывает пошаговый план устранения двух production-крашей, зафиксированных Crashlytics у пользователей версий 1.1 и 1.2.
 
+## Текущий статус (26.07.2026, ветка `fix/crashes`)
+
+| Этап | Что сделано | Что осталось |
+|---|---|---|
+| **1. Безопасный ключ `ItemListScreen`** | Реализация внедрена (коммит `4e99e021`): `SelectableItem`, `key = item.id`, id-сигнатуры VM, 4 wrapper-экрана, `RootScreen`, `FakeParksRootViewModel`. 1924 unit-теста зелёные. | Регрессионные тесты на дубликаты имён (1.1) — НЕ написаны. `make format`/`make lint` — не прогонялись. |
+| **2. Defensive fix `UnsatisfiedLinkError`** | Анализ APK (2.1) — 5/5 пунктов закрыты. | Сам фикс (2.2a), документация (2.2a + 3.2), тесты на fallback (2.4), `splits.abi` (2.3) — не начаты. |
+| **3. Верификация и релиз** | — | `make check`, android-тесты, релиз 1.3.1, мониторинг Crashlytics. |
+
+> **YAGNI-решения, зафиксированные в этом плане:**
+> - `SelectableItemMapper.kt` НЕ извлекается. Маппинг `Entity -> SelectableItem` остаётся inline `map { SelectableItem(it.id, it.name) }` в 4 wrapper-экранах и `ParksRootViewModel.toItemListUiState()`. 4 места × 1 строка — оверинжиниринг.
+> - `RegisterSelectCityScreen`/`RegisterSelectCountryScreen` регистрируются через те же wrapper-экраны, что и профильные — отдельные мапперы не нужны.
+
 ## Контекст и корневые причины
 
 ### Краш A — `java.lang.IllegalArgumentException: Key "Новомосковск" was already used`
@@ -62,41 +74,41 @@
 
 Цель: устранить `IllegalArgumentException` за счёт стабильного идентификатора элемента и сохранить поведение поиска/выбора.
 
-### 1.1 Тесты (RED)
+### 1.1 Регрессионные тесты (не RED, а блокировка регрессии)
 
-- [ ] В `app/src/androidTest/java/com/swparks/ui/screens/settings/ItemListScreenTest.kt` добавить параметризованный android-тест:
-  - `itemListScreen_cityMode_duplicateNames_rendersBothWithoutCrash` — `items = listOf("Новомосковск", "Новомосковск", "Тула")`, выбор второго «Новомосковск» возвращает ожидаемый колбэк.
-  - `itemListScreen_cityMode_duplicateNames_selectSecondReturnsItsId` — проверка, что `onItemSelected` получает уникальный `id` второго дубликата, а не только имя.
-  - `itemListScreen_countryMode_duplicateNames_rendersBoth` — аналогично для режима стран (на случай одинаковых названий стран).
-- [ ] В `app/src/test/java/.../EditProfileViewModelTest.kt` (если отсутствует — создать) добавить unit-тест:
-  - `selectCity_duplicateNames_returnsUniqueId` — ViewModel возвращает корректный `cityId` при колбэке выбора.
-- [ ] Тесты должны падать на текущем коде (`key = { _, item -> item }` → `IllegalArgumentException` или потеря идентичности при колбэке).
+Реализация (1.2) уже внедрена до написания тестов — TDD RED-фаза пропущена. Сейчас нужны **регрессионные тесты**, которые:
+
+- подтверждают, что `key = item.id` обрабатывает дубликаты имён без краша;
+- блокируют откат к `key = item` (или `key = { _, item -> item.name }`) в будущем.
+
+- [ ] В `app/src/androidTest/java/com/swparks/ui/screens/settings/ItemListScreenTest.kt` добавить android-тесты:
+  - `itemListScreen_cityMode_duplicateNames_rendersBothWithoutCrash` — `items = listOf(SelectableItem("1", "Новомосковск"), SelectableItem("2", "Новомосковск"), SelectableItem("3", "Тула"))`, выбор второго «Новомосковск» возвращает ожидаемый колбэк.
+  - `itemListScreen_cityMode_duplicateNames_selectSecondReturnsItsId` — `onItemSelected` получает `id = "2"` второго дубликата, а не `"1"`.
+  - `itemListScreen_countryMode_duplicateNames_rendersBoth` — аналогично для режима стран.
+- [ ] В `app/src/test/java/com/swparks/ui/viewmodel/EditProfileViewModelTest.kt` добавить unit-тест:
+  - `onCitySelected_duplicateNames_returnsUniqueId` — два разных города с одинаковым именем, выбор каждого возвращает свой `cityId`.
+- [ ] В `app/src/test/java/com/swparks/domain/model/EditProfileLocationsTest.kt` добавить параметризованный тест:
+  - `selectCity_duplicateNames_returnsUniqueId` — проверка `EditProfileLocations.selectCity(cityId, currentCountry)` для двух разных `cityId` с одинаковым `name`, возвращает разные `newCity`.
 
 ### 1.2 Реализация (GREEN)
 
-- [ ] Ввести модель идентифицируемого элемента списка (минимально, без оверинжиниринга) в `app/src/main/java/com/swparks/ui/state/`:
-  - `data class SelectableItem(val id: String, val label: String)`.
-- [ ] В `ItemListUiState` заменить `items: List<String>` на `items: List<SelectableItem>`. `selectedItem: String?` оставить как `id`.
-- [ ] В `ItemsList` (`ItemListScreen.kt:176-209`) сменить параметр на `items: List<SelectableItem>`, ключ — `key = { _, item -> item.id }`. В `CheckmarkRowView` передавать `text = item.label`. Колбэк `onItemSelected(SelectableItem)` отдавать элемент целиком, а не только строку.
-- [ ] В публичном `ItemListScreen` скорректировать сигнатуру `onItemSelected: (SelectableItem) -> Unit`.
-- [ ] В `SelectCityScreen`/`RegisterSelectCityScreen` отдавать `state.cities.map { SelectableItem(it.id, it.name) }`. Колбэк выбора прокидывает `city.id` в `viewModel.onCitySelected`.
-- [ ] В `SelectCountryScreen`/`RegisterSelectCountryScreen` — аналогично через `country.id`/`country.name`.
-- [ ] В `IEditProfileViewModel`/`EditProfileViewModel` скорректировать `onCitySelected`/`onCountrySelected` так, чтобы они принимали `cityId: String`/`countryId: String` и сохраняли выбор по `id`, а не по имени.
-- [ ] Если в существующих unit/android-тестах прокидывается `items = listOf("A", "B")` или колбэки `(String) -> Unit`, обновить их на новые типы (это правка тестов, не логики).
-- [ ] Локализация: новые строки (если потребуются для отображения региона/страны в скобках) — добавить в `app/src/main/res/values/strings.xml` через плюрализацию/форматирование.
-- [ ] Проверить сценарий поиска: фильтрация должна работать по `label`, а не по `id`, чтобы UI остался консистентным.
+- [x] Внедрена модель `SelectableItem(id, label)`; `ItemsList` использует `key = item.id`; `onItemSelected: (SelectableItem) -> Unit`.
+- [x] VM-сигнатуры выбора переведены на `id`: `IEditProfileViewModel`, `IRegisterViewModel` (`…ById`), `IParksRootViewModel`; `EditProfileLocations` ищет по `id`; `SelectCityResult.countryName` → `countryId`.
+- [x] Обновлены 4 wrapper-экрана (`SelectCityScreen`/`SelectCountryScreen`/`RegisterSelectCityScreen`/`RegisterSelectCountryScreen`), `RootScreen`, `FakeParksRootViewModel`, 7 тест-файлов. 1924/1924 unit-теста зелёные (коммит `4e99e021`).
 
 ### 1.3 Рефакторинг
 
-- [ ] Унифицировать формирование списков в обоих профильных и обоих регистрационных экранах — вынести маппинг `Entity -> SelectableItem` в общий приватный helper рядом с `ItemListUiState` или в `ui/state/SelectableItemMapper.kt` (без избыточных абстракций).
-- [ ] Убедиться, что `Divider` (последний элемент) по-прежнему отрисовывается только между элементами — проверить на обновлённом `ItemsList`.
-- [ ] Прогнать `make format`, `make lint`, `make test`. Все тесты должны быть зелёными.
+- [x] **Унификация маппинга — отклонено по YAGNI.** Маппинг `Entity -> SelectableItem` остаётся inline (`map { SelectableItem(it.id, it.name) }`) в 4 wrapper-экранах и `ParksRootViewModel.toItemListUiState()`. Извлечение `SelectableItemMapper.kt` экономит 4 строки ценой нового файла и indirection — не выгодно. Если количество маппингов вырастет (>6 мест) — пересмотреть.
+- [ ] Убедиться, что `Divider` (последний элемент в `ItemsList`) отрисовывается только между элементами на новых `SelectableItem`-ах — ручная проверка в `androidTest` или визуально. До выхода версии 1.3.1.
+- [x] `make test` — зелёный: 1924/1924 unit-тестов прошли (`./gradlew :app:testDebugUnitTest`).
+- [ ] `make format` — **не прогонялся**. До выхода версии 1.3.1.
+- [ ] `make lint` — **не прогонялся**. До выхода версии 1.3.1.
 
 ### 1.4 Критерии завершения этапа 1
 
-- Все добавленные тесты зелёные.
-- Существующие тесты `ItemListScreenTest`, `SelectCityScreenTest`, `EditProfileViewModelTest` обновлены под новые сигнатуры и зелёные.
-- Ручная проверка: на экране выбора города ввести «Новомосковск» — список показывает обе записи, выбор любой из них возвращает корректный `cityId` без краша.
+- [x] Все существующие тесты обновлены под новые сигнатуры и зелёные (1924/1924).
+- [ ] Регрессионные тесты на дубликаты имён (1.1) — не написаны. **Критично** для блокировки отката к `key = item` в будущем.
+- [ ] Ручная проверка на устройстве/эмуляторе: ввод «Новомосковск» в обоих режимах (профиль, регистрация) показывает обе записи, выбор любой возвращает корректный `id`. Отложено до этапа 3.
 
 ---
 
@@ -106,11 +118,7 @@
 
 ### 2.1 Что уже установлено анализом APK (без кода)
 
-- [x] **2.1.1** Скачать и проанализировать APK версии 1.2 (`swparks7.apk`) — выполнено 26.07.2026: `libmaplibre.so` присутствует для arm64-v8a (12.5 МБ) и armeabi-v7a (9.1 МБ), валидный ELF.
-- [x] **2.1.2** Транзитивные зависимости через `strings | grep '\.so'` — только стандартные Android-системные либы. Никакой `libc++_shared.so` MapLibre не требует (STL статически).
-- [x] **2.1.3** Crashlytics Issue `2cc0c26f...` — **один пользователь**, OnePlus 8 Pro, Android 11 (OxygenOS 11). Не воспроизводится массово.
-- [x] **2.1.4** R8-обфускация через `dexdump | grep NativeConnectivity` — класс `Lorg/maplibre/android/net/NativeConnectivityListener;` сохранён без переименования.
-- [x] **2.1.5** AndroidManifest в APK: `android:extractNativeLibs="false"` — дефолт AGP для `minSdk >= 23`. На Android 11 это режим `dlopen-from-apk`. На AOSP-устройствах работает штатно. На OxygenOS 11 — **предположительный** специфичный баг `dlopen-from-apk`; публичных багрепортов не найдено, вывод основан на единичном кейсе из Crashlytics.
+- [x] APK 1.2 (`swparks7.apk`) проанализирован 26.07.2026: `libmaplibre.so` валиден для обоих ABI; DT_NEEDED — только системные либы (STL статический); R8 не переименовал `NativeConnectivityListener`; `extractNativeLibs=false` — это режим `dlopen-from-apk`. Crashlytics Issue `2cc0c26f...` — **один** пользователь (OnePlus 8 Pro / OxygenOS 11). Итог: баг приложения отсутствует, это OEM edge case. Подробности — выше в «Контекст и корневые причины».
 
 **Вывод расследования**: баг приложения отсутствует. Это OEM/платформенный edge case на конкретной связке «OxygenOS 11 + AGP extractNativeLibs=false». Сторона приложения может либо (а) переключиться на `extractNativeLibs=true` (компромисс по размеру и AAB), либо (б) просто не падать — варианты и trade-off см. в 2.2b.
 
@@ -118,9 +126,21 @@
 
 #### 2.2a Try/catch вокруг `MapLibre.getInstance()` с fallback
 
-Обернуть вызов в `app/src/main/java/com/swparks/ui/screens/parks/ParkMapView.kt:114` в `runCatching { ... }` (или `try/catch` по `UnsatisfiedLinkError`). При неудаче:
+Текущий код (`app/src/main/java/com/swparks/ui/screens/parks/ParkMapView.kt:112-118`):
 
-- Логировать устройство и ОС через `Build.MANUFACTURER`, `Build.MODEL`, `Build.VERSION.RELEASE` (без PII).
+```kotlin
+val mapView =
+    remember {
+        MapLibre.getInstance(appContext)
+        MapView(context).apply {
+            onCreate(mapViewBundle)
+        }
+    }
+```
+
+План: обернуть `MapLibre.getInstance(appContext)` в `runCatching { ... }`. При неудаче:
+
+- Логировать устройство и ОС через `Build.MANUFACTURER`, `Build.MODEL`, `Build.VERSION.RELEASE` (без PII) на уровне `Log.w`.
 - В UI показать **только заглушку с текстом** «Карта недоступна на этом устройстве». **Без кнопки «Попробовать снова»** — корень сбоя в системном loader'е OxygenOS, повторный вызов `MapLibre.getInstance()` с той же вероятностью упадёт; кнопка создаёт ложное ожидание.
 - Не крашить приложение — пользователь остаётся в приложении, может пользоваться остальным функционалом.
 
@@ -214,10 +234,14 @@
 
 ## Чек-лист готовности
 
-- [ ] Этап 1.1 — тесты написаны и падают.
-- [ ] Этап 1.2 — реализация зелёная.
-- [ ] Этап 1.3 — рефакторинг завершён, `make format/lint/test` зелёные.
-- [ ] Этап 2.1 — расследование выполнено (5/5 пунктов закрыты, итог в плане).
-- [ ] Этап 2.2 — defensive fix внедрён (try/catch + заглушка), тесты зелёные.
-- [ ] Этап 2.3 — splits.abi сделаны безусловными, Makefile и документация обновлены.
-- [ ] Этап 3 — `make check`, ручной smoke-test, релиз и мониторинг Crashlytics.
+- [ ] **1.1** — регрессионные тесты на дубликаты имён добавлены (3 в `ItemListScreenTest`, 1 в `EditProfileViewModelTest`).
+- [x] **1.2** — реализация зелёная (коммит `4e99e021`, 1924 unit-тестов проходят).
+- [~] **1.3** — частично: `make test` зелёный, `make format`/`make lint` не прогонялись. `SelectableItemMapper.kt` — отклонено по YAGNI.
+- [ ] **1.4** — ручная проверка «Новомосковск» в обоих режимах (профиль, регистрация).
+- [x] **2.1** — расследование выполнено (5/5 пунктов закрыты, итог в плане).
+- [ ] **2.2** — defensive fix внедрён (try/catch + заглушка), тесты зелёные.
+- [ ] **2.3** — `splits.abi` безусловные, Makefile и документация обновлены. *(попутно; не лечение — может быть отложено)*
+- [ ] **3.1** — `make check` зелёный, android-тесты пройдены, ручной smoke-test успешен.
+- [ ] **3.2** — документация обновлена (`plan-map-screen.md`, `AGENTS.md`, `README.md`).
+- [ ] **3.3** — релиз 1.3.1, проверка `libmaplibre.so` в APK, заливка в GitHub Releases.
+- [ ] **3.4** — в Crashlytics 0 событий по обоим issue после 7 дней с релиза.
