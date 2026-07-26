@@ -10,7 +10,7 @@
 |---|---|---|
 | **1. Безопасный ключ `ItemListScreen`** | Реализация (коммит `4e99e021`) + регрессионные тесты (1.1) + `make {format,lint,test,build}` — всё зелёное. | Ручная проверка «Новомосковск» — отложена до этапа 3. |
 | **2. Defensive fix `UnsatisfiedLinkError`** | Анализ APK (2.1) закрыт; defensive fallback в `ParkMapView` (2.2a) с локализованной заглушкой; `splits.abi` под флагом `-PenableSplits=true` (2.3); strings/`ParkMapView`/`ParksRootScreenTest` обновлены; `make {format,lint,test,build}` — зелёные (1925/1925 unit). **Поправка:** флаг был ошибочно удалён в первом коммите — это ломало `make release` (`:app:buildReleasePreBundle` не собирает AAB с включёнными ABI-сплитами, <https://issuetracker.google.com/402800800>). Флаг возвращён, `make apk` снова передаёт `-PenableSplits=true`, `make release` работает. **Замечание:** AGENTS.md, `docs/plan-map-screen.md` и `docs/plan-release-process.md` всё ещё содержат формулировку «splits.abi включён безусловно» — это устаревший текст, см. «Несогласованности, обнаруженные при верификации». | Финальная регрессия 3.1, мониторинг Crashlytics 3.4, **корректировка устаревших формулировок в 3.2**. |
-| **3. Верификация и релиз** | Android-тесты 465/465 + unit-тесты 1925/1925 — зелёные (26.07.2026). | `make check` (lint не подтверждён после регрессии), ручной smoke-test, релиз 1.3.1, мониторинг Crashlytics. |
+| **3. Верификация и релиз** | Android-тесты 465/465 + unit-тесты 1925/1925 — зелёные; **ручной smoke-test профиля (Новомосковск, 26.07.2026) — краша нет, выбор возвращает корректный `id`**. | `make check` (lint не подтверждён), smoke-test регистрации + карты, релиз 1.3.1, мониторинг Crashlytics. |
 
 > **YAGNI-решения, зафиксированные в этом плане:**
 > - `SelectableItemMapper.kt` НЕ извлекается. Маппинг `Entity -> SelectableItem` остаётся inline `map { SelectableItem(it.id, it.name) }` в 4 wrapper-экранах и `ParksRootViewModel.toItemListUiState()`. 4 места × 1 строка — оверинжиниринг.
@@ -85,21 +85,16 @@
 - подтверждают, что `key = item.id` обрабатывает дубликаты имён без краша;
 - блокируют откат к `key = item` (или `key = { _, item -> item.name }`) в будущем.
 
-- [x] Регресс-тесты добавлены: 3 android-теста в `ItemListScreenTest` (дубликаты имён, выбор по id) + 1 unit-тест `onCitySelected_duplicateNames_selectsByUniqueId` в `EditProfileViewModelSelectionTest`.
+- [x] **1.1–1.3** — `SelectableItem(id, label)` с `key = item.id` (коммит `4e99e021`); регресс-тесты (3 android + 1 unit); YAGNI: `SelectableItemMapper.kt` не извлекался; ревью-фикс shadowing `cityId` → `numericCityId`.
 - [~] `EditProfileLocationsTest.selectCity_duplicateNames` — отложен (покрыт через ViewModel).
-
-### 1.2 Реализация (GREEN)
-
-- [x] Внедрён `SelectableItem(id, label)` с `key = item.id` (коммит `4e99e021`, 1924/1924 зелёные). Ревью-фикс: shadowing `cityId` → `numericCityId` в `ParksRootViewModel:623` и `FakeParksRootViewModel:202`.
 
 ### 1.3 Рефакторинг
 
-- [x] YAGNI: `SelectableItemMapper.kt` не извлекался (inline-маппинг в 5 местах). `make {test,format,lint,build}` — зелёные.
 - [ ] Убедиться, что `Divider` (последний элемент в `ItemsList`) отрисовывается только между элементами на новых `SelectableItem`-ах — ручная проверка в `androidTest` или визуально. До выхода версии 1.3.1.
 
 ### 1.4 Критерии завершения этапа 1
 
-- [ ] Ручная проверка на устройстве/эмуляторе: ввод «Новомосковск» в обоих режимах (профиль, регистрация) показывает обе записи, выбор любой возвращает корректный `id`. Отложено до этапа 3.
+- [~] Ручная проверка на устройстве/эмуляторе: ввод «Новомосковск» в обоих режимах (профиль, регистрация) показывает обе записи, выбор любой возвращает корректный `id`. **Профиль проверен 26.07.2026** (краша нет, выбор возвращает корректный id); регистрация — не проверено.
 
 ---
 
@@ -109,7 +104,7 @@
 
 ### 2.1 Что уже установлено анализом APK (без кода)
 
-- [x] APK 1.2 проанализирован 26.07.2026: `libmaplibre.so` валиден для обоих ABI, STL статический, R8 не тронул. `extractNativeLibs=false` → `dlopen-from-apk`. Один кейс на OnePlus 8 Pro / OxygenOS 11.
+- [x] APK 1.2 проанализирован (26.07.2026): `libmaplibre.so` валиден, R8 не виновен; edge case на OnePlus 8 Pro / OxygenOS 11.
 
 **Вывод расследования**: баг приложения отсутствует. Это OEM/платформенный edge case на конкретной связке «OxygenOS 11 + AGP extractNativeLibs=false». Сторона приложения может либо (а) переключиться на `extractNativeLibs=true` (компромисс по размеру и AAB), либо (б) просто не падать — варианты и trade-off см. в 2.2b.
 
@@ -137,7 +132,7 @@ val mapView =
 
 Сопутствующее:
 
-- [x] Локализация `R.string.map_not_available` (ru: «Карта недоступна на этом устройстве: %s»); логи `Log.e` через существующий `TAG = "ParkMapView"` (без PII: `MANUFACTURER`/`MODEL`/`VERSION.RELEASE`/`SDK_INT`); known issue в `docs/plan-map-screen.md` и правила тестирования карты на arm64-эмуляторе в `AGENTS.md`.
+- [x] `try/catch` вокруг `MapLibre.getInstance()` + локализованная заглушка (`map_not_available`); `Log.e` с `MANUFACTURER/MODEL/RELEASE/SDK_INT` (без PII); known issue в `docs/plan-map-screen.md` и правила arm64 в `AGENTS.md`.
 
 #### 2.2b Альтернативы и почему они отклонены
 
@@ -154,11 +149,11 @@ val mapView =
 
 `splits.abi` не лечит краш B, но это хорошая практика по уменьшению размера APK. Делаем независимо:
 
-- [x] `splits.abi` под флагом `-PenableSplits=true` (`app/build.gradle.kts:62-71`); `make apk` передаёт флаг, `make release` — нет (AGP запрещает splits при `bundleRelease`, <https://issuetracker.google.com/402800800>). Оба сценария (APK vs AAB) задокументированы в `docs/plan-release-process.md`.
+- [x] `splits.abi` под флагом `-PenableSplits=true` (`app/build.gradle.kts:62-71`); оба сценария (APK/AAB) задокументированы в `docs/plan-release-process.md`.
 
 ### 2.4 Тесты (для defensive fix)
 
-- [x] Регресс-тест `ParksRootScreenTest.whenMapTabIsSelected_errorPlaceholderTextIsNotShown` (happy-path: `map_not_available` не показывается, `testTag("park_map")` сохранён). Полный mockkStatic на `UnsatisfiedLinkError` под arm64-эмулятором не воспроизводим — отложен до ручной проверки на реальном OEM-устройстве. Unit-тесты 1925/1925 зелёные.
+- [x] Happy-path регресс-тест `ParksRootScreenTest.whenMapTabIsSelected_errorPlaceholderTextIsNotShown`; полный mockkStatic `UnsatisfiedLinkError` отложен до OEM-устройства.
 
 ### 2.5 Критерии завершения этапа 2
 
@@ -176,12 +171,10 @@ val mapView =
 ### 3.1 Регрессионные проверки
 
 - [~] Прогнать `make check` (build + test + lint) — тесты зелёные (android 465/465 + unit 1925/1925), lint не подтверждён после регрессии.
-- [x] Прогнать `make android-test` для критичных android-тестов: `ItemListScreenTest`, `SelectCityScreenTest`/`RegisterSelectCityScreenTest`, `ParkMapScreenTest` (или эквивалент), `EditProfileViewModelTest` — **465/465 пройдены** (26.07.2026).
-- [ ] Локально установить debug на эмулятор/устройство и проверить сценарии:
-  - Регистрация: выбор страны → выбор города с дубликатом имени → сохранение профиля.
-  - Профиль: смена города с дубликатом имени → переход на карту.
-  - Экран карты (`ParksRootScreen` → `ParkMapView`): открытие карты, переход на выбор города и возврат — карта не падает, нет `MapLibreSurfaceView Warning, !readyToDraw()` в логе.
-- [x] Проверить, что тесты снимков экрана (`screenshot-tests`) не падают (используют `ScreenshotAppContainer` с фейковой картой — **входят в 465 android-тестов**).
+- [x] `make android-test` — 465/465 пройдены (включая `ItemListScreenTest`, `SelectCityScreenTest`/`RegisterSelectCityScreenTest`, `ParkMapScreenTest` (или эквивалент), `EditProfileViewModelTest`, screenshot-tests); 26.07.2026.
+- [ ] Регистрация: выбор страны → выбор города с дубликатом имени → сохранение профиля.
+- [x] Профиль: смена города с дубликатом имени → переход на карту — **проверено 26.07.2026** (краша нет, обе записи отображаются, выбор возвращает корректный `id`).
+- [ ] Экран карты (`ParksRootScreen` → `ParkMapView`): открытие карты, переход на выбор города и возврат — карта не падает, нет `MapLibreSurfaceView Warning, !readyToDraw()` в логе.
 
 ### 3.2 Документация
 
@@ -227,9 +220,9 @@ val mapView =
 
 ## Чек-лист готовности
 
-- [x] **Этапы 1–2** — завершены: регресс-тесты (3 android + 1 unit) + реализация (`4e99e021`, 1924/1924) + defensive fix MapLibre (try/catch + заглушка) + `splits.abi` под флагом. Все сборки зелёные (1925/1925 unit, регресс Android). Детали — в секциях 1.1–2.4.
-- [~] **1.4** — ручная проверка отложена до 3.1.
-- [~] **3.1** — частично: android-тесты 465/465 + unit 1925/1925 зелёные; осталось — `make lint` + ручной smoke-test.
+- [x] **Этапы 1–2** выполнены: регресс-тесты (3 android + 1 unit), `SelectableItem`, defensive fix MapLibre (try/catch + заглушка), `splits.abi` под флагом — см. секции 1.1, 2.1, 2.2a, 2.3, 2.4.
+- [~] **1.4** — профиль проверен вручную 26.07.2026; регистрация — не проверено.
+- [~] **3.1** — частично: android-тесты 465/465 + unit 1925/1925 зелёные; smoke-test профиля пройден 26.07.2026; осталось — `make lint` + smoke-test регистрации и карты.
 - [ ] **3.2** — документация обновлена (`plan-map-screen.md`, `AGENTS.md`, `README.md`); **дополнительно:** закрыть технический долг из «Несогласованности, обнаруженные при верификации» — поправить устаревшие «безусловно» в `AGENTS.md`, `docs/plan-map-screen.md`, `docs/plan-release-process.md` (см. соответствующую секцию).
 - [ ] **3.3** — релиз 1.3.1, проверка `libmaplibre.so` в APK, заливка в GitHub Releases.
 - [ ] **3.4** — в Crashlytics 0 событий по обоим issue после 7 дней с релиза.
