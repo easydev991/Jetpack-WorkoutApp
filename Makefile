@@ -132,7 +132,7 @@ apk:
 		$(MAKE) _load_secrets; \
 	fi
 	@printf "$(YELLOW)Создаю релизные APK (arm64-v8a + armeabi-v7a)...$(RESET)\n"
-	@./gradlew assembleRelease -PenableSplits=true --console=plain
+	@./gradlew assembleRelease --console=plain
 	@VERSION_NAME=$$(grep "^VERSION_NAME=" gradle.properties | cut -d'=' -f2); \
 	VERSION_CODE=$$(grep "^VERSION_CODE=" gradle.properties | cut -d'=' -f2); \
 	cp app/build/outputs/apk/release/app-arm64-v8a-release.apk "swparks$$VERSION_CODE-arm64-v8a.apk"; \

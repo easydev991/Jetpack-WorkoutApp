@@ -59,14 +59,12 @@ android {
             signingConfig = signingConfigs.getByName("release")
             isShrinkResources = true
             isMinifyEnabled = true
-            if (project.findProperty("enableSplits") == "true") {
-                splits {
-                    abi {
-                        isEnable = true
-                        reset()
-                        include("arm64-v8a", "armeabi-v7a")
-                        isUniversalApk = false
-                    }
+            splits {
+                abi {
+                    isEnable = true
+                    reset()
+                    include("arm64-v8a", "armeabi-v7a")
+                    isUniversalApk = false
                 }
             }
             proguardFiles(

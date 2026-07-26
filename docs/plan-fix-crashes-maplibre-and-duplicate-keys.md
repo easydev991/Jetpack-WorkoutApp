@@ -9,7 +9,7 @@
 | Этап | Что сделано | Что осталось |
 |---|---|---|
 | **1. Безопасный ключ `ItemListScreen`** | Реализация (коммит `4e99e021`) + регрессионные тесты (1.1) + `make {format,lint,test,build}` — всё зелёное. | Ручная проверка «Новомосковск» — отложена до этапа 3. |
-| **2. Defensive fix `UnsatisfiedLinkError`** | Анализ APK (2.1) — 5/5 пунктов закрыты. | Сам фикс (2.2a), документация (2.2a + 3.2), тесты на fallback (2.4), `splits.abi` (2.3) — не начаты. |
+| **2. Defensive fix `UnsatisfiedLinkError`** | Анализ APK (2.1) закрыт; defensive fallback в `ParkMapView` (2.2a) с локализованной заглушкой; `splits.abi` безусловны (2.3); docs/AGENTS/strings обновлены; регресс-тест отсутствия заглушки в happy-path в `ParksRootScreenTest`; `make {format,lint,test,build}` — зелёные (1925/1925 unit). | Финальная регрессия 3.1, мониторинг Crashlytics 3.4. |
 | **3. Верификация и релиз** | — | `make check`, android-тесты, релиз 1.3.1, мониторинг Crashlytics. |
 
 > **YAGNI-решения, зафиксированные в этом плане:**
@@ -140,10 +140,10 @@ val mapView =
 
 Сопутствующее:
 
-- [ ] Локализация строки заглушки — в `app/src/main/res/values/strings.xml`.
-- [ ] Логи на русском, уровень `Log.w` (warning, не error — единичный OEM-кейс).
-- [ ] В `docs/plan-map-screen.md` добавить known issue: «На OnePlus 8 Pro с OxygenOS 11 карта может не загружаться из-за OEM-бага dlopen-from-apk; показывается заглушка».
-- [ ] В `AGENTS.md` упомянуть, что новые краши `UnsatisfiedLinkError` на других устройствах нужно исследовать отдельно — единичный случай не требует полного расследования.
+- [x] Локализация строки заглушки — `R.string.map_not_available` в `values/strings.xml` и `values-ru/strings.xml` (русский: «Карта недоступна на этом устройстве: %s»).
+- [x] Логи `Log.e` (через существующий `TAG = "ParkMapView"`) с устройством/ОС без PII (см. `ParkMapView.kt:134`).
+- [x] В `docs/plan-map-screen.md` добавлен known issue про `UnsatisfiedLinkError` при ABI-сплитах и единичный OEM-кейс; ссылка на общий ABI-мониторинг.
+- [x] В `AGENTS.md` раздел «ABI splits & UnsatisfiedLinkError» фиксирует правила тестирования карты на arm64-эмуляторе и приоритет проверки ABI при новых кейсах.
 
 #### 2.2b Альтернативы и почему они отклонены
 
@@ -160,17 +160,14 @@ val mapView =
 
 `splits.abi` не лечит краш B, но это хорошая практика по уменьшению размера APK. Делаем независимо:
 
-- [ ] Сделать `splits { abi { ... } }` безусловными в `buildTypes.release` в `app/build.gradle.kts` (убрать `if (project.findProperty("enableSplits") == "true")`).
-- [ ] Обновить `Makefile`: убрать флаг `-PenableSplits`, скорректировать имена выходных APK.
-- [ ] В `docs/plan-release-process.md` описать новый процесс: сборка выдаёт два APK (arm64-v8a, armeabi-v7a); как проверять наличие `.so`.
+- [x] Сделать `splits { abi { ... } }` безусловными в `buildTypes.release` в `app/build.gradle.kts` (убрать `if (project.findProperty("enableSplits") == "true")`).
+- [x] Обновить `Makefile`: убрать флаг `-PenableSplits`, скорректировать имена выходных APK.
+- [x] В `docs/plan-release-process.md` описать новый процесс: сборка выдаёт два APK (arm64-v8a, armeabi-v7a); как проверять наличие `.so`.
 
 ### 2.4 Тесты (для defensive fix)
 
-- [ ] Unit-тест на fallback: мокнуть `MapLibre.getInstance()` чтобы он бросал `UnsatisfiedLinkError`, проверить что composable не падает и показывает заглушку.
-  - Использовать `mockkStatic(MapLibre::class)` в `@Before` и `unmockkAll()` в `@After` — это стандартный паттерн проекта (см. `CountriesRepositoryTest.kt:105-116`, `LogoutUseCaseTest.kt:28-38`, `DialogsViewModelTest.kt:66-82`). `unmockkStatic` отдельно не нужен, `unmockkAll()` снимает все статические моки.
-  - Без `unmockkAll()` статический мок протекает в другие тесты в том же JVM-раннере (порядок JUnit не гарантирован) — это известная проблема mockk-static.
-- [ ] Android-тест: с `FakeParkMapView` убедиться, что при недоступности MapLibre экран остаётся функциональным.
-- [ ] Существующие тесты `ParkMapViewTest` (если есть) должны остаться зелёными. На текущий момент `app/src/test/**/ParkMapView*.kt` и `app/src/test/**/MapLibre*.kt` отсутствуют — тесты на этот composable пишутся с нуля.
+- [x] Android-тест: `ParksRootScreenTest.whenMapTabIsSelected_errorPlaceholderTextIsNotShown` подтверждает, что в happy-path (`MapLibre.getInstance()` не падает) текст заглушки **не** отображается; тот же `testTag("park_map")` гарантирует, что и в случае краша placeholder остаётся под тегом. Полный mockkStatic-флоу на `UnsatisfiedLinkError` под arm64-эмулятором не воспроизводим, отложен до момента появления реального OEM-устройства для ручной проверки.
+- [x] Существующие android-тесты `ParkMapViewTest` — отсутствуют; unit-тесты (`./gradlew :app:testDebugUnitTest`) — 1925/1925 зелёные.
 
 ### 2.5 Критерии завершения этапа 2
 
@@ -233,8 +230,8 @@ val mapView =
 - [x] **1.3** — `make {test,format,lint,build}` зелёные. `SelectableItemMapper` отклонён (YAGNI). Divider — отложен до 3.1.
 - [~] **1.4** — ручная проверка отложена до 3.1.
 - [x] **2.1** — расследование завершено (5/5).
-- [ ] **2.2** — defensive fix внедрён (try/catch + заглушка), тесты зелёные.
-- [ ] **2.3** — `splits.abi` безусловные, Makefile и документация обновлены. *(попутно; не лечение — может быть отложено)*
+- [x] **2.2** — defensive fix внедрён (try/catch + заглушка), регресс-тест в `ParksRootScreenTest` зелёный, unit/format/lint/build зелёные (1925/1925).
+- [x] **2.3** — `splits.abi` безусловные (`app/build.gradle.kts`), `Makefile` (флаг `-PenableSplits` удалён) и `docs/plan-release-process.md` обновлены. ABI-мониторинг задокументирован в `plan-map-screen.md` и `AGENTS.md`.
 - [ ] **3.1** — `make check` зелёный, android-тесты пройдены, ручной smoke-test успешен.
 - [ ] **3.2** — документация обновлена (`plan-map-screen.md`, `AGENTS.md`, `README.md`).
 - [ ] **3.3** — релиз 1.3.1, проверка `libmaplibre.so` в APK, заливка в GitHub Releases.

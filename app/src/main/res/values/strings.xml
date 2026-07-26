@@ -454,6 +454,7 @@
     <!-- Map -->
     <string name="see_details">Details</string>
     <string name="my_location_content_description">Center on my location</string>
+    <string name="map_not_available">Map is not available on this device: %s</string>
 
     <!-- Content descriptions -->
     <string name="create_park_description">Create park</string>

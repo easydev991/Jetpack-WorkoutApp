@@ -858,3 +858,26 @@ make test-all
 - при выборе города с `2+` уникальными координатами parks карта использует `fit bounds`, а не только `city center + zoom=11`;
 - при выборе города, где все parks реально совпадают в одной координате, пользователь видит ожидаемо одну точку или один кластер, и это подтверждается диагностическим логом `unique=1`;
 - после успешного `CenterOnUser` следующий `onCitySelected(...)` меняет viewport на город и не откатывается назад к `userLocation` без нового нажатия FAB.
+
+## Известная проблема: UnsatisfiedLinkError для MapLibre native lib при ABI-сплитах
+
+С момента этапа 2 `splits.abi` включён безусловно в `buildTypes.release`:
+- Релизные APK содержат *только* `arm64-v8a` и `armeabi-v7a` — **x86/x86_64 исключены**.
+- Это означает, что `libmaplibre.so` (и любые другие нативные библиотеки) **отсутствуют** в релизном APK для эмулятора, если тот запущен на архитектуре x86_64.
+
+### Как проявляется
+
+- `make apk` → установка `*-arm64-v8a-release.apk` на **x86_64 эмулятор** → при первой же попытке загрузить MapLibre: `java.lang.UnsatisfiedLinkError: dalvik.system.PathClassLoader[...] couldn't find "libmaplibre.so"`.
+- `make build` (debug, universal APK) — наоборот, работает на любой архитектуре, потому что `splits.abi` включён только в `release` build type.
+- AAB (`make release`) — не страдает, Google Play / RuStore сами достают нужную ABI из AAB.
+
+### Что делать
+
+- Разработка и тестирование карты (`PlanMapView`, кластеризация, жесты) — **только через `make build` + `make install`**. Эмулятор должен быть `arm64-v8a` (рекомендуется `Pixel 9 Pro API 36` или аналогичный arm64-образ).
+- Для тестирования карты в релизной конфигурации на эмуляторе — временно заменить `buildTypes.release` на universal (отключить `splits.abi` локально) или использовать `assembleRelease -Psplits.universal=true` (если флаг универсального APK будет добавлен позже).
+- Выпуск (`make release`, `make apk`) — касается только arm64-устройств (`arm64-v8a` и `armeabi-v7a`), что покрывает >98% Android-устройств.
+
+### Мониторинг
+
+- Если после очередного релиза появится crash по `UnsatisfiedLinkError` в Firebase Crashlytics для `libmaplibre.so` — первым делом проверить ABI-состав релизного APK/AAB.
+- Аналогичная проблема может возникнуть для любой другой native-библиотеки, если она будет добавлена в проект (Google Tink crypto уже есть, но он использует Java-only backend по умолчанию).
