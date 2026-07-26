@@ -249,8 +249,8 @@ apk:
 		$(MAKE) _load_secrets; \
 	fi
 	@printf "$(YELLOW)Создаю релизные APK (arm64-v8a + armeabi-v7a)...$(RESET)\n"
-	@# ABI-сплиты включены безусловно в buildTypes.release; флаг -PenableSplits больше не нужен
-	@./gradlew assembleRelease --console=plain
+	@# ABI-сплиты включаются через -PenableSplits=true; для bundleRelease (AAB) splits нужно отключать
+	@./gradlew assembleRelease -PenableSplits=true --console=plain
 	@VERSION_NAME=$$(grep "^VERSION_NAME=" gradle.properties | cut -d'=' -f2); \
 	VERSION_CODE=$$(grep "^VERSION_CODE=" gradle.properties | cut -d'=' -f2); \
 	cp app/build/outputs/apk/release/app-arm64-v8a-release.apk "swparks$$VERSION_CODE-arm64-v8a.apk"; \
@@ -262,7 +262,7 @@ apk:
 **Ключевые моменты:**
 - APK собираются отдельно для каждой архитектуры: `arm64-v8a` и `armeabi-v7a`
 - Каждый APK содержит только нативные библиотеки под свою ABI (нет x86/x86_64)
-- ABI-сплиты включены безусловно в `buildTypes.release`, отдельный флаг `enableSplits` больше не используется
+- ABI-сплиты включаются через `-PenableSplits=true` в `make apk`; `bundleRelease` (AAB) запускается без флага, чтобы AGP не ругался на множественные shrunk-resources (https://issuetracker.google.com/402800800)
 - Размер одного APK снижается примерно на 30% по сравнению с универсальным APK (~26 MB)
 - `TEMP_DIR=$$(mktemp -d)` с `trap "rm -rf $$TEMP_DIR" EXIT` — безопасная очистка
 - `git clone --depth 1` — shallow clone для скорости
@@ -285,7 +285,7 @@ apk:
 
 - [x] Запустить `make release` — убедиться что AAB подписывается корректно ✅
 - [x] Запустить `make apk` — убедиться что APK подписываются корректно (два файла: `arm64-v8a` и `armeabi-v7a`) ✅
-- [x] ABI-фильтры для release: `arm64-v8a` + `armeabi-v7a` (isShrinkResources=true, isMinifyEnabled=true), сделаны безусловными, флаг `enableSplits` удалён ✅
+- [x] ABI-фильтры для release: `arm64-v8a` + `armeabi-v7a` (isShrinkResources=true, isMinifyEnabled=true), включаются флагом `-PenableSplits=true` для `make apk`; для `bundleRelease` флаг не передаётся, чтобы AAB собрался (см. этап 2.3 и ссылку https://issuetracker.google.com/402800800) ✅
 
 ---
 
