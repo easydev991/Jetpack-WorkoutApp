@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.compose.material3.Text
 import androidx.compose.ui.test.assertIsSelected
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
