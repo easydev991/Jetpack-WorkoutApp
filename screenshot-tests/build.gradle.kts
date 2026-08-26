@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.swparks.screenshots"
-    compileSdk = 36
+    compileSdk = 37
 
     targetProjectPath = ":app"
 
@@ -45,6 +45,6 @@ dependencies {
     implementation(libs.androidx.ui.test.junit4)
     implementation(libs.androidx.test.uiautomator)
     implementation(libs.kotlinx.serialization.json)
-    implementation("tools.fastlane:screengrab:2.1.1")
+    implementation(libs.screengrab)
     implementation(libs.androidx.room.runtime)
 }
