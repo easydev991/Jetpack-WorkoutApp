@@ -39,7 +39,6 @@ fun PhotoDetailSheetHost(
     config: PhotoDetailConfig,
     onDismissed: (deletedPhotoId: Long?) -> Unit
 ) {
-    var allowHide by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val appContainer = (context.applicationContext as JetpackWorkoutApplication).container
@@ -64,20 +63,12 @@ fun PhotoDetailSheetHost(
     val sheetState =
         rememberModalBottomSheetState(
             skipPartiallyExpanded = true,
-            confirmValueChange = { newValue ->
-                when (newValue) {
-                    SheetValue.Expanded -> true
-                    SheetValue.PartiallyExpanded -> false
-                    SheetValue.Hidden -> allowHide
-                }
-            }
+            confirmValueChange = { it != SheetValue.PartiallyExpanded }
         )
 
     fun dismissSheet(onComplete: () -> Unit) {
         scope.launch {
-            allowHide = true
             sheetState.hide()
-            allowHide = false
             onComplete()
         }
     }
@@ -94,12 +85,13 @@ fun PhotoDetailSheetHost(
 
     if (show) {
         ModalBottomSheet(
-            onDismissRequest = {},
+            onDismissRequest = { onDismissed(null) },
             sheetState = sheetState,
+            sheetGesturesEnabled = false,
             dragHandle = null,
             properties =
                 ModalBottomSheetProperties(
-                    shouldDismissOnBackPress = false,
+                    shouldDismissOnBackPress = true,
                     shouldDismissOnClickOutside = false
                 )
         ) {
