@@ -10,12 +10,12 @@
 
 ## Scope изменений (что затрагиваем)
 
-- `app/src/main/java/com/swparks/ui/screens/RootScreen.kt` (root-host, top-level контейнеры, `TopAppBar`, `shouldShowBottomBar`, текущий граф 30+ маршрутов);
+- `app/src/main/java/com/swparks/ui/screens/RootScreen.kt` (root-host, top-level контейнеры, `TopAppBar`, `shouldShowBottomBar`, текущий граф top-level и дочерних маршрутов);
 - `app/src/main/java/com/swparks/navigation/AppState.kt` (state/контракты top-level навигации);
 - `app/src/main/java/com/swparks/navigation/Navigation.kt` (BottomNavigationBar click/select logic);
 - `app/src/main/java/com/swparks/navigation/Destinations.kt` (маршруты и parent/source mapping);
 - `app/src/main/java/com/swparks/navigation/*NavigationCoordinator*.kt` (Park/Event/UserParks и др.);
-- `app/src/main/java/com/swparks/ui/viewmodel/*NavArgsViewModel*.kt` (savedStateHandle и привязка к конкретному NavHostController);
+- `app/src/main/java/com/swparks/navigation/NavArgsViewModels.kt` (savedStateHandle и привязка к конкретному NavHostController);
 - `app/src/test/java/com/swparks/navigation/*` (unit-тесты state и route-контрактов);
 - `app/src/androidTest/java/com/swparks/ui/screens/RootScreen*.kt` и `.../parks/ParksRootScreenTest.kt` (интеграционные сценарии).
 
@@ -131,7 +131,7 @@
 - [ ] `backFromSubscreen_returnsToPreviousInSubStack`;
 - [ ] `backFromTopLevelRoot_returnsToPreviousTopLevel`.
 - [ ] Добавить отдельный класс `TopLevelNavigationStateTest` (не смешивать в один файл с legacy-проверками).
-- [ ] Явно сохранить зелёными существующие тесты `AppStateTest` (текущие сценарии source-driven, ~683 строки на момент планирования).
+- [ ] Явно сохранить зелёными существующие тесты `AppStateTest` (текущие сценарии source-driven).
 - [ ] Добавить integration/UI-тесты для `RootScreen`:
 - [ ] `parks(map) -> more -> parks` не создаёт новый map-host (через счётчик/лог-индикатор);
 - [ ] выбранная вкладка bottom-nav корректна во всех текущих source-flow сценариях;
@@ -202,7 +202,7 @@
 - [ ] Отдельно закрыть сценарий `ProfileNavigationAction.NavigateToOwnProfile`:
 - [ ] убрать глобальный `popUpTo(0) { inclusive = true }`;
 - [ ] заменить на безопасный reset только `profile` substack + активация `Screen.Profile`.
-- [ ] Провести аудит `*NavArgsViewModel*` и `consume*Args()/consume*Result()` helper-функций:
+- [ ] Провести аудит `NavArgsViewModels.kt` и `consume*Args()/consume*Result()` helper-функций:
 - [ ] проверить привязку к корректному `navBackStackEntry` внутри substack-local контроллеров;
 - [ ] при необходимости добавить адаптер слоя для совместимой работы `SavedStateHandle` при multi-host.
 
@@ -311,3 +311,9 @@ Rollback (быстрый откат):
 - [ ] Новые тесты persistent-tabs зелёные.
 - [ ] Регрессий по back/reselect/top bar/bottom bar не обнаружено.
 - [ ] Проверка на утечки памяти пройдена: нет новых leak-сигналов для `RootScreen`/`ParkMapView` после 10+ циклов `parks -> other -> parks` (LeakCanary или эквивалентный инструмент).
+
+## Статус актуализации (проверено по коду)
+
+- Миграция не начата: persistent-контейнеры (`TabHost`), `TopLevelNavigationState` и флаг `persistentTopLevelTabsEnabled` в коде отсутствуют — все этапы 0-5 остаются невыполненными.
+- База актуальна: `AppState.navigateToTopLevelDestination` по-прежнему использует `saveState/restoreState`; глобальный `popUpTo(0)` в `RootScreen.kt` (NavigateToOwnProfile) на месте.
+- Ссылки на код выверены: `AppSettingsDataStore` существует (`data/preferences/AppSettingsDataStore.kt`); координаторы `ParkNavigationCoordinator`, `EventNavigationCoordinator`, `UserParksNavigationCoordinator` на месте; `NavArgsViewModels.kt` лежит в `navigation/`, а не в `ui/viewmodel/`; тесты из плана тестирования (`RootScreenBottomNavSourceFlowTest`, `RootScreenTest`, `ParksRootScreenTest`) существуют.

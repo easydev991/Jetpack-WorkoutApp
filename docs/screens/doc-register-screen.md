@@ -63,7 +63,7 @@
 
 | Файл                                                          | Описание                         |
 |---------------------------------------------------------------|----------------------------------|
-| `test/java/com/swparks/ui/viewmodel/RegisterViewModelTest.kt` | Unit-тесты ViewModel (668 строк) |
+| `test/java/com/swparks/ui/viewmodel/RegisterViewModelTest.kt` | Unit-тесты ViewModel             |
 
 **Отсутствуют:**
 - UI тесты для `RegisterUserScreen` (автоматические тесты интерфейса)
@@ -74,7 +74,7 @@
 
 ### Автоматические тесты
 
-- **Unit-тесты:** ✅ `RegisterViewModelTest.kt` (668 строк)
+- **Unit-тесты:** ✅ `RegisterViewModelTest.kt`
 - **UI тесты:** ❌ Отсутствуют (RegisterUserScreenTest.kt не создан)
 
 ### Ручное тестирование (требуется устройство)
@@ -93,8 +93,8 @@
 
 ## Технические детали
 
-**Компоненты:** `SWTextField`, `DateTimePicker`, `PolicyToggle`, `LoadingOverlayView`
+**Компоненты:** `SWTextField`, `SWDateTimePicker`, `PolicyToggle`, `LoadingOverlayView`
 
-**API:** `SWApi.register()` с `@FormUrlEncoded`
+**API:** `AuthRepository.register()` → `SWApi.register()` с `@FormUrlEncoded`
 
-**Навигация:** Вызов из `ProfileScreen` → `RegisterSheetHost`
+**Навигация:** Открытие из `IncognitoProfileView` (экран профиля) → `RegisterSheetHost` в `RootScreen`

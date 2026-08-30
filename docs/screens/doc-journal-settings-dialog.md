@@ -2,11 +2,16 @@
 
 ## Описание
 
-Диалог для редактирования настроек дневника пользователя, аналогичный `JournalSettingsScreen` в iOS-приложении. Диалог показывается при нажатии на действие "Настроить" (JournalAction.SETUP) в меню дневника на экране JournalsListScreen.
+Диалог для редактирования настроек дневника пользователя, аналогичный `JournalSettingsScreen` в iOS-приложении. Показывается из двух точек:
+
+- **JournalsListScreen** — действие "Настроить" (JournalAction.SETUP) в меню дневника;
+- **JournalEntriesScreen** — иконка настроек в TopAppBar (видна только владельцу дневника).
+
+В обоих случаях используется `JournalSettingsDialog` с интерфейсом `IJournalSettingsViewModel`.
 
 ## Ссылки на референсы
 
-- **iOS-реализация**: `/Users/Oleg991/Documents/GitHub/SwiftUI-WorkoutApp/SwiftUI-WorkoutApp/Screens/Profile/Journals/JournalSettingsScreen.swift`
+- **iOS-реализация**: `../SwiftUI-WorkoutApp/SwiftUI-WorkoutApp/Screens/Profile/Journals/JournalSettingsScreen.swift`
 - **nowinandroid SettingsDialog**: Использовать как референс для AlertDialog с RadioButton опциями
 - **Android JournalAccess enum**: `app/src/main/java/com/swparks/ui/model/JournalAccess.kt`
 - **Android EditJournalSettingsRequest**: `app/src/main/java/com/swparks/ui/model/EditJournalSettingsRequest.kt`
@@ -15,10 +20,10 @@
 
 Диалог должен содержать следующие элементы:
 
-1. **Текстовое поле для названия дневника** - с валидацией на непустоту
+1. **Текстовое поле для названия дневника** - с валидацией на непустоту (isError при попытке сохранить пустое название)
 2. **Настройка "Кто видит записи"** - RadioButton с вариантами: Все, Друзья, Только я
 3. **Настройка "Кто может оставлять комментарии"** - RadioButton с теми же вариантами
-4. **Кнопка сохранения** - активна только при наличии изменений и непустом названии, с индикатором загрузки
+4. **Кнопка сохранения** - активна только при наличии изменений и непустом названии; во время сохранения блокируется, а поверх содержимого диалога показывается `LoadingOverlayView`
 5. **Кнопка закрытия** - с иконкой крестика в правом верхнем углу заголовка
 
 ## Архитектурные слои
@@ -49,7 +54,7 @@
 - Реализовать основную Composable функцию с локальным состоянием (`TextFieldValue` для title)
 - Создать вспомогательные компоненты: `JournalAccessOption`, `SettingsDialogSectionTitle`, `JournalAccessGroup`, `JournalAccessRow`
 - Добавить валидацию названия и логику активации кнопки сохранения
-- Показывать индикатор загрузки на кнопке во время сохранения
+- Показывать `LoadingOverlayView` поверх содержимого диалога во время сохранения (кнопка при этом заблокирована)
 
 #### JournalsListScreen Integration
 
@@ -132,15 +137,15 @@
    - `isSavingJournalSettings` устанавливается в `true` перед запросом и в `false` после
    - вызывается `syncJournalsUseCase` для перезагрузки данных
    - эмитится событие `JournalSettingsSaved` с журналом из текущего состояния
-   - эмитится событие `ShowSnackbar` с сообщением "Настройки дневника сохранены"
+   - вызывается `userNotifier.showInfo()` с сообщением "Настройки дневника сохранены" (Snackbar показывается в RootScreen)
 
 2. **Ошибка сети/сервера при сохранении:**
    - `isSavingJournalSettings` сбрасывается в `false`
-   - эмитится событие `ShowSnackbar` с сообщением об ошибке
+   - вызывается `userNotifier.handleError()` с сообщением об ошибке
 
 3. **Неожиданная ошибка (исключение) при сохранении:**
    - `isSavingJournalSettings` сбрасывается в `false`
-   - эмитится событие `ShowSnackbar` с сообщением об ошибке по умолчанию
+   - вызывается `userNotifier.handleError()` с сообщением об ошибке по умолчанию
 
 4. **Редактирование при состоянии не Content:**
    - обновления `isSavingJournalSettings` игнорируются (state остаётся как есть)
@@ -160,7 +165,7 @@
 3. **Кнопка "Сохранить" активна при наличии изменений**
 4. **RadioButton меняет выбранное значение**
 5. **Семантика RadioButton работает корректно** (правильная роль, selectableGroup modifier)
-6. **Индикатор загрузки при сохранении** (CircularProgressIndicator на кнопке, кнопка заблокирована)
+6. **Индикатор загрузки при сохранении** (LoadingOverlayView поверх содержимого диалога, кнопка заблокирована)
 7. **Ошибка валидации названия** (isError = true при попытке сохранить с пустым названием)
 8. **Диалог с uiState не Content** (isSaving вычисляется как false, кнопка работает нормально)
 
@@ -185,19 +190,18 @@
 ### Результаты тестирования
 
 Все тесты успешно проходят:
-- **Unit тесты:** 1005/1005 ✅
-- **UI тесты:** 244/244 ✅
-- **Всего:** 1249 тестов
+- **Unit тесты:** ✅
+- **UI тесты:** ✅
 
 Файлы тестов:
-- `app/src/test/java/com/swparks/domain/usecase/EditJournalSettingsUseCaseTest.kt` - 10 тестов (добавлен тест 10 для ServerException)
-- `app/src/test/java/com/swparks/ui/viewmodel/JournalsViewModelTest.kt` - тесты 18-30 (13 тестов, добавлены тесты 29-30 для проверки UserNotifier)
-- `app/src/androidTest/java/com/swparks/ui/screens/journals/JournalSettingsDialogTest.kt` - 19 тестов
+- `app/src/test/java/com/swparks/domain/usecase/EditJournalSettingsUseCaseTest.kt` (добавлен тест для ServerException)
+- `app/src/test/java/com/swparks/ui/viewmodel/JournalsViewModelTest.kt` (добавлены тесты для проверки UserNotifier)
+- `app/src/androidTest/java/com/swparks/ui/screens/journals/JournalSettingsDialogTest.kt`
 
 ## Заметки
 
 1. **Безопасное разворачивание опционалов**: Использовать `?.let`, `?:` и ранний выход, не использовать `!!`
-2. **Обработка ошибок сети**: Использовать `try-catch` и показывать Snackbar с сообщением об ошибке
+2. **Обработка ошибок сети**: Использовать `try-catch` и передавать ошибку в `userNotifier.handleError()` (Snackbar показывается глобально в RootScreen)
 3. **Индикатор загрузки**: Показывать CircularProgressIndicator на кнопке сохранения во время запроса
 4. **Валидация**: Название дневника не должно быть пустым
 5. **Активация кнопки сохранения**: Использовать `remember` для кэширования результата сравнения

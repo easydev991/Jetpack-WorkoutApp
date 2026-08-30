@@ -10,11 +10,12 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.swparks.testing.TimeoutTest
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
-class AppViewModelNavigationReuseTest {
+class AppViewModelNavigationReuseTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

@@ -48,8 +48,8 @@ enum class ResourceType { PARK, EVENT }
 
 ### DeleteUseCase
 
-- `DeleteParkUseCase(parkId: Long)` — идемпотентный, возвращает `Result<Unit>`
-- `DeleteEventUseCase(eventId: Long)` — идемпотентный, возвращает `Result<Unit>`
+- `DeleteParkUseCase(parkId: Long)` — делегирует в `ParksEventsRepository.removeParkLocally(parkId)`, возвращает `Result<Unit>`
+- `DeleteEventUseCase(eventId: Long)` — делегирует в `ParksEventsRepository.removeEventLocally(eventId)`, возвращает `Result<Unit>`
 
 ### Navigation Event
 
@@ -77,11 +77,11 @@ data object NavigateBack : EventDetailEvent()
 | `domain/usecase/DeleteEventUseCase.kt` | удаление event из repository |
 | `util/AppError.kt` | добавлен ResourceNotFound + ResourceType enum |
 | `util/AppErrorExt.kt` | toUiText() для ResourceNotFound |
-| `data/SWRepository.kt` | маппинг HTTP 404 → NotFoundException (getPark, getEvent) |
+| `data/repository/ParksEventsRepository.kt` | маппинг HTTP 404 → NotFoundException (getPark, getEvent) |
 | `ui/viewmodel/ParkDetailViewModel.kt` | 404 handling + DeleteParkUseCase DI |
 | `ui/viewmodel/EventDetailViewModel.kt` | 404 handling + DeleteEventUseCase DI |
 | `ui/viewmodel/ParkDetailEvent.kt` | NavigateBack event |
-| `ui/viewmodel/EventDetailEvent.kt` | NavigateBack event |
+| `ui/viewmodel/EventDetailViewModel.kt` | NavigateBack event (sealed class EventDetailEvent объявлен внутри файла) |
 
 ---
 
@@ -89,20 +89,29 @@ data object NavigateBack : EventDetailEvent()
 
 ### Repository тесты
 
-- `getPark_whenApiReturns404_thenReturnsParkNotFound`
-- `getEvent_whenApiReturns404_thenReturnsEventNotFound`
+- `getPark_whenApiReturns404_thenReturnsParkNotFound` (`ParksEventsRepositoryParksTest`)
+- `getEvent_whenApiReturns404_thenReturnsEventNotFound` (`ParksEventsRepositoryEventsTest`)
 
 ### UseCase тесты
 
-- `DeleteParkUseCase_whenParkExists_thenDeletesAndReturnsSuccess`
-- `DeleteParkUseCase_whenParkAlreadyDeleted_thenReturnsSuccess` (идемпотентность)
-- `DeleteEventUseCase_whenEventExists_thenDeletesAndReturnsSuccess`
-- `DeleteEventUseCase_whenEventAlreadyDeleted_thenReturnsSuccess` (идемпотентность)
+`DeleteParkUseCaseTest`:
+
+- `invoke_success_callsRemoveParkLocally`
+- `invoke_failure_returnsFailure`
+- `invoke_passesCorrectParkId`
+
+`DeleteEventUseCaseTest`:
+
+- `invoke_success_callsRemoveEventLocally`
+- `invoke_failure_returnsFailure`
+- `invoke_passesCorrectEventId`
 
 ### ViewModel тесты
 
-- `ParkDetailViewModel_whenLoadParkReturnsNotFound_thenDeletesAndNavigatesBack`
-- `EventDetailViewModel_whenLoadEventReturnsNotFound_thenDeletesAndNavigatesBack`
+- `loadPark_whenParkNotFound_thenDeletesLocallyNotifiesAndNavigatesBack`
+- `loadPark_whenParkNotFound_thenUiStateShowsError`
+- `loadEvent_whenEventNotFound_thenDeletesLocallyNotifiesAndNavigatesBack`
+- `loadEvent_whenEventNotFound_thenUiStateShowsError`
 
 ### Presentation Integration тесты
 

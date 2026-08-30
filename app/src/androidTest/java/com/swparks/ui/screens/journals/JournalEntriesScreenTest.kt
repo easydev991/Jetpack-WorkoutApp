@@ -21,6 +21,7 @@ import com.swparks.analytics.fakeAnalyticsLogger
 import com.swparks.data.model.User
 import com.swparks.domain.model.JournalEntry
 import com.swparks.navigation.AppState
+import com.swparks.testing.TimeoutTest
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.state.JournalEntriesUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
@@ -43,7 +44,7 @@ import org.junit.runner.RunWith
  * и поведение при разных состояниях UI (loading, error, content, empty).
  */
 @RunWith(AndroidJUnit4::class)
-class JournalEntriesScreenTest {
+class JournalEntriesScreenTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

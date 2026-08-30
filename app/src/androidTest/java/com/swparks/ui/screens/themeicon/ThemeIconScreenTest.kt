@@ -10,6 +10,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.domain.model.AppIcon
 import com.swparks.domain.model.AppTheme
+import com.swparks.testing.TimeoutTest
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import org.junit.Rule
 import org.junit.Test
@@ -21,7 +22,7 @@ import org.junit.runner.RunWith
  * Тестирует UI компонент в изоляции без ViewModel.
  */
 @RunWith(AndroidJUnit4::class)
-class ThemeIconScreenTest {
+class ThemeIconScreenTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

@@ -9,8 +9,8 @@
 | Этап 1: Создание интерфейсов для ViewModel                     | ✅ ВЫПОЛНЕН | 7/7      |
 | Этап 2: Обновление ViewModel для реализации интерфейсов        | ✅ ВЫПОЛНЕН | 7/7      |
 | Этап 3: Обновление UI экранов для использования интерфейсов    | ✅ ВЫПОЛНЕН | 7/7      |
-| Этап 4: Создание Fake ViewModels для тестов                    | ✅ ВЫПОЛНЕН | 5/5      |
-| Этап 5: Обновление UI тестов для использования Fake ViewModels | ✅ ВЫПОЛНЕН | 2/2      |
+| Этап 4: Создание Fake ViewModels для тестов                    | ✅ ВЫПОЛНЕН | 2/5 *    |
+| Этап 5: Обновление UI тестов для использования Fake ViewModels | ✅ ВЫПОЛНЕН | ✅       |
 | Этап 6: Исправление ошибок компиляции                          | ✅ ВЫПОЛНЕН | 13/13    |
 
 ### Выполненные задачи
@@ -40,14 +40,18 @@
 - ✅ `MyFriendsScreen.kt` - использует `IFriendsListViewModel`
 - ✅ `EventsScreen.kt` - использует `IEventsViewModel`
 
-**Этап 4: Fake ViewModels (✅ 5/5)**
-- ✅ `FakeProfileViewModel` - создан для UI тестов
-- ✅ `FakeLoginViewModel` - создан для UI тестов
-- ✅ `FakeThemeIconViewModel` - создан для UI тестов
-- ✅ `FakeBlacklistViewModel` - создан для UI тестов
-- ✅ `FakeFriendsListViewModel` - создан для UI тестов
+**Этап 4: Fake ViewModels (✅ 2/5, актуализировано)**
+- ✅ `FakeProfileViewModel` - создан для UI тестов (есть в коде)
+- ✅ `FakeLoginViewModel` - создан для UI тестов (есть в коде)
+- ❌ `FakeThemeIconViewModel` - в текущем коде отсутствует
+- ❌ `FakeBlacklistViewModel` - в текущем коде отсутствует
+- ❌ `FakeFriendsListViewModel` - в текущем коде отсутствует
 
-**Этап 5: UI тесты (✅ 2/2)**
+> \* Позже для других экранов созданы собственные Fake-модели: `FakeEventsViewModel`,
+> `FakeJournalsViewModel`, `FakeJournalEntriesViewModel`, `FakeEventFormViewModel`,
+> `FakeParkFormViewModel`, `FakeParksRootViewModel`, `FakeTextEntryViewModel`.
+
+**Этап 5: UI тесты (✅)**
 - ✅ `ProfileRootScreenTest` - использует `FakeProfileViewModel`
 - ✅ `LoginScreenTest` - использует `FakeLoginViewModel`
 
@@ -58,7 +62,7 @@
 - ✅ `EventsViewModelTest.kt` - исправлены обращения к `StateFlow` через `.value`
 - ✅ `make format` выполнен успешно
 - ✅ `./gradlew build` собирается без ошибок
-- ✅ `./gradlew test` все unit-тесты проходят (713 тестов)
+- ✅ `./gradlew test` все unit-тесты проходят
 
 ---
 
@@ -79,14 +83,13 @@
 
 3. **Все 7 экранов обновлены для использования интерфейсов**
 
-4. **Созданы 5 Fake ViewModels для UI тестов:**
-   - `FakeProfileViewModel`
-   - `FakeLoginViewModel`
-   - `FakeThemeIconViewModel`
-   - `FakeBlacklistViewModel`
-   - `FakeFriendsListViewModel`
+4. **Созданы Fake ViewModels для UI тестов:**
+   - `FakeProfileViewModel` (есть в коде)
+   - `FakeLoginViewModel` (есть в коде)
+   - `FakeThemeIconViewModel`, `FakeBlacklistViewModel`, `FakeFriendsListViewModel`
+     из первоначального плана в текущем коде отсутствуют
 
-5. **Обновлены 2 UI теста для использования Fake ViewModels**
+5. **Обновлены UI тесты для использования Fake ViewModels**
 
 6. **Исправлены все ошибки компиляции и тестов**
 

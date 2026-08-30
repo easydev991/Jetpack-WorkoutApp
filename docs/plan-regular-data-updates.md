@@ -38,7 +38,7 @@
 ### Этап 7: Интеграция
 
 - [x] Логирование на русском
-- [x] Все тесты (1735) проходят
+- [x] Все тесты проходят
 - [x] format/lint без ошибок
 
 ## Исправленные баги
@@ -74,16 +74,18 @@
 
 ## Новые задачи
 
-### 1. Логирование валидации парков
+### 1. Логирование валидации парков — ✅ реализовано
 
-Добавить логирование количества валидных парков и количества отфильтрованных в `normalizeSelectedCityParks()`:
-- В начале функции: `totalCount = parks.size`
-- После `mapNotNull`: `validCount = parksWithDistance.size`
-- Логировать: `"Валидация парков: всего=$totalCount, валидных=$validCount, отфильтровано=${totalCount - validCount}"`
+В `ParksRootViewModel.normalizeSelectedCityParks()` добавлено логирование (при непустом списке и распарсенных координатах города):
 
-### 2. Offline-поддержка для ParkDetailScreen
+```
+"Координаты площадок (<город>): всего=$totalCount, валидные=$validCount, невалидные=$invalidCoordCount"
+```
 
-При ошибках сети/сервера показывать данные из Room:
-1. Добавить метод в `ParkDao`: `suspend fun getParkById(id: Long): ParkEntity?`
-2. Обновить `SWRepository.getPark()`: при IOException - fallback на Room
-3. Обновить `ParkDetailViewModel.loadPark()`: при ошибке - использовать кэшированные данные
+Дополнительно логируются: пропуск нормализации (координаты города не парсятся), консистентность фильтра и результат `normalizeWideCityFilter()`.
+
+### 2. Offline-поддержка для ParkDetailScreen — ✅ реализовано (cache-first)
+
+1. `ParkDao.getParkById(id: Long)` — добавлен (используется в `ParksEventsRepository`)
+2. Вместо fallback при IOException внутри `getPark()` реализован cache-first на уровне ViewModel: `ParkDetailViewModel.loadPark()` сначала читает `getParkFromCache(parkId)` (Room) и сразу показывает контент, затем `refreshParkContentInBackground()` обновляет с сервера; успешный ответ `getPark()` кэшируется (`cachePark`)
+3. Ошибки сети/сервера обрабатываются через `handleError()` (IOException → сетевое уведомление), UI не блокируется

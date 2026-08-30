@@ -13,7 +13,7 @@
 
 ## Навигация
 
-Маршрут: `Screen.Chat(dialogId, userName, userImage, otherUserId)`
+Маршрут: `Screen.Chat(dialogId, userId, userName, userImage, source)` — `chat/{dialogId}?userId={userId}&userName={userName}&userImage={userImage}&source={source}`
 
 Параметры передаются из `DialogsListScreen` при нажатии на диалог.
 
@@ -36,7 +36,7 @@
 
 1. При прокрутке к последнему сообщению проверяется видимость
 2. Если последнее входящее сообщение видно — вызывается `markAsRead(userId)`
-3. Используется `SWRepository.markDialogAsRead()` — обновляет и сервер, и локальную БД
+3. Используется `MessagesRepositoryImpl.markDialogAsRead()` — обновляет и сервер, и локальную БД
 4. Room Flow автоматически обновляет бейдж непрочитанных на `MessagesRootScreen`
 
 ### UI-компоненты
@@ -55,5 +55,6 @@
 ## Зависимости ViewModel
 
 - `SWApi` — сетевые запросы
-- `SWRepository` — обновление локальной БД (markAsRead)
+- `MessagesRepositoryImpl` — обновление локальной БД (markAsRead)
 - `UserNotifier` — отображение ошибок в UI
+- `Logger`, `CrashReporter`, `AnalyticsService` — логирование, отчёты о сбоях, аналитика

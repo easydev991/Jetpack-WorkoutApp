@@ -128,15 +128,15 @@ UI → ViewModel → UseCase → Repository → API/Room/DataStore
 
 **Проблема:** `savePark()` / `deletePark()` не обновляли локальный кэш `UserEntity.addedParks`.
 
-**Решение:** Приватные методы в `SWRepository` для синхронизации кэша пользователя.
+**Решение:** Приватные методы в `ParksEventsRepository` для синхронизации кэша пользователя.
 
-| Операция                                   | Описание                            |
-|--------------------------------------------|-------------------------------------|
-| `SWRepository.updateUserAddedParksCache()` | Добавление парка в кэш пользователя |
-| `SWRepository.removeParkFromUser()`        | Удаление парка из кэша пользователя |
-| `UserDao.update()`                         | Сохранение изменений в Room         |
-| `SWRepository.savePark()`                  | Синхронизация кэша                  |
-| `SWRepository.deletePark()`                | Синхронизация кэша                  |
+| Операция                                            | Описание                                       |
+|-----------------------------------------------------|------------------------------------------------|
+| `ParksEventsRepository.updateUserAddedParksCache()` | Добавление/обновление парка в кэше пользователя |
+| `ParksEventsRepository.removeParkFromUser()`        | Удаление парка из кэша пользователя            |
+| `UserDao.insert()`                                  | Сохранение изменений в Room (upsert)           |
+| `ParksEventsRepository.savePark()`                  | Синхронизация кэша                             |
+| `ParksEventsRepository.deletePark()`                | Синхронизация кэша                             |
 
 ## Russian locale для Geocoding
 
@@ -144,37 +144,37 @@ UI → ViewModel → UseCase → Repository → API/Room/DataStore
 
 **Решение:**
 
-- `geocoderProvider` signature: `(Context) → (Context, Locale) → Geocoder`
+- `geocoderProvider` signature: `(Context, Locale) → Geocoder`
 - Lazy init: `geocoderProvider(context, Locale("ru", "RU"))`
 
 ## Тесты
 
 | Этап    | Компонент                                                                 | Тесты       |
 |---------|---------------------------------------------------------------------------|-------------|
-| 1 (TDD) | ParkForm модель                                                           | 35          |
-| 2 (TDD) | Data Layer, SWRepository.savePark                                         | —           |
-| 3 (TDD) | IParkFormViewModel + ParkFormViewModel                                    | 33          |
-| 4 (TDD) | UI Layer (Compose)                                                        | 17          |
-| 5.4     | FindCityByCoordinatesUseCase                                              | 8           |
-| 5.4.4   | ParkForm geocoding                                                        | 6           |
+| 1 (TDD) | ParkForm модель                                                           | ✓           |
+| 2 (TDD) | Data Layer, ParksEventsRepository.savePark                                | —           |
+| 3 (TDD) | IParkFormViewModel + ParkFormViewModel                                    | ✓           |
+| 4 (TDD) | UI Layer (Compose)                                                        | ✓           |
+| 5.4     | FindCityByCoordinatesUseCase                                              | ✓           |
+| 5.4.4   | ParkForm geocoding                                                        | ✓           |
 | 5.4.7   | ParksRootScreenTest, ParkFormViewModel, LocationPermissionAlertDialogTest | androidTest |
-| 6.0.1   | ParksRootViewModel                                                        | 11          |
-| 6.1     | ParksRootScreen permission UI                                             | 9           |
+| 6.0.1   | ParksRootViewModel                                                        | ✓           |
+| 6.1     | ParksRootScreen permission UI                                             | ✓           |
 | 6.3     | ParksRootScreen permission UI-тесты, ParkNavigationCoordinator            | unit        |
-| 7       | SWRepositoryParksTest (cache sync)                                        | unit        |
-| 8       | GeocodingServiceImpl (Russian locale)                                     | 5           |
+| 7       | ParksEventsRepositoryParksTest (cache sync)                               | unit        |
+| 8       | GeocodingServiceImpl (Russian locale)                                     | ✓           |
 
-**Примечание:** Нет отдельных тестов UserDao; тесты park operations в `SWRepositoryParksTest`.
+**Примечание:** Нет отдельных тестов UserDao; тесты park operations в `ParksEventsRepositoryParksTest`.
 
 ## Готово
 
-- [x] Этапы 1-4: ParkForm (35 тестов), ParkFormViewModel (33 теста), ParkFormScreen (17 тестов)
+- [x] Этапы 1-4: ParkForm, ParkFormViewModel, ParkFormScreen — unit и UI тесты
 - [x] Этап 5: routes, nav args, `NewParkDraft`, permissions, FAB, services, DI, error mapping
-- [x] Этап 6.0.1: ParksRootViewModel (11 unit-тестов), `FakeParksRootViewModel` для androidTest
-- [x] Этап 6.1 (Create entrypoint): ParksRootScreen integration tests (9 тестов)
+- [x] Этап 6.0.1: ParksRootViewModel (unit-тесты), `FakeParksRootViewModel` для androidTest
+- [x] Этап 6.1 (Create entrypoint): ParksRootScreen integration tests
 - [x] Этап 6.2 (Edit flow): `ParkDetail → EditPark`, refresh после сохранения
 - [x] Этап 6.3: ParksRootScreen permission UI-тесты, `ParkNavigationCoordinator`, `RootScreen` integration
-- [x] Этап 7 (Cache sync): `SWRepository.updateUserAddedParksCache()` / `removeParkFromUser()`, cache sync
+- [x] Этап 7 (Cache sync): `ParksEventsRepository.updateUserAddedParksCache()` / `removeParkFromUser()`, cache sync
 - [x] Этап 8 (Russian locale): `GeocodingServiceImpl` использует `Locale("ru", "RU")`
 - [x] `make lint` ✅, `make test` ✅
 

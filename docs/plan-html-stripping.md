@@ -52,10 +52,10 @@ Extension-функция `String.parseHtml()` с параметром `compactMo
 
 ## Этап 1: Утилита для обработки HTML
 
-- [ ] Создать extension-функцию `String.parseHtml()` в `util/HtmlUtils.kt`
-- [ ] Добавить параметр `compactMode` для управления сохранением переносов
-- [ ] Добавить обработку HTML-сущностей (`&amp;`, `&lt;`, `&gt;`, `&nbsp;`, `&quot;`)
-- [ ] Написать unit-тесты для функции
+- [x] Создать extension-функцию `String.parseHtml()` в `util/HtmlUtils.kt`
+- [x] Добавить параметр `compactMode` для управления сохранением переносов
+- [x] Добавить обработку HTML-сущностей (`&amp;`, `&lt;`, `&gt;`, `&nbsp;`, `&quot;`)
+- [x] Написать unit-тесты для функции (`HtmlUtilsTest` в конвенции when/then)
 
 **Файлы:**
 - `app/src/main/java/com/swparks/util/HtmlUtils.kt`
@@ -63,31 +63,33 @@ Extension-функция `String.parseHtml()` с параметром `compactMo
 
 ## Этап 2: Обновление моделей данных
 
-Применить `parseHtml()` в моделях при получении текста:
+Применить `parseHtml()` в моделях при получении текста.
+
+Фактическая реализация: вычисляемые свойства `parsed*` в data-моделях (исходные поля не мутируются); мапперы (`toDomain`) отдают уже очищенный текст.
 
 ### 2.1 DialogResponse
 
-- [ ] Обновить `DialogResponse` - обработка `lastMessageText` (compact mode)
+- [x] Обновить `DialogResponse` - обработка `lastMessageText` (compact mode): `parsedLastMessageText`
 
 ### 2.2 MessageResponse
 
-- [ ] Обновить `MessageResponse` - обработка `message` (detail mode)
+- [x] Обновить `MessageResponse` - обработка `message` (detail mode): `parsedMessage`
 
 ### 2.3 JournalResponse
 
-- [ ] Обновить `JournalResponse` - обработка `lastMessageText` (compact mode)
+- [x] Обновить `JournalResponse` - обработка `lastMessageText` (compact mode): `parsedLastMessageText`
 
 ### 2.4 JournalEntryResponse
 
-- [ ] Обновить `JournalEntryResponse` - обработка `message` (detail mode)
+- [x] Обновить `JournalEntryResponse` - обработка `message` (detail mode): `parsedMessage`
 
 ### 2.5 Comment
 
-- [ ] Обновить `Comment` - обработка `body` (detail mode)
+- [x] Обновить `Comment` - обработка `body` (detail mode): `parsedBody`
 
 ### 2.6 Event
 
-- [ ] Обновить `Event` - обработка `description` (detail mode)
+- [x] Обновить `Event` - обработка `description` (detail mode): `parsedDescription`
 
 **Файлы:**
 - `app/src/main/java/com/swparks/data/model/DialogResponse.kt`
@@ -99,18 +101,20 @@ Extension-функция `String.parseHtml()` с параметром `compactMo
 
 ## Этап 3: Обновление тестов моделей
 
-- [ ] Добавить тесты с HTML-тегами в тесты моделей
-- [ ] Проверить что теги корректно удаляются
+- [ ] Добавить тесты с HTML-тегами в тесты моделей (реальные примеры с сервера покрыты в `HtmlUtilsTest`; отдельных HTML-кейсов в тестах моделей нет)
+- [x] Проверить что теги корректно удаляются (покрыто в `HtmlUtilsTest`)
 
 ## Этап 4: Проверка UI
 
-- [ ] Запустить приложение
-- [ ] Проверить отображение в списке диалогов (compact)
-- [ ] Проверить отображение в чате (detail - переносы сохраняются)
-- [ ] Проверить отображение в списке дневников (compact)
-- [ ] Проверить отображение записей дневника (detail)
-- [ ] Проверить отображение комментариев (detail)
-- [ ] Проверить отображение описания мероприятий (detail)
+Подтверждено по коду: UI потребляет parsed-значения моделей.
+- [x] Список диалогов — `MessagesRootScreen` применяет `parseHtmlOrNull(compactMode = true)` на уровне экрана (`DialogResponse.parsedLastMessageText` определён, но не используется) (compact)
+- [x] Чат — `ChatScreen` использует `message.parsedMessage` (detail - переносы сохраняются)
+- [x] Список дневников — `JournalResponse.toDomain()` отдаёт `parsedLastMessageText` (compact)
+- [x] Записи дневника — `JournalEntry` маппится из `JournalEntryResponse.parsedMessage` (detail)
+- [x] Комментарии — `EventDetailSections`/`ParkDetailSections` используют `comment.parsedBody` (detail)
+- [x] Описание мероприятий — `Event.parsedDescription` и `parseHtmlOrNull` в `EventDetailSections` (detail)
+
+- [ ] Ручной smoke-прогон приложения не зафиксирован
 
 ---
 
@@ -311,10 +315,10 @@ class HtmlUtilsTest {
 
 ## Критерии завершения
 
-- [ ] Создана утилита `String.parseHtml()` с параметром `compactMode`
-- [ ] Написаны unit-тесты
-- [ ] Обновлены все модели из таблицы
-- [ ] Проверено отображение на всех затронутых экранах
-- [ ] Проект собирается без ошибок
-- [ ] Тесты проходят успешно
-- [ ] Выполнен `make format`
+- [x] Создана утилита `String.parseHtml()` с параметром `compactMode`
+- [x] Написаны unit-тесты
+- [x] Обновлены все модели из таблицы
+- [x] Проверено отображение на всех затронутых экранах (по коду; ручной smoke не зафиксирован)
+- [x] Проект собирается без ошибок (исторически; при сомнениях — `make build`)
+- [x] Тесты проходят успешно (исторически; при сомнениях — `make test`)
+- [x] Выполнен `make format`

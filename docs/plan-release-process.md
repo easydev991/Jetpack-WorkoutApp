@@ -70,7 +70,7 @@ android-secrets/
 
 ### Задачи
 
-- [x] `gradle.properties` уже содержит: `VERSION_NAME=1.0`, `VERSION_CODE=1`
+- [x] `gradle.properties` уже содержит `VERSION_NAME` и `VERSION_CODE` (на момент актуализации: `VERSION_NAME=1.3.3`, `VERSION_CODE=11`)
 - [x] `app/build.gradle.kts` уже читает версии из `gradle.properties`
 - [x] Makefile уже имеет `make release` с инкрементом VERSION_CODE и сборкой `swparks{VERSION_CODE}.aab`
 
@@ -78,9 +78,9 @@ android-secrets/
 
 ## Этап 3: Настройка подписи release-сборок
 
-### 3.0 Добавление `setup_ssh` в Makefile
+### 3.0 Добавление `setup_ssh` в Makefile — ✅ РЕАЛИЗОВАНО
 
-Для клонирования `android-secrets` по SSH требуется настроить SSH-доступ к GitHub.
+Target `setup_ssh` добавлен в Makefile и вызывается из `setup`. Ниже — справочная реализация.
 
 **Добавить переменные в начало Makefile:**
 
@@ -188,7 +188,7 @@ setup:
 **Выполнить:**
 
 ```bash
-cd /Users/Oleg991/Documents/GitHub/android-secrets
+cd ../android-secrets
 make init APP=swparks
 ```
 
@@ -219,9 +219,9 @@ make export-pem APP=swparks     # Только PEM для RuStore
 make reset-secrets APP=swparks  # Удалить все секреты (если нужно пересоздать)
 ```
 
-### 3.2 Добавление targets для загрузки секретов в Makefile
+### 3.2 Добавление targets для загрузки секретов в Makefile — ✅ РЕАЛИЗОВАНО
 
-В JetpackDays используется SSH-клон `android-secrets` в `.secrets/`. В Jetpack-WorkoutApp — аналогично, но с `SECRETS_DIR=swparks`.
+Targets `_load_secrets` и `apk` присутствуют в Makefile (с `-PenableSplits=true`). В JetpackDays используется SSH-клон `android-secrets` в `.secrets/`. В Jetpack-WorkoutApp — аналогично, но с `SECRETS_DIR=swparks`.
 
 **Добавить в Makefile (код из JetpackDays, строки 93-122, адаптировано для swparks):**
 
@@ -388,5 +388,5 @@ release:
 3. Настроенную подпись release-сборок
 4. ABI-фильтры для release: `arm64-v8a` + `armeabi-v7a`, включаются через флаг `-PenableSplits=true` (передаётся `make apk`); `make release` (`bundleRelease`) запускается без флага, иначе AGP падает на `:app:buildReleasePreBundle` (<https://issuetracker.google.com/402800800>) — сокращение размера APK с ~26MB до ~14-17MB на файл
 5. Два APK для GitHub Releases (раздельно по ABI: `arm64-v8a` и `armeabi-v7a`)
-6. Fastlane с lane-ами `test`, `beta`, `screenshots`, `screenshots_ru`, `screenshots_en`
+6. Fastlane с lane-ами `test`, `beta`, `deploy`, `screenshots`
 7. Ручной процесс публикации: `make release` → AAB файл → RuStore / Google Play; `make apk` → два APK → GitHub Releases

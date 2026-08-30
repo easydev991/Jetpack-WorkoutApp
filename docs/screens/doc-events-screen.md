@@ -10,6 +10,7 @@
 - **Этап 6: 100%** ✅ Блокировка нажатий на мероприятия во время refresh
 - **Этап 7: 100%** ✅ Отображение адресов мероприятий (7.1-7.12)
 - **Этап 8: 100%** ✅ Замена SegmentedButtonRow на PrimaryTabRow
+- **Этап 9: 100%** ✅ Диалог правил создания мероприятия
 
 ---
 
@@ -17,7 +18,7 @@
 
 ### Этап 1: Data Layer ✅
 
-EventEntity/EventDao, SWRepository с getPastEventsFlow()/syncPastEvents(), инъекция через AppContainer.
+EventEntity/EventDao, ParksEventsRepository с getPastEventsFlow()/syncPastEvents(), инъекция через AppContainer.
 
 ### Этап 2: Domain Layer ✅
 
@@ -29,7 +30,7 @@ SegmentedButtonRow → PrimaryTabRow, Scaffold с FAB, PullToRefreshBox, EventsL
 
 ### Этап 4: UI тесты ✅
 
-FakeEventsViewModel + EventsScreenTest (19 тестов), интеграция с RootScreen.
+FakeEventsViewModel + EventsScreenTest, интеграция с RootScreen.
 
 ### Этап 5: Исправление багов ✅
 
@@ -46,6 +47,10 @@ EventsUIState в `ui/state/`, addresses Map, CountriesRepository, loadAddress() 
 ### Этап 8: PrimaryTabRow ✅
 
 Замена SingleChoiceSegmentedButtonRow на PrimaryTabRow с selectedTabIndex, сохранение логики выбора табов.
+
+### Этап 9: Диалог правил создания мероприятия ✅
+
+`onFabClick()`: если у пользователя ещё нет тренировочных площадок (`hasUsedParks == false`), отправляется `EventsEvent.ShowEventCreationRule` и показывается AlertDialog с правилом создания мероприятий (кнопка «Открыть площадки» ведёт на вкладку площадок, dismiss закрывает диалог). Иначе — `EventsEvent.NavigateToCreateEvent`.
 
 ---
 

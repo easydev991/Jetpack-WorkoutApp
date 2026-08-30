@@ -78,7 +78,7 @@
 
 ## Тесты
 
-- `EventDetailViewModelTest` — 32 unit-теста, включая cache-first сценарии past event.
+- `EventDetailViewModelTest` — unit-тесты, включая cache-first сценарии past event.
 - `EventDetailScreenTest` — UI/instrumentation сценарии для error/content состояний и cached past event.
 
 ## Связанные экраны

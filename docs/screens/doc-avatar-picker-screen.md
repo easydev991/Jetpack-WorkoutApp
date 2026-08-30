@@ -8,7 +8,7 @@
 
 | Этап | Статус |
 |------|--------|
-| 1. Утилиты (UriUtils + ImageUtils) | ✅ Завершён |
+| 1. Утилиты (UriUtils + AvatarHelper) | ✅ Завершён |
 | 2. UI State | ✅ Завершён |
 | 3. ViewModel | ✅ Завершён |
 | 4. Photo Picker | ✅ Завершён |
@@ -32,9 +32,9 @@
 | Слой | Компоненты |
 |------|------------|
 | **UI** | AvatarSection, rememberLauncherForActivityResult (Photo Picker) |
-| **ViewModel** | onAvatarSelected(), selectedAvatarUri, avatarError, isUploadingAvatar |
-| **Utils** | UriUtils (Uri→ByteArray), ImageUtils (валидация MIME, сжатие до 5MB) |
-| **Data** | SWRepository.editUser(), SWApi.editUser() |
+| **ViewModel** | onAvatarSelected(), selectedAvatarUri, avatarError, isLoading |
+| **Utils** | AvatarHelper (валидация MIME, Uri→ByteArray, сжатие до 5 MB; внутри UriUtils и ImageProcessor) |
+| **Data** | UserProfileRepository.editUser(), SWApi.editUser() |
 
 ---
 
@@ -59,18 +59,18 @@
 
 - Превью выбранного фото до сохранения
 - Индикатор загрузки во время отправки на сервер
-- Блокировка UI при загрузке (`isUploadingAvatar`)
+- Блокировка UI при загрузке (`isLoading`)
 - Понятные сообщения об ошибках (локализованные)
 
 ---
 
 ## Тестирование
 
-| Файл | Тестов |
-|------|--------|
-| UriUtilsTest | 4 |
-| ImageUtilsTest | 14 |
-| EditProfileViewModelTest | 12 |
+| Файл |
+|------|
+| UriUtilsTest |
+| AvatarHelper / ImageProcessor — покрыты в `EditProfileViewModelTest` |
+| EditProfileViewModelTest |
 
 ---
 

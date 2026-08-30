@@ -40,6 +40,7 @@
 - `JournalEntriesScreen`
 - `JournalsListScreen`
 - `OtherUserProfileScreen`
+- `RootScreen` — отправка личного сообщения из списка диалогов (`FriendsPicker` → режим `Message`)
 
 ## Поведение `TextEntrySheetHost`
 

@@ -71,7 +71,7 @@
 
 ### Успешный запрос `/users/{userId}/areas`
 
-При успешном `SWRepository.getParksForUser(userId)`:
+При успешном `ParksEventsRepository.getParksForUser(userId)`:
 - сервер возвращает `List<Park>`
 - все полученные площадки сохраняются в общую таблицу `parks`
 - для `userId` полностью пересобираются связи `userId -> parkId`
@@ -85,7 +85,7 @@
 
 ### Чтение локального кэша
 
-В `SWRepository` реализованы методы:
+В `ParksEventsRepository` реализованы методы:
 - `hasCachedParksForUser(userId)`
 - `getCachedParksForUser(userId)`
 
@@ -114,7 +114,7 @@
 ### При успешном фоне
 
 - UI обновляется свежими данными
-- Room уже синхронизирован на уровне `SWRepository`
+- Room уже синхронизирован на уровне `ParksEventsRepository`
 
 ### При ошибке фона
 
@@ -134,6 +134,11 @@
 Если исключение происходит во время cache lookup:
 - `ViewModel` переводит экран в `Error`
 - ошибка отправляется в `UserNotifier`
+
+### При возврате на экран (ON_RESUME)
+
+- `UserTrainingParksScreen` вызывает `reloadFromCache()`
+- список перечитывается из Room без запроса к сети; если кэш пуст или не изменился — UI не трогается
 
 ---
 
@@ -182,27 +187,27 @@
 
 ### Data / Room
 
-- [SWDatabase.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/data/database/SWDatabase.kt)
-- [UserTrainingParkEntity.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/data/database/entity/UserTrainingParkEntity.kt)
-- [UserTrainingParkCacheStateEntity.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/data/database/entity/UserTrainingParkCacheStateEntity.kt)
-- [UserTrainingParkDao.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/data/database/dao/UserTrainingParkDao.kt)
+- [SWDatabase.kt](app/src/main/java/com/swparks/data/database/SWDatabase.kt)
+- [UserTrainingParkEntity.kt](app/src/main/java/com/swparks/data/database/entity/UserTrainingParkEntity.kt)
+- [UserTrainingParkCacheStateEntity.kt](app/src/main/java/com/swparks/data/database/entity/UserTrainingParkCacheStateEntity.kt)
+- [UserTrainingParkDao.kt](app/src/main/java/com/swparks/data/database/dao/UserTrainingParkDao.kt)
 
 ### Repository
 
-- [SWRepository.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/data/repository/SWRepository.kt)
+- [ParksEventsRepository.kt](app/src/main/java/com/swparks/data/repository/ParksEventsRepository.kt)
 
 ### UI / ViewModel
 
-- [UserTrainingParksViewModel.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/ui/viewmodel/UserTrainingParksViewModel.kt)
-- [UserTrainingParksScreen.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/ui/screens/profile/UserTrainingParksScreen.kt)
-- [RootScreen.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/ui/screens/RootScreen.kt)
+- [UserTrainingParksViewModel.kt](app/src/main/java/com/swparks/ui/viewmodel/UserTrainingParksViewModel.kt)
+- [UserTrainingParksScreen.kt](app/src/main/java/com/swparks/ui/screens/profile/UserTrainingParksScreen.kt)
+- [RootScreen.kt](app/src/main/java/com/swparks/ui/screens/RootScreen.kt)
 
 ### Тесты
 
-- [UserTrainingParkDaoTest.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/test/java/com/swparks/data/database/dao/UserTrainingParkDaoTest.kt)
-- [UserTrainingParkEntityTest.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/test/java/com/swparks/data/database/entity/UserTrainingParkEntityTest.kt)
-- [SWRepositoryUserTrainingParksTest.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/test/java/com/swparks/data/repository/SWRepositoryUserTrainingParksTest.kt)
-- [UserTrainingParksViewModelTest.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/test/java/com/swparks/ui/viewmodel/UserTrainingParksViewModelTest.kt)
+- [UserTrainingParkDaoTest.kt](app/src/test/java/com/swparks/data/database/dao/UserTrainingParkDaoTest.kt)
+- [UserTrainingParkEntityTest.kt](app/src/test/java/com/swparks/data/database/entity/UserTrainingParkEntityTest.kt)
+- [ParksEventsRepositoryUserTrainingParksTest.kt](app/src/test/java/com/swparks/data/repository/ParksEventsRepositoryUserTrainingParksTest.kt)
+- [UserTrainingParksViewModelTest.kt](app/src/test/java/com/swparks/ui/viewmodel/UserTrainingParksViewModelTest.kt)
 
 ---
 

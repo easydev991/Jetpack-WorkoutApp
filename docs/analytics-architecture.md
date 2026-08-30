@@ -14,20 +14,19 @@
   - `ScreenView(screen: AppScreen, source: AppScreen? = null)`
   - `UserAction(action: UserActionType, params: Map<String, String> = emptyMap())`
   - `AppError(operation: AppErrorOperation, throwable: Throwable)`
-- Провайдерная схема:
-  - `AnalyticsProvider` — контракт провайдера
-  - `FirebaseAnalyticsProvider` — отправка в Firebase Analytics и прокидывание ошибок в `CrashReporter`
-  - `NoopAnalyticsProvider` — заглушка для debug/test
-- `AnalyticsService` выполняет fan-out по всем провайдерам.
-- Ошибка одного провайдера не ломает отправку в остальные: исключения локально перехватываются внутри `AnalyticsService`.
+- Отправка событий:
+  - `FirebaseAnalyticsProvider` — отправка в Firebase Analytics и прокидывание ошибок в `CrashReporter` (принимает `Context`, `Logger` и `CrashReporter`)
+  - Отдельного контракта провайдера нет: `AnalyticsService` принимает список функций `List<(AnalyticsEvent) -> Unit>`.
+- `AnalyticsService` выполняет fan-out по всем зарегистрированным отправителям.
+- Ошибка одного отправителя не ломает отправку в остальные: исключения локально перехватываются внутри `AnalyticsService`.
 
 ## 3. DI и окружения
 
-- `AnalyticsService` создается в `DefaultAppContainer` как singleton.
-- `CrashReporter` создается в `DefaultAppContainer` как singleton (`FirebaseCrashReporter`) и передается в `FirebaseAnalyticsProvider`.
-- Выбор провайдера зависит от сборки:
-  - `BuildConfig.DEBUG = true` -> `NoopAnalyticsProvider`
-  - иначе -> `FirebaseAnalyticsProvider`
+- `AnalyticsService` создается в `DefaultAppContainer` как singleton (`by lazy`).
+- `CrashReporter` — singleton-объект `FirebaseCrashReporter` (`util/crash`), передается в `FirebaseAnalyticsProvider`.
+- Отправка событий зависит от сборки:
+  - `BuildConfig.DEBUG = true` -> `AnalyticsService` без отправителей (события не отправляются)
+  - иначе -> `AnalyticsService` с единственным отправителем `FirebaseAnalyticsProvider`
 - Сервис передается:
   - в UI через `rememberAppState(analyticsService = ...)`, после чего хранится в `AppState` (`appState.analyticsService`)
   - в ViewModel через конструкторы/фабрики `AppContainer`.
@@ -83,14 +82,13 @@
 ## 9. Ключевые файлы
 
 - `app/src/main/java/com/swparks/analytics/AnalyticsEvent.kt`
-- `app/src/main/java/com/swparks/analytics/AnalyticsProvider.kt`
 - `app/src/main/java/com/swparks/analytics/AnalyticsService.kt`
 - `app/src/main/java/com/swparks/analytics/FirebaseAnalyticsProvider.kt`
-- `app/src/main/java/com/swparks/analytics/NoopAnalyticsProvider.kt`
 - `app/src/main/java/com/swparks/analytics/AppScreen.kt`
 - `app/src/main/java/com/swparks/analytics/UserActionType.kt`
 - `app/src/main/java/com/swparks/analytics/AppErrorOperation.kt`
 - `app/src/main/java/com/swparks/data/AppContainer.kt`
 - `app/src/main/java/com/swparks/navigation/AppState.kt`
+- `app/src/main/java/com/swparks/util/Logger.kt`
 - `app/src/main/java/com/swparks/util/CrashReporter.kt`
 - `app/src/main/java/com/swparks/util/crash/FirebaseCrashReporter.kt`

@@ -14,11 +14,11 @@
 |--------------|-------------------------------------------------------------------------------------------------------------------------------------|
 | Domain Layer | `PhotoDetailUIState`, `PhotoDetailConfig`, `PhotoDetailAction`, `PhotoDetailEvent`, `IPhotoDetailViewModel`, `PhotoDetailViewModel` |
 | UI Layer     | `PhotoDetailScreen`, `ZoomablePhotoView` (pinch-to-zoom, double-tap), `DeleteConfirmDialog`, `PhotoDetailSheetHost`                 |
-| Интеграция   | Связь с `EventDetailScreen` через `NavigateToPhotoDetail`, callback `onPhotoDeleted`                                                |
+| Интеграция   | Связь с `EventDetailScreen` и `ParkDetailScreen` через `PhotoDetailSheetHost`, callback `onDismissed(deletedPhotoId: Long?)`          |
 | Локализация  | Строки en/ru для диалога удаления                                                                                                   |
-| Тестирование | 18 unit-тестов `PhotoDetailViewModelTest`, 4 Preview                                                                                |
-| API          | Удаление фото через `swRepository.deleteEventPhoto()`, LoadingOverlay, `UserNotifier.handleError()`                                 |
-| Bugfix       | `key = "photo_${config.photoId}"` для корректного открытия выбранного фото                                                          |
+| Тестирование | unit-тесты `PhotoDetailViewModelTest`, unit-тесты `PhotoDetailSheetHostTest`, Preview                                          |
+| API          | Удаление фото через `parksEventsRepository.deleteEventPhoto()`, LoadingOverlay, `UserNotifier.handleError()`                         |
+| Bugfix       | Ключ ViewModel через `buildPhotoDetailViewModelKey`: `"photo_${ownerType.name}_${parentId}_${photoId}"` для корректного открытия выбранного фото (разные родители/типы не конфликтуют) |
 
 ---
 
@@ -32,16 +32,31 @@
 
 ### Итерация 2 — Галерея (следующая)
 
-**Задача:** Открытие выбранной фотографии с горизонтальной коллекцией миниатюр внизу.
+**Задача:** Открытие выбранной фотографии с горизонтальной коллекцией миниатюр внизу. Не реализована — `PhotoDetailConfig` по-прежнему описывает одно фото.
 
-**Изменения в PhotoDetailConfig:**
+**Текущий PhotoDetailConfig:**
 
 ```kotlin
 data class PhotoDetailConfig(
-    val photos: List<Photo>,        // было: single Photo
-    val selectedPhotoId: String,    // ID фото для начального отображения
-    val authorId: String,
-    val canDelete: Boolean,
+    val photoId: Long,          // ID выбранного фото
+    val parentId: Long,         // ID события/парка
+    val parentTitle: String,
+    val isAuthor: Boolean,
+    val photoUrl: String,
+    val ownerType: PhotoOwner   // PhotoOwner.Event | PhotoOwner.Park
+)
+```
+
+**Целевые изменения в PhotoDetailConfig:**
+
+```kotlin
+data class PhotoDetailConfig(
+    val photos: List<Photo>,        // было: одиночное фото (photoId + photoUrl)
+    val selectedPhotoId: Long,      // ID фото для начального отображения
+    val parentId: Long,
+    val parentTitle: String,
+    val isAuthor: Boolean,
+    val ownerType: PhotoOwner
 )
 ```
 

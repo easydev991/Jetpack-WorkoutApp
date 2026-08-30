@@ -15,6 +15,7 @@ import com.swparks.R
 import com.swparks.data.model.Event
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
+import com.swparks.testing.TimeoutTest
 import com.swparks.ui.ds.CommentAction
 import com.swparks.ui.model.MapUriSet
 import com.swparks.ui.state.EventDetailUIState
@@ -29,7 +30,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class EventDetailScreenTest {
+class EventDetailScreenTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

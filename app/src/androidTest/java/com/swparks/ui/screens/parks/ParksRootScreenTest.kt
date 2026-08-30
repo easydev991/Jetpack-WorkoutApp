@@ -23,6 +23,7 @@ import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
 import com.swparks.data.model.User
 import com.swparks.navigation.AppState
+import com.swparks.testing.TimeoutTest
 import com.swparks.ui.model.ParksTab
 import com.swparks.ui.testtags.ScreenshotTestTags
 import com.swparks.ui.viewmodel.FakeParksRootViewModel
@@ -34,7 +35,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class ParksRootScreenTest {
+class ParksRootScreenTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

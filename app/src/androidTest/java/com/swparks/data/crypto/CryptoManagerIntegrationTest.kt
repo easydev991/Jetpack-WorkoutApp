@@ -3,6 +3,7 @@ package com.swparks.data.crypto
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.swparks.testing.TimeoutTest
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertNotNull
@@ -18,7 +19,7 @@ import org.junit.runner.RunWith
  * правильности шифрования и дешифрования данных.
  */
 @RunWith(AndroidJUnit4::class)
-class CryptoManagerIntegrationTest {
+class CryptoManagerIntegrationTest : TimeoutTest(180) {
     private lateinit var context: Context
     private lateinit var cryptoManager: CryptoManagerImpl
 

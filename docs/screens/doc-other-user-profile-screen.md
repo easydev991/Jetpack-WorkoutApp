@@ -109,7 +109,7 @@ Auth Error  Loading → getUser
 ### Автоматические тесты ✅
 
 - **Unit-тесты**: `OtherUserProfileViewModelTest`, `FriendsListViewModelTest`
-- **UI тесты**: `OtherUserProfileScreenTest` (20), `UserFriendsScreenTest` (10)
+- **UI тесты**: `OtherUserProfileScreenTest`, `UserFriendsScreenTest`
 
 ### Ручное тестирование (требуется устройство)
 
@@ -131,7 +131,7 @@ Auth Error  Loading → getUser
 | `ui/viewmodel/OtherUserProfileViewModel.kt`    | ViewModel для управления состоянием                                                                                                                             |
 | `ui/viewmodel/OtherUserProfileUiState.kt`      | Sealed class состояний UI                                                                                                                                       |
 | `ui/viewmodel/IOtherUserProfileViewModel.kt`   | Интерфейс ViewModel                                                                                                                                             |
-| `ui/screen/profile/ProfileButtons.kt`          | Переиспользуемые кнопки: FriendsButton, UsedParksButton, AddedParksButton, JournalsButton                                                                       |
+| `ui/ds/ProfileButtons.kt`                      | Переиспользуемые кнопки: FriendsButton, UsedParksButton, AddedParksButton, JournalsButton                                                                       |
 | `ui/screens/common/TextEntrySheetHost.kt`      | Sheet для отправки сообщений                                                                                                                                    |
 
 ---

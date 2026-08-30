@@ -103,7 +103,7 @@ sealed interface EditProfileEvent {
 - Photo Picker через `ActivityResultContracts.PickVisualMedia()` (только изображения)
 - MIME-проверка: поддерживаемые форматы изображений
 - Конвертация Uri → ByteArray через `AvatarHelper`
-- Автоматическое сжатие через `ImageUtils.compressIfNeeded()`
+- Автоматическое сжатие через `AvatarHelper` (`ImageProcessor.compressIfNeeded()`, лимит 5 MB)
 - Отображение ошибки при неудачной загрузке
 - Превью выбранного фото сразу после выбора
 
@@ -111,7 +111,7 @@ sealed interface EditProfileEvent {
 
 - Кнопка Save активна только при `canSave = hasChanges && emailError == null && birthDateError == null`
 - Блокировка повторного сохранения во время запроса
-- Отправка формы и аватара на сервер через `SWRepository.editUser()`
+- Отправка формы и аватара на сервер через `UserProfileRepository.editUser()`
 - Обновление `initialForm` после успешного сохранения
 - Автоматический возврат на предыдущий экран
 
@@ -135,13 +135,15 @@ sealed interface EditProfileEvent {
 
 ```kotlin
 class EditProfileViewModel(
-    private val swRepository: SWRepository,           // Данные пользователя
-    private val countriesRepository: CountriesRepository,  // Справочник стран/городов
-    private val deleteUserUseCase: IDeleteUserUseCase,     // Удаление профиля
-    private val avatarHelper: AvatarHelper,          // Конвертация Uri → ByteArray
-    private val logger: Logger,                      // Логирование
-    private val userNotifier: UserNotifier,          // Отображение ошибок
-    private val resources: ResourcesProvider         // Строковые ресурсы
+    private val authRepository: AuthRepository,                 // Текущий пользователь
+    private val userProfileRepository: UserProfileRepository,   // Сохранение профиля (editUser)
+    private val countriesRepository: CountriesRepositoryImpl,   // Справочник стран/городов
+    private val deleteUserUseCase: DeleteUserUseCase,           // Удаление профиля
+    private val avatarHelper: AvatarHelperImpl,                 // Конвертация Uri → ByteArray, MIME-проверка, сжатие
+    private val logger: Logger,                                 // Логирование
+    private val userNotifier: UserNotifier,                     // Отображение ошибок
+    private val resources: ResourcesProviderImpl,               // Строковые ресурсы
+    private val analyticsService: AnalyticsService              // Аналитика
 )
 ```
 
@@ -163,19 +165,19 @@ class EditProfileViewModel(
 
 ## Тестирование
 
-### EditProfile (53 теста)
+### EditProfile
 
-| Файл | Тестов | Покрытие |
-|------|--------|----------|
-| `EditProfileViewModelTest` | 31 | Avatar, hasChanges, canSave, email validation, delete |
-| `EditProfileViewModelSelectionTest` | 7 | Country/city selection |
-| `EditProfileLocationsTest` | 11 | Domain model |
-| `DeleteUserUseCaseTest` | 4 | Delete user API |
+| Файл | Покрытие |
+|------|----------|
+| `EditProfileViewModelTest` | Avatar, hasChanges, canSave, email validation, delete |
+| `EditProfileViewModelSelectionTest` | Country/city selection |
+| `EditProfileLocationsTest` | Domain model |
+| `DeleteUserUseCaseTest` | Delete user API |
 
-### ChangePassword (30 тестов)
+### ChangePassword
 
-| Файл | Тестов |
-|------|--------|
-| `ChangePasswordViewModelTest` | 14 |
-| `ChangePasswordUiStateTest` | 8 |
-| `ChangePasswordUseCaseTest` | 8 |
+| Файл |
+|------|
+| `ChangePasswordViewModelTest` |
+| `ChangePasswordUiStateTest` |
+| `ChangePasswordUseCaseTest` |

@@ -53,8 +53,9 @@ ViewModel (StateFlow) ──► Compose Screen
 - **НЕ в ViewModel** (замена на `MutableStateFlow`).
 - **НЕ в `ui/state` моделях** (остаются plain Kotlin классами).
 
-> **Исключение:** `AppState` использует `mutableStateOf` для `currentUser`,
-> `currentTopLevelDestination` и `bottomNavVisualEpoch`. Это осознанное решение:
+> **Исключение:** `AppState` использует `mutableStateOf` для `currentUser` и
+> `currentTopLevelDestination`, а также `mutableIntStateOf` для счетчика
+> `bottomNavVisualEpoch`. Это осознанное решение:
 > `AppState` является глобальным state-holder'ом для навигации и авторизации,
 > его механический перенос на `StateFlow` не требуется.
 
@@ -74,9 +75,11 @@ fun SomeScreen(viewModel: SomeViewModel) {
 ```
 
 Зависимость `androidx.lifecycle:lifecycle-runtime-compose` уже подключена.
-Метод `collectAsState()` без Lifecycle-aware остаётся только в обоснованных случаях
-с локальным объяснением причины. Однократные события не превращать в State:
-для них использовать `LaunchedEffect` и сбор `Flow` / `SharedFlow`.
+Правило действует для новых и изменяемых при рефакторе экранов. Существующий код
+в основном всё ещё использует `collectAsState()` (порядка 80 мест в `ui/`),
+полный перевод на lifecycle-aware вариант не выполнялся. Однократные события
+не превращать в State: для них использовать `LaunchedEffect` и сбор
+`Flow` / `SharedFlow`.
 
 ## Пример (Chat)
 
@@ -153,9 +156,10 @@ private val itemId: Long = checkNotNull(savedStateHandle["itemId"]) {
 }
 ```
 
-## Рекомендуемый PR-порядок
+## Статус миграции
 
-1. **PR 1:** проектный reference-документ + `ChatViewModel` migration.
-2. **PR 2:** `LoginViewModel` form state migration; удалить compatibility getter `credentials`.
+1. **PR 1 (выполнен):** проектный reference-документ + `ChatViewModel` migration.
+2. **PR 2 (выполнен):** `LoginViewModel` form state migration; compatibility getter
+   `credentials` удален, вместо него `credentialsState: StateFlow<LoginCredentials>`.
 3. **PR 3 (опционально):** точечный cleanup overlay state в `ParkDetailScreen` / `EventDetailScreen`.
 4. **PR 4 (опционально):** journals/root overlay cleanup при наличии сценарного риска.

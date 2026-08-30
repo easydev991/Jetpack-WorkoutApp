@@ -11,6 +11,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.data.model.User
+import com.swparks.testing.TimeoutTest
 import com.swparks.ui.model.ParticipantsMode
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import org.junit.Assert.assertEquals
@@ -28,7 +29,7 @@ import org.junit.runner.RunWith
  * клики по пользователям и пустое состояние.
  */
 @RunWith(AndroidJUnit4::class)
-class ParticipantsScreenTest {
+class ParticipantsScreenTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

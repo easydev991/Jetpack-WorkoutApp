@@ -52,7 +52,7 @@ object UserSearch : Screen("user_search?source={source}", parentTab = Messages) 
 
 ### 2. AppState (AppState.kt)
 
-Метод `onDestinationChanged()` автоматически определяет родительскую вкладку для всех дочерних экранов, включая `SearchUserScreen`:
+Метод `onDestinationChanged()` автоматически определяет родительскую вкладку для всех дочерних экранов, включая `SearchUserScreen`. Упрощённо (без логирования):
 
 ```kotlin
 fun onDestinationChanged(route: String?, arguments: android.os.Bundle? = null) {
@@ -66,8 +66,8 @@ fun onDestinationChanged(route: String?, arguments: android.os.Bundle? = null) {
     // Для дочерних экранов определяем parentTab через Screen.findParentTab()
     val parentTab = Screen.findParentTab(route ?: "", arguments)
     if (parentTab != null) {
-        val parentTopLevelDestination = topLevelDestinations.find { 
-            it.route == parentTab.route 
+        val parentTopLevelDestination = topLevelDestinations.find {
+            it.route == parentTab.route
         }
         if (parentTopLevelDestination != null) {
             currentTopLevelDestination = parentTopLevelDestination
@@ -79,18 +79,26 @@ fun onDestinationChanged(route: String?, arguments: android.os.Bundle? = null) {
 
 ### 3. Точки вызова навигации
 
-**ProfileRootScreen.kt:**
+Обе точки вызова находятся в **RootScreen.kt**:
+
+**Вкладка Profile** — колбэк при вызове `ProfileTopAppBar` (кнопка поиска определена в `ProfileTopAppBar`, файл `ProfileRootScreen.kt`):
 
 ```kotlin
-onSearchUsersClick = {
-    appState.navController.navigate(Screen.UserSearch.createRoute("profile"))
-}
+ProfileTopAppBar(
+    appState = appState,
+    onSearchUsersClick = {
+        appState.analyticsService.log(
+            AnalyticsEvent.ScreenView(AppScreen.SEARCH_USERS)
+        )
+        appState.navController.navigate(Screen.UserSearch.createRoute("profile"))
+    }
+)
 ```
 
-**MessagesRootScreen.kt:**
+**Вкладка Messages** — обработка действия от `MessagesRootScreen`:
 
 ```kotlin
-onNavigateToSearchUsers = {
+MessagesNavigationAction.NavigateToSearchUsers -> {
     appState.navController.navigate(Screen.UserSearch.createRoute("messages"))
 }
 ```
@@ -108,13 +116,30 @@ composable(
         }
     )
 ) { navBackStackEntry ->
+    val viewModel: SearchUserViewModel =
+        appViewModel {
+            appContainer.searchUserViewModelFactory()
+        }
+    // Получаем source из аргументов навигации для передачи в OtherUserProfile
     val source = navBackStackEntry.arguments?.getString("source") ?: "messages"
     SearchUserScreen(
+        modifier = Modifier.fillMaxSize(),
         viewModel = viewModel,
-        onUserClick = { userId ->
-            appState.navController.navigate(
-                Screen.OtherUserProfile.createRoute(userId, source)
-            )
+        config =
+            SearchUserConfig(
+                parentPaddingValues = paddingValues,
+                currentUserId = currentUser?.id
+            ),
+        onAction = { action ->
+            when (action) {
+                SearchUserAction.Back -> appState.navController.popBackStack()
+                is SearchUserAction.UserClick -> {
+                    appState.navController.navigate(
+                        Screen.OtherUserProfile.createRoute(action.userId, source)
+                    )
+                }
+                // Search и Retry опущены для краткости
+            }
         }
     )
 }
@@ -168,6 +193,6 @@ OnDestinationChangedListener: destination=user_search?source=profile, arguments=
 
 1. `app/src/main/java/com/swparks/navigation/Destinations.kt` — модель навигации
 2. `app/src/main/java/com/swparks/navigation/AppState.kt` — логика определения вкладки
-3. `app/src/main/java/com/swparks/ui/screens/RootScreen.kt` — настройка NavHost
-4. `app/src/main/java/com/swparks/ui/screens/profile/ProfileRootScreen.kt` — вызов из Profile
-5. `app/src/main/java/com/swparks/ui/screens/messages/MessagesRootScreen.kt` — вызов из Messages
+3. `app/src/main/java/com/swparks/ui/screens/RootScreen.kt` — настройка NavHost и обе точки вызова навигации
+4. `app/src/main/java/com/swparks/ui/screens/profile/ProfileRootScreen.kt` — `ProfileTopAppBar` с кнопкой поиска (колбэк `onSearchUsersClick`)
+5. `app/src/main/java/com/swparks/ui/screens/messages/MessagesRootScreen.kt` — отправка `MessagesNavigationAction.NavigateToSearchUsers`

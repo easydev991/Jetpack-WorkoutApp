@@ -50,7 +50,7 @@
 
 ### UI доработки
 
-- [x] FriendsButton: показывается если есть друзья ИЛИ заявки в друзья; текст друзей скрывается при `friendsCount=0`
+- [x] FriendsButton: показывается если есть друзья ИЛИ заявки в друзья; badge с количеством заявок при `friendRequestCount > 0`
 - [x] AlertDialog для подтверждения логаута с красной кнопкой подтверждения
 - [x] Логирование всех нажатий кнопок на русском
 - [x] Кнопки disabled при `isRefreshing`
@@ -64,7 +64,7 @@
 ```
 UserDao (Flow<User?>)
     ↓
-SWRepository.getCurrentUserFlow()
+AuthRepository.getCurrentUserFlow()
     ↓
 ProfileViewModel.currentUser (StateFlow<User?>)
     ↓
@@ -76,7 +76,7 @@ UI компоненты
 ### Data Layer
 
 - **UserPreferencesRepository.currentUserId**: `Flow<Long?>` для реактивного отслеживания авторизации
-- **SWRepository.getCurrentUserFlow()**: объединяет preferences и UserDao через `flatMapLatest`
+- **AuthRepository.getCurrentUserFlow()**: объединяет preferences и UserDao через `flatMapLatest`
 
 ### Domain Layer
 
@@ -91,7 +91,7 @@ UI компоненты
 
 - **Unit-тесты**: `ProfileViewModelTest`
 - **UI тесты**: `ProfileRootScreenTest`
-- **LoginUiState**: `LoginUiStateTest` (9 тестов)
+- **LoginUiState**: `LoginUiStateTest`
 
 ### Ручное тестирование (требуется устройство)
 
@@ -108,10 +108,10 @@ UI компоненты
 
 | Файл | Назначение |
 |------|------------|
-| `ui/screens/profile/ProfileRootScreen.kt` | UI экран профиля и кнопки (EditProfileButton, FriendsButton, UsedParksButton, AddedParksButton, JournalsButton, BlacklistButton, LogoutButton) |
+| `ui/screens/profile/ProfileRootScreen.kt` | UI экран профиля: AuthorizedProfileContent, ProfileTopAppBar, EditProfileButton, LogoutButton, LogoutDialog |
 | `ui/viewmodel/ProfileViewModel.kt` | ViewModel + `ProfileUiState` sealed class (объявлен внутри) |
 | `ui/viewmodel/IProfileViewModel.kt` | Интерфейс ViewModel |
-| `ui/screen/profile/ProfileButtons.kt` | Переиспользуемые кнопки (FriendsButton, UsedParksButton, AddedParksButton, JournalsButton) |
+| `ui/ds/ProfileButtons.kt` | Переиспользуемые кнопки (FriendsButton, UsedParksButton, AddedParksButton, JournalsButton, BlacklistButton) |
 
 ---
 

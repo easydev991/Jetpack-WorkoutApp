@@ -4,7 +4,7 @@
 
 Документ описывает реализацию безопасного хранения и использования токена авторизации в Android-приложении Jetpack-WorkoutApp с соблюдением консистентности с iOS-версией.
 
-**Последнее обновление:** 7 февраля 2026 года
+**Последнее обновление:** 30 сентября 2026 года
 
 **Статус проверки:** Все компоненты проверены и соответствуют текущему состоянию проекта
 
@@ -16,14 +16,15 @@
 
 ### Реализованные компоненты
 
-- ✅ **CryptoManager** - AES-128-GCM-HKDF шифрование через Tink, ключи в Android Keystore, интеграционные тесты
+- ✅ **CryptoManagerImpl** - AES-128-GCM шифрование через Tink (шаблон `AES128_GCM`), ключи в Android Keystore, интеграционные тесты
 - ✅ **EncryptedStringSerializer** - автоматическое шифрование/дешифрование строк с UTF-8 конвертацией
-- ✅ **SecureTokenRepository** - Flow authToken, методы saveAuthToken/getAuthTokenSync/clearAuthTokenSync, unit-тесты
+- ✅ **SecureTokenRepository** - Flow authToken, in-memory кэш для синхронного доступа из Interceptor, методы saveAuthToken/getAuthTokenSync/clearAuthTokenSync/loadTokenToCache, unit-тесты
 - ✅ **TokenInterceptor** - добавляет `Authorization: Basic {token}`, проверяет пустоту, интегрирован в OkHttpClient, unit-тесты
 - ✅ **AppContainer** - создает и интегрирует TokenInterceptor и SecureTokenRepository
-- ✅ **LoginUseCase** - сохраняет токен, вызывает login, сохраняет userId, интерфейс ILoginUseCase, unit-тесты
-- ✅ **LogoutUseCase** - очищает токен, сбрасывает isAuthorized, интерфейс ILogoutUseCase, unit-тесты
-- ✅ **AuthViewModel** - использует ILoginUseCase/ILogoutUseCase, AuthUiState, UserNotifier, unit-тесты
+- ✅ **TokenEncoder** - генерирует Base64-токен `login:password` из учётных данных
+- ✅ **LoginUseCase** - генерирует токен через TokenEncoder, сохраняет токен, вызывает login, сохраняет userId, unit-тесты
+- ✅ **LogoutUseCase** - очищает токен, сбрасывает авторизацию (forceLogout), очищает локальные данные пользователя, unit-тесты
+- ✅ **AuthViewModel** - использует LoginUseCase/LogoutUseCase, AuthUiState, UserNotifier, unit-тесты
 
 ### Проверка тестов
 
@@ -113,9 +114,9 @@ request.allHTTPHeaderFields = Dictionary(
                │ Управление ключами
                ▼
 ┌─────────────────────────────────────────────┐
-│       CryptoManager (Tink)          │
+│       CryptoManagerImpl (Tink)      │
 │  - Aead шифрование                   │
-│  - AES-128-GCM-HKDF               │
+│  - AES-128-GCM (AES128_GCM)       │
 │  - Генерация/чтение keyset        │
 └──────────────┬──────────────────────────┘
                │
@@ -139,11 +140,11 @@ request.allHTTPHeaderFields = Dictionary(
 
 **Компоненты архитектуры:**
 
-1. **CryptoManager** - Управление шифрованием
+1. **CryptoManagerImpl** (`com.swparks.data.crypto`) - Управление шифрованием
    - Создание ключа в Android Keystore (если не существует)
    - Хранение Tink keyset в SharedPreferences
    - Методы `encrypt(data: ByteArray): ByteArray` и `decrypt(ciphertext: ByteArray): ByteArray`
-   - Использует `Aead` с шаблоном `AES_128_GCM_HKDF`
+   - Использует `Aead` с шаблоном `AES128_GCM`
 
 2. **SecureTokenRepository** - API для работы с защищенным токеном
    - Сохранение токена с шифрованием через Preferences DataStore
@@ -155,10 +156,10 @@ request.allHTTPHeaderFields = Dictionary(
    - Добавляет заголовок `Authorization: Basic {token}` в запросы
    - Не добавляет заголовок если токена нет
 
-4. **AuthInterceptor** - Обработка ошибок 401 (без изменений)
-   - Сохраняется как есть
-   - При 401 очищает флаг `isAuthorized` в UserPreferencesRepository
-   - Опционально может вызывать `secureTokenRepository.clearAuthTokenSync()`
+4. **AuthInterceptor** - Обработка ошибок 401
+   - При 401 (кроме эндпоинтов login, register, reset-password) очищает данные авторизации через `UserPreferencesRepository.clearAllUserData()` — удаляет `currentUserId`, из которого вычисляется `isAuthorized`
+   - Защита от повторного логаута через `Mutex`
+   - `secureTokenRepository.clearAuthTokenSync()` при 401 не вызывается
 
 ---
 
@@ -169,14 +170,14 @@ request.allHTTPHeaderFields = Dictionary(
 ### Выполненные этапы
 
 - ✅ **Подготовка** - добавлена зависимость Tink, подключен Preferences DataStore
-- ✅ **Криптография** - CryptoManager с AES-128-GCM-HKDF и Android Keystore, интеграционные тесты
-- ✅ **SecureTokenRepository** - Flow authToken, методы для сохранения/чтения/очистки токена, unit-тесты
+- ✅ **Криптография** - CryptoManagerImpl с AES-128-GCM (шаблон Tink `AES128_GCM`) и Android Keystore, интеграционные тесты
+- ✅ **SecureTokenRepository** - Flow токена, in-memory кэш, методы для сохранения/чтения/очистки токена, unit-тесты
 - ✅ **EncryptedStringSerializer** - автоматическое шифрование/дешифрование строк
 - ✅ **TokenInterceptor** - добавляет `Authorization: Basic {token}`, unit-тесты
 - ✅ **AppContainer** - интеграция TokenInterceptor и SecureTokenRepository в OkHttp
-- ✅ **LoginUseCase** - сохраняет токен, вызывает API, сохраняет userId, интерфейс ILoginUseCase, unit-тесты
-- ✅ **LogoutUseCase** - очищает токен, сбрасывает авторизацию, интерфейс ILogoutUseCase, unit-тесты
-- ✅ **AuthViewModel** - управление состоянием авторизации, интерфейсы, UserNotifier, unit-тесты
+- ✅ **LoginUseCase** - генерирует токен через TokenEncoder, сохраняет токен, вызывает API, сохраняет userId, unit-тесты
+- ✅ **LogoutUseCase** - очищает токен, сбрасывает авторизацию, очищает локальные данные пользователя, unit-тесты
+- ✅ **AuthViewModel** - управление состоянием авторизации, AuthUiState, UserNotifier, unit-тесты
 
 ---
 
@@ -186,7 +187,7 @@ request.allHTTPHeaderFields = Dictionary(
 
 ### Функциональность
 
-✅ Безопасное хранение токена в Preferences DataStore с шифрованием через Tink (AES-128-GCM-HKDF)
+✅ Безопасное хранение токена в Preferences DataStore с шифрованием через Tink (AES-128-GCM, шаблон `AES128_GCM`)
 ✅ Ключи шифрования в Android Keystore
 ✅ Автоматическое добавление токена в заголовок `Authorization: Basic {token}` через TokenInterceptor
 ✅ LoginUseCase сохраняет токен и userId, LogoutUseCase очищает данные

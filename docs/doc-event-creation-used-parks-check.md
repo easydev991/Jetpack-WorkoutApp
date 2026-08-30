@@ -11,7 +11,7 @@
 
 Ориентир по iOS:
 
-- `SwiftUI-WorkoutApp/SwiftUI-WorkoutApp/Screens/Events/EventsListScreen.swift`
+- `../SwiftUI-WorkoutApp/SwiftUI-WorkoutApp/Screens/Events/EventsListScreen.swift`
 - локализационный ключ сообщения: `Alert.EventCreationRule`
 
 ## Пользовательский сценарий
@@ -77,7 +77,7 @@
 
 `EventsViewModel`:
 
-- подписывается на `SWRepository.getCurrentUserFlow()`;
+- подписывается на `AuthRepository.getCurrentUserFlow()`;
 - хранит `currentUser` как `StateFlow<User?>`;
 - на `onFabClick()` выбирает одно из двух событий:
   - `EventsEvent.NavigateToCreateEvent`
@@ -125,11 +125,11 @@
 
 Исправление:
 
-- в `SWRepository.updateTrainHereCache()` после успешного `trainHere` / `untrainHere` обновляется и `parksCount` текущего пользователя в `UserDao`.
+- в `ParksEventsRepository.updateTrainHereCache()` (вызывается из `changeTrainHereStatus` после успешного `trainHere` / `untrainHere`) обновляется и `parksCount` текущего пользователя в `UserDao`.
 
 Ключевой файл:
 
-- `app/src/main/java/com/swparks/data/repository/SWRepository.kt`
+- `app/src/main/java/com/swparks/data/repository/ParksEventsRepository.kt`
 
 ## Покрытие тестами
 
@@ -139,12 +139,12 @@
 
 - логика `EventsViewModel` для `hasUsedParks == true / false`;
 - реакция `EventsViewModel` на обновление `currentUserFlow`;
-- обновление `currentUser.parksCount` в `SWRepository` после `changeTrainHereStatus(true/false)`.
+- обновление `currentUser.parksCount` в `ParksEventsRepository` после `changeTrainHereStatus(true/false)`.
 
 Ключевые файлы:
 
 - `app/src/test/java/com/swparks/ui/screens/events/EventsViewModelTest.kt`
-- `app/src/test/java/com/swparks/data/repository/SWRepositoryParksTest.kt`
+- `app/src/test/java/com/swparks/data/repository/ParksEventsRepositoryParksTest.kt`
 
 ### UI tests
 
@@ -184,11 +184,11 @@
 - `app/src/main/java/com/swparks/ui/screens/events/EventsScreen.kt`
 - `app/src/main/java/com/swparks/ui/screens/RootScreen.kt`
 - `app/src/main/java/com/swparks/data/AppContainer.kt`
-- `app/src/main/java/com/swparks/data/repository/SWRepository.kt`
+- `app/src/main/java/com/swparks/data/repository/ParksEventsRepository.kt`
 - `app/src/main/res/values/strings.xml`
 - `app/src/main/res/values-ru/strings.xml`
 - `app/src/test/java/com/swparks/ui/screens/events/EventsViewModelTest.kt`
-- `app/src/test/java/com/swparks/data/repository/SWRepositoryParksTest.kt`
+- `app/src/test/java/com/swparks/data/repository/ParksEventsRepositoryParksTest.kt`
 - `app/src/androidTest/java/com/swparks/ui/screens/events/EventsScreenTest.kt`
 
 ## Что важно помнить дальше

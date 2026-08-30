@@ -28,14 +28,14 @@
 
 - Токен сохраняется через `SecureTokenRepository` в `LoginUseCase` (есть unit-тесты).
 - ID пользователя сохраняется через `UserPreferencesRepository` при успешном логине.
-- Флаг авторизации сохраняется при успешном логине и сбрасывается при выходе (LogoutUseCase / SWRepository / UserPreferencesRepository).
+- Флаг авторизации сохраняется при успешном логине и сбрасывается при выходе (LogoutUseCase / AuthRepository / UserPreferencesRepository).
 - Обработка ошибок сети через `NetworkException` с отображением диалогового окна пользователю.
 
 ### Реализованные компоненты
 
 **Data layer:**
-- `SWRepository.login(token)` - авторизация на сервере
-- `SWRepository.resetPassword(login)` - восстановление пароля
+- `AuthRepository.login(token)` - авторизация на сервере
+- `AuthRepository.resetPassword(login)` - восстановление пароля
 - `SecureTokenRepository` - безопасное хранение токена авторизации
 - `UserPreferencesRepository` - хранение ID пользователя и флага авторизации
 - `AuthInterceptor` (401) - обработка ошибок авторизации
@@ -51,15 +51,9 @@
 
 **UI layer:**
 - `LoginScreen` - экран авторизации с полями логина и пароля
-- `LoginSheetHost` - хост для LoginSheetHost в виде полноэкранного модального листа
+- `LoginSheetHost` - хост, отображающий `LoginScreen` как полноэкранный модальный лист
 - `LoginViewModel` - ViewModel с методом `resetForNewSession()` для очистки состояния при повторном открытии экрана
 - `AuthViewModel` - альтернативная ViewModel для авторизации (используется в тестах)
-- Design System компоненты: `SWTextField`, `SWButton`, `LoadingOverlayView`
-- AlertDialog'ы для уведомлений: "Нет интернета", "Забыли пароль", "Успешное восстановление"
-
-**UI layer:**
-- `LoginScreen` - экран авторизации с полями логина и пароля
-- `LoginViewModel` - ViewModel с методом `resetForNewSession()` для очистки состояния при повторном открытии экрана
 - Design System компоненты: `SWTextField`, `SWButton`, `LoadingOverlayView`
 - AlertDialog'ы для уведомлений: "Нет интернета", "Забыли пароль", "Успешное восстановление"
 
@@ -79,18 +73,18 @@
 - Полноэкранное модальное отображение LoginSheetHost: закрытие только крестиком/после успеха, dismiss-жесты и back press запрещены.
 - Реализована обработка одноразовых событий через `Channel<LoginEvent>` для корректной навигации и уведомлений.
 
-**Unit-тесты (71 тест):**
-- `SWRepositoryAuthTest.kt` - 17 тестов (тесты методов авторизации в SWRepository)
-- `LoginCredentialsTest.kt` - 14 тестов (валидация учетных данных)
-- `LoginViewModelTest.kt` - 13 тестов (тесты ViewModel авторизации)
-- `LoginUiStateTest.kt` - 8 тестов (тесты UI state)
-- `AuthViewModelTest.kt` - 4 теста (тесты AuthViewModel)
-- `LoginUseCaseTest.kt` - 3 теста (тесты use case авторизации)
-- `ResetPasswordUseCaseTest.kt` - 3 теста (тесты use case восстановления пароля)
-- `LoginSuccessTest.kt` - 3 теста (тесты модели LoginSuccess)
-- `AuthInterceptorTest.kt` - 6 тестов (тесты интерсептора авторизации)
+**Unit-тесты:**
+- `AuthRepositoryTest.kt` (тесты методов авторизации в AuthRepository; ранее `SWRepositoryAuthTest`)
+- `LoginCredentialsTest.kt` (валидация учетных данных)
+- `LoginViewModelTest.kt` (тесты ViewModel авторизации)
+- `LoginUiStateTest.kt` (тесты UI state)
+- `AuthViewModelTest.kt` (тесты AuthViewModel)
+- `LoginUseCaseTest.kt` (тесты use case авторизации)
+- `ResetPasswordUseCaseTest.kt` (тесты use case восстановления пароля)
+- `LoginSuccessTest.kt` (тесты модели LoginSuccess)
+- `AuthInterceptorTest.kt` (тесты интерсептора авторизации)
 
-**UI-тесты (15 тестов):**
+**UI-тесты:**
 - `LoginScreenTest.kt` - проверка отображения всех элементов экрана, валидация полей, работа кнопок и алертов
 
 ## Осталось (по порядку)

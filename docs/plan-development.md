@@ -11,12 +11,12 @@
 ### Android-приложение (Jetpack-WorkoutApp)
 
 - 🚧 **В активной разработке**
-- ✅ Дизайн-система: 42 компонента
-- ✅ Модели данных: 19 API + 9 доменных + 22 UI модели
-- ✅ API клиент SWApi: 62 endpoint-аннотации в `SWApi`
+- ✅ Дизайн-система: готовые компоненты
+- ✅ Модели данных: API, доменные и UI модели
+- ✅ API клиент SWApi: endpoint-аннотации в `SWApi`
 - ✅ Безопасность токена: шифрование, интерцепторы
-- ✅ Use Cases: 32 реализации + 24 интерфейса (`56` файлов)
-- ✅ ViewModels: 30 реализаций + 25 интерфейсов (`55` файлов)
+- ✅ Use Cases: реализации и интерфейсы (включая IconManager и обработчик локации парка)
+- ✅ ViewModels: реализации и интерфейсы
 - ✅ Namespace: `com.swparks`
 
 #### Реализованные экраны
@@ -38,23 +38,23 @@
 
 #### Реализованные модели данных
 
-**API модели (19):** User, Park, Event, Comment, Photo, JournalResponse, JournalEntryResponse, DialogResponse, MessageResponse, City, Country, ParkType, ParkSize, LoginSuccess, SocialUpdates, ApiFriendAction, ApiBlacklistOption и связанные сетевые DTO
+**API модели:** User, Park, Event, Comment, Photo, JournalResponse, JournalEntryResponse, DialogResponse, MessageResponse, City, Country, ParkType, ParkSize, LoginSuccess, SocialUpdates, ApiFriendAction, ApiBlacklistOption и связанные сетевые DTO
 
-**Доменные модели (9):** AppIcon, AppTheme, Journal, JournalEntry, FriendAction, EditProfileLocations, RegistrationParams и дополнительные доменные сущности
+**Доменные модели:** AppIcon, AppTheme, Journal, JournalEntry, FriendAction, EditProfileLocations, RegistrationParams и дополнительные доменные сущности
 
-**UI модели (22):** LoginCredentials, ParkForm, EventForm, MainUserForm, RegisterForm, EditJournalSettingsRequest, FriendAction, BlacklistAction, Gender, JournalAccess, TextEntryOption, TextEntryMode, EditInfo, EventKind, EventType, EventFormMode, ParticipantsMode, PickedImageItem, PickedImagesState, MapUriSet и связанные UI state/request модели
+**UI модели:** LoginCredentials, ParkForm, EventForm, MainUserForm, RegisterForm, EditJournalSettingsRequest, FriendAction, BlacklistAction, Gender, JournalAccess, TextEntryOption, TextEntryMode, EditInfo, EventKind, EventType, EventFormMode, ParticipantsMode, PickedImageItem, PickedImagesState, MapUriSet и связанные UI state/request модели
 
 #### Реализованная архитектура
 
-**Data Layer:** AppContainer (DI), SWRepository (покрывает весь текущий контракт `SWApi`), UserPreferencesRepository (DataStore), SecureTokenRepository (Tink шифрование)
+**Data Layer:** AppContainer (DI), специализированные репозитории (`AuthRepository`, `UserProfileRepository`, `FriendsRepository`, `CommentsRepository`, `ParksEventsRepository`, `MessagesRepositoryImpl`, `JournalsRepositoryImpl`, `JournalEntriesRepositoryImpl`, `CountriesRepositoryImpl`) + `BaseRepository` (общая обработка ошибок сети/сервера), UserPreferencesRepository (DataStore), SecureTokenRepository (Tink шифрование)
 
 **Network Layer:** SWApi, RetryInterceptor, AuthInterceptor (401), TokenInterceptor
 
 **Security:** CryptoManager (AES-128-GCM-HKDF), EncryptedStringSerializer
 
-**Domain Layer:** 32 реализации use case + 24 интерфейса, IconManager, исключения (ServerException, NetworkException)
+**Domain Layer:** реализации use case + интерфейс `ICreateParkLocationHandler`, IconManager, исключения (ServerException, NetworkException)
 
-**UI layer:** 30 ViewModel + 25 интерфейсов/контрактов
+**UI layer:** ViewModel и интерфейсы/контракты
 
 ---
 
@@ -82,7 +82,7 @@
 
 **Экраны:** MoreScreen (настройки), ThemeIconScreen (тема и иконки)
 
-**Статус:** Полный стек (Domain, Data, UI), unit-тесты, UI-тесты (11 тестов)
+**Статус:** Полный стек (Domain, Data, UI), unit-тесты, UI-тесты
 
 **Детальный план:** `docs/screens/doc-more-screen.md`
 
@@ -256,21 +256,23 @@
 
 ## Технологический стек
 
-**Основные:** Kotlin 2.3.20, Jetpack Compose (BOM 2026.03.01), Material 3, Android Gradle Plugin 9.1.1, Java 21
+Актуальные версии зависимостей — в `gradle/libs.versions.toml` и `README.md`.
 
-**Требования:** minSdk 26, targetSdk 36, compileSdk 36
+**Основные:** Kotlin, Jetpack Compose (BOM), Material 3, Android Gradle Plugin, Java 21
 
-**Архитектура:** ViewModel 2.10.0, Navigation 2.9.7, Lifecycle 2.10.0, Room 2.8.4
+**Требования:** minSdk 26, targetSdk 37, compileSdk 37
 
-**Сеть:** Retrofit 3.0.0, Kotlinx Serialization 1.11.0, Coroutines 1.10.2
+**Архитектура:** ViewModel, Navigation, Lifecycle, Room
 
-**Изображения:** Coil Compose 2.7.0
+**Сеть:** Retrofit, Kotlinx Serialization, Coroutines
 
-**Хранение:** DataStore 1.2.1, Room 2.8.4
+**Изображения:** Coil Compose
 
-**Качество:** KtLint 14.2.0, Detekt 1.23.8, KSP 2.3.6
+**Хранение:** DataStore, Room
 
-**Тестирование:** JUnit 4.13.2, MockK 1.14.9, Turbine 1.2.1, Compose UI Test, Robolectric 4.16.1
+**Качество:** KtLint, Detekt, KSP
+
+**Тестирование:** JUnit 4, MockK, Turbine, Compose UI Test, Robolectric
 
 ---
 
@@ -281,15 +283,15 @@
 ```
 app/src/main/java/com/swparks/
 ├── data/              # Data layer (repository, crypto, datetime, interceptor, serialization, database, model)
-│   └── model/         # API модели и DTOs (19 файлов)
+│   └── model/         # API модели и DTOs
 ├── domain/            # Domain layer (exception, usecase, model)
-│   └── model/         # Доменные модели (9 файлов)
+│   └── model/         # Доменные модели
 ├── network/           # API клиент (`SWApi`)
 ├── ui/
-│   ├── ds/            # Компоненты дизайн-системы (42 файла)
-│   ├── model/         # UI формы и запросы (22 файла)
-│   ├── screens/       # Экраны приложения (57 файлов)
-│   ├── viewmodel/     # ViewModels (30 реализаций + 25 интерфейсов)
+│   ├── ds/            # Компоненты дизайн-системы
+│   ├── model/         # UI формы и запросы
+│   ├── screens/       # Экраны приложения
+│   ├── viewmodel/     # ViewModels (реализации + интерфейсы)
 │   └── theme/         # Тема
 ├── navigation/        # Навигация
 └── util/              # Утилиты
@@ -298,8 +300,8 @@ app/src/main/java/com/swparks/
 ### Структура тестов
 
 ```
-app/src/test/java/com/swparks/          # Unit-тесты (1833 @Test)
-app/src/androidTest/java/com/swparks/   # Интеграционные и UI тесты (452 @Test)
+app/src/test/java/com/swparks/          # Unit-тесты
+app/src/androidTest/java/com/swparks/   # Интеграционные и UI тесты
 ```
 
 ---
@@ -318,7 +320,7 @@ app/src/androidTest/java/com/swparks/   # Интеграционные и UI т�
 
 ### Компоненты дизайн-системы
 
-- ✅ 42 компонента готовы к использованию
+- ✅ Компоненты дизайн-системы готовы к использованию
 
 ---
 
@@ -342,15 +344,15 @@ app/src/androidTest/java/com/swparks/   # Интеграционные и UI т�
 
 ### Реализованный API
 
-✅ **62 endpoint-аннотации в `SWApi`**
+✅ **Endpoint-аннотации в `SWApi`**
 
-- Авторизация/профиль: 7 endpoints
-- Друзья/черный список: 10 endpoints
-- Страны/города: 1 endpoint
-- Площадки: 15 endpoints
-- Мероприятия: 12 endpoints
-- Сообщения: 5 endpoints
-- Дневники: 7 endpoints
+- Авторизация/профиль
+- Друзья/черный список
+- Страны/города
+- Площадки
+- Мероприятия
+- Сообщения
+- Дневники
 
 ### Безопасность авторизации
 
@@ -358,9 +360,9 @@ app/src/androidTest/java/com/swparks/   # Интеграционные и UI т�
 
 ### Тестирование
 
-**1833 unit-тестов:** Data, Domain, Model, ViewModel, UI state, Utils, Network
+**Unit-тесты:** Data, Domain, Model, ViewModel, UI state, Utils, Network
 
-**452 интеграционных и UI тестов:**
+**Интеграционные и UI тесты:**
 - Интеграционные: CryptoManagerIntegrationTest, JournalEntryDaoTest
 - UI тесты: LoginScreen, MoreScreen, ThemeIconScreen, MyFriendsScreen, MyBlacklistScreen, ProfileRootScreen, UserFriendsScreen, OtherUserProfileScreen, SearchUserScreen, RootScreen, JournalsListScreen, JournalEntriesScreen, JournalSettingsDialog, TextEntryScreen, MessagesRootScreen, ChatScreen, EventsScreen, EventFormScreen, ParticipantsScreen, ParkFormScreen, ParkDetailScreen, ParksRootScreen, ParksFilterDialog, ParksAddedByUserScreen, PickedImagesGrid и связанные интеграционные сценарии
 
@@ -373,14 +375,15 @@ app/src/androidTest/java/com/swparks/   # Интеграционные и UI т�
 - **2026-01-22:** Обновление на основе фактического состояния (API, архитектура, модели)
 - **2026-01-25:** Вкладка "Ещё" (More) завершена - MoreScreen и ThemeIconScreen
 - **2026-01-31:** Авторизация (Auth) - LoginScreen завершен
-- **2026-02-07:** Дизайн-система (28 компонентов), новые экраны (MyFriendsScreen, ParksAddedByUserScreen), database слой
-- **2026-02-11:** Дневники (Journals) - 13 ViewModels, 10 экранов (с тестами), 17 use cases, 766+ unit-тестов, 2 интеграционных теста
-- **2026-02-23:** Обновление документации - 31 компонент дизайн-системы, 32 use cases, 36 ViewModels, 85+ unit-тестов, 17 интеграционных и UI тестов, новые экраны (EditProfileScreen, RegisterUserScreen, OtherUserProfileScreen, SearchUserScreen, ChangePasswordScreen, MessagesRootScreen), UI модели (RegisterForm), новые доменные модели (FriendAction, EditProfileLocations)
+- **2026-02-07:** Дизайн-система, новые экраны (MyFriendsScreen, ParksAddedByUserScreen), database слой
+- **2026-02-11:** Дневники (Journals) - ViewModels, экраны (с тестами), use cases, unit- и интеграционные тесты
+- **2026-02-23:** Обновление документации - компоненты дизайн-системы, use cases, ViewModels, unit и интеграционные/UI тесты, новые экраны (EditProfileScreen, RegisterUserScreen, OtherUserProfileScreen, SearchUserScreen, ChangePasswordScreen, MessagesRootScreen), UI модели (RegisterForm), новые доменные модели (FriendAction, EditProfileLocations)
 - **2026-02-23:** Актуализация статусов - вкладка "Профиль" ✅ ЗАВЕРШЕНО, JournalsListScreen 100% реализован (4 итерации: базовый экран, удаление, создание, унифицированные уведомления), JournalEntriesScreen реализован (6 итераций с багфиксами, включает создание/редактирование/удаление записей), JournalSettingsDialog реализован, уточнение функционала (запросы в друзья в MyFriendsScreen, выбор страны/города встроен в EditProfileScreen и RegisterUserScreen)
-- **2026-03-02:** Вкладка "Сообщения" (Messages) ✅ ЗАВЕРШЕНО - ChatScreen реализован (ChatViewModel, ChatScreen.kt, 15 unit-тестов), включает: отправка сообщений, markAsRead через repository, обновление списка диалогов через SharedFlow, автопрокрутка, блокировка ввода при отправке
+- **2026-03-02:** Вкладка "Сообщения" (Messages) ✅ ЗАВЕРШЕНО - ChatScreen реализован (ChatViewModel, ChatScreen.kt), включает: отправка сообщений, markAsRead через repository, обновление списка диалогов через SharedFlow, автопрокрутка, блокировка ввода при отправке
 - **2026-03-17:** Актуализация навигации и документации - в `RootScreen` реализованы и подключены `EventDetail/EditEvent/EventParticipants`, `ParkDetail/CreatePark/EditPark`, `Chat`, а также typed args parsers/coordinators для key navigation flows.
-- **2026-03-21:** Актуализация метрик проекта - 41 компонент дизайн-системы, 24 use case, 25 ViewModel, 113 unit-тестов, 23 интеграционных/UI тестов, 32 экрана (18 с UI тестами), новые модели (RegistrationParams, EventFormMode, ParticipantsMode, PickedImageItem, PickedImagesState, MapUriSet)
+- **2026-03-21:** Актуализация метрик проекта - компоненты дизайн-системы, use cases, ViewModels, unit и интеграционные/UI тесты, экраны (часть с UI тестами), новые модели (RegistrationParams, EventFormMode, ParticipantsMode, PickedImageItem, PickedImagesState, MapUriSet)
 - **2026-03-31:** TDD план для Offline-поддержки ParkDetailScreen — `docs/screens/doc-park-detail-offline-tdd.md`
 - **2026-03-31:** Актуализация плана по фактическому состоянию кода: обновлены метрики проекта, статус вкладки Events и ссылка на `docs/screens/doc-event-form-screen.md`
-- **2026-04-03:** Актуализация по фактическому состоянию репозитория: Journals переведены в статус ✅ завершено, `ParksAddedByUserScreen` вынесен из частично реализованных сценариев в реализованные вспомогательные экраны, обновлены тестовые метрики (`1833` unit / `452` androidTest), добавлена ссылка на итоговую документацию `docs/doc-retry-loading-state.md`
+- **2026-04-03:** Актуализация по фактическому состоянию репозитория: Journals переведены в статус ✅ завершено, `ParksAddedByUserScreen` вынесен из частично реализованных сценариев в реализованные вспомогательные экраны, обновлена ссылка на итоговую документацию `docs/doc-retry-loading-state.md`
 - **2026-04-03:** Уточнение статусов по фактическому состоянию экранов: `EventDetailScreen`, `FeedbackSender` и `ItemListScreen` переведены из исторического статуса "частично" в реализованные сценарии; `ParksRootScreen` оставлен в частично завершённых из-за отдельного хвоста по persistent tabs / keep-alive карты между bottom-nav вкладками
+- **2026-09-30:** Актуализация по фактическому состоянию кода: endpoint-аннотации SWApi (площадки, дневники), метрики проекта, Data Layer переписан — `SWRepository` разделён на специализированные репозитории + `BaseRepository`; обновлён технологический стек (Kotlin, AGP, Compose BOM, targetSdk/compileSdk 37, Navigation, Lifecycle/ViewModel, Room, Coroutines, KSP, MockK, Robolectric)

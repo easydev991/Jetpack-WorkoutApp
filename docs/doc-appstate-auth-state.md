@@ -94,9 +94,16 @@ fun ParksTopAppBar(appState: AppState) {
 ```kotlin
 @Composable
 fun RootScreen(appState: AppState) {
-    val profileViewModel = remember {
-        appContainer.profileViewModelFactory()
+    val context = LocalContext.current
+    val appContainer = remember {
+        (context.applicationContext as JetpackWorkoutApplication).container
     }
+
+    // ProfileViewModel создаётся один раз на уровне RootScreen
+    val profileViewModel =
+        appViewModel {
+            appContainer.profileViewModelFactory()
+        }
 
     // Подписываемся на Flow из ProfileViewModel для реактивного обновления
     val currentUser by profileViewModel.currentUser.collectAsState()
@@ -141,8 +148,10 @@ fun RootScreen(appState: AppState) {
 
 ### 2. AppState уже используется везде
 
-`AppState` уже прокидывается во все экраны через навигацию:
-- Вкладки: `ParksRootScreen`, `EventsScreen`, `MessagesRootScreen`, `ProfileRootScreen`, `MoreScreen`
+`AppState` прокидывается через навигацию не во все экраны:
+
+- `appState` получают: `ParksRootScreen`, `MessagesRootScreen`, `ProfileRootScreen` (через `ProfileRootConfig`)
+- `EventsScreen` и `MoreScreen` работают без `AppState`: первый берёт пользователя из собственного `EventsViewModel`, второй получает `navController` и `analyticsService`
 - Детальные экраны получают `appState` из `MainActivity` → `RootScreen` → навигация
 
 Это означает, что не нужно прокидывать ProfileViewModel в каждый экран — просто используйте `appState.isAuthorized`.
@@ -193,7 +202,7 @@ fun ParksScreen(appState: AppState) {
 
 ```kotlin
 @Composable
-fun EventsScreen(appState: AppState) {
+fun SomeActionScreen(appState: AppState) {
     if (appState.isAuthorized) {
         Button(onClick = { /* Создать мероприятие */ }) {
             Text("Создать мероприятие")
@@ -247,11 +256,11 @@ fun ProfileScreen(appState: AppState) {
 - Переходы состояний (null → user → null → user)
 - Стабильность при повторных обновлениях одним и тем же пользователем
 
-**Результаты тестирования:**
-- Количество тестов: 9
-- Успешно: 9/9
+**Результаты тестирования (auth-сценарии):**
 - Успешность: 100%
 - Время выполнения: 0.046s
+
+Примечание: файл `AppStateTest.kt` разросся и помимо auth-состояния покрывает навигацию и динамическое определение parentTab (см. `docs/doc-searchuser-navigation.md`).
 
 ### Пример теста
 
