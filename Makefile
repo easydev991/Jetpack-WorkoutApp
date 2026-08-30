@@ -19,6 +19,9 @@ BUNDLE_EXEC := RBENV_VERSION=$(RUBY_VERSION) bundle exec
 SECRETS_REPO = git@github.com:easydev991/android-secrets.git
 SECRETS_DIR = swparks
 
+# Серийный номер первого запущенного эмулятора (пустая строка, если эмулятор не подключён)
+EMULATOR_SERIAL = $(shell adb devices | awk '/^emulator-[0-9]+\tdevice$$/{print $$1; exit}')
+
 ## help: Показать это справочное сообщение
 help:
 	@echo "Доступные команды Makefile:"
@@ -57,7 +60,7 @@ test:
 ## android-test: Запуск интеграционных тестов на Android устройстве
 android-test:
 	@if [ -f scripts/android_test_report.py ]; then chmod +x scripts/android_test_report.py; fi
-	@./gradlew connectedDebugAndroidTest --console=plain; BUILD_STATUS=$$?; \
+	@./gradlew :app:connectedDebugAndroidTest --console=plain; BUILD_STATUS=$$?; \
 	if [ $$BUILD_STATUS -ne 0 ]; then \
 		echo ""; \
 		echo "================================================================================"; \
@@ -416,13 +419,30 @@ _ensure_fastlane:
 
 ## _set_emulator_location_moscow: Установить геолокацию Москва на первом запущенном Android-эмуляторе
 _set_emulator_location_moscow:
-	@SERIAL=$$(adb devices | awk '/^emulator-[0-9]+\tdevice$$/{print $$1; exit}'); \
+	@SERIAL=$(EMULATOR_SERIAL); \
 	if [ -z "$$SERIAL" ]; then \
 		printf "$(YELLOW)Эмулятор не найден, шаг геолокации пропущен$(RESET)\n"; \
 	else \
 		printf "$(YELLOW)Устанавливаю геолокацию Москва для $$SERIAL...$(RESET)\n"; \
 		adb -s "$$SERIAL" emu geo fix 37.6173 55.7558 >/dev/null 2>&1 || true; \
 	fi
+
+## emulator-fast: Отключить анимации на эмуляторе (ускоряет make android-test)
+## emulator-slow: Включить анимации обратно (значение 1)
+emulator-fast: _emulator_animations
+emulator-fast: SCALE := 0
+emulator-slow: _emulator_animations
+emulator-slow: SCALE := 1
+
+_emulator_animations:
+	@SERIAL=$(EMULATOR_SERIAL); \
+	if [ -z "$$SERIAL" ]; then \
+		printf "$(YELLOW)Эмулятор не найден$(RESET)\n"; exit 1; \
+	fi; \
+	for k in window transition animator_duration; do \
+		adb -s "$$SERIAL" shell settings put global $${k}_animation_scale $(SCALE); \
+	done; \
+	printf "$(GREEN)Анимации установлены (scale=$(SCALE)) на $$SERIAL$(RESET)\n"
 
 ## android-test-report: Открыть HTML отчет интеграционных тестов в браузере
 android-test-report:
@@ -457,4 +477,4 @@ release:
 ## all: Полная проверка (сборка + тесты + линтер) и установка APK на устройство
 all: check install
 
-.PHONY: build clean test lint format check install all android-test test-all android-test-report screenshots update_readme update_readme_versions _build_screenshots_apk _cleanup_screenshots_apk _ensure_fastlane _set_emulator_location_moscow setup setup_fastlane update_fastlane fastlane help release apk _check_rbenv _check_ruby _check_ruby_version_file _check_bundler _check_gemfile _install_gemfile_deps _check_markdownlint _load_secrets setup_ssh
+.PHONY: build clean test lint format check install all android-test test-all android-test-report screenshots update_readme update_readme_versions _build_screenshots_apk _cleanup_screenshots_apk _ensure_fastlane _set_emulator_location_moscow emulator-fast emulator-slow _emulator_animations setup setup_fastlane update_fastlane fastlane help release apk _check_rbenv _check_ruby _check_ruby_version_file _check_bundler _check_gemfile _install_gemfile_deps _check_markdownlint _load_secrets setup_ssh

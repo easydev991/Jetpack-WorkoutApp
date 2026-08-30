@@ -14,18 +14,18 @@
 
 ### Экраны
 
-- [x] **SearchUserScreen**: добавлен параметр `currentUserId: Long?`, вьюха блокируется через `disabledIf(user.id == currentUserId)`
-- [x] **UserFriendsScreen**: добавлен параметр `currentUserId: Long?`, вьюха блокируется через `disabledIf(user.id == currentUserId)`
-- [x] **MyFriendsScreen**: добавлен параметр `currentUserId: Long?`, вьюха блокируется через `disabledIf(user.id == currentUserId || !enabled)` (комбинируется с existing `enabled`)
-- [x] **RootScreen**: передача `currentUser?.id` во все три экрана (строки 333, 389, 435)
+Блокировка выполняется через параметр `enabled` в `UserRowData` (компонент `UserRowView`): при `enabled = false` блокируются клики, визуальное disabled-состояние обрабатывает `FormCardContainer`.
+
+- [x] **SearchUserScreen**: `currentUserId: Long?` передаётся через конфиг `SearchUserConfig`; в списке `UsersList` — `val isDisabled = user.id == currentUserId`, вьюха блокируется через `UserRowData(enabled = !isDisabled)`
+- [x] **UserFriendsScreen**: `currentUserId: Long?` передаётся через конфиг `FriendsScreenConfig`; в приватном `FriendsList` — `val isDisabled = user.id == currentUserId`, вьюха блокируется через `UserRowData(enabled = !isDisabled)`
+- [x] **MyFriendsScreen**: `currentUserId: Long?` передаётся через конфиг `FriendsScreenConfig`; блокировка в общем `FriendsListSection` (`com.swparks.ui.screens.common`): `val isDisabled = user.id == config.currentUserId || !config.enabled` (комбинируется с existing `enabled`)
+- [x] **RootScreen**: передача `currentUser?.id` через конфиги в composable для маршрутов `user_search`, `my_friends`, `user_friends`
 - [x] **Аудит DialogsListScreen**: не требует изменений (нет навигации на профиль)
 
-### Рефакторинг
+### Утилиты
 
-- [x] **ModifierUtils.disabledIf()**: создана extension функция в `app/src/main/java/com/swparks/ui/utils/ModifierUtils.kt`
-  - Визуальная блокировка (alpha = 0.5)
-  - Блокировка кликов
-  - Устранение дублирования кода в 3 экранах
+- `Modifier.disabledIf()` существует в `app/src/main/java/com/swparks/ui/utils/ModifierUtils.kt` (alpha 0.5 + блокировка кликов), но в списках пользователей **не используется** — применяется в `CommentRowView`
+- Списки пользователей блокируются на уровне данных вьюхи (`UserRowData.enabled`), а не через modifier
 
 ### Тестирование
 
@@ -43,14 +43,12 @@
 
 Для добавления блокировки на новые экраны:
 
-### 1. Добавить параметр в экран
+### 1. Добавить currentUserId в конфиг экрана
 
 ```kotlin
-@Composable
-fun YourScreen(
-    // ...
-    currentUserId: Long?,  // <-- добавить
-    // ...
+data class YourScreenConfig(
+    val parentPaddingValues: PaddingValues,
+    val currentUserId: Long? = null  // <-- добавить
 )
 ```
 
@@ -59,43 +57,46 @@ fun YourScreen(
 ```kotlin
 // В RootScreen (currentUser уже доступен через collectAsState)
 YourScreen(
-    // ...
-    currentUserId = currentUser?.id,  // <-- передать
-    // ...
+    config =
+        YourScreenConfig(
+            parentPaddingValues = paddingValues,
+            currentUserId = currentUser?.id  // <-- передать
+        )
 )
 ```
 
-### 3. Использовать disabledIf в списке
+### 3. Заблокировать вьюху в списке
 
 ```kotlin
-import com.swparks.ui.utils.disabledIf
-
-items(users) { user ->
-    Box(
-        modifier = Modifier.disabledIf(
-            disabled = user.id == currentUserId,
-            onClick = { onUserClick(user.id) }
-        )
-    ) {
-        UserRowView(...)
-    }
+items(users, key = { it.id }) { user ->
+    val isDisabled = user.id == config.currentUserId
+    UserRowView(
+        data =
+            UserRowData(
+                modifier = Modifier,
+                enabled = !isDisabled,  // <-- блокировка своего профиля
+                imageStringURL = user.image,
+                name = user.name,
+                address = null,
+                onClick = { onUserClick(user.id) }
+            )
+    )
 }
 ```
 
 ### 4. Если есть existing `enabled`
 
 ```kotlin
-// Комбинировать условия (как в MyFriendsScreen)
-val isDisabled = user.id == currentUserId || !enabled
+// Комбинировать условия (как в FriendsListSection для MyFriendsScreen)
+val isDisabled = user.id == config.currentUserId || !config.enabled
 
-Box(
-    modifier = Modifier.disabledIf(
-        disabled = isDisabled,
-        onClick = { onUserClick(user.id) }
-    )
-) {
-    UserRowView(...)
-}
+UserRowView(
+    data =
+        UserRowData(
+            enabled = !isDisabled,
+            // ...
+        )
+)
 ```
 
 ---
@@ -109,8 +110,8 @@ Box(
 
 ### Компоненты
 
-- **UserRowView**: компонент дизайн-системы, НЕ изменять
-- **Блокировка**: через `Box` с `disabledIf` на уровне вызова
+- **UserRowView**: компонент дизайн-системы, блокировка настраивается на уровне вызова через `UserRowData.enabled`
+- **Блокировка**: `UserRowData(enabled = false)` блокирует клики; disabled-состояние визуально обрабатывает `FormCardContainer`
 
 ### Связанная документация
 

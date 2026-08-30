@@ -16,6 +16,7 @@ import com.swparks.analytics.fakeAnalyticsLogger
 import com.swparks.navigation.AppState
 import com.swparks.navigation.BottomNavigationBar
 import com.swparks.navigation.Screen
+import com.swparks.testing.TimeoutTest
 import com.swparks.util.Logger
 import io.mockk.every
 import io.mockk.mockk
@@ -36,7 +37,7 @@ import org.junit.runner.RunWith
  * на основе currentTopLevelDestination в AppState.
  */
 @RunWith(AndroidJUnit4::class)
-class RootScreenBottomNavSourceFlowTest {
+class RootScreenBottomNavSourceFlowTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

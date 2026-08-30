@@ -11,7 +11,7 @@
 В Android-приложении (`Jetpack-WorkoutApp`):
 - `ItemListScreen` — stateless экран выбора элемента (уже существует!)
 - `ItemListMode` — enum с `COUNTRY` и `CITY` режимами
-- `IFilterParksUseCase` — существующий UseCase для фильтрации парков (НО не фильтрует по городу!)
+- `FilterParksUseCase` — UseCase для фильтрации парков (на момент старта плана не фильтровал по городу; сейчас фильтрует через `ParkFilter.selectedCityId`)
 - `CountriesRepository` — уже имеет `getAllCities()` и `getCityById()` (НЕ нужен отдельный CitiesRepository!)
 - `ParkFilter` — существующий фильтр (size, type), НЕ включает город
 - `ParksRootScreen` — главный экран парков, НО нет фильтра по городу
@@ -46,13 +46,13 @@
 - [x] Добавлено computed property `cityNames: List<String>` (derived от `cities` + `citySearchQuery`)
 - [x] Добавлены методы: `onSelectCityClick`, `onCitySearchQueryChange`, `onCitySelected`, `onClearCityFilter`
 - [x] Добавлена extension function `toItemListUiState()` для конвертации в `ItemListUiState`
-- [ ] Написать unit-тесты
+- [x] Написать unit-тесты (`ParksRootViewModelTest`: `onCitySelected_*`, `toItemListUiState_*`, `showNoParksFound_*`)
 
 ### 2.2. Обновить `ParksRootViewModel`
 
 - [x] Реализованы все методы интерфейса; `cityNames` вычисляется через `cities.filter { ... }.map { it.name }`
 - [x] При инициализации: загрузка городов через `countriesRepository.getAllCities()`
-- [x] `onCitySelected`: поиск города по имени → `city?.id?.toIntOrNull()` → сохранение в `localFilter` + `selectedCity`, пересчёт `filteredParks`
+- [x] `onCitySelected(cityId: String)`: поиск города по id (`cities.find { it.id == cityId }`) → `city.id.toIntOrNull()` → сохранение в `localFilter` + `selectedCity`, обновление камеры на город, пересчёт `filteredParks` (актуализация: сигнатура переведена с имени города на `cityId: String`, добавлена аналитика `SELECT_PARK_FILTER_CITY`)
 - [x] `onClearCityFilter`: сброс `selectedCityId`/`selectedCity` в null, сохранение, пересчёт
 - [x] При восстановлении: collector в `init {}` синхронизирует `localFilter` из DataStore, `selectedCity` восстанавливается через `getCityById`
 - [x] `onCitySearchQueryChange`: обновляет `citySearchQuery` → пересчёт `cityNames`
@@ -97,7 +97,7 @@
 - [x] `SearchCityButton` отображается под TopAppBar на `ParksRootScreen` (Этап 3)
 - [x] Нажатие открывает `ItemListScreen` (режим CITY) (Этап 4)
 - [x] Выбор города сохраняется в `ParksFilterDataStore` (Этап 1, 2)
-- [x] `IFilterParksUseCase` фильтрует парки по `cityId` (Этап 1)
+- [x] `FilterParksUseCase` фильтрует парки по `cityId` (Этап 1)
 - [x] Кнопка очистки сбрасывает фильтр города (Этап 3)
 - [x] Unit-тесты проходят (`./gradlew :app:testDebugUnitTest`)
 - [x] Линт проходит (`make lint`)
@@ -146,7 +146,7 @@ override fun onFilterApply() {
 
 ### 6.3: Верификация (Refactor) ✅
 
-- [x] Все тесты проходят (20 tests passed)
+- [x] Все тесты проходят
 - [x] `make lint` ✅ / `make test` ✅
 
 ---
@@ -219,36 +219,30 @@ override fun updateParks(parks: List<Park>) {
 
 ---
 
-## Этап 8: Исправление бага — NoParksFoundView не отображается
+## Этап 8: Исправление бага — NoParksFoundView не отображается ✅ (реализовано иначе, чем планировалось)
 
 ### Баг
 
 `NoParksFoundView` не показывается когда фильтр возвращает 0 парков.
 
-**Причина:** `RootScreen.kt:324` передаёт `filteredParks` (уже отфильтрованные) в `ParksRootScreen`. Когда фильтр строгий → `filteredParks` пустой → `viewModel.updateParks(emptyList())` → `hasParks = false` → `showNoParksFound = false`.
+**Причина (исходная):** `RootScreen` передавал `filteredParks` (уже отфильтрованные) в `ParksRootScreen`, из-за чего `hasParks` считался по отфильтрованному набору.
 
-**Архитектура:** `ParksRootViewModel` должна получать **все** парки для корректного вычисления `hasParks`. Фильтрация происходит внутри ViewModel через `filterParksUseCase`.
+**Как исправлено фактически (актуализация):** `ParksRootScreen` больше не получает парки снаружи — параметр `parks` удалён из его сигнатуры. `ParksRootViewModel` сам подписан на полный поток парков: `observeParks()` в `init {}` собирает `parksEventsRepository.getParksFlow()` и вызывает `updateParks(allParks)`, поэтому `hasParks` считается по всем паркам, а `filteredParks` — внутри ViewModel через `FilterParksUseCase`. Счётчик в `RootScreen` берётся из `parksRootUiState.filteredParks.size`.
 
 ### 8.1: Unit-тесты (TDD — Red)
 
 **Файл:** `app/src/test/java/com/swparks/ui/viewmodel/ParksRootViewModelTest.kt`
 
-- [ ] Тест: `updateParks_whenCalledWithAllParks_setsHasParksTrue` — проверяет что `hasParks = true` после `updateParks(allParks)`
-- [ ] Тест: `updateParks_whenCalledWithEmptyList_setsHasParksFalse` — проверяет что `hasParks = false` после `updateParks(emptyList())`
-- [ ] Тест: `showNoParksFound_whenAllParksLoadedButFilterReturnsEmpty_showsNoParksFound` — все парки загружены, фильтр возвращает пустой список → `showNoParksFound = true`
+- [x] Частично покрыто существующими тестами: `init_whenParksFlowEmits_updatesUiStateFromLocalStorage` проверяет `hasParks` и `filteredParks` после эмита потока парков
+- [ ] Выделенные тесты из плана не написаны: `updateParks_whenCalledWithAllParks_setsHasParksTrue`, `updateParks_whenCalledWithEmptyList_setsHasParksFalse`, `showNoParksFound_whenAllParksLoadedButFilterReturnsEmpty_showsNoParksFound`
 
-### 8.2: Исправление (Green)
+### 8.2: Исправление (Green) ✅
 
-**Файл:** `app/src/main/java/com/swparks/ui/screens/RootScreen.kt`
-
-- [ ] Строка 324: изменить `parks = filteredParks` на `parks = parks` (передавать все парки)
-- [ ] Строка 271: изменить `parksCount = filteredParks.size` на `parksCount = parksRootUiState.filteredParks.size` (использовать отфильтрованные из ViewModel)
+- [x] Выполнено через перевод ViewModel на самостоятельную подписку на полный поток парков (см. описание выше)
 
 ### 8.3: Верификация (Refactor)
 
-- [ ] `make lint` ✅
-- [ ] `make test` ✅
-- [ ] Ручное тестирование: выбрать город + строгий фильтр → NoParksFoundView отображается
+- [ ] Ручное тестирование: выбрать город + строгий фильтр → NoParksFoundView отображается (из содержимого репозитория не подтверждается)
 
 ---
 
@@ -280,7 +274,7 @@ fun ParksRootUiState.toItemListUiState(): ItemListUiState = ItemListUiState(
 
 **Файл:** `app/src/test/java/com/swparks/ui/viewmodel/ParksRootViewModelTest.kt`
 
-- [x] Тест: `toItemListUiState_whenCitySelected_setsSelectedItemToCityName` — проверяет что `selectedItem = selectedCity?.name`
+- [x] Тест: `toItemListUiState_whenCitySelected_setsSelectedItemToCityName` — проверяет что `selectedItem = selectedCity?.id` (актуализация: тест носит историческое имя, но проверяет id города, а не имя)
 - [x] Тест: `toItemListUiState_whenNoCitySelected_setsSelectedItemToNull` — проверяет что `selectedItem = null` когда город не выбран
 
 ### 9.2: Исправление (Green) ✅
@@ -288,16 +282,20 @@ fun ParksRootUiState.toItemListUiState(): ItemListUiState = ItemListUiState(
 **Файл:** `app/src/main/java/com/swparks/ui/viewmodel/IParksRootViewModel.kt`
 
 ```kotlin
-fun ParksRootUiState.toItemListUiState(): ItemListUiState = ItemListUiState(
-    mode = ItemListMode.CITY,
-    items = cities
-        .filter { it.name.contains(citySearchQuery, ignoreCase = true) }
-        .map { it.name },
-    selectedItem = selectedCity?.name,  // <-- исправлено
-    searchQuery = citySearchQuery,
-    isEmpty = false
-)
+fun ParksRootUiState.toItemListUiState(): ItemListUiState =
+    ItemListUiState(
+        mode = ItemListMode.CITY,
+        items =
+            cities
+                .filter { it.name.contains(citySearchQuery, ignoreCase = true) }
+                .map { SelectableItem(it.id, it.name) },
+        selectedItem = selectedCity?.id,
+        searchQuery = citySearchQuery,
+        isEmpty = false
+    )
 ```
+
+Актуализация: после этапа 1 плана `docs/plan-fix-crashes-maplibre-and-duplicate-keys.md` элементы переведены на `SelectableItem(id, name)`, а `selectedItem` хранит `id` города (не имя) — это также снимает коллизию ключей `LazyColumn` при дублях имён городов.
 
 ### 9.3: Верификация (Refactor) ✅
 

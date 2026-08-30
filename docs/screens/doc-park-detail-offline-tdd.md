@@ -13,7 +13,7 @@
 
 Это решение намеренно проще, чем отдельный потоковый `UseCase` с несколькими эмиссиями. Для текущего проекта достаточно:
 - расширить существующую `parks`-таблицу
-- добавить простые cache-операции в `SWRepository`
+- добавить простые cache-операции в `ParksEventsRepository`
 - обновить `ParkDetailViewModel`, чтобы она сначала подставляла кэш, а затем делала обычный network refresh
 
 ---
@@ -74,16 +74,16 @@
 
 ## Текущее состояние
 
-- `SWRepository.getPark(id)` уже сохраняет успешно загруженную площадку в Room
-- `SWRepository` уже умеет `getParkFromCache(parkId)` и `cachePark(park)`
-- `SWRepository` уже обновляет detail-кэш после `savePark()`, `deletePark()`, `changeTrainHereStatus()`, `deleteParkPhoto()`, `deleteComment()`
+- `ParksEventsRepository.getPark(id)` уже сохраняет успешно загруженную площадку в Room
+- `ParksEventsRepository` уже умеет `getParkFromCache(parkId)` и `cachePark(park)`
+- `ParksEventsRepository` уже обновляет detail-кэш после `savePark()`, `deletePark()`, `changeTrainHereStatus()`, `deleteParkPhoto()`; кэш при `deleteComment()` обновляет `CommentsRepository`
 - `ParkDetailViewModel.loadPark()` уже работает по схеме cache-first: сначала Room, затем фоновый refresh с сервера
 - `refresh()` в `ParkDetailViewModel` уже использует текущий `Content` как fallback при сетевой ошибке
 - `ParkEntity` уже расширен detail-полями (`author`, `photos`, `comments`, `trainingUsers`, `trainHere`, `mine`, `canEdit`, `equipmentIDS`, `createDate`, `modifyDate`)
 - `commentsCount` и `trainingUsersCount` уже переведены в nullable-семантику
 - общий объект `AppConverters` уже добавлен и подключён на уровне `SWDatabase`
 - `ParkDao` уже поддерживает `getParkById`, `upsertPark`, `deleteById`
-- тесты для `Converters`, `ParkEntity`, `ParkDao`, `SWRepository` и `ParkDetailViewModel` уже реализованы и проходят на текущем покрытии
+- тесты для `Converters`, `ParkEntity`, `ParkDao`, `ParksEventsRepository` и `ParkDetailViewModel` уже реализованы и проходят на текущем покрытии
 - полный прогон `make test` и `make lint` уже проходит
 
 ---
@@ -280,14 +280,14 @@
     fun storedEntity_whenDetailFieldsSet_thenPreservesDetailFieldsViaRoom()
 ```
 
-#### 4. SWRepository cache methods
+#### 4. ParksEventsRepository cache methods
 
 **Актуальные файлы:**
-- `app/src/test/java/com/swparks/data/repository/SWRepositoryParksTest.kt`
-- `app/src/test/java/com/swparks/data/repository/SWRepositoryCommentsTest.kt`
+- `app/src/test/java/com/swparks/data/repository/ParksEventsRepositoryParksTest.kt`
+- `app/src/test/java/com/swparks/data/repository/CommentsRepositoryTest.kt`
 
 ```kotlin
-    // SWRepositoryParksTest
+    // ParksEventsRepositoryParksTest
     @Test
     fun getParkFromCache_whenEntityExists_thenReturnsCachedPark()
 
@@ -310,7 +310,7 @@
     fun deleteParkPhoto_whenSuccess_thenUpdatesCacheOrRefreshesFromNetwork()
 
     @Test
-    // SWRepositoryCommentsTest
+    // CommentsRepositoryTest
     fun deleteComment_whenOptionIsPark_thenCallsDeleteParkComment()
 
     @Test
@@ -342,8 +342,8 @@
 
 Отдельного файла `ParkCacheIntegrationTest.kt` в текущем проекте нет.
 Сценарии cache-first покрыты unit-тестами в:
-- `SWRepositoryParksTest`
-- `SWRepositoryCommentsTest`
+- `ParksEventsRepositoryParksTest`
+- `CommentsRepositoryTest`
 - `ParkDetailViewModelTest`
 
 ---
@@ -359,7 +359,7 @@
 - [x] nullable-семантика для `commentsCount` и `trainingUsersCount` сохранена
 - [x] `ParkDao` дополнен методами `upsertPark` и `deleteById`
 - [x] добавлены и проходят тесты:
-  - `ConvertersTest`
+  - `ConvertersTest`, `AppConvertersTest`
   - `ParkEntityTest`
   - `ParkDaoTest`
 
@@ -411,8 +411,8 @@
 | `app/src/test/java/com/swparks/data/database/entity/ParkEntityTest.kt` | Тесты мапперов `ParkEntity` |
 | `app/src/test/java/com/swparks/data/database/ConvertersTest.kt` | Тесты конвертеров |
 | `app/src/test/java/com/swparks/data/database/dao/ParkDaoTest.kt` | Тесты DAO |
-| `app/src/test/java/com/swparks/data/repository/SWRepositoryParksTest.kt` | Тесты cache API в repository (`getParkFromCache`, `savePark`, `deletePark`, `changeTrainHereStatus`, `deleteParkPhoto`) |
-| `app/src/test/java/com/swparks/data/repository/SWRepositoryCommentsTest.kt` | Тесты удаления комментариев с учётом обновления park-cache |
+| `app/src/test/java/com/swparks/data/repository/ParksEventsRepositoryParksTest.kt` | Тесты cache API в repository (`getParkFromCache`, `savePark`, `deletePark`, `changeTrainHereStatus`, `deleteParkPhoto`) |
+| `app/src/test/java/com/swparks/data/repository/CommentsRepositoryTest.kt` | Тесты удаления комментариев с учётом обновления park-cache |
 | `app/src/test/java/com/swparks/ui/viewmodel/ParkDetailViewModelTest.kt` | Тесты cache-first поведения и refresh/fallback на экране |
 
 ### Модифицируемые
@@ -423,7 +423,8 @@
 | `app/src/main/java/com/swparks/data/database/SWDatabase.kt` | Подключение конвертеров |
 | `app/src/main/java/com/swparks/data/database/entity/ParkEntity.kt` | Detail-поля и мапперы |
 | `app/src/main/java/com/swparks/data/database/dao/ParkDao.kt` | `upsertPark`, возможно `deleteById` |
-| `app/src/main/java/com/swparks/data/repository/SWRepository.kt` | Простые cache-операции и обновление Room после успешных мутаций |
+| `app/src/main/java/com/swparks/data/repository/ParksEventsRepository.kt` | Простые cache-операции и обновление Room после успешных мутаций |
+| `app/src/main/java/com/swparks/data/repository/CommentsRepository.kt` | Обновление park-кэша при удалении комментария |
 | `app/src/main/java/com/swparks/ui/viewmodel/ParkDetailViewModel.kt` | Сначала Room, затем refresh с сервера |
 
 ---
@@ -466,7 +467,7 @@
 
 1. [x] Расширить `ParkEntity` и конвертеры
 2. [x] Обновить `SWDatabase` и `ParkDao`
-3. [x] Добавить cache API в `SWRepository`
+3. [x] Добавить cache API в `ParksEventsRepository`
 4. [x] Сохранять успешный `getPark(id)` в Room
 5. [x] Перевести `ParkDetailViewModel` на схему "сначала Room, потом сеть"
 6. [x] Добавить обновление detail-кэша после мутаций

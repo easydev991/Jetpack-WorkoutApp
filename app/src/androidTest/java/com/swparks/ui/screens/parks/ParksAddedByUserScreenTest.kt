@@ -10,6 +10,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.data.model.Park
+import com.swparks.testing.TimeoutTest
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.IUserAddedParksViewModel
 import com.swparks.ui.viewmodel.UserAddedParksUiState
@@ -20,7 +21,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class ParksAddedByUserScreenTest {
+class ParksAddedByUserScreenTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

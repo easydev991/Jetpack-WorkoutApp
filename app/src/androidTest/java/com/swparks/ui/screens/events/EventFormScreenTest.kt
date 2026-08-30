@@ -14,6 +14,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.data.model.Event
 import com.swparks.data.model.User
+import com.swparks.testing.TimeoutTest
 import com.swparks.ui.model.EventForm
 import com.swparks.ui.model.EventFormMode
 import com.swparks.ui.state.EventFormUiState
@@ -24,7 +25,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class EventFormScreenTest {
+class EventFormScreenTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

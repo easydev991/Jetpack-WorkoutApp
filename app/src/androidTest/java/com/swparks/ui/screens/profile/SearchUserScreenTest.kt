@@ -11,6 +11,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.data.model.User
+import com.swparks.testing.TimeoutTest
 import com.swparks.ui.state.SearchUserUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import org.junit.Rule
@@ -24,7 +25,7 @@ import org.junit.runner.RunWith
  * Проверяет отображение различных состояний UI и реакции на действия пользователя.
  */
 @RunWith(AndroidJUnit4::class)
-class SearchUserScreenTest {
+class SearchUserScreenTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

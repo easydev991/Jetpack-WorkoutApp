@@ -40,7 +40,7 @@ android {
     defaultConfig {
         applicationId = "com.swparks"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 37
         versionCode = project.findProperty("VERSION_CODE")?.toString()?.toInt() ?: 1
         versionName = project.findProperty("VERSION_NAME")?.toString() ?: "1.0"
 

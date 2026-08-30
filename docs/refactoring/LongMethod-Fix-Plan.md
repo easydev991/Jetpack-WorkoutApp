@@ -10,13 +10,13 @@
 
 ## Этап 1-3: Критические, высокие и средние методы ✅
 
-- [x] Этап 1: 10 экранов (>100 строк) — извлечены composables, state-классы, params-классы
-- [x] Этап 2: 7 экранов (80-100 строк) — EventsScreen, ProfileContent, MessagesRootScreen, SearchUserScreenContent, SuccessContent, MyBlacklistScreenContent, ChangePasswordScreen
-- [x] Этап 3: 4 файла (70-80 строк) — SWDateTimePicker, PhotoDetailSheetHost, TextEntryViewModel.onSend, RegisterSheetHost
+- [x] Этап 1: крупные экраны — извлечены composables, state-классы, params-классы
+- [x] Этап 2: экраны среднего размера — EventsScreen, ProfileContent, MessagesRootScreen, SearchUserScreenContent, SuccessContent, MyBlacklistScreenContent, ChangePasswordScreen
+- [x] Этап 3: SWDateTimePicker, PhotoDetailSheetHost, TextEntryViewModel.onSend, RegisterSheetHost
 
 ---
 
-## Этап 4: Низкие методы (60-70 строк) ✅
+## Этап 4: Низкие методы ✅
 
 - [x] ChatContent, LoginScreen, PhotoDetailScreen, TextEntryScreen — соответствуют лимиту
 - [x] TextEntrySheetHost — извлечён `SheetContent` + `SheetContentParams`

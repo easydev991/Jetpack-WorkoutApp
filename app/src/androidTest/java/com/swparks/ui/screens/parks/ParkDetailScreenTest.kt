@@ -16,6 +16,7 @@ import com.swparks.data.model.Comment
 import com.swparks.data.model.Park
 import com.swparks.data.model.Photo
 import com.swparks.data.model.User
+import com.swparks.testing.TimeoutTest
 import com.swparks.ui.ds.CommentAction
 import com.swparks.ui.model.MapUriSet
 import com.swparks.ui.state.ParkDetailUIState
@@ -26,7 +27,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -34,7 +34,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class ParkDetailScreenTest {
+class ParkDetailScreenTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -896,14 +896,12 @@ class ParkDetailScreenTest {
             }
         }
 
-        runBlocking {
-            viewModel.emitEvent(
-                ParkDetailEvent.NavigateToTrainees(
-                    parkId = park.id,
-                    users = users
-                )
+        viewModel.emitEvent(
+            ParkDetailEvent.NavigateToTrainees(
+                parkId = park.id,
+                users = users
             )
-        }
+        )
         composeTestRule.waitForIdle()
 
         assertTrue(
@@ -953,7 +951,8 @@ private class FakeParkDetailViewModel(
     private val refreshAction: () -> Unit = {}
 ) : IParkDetailViewModel {
     override val uiState: StateFlow<ParkDetailUIState> = uiState
-    private val mutableEvents = MutableSharedFlow<ParkDetailEvent>()
+    private val mutableEvents =
+        MutableSharedFlow<ParkDetailEvent>(extraBufferCapacity = 1)
     override val events: SharedFlow<ParkDetailEvent> = mutableEvents
     override val isRefreshing: StateFlow<Boolean> = MutableStateFlow(false)
     override val isAuthorized: StateFlow<Boolean> = MutableStateFlow(true)
@@ -1009,7 +1008,7 @@ private class FakeParkDetailViewModel(
 
     override fun reloadFromCache() {}
 
-    suspend fun emitEvent(event: ParkDetailEvent) {
-        mutableEvents.emit(event)
+    fun emitEvent(event: ParkDetailEvent) {
+        mutableEvents.tryEmit(event)
     }
 }

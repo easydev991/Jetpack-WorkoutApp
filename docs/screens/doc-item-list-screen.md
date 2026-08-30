@@ -19,7 +19,7 @@
 
 **Реализовано:**
 - `EditProfileLocations.kt` - модель с методами `selectCountry()`, `selectCity()`, `fromCountries()`
-- `EditProfileLocationsTest.kt` - 11 unit-тестов (isEmpty, selectCountry*, selectCity*)
+- `EditProfileLocationsTest.kt` - unit-тесты (isEmpty, selectCountry*, selectCity*)
 
 ---
 
@@ -45,7 +45,7 @@
 **Реализовано:**
 - `EditProfileViewModel.kt` - методы `onCountrySelected()`, `onCitySelected()`
 - `IEditProfileViewModel.kt` - интерфейс обновлён
-- `EditProfileViewModelSelectionTest.kt` - 5 unit-тестов
+- `EditProfileViewModelSelectionTest.kt` - unit-тесты
 
 ### 3.2 Навигация
 
@@ -116,7 +116,7 @@
 
 ### Автоматические тесты
 
-- **UI тесты:** Отсутствуют (ItemListScreenTest.kt не создан)
+- **UI тесты:** `ItemListScreenTest.kt` — instrumented-тесты (`app/src/androidTest/java/com/swparks/ui/screens/settings/`)
 - **Unit-тесты:** Отложены для LocationFeedback/AppVersionProvider (требуют Robolectric)
 
 ### Ручное тестирование ✅

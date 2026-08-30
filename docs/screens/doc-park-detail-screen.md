@@ -41,6 +41,7 @@
 - **State**: `ParkDetailUIState` (sealed: `InitialLoading`/`Content`/`Error`)
 - **ViewModel**: `ParkDetailViewModel` реализует `IParkDetailViewModel`
 - **Events**: `ParkDetailEvent` (sealed class)
+- **Загрузка**: cache-first — сначала Room (`getParkFromCache`), затем фоновый refresh с сервера; при возврате на экран вызывается `reloadFromCache()`
 
 ## Компоненты
 
@@ -81,12 +82,12 @@
 | `getPark`               | Загрузка данных площадки   |
 | `changeTrainHereStatus` | Toggle train_here          |
 | `deleteParkPhoto`       | Удаление фото              |
-| `sendComplaint`         | Жалоба на фото/комментарий |
+| `sendComplaint()`       | Жалоба через почтовый клиент (`FeedbackSender`, не API) |
 
 ## Тесты
 
-- `ParkDetailViewModelTest` — 22 unit-теста
-- `ParkDetailScreenTest` — 32 instrumented-теста
+- `ParkDetailViewModelTest` — unit-тесты
+- `ParkDetailScreenTest` — instrumented-тесты
 - `PhotoDetailViewModelTest` — тесты для Event и Park режимов
 
 ## Связанные экраны

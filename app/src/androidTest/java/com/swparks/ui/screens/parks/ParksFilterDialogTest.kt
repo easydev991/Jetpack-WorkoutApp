@@ -14,13 +14,14 @@ import com.swparks.R
 import com.swparks.data.model.ParkFilter
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
+import com.swparks.testing.TimeoutTest
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class ParksFilterDialogTest {
+class ParksFilterDialogTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

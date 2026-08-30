@@ -14,10 +14,11 @@
 ### Архитектурный подход: Offline-First с предзагрузкой
 
 **Как это работает:**
-1. `ProfileViewModel` при загрузке профиля вызывает `swRepository.getSocialUpdates(userId)`
+1. `ProfileViewModel` при загрузке профиля вызывает `userProfileRepository.getSocialUpdates(userId)`
 2. `getSocialUpdates()` загружает параллельно: пользователя, друзей, заявки, черный список
 3. Все данные сохраняются в кэш (UserDao) с флагами: `isFriend`, `isFriendRequest`, `isBlacklisted`
 4. При открытии экрана `MyFriendsScreen` данные отображаются мгновенно из кэша
+5. Если кэш пуст, `FriendsListViewModel` сам догружает `getSocialUpdates()` при открытии экрана
 
 **Преимущества:** мгновенный UX, Offline-First, Single Source of Truth (UserDao), реактивный UI через Flow
 
@@ -36,7 +37,7 @@
 ### Принятие/отклонение заявок
 
 - [x] **UserDao**: методы `removeFriendRequest()` и `markAsFriend()`
-- [x] **SWRepository.respondToFriendRequest**: синхронизация кэша с сервером
+- [x] **FriendsRepository.respondToFriendRequest**: синхронизация кэша с сервером
   - При принятии: API `acceptFriendRequest` + `markAsFriend` + `removeFriendRequest`
   - При отклонении: API `declineFriendRequest` + `removeFriendRequest`
 - [x] **UI State**: состояние `isProcessing` для блокировки UI при выполнении запроса
@@ -52,8 +53,8 @@
 
 - [x] Divider между секциями только при наличии обеих секций
 - [x] Пустое состояние: сообщение "Друзей пока нет" / "No friends yet" вместо "Loading"
-- [x] FriendsButton: скрытие текста про друзей при `friendsCount=0` (показывается только badge с заявками)
-- [x] Кнопки профиля disabled при `isFriendActionLoading`
+- [x] FriendsButton: показывается при наличии друзей или заявок; badge с количеством заявок при `friendRequestsCount > 0`
+- [x] Строки заявок/друзей disabled при `isProcessing`
 
 ---
 
@@ -61,8 +62,8 @@
 
 ### Автоматические тесты ✅
 
-- **Unit-тесты**: `FriendsListViewModelTest`, `SWRepositoryFriendsTest`
-- **UI тесты**: `MyFriendsScreenTest` (19 тестов)
+- **Unit-тесты**: `FriendsListViewModelTest`, `FriendsRepositoryTest`
+- **UI тесты**: `MyFriendsScreenTest`
 - Все тесты проходят (100% успех)
 
 ### Ручное тестирование (требуется устройство)
@@ -91,7 +92,6 @@
 
 ## Будущие улучшения
 
-- Навигация на профиль друга при клике
 - Pull-to-refresh
 - Поиск по списку друзей
 - Анимации

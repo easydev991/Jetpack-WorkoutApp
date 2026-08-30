@@ -69,7 +69,7 @@
 - [x] добавлены UI-тесты для `JournalsListScreen` на retry success/failure
 - [x] добавлены UI-тесты для `JournalEntriesScreen` на retry success/failure
 - [x] добавлен новый suite `ParksAddedByUserScreenTest`
-- [x] instrumentation smoke-check целевых экранов: `60/60` зелёных на `Pixel_9 (AVD) - 16`
+- [x] instrumentation smoke-check целевых экранов: зелёные на `Pixel_9 (AVD) - 16`
 
 ## Верификация
 

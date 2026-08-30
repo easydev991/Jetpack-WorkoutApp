@@ -4,28 +4,32 @@
 
 Доработать экран MoreScreen до соответствия iOS-версии приложения.
 
-### Текущее состояние Android-версии
+### Текущее состояние Android-версии (актуально)
+
+**Секция "Настройки" (SettingsSection):**
+
+- ✅ Язык приложения (LanguageSettingsRow) — открывает системные настройки языка приложения (Android 13+: ACTION_APP_LOCALE_SETTINGS, ниже — настройки приложения)
+- ✅ Оформление (ThemeAndIconRow) — переход на ThemeIconScreen (тема + иконка)
 
 **Секция "О приложении" (AboutAppSection):**
 
-- ✅ Отправить обратную связь (SendFeedbackRow)
-- ✅ Оценить приложение (RateAppRow)
-- ✅ Правила использования (TermsOfUseRow)
-- ✅ Официальный сайт (OfficialSiteRow)
-- ✅ Разработчик приложения (AppDeveloperRow)
+- ✅ Отправить обратную связь (SendFeedbackRow) — `sendFeedback()`: mailto-интент, при отсутствии почтового клиента — Toast с `no_email_client`
+- ✅ Оценить приложение (ExternalLinkRow, RuStore)
+- ✅ Официальный сайт (ExternalLinkRow)
+- ✅ Разработчик приложения (ExternalLinkRow)
+- ✅ Поделиться приложением (ShareAppRow) — `shareApp()` через ShareSheet
 - ✅ Версия приложения (AppVersionRow)
+
+**Секция "Другие приложения" (OtherAppsSection):**
+
+- ✅ Days Counter (ExternalLinkRow, RuStore)
 
 **Секция "Поддержать проект" (SupportProjectSection):**
 
-- ✅ Магазин WORKOUT (WorkoutShopRow)
+- ✅ GitHub-страница проекта (ExternalLinkRow)
 
-### Отсутствующие секции и кнопки
+Строки "Правила использования" и "Магазин WORKOUT" из iOS-версии в текущей Android-реализации отсутствуют
 
-**Секция "Настройки" (нужно добавить):**
-
-- Тема и иконка приложения (аналог iOS: объединение appThemeButton и appIconButton)
-- Примечание: одна кнопка ведёт на экран ThemeIconScreen, где можно выбрать и тему, и иконку
-- Примечание: "Язык приложения" отсутствует в плане (Android не поддерживает смену языка внутри приложения)
 ---
 
 ## Реализация (Этапы 1-9, 10.1) ✅
@@ -41,24 +45,24 @@
 
 ### 10.2 UI-тесты
 
-**Статус:** ✅ Все UI-тесты реализованы и проходят (22 теста, 0 failed)
+**Статус:** ✅ Все UI-тесты реализованы и проходят
 
 - [x] ThemeIconScreenTest.kt: тестирование TopAppBar, секций темы/динамических цветов/иконки, кликов по элементам
-- [x] MoreScreenTest.kt: тестирование кнопок всех секций (22 теста)
+- [x] MoreScreenTest.kt: тестирование кнопок всех секций
 
 ### 10.3 Ручное тестирование
 
 - [x] Проверить правильное отображение TopAppBar в ThemeIconScreen (исправлен contentWindowInsets в RootScreen)
 - [x] Проверить безопасные зоны на всех экранах с TopAppBar (убран windowInsets = WindowInsets(top = 0) — теперь safe zone обрабатывается автоматически как в nowinandroid)
-- [ ] Проверить работу кнопки "Поделиться приложением" через Intent-подход (как в nowinandroid)
-- [ ] Проверить открытие GitHub через Intent-подход (как в nowinandroid)
-- [ ] Проверить открытие RuStore для оценки
+- [x] Кнопка "Поделиться приложением" реализована (ShareAppRow + `shareApp()` через ShareSheet) — вручную проверить сцену выбора приложения
+- [x] Открытие GitHub реализовано (ExternalLinkRow + `uriHandler.openUri`)
+- [x] Открытие RuStore для оценки реализовано (ExternalLinkRow + `uriHandler.openUri`)
 - [x] Проверить смену темы приложения (LIGHT, DARK, SYSTEM) — работает
 - [x] Проверить смену иконки приложения — работает
 - [x] Проверить динамические цвета на Android 12+ — работают
 - [x] Проверить персистентность настроек после перезапуска — работает
 - [x] Проверить работу кнопки "Назад" в ThemeIconScreen — работает
-- [ ] Проверить работу кнопки "Отправить обратную связь" — не открывает почтовый клиент (нужно реализовать)
+- [x] Кнопка "Отправить обратную связь" реализована (`sendFeedback()`: mailto-интент, fallback — Toast `no_email_client`) — вручную проверить на устройстве с почтовым клиентом
 
 ### 10.4 Критерии приемки тестов
 
@@ -88,7 +92,7 @@
 
 **Тема:** `DynamicColors.kt`
 
-**MoreScreen:** функции `shareApp()` и `openGitHub()` (аналог nowinandroid для секций "Другие приложения" и "Поддержать проект"), структура экрана с одной кнопкой "Тема и иконка"
+**MoreScreen:** функция `shareApp()` (аналог nowinandroid для секций "Другие приложения" и "Поддержать проект"); ссылки GitHub/RuStore реализованы через `ExternalLinkRow` + `uriHandler.openUri`, структура экрана с кнопками "Язык приложения" и "Оформление"
 
 **Строковые ресурсы (для ThemeIconScreen):** строки 40, 84-93
 
@@ -127,10 +131,9 @@
 - ✅ MoreScreen: все секции, функции и навигация работают
 - ✅ Иконки: activity-aliases, PNG и adaptive icons для всех размеров
 - ✅ Unit-тесты: SettingsModelsTest.kt, ThemeIconViewModelTest.kt
-- ✅ UI-тесты: ThemeIconScreenTest.kt, MoreScreenTest.kt (22 теста)
+- ✅ UI-тесты: ThemeIconScreenTest.kt, MoreScreenTest.kt
 
 **Осталось:**
 
-- ❌ Ручное тестирование оставшихся функций (Этап 10.3)
-- ❌ Реализация кнопки "Отправить обратную связь" — не открывает почтовый клиент
+- ❌ Ручная проверка share/feedback-интентов на устройстве с почтовым клиентом (Этап 10.3)
 - ❌ Запуск всех тестов и проверка linting

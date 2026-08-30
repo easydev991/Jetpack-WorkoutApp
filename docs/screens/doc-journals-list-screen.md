@@ -39,7 +39,7 @@
 - UI: экран с AppBar, Pull-to-Refresh, состояниями UI
 - Локализация: `journals_list_title`, `journals_empty`
 
-**Тестирование:** 11 UI тестов, 12 unit тестов для ViewModel
+**Тестирование:** UI тесты, unit тесты для ViewModel
 
 **Измененные файлы:**
 - `JournalsListScreen.kt`, `IJournalsViewModel.kt`, `FakeJournalsViewModel.kt`
@@ -55,10 +55,10 @@
 - Domain Layer: `DeleteJournalUseCase`
 - Presentation: метод `deleteJournal()`, флаг `isDeleting`, события для Snackbar
 - UI: диалог подтверждения `DeleteConfirmationDialog`, обработка `DELETE` действия
-- Data Layer: `SWRepository.deleteJournal()` синхронизирует локальную БД
+- Data Layer: `JournalsRepository.deleteJournal()` (реализация `JournalsRepositoryImpl`) синхронизирует локальную БД
 - Локализация: `delete_journal_title`, `delete_journal_message`, `journal_deleted`, `error_delete_journal`
 
-**Тестирование:** 5 unit тестов для удаления
+**Тестирование:** unit тесты для удаления
 
 **Измененные файлы:**
 - **Созданные:** `IDeleteJournalUseCase.kt`, `DeleteJournalUseCase.kt`, `DeleteJournalUseCaseTest.kt`
@@ -77,8 +77,8 @@
 - Локализация: `new_journal_placeholder`, `journal_created`, `error_create_journal`, `error_empty_title`, `fab_create_journal_description`
 
 **Тестирование:**
-- 6 unit тестов для `CreateJournalUseCase`
-- 4 новых UI теста для FAB (авторизованный/неавторизованный пользователь, свой/чужой профиль, удаление)
+- unit тесты для `CreateJournalUseCase`
+- новые UI тесты для FAB (авторизованный/неавторизованный пользователь, свой/чужой профиль, удаление)
 
 **Измененные файлы:**
 - **Созданные:** `CreateJournalRequest.kt`, `ICreateJournalUseCase.kt`, `CreateJournalUseCase.kt`, `CreateJournalUseCaseTest.kt`, `TextEntryUseCaseTest.kt`
@@ -129,13 +129,13 @@
 
 **Решение:**
 1. Добавлены методы `incrementJournalCount()` и `decrementJournalCount()` в `UserDao`
-2. В `SWRepository.createJournal()` после успешного создания вызывается `userDao.incrementJournalCount()`
-3. В `SWRepository.deleteJournal()` после успешного удаления вызывается `userDao.decrementJournalCount()`
+2. В `JournalsRepository.createJournal()` (реализация `JournalsRepositoryImpl`) после успешного создания вызывается `userDao.incrementJournalCount()`
+3. В `JournalsRepository.deleteJournal()` после успешного удаления вызывается `userDao.decrementJournalCount()`
 4. Так как `ProfileViewModel` подписан на `getCurrentUserFlow()`, счётчик обновляется автоматически
 
 **Измененные файлы:**
 - `UserDao.kt` - добавлены методы incrementJournalCount/decrementJournalCount
-- `SWRepository.kt` - вызовы методов обновления счётчика при создании/удалении дневника
+- `JournalsRepositoryImpl.kt` - вызовы методов обновления счётчика при создании/удалении дневника
 
 ---
 
@@ -149,8 +149,7 @@
 - Кнопка "Journals" остаётся кликабельной (пользователь может создать дневник)
 
 **Измененные файлы:**
-- `ProfileRootScreen.kt` - JournalsButton с условным отображением trailingText
-- `ProfileButtons.kt` - JournalsButton с условным отображением trailingText
+- `ui/ds/ProfileButtons.kt` - JournalsButton с условным отображением trailingText (используется в `ProfileRootScreen.kt` и `OtherUserProfileScreen.kt`)
 
 ---
 

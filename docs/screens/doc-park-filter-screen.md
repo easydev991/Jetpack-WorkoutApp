@@ -2,10 +2,10 @@
 
 ## Обзор
 
-Мультиселект-фильтр для площадок по размеру и типу. Реализован как аналог iOS `ParkFilterScreen`.
+Мультиселект-фильтр для площадок по размеру, типу и городу. Реализован как аналог iOS `ParkFilterScreen`.
 
 **Исходные данные:** 9000+ площадок — фильтрация O(1) по Set.
-**Стек:** Jetpack Compose, `JournalSettingsDialog` как шаблон, `ParkSize`/`ParkType` enums, `CheckmarkRowView`.
+**Стек:** Jetpack Compose, `JournalSettingsDialog` как шаблон, `ParkSize`/`ParkType` enums, `CheckmarkRowView`, `ItemListScreen` для выбора города.
 
 ---
 
@@ -17,16 +17,16 @@ ParksFilterDialog → ParksRootViewModel → ParksFilterDataStore → FilterPark
 
 ### Слои
 
-| Слой   | Компонент              | Описание                                                           |
-|--------|------------------------|--------------------------------------------------------------------|
-| UI     | `ParksFilterDialog`    | Диалог с секциями Size/Type, кнопки Reset/Apply                    |
-| UI     | `ParksRootScreen`      | `filteredParks` через `derivedStateOf`                             |
-| UI     | `CheckmarkRowView`     | Галка с опциональным `onCheckedChange`                             |
-| Domain | `ParkFilter`           | `sizes: Set<ParkSize>`, `types: Set<ParkType>`                     |
-| Domain | `IFilterParksUseCase`  | `invoke(allParks, filter)` → `List<Park>`, Set lookup O(1)         |
-| Domain | `FilterParksUseCase`   | Реализация с Set lookup по `rawValue`                              |
-| Data   | `ParksFilterDataStore` | DataStore persistence, `saveFilter()` / `filter: Flow<ParkFilter>` |
-| Data   | `AppContainer`         | DI: `filterParksUseCase`, `parksFilterDataStore`                   |
+| Слой   | Компонент              | Описание                                                                    |
+|--------|------------------------|-----------------------------------------------------------------------------|
+| UI     | `ParksFilterDialog`    | Диалог с секциями Size/Type, кнопки Reset/Apply                             |
+| UI     | `ParksRootScreen`      | `filteredParks` из `ParksRootUiState` (пересчитывается во ViewModel)        |
+| UI     | `ItemListScreen`       | Переиспользуемый экран выбора города (режим `CITY`)                         |
+| UI     | `CheckmarkRowView`     | Галка с опциональным `onCheckedChange`                                      |
+| Domain | `ParkFilter`           | `sizes: Set<ParkSize>`, `types: Set<ParkType>`, `selectedCityId: Int?`      |
+| Domain | `FilterParksUseCase`   | `invoke(allParks, filter)` → `List<Park>`, Set lookup O(1) + фильтр по городу |
+| Data   | `ParksFilterDataStore` | DataStore persistence, `saveFilter()` / `filter: Flow<ParkFilter>`          |
+| Data   | `AppContainer`         | DI: `filterParksUseCase`, `parksFilterDataStore`                            |
 
 ---
 
@@ -35,15 +35,17 @@ ParksFilterDialog → ParksRootViewModel → ParksFilterDataStore → FilterPark
 ```kotlin
 data class ParkFilter(
     val sizes: Set<ParkSize> = ParkSize.entries.toSet(),
-    val types: Set<ParkType> = ParkType.entries.toSet()
+    val types: Set<ParkType> = ParkType.entries.toSet(),
+    val selectedCityId: Int? = null
 ) {
     val isDefault: Boolean get() = this == ParkFilter()
 }
 ```
 
-- По умолчанию **все** размеры и типы выбраны (фильтрация не применяется)
+- По умолчанию **все** размеры и типы выбраны, город не выбран (фильтрация не применяется)
 - `isDefault` — проверка, является ли фильтр дефолтным
 - Минимальное количество выбранных элементов — **1** (нельзя сбросить все)
+- `selectedCityId` — фильтр по городу (`null` = все города); выбор города — через переиспользуемый `ItemListScreen`
 - Фильтр применяется к **исходному списку** parks, а не к предварительно отфильтрованному
 
 ---
@@ -65,6 +67,7 @@ data class ParkFilter(
 - `showFilterDialog: Boolean` — видимость диалога
 - `localFilter: ParkFilter` — локальное состояние в диалоге
 - `isLoadingFilter: Boolean` — загрузка фильтра из DataStore
+- `selectedCity: City?` / `cities: List<City>` / `citySearchQuery: String` — фильтр по городу
 
 **Методы**:
 - `onLocalFilterChange(filter)` — обновить локальный фильтр
@@ -72,10 +75,12 @@ data class ParkFilter(
 - `onFilterReset()` — сбросить фильтр до дефолтного
 - `onFilterApply()` — применить фильтр и сохранить в DataStore
 - `onShowFilterDialog()` / `onDismissFilterDialog()` — открыть/закрыть диалог
+- `onSelectCityClick()` / `onCitySelected(cityId)` / `onClearCityFilter()` — выбор/сброс города
+- `onCitySearchQueryChange(query)` — поиск по городам
 
 ### Производительность
 
-- `derivedStateOf` для `filteredParks` — фильтрация не на каждый recompose
+- `filteredParks` пересчитывается в `ParksRootViewModel.recalculateFilteredParks()` (размер/тип → город → отсечение парков с невалидными координатами), а не на каждый recompose
 - Set lookup O(1) по `rawValue`
 
 ---
@@ -103,8 +108,8 @@ data class ParkFilter(
 | Файл                                        | Назначение              |
 |---------------------------------------------|-------------------------|
 | `data/model/ParkFilter.kt`                  | Модель фильтра          |
-| `domain/usecase/IFilterParksUseCase.kt`     | Интерфейс use case      |
-| `domain/usecase/FilterParksUseCase.kt`      | Реализация use case     |
+| `domain/usecase/FilterParksUseCase.kt`      | Use case фильтрации     |
+| `ui/screens/settings/ItemListScreen.kt`     | Экран выбора города     |
 | `data/preferences/ParksFilterDataStore.kt`  | Persistence             |
 | `ui/ds/CheckmarkRowView.kt`                 | Компонент галки         |
 | `ui/screens/parks/ParksFilterDialog.kt`     | Диалог фильтра          |
@@ -134,4 +139,4 @@ data class ParkFilter(
 2. Фильтр **персистентен** — сохраняется между сессиями
 3. По умолчанию **все** размеры и типы выбраны
 4. Минимальное количество выбранных элементов — **1**
-5. `ParksRootScreen` получает `parks: List<Park>` извне (от `RootScreen`), фильтрация происходит в `RootScreen`
+5. `ParksRootViewModel` сам наблюдает список площадок (`ParksEventsRepository.getParksFlow()`); фильтрация выполняется во ViewModel (`recalculateFilteredParks`), результат кладётся в `ParksRootUiState.filteredParks`

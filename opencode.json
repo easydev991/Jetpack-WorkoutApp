@@ -3,6 +3,15 @@
   "mcp": {
     "android-debug-bridge": {
       "enabled": true
+    },
+    "xcode": {
+      "enabled": false
+    },
+    "xcodebuild-mcp": {
+      "enabled": false
+    },
+    "gitlab": {
+      "enabled": false
     }
   },
   "instructions": [".opencode/rules/*.md"]

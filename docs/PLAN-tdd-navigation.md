@@ -77,7 +77,7 @@
 - [x] Проверка смотрит на реально выбранный item BottomNavigation через `assertIsSelected()`.
 
 Критерий завершения: ✅
-- 9 инструментальных тестов проходят, доказывая инвариант для реальных переходов.
+- Инструментальные тесты проходят, доказывая инвариант для реальных переходов.
 
 ---
 
@@ -96,7 +96,7 @@
 ## Запуск проверок
 
 - [x] `./gradlew :app:testDebugUnitTest --tests "com.swparks.navigation.AppStateTest" --tests "com.swparks.navigation.DestinationsTest" --tests "com.swparks.navigation.UserParksNavigationCoordinatorTest"` ✅
-- [x] `./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.swparks.ui.screens.RootScreenBottomNavSourceFlowTest` ✅ (9/9 tests passed)
+- [x] `./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.swparks.ui.screens.RootScreenBottomNavSourceFlowTest` ✅
 
 ---
 

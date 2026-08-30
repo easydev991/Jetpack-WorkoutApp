@@ -18,6 +18,7 @@ import com.swparks.analytics.fakeAnalyticsLogger
 import com.swparks.data.database.entity.DialogEntity
 import com.swparks.data.model.User
 import com.swparks.navigation.AppState
+import com.swparks.testing.TimeoutTest
 import com.swparks.ui.model.Gender
 import com.swparks.ui.state.DialogsUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
@@ -37,7 +38,7 @@ import org.junit.runner.RunWith
  * Проверяет отображение списка диалогов, пустого состояния и ошибок.
  */
 @RunWith(AndroidJUnit4::class)
-class MessagesRootScreenTest {
+class MessagesRootScreenTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

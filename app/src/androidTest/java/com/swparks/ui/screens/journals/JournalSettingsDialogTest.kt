@@ -16,6 +16,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.domain.model.Journal
+import com.swparks.testing.TimeoutTest
 import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalsUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
@@ -34,7 +35,7 @@ import org.junit.runner.RunWith
  * и взаимодействие с SWRadioButton.
  */
 @RunWith(AndroidJUnit4::class)
-class JournalSettingsDialogTest {
+class JournalSettingsDialogTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

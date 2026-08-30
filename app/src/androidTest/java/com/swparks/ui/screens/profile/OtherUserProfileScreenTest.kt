@@ -11,6 +11,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.domain.model.FriendAction
+import com.swparks.testing.TimeoutTest
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import org.junit.Rule
 import org.junit.Test
@@ -23,7 +24,7 @@ import org.junit.runner.RunWith
  * Проверяет отображение различных состояний и реакцию на действия пользователя.
  */
 @RunWith(AndroidJUnit4::class)
-class OtherUserProfileScreenTest {
+class OtherUserProfileScreenTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

@@ -4,8 +4,8 @@
 
 | Файл                       | Назначение                                                 |
 |----------------------------|------------------------------------------------------------|
-| `util/AppError.kt`         | sealed класс ошибок (Network, Validation, Server, Generic) |
-| `util/AppErrorExt.kt`      | extension `toUiText()` для локализации                     |
+| `util/AppError.kt`         | sealed класс ошибок (Network, Validation, Server, Generic, LocationFailed, LocationDisabled, GeocodingFailed, ResourceNotFound) |
+| `util/AppErrorExt.kt`      | extension `toUiText()` для локализации (используется в `RootScreen` и `RegisterSheetHost`) |
 | `util/UserNotifier.kt`     | Класс с `errorFlow: SharedFlow<AppError>` и `notificationFlow` |
 | `util/AppNotification.kt`  | sealed класс уведомлений (Info)                            |
 | `ui/screens/RootScreen.kt` | Сбор ошибок через `LaunchedEffect`, показ Snackbar         |
@@ -14,7 +14,7 @@
 
 ### Основные компоненты
 
-- ✅ `AppError` — модель ошибок (Network, Validation, Server, Generic)
+- ✅ `AppError` — модель ошибок (Network, Validation, Server, Generic, LocationFailed, LocationDisabled, GeocodingFailed, ResourceNotFound)
 - ✅ `AppNotification` — модель уведомлений (Info)
 - ✅ `UserNotifier` — SharedFlow для отправки ошибок и уведомлений
 - ✅ DI в `AppContainer`, все ViewModels обновлены
@@ -27,12 +27,20 @@
 - ✅ Русский язык (values-ru/strings.xml)
 - ✅ Поддержка полей для Validation ошибок (email, password)
 - ✅ Поддержка HTTP кодов для Server ошибок (401, 403, 404, 500, 503)
+- ✅ Локализация LocationFailed/LocationDisabled/GeocodingFailed/ResourceNotFound
+
+### Аналитика ошибок
+
+- ✅ `AnalyticsEvent.AppError` — событие аналитики (операция + throwable)
+- ✅ `analytics/FirebaseAnalyticsProvider` — отправка `app_error` в Firebase Analytics
+- ✅ `util/crash/FirebaseCrashReporter` — логирование исключений в Crashlytics
+- ✅ ViewModels и репозитории логируют ошибки через `AnalyticsService.log(AnalyticsEvent.AppError(...))`; `UserNotifier` сам в аналитику не отправляет
 
 ### Тестирование
 
-- ✅ Unit-тесты `AppErrorTest` (12 тестов)
-- ✅ Unit-тесты `UserNotifierTest` (10 тестов)
-- ✅ Инструментальные тесты `RootScreenTest` (4 теста)
+- ✅ Unit-тесты `AppErrorTest`
+- ✅ Unit-тесты `UserNotifierTest`
+- ✅ Инструментальные тесты `RootScreenTest`
   - Network error с IOException
   - Validation error (password)
   - Server error (500)
@@ -68,7 +76,3 @@
 ### Кэш истории ошибок
 
 - Хранить последние 100 ошибок для отладки
-
-### Аналитика ошибок
-
-- Интеграция с Firebase Analytics/Crashlytics

@@ -27,8 +27,8 @@
 - [x] Создать `ParksTabRow` composable (по аналогии с `EventsTabRow`)
   - PrimaryTabRow с отступами (spacing_regular, spacing_small)
   - Два Tab: MAP и LIST
-  - Табы всегда enabled
-  - `LoadingOverlayView()` продолжает блокировать весь `ParksRootScreen` при `isGettingLocation == true`, независимо от выбранного таба
+  - Табы блокируются во время геолокации: `enabled = !isGettingLocation` (актуализация: исходная формулировка «табы всегда enabled» не соответствует коду)
+  - `LoadingOverlayView()` блокирует весь `ParksRootScreen` при `isGettingLocation == true` или `isRefreshing == true`, независимо от выбранного таба
 - [x] Добавить `ParksTabRow` в Column между SearchCityButton и контентом
 
 ## Этап 5: ParksRootScreen — Контент (UI Layer)
@@ -41,8 +41,8 @@
 
 - [x] Изменить content в Column:
   - Под SearchCityButton добавить ParksTabRow
-  - При `selectedTab == ParksTab.MAP` — показывать placeholder-заглушку для карты
-  - Добавить для placeholder понятную семантику для UI-тестов (`testTag` или текст)
+  - При `selectedTab == ParksTab.MAP` — показывать `ParkMapView` (актуализация: вместо исходной placeholder-заглушки — полноценная карта); при `showNoParksFound` — `NoParksFoundView`
+  - Семантика для UI-тестов: `testTag("park_map")` на карте
   - При `selectedTab == ParksTab.LIST` — показывать текущее содержимое (ParksListView или NoParksFoundView)
 
 ## Этап 6: Тестирование
@@ -57,13 +57,13 @@
 - [x] Написать UI-тесты для `ParksRootScreen` в `app/src/androidTest/java/com/swparks/ui/screens/parks/ParksRootScreenTest.kt`
   - Тест отображения табов
   - Тест переключения табов
-  - Тест показа placeholder-заглушки при выборе MAP
+  - Тест отображения карты (`testTag park_map`) при выборе MAP
   - Тест показа списка при выборе LIST
 
 ## Этап 7: Локализация
 
 - [x] Проверить наличие строк parks_map и parks_list (уже есть в values/strings.xml и values-ru/strings.xml)
-- [x] Добавить строку `map_coming_soon` в values/strings.xml и values-ru/strings.xml
+- [x] Добавить строку `map_coming_soon` в values/strings.xml и values-ru/strings.xml (актуализация: строка осталась в ресурсах, в коде больше не используется — вместо заглушки реализована карта)
 
 ## Структура изменений
 
@@ -90,7 +90,7 @@ ParksRootScreen.kt
   + ParksTabRow composable
   + TabRow между SearchCityButton и контентом
   + selectedTab.collectAsState()
-  + when(selectedTab) -> MAP -> placeholder карты, LIST -> ParksListView / NoParksFoundView
+   + when(selectedTab) -> MAP -> ParkMapView (testTag park_map) + ParkInfoCard/MyLocationFab, LIST -> ParksListView / NoParksFoundView
   + LoadingOverlayView продолжает блокировать весь экран поверх любого таба
 ```
 

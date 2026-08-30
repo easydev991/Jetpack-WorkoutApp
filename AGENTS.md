@@ -16,12 +16,13 @@ make clean          # gradle clean
 make lint           # ktlintCheck + app:detekt + markdownlint (if installed)
 make format         # ktlintFormat + app:detekt autoCorrect + markdownlint --fix
 make test           # unit tests + Python report
-make android-test   # connectedDebugAndroidTest
+make android-test   # :app:connectedDebugAndroidTest (только :app:, без :screenshot-tests)
 make check          # build + test + lint
 make install        # installDebug
 ```
 
 - `make lint` only warns if `markdownlint-cli` is missing; install it via `npm install -g markdownlint-cli`.
+- **`make emulator-fast`** — отключает анимации эмулятора (ускоряет `make android-test` в ~3.5×). Вызывать **после каждого старта эмулятора**. Откат: `make emulator-slow`.
 - Detekt: `config/detekt/detekt.yml`. `maxIssues: 35`, `TooManyFunctions` threshold 20, `LargeClass` excludes `*ViewModel.kt`. Add `@Suppress("TooManyFunctions")` to interfaces when they grow past 20 methods.
 - EditorConfig: `.editorconfig`. No wildcard imports, no trailing commas, 4-space indent.
 
@@ -30,8 +31,12 @@ make install        # installDebug
 ```bash
 ./gradlew :app:testDebugUnitTest --tests "com.swparks.domain.usecase.LoginUseCaseTest"
 ./gradlew :app:testDebugUnitTest --tests "com.swparks.domain.usecase.LoginUseCaseTest.invoke_whenValidCredentials_thenSavesTokenAndCallsLogin"
-./gradlew connectedDebugAndroidTest --tests "com.swparks.ui.screens.more.MoreScreenTest"
+./gradlew :app:connectedDebugAndroidTest \
+    -Pandroid.testInstrumentationRunnerArguments.class=com.swparks.ui.screens.more.MoreScreenTest
 ```
+
+- **`--tests "<FQN>"` не работает на AGP 9** для таска `connectedDebugAndroidTest` (Gradle 9.7.1 возвращает `Unknown command-line option '--tests'`). Рабочий фильтр — `-Pandroid.testInstrumentationRunnerArguments.class=<FQN>` (см. пример выше).
+- **Канон**: в итерации — фильтр по FQN (как выше); перед коммитом или релизом — полный прогон через `make android-test` (после `make emulator-fast`).
 
 ## Architecture
 
@@ -50,11 +55,12 @@ make install        # installDebug
 
 ## Testing
 
-- TDD order: tests → logic → UI.
-- Test names: `functionName_whenCondition_thenExpectedResult()`.
-- Unit tests: `app/src/test/java/com/swparks/`. Android tests: `app/src/androidTest/java/com/swparks/`.
-- Libraries: JUnit 4, MockK, kotlinx.coroutines.test, Turbine, Robolectric, Compose UI tests.
-- Many Android tests use `Fake*` ViewModels. Update matching fakes when a ViewModel interface changes.
+Подробности — в навыке `testing` (`.opencode/skills/testing/SKILL.md`).
+Ключевое:
+- Тесты: `app/src/test/` (unit, JUnit 4) и `app/src/androidTest/` (UI/integration).
+- Имена: `functionName_whenCondition_thenExpectedResult()`.
+- Android-тесты наследуют `TimeoutTest(N)` (UI: 60 с, Keystore/Room: 180 с) — зависший `@Test` не блокирует прогон.
+- Сеть AVD нестабильна — flaky сеть-зависимые тесты лечить сетью или stubs.
 
 ## Key files
 

@@ -185,7 +185,7 @@ val canDeleteEntry: (JournalEntry) -> Boolean = { entry -> viewModel.canDeleteEn
 
 ### Unit-тесты
 
-Добавлено 10 тестов в `JournalEntriesViewModelTest`:
+Добавлены тесты в `JournalEntriesViewModelTest`:
 - `canEditEntry_journalOwner_returnsTrue`
 - `canEditEntry_authorInForeignJournal_returnsTrue`
 - `canEditEntry_notLoggedIn_returnsFalse`
@@ -281,7 +281,7 @@ suspend fun clearAllFriendRequestFlags()
 suspend fun clearAllBlacklistFlags()
 ```
 
-**2. SWRepository.kt** — `getSocialUpdates()` теперь очищает старые данные перед вставкой новых:
+**2. UserProfileRepository.kt** — `getSocialUpdates()` теперь очищает старые данные перед вставкой новых:
 
 ```kotlin
 // Сбрасываем все флаги перед обновлением
@@ -297,7 +297,7 @@ userDao.insertAll(friends.map { it.toEntity(isFriend = true) })
 
 ### Unit-тесты
 
-Добавлено 4 теста в `SWRepositoryProfileTest`:
+Добавлены тесты в `SWRepositoryProfileTest`:
 - `getSocialUpdates_clearsOldFriendsBeforeInsertingNew` — проверяет очистку флагов перед вставкой
 - `getSocialUpdates_whenApiReturnsEmptyFriendsList_clearsOldFriends` — проверяет очистку при пустом списке
 - `getSocialUpdates_whenApiReturnsEmptyFriendRequests_clearsOldRequests` — проверяет очистку заявок
@@ -361,7 +361,7 @@ if (entries.isEmpty()) {
 
 ### UI-тесты
 
-Добавлено 4 теста в `JournalEntriesScreenTest.kt`:
+Добавлены тесты в `JournalEntriesScreenTest.kt`:
 - `testEmptyState_notShown_whenRefreshing` — EmptyStateView не показывается во время загрузки
 - `testEmptyState_shown_forForeignJournalWithAllAccess` — EmptyStateView показывается при ALL-доступе в чужом дневнике
 - `testEmptyState_notShown_forForeignJournalWithNobodyAccess` — EmptyStateView не показывается при NOBODY-доступе

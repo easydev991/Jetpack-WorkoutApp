@@ -24,7 +24,7 @@
 | UI экран    | `SearchUserScreen.kt` с `displayState` логикой и `ErrorContentView`                 |
 | Preview     | `SearchUserScreenPreview.kt` — 5 превью для всех состояний                          |
 | Навигация   | `Screen.UserSearch.route` в `RootScreen.kt`                                         |
-| Тесты       | Unit: 11 тестов, UI: 15 тестов                                                      |
+| Тесты       | Unit и UI тесты                                                                     |
 
 ---
 
@@ -37,8 +37,8 @@
 | `ui/viewmodel/SearchUserViewModel.kt`           | Реализация ViewModel   |
 | `ui/screens/profile/SearchUserScreen.kt`        | Compose экран          |
 | `ui/screens/profile/SearchUserScreenPreview.kt` | 5 Preview              |
-| `test/.../SearchUserViewModelTest.kt`           | 11 unit-тестов         |
-| `androidTest/.../SearchUserScreenTest.kt`       | 15 UI тестов           |
+| `test/.../SearchUserViewModelTest.kt`           | Unit-тесты             |
+| `androidTest/.../SearchUserScreenTest.kt`       | UI-тесты               |
 
 ## Изменённые файлы
 
@@ -52,7 +52,7 @@
 
 **Компоненты:** `SWTextField`, `UserRowView`, `LoadingOverlayView`, `ErrorContentView`
 
-**API:** `SWRepository.findUsers(name: String): Result<List<User>>`
+**API:** `UserProfileRepository.findUsers(name: String): Result<List<User>>`
 
 **Навигация:** `Screen.UserSearch.createRoute(source)` используется как минимум в двух сценариях:
 

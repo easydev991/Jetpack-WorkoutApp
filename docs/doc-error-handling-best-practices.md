@@ -32,6 +32,8 @@ suspend fun refreshData(): Result<Unit> = try {
 }
 ```
 
+> **Как это устроено в проекте**: репозитории наследуют `BaseRepository` и вместо дублирования catch-блоков используют хелперы `handleIOException(...)` / `handleHttpException(...)`, которые логируют ошибку, отправляют её в `CrashReporter` и возвращают `NetworkException` / `ServerException`. См. `data/repository/BaseRepository.kt` и `data/repository/ParksEventsRepository.kt`.
+
 ### Правильный паттерн в ViewModel
 
 ```kotlin

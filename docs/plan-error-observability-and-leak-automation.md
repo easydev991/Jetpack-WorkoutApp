@@ -9,7 +9,10 @@
 ## Контекст и исходные проблемы (по текущему состоянию)
 
 - [x] Для `ChatViewModel` прямые `Log.e` заменены на единый маршрут `Logger + CrashReporter`.
-- [ ] В части остальных ViewModel/feature-кода еще может использоваться `Log.*` напрямую, без единого маршрута в `Logger`/`CrashReporter`.
+- [ ] В части остальных ViewModel/feature-кода еще используется `Log.*` напрямую, без единого маршрута в `Logger`/`CrashReporter` (проверено grep'ом по коду на момент актуализации):
+  - ViewModel: `JournalEntriesViewModel`, `ThemeIconViewModel`, `JournalsViewModel`;
+  - feature-код: `FeedbackSender`, `RootScreen`, `ParkMapView`;
+  - data/domain (менее критично): `SecureTokenRepository`, `AuthInterceptor`, `CryptoManagerImpl`, `EncryptedStringSerializer`, `UserPreferencesRepository`, `Converters`, а также `SyncJournalsUseCase`, `SyncJournalEntriesUseCase`, `GetJournalEntriesUseCase`, `TextEntryUseCase`, `DeleteUserUseCase`, `LogoutUseCase`, `IconManager`.
 - [ ] В release-режиме `NoOpLogger` снижает шум в логах, но часть non-fatal ошибок может быть недостаточно наблюдаемой, если не отправлена в Crashlytics.
 - [ ] Для утечек нет постоянного автоматического контура; есть рисковые зоны вокруг карты и долгоживущих ресурсов.
 - [ ] `lintDebug` уже сигналит `StaticFieldLeak` и другие warning/error, но это не встроено в обязательный релизный gate.

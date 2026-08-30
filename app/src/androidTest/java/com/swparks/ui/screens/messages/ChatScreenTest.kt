@@ -12,6 +12,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.data.model.MessageResponse
+import com.swparks.testing.TimeoutTest
 import com.swparks.ui.state.ChatUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import org.junit.Rule
@@ -24,7 +25,7 @@ import org.junit.runner.RunWith
  * Тестирует UI компонент ChatContent в изоляции без ViewModel.
  */
 @RunWith(AndroidJUnit4::class)
-class ChatScreenTest {
+class ChatScreenTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

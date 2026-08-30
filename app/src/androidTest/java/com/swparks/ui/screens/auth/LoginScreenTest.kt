@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
+import com.swparks.testing.TimeoutTest
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.FakeLoginViewModel
 import org.junit.Rule
@@ -25,7 +26,7 @@ import org.junit.runner.RunWith
  * взаимодействие с полями ввода, кнопками и алертами.
  */
 @RunWith(AndroidJUnit4::class)
-class LoginScreenTest {
+class LoginScreenTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

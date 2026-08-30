@@ -10,7 +10,7 @@
 | `EditExisting` | `Screen.EditEvent` | меню автора на `EventDetailScreen` | Форма инициализируется данными существующего мероприятия |
 | `CreateForSelected` | `Screen.CreateEventForPark` | `ParkDetailScreen` | Площадка предустановлена и недоступна для смены |
 
-Экран реализован в [EventFormScreen.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/ui/screens/events/EventFormScreen.kt), состояние и бизнес-логика находятся в [EventFormViewModel.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/ui/viewmodel/EventFormViewModel.kt).
+Экран реализован в [EventFormScreen.kt](app/src/main/java/com/swparks/ui/screens/events/EventFormScreen.kt), состояние и бизнес-логика находятся в [EventFormViewModel.kt](app/src/main/java/com/swparks/ui/viewmodel/EventFormViewModel.kt).
 
 ## Архитектура
 
@@ -18,10 +18,10 @@
 
 | Сущность | Файл | Назначение |
 |---------|------|------------|
-| `EventForm` | [EventForm.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/ui/model/EventForm.kt) | DTO формы для create/edit API |
-| `EventFormMode` | [EventFormMode.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/ui/model/EventFormMode.kt) | Режим работы экрана и заголовок навигации |
-| `EventFormUiState` | [EventFormUiState.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/ui/state/EventFormUiState.kt) | Полное состояние UI, производные флаги и лимиты |
-| `EventFormEvent` | [EventFormUiState.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/ui/state/EventFormUiState.kt) | Одноразовые события: сохранение, навигация, пикер фото |
+| `EventForm` | [EventForm.kt](app/src/main/java/com/swparks/ui/model/EventForm.kt) | DTO формы для create/edit API |
+| `EventFormMode` | [EventFormMode.kt](app/src/main/java/com/swparks/ui/model/EventFormMode.kt) | Режим работы экрана и заголовок навигации |
+| `EventFormUiState` | [EventFormUiState.kt](app/src/main/java/com/swparks/ui/state/EventFormUiState.kt) | Полное состояние UI, производные флаги и лимиты |
+| `EventFormEvent` | [EventFormUiState.kt](app/src/main/java/com/swparks/ui/state/EventFormUiState.kt) | Одноразовые события: сохранение, навигация, пикер фото |
 
 ### Поток данных
 
@@ -29,7 +29,7 @@
 EventFormScreen
   -> EventFormViewModel
   -> CreateEventUseCase / EditEventUseCase
-  -> SWRepository.saveEvent()
+  -> ParksEventsRepository.saveEvent()
   -> SWApi.createEvent() / SWApi.editEvent()
 ```
 
@@ -42,9 +42,9 @@ EventFormScreen
 
 Связанные точки входа:
 
-- [RootScreen.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/ui/screens/RootScreen.kt)
-- [EventNavigationCoordinator.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/navigation/EventNavigationCoordinator.kt)
-- [EventNavArgs.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/navigation/EventNavArgs.kt)
+- [RootScreen.kt](app/src/main/java/com/swparks/ui/screens/RootScreen.kt)
+- [EventNavigationCoordinator.kt](app/src/main/java/com/swparks/navigation/EventNavigationCoordinator.kt)
+- [EventNavArgs.kt](app/src/main/java/com/swparks/navigation/EventNavArgs.kt)
 
 ## Реализованный функционал
 
@@ -98,8 +98,8 @@ EventFormScreen
 
 ### UseCase и repository
 
-- `CreateEventUseCase` и `EditEventUseCase` являются тонкими обёртками над `SWRepository.saveEvent(...)`.
-- `SWRepository.saveEvent(...)` использует один путь для create и edit, различая сценарии по `id == null`.
+- `CreateEventUseCase` и `EditEventUseCase` являются тонкими обёртками над `ParksEventsRepository.saveEvent(...)`.
+- `ParksEventsRepository.saveEvent(...)` использует один путь для create и edit, различая сценарии по `id == null`.
 
 ### Формирование multipart
 
@@ -110,8 +110,8 @@ EventFormScreen
 
 Код:
 
-- [SWRepository.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/data/repository/SWRepository.kt)
-- [NetworkUtils.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/data/NetworkUtils.kt)
+- [ParksEventsRepository.kt](app/src/main/java/com/swparks/data/repository/ParksEventsRepository.kt)
+- [NetworkUtils.kt](app/src/main/java/com/swparks/data/NetworkUtils.kt)
 
 ## UX и пользовательские сценарии
 
@@ -134,16 +134,16 @@ EventFormScreen
 
 ## Тестовое покрытие
 
-| Файл | Тип | Кол-во тестов | Покрывает |
-|------|-----|---------------|-----------|
-| [EventFormViewModelTest.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/test/java/com/swparks/ui/viewmodel/EventFormViewModelTest.kt) | unit | 45 | инициализацию режимов, изменение полей, нормализацию дат, лимиты фото, сохранение |
-| [EventFormScreenTest.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/androidTest/java/com/swparks/ui/screens/events/EventFormScreenTest.kt) | androidTest | 26 | заголовки режимов, доступность Save, блокировки, confirm dialog, поведение выбора площадки |
-| [SWRepositoryEventsTest.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/test/java/com/swparks/data/repository/SWRepositoryEventsTest.kt) | unit | 16 | create/edit event API, multipart-части и обработку ошибок |
-| [NetworkUtilsTest.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/test/java/com/swparks/data/NetworkUtilsTest.kt) | unit | 5 | MIME, filename и multipart helper |
+| Файл | Тип | Покрывает |
+|------|-----|-----------|
+| [EventFormViewModelTest.kt](app/src/test/java/com/swparks/ui/viewmodel/EventFormViewModelTest.kt) | unit | инициализацию режимов, изменение полей, нормализацию дат, лимиты фото, сохранение |
+| [EventFormScreenTest.kt](app/src/androidTest/java/com/swparks/ui/screens/events/EventFormScreenTest.kt) | androidTest | заголовки режимов, доступность Save, блокировки, confirm dialog, поведение выбора площадки |
+| [ParksEventsRepositoryEventsTest.kt](app/src/test/java/com/swparks/data/repository/ParksEventsRepositoryEventsTest.kt) | unit | create/edit event API, multipart-части и обработку ошибок |
+| [NetworkUtilsTest.kt](app/src/test/java/com/swparks/data/NetworkUtilsTest.kt) | unit | MIME, filename и multipart helper |
 
 ## Что учитывать при развитии фичи
 
 - Если понадобится редактирование существующих фото, это придётся добавлять отдельно: сейчас `EventFormUiState` знает только количество существующих фото, но не управляет ими как сущностями UI.
 - Если нужно показывать название площадки при редактировании без пере-выбора, надо расширять payload навигации или восстанавливать park name по `parkId`.
 - Любые изменения формата даты нужно синхронизировать сразу в трёх местах: `EventFormViewModel.normalizeDateForServer(...)`, `parseFormDateTimeOrNow(...)` и `parseEventDateTime(...)`.
-- Любые изменения photo upload контракта нужно проверять не только в UI/ViewModel, но и в [SWRepository.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/data/repository/SWRepository.kt) и [NetworkUtils.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/app/src/main/java/com/swparks/data/NetworkUtils.kt).
+- Любые изменения photo upload контракта нужно проверять не только в UI/ViewModel, но и в [ParksEventsRepository.kt](app/src/main/java/com/swparks/data/repository/ParksEventsRepository.kt) и [NetworkUtils.kt](app/src/main/java/com/swparks/data/NetworkUtils.kt).

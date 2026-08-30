@@ -4,6 +4,7 @@
 
 Интеграция Firebase на основе паттернов из проекта JetpackDays (`com.dayscounter`).
 Реализуется **Crashlytics** (краш-репорты) для отслеживания крашей после релиза.
+Помимо Crashlytics в проекте используется **Firebase Analytics** (пакет `com.swparks.analytics`: `AnalyticsService`, `FirebaseAnalyticsProvider`).
 
 ---
 
@@ -20,7 +21,7 @@
 ## Этап 2: CrashlyticsHelper (TDD)
 
 - [x] Реализованы `CrashReporter` интерфейс, `FirebaseCrashReporter` (object singleton, fail-safe) и `NoOpCrashReporter`
-- [x] Тесты для `NoOpCrashReporter` покрывают `logException`, `setUserId`, `setCustomKey`
+- [x] Тесты для `NoOpCrashReporter` покрывают `logException`, `setUserId`, `setCustomKey`, `log`
 - [x] `CrashReporter` зарегистрирован в `AppContainer`
 
 ---
@@ -55,9 +56,11 @@
 ## Структура файлов
 
 ```
-app/src/main/java/com/swparks/util/crash/
+app/src/main/java/com/swparks/util/
   CrashReporter.kt           # interface
+app/src/main/java/com/swparks/util/crash/
   FirebaseCrashReporter.kt   # object singleton
+app/src/main/java/com/swparks/util/
   NoOpCrashReporter.kt       # для тестов
 app/src/test/java/com/swparks/util/crash/
   CrashReporterTest.kt
@@ -65,5 +68,5 @@ app/src/test/java/com/swparks/util/crash/
 
 ## Ссылки
 
-- Референс: JetpackDays (`/Users/Oleg991/Documents/GitHub/JetpackDays`)
-- Firebase BOM: `34.11.0`
+- Референс: JetpackDays (`../JetpackDays`)
+- Firebase BOM (актуальная версия — `gradle/libs.versions.toml`)

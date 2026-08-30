@@ -2,8 +2,8 @@
 
 ## Выполнено
 
-- ✅ **AppContainer.kt:284** — `logger` условный (`BuildConfig.DEBUG ? AndroidLogger : NoOpLogger`)
-- ✅ **AppContainer.kt:421-425** — `LoggingInterceptor` добавляется только в DEBUG
+- ✅ **AppContainer.kt:135** — `logger` условный (`BuildConfig.DEBUG ? AndroidLogger : NoOpLogger`)
+- ✅ **AppContainer.kt:313-314** — `LoggingInterceptor` добавляется только в DEBUG
 - ✅ **JetpackWorkoutApplication** — `logger` удалён, используется DI из `container.logger`
 - ✅ `private val loggingInterceptor` — удалён
 
@@ -42,18 +42,21 @@
 
 ### Места с потенциально тяжёлыми объектами
 
-**1. `SWRepository.kt:255`** — логирование сырого тела HTTP-ответа
+> **Актуализация:** `SWRepository` разделён на специализированные репозитории; общая обработка ошибок HTTP теперь в `BaseRepository.kt`.
+
+**1. `BaseRepository.kt:48-58` (`handleHttpException`)** — чтение и десериализация сырого тела HTTP-ошибки:
 
 ```kotlin
-logger.e(TAG, "Тело ответа сервера: $responseBody")
+val responseBody = e.response()?.errorBody()?.string()
+val errorResponse = json.decodeFromString<ErrorResponse>(responseBody)
 ```
 
-Аналогично: `SWRepository.kt:286`
+Аналогично: `BaseRepository.kt:75-83` (`handleResponseError`) и `BaseRepository.kt:97-98`.
 
-**2. `SWRepository.kt:257-259`** — здесь заранее собирается строка с полями десериализованного объекта, что тоже создаёт лишнюю работу в release:
+**2. `BaseRepository.kt:58, 83`** — здесь заранее собирается строка с сообщением об ошибке десериализации, что тоже создаёт лишнюю работу в release:
 
 ```kotlin
-logger.e(TAG, "Десериализованный ErrorResponse: message=${errorResponse.message}, errors=${errorResponse.errors}")
+logger.e(tag, "Не удалось десериализовать ответ об ошибке: ${se.message}")
 ```
 
 **3. `LoggingInterceptor.kt:25-63`** — `buildString` для всего request/response, включая тела

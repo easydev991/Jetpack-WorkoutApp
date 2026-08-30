@@ -12,7 +12,7 @@
 
 **Используется в:**
 - EventFormScreen (создание/редактирование мероприятий)
-- ParkFormScreen (создание/редактирование площадок) - в будущем
+- ParkFormScreen (создание/редактирование площадок)
 
 ---
 
@@ -47,7 +47,7 @@
 Файл: `app/src/main/java/com/swparks/ui/model/PickedImageItem.kt`
 
 - [x] Создать sealed class `PickedImageItem`
-- [x] `Image` - содержит Uri и уникальный id
+- [x] `Image` - содержит Uri (отдельное поле id не нужно: ключ элемента формируется в гриде)
 - [x] `AddButton` - кнопка добавления
 
 ### 1.2 PickedImagesState ✅
@@ -96,20 +96,23 @@
 
 ```
 PickedImagesGrid
-├── Header (опционально)
+├── Header (опционально, config.showTitle)
 ├── Subtitle (подсказка о лимите)
-└── LazyVerticalGrid
+└── FlowRow (3 колонки, ширина ячейки считается в пикселях)
     └── PickedImageCell items
 ```
 
 **Параметры:**
 - `images: List<Uri>` - список выбранных фото
 - `selectionLimit: Int` - максимальное количество
-- `onAddClick: () -> Unit` - callback добавления
-- `onRemoveClick: (index: Int) -> Unit` - callback удаления
-- `onImageClick: (uri: Uri) -> Unit` - callback просмотра
-- `enabled: Boolean` - блокировка взаимодействия
+- `onAction: (PickedImagesGridAction) -> Unit` - единый callback действий
 - `modifier: Modifier`
+- `config: PickedImagesGridConfig` - `enabled` (блокировка взаимодействия), `showTitle`
+
+**PickedImagesGridAction:**
+- `AddImage` - добавление фото
+- `RemoveImage(index)` - удаление
+- `ViewImage(uri, index)` - просмотр
 
 - [x] Создать composable `PickedImagesGrid`
 - [x] Реализовать сетку 3 колонки с aspectRatio(1f)
@@ -295,7 +298,7 @@ fun rememberPickedImagesController(
 #### Шаг 3. Сделать стабильные ключи элементов грида ✅
 
 - [x] Убрать генерацию случайного `UUID` для UI-ключа у `PickedImageItem.Image`
-- [x] Использовать стабильный key `"${uri}-$index"` (поддерживает дубликаты uri)
+- [x] Поле `id` из модели удалено; итоговая сетка построена на `FlowRow` — явные ключи элементов не требуются
 - [x] Проверить, что тесты проходят после изменений
 
 #### Шаг 4. Привести `PickedImageCell` к требованиям плана ✅
@@ -338,9 +341,13 @@ fun EventFormScreen(viewModel: EventFormViewModel) {
     PickedImagesGrid(
         images = uiState.photos,
         selectionLimit = 15,
-        onAddClick = { photoPickerController.launch() },
-        onRemoveClick = viewModel::onPhotoRemoved,
-        onImageClick = { uri, _ -> previewUri = uri },
+        onAction = { action ->
+            when (action) {
+                PickedImagesGridAction.AddImage -> photoPickerController.launch()
+                is PickedImagesGridAction.RemoveImage -> viewModel.onPhotoRemoved(action.index)
+                is PickedImagesGridAction.ViewImage -> previewUri = action.uri
+            }
+        },
         enabled = !uiState.isLoading
     )
     

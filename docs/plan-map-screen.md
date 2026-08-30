@@ -41,7 +41,7 @@
   - безопасная обработка tap: кластер определяется по `point_count`, tap по feature без id деградирует в `ClearSelection`;
   - `fit bounds` для выбранного города при наличии 2+ уникальных координат;
   - диагностический лог координат: total/valid/unique, min/max lat/lon;
-  - lifecycle MapView через `LifecycleEventObserver` + `ComponentCallbacks2`.
+  - lifecycle MapView через `LifecycleEventObserver`, состояние — через `rememberSaveable` Bundle + `onSaveInstanceState` (актуализация: `ComponentCallbacks2` не используется).
 - Этап 5: добавлены `ParkInfoCard` и `MyLocationFab`.
 - Этап 6: `MAP` tab интегрирован в `ParksRootScreen`, навигация в `ParkDetailScreen` идёт через UI-callback.
 - `ParkMapView` переведён на единый `onMapEvent`, поэтому `ParksRootScreen` больше не разворачивает map events в набор отдельных callback-параметров.
@@ -49,13 +49,13 @@
   - `ParkInfoCard` шириной max 420dp;
   - `CreateParkFab` автоматически поднимается над открытой карточкой по её реальной высоте;
   - появление/скрытие карточки и смена позиции FAB анимированы.
-- Unit-тесты: `MapUiStateTest`, `ParksRootViewModelTest` (776 строк), `ParkMapGeometryTest`, `ParkMapMarkerSizingTest`.
+- Unit-тесты: `MapUiStateTest`, `ParksRootViewModelTest`, `ParkMapGeometryTest`, `ParkMapMarkerSizingTest`.
 
 ### Требует завершения
 
 - Этап 7: one-shot поведение `MyLocationFab` реализовано в `ParksRootViewModel`, требуется финальная верификация на реальном устройстве.
 - Этап 8: OpenFreeMap glyph 404 не блокирует отображение parks/clusters, но label-слои базовой карты могут быть неполными.
-- Этап 9: отсутствуют Android instrumented tests для `ParkMapView`, `ParkInfoCard`, `MyLocationFab`.
+- Этап 9: выделенные Android instrumented tests для `ParkMapView`, `ParkInfoCard`, `MyLocationFab` отсутствуют (карта и оверлеи частично покрыты smoke-проверками в `ParksRootScreenTest`).
 
 ### Принятое решение по оставшимся багам
 
@@ -397,7 +397,7 @@
 ### 4.0 Текущий статус
 
 Реализовано:
-- `ParkMapView` создан (620 строк);
+- `ParkMapView` создан;
 - `GeoJsonSource` и слои добавляются после загрузки style;
 - `ParkMapView` наружу отдаёт единый `MapEvent`, а не набор разрозненных callback'ов;
 - `OnCameraIdle` синхронизирует камеру обратно в `MapUiState`.
@@ -428,7 +428,6 @@ fun ParkMapView(
     selectedParkId: Long?,
     selectedCityCenter: UiCoordinates?,
     cameraPosition: MapCameraPosition?,
-    userLocation: UiCoordinates?,
     onMapEvent: (MapEvent) -> Unit,
     modifier: Modifier = Modifier
 )
@@ -436,6 +435,8 @@ fun ParkMapView(
 
 Внутри `ParkMapView` выполняется локальная конвертация `UiCoordinates` в `LatLng`.
 Наружу SDK-типы не выносятся.
+
+Актуализация: параметр `userLocation` из исходного плана удалён. `userLocation` хранится только в `MapUiState`; `ParkMapView` геолокацию не получает и как источник камеры её не использует — `MyLocationFab` центрирует карту через запись разового `cameraPosition` в ViewModel.
 
 ### 4.2 Реализация через `AndroidView + MapView`
 
@@ -569,7 +570,7 @@ maplibreMap.animateCamera(
   - в городе с `15 features` визуально видна только одна точка;
 - это означает, что нужно проверить и рендер слоёв, и сами данные координат.
 
-План доработки:
+План доработки (выполнен — bitmap-иконки вместо текстовых слоёв, `fit bounds` через `selectedCityBoundsCameraUpdate` в `ParkMapGeometry`; см. «Как именно были починены кластеры и точки»):
 - сохранить текущее правило приоритета камеры:
   - `userLocation` не должен быть постоянным драйвером камеры и не должен автоматически возвращать карту к пользователю после style reload / recomposition;
   - `MyLocationFab` делает разовый recenter через запись новой `cameraPosition`;
@@ -595,66 +596,69 @@ maplibreMap.animateCamera(
 - `user-location`: камера меняется только когда ViewModel явно записала новый `cameraPosition` после успешного one-shot запроса геолокации;
 - `initial fallback`: без города используем безопасный регион, а не `fit all parks`.
 
-### 4.7 Lifecycle `MapView` ⚠️ доработать ownership `MapView`
+### 4.7 Lifecycle `MapView` ✅ реализация завершена
 
-**Файл:** `app/src/main/java/com/swparks/ui/screens/parks/ParkMapView.kt:77-112`
+**Файл:** `app/src/main/java/com/swparks/ui/screens/parks/ParkMapView.kt` (блок `DisposableEffect`, ~строки 170–205)
 
-Полная реализация через `LifecycleEventObserver` + `ComponentCallbacks2`:
+Фактическая реализация (актуализировано по коду):
 
 ```kotlin
-val lifecycleOwner = LocalLifecycleOwner.current
+val mapViewBundle = rememberSaveable { Bundle() }
 
-DisposableEffect(Unit) {
-    MapLibre.getInstance(context)
-    val map = MapView(context)
-    mapView = map
-    map.onCreate(null)
-
-    val observer = LifecycleEventObserver { _, event ->
-        when (event) {
-            Lifecycle.Event.ON_START -> map.onStart()
-            Lifecycle.Event.ON_RESUME -> map.onResume()
-            Lifecycle.Event.ON_PAUSE -> map.onPause()
-            Lifecycle.Event.ON_STOP -> map.onStop()
-            Lifecycle.Event.ON_DESTROY -> map.onDestroy()
-            else -> {}
+val mapView =
+    remember {
+        try {
+            MapLibre.getInstance(appContext)
+            MapView(context).apply {
+                onCreate(mapViewBundle)
+            }
+        } catch (e: UnsatisfiedLinkError) {
+            // defensive fix для OEM-кейса: docs/plan-fix-crashes-maplibre-and-duplicate-keys.md (2.2a)
+            null
         }
     }
+
+DisposableEffect(mapView, lifecycleOwner) {
+    val observer =
+        LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> mapView.onStart()
+                Lifecycle.Event.ON_RESUME -> mapView.onResume()
+                Lifecycle.Event.ON_PAUSE -> mapView.onPause()
+                Lifecycle.Event.ON_STOP -> mapView.onStop()
+                Lifecycle.Event.ON_DESTROY -> {
+                    mapView.onSaveInstanceState(mapViewBundle)
+                    mapView.onDestroy()
+                }
+
+                else -> Unit
+            }
+        }
+
     lifecycleOwner.lifecycle.addObserver(observer)
 
-    val componentCallbacks = object : android.content.ComponentCallbacks2 {
-        override fun onLowMemory() = map.onLowMemory()
-        override fun onTrimMemory(level: Int) {}
-        override fun onConfigurationChanged(config: android.content.res.Configuration) {}
-    }
-    context.registerComponentCallbacks(componentCallbacks)
+    // ... немедленный onStart/onResume, если lifecycle уже в STARTED/RESUMED ...
 
     onDispose {
         lifecycleOwner.lifecycle.removeObserver(observer)
-        context.unregisterComponentCallbacks(componentCallbacks)
-        map.onDestroy()
-        mapView = null
+        mapView.onSaveInstanceState(mapViewBundle)
         mapLibreMap = null
     }
 }
 ```
 
-Принятые решения:
-- `ON_LOW_MEMORY` не является `Lifecycle.Event` — обрабатывается через `ComponentCallbacks2`;
-- `onTrimMemory`-заглушка (пустое тело), т.к. `MapView` не имеет соответствующего метода;
-- Регистрация/удаление `ComponentCallbacks` в `DisposableEffect` гарантирует очистку при unmount;
-- v1: полный native `onSaveInstanceState(...)` не реализован, восстановление через `MapUiState.cameraPosition`.
+Принятые решения (актуализация):
+- `ComponentCallbacks2`/`registerComponentCallbacks` из исходного плана не используются — обработка low-memory оставлена SDK и системе;
+- состояние `MapView` сохраняется через `rememberSaveable` Bundle: `onCreate(mapViewBundle)` при создании, `onSaveInstanceState(mapViewBundle)` в `ON_DESTROY` и в `onDispose`;
+- `MapLibre.getInstance(...)` и создание `MapView` обёрнуты в `try/catch (UnsatisfiedLinkError)` — при недоступности native-библиотеки рисуется текстовая заглушка `map_not_available` (см. `docs/plan-fix-crashes-maplibre-and-duplicate-keys.md`, этап 2.2a);
+- восстановление камеры — через `MapUiState.cameraPosition`.
 
 Дополнительно для стабилизации:
-- убедиться, что `MapView`, переданный в `AndroidView`, и `MapView`, на который навешан lifecycle, совпадают;
-- исключить сценарий с созданием второго `MapView` вне lifecycle-контроля;
-- исключить двойной вызов `onDestroy()` для разных экземпляров.
 
-Статус:
-- после последних правок карта больше не падает на открытии, значит этот блок близок к закрытию;
-- окончательно считать этап закрытым только после того, как:
-  - при выборе города viewport реально меняется;
-  - на карте становятся видны parks/кластеры этого города без ручного центрирования на геолокацию.
+- актуальное состояние: `MapView` создаётся один раз в `remember` и используется и в lifecycle-эффекте, и в `AndroidView` — второго экземпляра вне lifecycle-контроля нет;
+- `onDispose` не вызывает `mapView.onDestroy()` повторно — destroy выполняется только через `ON_DESTROY` lifecycle-наблюдателя.
+
+Статус: закрыт — карта не падает на открытии, viewport меняется при выборе города, parks/кластеры отображаются без ручного центрирования на геолокацию (подтверждено логами, см. «Анализ по логам после доработок»).
 
 ## Этап 5: Overlay-компоненты
 
@@ -777,16 +781,16 @@ val styleUri = "https://tiles.openfreemap.org/styles/liberty"
 
 Существующие:
 - `MapUiStateTest` — базовые тесты map state;
-- `ParksRootViewModelTest` (776 строк) — тесты ViewModel для map events, city filter, геолокации;
+- `ParksRootViewModelTest` — тесты ViewModel для map events, city filter, геолокации;
 - `ParkMapGeometryTest` — тесты геометрии камеры для city bounds;
 - `ParkMapMarkerSizingTest` — тесты размеров bitmap-иконок для кластеров.
 
 ### 9.2 Android / UI тесты ⚠️
 
 Существующие:
-- `ParksRootScreenTest` — общий тест экрана parks.
+- `ParksRootScreenTest` — общий тест экрана parks: переключение табов MAP/LIST, отображение карты (`testTag park_map`), `NoParksFoundView`.
 
-Отсутствуют:
+Отсутствуют (выделенные тесты компонентов):
 - `ParkMapViewTest` — тесты MapView, cluster rendering, tap handling;
 - `ParkInfoCardTest` — тесты карточки парка;
 - `MyLocationFabTest` — тесты FAB и геолокации.

@@ -12,6 +12,7 @@ import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.fakeAnalyticsLogger
 import com.swparks.data.DefaultAppContainer
 import com.swparks.navigation.rememberAppState
+import com.swparks.testing.TimeoutTest
 import com.swparks.util.AppError
 import com.swparks.util.Logger
 import io.mockk.mockk
@@ -27,7 +28,7 @@ import java.io.IOException
  * Проверяют отображение Snackbar при возникновении ошибок.
  */
 @RunWith(AndroidJUnit4::class)
-class RootScreenTest {
+class RootScreenTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

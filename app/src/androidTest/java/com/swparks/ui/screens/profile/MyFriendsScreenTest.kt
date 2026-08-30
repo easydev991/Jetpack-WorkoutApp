@@ -15,6 +15,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.data.model.User
+import com.swparks.testing.TimeoutTest
 import com.swparks.ui.state.FriendsListUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import org.junit.Rule
@@ -29,7 +30,7 @@ import org.junit.runner.RunWith
  * и поведение при разных состояниях UI.
  */
 @RunWith(AndroidJUnit4::class)
-class MyFriendsScreenTest {
+class MyFriendsScreenTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

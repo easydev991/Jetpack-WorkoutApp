@@ -16,9 +16,9 @@
 
 **Архитектура:** MVVM + Fallback cache (сервер → Room → UI, офлайн-режим)
 
-**Компоненты:** `DialogEntity`, `DialogDao`, `MessagesRepository`, `DialogsViewModel` с `DialogsUiState`, `MessagesRootScreen`, `DialogRowView`
+**Компоненты:** `DialogEntity`, `DialogDao`, `MessagesRepositoryImpl`, `DialogsViewModel` с `DialogsUiState`, `MessagesRootScreen`, `DialogRowView`
 
-**Тесты:** покрыто unit-тестами ViewModel и репозитория (`DialogsViewModelTest`, `MessagesRepositoryTest`, `SWRepositoryMessagesTest`)
+**Тесты:** покрыто unit-тестами ViewModel и репозитория (`DialogsViewModelTest`, `MessagesRepositoryTest`, `MessagesRepositoryImplTest`)
 
 ### Запуск нового диалога (FAB / Empty state CTA)
 
@@ -34,7 +34,7 @@
 
 **UX:** Long Press → DropdownMenu → AlertDialog → API → LoadingOverlayView
 
-**Реализация:** DropdownMenu рендерится на уровне `DialogsContent` (State Hoisting). `DialogRowData.onLongClick` делегирует позицию, `FormCardContainer.onLongClickWithOffset` использует `pointerInput` + `detectTapGestures`. `SWRepository.deleteDialog` выполняет API-запрос и удаляет из БД.
+**Реализация:** DropdownMenu рендерится на уровне `DialogsContent` (State Hoisting). `DialogRowData.onLongClick` делегирует позицию, `FormCardContainer.onLongClickWithOffset` использует `pointerInput` + `detectTapGestures`. `MessagesRepositoryImpl.deleteDialog` выполняет API-запрос и удаляет из БД.
 
 ### Mark as Read
 
@@ -66,8 +66,6 @@
 # Data Layer
 data/database/entity/DialogEntity.kt
 data/database/dao/DialogDao.kt
-data/repository/SWRepository.kt
-domain/repository/MessagesRepository.kt
 data/repository/MessagesRepositoryImpl.kt
 data/model/DialogResponse.kt
 

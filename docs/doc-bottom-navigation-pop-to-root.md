@@ -86,11 +86,11 @@ ParkDetail (source=messages) ✓
 - `JournalsList`, `JournalEntries`
 
 **Экраны площадок:**
-- `ParkDetail`, `EditPark`, `CreateEventForPark`, `ParkRoute`
+- `ParkDetail`, `CreatePark`, `EditPark`, `CreateEventForPark`, `ParkRoute`
 - `AddParkComment`, `ParkTrainees`, `ParkGallery`
 
 **Экраны мероприятий:**
-- `EventDetail`, `EditEvent`, `EventParticipants`, `EventGallery`, `AddEventComment`
+- `EventDetail`, `EditEvent`, `EventParticipants`, `EventGallery`, `AddEventComment`, `SelectParkForEvent`
 
 **Экраны сообщений:**
 - `Chat`
@@ -136,7 +136,7 @@ sealed class Screen(
 
 fun getScreenBySource(source: String, default: Screen): Screen {
     return when (source) {
-        "parks" -> Screen.Parks
+        "parks", "park" -> Screen.Parks
         "events" -> Screen.Events
         "messages" -> Screen.Messages
         "profile" -> Screen.Profile
@@ -269,8 +269,8 @@ composable(
 7. ✅ Обновлена логика `navigateToTopLevelDestination()`
 8. ✅ Добавлен `source` параметр для 22 экранов
 9. ✅ Обновлены экраны UI для передачи `source` в дочерние экраны
-10. ✅ Unit-тесты: `DestinationsTest.kt` — 42 теста для `getScreenBySource()` и `findParentTab()`
-11. ✅ Проект собирается, тесты проходят (1076 тестов)
+10. ✅ Unit-тесты: `DestinationsTest.kt` для `getScreenBySource()` и `findParentTab()`
+11. ✅ Проект собирается, тесты проходят
 
 ### 📋 Сценарии проверки
 

@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swparks.data.database.SWDatabase
 import com.swparks.data.database.entity.JournalEntryEntity
+import com.swparks.testing.TimeoutTest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -22,7 +23,7 @@ import org.junit.runner.RunWith
  * используя in-memory Room базу данных для изолированного тестирования
  */
 @RunWith(AndroidJUnit4::class)
-class JournalEntryDaoTest {
+class JournalEntryDaoTest : TimeoutTest(180) {
     private lateinit var db: SWDatabase
     private lateinit var journalEntryDao: JournalEntryDao
 

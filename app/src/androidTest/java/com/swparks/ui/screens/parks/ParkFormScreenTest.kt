@@ -14,6 +14,7 @@ import com.swparks.R
 import com.swparks.data.model.Park
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
+import com.swparks.testing.TimeoutTest
 import com.swparks.ui.model.ParkForm
 import com.swparks.ui.model.ParkFormMode
 import com.swparks.ui.state.ParkFormUiState
@@ -24,7 +25,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class ParkFormScreenTest {
+class ParkFormScreenTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

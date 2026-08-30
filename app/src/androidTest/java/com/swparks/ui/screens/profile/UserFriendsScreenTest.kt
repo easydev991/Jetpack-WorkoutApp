@@ -9,6 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.data.model.User
+import com.swparks.testing.TimeoutTest
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.UserFriendsUiState
 import org.junit.Rule
@@ -22,7 +23,7 @@ import org.junit.runner.RunWith
  * Проверяет отображение списка друзей, пустого состояния и ошибок.
  */
 @RunWith(AndroidJUnit4::class)
-class UserFriendsScreenTest {
+class UserFriendsScreenTest : TimeoutTest() {
     @get:Rule
     val composeTestRule = createComposeRule()
 

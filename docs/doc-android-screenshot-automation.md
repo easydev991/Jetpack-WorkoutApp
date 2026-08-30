@@ -15,9 +15,9 @@
 
 ### Конфигурация Gradle
 
-- В [settings.gradle.kts](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/settings.gradle.kts) подключен модуль:
+- В [settings.gradle.kts](settings.gradle.kts) подключен модуль:
   - `include(":screenshot-tests")`
-- В [screenshot-tests/build.gradle.kts](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/screenshot-tests/build.gradle.kts):
+- В [screenshot-tests/build.gradle.kts](screenshot-tests/build.gradle.kts):
   - `targetProjectPath = ":app"`
   - `namespace = "com.swparks.screenshots"`
   - `testInstrumentationRunner = "com.swparks.screenshots.ScreenshotTestRunner"`
@@ -25,16 +25,21 @@
 
 ### Screenshot runtime
 
-- Runner: [ScreenshotTestRunner.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/screenshot-tests/src/main/java/com/swparks/screenshots/ScreenshotTestRunner.kt)
-- Test Application: [ScreenshotTestApplication.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/screenshot-tests/src/main/java/com/swparks/screenshots/ScreenshotTestApplication.kt)
-- Container с demo-данными: [ScreenshotAppContainer.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/screenshot-tests/src/main/java/com/swparks/screenshots/ScreenshotAppContainer.kt)
-- Сценарное состояние: [ScreenshotScenarioState.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/screenshot-tests/src/main/java/com/swparks/screenshots/ScreenshotScenarioState.kt)
+- Runner: [ScreenshotTestRunner.kt](screenshot-tests/src/main/java/com/swparks/screenshots/ScreenshotTestRunner.kt)
+- Test Application: [ScreenshotTestApplication.kt](screenshot-tests/src/main/java/com/swparks/screenshots/ScreenshotTestApplication.kt)
+- Container с demo-данными: [ScreenshotAppContainer.kt](screenshot-tests/src/main/java/com/swparks/screenshots/ScreenshotAppContainer.kt)
+- Сценарное состояние: [ScreenshotScenarioState.kt](screenshot-tests/src/main/java/com/swparks/screenshots/ScreenshotScenarioState.kt)
 
 ## Screenshot-сценарий
 
 Основной orchestrator-тест:
 
-- [WorkoutAppScreenshotsTest.kt](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/screenshot-tests/src/main/java/com/swparks/screenshots/WorkoutAppScreenshotsTest.kt)
+- [WorkoutAppScreenshotsTest.kt](screenshot-tests/src/main/java/com/swparks/screenshots/WorkoutAppScreenshotsTest.kt)
+
+Дополнительные файлы сценария:
+
+- [ScreenshotAppBootstrapTest.kt](screenshot-tests/src/main/java/com/swparks/screenshots/ScreenshotAppBootstrapTest.kt) — smoke-тест бутстрапа (без снимков): проверяет `ScreenshotTestApplication` и детерминированность demo-данных
+- [DemoData.kt](screenshot-tests/src/main/java/com/swparks/screenshots/DemoData.kt) — demo-данные контейнера
 
 Порядок снимков (текущая реализация):
 
@@ -51,9 +56,9 @@
 
 ### Lane
 
-В [fastlane/Fastfile](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/fastlane/Fastfile) используется lane:
+В [fastlane/Fastfile](fastlane/Fastfile) используется lane:
 
-- `screenshots`
+- `screenshots` — перед снимками устанавливает геолокацию Москва на эмуляторе
 
 ### Пути APK
 
@@ -62,7 +67,7 @@
 
 ### Screengrabfile
 
-В [fastlane/Screengrabfile](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/fastlane/Screengrabfile):
+В [fastlane/Screengrabfile](fastlane/Screengrabfile):
 
 - `tests_package_name 'com.swparks.screenshots'`
 - `test_instrumentation_runner 'com.swparks.screenshots.ScreenshotTestRunner'`
@@ -72,9 +77,9 @@
 
 ## Makefile
 
-В [Makefile](/Users/Oleg991/Documents/GitHub/Jetpack-WorkoutApp/Makefile):
+В [Makefile](Makefile):
 
-- цель `screenshots` запускает fastlane lane `screenshots`;
+- цель `screenshots` устанавливает геолокацию Москва, запускает fastlane lane `screenshots` и в конце вызывает `update_readme` (README.md обновляется автоматически);
 - `_build_screenshots_apk` собирает:
   - `:app:assembleDebug`
   - `:screenshot-tests:assembleDebug`
