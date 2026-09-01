@@ -5,9 +5,8 @@
 [<img alt="Android SDK" src="https://img.shields.io/badge/Android_SDK-37-green">](https://developer.android.com/)
 [<img alt="Min SDK" src="https://img.shields.io/badge/Min_SDK-26-informational">](https://developer.android.com/)
 [<img alt="Gradle" src="https://img.shields.io/badge/Gradle-9.7.1-blue">](https://gradle.org/)
-[<img alt="AGP" src="https://img.shields.io/badge/AGP-9.3.2-green">](https://developer.android.com/tools/releases/gradle-plugin)
+[<img alt="AGP" src="https://img.shields.io/badge/AGP-9.4.0-green">](https://developer.android.com/tools/releases/gradle-plugin)
 <!-- END_VERSIONS -->
-[![GitMCP](https://img.shields.io/endpoint?url=https://gitmcp.io/badge/easydev991/Jetpack-WorkoutApp)](https://gitmcp.io/easydev991/Jetpack-WorkoutApp)
 
 - Это Android-версия моего пет-проекта "Street Workout Площадки", которая повторяет основную
   функциональность [iOS-версии](https://github.com/easydev991/SwiftUI-WorkoutApp)
