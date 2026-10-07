@@ -199,6 +199,7 @@ private fun OtherUserProfileScaffold(
         topBar = {
             OtherUserProfileTopAppBar(
                 isInBlacklist = relations.isInBlacklist,
+                showBlacklistButton = params.uiState is OtherUserProfileUiState.Success,
                 onBlacklistClick = { dialogState = dialogState.copy(showBlacklistDialog = true) },
                 onBackClick = { onAction(ProfileNavigationAction.Back) }
             )
@@ -470,6 +471,7 @@ private fun OtherUserProfileDialogs(
 @Composable
 private fun OtherUserProfileTopAppBar(
     isInBlacklist: Boolean,
+    showBlacklistButton: Boolean,
     onBlacklistClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
@@ -484,11 +486,17 @@ private fun OtherUserProfileTopAppBar(
             }
         },
         actions = {
-            IconButton(onClick = onBlacklistClick) {
-                Icon(
-                    imageVector = if (isInBlacklist) Icons.Outlined.CheckCircle else Icons.Outlined.Block,
-                    contentDescription = stringResource(if (isInBlacklist) R.string.unblock else R.string.block)
-                )
+            // Кнопка блокировки доступна только при загруженном профиле:
+            // без viewedUser performBlacklistAction() завершается no-op
+            if (showBlacklistButton) {
+                IconButton(onClick = onBlacklistClick) {
+                    Icon(
+                        imageVector =
+                            if (isInBlacklist) Icons.Outlined.CheckCircle else Icons.Outlined.Block,
+                        contentDescription =
+                            stringResource(if (isInBlacklist) R.string.unblock else R.string.block)
+                    )
+                }
             }
         }
     )

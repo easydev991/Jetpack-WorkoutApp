@@ -5,14 +5,23 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
+import com.swparks.analytics.AnalyticsService
+import com.swparks.data.model.User
 import com.swparks.domain.model.FriendAction
+import com.swparks.navigation.rememberAppState
 import com.swparks.testing.TimeoutTest
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
+import com.swparks.ui.viewmodel.IOtherUserProfileViewModel
+import com.swparks.ui.viewmodel.OtherUserProfileUiState
+import com.swparks.util.NoOpLogger
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -535,4 +544,85 @@ class OtherUserProfileScreenTest : TimeoutTest() {
             .onNodeWithText(context.getString(R.string.remove_friend))
             .assertIsNotEnabled()
     }
+
+    // === Тесты для OtherUserProfileScreen: видимость кнопки блокировки ===
+
+    private fun setProfileScreen(viewModel: IOtherUserProfileViewModel) {
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                OtherUserProfileScreen(
+                    viewModel = viewModel,
+                    appState =
+                        rememberAppState(
+                            analyticsService = AnalyticsService(emptyList(), NoOpLogger())
+                        )
+                )
+            }
+        }
+    }
+
+    @Test
+    fun otherUserProfileScreen_whenErrorState_thenHidesBlacklistButton() {
+        // Given
+        val viewModel =
+            FakeIOtherUserProfileViewModel(
+                uiState = MutableStateFlow(OtherUserProfileUiState.Error(message = "Network error"))
+            )
+        setProfileScreen(viewModel)
+
+        // Then
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.block))
+            .assertDoesNotExist()
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.profile))
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithContentDescription(
+                context.getString(R.string.close_button_content_description)
+            ).assertIsDisplayed()
+    }
+
+    @Test
+    fun otherUserProfileScreen_whenSuccessState_thenShowsBlacklistButton() {
+        // Given - currentUser = null, чтобы не сработал guard навигации на свой профиль
+        val viewModel =
+            FakeIOtherUserProfileViewModel(
+                viewedUser = MutableStateFlow(User(id = 2, name = "other_user", image = null)),
+                uiState = MutableStateFlow(OtherUserProfileUiState.Success())
+            )
+        setProfileScreen(viewModel)
+
+        // Then
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.block))
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.profile))
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithContentDescription(
+                context.getString(R.string.close_button_content_description)
+            ).assertIsDisplayed()
+    }
+}
+
+private class FakeIOtherUserProfileViewModel(
+    override val viewedUser: StateFlow<User?> = MutableStateFlow(null),
+    override val currentUser: StateFlow<User?> = MutableStateFlow(null),
+    override val friends: StateFlow<List<User>> = MutableStateFlow(emptyList()),
+    override val blacklist: StateFlow<List<User>> = MutableStateFlow(emptyList()),
+    override val uiState: StateFlow<OtherUserProfileUiState> =
+        MutableStateFlow(OtherUserProfileUiState.Loading),
+    override val isRefreshing: StateFlow<Boolean> = MutableStateFlow(false),
+    override val isLoadingCurrentUser: StateFlow<Boolean> = MutableStateFlow(false),
+    override val isFriendActionLoading: StateFlow<Boolean> = MutableStateFlow(false)
+) : IOtherUserProfileViewModel {
+    override fun loadUser() = Unit
+
+    override fun refreshUser() = Unit
+
+    override fun performFriendAction() = Unit
+
+    override fun performBlacklistAction(onBlocked: () -> Unit) = Unit
 }

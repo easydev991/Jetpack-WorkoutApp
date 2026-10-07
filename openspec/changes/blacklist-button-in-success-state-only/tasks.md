@@ -2,7 +2,7 @@
 
 ## 1. Red — падающие тесты
 
-- [ ] 1.1 Добавить `FakeIOtherUserProfileViewModel` в
+- [x] 1.1 Добавить `FakeIOtherUserProfileViewModel` в
       `app/src/androidTest/java/com/swparks/ui/screens/profile/OtherUserProfileScreenTest.kt`
       (по образцу `FakeProfileViewModel` из
       `app/src/androidTest/java/com/swparks/ui/viewmodel/FakeProfileViewModel.kt`,
@@ -14,7 +14,7 @@
       класс компилируется, существующие тесты
       файла проходят (`./gradlew :app:connectedDebugAndroidTest
       -Pandroid.testInstrumentationRunnerArguments.class=com.swparks.ui.screens.profile.OtherUserProfileScreenTest`).
-- [ ] 1.2 Тест `otherUserProfileScreen_whenErrorState_thenHidesBlacklistButton`:
+- [x] 1.2 Тест `otherUserProfileScreen_whenErrorState_thenHidesBlacklistButton`:
       контент `OtherUserProfileScreen(viewModel = fake, appState = rememberAppState(
       analyticsService = <заглушка/mockk AnalyticsService>))` — `appState` обязателен
       без дефолта, `navController` берётся из дефолта `rememberAppState()`;
@@ -23,7 +23,7 @@
       (`R.string.profile`) и кнопка закрытия (`R.string.close_button_content_description`)
       — `assertIsDisplayed()`. Проверка: тест падает — кнопка есть
       (подтверждение диагноза).
-- [ ] 1.3 Контрольный тест `otherUserProfileScreen_whenSuccessState_thenShowsBlacklistButton`
+- [x] 1.3 Контрольный тест `otherUserProfileScreen_whenSuccessState_thenShowsBlacklistButton`
       (тот же setContent, что в 1.2): `uiState = Success(...)`, `viewedUser` с id ≠ id
       `currentUser` (guard на свой
       профиль, см. design.md); кнопка блокировки видна, заголовок (`R.string.profile`) и
@@ -33,7 +33,7 @@
 
 ## 2. Green — реализация
 
-- [ ] 2.1 В `OtherUserProfileScaffold`
+- [x] 2.1 В `OtherUserProfileScaffold`
       (`app/src/main/java/com/swparks/ui/screens/profile/OtherUserProfileScreen.kt`)
       вычислить видимость кнопки (`params.uiState is Success` — поле уже есть в
       `OtherUserProfileScaffoldParams`, новый проброс не нужен) и передать параметром в
@@ -42,14 +42,17 @@
 
 ## 3. Верификация
 
-- [ ] 3.1 `make format && make lint && make test` — зелёные, без новых предупреждений
+- [x] 3.1 `make format && make lint && make test` — зелёные, без новых предупреждений
       detekt (лимит не повышать); затем `make build` (pre-commit-чеклист AGENTS.md).
       Проверка: все команды завершаются без ошибок.
-- [ ] 3.2 Полный прогон UI-тестов (`make emulator-fast`, затем `make android-test`) —
-      все UI-тесты зелёные. Проверка: `make android-test` без падений.
-- [ ] 3.3 (опционально, не блокирует) Ручная проверка на эмуляторе (`make install`):
+- [x] 3.2 UI-тесты задетых экранов (решение пользователя: полный `make android-test`
+      заменён точечным прогоном): `OtherUserProfileScreenTest` — 28/28 зелёные после
+      форматирования. Проверка: `./gradlew :app:connectedDebugAndroidTest
+      -Pandroid.testInstrumentationRunnerArguments.class=com.swparks.ui.screens.profile.OtherUserProfileScreenTest`.
+- [x] 3.3 (опционально, не блокирует) Ручная проверка на эмуляторе (`make install`):
       профиль с ошибкой → кнопки блокировки нет; после retry (Success) → кнопка есть и
-      открывает диалог. Проверка: визуальный осмотр; автоматическое покрытие — п. 3.2.
+      открывает диалог. Решение пользователя: сценарий покрыт автоматическими тестами
+      (п. 3.2, 28/28) — задача считается закрытой без ручного визуального осмотра.
 
 ## Workflow follow-up
 
