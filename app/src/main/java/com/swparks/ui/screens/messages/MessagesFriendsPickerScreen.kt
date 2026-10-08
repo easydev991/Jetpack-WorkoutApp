@@ -96,7 +96,6 @@ data class FriendsPickerConfig(
     val currentUserId: Long? = null
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MessagesFriendsPickerScreen(
     modifier: Modifier = Modifier,

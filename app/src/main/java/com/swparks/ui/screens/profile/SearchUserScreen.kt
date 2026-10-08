@@ -75,7 +75,6 @@ sealed class SearchUserAction {
  * @param config Конфигурация экрана с паддингами и ID текущего пользователя
  * @param onAction Callback для обработки действий
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchUserScreen(
     modifier: Modifier = Modifier,
@@ -110,7 +109,6 @@ fun SearchUserScreen(
  * @param config Конфигурация экрана с паддингами и ID текущего пользователя
  * @param onAction Callback для обработки действий (Search, UserClick, Back, Retry)
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchUserScreenContent(
     modifier: Modifier = Modifier,

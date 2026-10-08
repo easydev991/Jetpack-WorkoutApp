@@ -71,7 +71,6 @@ sealed class FriendAction {
  * @param onFriendClick Callback для навигации на профиль друга
  * @param onAction Callback для обработки действий с друзьями
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyFriendsScreen(
     modifier: Modifier = Modifier,

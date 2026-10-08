@@ -58,7 +58,6 @@ import com.swparks.ui.viewmodel.EventsViewModel
 import com.swparks.ui.viewmodel.IEventsViewModel
 import com.swparks.util.DateFormatter
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventsScreen(
     modifier: Modifier = Modifier,
@@ -140,7 +139,6 @@ fun EventsScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EventsTabRow(
     selectedTabIndex: Int,

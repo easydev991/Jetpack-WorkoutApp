@@ -82,7 +82,6 @@ sealed class ProfileAuthAction {
     data object ShowRegisterSheet : ProfileAuthAction()
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileRootScreen(
     modifier: Modifier = Modifier,
@@ -154,7 +153,6 @@ fun ProfileRootScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AuthorizedProfileContent(
     modifier: Modifier,

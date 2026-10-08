@@ -51,7 +51,6 @@ import com.swparks.ui.state.LoginUiState
 import com.swparks.ui.testtags.ScreenshotTestTags
 import com.swparks.ui.viewmodel.ILoginViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,

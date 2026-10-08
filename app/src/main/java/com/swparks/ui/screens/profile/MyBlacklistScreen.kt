@@ -43,7 +43,6 @@ import com.swparks.ui.model.BlacklistAction as ApiBlacklistAction
  * @param onBackClick Callback для навигации назад
  * @param parentPaddingValues Паддинги для учета BottomNavigationBar
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyBlacklistScreen(
     modifier: Modifier = Modifier,

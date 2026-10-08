@@ -570,7 +570,6 @@ fun CreateParkFab(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ParksTabRow(
     selectedTabIndex: Int,

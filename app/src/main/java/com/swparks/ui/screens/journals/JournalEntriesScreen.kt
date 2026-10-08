@@ -239,7 +239,6 @@ private fun JournalSettingsDialogSection(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun JournalEntriesScaffold(
     modifier: Modifier,
@@ -385,7 +384,6 @@ private data class JournalEntriesOverlayState(
  * Экран списка записей в дневнике пользователя
  */
 @Suppress("LongParameterList")
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JournalEntriesScreen(
     modifier: Modifier = Modifier,
@@ -522,7 +520,6 @@ private fun buildScaffoldState(params: ScaffoldParams): ScaffoldState {
 /**
  * Контент с Pull-to-Refresh и списком записей
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ContentScreen(
     state: EntriesContentState,
@@ -687,7 +684,6 @@ private fun DeleteConfirmationDialog(
 
 // ==================== PREVIEWS ====================
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, locale = "ru", name = "Empty Journal Entries")
 @Composable
 private fun JournalEntriesScreenEmptyPreview() {
@@ -706,7 +702,6 @@ private fun JournalEntriesScreenEmptyPreview() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, locale = "ru", name = "Journal Entries with Items")
 @Composable
 private fun JournalEntriesScreenWithItemsPreview() {

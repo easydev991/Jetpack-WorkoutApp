@@ -89,7 +89,6 @@ private data class ParkFormContentParams(
     val onPhotoPreview: (Uri) -> Unit
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ParkFormScreen(
     modifier: Modifier = Modifier,

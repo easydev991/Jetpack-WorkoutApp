@@ -32,7 +32,6 @@ import com.swparks.R
 import com.swparks.ui.screens.photos.ZoomConfig
 import com.swparks.ui.screens.photos.ZoomablePhotoView
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImagePreviewDialog(
     uri: Uri,

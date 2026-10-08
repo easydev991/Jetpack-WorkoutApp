@@ -48,7 +48,6 @@ sealed class UserFriendsAction {
  * @param config Конфигурация экрана с паддингами и ID текущего пользователя
  * @param onAction Callback для обработки действий (Back, UserClick, Refresh)
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserFriendsScreen(
     modifier: Modifier = Modifier,

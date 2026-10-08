@@ -130,7 +130,6 @@ sealed class ProfileContentAction {
     object ShowRemoveFriendDialog : ProfileContentAction()
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OtherUserProfileScreen(
     viewModel: IOtherUserProfileViewModel,
@@ -180,7 +179,6 @@ fun OtherUserProfileScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun OtherUserProfileScaffold(
     modifier: Modifier,
@@ -291,7 +289,6 @@ private sealed class TextEntryAction {
     ) : TextEntryAction()
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun OtherUserProfileScaffoldContent(
     paddingValues: androidx.compose.foundation.layout.PaddingValues,
@@ -319,7 +316,6 @@ private fun OtherUserProfileScaffoldContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ProfilePullToRefreshContent(
     params: OtherUserProfileScaffoldParams,

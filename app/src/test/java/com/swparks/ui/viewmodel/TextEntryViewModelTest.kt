@@ -15,6 +15,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -494,5 +495,27 @@ class TextEntryViewModelTest {
             val event = viewModel.events.first()
             assertTrue(event is TextEntryEvent.Success)
             coVerify(exactly = 1) { textEntryUseCase.sendMessageTo(userId, testText) }
+        }
+
+    @Test
+    fun onSend_WhenSendFails_ThenEmitsErrorOnceWithoutGlobalNotification() =
+        runTest {
+            // Given
+            val mode = TextEntryMode.NewForPark(testParkId)
+            viewModel = TextEntryViewModel(textEntryUseCase, userNotifier, mode, context)
+            viewModel.onTextChanged(testText)
+            coEvery { textEntryUseCase.addParkComment(testParkId, testText) } returns
+                Result.failure(RuntimeException("Network failure"))
+
+            // When
+            viewModel.onSend()
+            advanceUntilIdle()
+
+            // Then — ошибка уходит только в событие листа, ровно один раз
+            val event = viewModel.events.first()
+            assertTrue(event is TextEntryEvent.Error)
+            assertEquals("Error: error message", (event as TextEntryEvent.Error).message)
+            // Глобальное уведомление (snackbar корневого экрана) не вызывается
+            verify(exactly = 0) { userNotifier.handleError(any()) }
         }
 }

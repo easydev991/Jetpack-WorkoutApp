@@ -10,7 +10,6 @@ import com.swparks.domain.usecase.TextEntryUseCase
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.state.TextEntryEvent
 import com.swparks.ui.state.TextEntryUiState
-import com.swparks.util.AppError
 import com.swparks.util.UserNotifier
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -144,12 +143,6 @@ class TextEntryViewModel(
                         exception.message ?: ""
                     )
                 _events.trySend(TextEntryEvent.Error(errorMessage))
-                val appError =
-                    AppError.Generic(
-                        message = errorMessage,
-                        throwable = exception
-                    )
-                userNotifier.handleError(appError)
             }
         )
     }

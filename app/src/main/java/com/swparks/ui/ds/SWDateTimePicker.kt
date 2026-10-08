@@ -225,7 +225,6 @@ data class DatePickerConfig(
     val onClickSaveDate: (Long) -> Unit
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SWDatePicker(config: DatePickerConfig) {
     var showDatePicker by remember { mutableStateOf(false) }

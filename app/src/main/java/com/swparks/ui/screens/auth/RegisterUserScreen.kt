@@ -98,7 +98,6 @@ data class RegisterContentParams(
     val isLoading: Boolean
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterUserScreen(
     modifier: Modifier = Modifier,

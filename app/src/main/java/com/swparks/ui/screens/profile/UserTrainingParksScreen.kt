@@ -52,7 +52,6 @@ data class UserTrainingParksConfig(
  * @param parentPaddingValues PaddingValues для соблюдения безопасных зон
  * @param config Конфигурация экрана - [UserTrainingParksConfig]
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserTrainingParksScreen(
     modifier: Modifier = Modifier,
@@ -143,7 +142,6 @@ private fun TopAppBar(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun UserTrainingParksContent(
     uiState: UserTrainingParksUiState,

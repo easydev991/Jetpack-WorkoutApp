@@ -271,7 +271,6 @@ private fun DeleteDialogConfirmation(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DialogsContent(
     modifier: Modifier = Modifier,
@@ -347,7 +346,6 @@ fun DialogsContent(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DialogsStateContent(
     params: DialogsStateParams,

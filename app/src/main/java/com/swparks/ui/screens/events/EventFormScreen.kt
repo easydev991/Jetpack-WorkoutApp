@@ -90,7 +90,6 @@ private data class EventFormContentParams(
     val onPhotoPreview: (Uri) -> Unit
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventFormScreen(
     modifier: Modifier = Modifier,
@@ -351,7 +350,6 @@ private fun ParkSelector(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DatePickerSection(
     date: String,

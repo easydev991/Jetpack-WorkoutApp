@@ -196,7 +196,6 @@ data class JournalsScaffoldContentParams(
     val dialogsActions: JournalsDialogsActions
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JournalsListScreen(
     modifier: Modifier = Modifier,
@@ -517,7 +516,6 @@ private fun JournalsEventHandler(
 /**
  * Контент с Pull-to-Refresh и списком дневников
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ContentScreen(
     state: JournalsContentState,
@@ -693,7 +691,6 @@ private fun DeleteConfirmationDialog(
 
 // ==================== PREVIEWS ====================
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, locale = "ru", name = "Empty Journals List - Owner")
 @Composable
 private fun JournalsListScreenEmptyPreview() {
@@ -718,7 +715,6 @@ private fun JournalsListScreenEmptyPreview() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, locale = "ru", name = "Empty Journals List - Other User Loading")
 @Composable
 private fun JournalsListScreenEmptyOtherUserLoadingPreview() {
@@ -743,7 +739,6 @@ private fun JournalsListScreenEmptyOtherUserLoadingPreview() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, locale = "ru", name = "Empty Journals List - Other User Loaded")
 @Composable
 private fun JournalsListScreenEmptyOtherUserLoadedPreview() {
@@ -768,7 +763,6 @@ private fun JournalsListScreenEmptyOtherUserLoadedPreview() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, locale = "ru", name = "Journals List with Items")
 @Composable
 private fun JournalsListScreenWithItemsPreview() {

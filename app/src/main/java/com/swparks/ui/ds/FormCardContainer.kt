@@ -1,6 +1,5 @@
 package com.swparks.ui.ds
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -36,7 +35,6 @@ data class FormCardContainerParams(
  * @param params Параметры карточки
  * @param content Контент
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FormCardContainer(
     params: FormCardContainerParams,

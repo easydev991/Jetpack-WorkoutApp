@@ -54,7 +54,6 @@ import com.swparks.ui.theme.JetpackWorkoutAppTheme
  * @param onContactUs Колбэк при нажатии "Связаться с нами"
  * @param onBackClick Колбэк при нажатии назад
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemListScreen(
     state: ItemListUiState,
