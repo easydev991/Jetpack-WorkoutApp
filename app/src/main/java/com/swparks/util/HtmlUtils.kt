@@ -6,24 +6,14 @@ package com.swparks.util
  *                    Если false, сохраняет структуру текста (параграфы, переносы).
  */
 fun String.parseHtml(compactMode: Boolean = false): String {
-    var text = this
-
-    // 1. Предварительная обработка структурных тегов
-    if (compactMode) {
-        // В компактном режиме всё, что похоже на перенос, меняем на пробел
-        text =
-            text
-                .replace(Regex("<br\\s*/?>", RegexOption.IGNORE_CASE), " ")
-                .replace(Regex("</p>", RegexOption.IGNORE_CASE), " ")
-                .replace(Regex("</div>", RegexOption.IGNORE_CASE), " ")
-    } else {
-        // В детальном режиме сохраняем переносы
-        text =
-            text
-                .replace(Regex("<br\\s*/?>", RegexOption.IGNORE_CASE), "\n")
-                .replace(Regex("</p>", RegexOption.IGNORE_CASE), "\n\n")
-                .replace(Regex("</div>", RegexOption.IGNORE_CASE), "\n")
-    }
+    // 1. Предварительная обработка структурных тегов: в компактном режиме переносы — в пробелы
+    val lineBreak = if (compactMode) " " else "\n"
+    val paragraph = if (compactMode) " " else "\n\n"
+    val text =
+        this
+            .replace(Regex("<br\\s*/?>", RegexOption.IGNORE_CASE), lineBreak)
+            .replace(Regex("</p>", RegexOption.IGNORE_CASE), paragraph)
+            .replace(Regex("</div>", RegexOption.IGNORE_CASE), lineBreak)
 
     return text
         // 2. Удаляем все оставшиеся теги

@@ -30,6 +30,7 @@ import org.junit.Test
 import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Unit тесты для ChatViewModel.
@@ -235,7 +236,7 @@ class ChatViewModelTest {
             val dialogId = 1L
             coEvery { swApi.getMessages(dialogId) } returns listOf(testMessage)
             coEvery { swApi.getMessages(dialogId) } coAnswers {
-                kotlinx.coroutines.delay(100)
+                kotlinx.coroutines.delay(100.milliseconds)
                 listOf(testMessage)
             }
 
@@ -344,7 +345,7 @@ class ChatViewModelTest {
             val userId = 123
             coEvery { swApi.getMessages(dialogId) } returns listOf(testMessage)
             coEvery { swApi.sendMessageTo(userId.toLong(), any()) } coAnswers {
-                kotlinx.coroutines.delay(100)
+                kotlinx.coroutines.delay(100.milliseconds)
                 mockk(relaxed = true)
             }
 

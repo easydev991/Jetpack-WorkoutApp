@@ -68,7 +68,7 @@ class PickedImagesGridTest : TimeoutTest() {
         setContent(images = images, selectionLimit = 15)
 
         composeTestRule
-            .onNodeWithText(context.getString(R.string.photos_add_subtitle_more, 12))
+            .onNodeWithText(context.resources.getQuantityString(R.plurals.photos_add_subtitle_more, 12, 12))
             .assertIsDisplayed()
     }
 

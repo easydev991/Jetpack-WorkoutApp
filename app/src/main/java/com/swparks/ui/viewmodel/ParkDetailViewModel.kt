@@ -892,9 +892,7 @@ class ParkDetailViewModel(
             try {
                 val cachedPark = parksEventsRepository.getParkFromCache(parkId)
                 if (cachedPark != null) {
-                    val currentState = _uiState.value
-
-                    when (currentState) {
+                    when (val currentState = _uiState.value) {
                         is ParkDetailUIState.Content -> {
                             val currentPark = currentState.park
                             val trainHereChanged = currentPark.trainHere != cachedPark.trainHere

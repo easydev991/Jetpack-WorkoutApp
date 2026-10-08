@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import retrofit2.HttpException
+import kotlin.time.Duration.Companion.milliseconds
 
 @Suppress("TooGenericExceptionCaught", "InstanceOfCheckForException", "UnusedPrivateProperty")
 class OtherUserProfileViewModel(
@@ -108,7 +109,7 @@ class OtherUserProfileViewModel(
         viewModelScope.launch {
             try {
                 // Ждем загрузки текущего пользователя с timeout
-                withTimeout(CURRENT_USER_LOAD_TIMEOUT_MS) {
+                withTimeout(CURRENT_USER_LOAD_TIMEOUT_MS.milliseconds) {
                     currentUser.first { it != null }
                 }
                 _isLoadingCurrentUser.update { false }
@@ -156,13 +157,9 @@ class OtherUserProfileViewModel(
                     logger.i(TAG, "Профиль загружен: ${viewedUser.id}")
                 }.onFailure { error ->
                     val (message, canRetry) =
-                        when {
-                            error is HttpException && error.code() == HTTP_NOT_FOUND ->
-                                "Пользователь не найден" to false
-
-                            error is HttpException && error.code() == HTTP_FORBIDDEN ->
-                                "Доступ запрещен" to false
-
+                        when (val code = (error as? HttpException)?.code()) {
+                            HTTP_NOT_FOUND -> "Пользователь не найден" to false
+                            HTTP_FORBIDDEN -> "Доступ запрещен" to false
                             else -> "Ошибка загрузки профиля: ${error.message}" to true
                         }
                     userNotifier.handleError(AppError.Generic(message, error))

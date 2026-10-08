@@ -30,6 +30,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Unit тесты для DialogsViewModel.
@@ -438,7 +439,7 @@ class DialogsViewModelTest {
             coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
             // Добавляем небольшую задержку, чтобы успеть проверить состояние isDeleting = true
             coEvery { messagesRepository.deleteDialog(dialogId) } coAnswers {
-                kotlinx.coroutines.delay(100)
+                kotlinx.coroutines.delay(100.milliseconds)
                 Result.success(Unit)
             }
 
@@ -565,7 +566,7 @@ class DialogsViewModelTest {
             coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
             coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
             coEvery { messagesRepository.markDialogAsRead(dialogId, userId) } coAnswers {
-                kotlinx.coroutines.delay(100)
+                kotlinx.coroutines.delay(100.milliseconds)
                 Result.success(Unit)
             }
 
@@ -743,7 +744,7 @@ class DialogsViewModelTest {
             coEvery { messagesRepository.dialogs } returns dialogFlow
             coEvery { messagesRepository.refreshDialogs() } coAnswers {
                 // Симулируем что сервер возвращает пустой список, но Flow обновляется не сразу
-                kotlinx.coroutines.delay(500)
+                kotlinx.coroutines.delay(500.milliseconds)
                 Result.success(Unit)
             }
 
@@ -818,11 +819,11 @@ class DialogsViewModelTest {
             coEvery { messagesRepository.dialogs } returns flowOf(emptyList())
             coEvery { messagesRepository.refreshDialogs() } returns Result.success(Unit)
             coEvery { messagesRepository.deleteDialog(dialogId) } coAnswers {
-                kotlinx.coroutines.delay(100)
+                kotlinx.coroutines.delay(100.milliseconds)
                 Result.success(Unit)
             }
             coEvery { messagesRepository.markDialogAsRead(dialogId, userId) } coAnswers {
-                kotlinx.coroutines.delay(100)
+                kotlinx.coroutines.delay(100.milliseconds)
                 Result.success(Unit)
             }
 

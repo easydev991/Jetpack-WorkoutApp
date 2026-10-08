@@ -145,10 +145,10 @@ private fun SheetContent(
     onShowDeleteDialogChange: (Boolean) -> Unit,
     onAction: (PhotoDetailAction) -> Unit
 ) {
-    when (val state = uiState) {
+    when (uiState) {
         is PhotoDetailUIState.Content -> {
             PhotoDetailScreen(
-                state = state,
+                state = uiState,
                 isAuthorized = isAuthorized,
                 showDeleteDialog = showDeleteDialog,
                 onAction = { action ->

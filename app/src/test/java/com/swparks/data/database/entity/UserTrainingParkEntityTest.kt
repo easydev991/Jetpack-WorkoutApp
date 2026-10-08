@@ -40,8 +40,8 @@ class UserTrainingParkEntityTest {
         val entity1 = UserTrainingParkEntity(userId = 1L, parkId = 100L)
         val entity2 = UserTrainingParkEntity(userId = 2L, parkId = 100L)
 
-        assertEquals(entity1.userId, 1L)
-        assertEquals(entity2.userId, 2L)
+        assertEquals(1L, entity1.userId)
+        assertEquals(2L, entity2.userId)
         assertEquals(entity1.parkId, entity2.parkId)
     }
 
@@ -51,7 +51,7 @@ class UserTrainingParkEntityTest {
         val entity2 = UserTrainingParkEntity(userId = 1L, parkId = 200L)
 
         assertEquals(entity1.userId, entity2.userId)
-        assertEquals(entity1.parkId, 100L)
-        assertEquals(entity2.parkId, 200L)
+        assertEquals(100L, entity1.parkId)
+        assertEquals(200L, entity2.parkId)
     }
 }

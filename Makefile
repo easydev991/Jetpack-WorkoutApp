@@ -58,7 +58,7 @@ test:
 	fi
 
 ## android-test: Запуск интеграционных тестов на Android устройстве
-android-test:
+android-test: _ensure_animations_off
 	@if [ -f scripts/android_test_report.py ]; then chmod +x scripts/android_test_report.py; fi
 	@./gradlew :app:connectedDebugAndroidTest --console=plain; BUILD_STATUS=$$?; \
 	if [ $$BUILD_STATUS -ne 0 ]; then \
@@ -439,10 +439,21 @@ _emulator_animations:
 	if [ -z "$$SERIAL" ]; then \
 		printf "$(YELLOW)Эмулятор не найден$(RESET)\n"; exit 1; \
 	fi; \
+	FAILED=0; \
 	for k in window transition animator_duration; do \
 		adb -s "$$SERIAL" shell settings put global $${k}_animation_scale $(SCALE); \
+		V=$$(adb -s "$$SERIAL" shell settings get global $${k}_animation_scale | tr -d '\r'); \
+		if [ "$$V" != "$(SCALE)" ]; then \
+			printf "$(RED)[FAIL] $${k}_animation_scale = $$V (ожидалось $(SCALE)) — запись не прижилась$(RESET)\n"; \
+			FAILED=1; \
+		fi; \
 	done; \
-	printf "$(GREEN)Анимации установлены (scale=$(SCALE)) на $$SERIAL$(RESET)\n"
+	if [ $$FAILED -ne 0 ]; then exit 1; fi; \
+	printf "$(GREEN)Анимации установлены (scale=$(SCALE)) на $$SERIAL (read-back сверен)$(RESET)\n"
+
+# дрейф масштабов после записи — чиним перед каждым прогоном (эмулятора нет — no-op)
+_ensure_animations_off:
+	@SERIAL=$(EMULATOR_SERIAL); if [ -z "$$SERIAL" ]; then exit 0; fi; $(MAKE) --no-print-directory _emulator_animations SCALE=0
 
 ## android-test-report: Открыть HTML отчет интеграционных тестов в браузере
 android-test-report:

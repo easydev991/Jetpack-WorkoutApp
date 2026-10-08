@@ -3,7 +3,6 @@ package com.swparks.util
 import android.content.Context
 import android.util.Log
 import androidx.annotation.VisibleForTesting
-import com.swparks.util.DateFormatter.parseIsoDate
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime

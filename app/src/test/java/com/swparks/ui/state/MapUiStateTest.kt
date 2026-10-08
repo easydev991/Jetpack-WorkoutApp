@@ -3,7 +3,7 @@ package com.swparks.ui.state
 import com.swparks.data.model.Park
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertSame
 import org.junit.Test
 
 class MapUiStateTest {
@@ -183,7 +183,7 @@ class MapUiStateTest {
     fun clearSelectionEvent_isSingleton() {
         val event1 = MapEvent.ClearSelection
         val event2 = MapEvent.ClearSelection
-        assertTrue(event1 === event2)
+        assertSame(event1, event2)
     }
 
     @Test
@@ -198,7 +198,7 @@ class MapUiStateTest {
     fun centerOnUserEvent_isSingleton() {
         val event1 = MapEvent.CenterOnUser
         val event2 = MapEvent.CenterOnUser
-        assertTrue(event1 === event2)
+        assertSame(event1, event2)
     }
 
     @Test
@@ -225,6 +225,6 @@ class MapUiStateTest {
     fun onMapReadyEvent_isSingleton() {
         val event1 = MapEvent.OnMapReady
         val event2 = MapEvent.OnMapReady
-        assertTrue(event1 === event2)
+        assertSame(event1, event2)
     }
 }

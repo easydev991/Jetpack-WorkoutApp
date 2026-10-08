@@ -23,7 +23,6 @@ object NetworkUtils {
      * Создает часть multipart-запроса с именем поля
      * Примечание: имя поля не используется в текущей реализации
      */
-    @Suppress("UnusedParameter")
     fun createPartWithName(
         name: String,
         value: String
@@ -32,7 +31,6 @@ object NetworkUtils {
     /**
      * Создает опциональную часть multipart-запроса с именем поля
      */
-    @Suppress("UnusedParameter")
     fun createOptionalPartWithName(
         name: String,
         value: String?

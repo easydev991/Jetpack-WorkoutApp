@@ -29,15 +29,15 @@ enum class APIError(
          */
         @Suppress("MagicNumber")
         fun fromStatusCode(code: Int): APIError =
-            when {
-                code == 401 -> INVALID_CREDENTIALS
-                code == 403 -> FORBIDDEN
-                code == 404 -> NOT_FOUND
-                code == 413 -> PAYLOAD_TOO_LARGE
-                code == 429 -> TOO_MANY_REQUESTS
-                code in 500..599 -> SERVER_ERROR
-                code in listOf(502, 503, 504) -> SERVICE_UNAVAILABLE
-                code in listOf(400, 402) || code in 405..412 || code in 414..428 -> BAD_REQUEST
+            when (code) {
+                401 -> INVALID_CREDENTIALS
+                403 -> FORBIDDEN
+                404 -> NOT_FOUND
+                413 -> PAYLOAD_TOO_LARGE
+                429 -> TOO_MANY_REQUESTS
+                in 500..599 -> SERVER_ERROR
+                in listOf(502, 503, 504) -> SERVICE_UNAVAILABLE
+                in listOf(400, 402), in 405..412, in 414..428 -> BAD_REQUEST
                 else -> UNKNOWN
             }
     }

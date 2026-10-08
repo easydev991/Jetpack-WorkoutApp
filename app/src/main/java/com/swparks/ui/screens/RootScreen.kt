@@ -164,8 +164,7 @@ internal fun shouldShowBottomBar(route: String?): Boolean {
             ?.substringBefore("/")
             .orEmpty()
 
-    if (baseRoute.isBlank()) return true
-    return baseRoute !in BOTTOM_BAR_HIDDEN_BASE_ROUTES
+    return baseRoute.isBlank() || baseRoute !in BOTTOM_BAR_HIDDEN_BASE_ROUTES
 }
 
 /** Состояние auth-листов (Login/Register) экрана RootScreen. */

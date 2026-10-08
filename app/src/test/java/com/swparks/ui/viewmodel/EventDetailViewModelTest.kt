@@ -1019,7 +1019,7 @@ class EventDetailViewModelTest {
             coEvery { parksEventsRepository.getEvent(TEST_EVENT_ID) } returns
                 Result.failure(Exception("Load error"))
 
-            val viewModel = createViewModel()
+            createViewModel()
             advanceUntilIdle()
 
             verify {

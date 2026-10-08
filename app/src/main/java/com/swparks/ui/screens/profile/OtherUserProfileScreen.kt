@@ -134,8 +134,8 @@ sealed class ProfileContentAction {
 fun OtherUserProfileScreen(
     viewModel: IOtherUserProfileViewModel,
     appState: AppState,
-    source: String = "profile",
     modifier: Modifier = Modifier,
+    source: String = "profile",
     onAction: (ProfileNavigationAction) -> Unit = {}
 ) {
     val viewedUser by viewModel.viewedUser.collectAsState()
@@ -364,7 +364,7 @@ private fun ProfileUiStateContent(
     config: ProfileContentConfig,
     handlers: ProfileActionHandlers
 ) {
-    when (val state = uiState) {
+    when (uiState) {
         is OtherUserProfileUiState.Loading -> { // Контент скрыт
         }
 
@@ -383,8 +383,8 @@ private fun ProfileUiStateContent(
                 state =
                     ProfileContentState(
                         viewedUser = params.viewedUser,
-                        country = state.country,
-                        city = state.city,
+                        country = uiState.country,
+                        city = uiState.city,
                         isFriend = params.isFriend,
                         isInBlacklist = params.isInBlacklist,
                         isRefreshing = params.isRefreshing,
@@ -415,8 +415,8 @@ private fun ProfileUiStateContent(
 
         is OtherUserProfileUiState.Error -> {
             ErrorContent(
-                message = state.message,
-                canRetry = state.canRetry,
+                message = uiState.message,
+                canRetry = uiState.canRetry,
                 onRetry = { config.viewModel.loadUser() }
             )
         }

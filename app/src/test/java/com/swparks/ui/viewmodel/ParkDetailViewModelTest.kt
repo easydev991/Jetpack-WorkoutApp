@@ -48,6 +48,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.io.IOException
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ParkDetailViewModelTest {
@@ -111,7 +112,7 @@ class ParkDetailViewModelTest {
             val freshPark = createPark().copy(name = "Сервер")
             coEvery { parksEventsRepository.getParkFromCache(TEST_PARK_ID) } returns cachedPark
             coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } coAnswers {
-                delay(1_000)
+                delay(1.seconds)
                 Result.success(freshPark)
             }
 
@@ -122,7 +123,7 @@ class ParkDetailViewModelTest {
             assertTrue(intermediateState is ParkDetailUIState.Content)
             assertEquals("Кэш", (intermediateState as ParkDetailUIState.Content).park.name)
 
-            advanceTimeBy(1_000)
+            advanceTimeBy(1.seconds)
             advanceUntilIdle()
 
             val finalState = viewModel.uiState.value
@@ -189,7 +190,7 @@ class ParkDetailViewModelTest {
                 if (callCount == 1) {
                     Result.failure(Exception("Первичная ошибка"))
                 } else {
-                    delay(1_000)
+                    delay(1.seconds)
                     Result.success(createPark())
                 }
             }
@@ -203,7 +204,7 @@ class ParkDetailViewModelTest {
 
             assertEquals(ParkDetailUIState.InitialLoading, viewModel.uiState.value)
 
-            advanceTimeBy(1_000)
+            advanceTimeBy(1.seconds)
             advanceUntilIdle()
             assertTrue(viewModel.uiState.value is ParkDetailUIState.Content)
         }
@@ -218,7 +219,7 @@ class ParkDetailViewModelTest {
                 if (callCount == 1) {
                     Result.failure(Exception("Первичная ошибка"))
                 } else {
-                    delay(1_000)
+                    delay(1.seconds)
                     Result.failure(Exception(retryError))
                 }
             }
@@ -232,7 +233,7 @@ class ParkDetailViewModelTest {
 
             assertEquals(ParkDetailUIState.InitialLoading, viewModel.uiState.value)
 
-            advanceTimeBy(1_000)
+            advanceTimeBy(1.seconds)
             advanceUntilIdle()
             val state = viewModel.uiState.value
             assertTrue(state is ParkDetailUIState.Error)

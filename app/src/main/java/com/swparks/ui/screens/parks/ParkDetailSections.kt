@@ -124,7 +124,7 @@ private fun ParkHeaderContent(
         )
 
         val parkAddress = park.address
-        if (!parkAddress.isBlank()) {
+        if (parkAddress.isNotBlank()) {
             Text(
                 text = parkAddress,
                 style = MaterialTheme.typography.bodyLarge

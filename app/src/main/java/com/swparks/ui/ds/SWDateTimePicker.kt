@@ -33,13 +33,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import java.text.DateFormat
-import java.util.Locale
 
 /**
  * Вариант пикера даты
@@ -191,7 +191,7 @@ private fun PickerButtons(
         if (config.mode.showTimePicker) {
             val timeString =
                 String.format(
-                    Locale.getDefault(),
+                    LocalConfiguration.current.locales[0],
                     "%02d:%02d",
                     state.selectedHour,
                     state.selectedMinute

@@ -217,11 +217,11 @@ private fun SearchUserStateContent(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    when (val state = displayState) {
+    when (displayState) {
         is SearchUserUiState.Initial -> {}
         is SearchUserUiState.Success -> {
             UsersList(
-                users = state.users,
+                users = displayState.users,
                 onUserClick = onUserClick,
                 modifier = modifier,
                 currentUserId = currentUserId

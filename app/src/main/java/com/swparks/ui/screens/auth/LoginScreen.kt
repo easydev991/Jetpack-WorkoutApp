@@ -155,7 +155,6 @@ private fun HandleLoginEvents(
 }
 
 /** Состояние экрана авторизации. */
-@Suppress("AssignedValueIsNeverRead")
 @Composable
 private fun rememberLoginScreenState(): LoginScreenState {
     var showNoInternetAlert by rememberSaveable { mutableStateOf(false) }

@@ -1,6 +1,5 @@
 package com.swparks.data.database.dao
 
-import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -36,7 +35,7 @@ class JournalEntryDaoTest : TimeoutTest(180) {
         db =
             Room
                 .inMemoryDatabaseBuilder(
-                    ApplicationProvider.getApplicationContext<Context>(),
+                    ApplicationProvider.getApplicationContext(),
                     SWDatabase::class.java
                 ).build()
         journalEntryDao = db.journalEntryDao()

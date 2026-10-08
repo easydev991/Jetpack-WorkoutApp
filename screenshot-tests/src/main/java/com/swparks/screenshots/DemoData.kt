@@ -9,7 +9,6 @@ import com.swparks.data.model.Photo
 import com.swparks.data.model.User
 import com.swparks.util.WorkoutAppJson
 import com.swparks.util.readJSONFromAssets
-import kotlinx.serialization.decodeFromString
 
 object DemoData {
     const val SCREENSHOT_LOGIN = "testuserapple"

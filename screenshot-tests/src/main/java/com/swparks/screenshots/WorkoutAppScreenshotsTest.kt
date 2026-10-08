@@ -33,7 +33,7 @@ class WorkoutAppScreenshotsTest {
 
     @Rule
     @JvmField
-    val grantPermissionRule =
+    val grantPermissionRule: GrantPermissionRule =
         GrantPermissionRule.grant(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION

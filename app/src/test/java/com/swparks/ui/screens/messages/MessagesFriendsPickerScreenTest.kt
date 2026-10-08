@@ -138,7 +138,6 @@ class MessagesFriendsPickerScreenTest {
 
     @Test
     fun createFriendsPickerParams_whenOnFriendClickCalled_thenDoesNotNavigateToProfile() {
-        var navigationCalled = false
         var callbackCalled = false
         val friends = listOf(User(id = 1L, name = "Friend 1", image = null))
         val uiState = FriendsListUiState.Success(friends = friends)
@@ -156,7 +155,6 @@ class MessagesFriendsPickerScreenTest {
         params.onFriendClick(1L, "Friend 1")
 
         assertEquals(true, callbackCalled)
-        assertEquals(false, navigationCalled)
     }
 
     @Test

@@ -995,20 +995,19 @@ class ParksRootViewModelTest {
         runTest {
             coEvery { syncParksUseCase.invoke() } returns Result.failure(Exception("Sync failed"))
 
-            val vm =
-                ParksRootViewModel(
-                    createParkLocationHandler = createParkLocationHandler,
-                    logger = logger,
-                    filterParksUseCase = filterParksUseCase,
-                    parksFilterDataStore = parksFilterDataStore,
-                    countriesRepository = countriesRepository,
-                    parksEventsRepository = parksEventsRepository,
-                    initializeParksUseCase = initializeParksUseCase,
-                    userNotifier = userNotifier,
-                    locationService = locationService,
-                    syncParksUseCase = syncParksUseCase,
-                    analyticsService = analyticsService
-                )
+            ParksRootViewModel(
+                createParkLocationHandler = createParkLocationHandler,
+                logger = logger,
+                filterParksUseCase = filterParksUseCase,
+                parksFilterDataStore = parksFilterDataStore,
+                countriesRepository = countriesRepository,
+                parksEventsRepository = parksEventsRepository,
+                initializeParksUseCase = initializeParksUseCase,
+                userNotifier = userNotifier,
+                locationService = locationService,
+                syncParksUseCase = syncParksUseCase,
+                analyticsService = analyticsService
+            )
             advanceUntilIdle()
 
             verify {

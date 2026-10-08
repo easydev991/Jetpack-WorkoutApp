@@ -285,7 +285,6 @@ class TextEntryScreenTest : TimeoutTest() {
     fun textEntryScreen_whenNotLoading_thenCloseButtonEnabled() {
         // Given
         val mode = TextEntryMode.NewForPark(parkId = 1L)
-        var dismissCalled = false
         val viewModel =
             FakeTextEntryViewModel(
                 uiState =
@@ -298,7 +297,7 @@ class TextEntryScreenTest : TimeoutTest() {
             )
 
         // When
-        setContent(viewModel, onDismiss = { dismissCalled = true })
+        setContent(viewModel, onDismiss = {})
         composeTestRule
             .onNodeWithContentDescription(closeDescription, ignoreCase = true)
             .assertIsDisplayed()

@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import androidx.core.graphics.scale
 import java.io.ByteArrayOutputStream
 
 /**
@@ -134,6 +135,6 @@ class ImageProcessor {
     ): Bitmap {
         val width = (bitmap.width * scale).toInt()
         val height = (bitmap.height * scale).toInt()
-        return Bitmap.createScaledBitmap(bitmap, width, height, true)
+        return bitmap.scale(width, height, true)
     }
 }

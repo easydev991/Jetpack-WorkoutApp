@@ -10,7 +10,7 @@
 | `EditExisting` | `Screen.EditEvent` | меню автора на `EventDetailScreen` | Форма инициализируется данными существующего мероприятия |
 | `CreateForSelected` | `Screen.CreateEventForPark` | `ParkDetailScreen` | Площадка предустановлена и недоступна для смены |
 
-Экран реализован в [EventFormScreen.kt](app/src/main/java/com/swparks/ui/screens/events/EventFormScreen.kt), состояние и бизнес-логика находятся в [EventFormViewModel.kt](app/src/main/java/com/swparks/ui/viewmodel/EventFormViewModel.kt).
+Экран реализован в [EventFormScreen.kt](../../app/src/main/java/com/swparks/ui/screens/events/EventFormScreen.kt), состояние и бизнес-логика находятся в [EventFormViewModel.kt](../../app/src/main/java/com/swparks/ui/viewmodel/EventFormViewModel.kt).
 
 ## Архитектура
 
@@ -18,10 +18,10 @@
 
 | Сущность | Файл | Назначение |
 |---------|------|------------|
-| `EventForm` | [EventForm.kt](app/src/main/java/com/swparks/ui/model/EventForm.kt) | DTO формы для create/edit API |
-| `EventFormMode` | [EventFormMode.kt](app/src/main/java/com/swparks/ui/model/EventFormMode.kt) | Режим работы экрана и заголовок навигации |
-| `EventFormUiState` | [EventFormUiState.kt](app/src/main/java/com/swparks/ui/state/EventFormUiState.kt) | Полное состояние UI, производные флаги и лимиты |
-| `EventFormEvent` | [EventFormUiState.kt](app/src/main/java/com/swparks/ui/state/EventFormUiState.kt) | Одноразовые события: сохранение, навигация, пикер фото |
+| `EventForm` | [EventForm.kt](../../app/src/main/java/com/swparks/ui/model/EventForm.kt) | DTO формы для create/edit API |
+| `EventFormMode` | [EventFormMode.kt](../../app/src/main/java/com/swparks/ui/model/EventFormMode.kt) | Режим работы экрана и заголовок навигации |
+| `EventFormUiState` | [EventFormUiState.kt](../../app/src/main/java/com/swparks/ui/state/EventFormUiState.kt) | Полное состояние UI, производные флаги и лимиты |
+| `EventFormEvent` | [EventFormUiState.kt](../../app/src/main/java/com/swparks/ui/state/EventFormUiState.kt) | Одноразовые события: сохранение, навигация, пикер фото |
 
 ### Поток данных
 
@@ -42,9 +42,9 @@ EventFormScreen
 
 Связанные точки входа:
 
-- [RootScreen.kt](app/src/main/java/com/swparks/ui/screens/RootScreen.kt)
-- [EventNavigationCoordinator.kt](app/src/main/java/com/swparks/navigation/EventNavigationCoordinator.kt)
-- [EventNavArgs.kt](app/src/main/java/com/swparks/navigation/EventNavArgs.kt)
+- [RootScreen.kt](../../app/src/main/java/com/swparks/ui/screens/RootScreen.kt)
+- [EventNavigationCoordinator.kt](../../app/src/main/java/com/swparks/navigation/EventNavigationCoordinator.kt)
+- [EventNavArgs.kt](../../app/src/main/java/com/swparks/navigation/EventNavArgs.kt)
 
 ## Реализованный функционал
 
@@ -110,8 +110,8 @@ EventFormScreen
 
 Код:
 
-- [ParksEventsRepository.kt](app/src/main/java/com/swparks/data/repository/ParksEventsRepository.kt)
-- [NetworkUtils.kt](app/src/main/java/com/swparks/data/NetworkUtils.kt)
+- [ParksEventsRepository.kt](../../app/src/main/java/com/swparks/data/repository/ParksEventsRepository.kt)
+- [NetworkUtils.kt](../../app/src/main/java/com/swparks/data/NetworkUtils.kt)
 
 ## UX и пользовательские сценарии
 
@@ -136,14 +136,14 @@ EventFormScreen
 
 | Файл | Тип | Покрывает |
 |------|-----|-----------|
-| [EventFormViewModelTest.kt](app/src/test/java/com/swparks/ui/viewmodel/EventFormViewModelTest.kt) | unit | инициализацию режимов, изменение полей, нормализацию дат, лимиты фото, сохранение |
-| [EventFormScreenTest.kt](app/src/androidTest/java/com/swparks/ui/screens/events/EventFormScreenTest.kt) | androidTest | заголовки режимов, доступность Save, блокировки, confirm dialog, поведение выбора площадки |
-| [ParksEventsRepositoryEventsTest.kt](app/src/test/java/com/swparks/data/repository/ParksEventsRepositoryEventsTest.kt) | unit | create/edit event API, multipart-части и обработку ошибок |
-| [NetworkUtilsTest.kt](app/src/test/java/com/swparks/data/NetworkUtilsTest.kt) | unit | MIME, filename и multipart helper |
+| [EventFormViewModelTest.kt](../../app/src/test/java/com/swparks/ui/viewmodel/EventFormViewModelTest.kt) | unit | инициализацию режимов, изменение полей, нормализацию дат, лимиты фото, сохранение |
+| [EventFormScreenTest.kt](../../app/src/androidTest/java/com/swparks/ui/screens/events/EventFormScreenTest.kt) | androidTest | заголовки режимов, доступность Save, блокировки, confirm dialog, поведение выбора площадки |
+| [ParksEventsRepositoryEventsTest.kt](../../app/src/test/java/com/swparks/data/repository/ParksEventsRepositoryEventsTest.kt) | unit | create/edit event API, multipart-части и обработку ошибок |
+| [NetworkUtilsTest.kt](../../app/src/test/java/com/swparks/data/NetworkUtilsTest.kt) | unit | MIME, filename и multipart helper |
 
 ## Что учитывать при развитии фичи
 
 - Если понадобится редактирование существующих фото, это придётся добавлять отдельно: сейчас `EventFormUiState` знает только количество существующих фото, но не управляет ими как сущностями UI.
 - Если нужно показывать название площадки при редактировании без пере-выбора, надо расширять payload навигации или восстанавливать park name по `parkId`.
 - Любые изменения формата даты нужно синхронизировать сразу в трёх местах: `EventFormViewModel.normalizeDateForServer(...)`, `parseFormDateTimeOrNow(...)` и `parseEventDateTime(...)`.
-- Любые изменения photo upload контракта нужно проверять не только в UI/ViewModel, но и в [ParksEventsRepository.kt](app/src/main/java/com/swparks/data/repository/ParksEventsRepository.kt) и [NetworkUtils.kt](app/src/main/java/com/swparks/data/NetworkUtils.kt).
+- Любые изменения photo upload контракта нужно проверять не только в UI/ViewModel, но и в [ParksEventsRepository.kt](../../app/src/main/java/com/swparks/data/repository/ParksEventsRepository.kt) и [NetworkUtils.kt](../../app/src/main/java/com/swparks/data/NetworkUtils.kt).

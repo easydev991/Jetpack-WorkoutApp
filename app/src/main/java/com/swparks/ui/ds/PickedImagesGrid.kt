@@ -137,7 +137,12 @@ private fun SubtitleText(state: PickedImagesState) {
                     state.selectionLimit
                 )
 
-            else -> stringResource(R.string.photos_add_subtitle_more, state.remainingSlots)
+            else ->
+                pluralStringResource(
+                    R.plurals.photos_add_subtitle_more,
+                    state.remainingSlots,
+                    state.remainingSlots
+                )
         }
 
     Text(

@@ -7,22 +7,10 @@ import io.mockk.verify
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
 
 /** Unit тесты для TokenInterceptor */
 class TokenInterceptorTest {
-    @Before
-    fun setup() {
-        // Mock не требуется для TokenInterceptor
-    }
-
-    @After
-    fun tearDown() {
-        // Cleanup не требуется
-    }
-
     @Test
     fun intercept_whenTokenExists_thenAddsAuthorizationHeader() {
         // Given

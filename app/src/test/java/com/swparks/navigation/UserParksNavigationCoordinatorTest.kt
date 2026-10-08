@@ -56,7 +56,7 @@ class UserParksNavigationCoordinatorTest {
             data.route.contains("source=park&")
         )
         assertFalse(
-            "Route не должен содержать legacy 'source=park\$'",
+            "Route не должен содержать legacy 'source=park$'",
             data.route.endsWith("source=park")
         )
     }

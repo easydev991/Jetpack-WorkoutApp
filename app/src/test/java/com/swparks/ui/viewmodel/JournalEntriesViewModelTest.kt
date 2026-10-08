@@ -1235,7 +1235,6 @@ class JournalEntriesViewModelTest {
         runTest {
             // Given
             val journalOwnerId = 100L
-            val currentUserId = journalOwnerId
             val foreignAuthorId = 200L
             val entry = testEntry.copy(authorId = foreignAuthorId)
             coEvery { getJournalEntriesUseCase(any(), any()) } returns emptyFlow()
@@ -1243,7 +1242,7 @@ class JournalEntriesViewModelTest {
 
             // When
             viewModel =
-                createViewModel(currentUserId = currentUserId, journalOwnerId = journalOwnerId)
+                createViewModel(currentUserId = journalOwnerId, journalOwnerId = journalOwnerId)
             advanceUntilIdle()
 
             val result = viewModel.canEditEntry(entry)
@@ -1364,7 +1363,6 @@ class JournalEntriesViewModelTest {
         runTest {
             // Given
             val journalOwnerId = 100L
-            val currentUserId = journalOwnerId
             val foreignAuthorId = 200L
             val entry = testEntry.copy(authorId = foreignAuthorId)
             coEvery { getJournalEntriesUseCase(any(), any()) } returns emptyFlow()
@@ -1372,7 +1370,7 @@ class JournalEntriesViewModelTest {
 
             // When
             viewModel =
-                createViewModel(currentUserId = currentUserId, journalOwnerId = journalOwnerId)
+                createViewModel(currentUserId = journalOwnerId, journalOwnerId = journalOwnerId)
             advanceUntilIdle()
 
             val result = viewModel.canDeleteEntry(entry)

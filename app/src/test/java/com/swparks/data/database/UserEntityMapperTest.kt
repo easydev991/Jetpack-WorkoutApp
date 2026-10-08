@@ -12,7 +12,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Unit тесты для [UserEntityMapper]
+ * Unit тесты для мапперов [User.toEntity] и [UserEntity.toDomain]
  */
 class UserEntityMapperTest {
     @Test

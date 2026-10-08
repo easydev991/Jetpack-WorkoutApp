@@ -64,32 +64,17 @@ data class User(
     /**
      * Есть ли дневники
      */
-    val hasJournals =
-        if (journalCount != null) {
-            journalCount > 0
-        } else {
-            false
-        }
+    val hasJournals = (journalCount ?: 0) > 0
 
     /**
      * Есть ли друзья
      */
-    val hasFriends =
-        if (friendsCount != null) {
-            friendsCount > 0
-        } else {
-            false
-        }
+    val hasFriends = (friendsCount ?: 0) > 0
 
     /**
      * Тренируется ли на каких-нибудь площадках
      */
-    val hasUsedParks =
-        if (parksCount?.toIntOrNull() != null) {
-            parksCount.toInt() > 0
-        } else {
-            false
-        }
+    val hasUsedParks = (parksCount?.toIntOrNull() ?: 0) > 0
 
     /**
      * Добавил ли какие-нибудь площадки

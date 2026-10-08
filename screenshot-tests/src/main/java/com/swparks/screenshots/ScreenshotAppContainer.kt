@@ -3,6 +3,7 @@ package com.swparks.screenshots
 import android.content.Context
 import com.swparks.data.DefaultAppContainer
 import com.swparks.data.TokenEncoder
+import com.swparks.data.model.City
 import com.swparks.data.model.Country
 import com.swparks.data.model.Event
 import com.swparks.data.model.LoginSuccess
@@ -222,19 +223,18 @@ private class ScreenshotAuthRepository(
         logger = logger,
         crashReporter = crashReporter
     ) {
-    private val currentUserFlow = kotlinx.coroutines.flow.MutableStateFlow<com.swparks.data.model.User?>(null)
-    private val isAuthorizedFlow = kotlinx.coroutines.flow.MutableStateFlow(false)
+    private val currentUserFlow = MutableStateFlow<User?>(null)
+    private val isAuthorizedFlow = MutableStateFlow(false)
 
-    override val isAuthorized = isAuthorizedFlow as kotlinx.coroutines.flow.Flow<Boolean>
+    override val isAuthorized = isAuthorizedFlow as Flow<Boolean>
 
     override fun getCurrentUserFlow() = currentUserFlow
 
-    override suspend fun login(token: String?): Result<com.swparks.data.model.LoginSuccess> {
+    override suspend fun login(token: String?): Result<LoginSuccess> {
         currentUserFlow.value = DemoData.demoAuthorizedUser
         isAuthorizedFlow.value = true
         return Result.success(
-            com.swparks.data.model
-                .LoginSuccess(userId = DemoData.demoAuthorizedUser.id)
+            LoginSuccess(userId = DemoData.demoAuthorizedUser.id)
         )
     }
 
@@ -262,7 +262,7 @@ private class ScreenshotUserProfileRepository(
         logger = logger,
         crashReporter = crashReporter
     ) {
-    override suspend fun getUser(userId: Long): Result<com.swparks.data.model.User> {
+    override suspend fun getUser(userId: Long): Result<User> {
         val user =
             when (userId) {
                 DemoData.demoAuthorizedUser.id -> DemoData.demoAuthorizedUser
@@ -273,10 +273,10 @@ private class ScreenshotUserProfileRepository(
         return Result.success(user)
     }
 
-    override suspend fun getSocialUpdates(userId: Long): Result<com.swparks.data.model.SocialUpdates> {
+    override suspend fun getSocialUpdates(userId: Long): Result<SocialUpdates> {
         val user = DemoData.demoAuthorizedUser
         return Result.success(
-            com.swparks.data.model.SocialUpdates(
+            SocialUpdates(
                 user = user,
                 friends = emptyList(),
                 friendRequests = emptyList(),
@@ -285,7 +285,7 @@ private class ScreenshotUserProfileRepository(
         )
     }
 
-    override suspend fun findUsers(name: String): Result<List<com.swparks.data.model.User>> = Result.success(DemoData.searchUsers(name))
+    override suspend fun findUsers(name: String): Result<List<User>> = Result.success(DemoData.searchUsers(name))
 }
 
 private class ScreenshotFriendsRepository(
@@ -299,9 +299,9 @@ private class ScreenshotFriendsRepository(
         logger = logger,
         crashReporter = crashReporter
     ) {
-    private val friendsFlow = kotlinx.coroutines.flow.MutableStateFlow<List<com.swparks.data.model.User>>(emptyList())
-    private val friendRequestsFlow = kotlinx.coroutines.flow.MutableStateFlow<List<com.swparks.data.model.User>>(emptyList())
-    private val blacklistFlow = kotlinx.coroutines.flow.MutableStateFlow<List<com.swparks.data.model.User>>(emptyList())
+    private val friendsFlow = MutableStateFlow<List<User>>(emptyList())
+    private val friendRequestsFlow = MutableStateFlow<List<User>>(emptyList())
+    private val blacklistFlow = MutableStateFlow<List<User>>(emptyList())
 
     override fun getFriendsFlow() = friendsFlow
 
@@ -309,7 +309,7 @@ private class ScreenshotFriendsRepository(
 
     override fun getBlacklistFlow() = blacklistFlow
 
-    override fun getFriendsCountFlow() = kotlinx.coroutines.flow.flowOf(DemoData.demoAuthorizedUser.friendsCount ?: 0)
+    override fun getFriendsCountFlow() = flowOf(DemoData.demoAuthorizedUser.friendsCount ?: 0)
 }
 
 private class ScreenshotParksEventsRepository(
@@ -320,7 +320,7 @@ private class ScreenshotParksEventsRepository(
     eventDao: com.swparks.data.database.dao.EventDao,
     parkDao: com.swparks.data.database.dao.ParkDao,
     userDao: com.swparks.data.database.dao.UserDao,
-    demoParks: List<com.swparks.data.model.Park>
+    demoParks: List<Park>
 ) : ParksEventsRepository(
         swApi = swApi,
         preferencesRepository = preferencesRepository,
@@ -330,9 +330,9 @@ private class ScreenshotParksEventsRepository(
         logger = logger,
         crashReporter = crashReporter
     ) {
-    private val parksFlow = kotlinx.coroutines.flow.MutableStateFlow(demoParks)
-    private val futureEventsFlow = kotlinx.coroutines.flow.MutableStateFlow(DemoData.demoFutureEvents)
-    private val pastEventsFlow = kotlinx.coroutines.flow.MutableStateFlow(DemoData.demoPastEvents)
+    private val parksFlow = MutableStateFlow(demoParks)
+    private val futureEventsFlow = MutableStateFlow(DemoData.demoFutureEvents)
+    private val pastEventsFlow = MutableStateFlow(DemoData.demoPastEvents)
 
     override fun getParksFlow() = parksFlow
 
@@ -340,35 +340,34 @@ private class ScreenshotParksEventsRepository(
 
     override fun getPastEventsFlow() = pastEventsFlow
 
-    override suspend fun getAllParks(): Result<List<com.swparks.data.model.Park>> = Result.success(parksFlow.value)
+    override suspend fun getAllParks(): Result<List<Park>> = Result.success(parksFlow.value)
 
-    override suspend fun getPark(id: Long): Result<com.swparks.data.model.Park> {
+    override suspend fun getPark(id: Long): Result<Park> {
         val fallback = parksFlow.value.firstOrNull { it.id == id }
         val park = DemoData.parkDetailsById(id, fallback)
         if (fallback == null && park.id != id) {
             return Result.failure(
-                com.swparks.domain.exception.NotFoundException
+                NotFoundException
                     .ParkNotFound(id)
             )
         }
         return Result.success(park)
     }
 
-    override suspend fun getParkFromCache(parkId: Long): com.swparks.data.model.Park? {
+    override suspend fun getParkFromCache(parkId: Long): Park? {
         val fallback = parksFlow.value.firstOrNull { it.id == parkId }
         return if (fallback != null) DemoData.parkDetailsById(parkId, fallback) else null
     }
 
-    override suspend fun getParksForUser(userId: Long): Result<List<com.swparks.data.model.Park>> =
-        Result.success(DemoData.demoParksForUser(parksFlow.value))
+    override suspend fun getParksForUser(userId: Long): Result<List<Park>> = Result.success(DemoData.demoParksForUser(parksFlow.value))
 
-    override suspend fun importSeedParks(context: android.content.Context) = Unit
+    override suspend fun importSeedParks(context: Context) = Unit
 
-    override suspend fun upsertParks(parks: List<com.swparks.data.model.Park>) {
-        parksFlow.value = if (parks.isEmpty()) parksFlow.value else parks
+    override suspend fun upsertParks(parks: List<Park>) {
+        parksFlow.value = parks.ifEmpty { parksFlow.value }
     }
 
-    override suspend fun cachePark(park: com.swparks.data.model.Park) {
+    override suspend fun cachePark(park: Park) {
         parksFlow.value =
             parksFlow.value
                 .filterNot { it.id == park.id }
@@ -376,25 +375,24 @@ private class ScreenshotParksEventsRepository(
                 .sortedBy { it.id }
     }
 
-    override suspend fun getCachedParksForUser(userId: Long): List<com.swparks.data.model.Park>? =
-        DemoData.demoParksForUser(parksFlow.value)
+    override suspend fun getCachedParksForUser(userId: Long): List<Park> = DemoData.demoParksForUser(parksFlow.value)
 
     override suspend fun hasCachedParksForUser(userId: Long): Boolean = true
 
-    override suspend fun getUpdatedParks(date: String): Result<List<com.swparks.data.model.Park>> = Result.success(parksFlow.value)
+    override suspend fun getUpdatedParks(date: String): Result<List<Park>> = Result.success(parksFlow.value)
 
-    override suspend fun getEvents(type: com.swparks.ui.model.EventType): Result<List<com.swparks.data.model.Event>> =
+    override suspend fun getEvents(type: EventType): Result<List<Event>> =
         when (type) {
-            com.swparks.ui.model.EventType.FUTURE -> Result.success(futureEventsFlow.value)
-            com.swparks.ui.model.EventType.PAST -> Result.success(pastEventsFlow.value)
+            EventType.FUTURE -> Result.success(futureEventsFlow.value)
+            EventType.PAST -> Result.success(pastEventsFlow.value)
         }
 
-    override suspend fun getEvent(id: Long): Result<com.swparks.data.model.Event> {
+    override suspend fun getEvent(id: Long): Result<Event> {
         val allEvents = futureEventsFlow.value + pastEventsFlow.value
         val event =
             allEvents.firstOrNull { it.id == id }
                 ?: return Result.failure(
-                    com.swparks.domain.exception.NotFoundException
+                    NotFoundException
                         .EventNotFound(id)
                 )
         return Result.success(event)
@@ -410,7 +408,7 @@ private class ScreenshotParksEventsRepository(
         go: Boolean,
         eventId: Long
     ): Result<Unit> {
-        val update = { event: com.swparks.data.model.Event ->
+        val update = { event: Event ->
             if (event.id == eventId) event.copy(trainHere = go) else event
         }
         futureEventsFlow.value = futureEventsFlow.value.map(update)
@@ -438,18 +436,17 @@ private class ScreenshotCountriesRepository(
 
     override fun ensureCountriesLoaded() = Unit
 
-    override fun getCountriesFlow(): Flow<List<com.swparks.data.model.Country>> = countriesFlow
+    override fun getCountriesFlow(): Flow<List<Country>> = countriesFlow
 
-    override suspend fun getCountryById(countryId: String): com.swparks.data.model.Country? = countriesById[countryId]
+    override suspend fun getCountryById(countryId: String): Country? = countriesById[countryId]
 
-    override suspend fun getCityById(cityId: String): com.swparks.data.model.City? = citiesById[cityId]
+    override suspend fun getCityById(cityId: String): City? = citiesById[cityId]
 
-    override suspend fun getCitiesByCountry(countryId: String): List<com.swparks.data.model.City> =
-        getCountryById(countryId)?.cities.orEmpty()
+    override suspend fun getCitiesByCountry(countryId: String): List<City> = getCountryById(countryId)?.cities.orEmpty()
 
-    override suspend fun getAllCities(): List<com.swparks.data.model.City> = citiesById.values.toList()
+    override suspend fun getAllCities(): List<City> = citiesById.values.toList()
 
-    override suspend fun getCountryForCity(cityId: String): com.swparks.data.model.Country? {
+    override suspend fun getCountryForCity(cityId: String): Country? {
         val city = getCityById(cityId) ?: return null
         return countries.firstOrNull { country ->
             country.cities.any { it.id == city.id }

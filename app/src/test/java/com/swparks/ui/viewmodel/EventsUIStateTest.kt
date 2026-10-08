@@ -27,7 +27,7 @@ class EventsUIStateTest {
         )
 
     @Test
-    fun Content_withAddresses_shouldStoreThem() {
+    fun Content_whenAddressesProvided_thenStoresThem() {
         val addresses =
             mapOf(
                 (1 to 1) to "Россия, Москва",
@@ -47,7 +47,7 @@ class EventsUIStateTest {
     }
 
     @Test
-    fun Content_defaultAddresses_shouldBeEmpty() {
+    fun Content_whenNoAddresses_thenAddressesEmpty() {
         val state =
             EventsUIState.Content(
                 events = listOf(createTestEvent()),
@@ -58,7 +58,7 @@ class EventsUIStateTest {
     }
 
     @Test
-    fun Error_withAddresses_shouldStoreThem() {
+    fun Error_whenAddressesProvided_thenStoresThem() {
         val addresses =
             mapOf(
                 (1 to 1) to "Россия, Москва"
@@ -75,7 +75,7 @@ class EventsUIStateTest {
     }
 
     @Test
-    fun Error_defaultAddresses_shouldBeEmpty() {
+    fun Error_whenNoAddresses_thenAddressesEmpty() {
         val state = EventsUIState.Error(message = "Ошибка загрузки")
 
         assertTrue(state.addresses.isEmpty())

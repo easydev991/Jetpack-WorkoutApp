@@ -84,9 +84,7 @@ fun TextEntrySheetHost(
     val sheetState =
         rememberModalBottomSheetState(
             skipPartiallyExpanded = true,
-            confirmValueChange = { newValue ->
-                if (newValue == SheetValue.Hidden) allowHide.value else true
-            }
+            confirmValueChange = { newValue -> newValue != SheetValue.Hidden || allowHide.value }
         )
 
     fun dismiss(onComplete: () -> Unit) {

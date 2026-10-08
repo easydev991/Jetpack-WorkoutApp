@@ -134,7 +134,7 @@ description: >
 | `MutableSharedFlow()` без буфера + suspend `emit()` до подписки → deadlock | Либо `extraBufferCapacity = 1` / `replay = 1`, либо не-suspend `tryEmit`. Подробности — `references/fakes-and-stateflow.md` (раздел «Буфер MutableSharedFlow») |
 | Room-тест падает «cannot access database on the main thread» | DAO вызывать через `runTest` (или `runBlocking` в Robolectric). Флаг `.allowMainThreadQueries()` нужен только в Robolectric-DAO в `test/.../database/dao/` (ParkDaoTest, UserTrainingParkDaoTest); в androidTest `JournalEntryDaoTest` работает без флага |
 | Mockito в импортах | Только MockK |
-| Прогон `make android-test` зависает >10 мин | Проверь, что после старта эмулятора вызван `make emulator-fast`. Если и с ним висит — проверь `TimeoutTest(N)` (правило 13) |
+| Прогон `make android-test` зависает >10 мин или идёт втрое дольше обычного | Масштабы анимаций слетели: `android-test` чинит их сам (prereq `_ensure_animations_off`), при прямом gradle-вызове — сначала `make emulator-fast` (сам сверяет read-back). Диагностика и механизм — `references/running-tests.md` («Масштабы анимаций: авто-защита от дрейфа»). Если и с ними висит — проверь `TimeoutTest(N)` (правило 13) |
 | `--tests "<FQN>"` для androidTest: `Unknown command-line option` | AGP 9 не поддерживает — `references/running-tests.md` (раздел «Фильтр по одному классу») |
 | Тест flaky из-за сети | → `references/compose-ui-testing.md` («Сетевые тесты») |
 

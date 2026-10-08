@@ -159,6 +159,6 @@ class JournalEntriesRepositoryTest {
             assertTrue(result.isSuccess)
             coVerify { mockApi.getJournalEntries(1L, 1L) }
             coVerify { mockJournalEntryDao.deleteByJournalId(1L) }
-            coVerify { mockJournalEntryDao.insertAll(emptyList<JournalEntryEntity>()) }
+            coVerify { mockJournalEntryDao.insertAll(emptyList()) }
         }
 }

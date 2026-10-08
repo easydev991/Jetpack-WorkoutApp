@@ -28,7 +28,7 @@ class UserAddedParksViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val userProfileRepository: UserProfileRepository = mockk<UserProfileRepository>()
+    private val userProfileRepository: UserProfileRepository = mockk()
     private val logger: Logger = mockk<Logger>(relaxed = true)
     private val userNotifier: UserNotifier =
         mockk<UserNotifier>(relaxed = true).also {

@@ -292,7 +292,10 @@
     <string name="photos_add">Add photos</string>
     <string name="photos_view_fullscreen">View fullscreen</string>
     <string name="photos_add_subtitle_empty">Add photos, max %1$d</string>
-    <string name="photos_add_subtitle_more">Can add %1$d more</string>
+    <plurals name="photos_add_subtitle_more">
+        <item quantity="one">Can add %1$d more</item>
+        <item quantity="other">Can add %1$d more</item>
+    </plurals>
     <string name="photos_max_reached">Maximum number of photos added</string>
 
     <string name="error_label">Error!</string>

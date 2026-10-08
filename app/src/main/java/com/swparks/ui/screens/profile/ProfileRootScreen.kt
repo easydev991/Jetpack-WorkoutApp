@@ -222,9 +222,9 @@ private fun ProfileCardSection(
     uiState: ProfileUiState
 ) {
     val (country, city) =
-        when (val state = uiState) {
-            is ProfileUiState.Success -> state.country to state.city
-            is ProfileUiState.Error -> state.country to state.city
+        when (uiState) {
+            is ProfileUiState.Success -> uiState.country to uiState.city
+            is ProfileUiState.Error -> uiState.country to uiState.city
             ProfileUiState.Loading -> null to null
         }
 

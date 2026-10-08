@@ -1,7 +1,6 @@
 package com.swparks.ui.ds
 
 import android.content.res.Configuration
-import android.net.Uri
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,6 +21,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.swparks.R
@@ -90,7 +90,7 @@ private fun normalizeImageUrl(rawUrl: String?): String? {
 
     val trimmed = rawUrl.trim()
     return runCatching {
-        val parsed = Uri.parse(trimmed)
+        val parsed = trimmed.toUri()
         if (parsed.scheme.isNullOrBlank() || parsed.authority.isNullOrBlank()) {
             trimmed
         } else {

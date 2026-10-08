@@ -544,8 +544,8 @@ fun ParksTopAppBar(
 @Composable
 fun CreateParkFab(
     appState: AppState,
-    enabled: Boolean = true,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     onClick: () -> Unit = {}
 ) {
     if (appState.isAuthorized) {

@@ -30,7 +30,7 @@ class CryptoManagerIntegrationTest : TimeoutTest(180) {
 
     @Before
     fun setup() {
-        context = ApplicationProvider.getApplicationContext<Context>()
+        context = ApplicationProvider.getApplicationContext()
         // Очищаем старые данные перед каждым тестом
         val prefs = context.getSharedPreferences(KEYSET_PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().clear().apply()

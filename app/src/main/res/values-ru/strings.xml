@@ -90,6 +90,7 @@
     <string name="requests">Заявки</string>
     <string name="friends">Друзья</string>
     <string name="no_friends_yet">Друзей пока нет</string>
+    <string name="select_friend">Выберите друга</string>
     <string name="no_participants">Участников пока нет</string>
     <string name="where_trains">Где тренируется</string>
     <string name="your_parks">Твои площадки</string>
@@ -178,6 +179,8 @@
     <string name="park_title">Площадка</string>
     <string name="park_number_title">Площадка № %1$d</string>
     <string name="new_park_title">Новая площадка</string>
+    <string name="park_actions">Действия с площадкой</string>
+    <string name="park_share">Поделиться</string>
     <string name="build_route">Построить маршрут</string>
     <string name="create_event">Создать мероприятие</string>
     <string name="train_here">Тренируюсь здесь</string>
@@ -303,7 +306,12 @@
     <string name="photos_add">Добавить фото</string>
     <string name="photos_view_fullscreen">На весь экран</string>
     <string name="photos_add_subtitle_empty">Добавьте фото, максимум %1$d</string>
-    <string name="photos_add_subtitle_more">Можно добавить ещё %1$d</string>
+    <plurals name="photos_add_subtitle_more">
+        <item quantity="one">Можно добавить ещё %1$d</item>
+        <item quantity="few">Можно добавить ещё %1$d</item>
+        <item quantity="many">Можно добавить ещё %1$d</item>
+        <item quantity="other">Можно добавить ещё %1$d</item>
+    </plurals>
     <string name="photos_max_reached">Добавлено максимальное количество фотографий</string>
 
     <string name="error_label">Ошибка!</string>
@@ -375,6 +383,7 @@
     <string name="dialogs_empty">Чатов пока нет</string>
     <string name="dialogs_open_friends">Открыть список друзей</string>
     <string name="dialogs_find_user">Найти пользователя</string>
+    <string name="dialogs_fab_description">Новый чат</string>
     <string name="dialogs_sync_error">Ошибка синхронизации</string>
     <string name="sync_error_message">Ошибка синхронизации</string>
     <string name="default_user_name">Пользователь</string>

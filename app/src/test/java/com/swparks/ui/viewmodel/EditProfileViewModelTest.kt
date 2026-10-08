@@ -42,6 +42,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.time.LocalDate
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Unit тесты для EditProfileViewModel.
@@ -785,7 +786,7 @@ class EditProfileViewModelTest {
             coEvery { deleteUserUseCase() } coAnswers {
                 deleteCallCount++
                 // Небольшая задержка, чтобы успеть вызвать второй раз
-                kotlinx.coroutines.delay(100)
+                kotlinx.coroutines.delay(100.milliseconds)
                 Result.success(Unit)
             }
 

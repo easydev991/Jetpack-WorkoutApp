@@ -26,7 +26,7 @@ import java.util.Locale
  * - `2024-01-15T10:30:00` (server date time без часового пояса)
  * - `2024-01-15` (ISO short date)
  *
- * @see FlexibleDateSerializer для сериализации
+ * Реализует [KSerializer], то есть обрабатывает и сериализацию, и десериализацию.
  */
 object FlexibleDateDeserializer : KSerializer<String> {
     private const val SUPPORTED_FORMATS_MESSAGE =

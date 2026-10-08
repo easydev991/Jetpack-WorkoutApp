@@ -381,14 +381,12 @@ class ParkDetailScreenTest : TimeoutTest() {
                 Photo(id = 1L, photo = "https://example.com/photo1.jpg"),
                 Photo(id = 2L, photo = "https://example.com/photo2.jpg")
             )
-        var clickedPhotoId: Long? = null
-
         composeTestRule.setContent {
             JetpackWorkoutAppTheme {
                 ParkPhotosSection(
                     photos = photos,
                     isRefreshing = false,
-                    onPhotoClick = { photo -> clickedPhotoId = photo.id }
+                    onPhotoClick = {}
                 )
             }
         }

@@ -40,6 +40,7 @@ import org.junit.Rule
 import org.junit.Test
 import retrofit2.HttpException
 import retrofit2.Response
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class OtherUserProfileViewModelTest {
@@ -450,7 +451,7 @@ class OtherUserProfileViewModelTest {
                 )
 
             // Используем advanceTimeBy для срабатывания timeout (10 сек + запас)
-            advanceTimeBy(OtherUserProfileViewModel.CURRENT_USER_LOAD_TIMEOUT_MS + 100)
+            advanceTimeBy(OtherUserProfileViewModel.CURRENT_USER_LOAD_TIMEOUT_MS.milliseconds + 100.milliseconds)
             advanceUntilIdle()
 
             // После timeout показывается ошибка авторизации без возможности retry

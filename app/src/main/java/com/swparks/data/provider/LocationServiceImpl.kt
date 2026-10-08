@@ -27,6 +27,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
+import kotlin.time.Duration.Companion.milliseconds
 
 open class LocationServiceImpl(
     private val context: Context,
@@ -58,7 +59,7 @@ open class LocationServiceImpl(
         }
 
         val locationResult =
-            withTimeoutOrNull(locationTimeoutMillis) {
+            withTimeoutOrNull(locationTimeoutMillis.milliseconds) {
                 suspendCancellableCoroutine { continuation ->
                     val cancellationTokenSource = CancellationTokenSource()
 

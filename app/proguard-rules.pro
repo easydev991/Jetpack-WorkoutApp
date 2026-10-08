@@ -23,5 +23,4 @@
 # Firebase Crashlytics
 -keepattributes *Annotation*
 -keepattributes exceptions
--keep class com.google.firebase.crashlytics.** { *; }
 -dontwarn com.google.firebase.crashlytics.**

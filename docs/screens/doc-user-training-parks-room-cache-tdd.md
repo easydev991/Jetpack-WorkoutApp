@@ -187,27 +187,27 @@
 
 ### Data / Room
 
-- [SWDatabase.kt](app/src/main/java/com/swparks/data/database/SWDatabase.kt)
-- [UserTrainingParkEntity.kt](app/src/main/java/com/swparks/data/database/entity/UserTrainingParkEntity.kt)
-- [UserTrainingParkCacheStateEntity.kt](app/src/main/java/com/swparks/data/database/entity/UserTrainingParkCacheStateEntity.kt)
-- [UserTrainingParkDao.kt](app/src/main/java/com/swparks/data/database/dao/UserTrainingParkDao.kt)
+- [SWDatabase.kt](../../app/src/main/java/com/swparks/data/database/SWDatabase.kt)
+- [UserTrainingParkEntity.kt](../../app/src/main/java/com/swparks/data/database/entity/UserTrainingParkEntity.kt)
+- [UserTrainingParkCacheStateEntity.kt](../../app/src/main/java/com/swparks/data/database/entity/UserTrainingParkCacheStateEntity.kt)
+- [UserTrainingParkDao.kt](../../app/src/main/java/com/swparks/data/database/dao/UserTrainingParkDao.kt)
 
 ### Repository
 
-- [ParksEventsRepository.kt](app/src/main/java/com/swparks/data/repository/ParksEventsRepository.kt)
+- [ParksEventsRepository.kt](../../app/src/main/java/com/swparks/data/repository/ParksEventsRepository.kt)
 
 ### UI / ViewModel
 
-- [UserTrainingParksViewModel.kt](app/src/main/java/com/swparks/ui/viewmodel/UserTrainingParksViewModel.kt)
-- [UserTrainingParksScreen.kt](app/src/main/java/com/swparks/ui/screens/profile/UserTrainingParksScreen.kt)
-- [RootScreen.kt](app/src/main/java/com/swparks/ui/screens/RootScreen.kt)
+- [UserTrainingParksViewModel.kt](../../app/src/main/java/com/swparks/ui/viewmodel/UserTrainingParksViewModel.kt)
+- [UserTrainingParksScreen.kt](../../app/src/main/java/com/swparks/ui/screens/profile/UserTrainingParksScreen.kt)
+- [RootScreen.kt](../../app/src/main/java/com/swparks/ui/screens/RootScreen.kt)
 
 ### Тесты
 
-- [UserTrainingParkDaoTest.kt](app/src/test/java/com/swparks/data/database/dao/UserTrainingParkDaoTest.kt)
-- [UserTrainingParkEntityTest.kt](app/src/test/java/com/swparks/data/database/entity/UserTrainingParkEntityTest.kt)
-- [ParksEventsRepositoryUserTrainingParksTest.kt](app/src/test/java/com/swparks/data/repository/ParksEventsRepositoryUserTrainingParksTest.kt)
-- [UserTrainingParksViewModelTest.kt](app/src/test/java/com/swparks/ui/viewmodel/UserTrainingParksViewModelTest.kt)
+- [UserTrainingParkDaoTest.kt](../../app/src/test/java/com/swparks/data/database/dao/UserTrainingParkDaoTest.kt)
+- [UserTrainingParkEntityTest.kt](../../app/src/test/java/com/swparks/data/database/entity/UserTrainingParkEntityTest.kt)
+- [ParksEventsRepositoryUserTrainingParksTest.kt](../../app/src/test/java/com/swparks/data/repository/ParksEventsRepositoryUserTrainingParksTest.kt)
+- [UserTrainingParksViewModelTest.kt](../../app/src/test/java/com/swparks/ui/viewmodel/UserTrainingParksViewModelTest.kt)
 
 ---
 

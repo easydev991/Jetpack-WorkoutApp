@@ -105,7 +105,7 @@ class HtmlUtilsTest {
 
     @Test
     fun parseHtmlOrNull_whenNonNullInput_thenReturnsParsedString() {
-        val html: String = "<p>Test</p>"
+        val html = "<p>Test</p>"
         assertEquals("Test", html.parseHtmlOrNull())
     }
 

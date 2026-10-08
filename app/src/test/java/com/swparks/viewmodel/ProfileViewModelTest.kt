@@ -459,14 +459,6 @@ class ProfileViewModelTest {
     fun loadProfileFromServer_whenFailure_shouldLogAppErrorProfileLoadFailed() =
         runTest {
             val testUser = createTestUser()
-            val socialUpdates =
-                SocialUpdates(
-                    user = testUser,
-                    friends = emptyList(),
-                    friendRequests = emptyList(),
-                    blacklist = emptyList()
-                )
-
             coEvery { authRepository.getCurrentUserFlow() } returns flowOf(testUser)
             coEvery {
                 userProfileRepository.getSocialUpdates(testUser.id)

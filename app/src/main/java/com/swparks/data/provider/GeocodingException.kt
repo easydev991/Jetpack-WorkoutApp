@@ -5,7 +5,7 @@ import com.swparks.util.AppError
 /**
  * Исключение геокодирования, содержащее доменную ошибку [AppError.GeocodingFailed].
  *
- * Используется внутри [GeocodingService] для передачи доменной ошибки через [Result.failure].
+ * Используется внутри [GeocodingServiceImpl] для передачи доменной ошибки через [Result.failure].
  *
  * @property appError Ошибка геокодирования
  */

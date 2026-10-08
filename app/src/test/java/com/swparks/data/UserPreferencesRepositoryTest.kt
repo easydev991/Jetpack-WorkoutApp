@@ -104,7 +104,7 @@ class UserPreferencesRepositoryTest {
             val testException = RuntimeException("Test error")
             // Создаем Flow, который выбрасывает RuntimeException при подписке через onStart
             every { mockDataStore.data } returns
-                flowOf<Preferences>(emptyPreferences()).onStart { throw testException }
+                flowOf(emptyPreferences()).onStart { throw testException }
             val repository = UserPreferencesRepository(mockDataStore)
 
             // When & Then - исключение должно быть проброшено дальше
