@@ -3,6 +3,7 @@ package com.swparks.ui.screens.common
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -489,6 +490,39 @@ class TextEntryScreenTest : TimeoutTest() {
         composeTestRule
             .onNodeWithText(oldText, ignoreCase = false)
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun textEntryScreen_whenValidationError_thenShowsSnackbarAndResetsError() {
+        // Given
+        val errorMessage = "Текст не может быть пустым"
+        val uiState =
+            MutableStateFlow(
+                TextEntryUiState(mode = TextEntryMode.NewForPark(parkId = 1L))
+            )
+        val viewModel = FakeTextEntryViewModel(uiState = uiState)
+        setContent(viewModel)
+
+        // When
+        uiState.value = uiState.value.copy(error = errorMessage)
+
+        // Then - текст ошибки отображается в snackbar'е экрана
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            composeTestRule
+                .onAllNodesWithText(errorMessage)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        composeTestRule
+            .onNodeWithText(errorMessage)
+            .assertIsDisplayed()
+        // Ошибка сбрасывается после показа: вызван onDismissError
+        composeTestRule.waitUntil(timeoutMillis = 10_000) {
+            viewModel.onDismissErrorCalls == 1
+        }
+        assert(viewModel.onDismissErrorCalls == 1) {
+            "onDismissError должен быть вызван после показа ошибки в snackbar'е"
+        }
     }
 
     @Test

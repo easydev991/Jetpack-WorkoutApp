@@ -16,9 +16,20 @@ import kotlinx.coroutines.flow.asSharedFlow
 class FakeTextEntryViewModel(
     override val uiState: StateFlow<TextEntryUiState>
 ) : ITextEntryViewModel {
-    // Поток событий для тестирования
-    private val _events = MutableSharedFlow<TextEntryEvent>()
+    // Поток событий с буфером: sendEvent не теряет событие, если коллектор ещё не готов
+    private val _events = MutableSharedFlow<TextEntryEvent>(extraBufferCapacity = 1)
     override val events: SharedFlow<TextEntryEvent> = _events.asSharedFlow()
+
+    /** Количество вызовов [onDismissError] — для проверки сброса ошибки в UI. */
+    var onDismissErrorCalls: Int = 0
+        private set
+
+    /**
+     * Отправляет событие в [events] — имитация событий реальной ViewModel.
+     */
+    fun sendEvent(event: TextEntryEvent) {
+        _events.tryEmit(event)
+    }
 
     /**
      * Функция-заглушка для обновления текста.
@@ -41,7 +52,7 @@ class FakeTextEntryViewModel(
      * В тестах можно проверить, был ли вызван этот метод.
      */
     override fun onDismissError() {
-        // Заглушка - не делает ничего в тестах
+        onDismissErrorCalls++
     }
 
     /**

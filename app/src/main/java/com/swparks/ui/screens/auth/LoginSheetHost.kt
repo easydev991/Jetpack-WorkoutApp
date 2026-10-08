@@ -12,12 +12,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.swparks.ui.ds.disableAllGestures
 import com.swparks.ui.viewmodel.ILoginViewModel
 import com.swparks.ui.viewmodel.LoginViewModel
 import kotlinx.coroutines.launch
@@ -28,10 +26,12 @@ import kotlinx.coroutines.launch
  * LoginScreen открывается как ModalBottomSheet на весь экран поверх текущего UI.
  * Закрытие листа разрешено только:
  * - по нажатию на крестик в левом верхнем углу (только если !uiState.isBusy: не идёт логин и не загружаются данные)
+ * - по системной кнопке или жесту «назад» (только если !uiState.isBusy)
  * - автоматически после успешной авторизации
  *
- * Закрытие по тапу вне области, свайпу вниз, системной кнопке/жесту "назад" — запрещено.
- * Все жесты блокируются на уровне контента через Modifier.
+ * Закрытие по тапу вне области и свайпу вниз запрещено.
+ * Обратный свайп листа не срабатывает: перетаскивание отключено параметром
+ * [ModalBottomSheet.sheetGesturesEnabled], взаимодействие с контентом не ограничивается.
  *
  * ВАЖНО: Загрузка данных пользователя выполняется в ProfileViewModel при открытии профиля.
  *
@@ -39,6 +39,8 @@ import kotlinx.coroutines.launch
  * @param onDismissed Callback при закрытии листа
  * @param onLoginSuccess Callback при успешной авторизации с userId
  * @param onResetSuccess Callback при успешном сбросе пароля с email (опционально)
+ * @param viewModel ViewModel авторизации (опционально; при null создаётся на уровне хоста).
+ * Параметр для UI-тестов с фейковой реализацией
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,16 +49,17 @@ fun LoginSheetHost(
     onDismissed: () -> Unit,
     onLoginSuccess: (userId: Long) -> Unit,
     // Новый параметр (опционально)
-    onResetSuccess: (String) -> Unit = {}
+    onResetSuccess: (String) -> Unit = {},
+    viewModel: ILoginViewModel? = null
 ) {
     var allowHide by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    // Создаем ViewModel на уровне хоста с явным указанием типа
+    // ViewModel передаётся извне в UI-тестах; иначе создаётся на уровне хоста
     val loginViewModel: ILoginViewModel =
-        viewModel<LoginViewModel>(factory = LoginViewModel.Factory)
+        viewModel ?: viewModel<LoginViewModel>(factory = LoginViewModel.Factory)
     val uiState by loginViewModel.uiState.collectAsStateWithLifecycle()
 
     // Сбрасываем состояние при каждом открытии sheet
@@ -70,7 +73,7 @@ fun LoginSheetHost(
         rememberModalBottomSheetState(
             skipPartiallyExpanded = true,
             confirmValueChange = { newValue ->
-                // Запрещаем скрытие всегда, кроме явного close/success
+                // Разрешаем скрытие только через явное закрытие (крестик, возврат, успех)
                 if (newValue == SheetValue.Hidden) allowHide else true
             }
         )
@@ -89,14 +92,17 @@ fun LoginSheetHost(
     if (show) {
         ModalBottomSheet(
             onDismissRequest = {
-                // Игнорируем тап вне sheet / системный dismiss
+                if (uiState.isBusy) return@ModalBottomSheet
+                dismissSheet(onDismissed)
             },
             sheetState = sheetState,
             dragHandle = {}, // СКРЫВАЕМ визуальный drag handle (pin вверху)
             properties =
                 ModalBottomSheetProperties(
-                    shouldDismissOnBackPress = false // ЗАПРЕЩАЕМ системную кнопку "назад"
-                )
+                    shouldDismissOnBackPress = true,
+                    shouldDismissOnClickOutside = false
+                ),
+            sheetGesturesEnabled = false
         ) {
             LoginScreen(
                 viewModel = loginViewModel,
@@ -107,8 +113,7 @@ fun LoginSheetHost(
                 onLoginSuccess = { userId ->
                     dismissSheet { onLoginSuccess(userId) }
                 },
-                onResetSuccess = onResetSuccess, // Передаем обработчик (если нужен проброс наверх)
-                modifier = Modifier.disableAllGestures() // Блокируем все жесты для всего контента sheet
+                onResetSuccess = onResetSuccess // Передаем обработчик (если нужен проброс наверх)
             )
         }
     }

@@ -18,11 +18,15 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
@@ -53,13 +57,26 @@ import kotlinx.coroutines.flow.emptyFlow
 fun TextEntryScreen(
     modifier: Modifier = Modifier,
     viewModel: ITextEntryViewModel,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    snackbarHostState: SnackbarHostState? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val resources = LocalContext.current.resources
 
+    // При null используется собственное состояние: превью и существующие тесты правок не требуют
+    val resolvedSnackbarHostState = snackbarHostState ?: remember { SnackbarHostState() }
+
+    // Ошибка валидации показывается в snackbar'е экрана и сбрасывается после показа
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { error ->
+            resolvedSnackbarHostState.showSnackbar(error)
+            viewModel.onDismissError()
+        }
+    }
+
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(hostState = resolvedSnackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
