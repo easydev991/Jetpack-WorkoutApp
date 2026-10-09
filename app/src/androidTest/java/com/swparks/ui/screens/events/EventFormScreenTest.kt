@@ -9,6 +9,10 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
+import androidx.test.espresso.Espresso.closeSoftKeyboard
+import androidx.test.espresso.Espresso.pressBack
+import androidx.test.espresso.NoActivityResumedException
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
@@ -318,11 +322,11 @@ class EventFormScreenTest : TimeoutTest() {
             .performClick()
 
         composeTestRule
-            .onNodeWithText(context.getString(R.string.event_form_confirm_close_title))
+            .onNodeWithText(context.getString(R.string.confirm_close_title))
             .assertIsDisplayed()
 
         composeTestRule
-            .onNodeWithText(context.getString(R.string.event_form_confirm_close_message))
+            .onNodeWithText(context.getString(R.string.confirm_close_message))
             .assertIsDisplayed()
     }
 
@@ -388,7 +392,7 @@ class EventFormScreenTest : TimeoutTest() {
             .performClick()
 
         composeTestRule
-            .onNodeWithText(context.getString(R.string.event_form_confirm_close_title))
+            .onNodeWithText(context.getString(R.string.confirm_close_title))
             .assertDoesNotExist()
     }
 
@@ -554,5 +558,145 @@ class EventFormScreenTest : TimeoutTest() {
         composeTestRule
             .onNodeWithText(context.getString(R.string.event_form_save))
             .assertIsEnabled()
+    }
+
+    @Test
+    fun pressBack_whenHasChanges_thenShowsConfirmDialogAndStaysOnScreen() {
+        // Given - форма с введённым названием (есть несохранённые правки)
+        val viewModel =
+            FakeEventFormViewModel(
+                initialState = EventFormUiState(isLoading = false)
+            )
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                EventFormScreen(
+                    viewModel = viewModel,
+                    onAction = {}
+                )
+            }
+        }
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_form_name_label))
+            .performTextInput("Changed Title")
+        closeSoftKeyboard()
+
+        // When - системный возврат
+        pressBack()
+
+        // Then - показан confirm, форма открыта, введённое значение на месте
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.confirm_close_title))
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_form_title_create))
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText("Changed Title")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun pressBack_whenNoChanges_thenNavigatesBack() {
+        // Given - форма без правок
+        setContent(
+            uiState = EventFormUiState(isLoading = false)
+        )
+
+        // When - системный возврат; Espresso бросает NoActivityResumedException,
+        // когда back не перехвачен формой и закрыл единственную activity — это и есть уход назад
+        try {
+            pressBack()
+            org.junit.Assert.fail("Ожидался уход назад без правок: back должен закрыть экран")
+        } catch (expected: NoActivityResumedException) {
+            // Ожидаемое поведение
+        }
+    }
+
+    @Test
+    fun confirmCloseDialog_whenConfirmed_thenNavigatesBack() {
+        // Given - форма с правками и открытым confirm-диалогом
+        var navigatedBack = false
+        val viewModel =
+            FakeEventFormViewModel(
+                initialState = EventFormUiState(isLoading = false)
+            )
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                EventFormScreen(
+                    viewModel = viewModel,
+                    onAction = { action ->
+                        if (action == EventFormNavigationAction.Back) navigatedBack = true
+                    }
+                )
+            }
+        }
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_form_name_label))
+            .performTextInput("Changed Title")
+        closeSoftKeyboard()
+        pressBack()
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.confirm_close_title))
+            .assertIsDisplayed()
+
+        // When - подтверждаем закрытие
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.close))
+            .performClick()
+
+        // Then - экран уходит назад
+        org.junit.Assert.assertTrue("Ожидался возврат назад после подтверждения", navigatedBack)
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.confirm_close_title))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun confirmCloseDialog_whenCancelled_thenStaysOnScreen() {
+        // Given - форма с правками и открытым confirm-диалогом
+        var navigatedBack = false
+        val viewModel =
+            FakeEventFormViewModel(
+                initialState = EventFormUiState(isLoading = false)
+            )
+        composeTestRule.setContent {
+            JetpackWorkoutAppTheme {
+                EventFormScreen(
+                    viewModel = viewModel,
+                    onAction = { action ->
+                        if (action == EventFormNavigationAction.Back) navigatedBack = true
+                    }
+                )
+            }
+        }
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_form_name_label))
+            .performTextInput("Changed Title")
+        closeSoftKeyboard()
+        pressBack()
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.confirm_close_title))
+            .assertIsDisplayed()
+
+        // When - отменяем закрытие
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.cancel))
+            .performClick()
+
+        // Then - экран открыт, правки на месте, назад не уходим
+        org.junit.Assert.assertFalse("Отмена не должна уводить назад", navigatedBack)
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.confirm_close_title))
+            .assertDoesNotExist()
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.event_form_title_create))
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText("Changed Title")
+            .assertIsDisplayed()
     }
 }

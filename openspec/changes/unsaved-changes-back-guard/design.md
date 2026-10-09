@@ -23,7 +23,7 @@
 - Черновики/автосохранение ввода (меняет семантику данных, отдельная тема).
 - Глобальный перехват возврата в `RootScreen`/навигации — см. решение 1.
 - Правка листов `PhotoDetailSheetHost`, `TextEntrySheetHost`, auth-листов (задача `sheet-back-gesture`): поведение `TextEntrySheetHost`/auth-листов зафиксировано спеками `text-entry`/`auth-sheets`, у `PhotoDetailSheetHost` — только кодом, спеки нет.
-- `BackHandler` для листов не нужен и отвергнут (`openspec/changes/archive/2026-10-08-sheet-back-gesture/design.md:43` — дублирует встроенный канал `ModalBottomSheet`); у `AlertDialog` такого канала нет — здесь он необходим, иначе пришлось бы глушить возврат (`onDismissRequest = {}`) вместо показа подтверждения.
+- `BackHandler` для листов не нужен и отвергнут (`openspec/changes/archive/2026-10-08-sheet-back-gesture/design.md:43` — дублирует встроенный канал `ModalBottomSheet`); для `AlertDialog` он тоже не нужен — канал есть: возврат перехватывает окно диалога и приходит в `onDismissRequest`, который маршрутизируется в guard (решение 4).
 - Рефакторинг управления confirm-диалогом в ParkForm с `ParkFormDialogAction` на локальное состояние (как в EventForm) — работает, не трогаем.
 - Унификация с `DeleteConfirmDialog` (`ImagePreviewDialog.kt`) и `DeleteProfileDialog` (`EditProfileScreen.kt`) — те же структурно `AlertDialog`, отличаются строками; консолидация только close-диалогов, delete-диалоги — отдельная задача.
 
@@ -46,15 +46,15 @@
 
 `onBackClick` получает ту же ветку `if (uiState.hasChanges) showCloseConfirm = true else Back` (новый локальный `showCloseConfirm`), BackHandler ставит тот же флаг. Confirm-диалог рендерится рядом с существующим `showDeleteDialog` (:172–180). Оба пути (кнопка и системный возврат) сходятся в один флаг — спека требует одинакового поведения.
 
-### 4. Диалоги: BackHandler внутри содержимого + единый `requestClose()` внутри диалога
+### 4. Диалоги: единый `requestClose()` в `onDismissRequest` — без `BackHandler`
 
-`BackHandler`, скомпонованный внутри слота `text = { … }` `AlertDialog`, регистрируется на dispatcher окна диалога и перехватывает возврат раньше нативного dismiss — при `hasChanges` показываем confirm-поверх (второй `AlertDialog` поверх — штатный паттерн Dialog-над-Dialog). Локальный `var showCloseConfirm by remember`, и единый обработчик (пример JournalSettingsDialog; у фильтра признак — `state.canApply`):
+Возврат в `AlertDialog` без своего `BackHandler` перехватывает окно диалога (`dismissOnBackPress` включён по умолчанию) и приходит в `onDismissRequest`; тап вне области и крестик заголовка идут туда же. При `hasChanges` показываем confirm-поверх (второй `AlertDialog` поверх — штатный паттерн Dialog-над-Dialog). Локальный `var showCloseConfirm by remember`, и единый обработчик (пример JournalSettingsDialog; у фильтра признак — `state.canApply`):
 
 ```
 val requestClose = { if (!isSaving) { if (state.hasChanges) showCloseConfirm = true else onDismiss() } }
 ```
 
-через него маршрутятся `onDismissRequest` и крестик заголовка; возврат перехватывает `BackHandler` без `enabled` — он тоже вызывает `requestClose()` (без правок тот зовёт `onDismiss` — тот же результат, что нативный dismiss; единственная проверка `hasChanges` живёт внутри `requestClose`). При идущем сохранении (`isSaving`) `requestClose` выходит рано — возврат не показывает confirm поверх запроса и не закрывает диалог (прецедент: спеки `auth-sheets`/`text-entry`); крестик и тап вне маршрутятся через тот же `requestClose`, поэтому во время сохранения они тоже ничего не делают — следствие раннего выхода, осознанно; `enabled` для этого не вводится — единственная точка решения остаётся внутри `requestClose`. Сам confirm-диалог: `onConfirm = { showCloseConfirm = false; onDismiss() }` — подтверждение закрывает оба слоя; его `onDismissRequest = { showCloseConfirm = false }` — возврат/тап вне по confirm только сбрасывает флаг. Тап вне основного диалога при наличии правок тоже попадает в `onDismissRequest → requestClose` — правки не теряются незаметно (в ParkForm/EventForm закрываемой тап-вне поверхности нет — там ничего дополнительно не нужно). При отсутствии правок поведение идентично текущему: `requestClose` → `onDismiss`.
+через него маршрутятся `onDismissRequest` (возврат и тап вне) и крестик заголовка — все пути закрытия сходятся в единственную проверку `hasChanges` внутри `requestClose` (без правок он зовёт `onDismiss` — тот же результат, что нативный dismiss). При идущем сохранении (`isSaving`) `requestClose` выходит рано — возврат не показывает confirm поверх запроса и не закрывает диалог (прецедент: спеки `auth-sheets`/`text-entry`); крестик и тап вне маршрутятся через тот же `requestClose`, поэтому во время сохранения они тоже ничего не делают — следствие раннего выхода, осознанно; `enabled` для этого не вводится — единственная точка решения остаётся внутри `requestClose`. Сам confirm-диалог: `onConfirm = { showCloseConfirm = false; onDismiss() }` — подтверждение закрывает оба слоя; его `onDismissRequest = { showCloseConfirm = false }` — возврат/тап вне по confirm только сбрасывает флаг. Тап вне основного диалога при наличии правок тоже попадает в `onDismissRequest → requestClose` — правки не теряются незаметно (в ParkForm/EventForm закрываемой тап-вне поверхности нет — там ничего дополнительно не нужно). При отсутствии правок поведение идентично текущему: `requestClose` → `onDismiss`.
 
 ### 5. Видимость confirm-диалога
 
@@ -62,7 +62,7 @@ val requestClose = { if (!isSaving) { if (state.hasChanges) showCloseConfirm = t
 
 ## Risks / Trade-offs
 
-- **Predictive back (API 34+, AVD API 36)**: активный `BackHandler` отключает системную анимацию предиктивного возврата на защищаемых экранах — осознанный размен: без него возврат закрывал бы форму до того, как guard успевает показать диалог. На безизменённых формах `enabled = false` и анимация остаётся. В диалогах `BackHandler` без `enabled` — предиктивная анимация отключается там всегда, даже без правок; альтернатива `enabled = state.hasChanges` отвергнута как дублирование проверки внутри `requestClose()`.
+- **Predictive back (API 34+, AVD API 36)**: активный `BackHandler` отключает системную анимацию предиктивного возврата на защищаемых экранах — осознанный размен: без него возврат закрывал бы форму до того, как guard успевает показать диалог. На безизменённых формах `enabled = false` и анимация остаётся. В диалогах `BackHandler` нет: возврат поглощает окно диалога и приходит в `onDismissRequest → requestClose` — предиктивная анимация диалога не затронута, guard при этом работает.
 - **UI-тесты `pressBack` на диалогах** могут быть нестабильны на эмуляторе (опыт `sheet-back-gesture`, риск зафиксирован там же) → при нестабильности сценарий переводится в наблюдаемую ручную проверку — шаблон задач это допускает.
 - **`FakeEditProfileViewModel`** пишется с нуля — по образцу `FakeParkFormViewModel`; риск только механический.
 - **Крестик диалогов меняет поведение** (раньше закрывал сразу, теперь при правках спрашивает) — это и есть цель спеки («не существует пути мгновенной потери правок»), но в задачу включена ручная проверка обоих диалогов.

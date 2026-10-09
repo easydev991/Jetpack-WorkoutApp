@@ -1,6 +1,7 @@
 package com.swparks.ui.screens.events
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,15 +12,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -33,6 +31,7 @@ import androidx.compose.ui.res.stringResource
 import com.swparks.R
 import com.swparks.data.model.Event
 import com.swparks.ui.ds.ButtonConfig
+import com.swparks.ui.ds.ConfirmCloseDialog
 import com.swparks.ui.ds.DateTimePickerConfig
 import com.swparks.ui.ds.FormCardContainer
 import com.swparks.ui.ds.FormCardContainerParams
@@ -159,6 +158,11 @@ fun EventFormScreen(
                 LoadingOverlayView()
             }
         }
+    }
+
+    // Возврат с несохранёнными правками сначала показывает подтверждение.
+    BackHandler(enabled = uiState.hasChanges) {
+        showConfirmDialog = true
     }
 
     if (showConfirmDialog) {
@@ -436,34 +440,5 @@ private fun SaveButton(
                 enabled = enabled,
                 onClick = onClick
             )
-    )
-}
-
-@Composable
-private fun ConfirmCloseDialog(
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(text = stringResource(R.string.event_form_confirm_close_title))
-        },
-        text = {
-            Text(text = stringResource(R.string.event_form_confirm_close_message))
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(
-                    text = stringResource(R.string.close),
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.cancel))
-            }
-        }
     )
 }

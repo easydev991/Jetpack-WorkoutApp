@@ -38,6 +38,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.swparks.R
 import com.swparks.domain.model.Journal
 import com.swparks.ui.ds.ButtonConfig
+import com.swparks.ui.ds.ConfirmCloseDialog
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.SWButton
 import com.swparks.ui.ds.SWButtonSize
@@ -67,14 +68,27 @@ fun JournalSettingsDialog(
 ) {
     val state = rememberJournalSettingsDialogState(journal)
     val configuration = LocalWindowInfo.current
+    var showCloseConfirm by remember { mutableStateOf(false) }
+
+    // Единая точка закрытия: во время сохранения ничего не делаем,
+    // с несохранёнными правками показываем подтверждение
+    val requestClose = {
+        if (!isSaving) {
+            if (state.hasChanges) {
+                showCloseConfirm = true
+            } else {
+                onDismiss()
+            }
+        }
+    }
 
     AlertDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
         modifier =
             Modifier
                 .widthIn(max = configuration.containerDpSize.width - (dimensionResource(R.dimen.spacing_regular)) * 2),
-        onDismissRequest = onDismiss,
-        title = { DialogTitle(onDismiss) },
+        onDismissRequest = requestClose,
+        title = { DialogTitle(requestClose) },
         text = { DialogContent(state = state, isSaving = isSaving) },
         confirmButton = {
             SaveButton(
@@ -94,6 +108,16 @@ fun JournalSettingsDialog(
             )
         }
     )
+
+    if (showCloseConfirm) {
+        ConfirmCloseDialog(
+            onDismiss = { showCloseConfirm = false },
+            onConfirm = {
+                showCloseConfirm = false
+                onDismiss()
+            }
+        )
+    }
 }
 
 private class JournalSettingsDialogState(
@@ -109,9 +133,9 @@ private class JournalSettingsDialogState(
 
     val hasChanges: Boolean
         get() =
-            title.text != journal.title ||
-                viewAccess != journal.viewAccess ||
-                commentAccess != journal.commentAccess
+            title.text != (journal.title ?: "") ||
+                viewAccess != (journal.viewAccess ?: JournalAccess.ALL) ||
+                commentAccess != (journal.commentAccess ?: JournalAccess.ALL)
 
     val isSaveButtonEnabled: Boolean
         get() = title.text.isNotBlank() && hasChanges

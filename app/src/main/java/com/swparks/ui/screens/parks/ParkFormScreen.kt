@@ -1,6 +1,7 @@
 package com.swparks.ui.screens.parks
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,7 +13,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -20,7 +20,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -36,6 +35,7 @@ import com.swparks.data.model.Park
 import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
 import com.swparks.ui.ds.ButtonConfig
+import com.swparks.ui.ds.ConfirmCloseDialog
 import com.swparks.ui.ds.FormCardContainer
 import com.swparks.ui.ds.FormCardContainerParams
 import com.swparks.ui.ds.ImagePreviewDialog
@@ -157,6 +157,12 @@ fun ParkFormScreen(
                 LoadingOverlayView()
             }
         }
+    }
+
+    // Возврат с несохранёнными правками сначала показывает подтверждение,
+    // подтверждение уходит через ParkFormDialogAction.OnConfirmClose -> Back.
+    BackHandler(enabled = uiState.hasChanges) {
+        showConfirmDialog = true
     }
 
     ParkFormDialogs(
@@ -430,33 +436,4 @@ private fun ParkFormDialogs(
             onDelete = { onAction(ParkFormDialogAction.OnDeletePhoto(uri)) }
         )
     }
-}
-
-@Composable
-private fun ConfirmCloseDialog(
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(text = stringResource(R.string.event_form_confirm_close_title))
-        },
-        text = {
-            Text(text = stringResource(R.string.event_form_confirm_close_message))
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(
-                    text = stringResource(R.string.close),
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.cancel))
-            }
-        }
-    )
 }

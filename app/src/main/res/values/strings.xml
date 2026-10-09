@@ -437,8 +437,8 @@
     <string name="event_form_park_select">Select park</string>
     <string name="event_form_date_label">Date and time</string>
     <string name="event_form_save">Save</string>
-    <string name="event_form_confirm_close_title">Close?</string>
-    <string name="event_form_confirm_close_message">Unsaved changes will be lost</string>
+    <string name="confirm_close_title">Close?</string>
+    <string name="confirm_close_message">Unsaved changes will be lost</string>
 
     <!-- Location permission -->
     <string name="location_permission_alert_title">Location access</string>

@@ -18,8 +18,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
@@ -32,6 +35,7 @@ import com.swparks.data.model.ParkSize
 import com.swparks.data.model.ParkType
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.CheckmarkRowView
+import com.swparks.ui.ds.ConfirmCloseDialog
 import com.swparks.ui.ds.FormCardContainer
 import com.swparks.ui.ds.FormCardContainerParams
 import com.swparks.ui.ds.SWButton
@@ -47,6 +51,16 @@ fun ParksFilterDialog(
     onDismiss: () -> Unit
 ) {
     val state = rememberParksFilterDialogState(filter)
+    var showCloseConfirm by remember { mutableStateOf(false) }
+
+    // Единая точка закрытия: с несохранённым фильтром показываем подтверждение
+    val requestClose = {
+        if (state.canApply) {
+            showCloseConfirm = true
+        } else {
+            onDismiss()
+        }
+    }
 
     AlertDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
@@ -54,8 +68,8 @@ fun ParksFilterDialog(
             Modifier
                 .padding(horizontal = dimensionResource(R.dimen.spacing_regular))
                 .fillMaxWidth(),
-        onDismissRequest = onDismiss,
-        title = { DialogTitle(onDismiss) },
+        onDismissRequest = requestClose,
+        title = { DialogTitle(requestClose) },
         text = {
             FilterDialogContent(state = state)
         },
@@ -84,6 +98,16 @@ fun ParksFilterDialog(
             }
         }
     )
+
+    if (showCloseConfirm) {
+        ConfirmCloseDialog(
+            onDismiss = { showCloseConfirm = false },
+            onConfirm = {
+                showCloseConfirm = false
+                onDismiss()
+            }
+        )
+    }
 }
 
 @Composable

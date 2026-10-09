@@ -8,6 +8,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.test.espresso.Espresso.pressBack
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
@@ -26,6 +27,10 @@ class ParksFilterDialogTest : TimeoutTest() {
     val composeTestRule = createComposeRule()
 
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
+
+    /** Фильтр, отличный от дефолтного, — база для несохранённых правок в guard-тестах. */
+    private val changedFilter =
+        ParkFilter(sizes = setOf(ParkSize.MEDIUM), types = ParkType.entries.toSet())
 
     private fun setContent(
         filter: ParkFilter = ParkFilter(),
@@ -184,5 +189,122 @@ class ParksFilterDialogTest : TimeoutTest() {
         composeTestRule
             .onNodeWithText(context.getString(R.string.reset_filter))
             .assertIsEnabled()
+    }
+
+    /** Переключает размер площадки, создавая несохранённое изменение фильтра. */
+    private fun changeFilter() {
+        composeTestRule
+            .onNodeWithText(context.getString(ParkSize.LARGE.description))
+            .performClick()
+    }
+
+    @Test
+    fun pressBack_whenHasChanges_thenShowsConfirmDialogAndDialogStaysOpen() {
+        // Given - диалог с несохранёнными правками фильтра
+        var dismissCalled = false
+        setContent(
+            filter = changedFilter,
+            onDismiss = { dismissCalled = true }
+        )
+        changeFilter()
+
+        // When - системный возврат
+        pressBack()
+
+        // Then - показан диалог подтверждения, сам фильтр остался открыт
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.confirm_close_title))
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.filter_parks))
+            .assertIsDisplayed()
+        assert(!dismissCalled) { "Возврат с правками не должен закрывать фильтр" }
+    }
+
+    @Test
+    fun pressBack_whenNoChanges_thenClosesDialog() {
+        // Given - фильтр без правок
+        var dismissCalled = false
+        setContent(onDismiss = { dismissCalled = true })
+
+        // When - системный возврат
+        pressBack()
+
+        // Then - фильтр закрыт без подтверждения
+        assert(dismissCalled) { "Ожидалось закрытие фильтра без правок" }
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.confirm_close_title))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun confirmCloseDialog_whenConfirmed_thenClosesDialog() {
+        // Given - фильтр с правками и открытым подтверждением
+        var dismissCalled = false
+        setContent(
+            filter = changedFilter,
+            onDismiss = { dismissCalled = true }
+        )
+        changeFilter()
+        pressBack()
+
+        // When - подтверждение закрытия
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.close))
+            .performClick()
+
+        // Then - фильтр закрыт, подтверждение скрыто
+        assert(dismissCalled) { "Подтверждение должно закрывать фильтр" }
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.confirm_close_title))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun confirmCloseDialog_whenCancelled_thenDialogStaysOpen() {
+        // Given - фильтр с правками и открытым подтверждением
+        var dismissCalled = false
+        setContent(
+            filter = changedFilter,
+            onDismiss = { dismissCalled = true }
+        )
+        changeFilter()
+        pressBack()
+
+        // When - отмена закрытия
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.cancel))
+            .performClick()
+
+        // Then - фильтр открыт, подтверждение скрыто
+        assert(!dismissCalled) { "Отмена не должна закрывать фильтр" }
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.confirm_close_title))
+            .assertDoesNotExist()
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.filter_parks))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun closeButton_whenHasChanges_thenShowsConfirmDialog() {
+        // Given - фильтр с несохранёнными правками
+        var dismissCalled = false
+        setContent(
+            filter = changedFilter,
+            onDismiss = { dismissCalled = true }
+        )
+        changeFilter()
+
+        // When - клик по крестику заголовка
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.close))
+            .performClick()
+
+        // Then - показан диалог подтверждения, фильтр не закрыт
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.confirm_close_title))
+            .assertIsDisplayed()
+        assert(!dismissCalled) { "Крестик с правками не должен закрывать фильтр сразу" }
     }
 }

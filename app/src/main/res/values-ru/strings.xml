@@ -453,8 +453,8 @@
     <string name="event_form_park_select">Выбрать площадку</string>
     <string name="event_form_date_label">Дата и время</string>
     <string name="event_form_save">Сохранить</string>
-    <string name="event_form_confirm_close_title">Закрыть?</string>
-    <string name="event_form_confirm_close_message">Несохраненные изменения будут потеряны</string>
+    <string name="confirm_close_title">Закрыть?</string>
+    <string name="confirm_close_message">Несохраненные изменения будут потеряны</string>
 
     <!-- Location permission -->
     <string name="location_permission_alert_title">Доступ к геолокации</string>

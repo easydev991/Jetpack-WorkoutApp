@@ -12,6 +12,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import androidx.test.espresso.Espresso.closeSoftKeyboard
+import androidx.test.espresso.Espresso.pressBack
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
@@ -517,5 +519,155 @@ class JournalSettingsDialogTest : TimeoutTest() {
         composeTestRule
             .onNodeWithTag("saveButton")
             .assertIsEnabled()
+    }
+
+    /** Вводит новый заголовок дневника и закрывает клавиатуру, чтобы back не перехватил IME. */
+    private fun changeTitle(newValue: String = "Изменённый заголовок") {
+        composeTestRule
+            .onNodeWithText("Тестовый дневник")
+            .performTextClearance()
+        composeTestRule
+            .onNodeWithText("")
+            .performTextInput(newValue)
+        closeSoftKeyboard()
+    }
+
+    @Test
+    fun pressBack_whenHasChanges_thenShowsConfirmDialogAndDialogStaysOpen() {
+        // Given - диалог с несохранёнными правками
+        var dismissCalled = false
+        setContent(
+            journal = createTestJournal(title = "Тестовый дневник"),
+            onDismiss = { dismissCalled = true }
+        )
+        changeTitle()
+
+        // When - системный возврат
+        pressBack()
+
+        // Then - показан диалог подтверждения, сам диалог настроек остался открыт
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.confirm_close_title))
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.journal_settings))
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText("Изменённый заголовок")
+            .assertIsDisplayed()
+        assert(!dismissCalled) { "Возврат с правками не должен закрывать диалог" }
+    }
+
+    @Test
+    fun pressBack_whenNoChanges_thenClosesDialog() {
+        // Given - диалог без правок
+        var dismissCalled = false
+        setContent(
+            journal = createTestJournal(title = "Тестовый дневник"),
+            onDismiss = { dismissCalled = true }
+        )
+
+        // When - системный возврат
+        pressBack()
+
+        // Then - диалог закрыт без подтверждения
+        assert(dismissCalled) { "Ожидалось закрытие диалога без правок" }
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.confirm_close_title))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun pressBack_whenIsSaving_thenNothingHappens() {
+        // Given - идёт сохранение настроек
+        var dismissCalled = false
+        setContent(
+            journal = createTestJournal(title = "Тестовый дневник"),
+            isSaving = true,
+            onDismiss = { dismissCalled = true }
+        )
+
+        // When - системный возврат
+        pressBack()
+
+        // Then - ни подтверждения, ни закрытия
+        assert(!dismissCalled) { "Возврат во время сохранения не должен закрывать диалог" }
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.confirm_close_title))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun confirmCloseDialog_whenConfirmed_thenClosesDialog() {
+        // Given - диалог с правками и открытым подтверждением
+        var dismissCalled = false
+        setContent(
+            journal = createTestJournal(title = "Тестовый дневник"),
+            onDismiss = { dismissCalled = true }
+        )
+        changeTitle()
+        pressBack()
+
+        // When - подтверждение закрытия
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.close))
+            .performClick()
+
+        // Then - диалог настроек закрыт, подтверждение скрыто
+        assert(dismissCalled) { "Подтверждение должно закрывать диалог" }
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.confirm_close_title))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun confirmCloseDialog_whenCancelled_thenDialogStaysOpen() {
+        // Given - диалог с правками и открытым подтверждением
+        var dismissCalled = false
+        setContent(
+            journal = createTestJournal(title = "Тестовый дневник"),
+            onDismiss = { dismissCalled = true }
+        )
+        changeTitle()
+        pressBack()
+
+        // When - отмена закрытия
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.cancel))
+            .performClick()
+
+        // Then - диалог открыт, подтверждение скрыто, правки на месте
+        assert(!dismissCalled) { "Отмена не должна закрывать диалог" }
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.confirm_close_title))
+            .assertDoesNotExist()
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.journal_settings))
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText("Изменённый заголовок")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun closeButton_whenHasChanges_thenShowsConfirmDialog() {
+        // Given - диалог с несохранёнными правками
+        var dismissCalled = false
+        setContent(
+            journal = createTestJournal(title = "Тестовый дневник"),
+            onDismiss = { dismissCalled = true }
+        )
+        changeTitle()
+
+        // When - клик по крестику заголовка
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.close))
+            .performClick()
+
+        // Then - показан диалог подтверждения, диалог настроек не закрыт
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.confirm_close_title))
+            .assertIsDisplayed()
+        assert(!dismissCalled) { "Крестик с правками не должен закрывать диалог сразу" }
     }
 }

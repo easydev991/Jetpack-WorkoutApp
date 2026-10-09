@@ -1,6 +1,7 @@
 package com.swparks.ui.screens.profile
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -51,6 +52,7 @@ import coil.compose.AsyncImage
 import com.swparks.R
 import com.swparks.data.model.User
 import com.swparks.ui.ds.ButtonConfig
+import com.swparks.ui.ds.ConfirmCloseDialog
 import com.swparks.ui.ds.DateTimePickerConfig
 import com.swparks.ui.ds.FormCardContainer
 import com.swparks.ui.ds.FormCardContainerParams
@@ -119,6 +121,7 @@ fun EditProfileScreen(
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showCloseConfirm by remember { mutableStateOf(false) }
 
     val photoPickerLauncher =
         rememberLauncherForActivityResult(
@@ -142,7 +145,13 @@ fun EditProfileScreen(
     Scaffold(
         topBar = {
             EditProfileTopBar(
-                onBackClick = { onAction(EditProfileNavigationAction.Back) },
+                onBackClick = {
+                    if (uiState.hasChanges) {
+                        showCloseConfirm = true
+                    } else {
+                        onAction(EditProfileNavigationAction.Back)
+                    }
+                },
                 onDeleteClick = { showDeleteDialog = true }
             )
         },
@@ -169,12 +178,25 @@ fun EditProfileScreen(
         )
     }
 
+    // Возврат с несохранёнными правками сначала показывает подтверждение
+    BackHandler(enabled = uiState.hasChanges) { showCloseConfirm = true }
+
     if (showDeleteDialog) {
         DeleteProfileDialog(
             onDismiss = { showDeleteDialog = false },
             onConfirm = {
                 showDeleteDialog = false
                 viewModel.onDeleteProfileClick()
+            }
+        )
+    }
+
+    if (showCloseConfirm) {
+        ConfirmCloseDialog(
+            onDismiss = { showCloseConfirm = false },
+            onConfirm = {
+                showCloseConfirm = false
+                onAction(EditProfileNavigationAction.Back)
             }
         )
     }
