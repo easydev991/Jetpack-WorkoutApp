@@ -17,6 +17,7 @@ make lint           # ktlintCheck + app:detekt + markdownlint (if installed)
 make format         # ktlintFormat + app:detekt autoCorrect + markdownlint --fix
 make test           # unit tests + Python report
 make android-test   # :app:connectedDebugAndroidTest (только :app:, без :screenshot-tests)
+make memory-check   # LeakCanary-прогон только по leak-тестам (нужен подключенный эмулятор)
 make check          # build + test + lint
 make install        # installDebug
 ```
@@ -61,6 +62,7 @@ make install        # installDebug
 - Имена: `functionName_whenCondition_thenExpectedResult()`.
 - Android-тесты наследуют `TimeoutTest(N)` (UI: 60 с, Keystore/Room: 180 с) — зависший `@Test` не блокирует прогон.
 - Сеть AVD нестабильна — flaky сеть-зависимые тесты лечить сетью или stubs.
+- **`make memory-check`** — требует запущенного эмулятора; подробности — `docs/plan-error-observability-and-leak-automation.md` (Этапы 6-7).
 
 ## Key files
 
@@ -99,5 +101,6 @@ make install        # installDebug
 - `make lint`
 - `make test`
 - `make build`
+- `make memory-check` — если задача трогала UI, навигацию или ViewModel
 - No deprecated API usage
 - No crashes on app launch

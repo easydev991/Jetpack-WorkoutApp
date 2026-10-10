@@ -74,6 +74,33 @@ android-test: _ensure_animations_off
 		python3 scripts/android_test_report.py; \
 	fi
 
+## memory-check: Проверка утечек памяти на эмуляторе (только leak-тесты)
+memory-check: _ensure_animations_off
+	@if [ -f scripts/android_test_report.py ]; then chmod +x scripts/android_test_report.py; fi
+	@SERIAL=$(EMULATOR_SERIAL); \
+	if [ -z "$$SERIAL" ]; then \
+		echo ""; \
+		echo "================================================================================"; \
+		printf "$(RED)[FAIL] ЭМУЛЯТОР НЕ НАЙДЕН — запустите AVD и повторите$(RESET)\n"; \
+		echo "================================================================================"; \
+		exit 1; \
+	fi; \
+	printf "$(YELLOW)Проверка утечек памяти на $$SERIAL (LeakCanary)...$(RESET)\n"; \
+	./gradlew :app:connectedDebugAndroidTest --console=plain \
+		-Pandroid.testInstrumentationRunnerArguments.class=com.swparks.leak.MemoryLeakRegressionTest; \
+	BUILD_STATUS=$$?; \
+	if [ $$BUILD_STATUS -ne 0 ]; then \
+		echo ""; \
+		echo "================================================================================"; \
+		printf "$(RED)[FAIL] ОБНАРУЖЕНЫ УТЕЧКИ ПАМЯТИ (или ошибка прогона)$(RESET)\n"; \
+		echo "Детали: app/build/reports/androidTests/connected/debug/index.html"; \
+		echo "Полный отчет LeakCanary (HEAP ANALYSIS RESULT) — в XML прогона"; \
+		echo "================================================================================"; \
+		exit 1; \
+	fi; \
+	echo "Тесты выполнены. Результаты:"; \
+	python3 scripts/android_test_report.py || exit 1
+
 ## test-all: Запуск всех тестов (unit + интеграционные)
 test-all:
 	@echo ""
@@ -488,4 +515,4 @@ release:
 ## all: Полная проверка (сборка + тесты + линтер) и установка APK на устройство
 all: check install
 
-.PHONY: build clean test lint format check install all android-test test-all android-test-report screenshots update_readme update_readme_versions _build_screenshots_apk _cleanup_screenshots_apk _ensure_fastlane _set_emulator_location_moscow emulator-fast emulator-slow _emulator_animations setup setup_fastlane update_fastlane fastlane help release apk _check_rbenv _check_ruby _check_ruby_version_file _check_bundler _check_gemfile _install_gemfile_deps _check_markdownlint _load_secrets setup_ssh
+.PHONY: build clean test lint format check install all android-test memory-check test-all android-test-report screenshots update_readme update_readme_versions _build_screenshots_apk _cleanup_screenshots_apk _ensure_fastlane _set_emulator_location_moscow emulator-fast emulator-slow _emulator_animations setup setup_fastlane update_fastlane fastlane help release apk _check_rbenv _check_ruby _check_ruby_version_file _check_bundler _check_gemfile _install_gemfile_deps _check_markdownlint _load_secrets setup_ssh

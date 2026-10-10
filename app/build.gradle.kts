@@ -163,8 +163,11 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     androidTestImplementation(libs.mockk.android)
+    // JUnit-правило LeakCanary: валит тест при подтвержденных утечках (make memory-check)
+    androidTestImplementation(libs.leakcanary.android.instrumentation)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    debugImplementation(libs.leakcanary.android)
 }
 
 detekt {
