@@ -187,9 +187,6 @@ class ChatViewModel(
                 // Ошибки markAsRead логируем, но не беспокоим пользователя
                 val error = result.exceptionOrNull()
                 logger.e(TAG, "Ошибка markAsRead: ${error?.message}", error)
-                if (error != null) {
-                    crashReporter.logException(error, "Ошибка markAsRead")
-                }
             }
         }
     }

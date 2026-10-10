@@ -425,7 +425,7 @@ class ChatViewModelTest {
             // Then - markAsRead errors should NOT call userNotifier.handleError
             verify(exactly = 0) { userNotifier.handleError(any<AppError>()) }
             verify { logger.e(any(), match { it.contains("Ошибка markAsRead") }, any()) }
-            verify { crashReporter.logException(any(), "Ошибка markAsRead") }
+            verify(exactly = 0) { crashReporter.logException(any(), any()) }
         }
 
     // ==================== events flow ====================

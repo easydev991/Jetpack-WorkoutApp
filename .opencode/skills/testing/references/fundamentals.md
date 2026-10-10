@@ -58,6 +58,51 @@ fun invoke_whenValidCredentials_thenSavesTokenAndCallsLogin() = runTest {
 }
 ```
 
+## Параметризация
+
+Канон проекта — **`forEach` внутри `@Test`**, без
+`@RunWith(Parameterized::class)` (в проекте 0 таких — не вводить без
+реальной нужды: отдельный runner = отдельный инстанс класса на каждый
+кейс и медленнее прогон).
+
+Пример из реального проекта (`MessagesRepositoryImplTest`):
+
+```kotlin
+@Test
+fun markDialogAsRead_whenApiReturnsAnyResponse_thenResetsUnreadCountAndReturnsSuccess() = runTest {
+    // Given
+    val responses = listOf(
+        Response.success(Unit),
+        Response.error(403, "{}".toResponseBody(null))
+    )
+
+    responses.forEach { response ->
+        val mockApi = mockk<SWApi>()
+        val dialogDao = mockk<DialogDao>(relaxed = true)
+        coEvery { mockApi.markAsRead(2L) } returns response
+        val repository = createRepository(mockApi, dialogDao)
+
+        // When
+        val result = repository.markDialogAsRead(dialogId = 1L, userId = 2)
+
+        // Then
+        assertTrue("Ожидался success при ответе $response", result.isSuccess)
+        coVerify(exactly = 1) { dialogDao.updateUnreadCount(0) }
+    }
+}
+```
+
+Три правила:
+
+1. **Моки, по которым `verify(exactly = N)`, создавать внутри
+   итерации.** Общий мок накапливает вызовы через итерации —
+   `exactly = 1` упадёт на второй. `relaxed = true` + локальное
+   создание — дёшево и изолированно.
+2. `verify`/`coVerify` — внутри итерации, рядом с assert.
+3. В имени теста — обобщение (`whenApiReturnsAnyResponse`), конкретные
+   значения — в списке. Если кейсы ведут себя по-разному (разный
+   результат) — это отдельные тесты, а не параметризация.
+
 ## Сообщения assert на русском
 
 С контекстом и фактическими значениями:

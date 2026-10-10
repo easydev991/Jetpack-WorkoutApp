@@ -34,9 +34,9 @@
 
 ### MarkAsRead
 
-1. При прокрутке к последнему сообщению проверяется видимость
-2. Если последнее входящее сообщение видно — вызывается `markAsRead(userId)`
-3. Используется `MessagesRepositoryImpl.markDialogAsRead()` — обновляет и сервер, и локальную БД
+1. Авто-отметка по скроллу **не подключена**: `ChatScreen` принимает `onMarkAsRead = { }` (no-op)
+2. Отметка выполняется вручную: «Отметить прочитанным» в контекстном меню `MessagesRootScreen` → `DialogsViewModel.markDialogAsRead()`
+3. `MessagesRepositoryImpl.markDialogAsRead()` — best-effort: при ошибке API (в т.ч. 403) сбой логируется и игнорируется, локальный сброс счётчика в Room выполняется при любом ответе; `failure` возвращается только при ошибке Room
 4. Room Flow автоматически обновляет бейдж непрочитанных на `MessagesRootScreen`
 
 ### UI-компоненты

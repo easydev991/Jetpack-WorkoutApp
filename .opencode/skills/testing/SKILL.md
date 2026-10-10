@@ -75,27 +75,30 @@ description: >
 12. **Robolectric** для unit-тестов с Android `Context`/`Resources` →
     `references/fundamentals.md` (общий вид) + `references/room-testing.md`
     (DAO-каркас «Каркас 2», `@Config(sdk=[33])` + `allowMainThreadQueries`).
+13. **Параметризация — `forEach` внутри `@Test`** (не
+    `@RunWith(Parameterized)`); моки для `verify(exactly = N)` —
+    внутри итерации → `references/fundamentals.md` (раздел «Параметризация»).
 
 ### androidTest (app/src/androidTest/)
 
-13. **`TimeoutTest(N)` — базовый класс** (UI: 60 с, Keystore/Room:
+14. **`TimeoutTest(N)` — базовый класс** (UI: 60 с, Keystore/Room:
     180 с) → `references/room-testing.md` (раздел «Каркас 1»).
-14. **Все androidTest-классы несут `@RunWith(AndroidJUnit4::class)`**
+15. **Все androidTest-классы несут `@RunWith(AndroidJUnit4::class)`**
     (включая компонентные). Исключение обосновать в коде.
-15. **ComposeTestRule** + один `setContent` на тест (повторный
+16. **ComposeTestRule** + один `setContent` на тест (повторный
     `setContent` бросает `IllegalStateException`; смена экрана —
     через `mutableStateOf` внутри первого `setContent`) →
     `references/compose-ui-testing.md`.
-16. **`Fake*ViewModel`** в `ui/viewmodel/` для изоляции экрана (при
+17. **`Fake*ViewModel`** в `ui/viewmodel/` для изоляции экрана (при
     изменении реального VM — синхронизируй Fake) →
     `references/fakes-and-stateflow.md` (раздел «Fake*ViewModel в androidTest»).
     Выбор Mock vs Fake — `Bottom line` там же.
-17. **Room in-memory** для DAO → `references/room-testing.md`.
-18. **`waitUntil`/`waitForIdle` вместо `Thread.sleep`** →
+18. **Room in-memory** для DAO → `references/room-testing.md`.
+19. **`waitUntil`/`waitForIdle` вместо `Thread.sleep`** →
     `references/compose-ui-testing.md`.
-19. **Строки UI через ресурсы** (`context.getString(R.string.xxx)`)
+20. **Строки UI через ресурсы** (`context.getString(R.string.xxx)`)
     → `references/compose-ui-testing.md`.
-20. **Поиск нод в merged-контейнерах** — `useUnmergedTree = true` →
+21. **Поиск нод в merged-контейнерах** — `useUnmergedTree = true` →
     `references/compose-ui-testing.md`.
 
 ## First 60 seconds (triage template)
@@ -134,7 +137,8 @@ description: >
 | `MutableSharedFlow()` без буфера + suspend `emit()` до подписки → deadlock | Либо `extraBufferCapacity = 1` / `replay = 1`, либо не-suspend `tryEmit`. Подробности — `references/fakes-and-stateflow.md` (раздел «Буфер MutableSharedFlow») |
 | Room-тест падает «cannot access database on the main thread» | DAO вызывать через `runTest` (или `runBlocking` в Robolectric). Флаг `.allowMainThreadQueries()` нужен только в Robolectric-DAO в `test/.../database/dao/` (ParkDaoTest, UserTrainingParkDaoTest); в androidTest `JournalEntryDaoTest` работает без флага |
 | Mockito в импортах | Только MockK |
-| Прогон `make android-test` зависает >10 мин или идёт втрое дольше обычного | Масштабы анимаций слетели: `android-test` чинит их сам (prereq `_ensure_animations_off`), при прямом gradle-вызове — сначала `make emulator-fast` (сам сверяет read-back). Диагностика и механизм — `references/running-tests.md` («Масштабы анимаций: авто-защита от дрейфа»). Если и с ними висит — проверь `TimeoutTest(N)` (правило 13) |
+| Прогон `make android-test` зависает >10 мин или идёт втрое дольше обычного | Масштабы анимаций слетели: `android-test` чинит их сам (prereq `_ensure_animations_off`), при прямом gradle-вызове — сначала `make emulator-fast` (сам сверяет read-back). Диагностика и механизм — `references/running-tests.md` («Масштабы анимаций: авто-защита от дрейфа»). Если и с ними висит — проверь `TimeoutTest(N)` (правило 14) |
+| `coVerify(exactly = 1)` падает на второй итерации `forEach` в параметризованном тесте | Моки создавать внутри цикла — общий мок накапливает вызовы через итерации → `references/fundamentals.md` («Параметризация») |
 | `--tests "<FQN>"` для androidTest: `Unknown command-line option` | AGP 9 не поддерживает — `references/running-tests.md` (раздел «Фильтр по одному классу») |
 | Тест flaky из-за сети | → `references/compose-ui-testing.md` («Сетевые тесты») |
 
@@ -170,16 +174,17 @@ description: >
 
 ## Verification checklist
 
-Пройти правила 1–20 — таблица «правило → файл» ниже.
+Пройти правила 1–21 — таблица «правило → файл» ниже.
 
 | Правила | Где смотреть |
 |---|---|
 | 1–5 (JUnit 4, имена, Given/When/Then, нет `!!`, зеркалирование) | `references/fundamentals.md` |
 | 6 (`ViewModel` только unit), 9 (`MainDispatcherRule`), 10 (Turbine, только `test/`) | `references/viewmodel-testing.md` |
-| 7 (MockK vs Fake), 16 (`Fake*ViewModel`, синхронизировать при изменении VM), правило буфера `MutableSharedFlow` | `references/fakes-and-stateflow.md` |
+| 7 (MockK vs Fake), 17 (`Fake*ViewModel`, синхронизировать при изменении VM), правило буфера `MutableSharedFlow` | `references/fakes-and-stateflow.md` |
 | 8 (`coEvery`/`coVerify`) | `references/mocking-mockk.md` |
 | 11 (`Result<T>`) | `references/use-cases.md` |
 | 12 (Robolectric при необходимости) | `references/fundamentals.md` (раздел «Robolectric») + `references/room-testing.md` («Каркас 2» для DAO) |
-| 13 (`TimeoutTest(N)`), 17 (Room in-memory) | `references/room-testing.md` |
-| 14 (`@RunWith(AndroidJUnit4::class)`) | `references/compose-ui-testing.md` (сниппет «Канонический компонентный тест»); исключение обосновать в коде |
-| 15 (один `setContent` на тест), 18 (`waitForIdle` вместо `Thread.sleep`), 19 (`R.string.`), 20 (`useUnmergedTree`) | `references/compose-ui-testing.md` |
+| 13 (forEach-параметризация) | `references/fundamentals.md` (раздел «Параметризация») |
+| 14 (`TimeoutTest(N)`), 18 (Room in-memory) | `references/room-testing.md` |
+| 15 (`@RunWith(AndroidJUnit4::class)`) | `references/compose-ui-testing.md` (сниппет «Канонический компонентный тест»); исключение обосновать в коде |
+| 16 (один `setContent` на тест), 19 (`waitForIdle` вместо `Thread.sleep`), 20 (`R.string.`), 21 (`useUnmergedTree`) | `references/compose-ui-testing.md` |

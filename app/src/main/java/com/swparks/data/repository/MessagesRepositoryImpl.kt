@@ -99,25 +99,43 @@ open class MessagesRepositoryImpl(
             Result.failure(handleHttpException(e, TAG, "отметке сообщений прочитанными"))
         }
 
+    /**
+     * Отмечает сообщения диалога прочитанными.
+     *
+     * Контракт: серверный вызов выполняется best-effort, его результат
+     * не влияет на итог и не репортится в CrashReporter; при ошибке
+     * локального сброса счётчика возвращается [Result.failure] —
+     * DialogsViewModel покажет пользователю syncError-снекбар.
+     */
+    @Suppress("TooGenericExceptionCaught")
     open suspend fun markDialogAsRead(
         dialogId: Long,
         userId: Int
-    ): Result<Unit> =
+    ): Result<Unit> {
         try {
             val response = swApi.markAsRead(userId.toLong())
-            if (response.isSuccessful) {
-                dialogsDao?.updateUnreadCount(dialogId)
-                Result.success(Unit)
-            } else {
-                Result.failure(handleResponseError(response, TAG, "отметке сообщений прочитанными"))
+            if (!response.isSuccessful) {
+                logger.w(TAG, "Сервер отклонил отметку сообщений прочитанными: код ${response.code()}")
             }
         } catch (e: IOException) {
-            Result.failure(handleIOException(e, TAG, "отметке сообщений прочитанными"))
+            logger.w(TAG, "Ошибка сети при отметке сообщений прочитанными", e)
         } catch (e: HttpException) {
-            Result.failure(handleHttpException(e, TAG, "отметке сообщений прочитанными"))
+            logger.w(TAG, "Ошибка сервера при отметке сообщений прочитанными", e)
         } catch (e: IllegalStateException) {
-            Result.failure(NetworkException("Ошибка сети: ${e.message}"))
+            logger.w(TAG, "Некорректное состояние при отметке сообщений прочитанными", e)
         }
+
+        try {
+            dialogsDao?.updateUnreadCount(dialogId)
+        } catch (e: Exception) {
+            logger.w(TAG, "Ошибка сброса счётчика непрочитанных в БД", e)
+            return Result.failure(
+                NetworkException("Не удалось отметить диалог прочитанным", cause = e)
+            )
+        }
+
+        return Result.success(Unit)
+    }
 
     open suspend fun deleteDialog(dialogId: Long): Result<Unit> =
         try {
