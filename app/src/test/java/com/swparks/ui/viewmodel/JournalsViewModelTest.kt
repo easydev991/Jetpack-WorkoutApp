@@ -7,6 +7,7 @@ import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
 import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.domain.exception.ServerException
 import com.swparks.domain.model.Journal
 import com.swparks.domain.usecase.DeleteJournalUseCase
 import com.swparks.domain.usecase.EditJournalSettingsUseCase
@@ -777,6 +778,43 @@ class JournalsViewModelTest {
             // Then - проверяем, что handleError был вызван
             coVerify(exactly = 1) {
                 userNotifier.handleError(match { it is AppError.Generic })
+            }
+        }
+
+    /**
+     * Тест 16.1: Инфра-404 (ServerException с кодом 503) — локализованное «Сервер недоступен»
+     */
+    @Test
+    fun testDeleteJournal_serverExceptionWithCode503_callsHandleErrorWithServer() =
+        runTest {
+            // Given
+            val testJournalId = 1L
+            coEvery {
+                deleteJournalUseCase(testUserId, testJournalId)
+            } returns Result.failure(ServerException(message = "Сервер недоступен", code = 503))
+
+            // When
+            viewModel =
+                JournalsViewModel(
+                    testUserId,
+                    getJournalsUseCase,
+                    syncJournalsUseCase,
+                    deleteJournalUseCase,
+                    editJournalSettingsUseCase,
+                    userNotifier,
+                    resources,
+                    analyticsService = analyticsService
+                )
+            advanceUntilIdle()
+
+            viewModel.deleteJournal(testJournalId)
+            advanceUntilIdle()
+
+            // Then - handleError получает AppError.Server (локализованная строка вместо хардкода)
+            coVerify(exactly = 1) {
+                userNotifier.handleError(
+                    AppError.Server(code = 503, message = "Сервер недоступен")
+                )
             }
         }
 

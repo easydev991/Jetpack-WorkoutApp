@@ -8,8 +8,6 @@ sealed class OtherUserProfileUiState {
 
     data object UserNotFound : OtherUserProfileUiState()
 
-    data object BlockedByUser : OtherUserProfileUiState()
-
     data class Success(
         val country: Country? = null,
         val city: City? = null

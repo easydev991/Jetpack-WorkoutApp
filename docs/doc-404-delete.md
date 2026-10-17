@@ -7,6 +7,8 @@
 2. Показать ошибку пользователю
 3. Вернуться на предыдущий экран
 
+**Правило (канон)**: удаление при 404 допустимо **только** если тело ответа — JSON с полями `errors`/`name` (реальный API-404; проверено живыми запросами к проду: оба формата 404 — `errors`-массив от контроллеров и `name`+`message`+`status` от Yii2 error handler — несут эти поля, пустых тел сервер не отдаёт). Инфраструктурный 404 (HTML-страница от nginx/прокси, пустое или битое тело, чужой JSON без `errors`/`name`) удаление **не** инициирует: он мапится в `ServerException(code = 503)` → `AppError.Server(code = 503)` → «Сервер недоступен. Попробуйте позже.» (`R.string.error_server_unavailable`). Это единственный путь обработки инфра-404 — см. раздел «Определение реального API-404».
+
 **Порядок действий**: сначала отправить ошибку в `UserNotifier`, затем эмитить навигационное событие назад. Поскольку уведомления централизованно показывает `RootScreen`, сообщение переживёт возврат на предыдущий экран.
 
 ---
@@ -66,6 +68,39 @@ data object NavigateBack : EventDetailEvent()
 2. `userNotifier.handleError(AppError.ResourceNotFound(...))` — показывает Snackbar
 3. `emit(NavigateBack)` — возврат на предыдущий экран
 
+Алгоритм применяется **только** для реального API-404 (см. следующий раздел). При инфра-404 ни один из шагов не выполняется: пользователь видит «Сервер недоступен. Попробуйте позже.», локальный кэш сохраняется.
+
+---
+
+## Определение реального API-404
+
+Классификация выполняется **по содержимому тела ответа**, Content-Type не проверяется. Помощник: `isApiNotFoundBody(body: ResponseBody?, json: Json): ErrorResponse?` (`BaseRepository.kt`, top-level internal fun).
+
+```
+HTTP 404 получен
+    ↓
+Парсим тело как ErrorResponse
+(Json: ignoreUnknownKeys, isLenient;
+null/blank/битое тело — парсинг не удался)
+    ↓
+Парсинг успешен И есть поля API
+(errors / name; чужой message —
+не признак нашего API)? ── да ──→ API-404
+    ↓ нет                  (ErrorResponse(realMessage = ...) — с серверным сообщением)
+Инфра-404 (пустое тело, HTML/XML/текст
+от прокси или валидный JSON без полей API —
+чужой прокси, Spring Boot и т.п.)
+    → ServerException(message, code = 503)
+    → AppError.Server(code = 503)
+    → «Сервер недоступен. Попробуйте позже.»
+```
+
+**Контракт `isApiNotFoundBody`**: `null` — не API-404 (инфра-404); `ErrorResponse` — API-404, серверное сообщение в `realMessage` (может быть `null`, если заполнено только `name`). `body` — peek-копия (`okhttp3.Response.peekBody`, 64KB), функцией потребляется, исходное `errorBody` не затрагивается.
+
+**Коды `ServerException.code`**: настоящий API-404 → `code = 404` (ViewModel могут ветвиться: например, профиль — экран «Пользователь не найден»); инфра-404 → `code = 503` («Сервер недоступен», деструктивные действия запрещены); прочие ошибки → `code = null`. Инфра-404 дополнительно пишет breadcrumb `crashReporter.log("[infra_html_404] ...")`.
+
+**Следствие для деструктивных операций**: удаление park/event из локального кэша и silent delete журналов/записей разрешены только при `isApiNotFoundBody != null`.
+
 ---
 
 ## Реализованные файлы
@@ -108,10 +143,10 @@ data object NavigateBack : EventDetailEvent()
 
 ### ViewModel тесты
 
-- `loadPark_whenParkNotFound_thenDeletesLocallyNotifiesAndNavigatesBack`
-- `loadPark_whenParkNotFound_thenUiStateShowsError`
-- `loadEvent_whenEventNotFound_thenDeletesLocallyNotifiesAndNavigatesBack`
-- `loadEvent_whenEventNotFound_thenUiStateShowsError`
+- `loadPark_whenParkNotFound_thenDeletesLocallyNotifiesAndNavigatesBack` (`ParkDetailViewModelTest`)
+- `loadPark_whenParkNotFound_thenUiStateShowsError` (`ParkDetailViewModelTest`)
+- `loadEvent_whenEventNotFound_thenDeletesLocallyNotifiesAndNavigatesBack` (`EventDetailViewModelTest`)
+- `loadEvent_whenEventNotFound_thenUiStateShowsError` (`EventDetailViewModelTest`)
 
 ### Presentation Integration тесты
 

@@ -22,6 +22,9 @@ class AppErrorExtTest {
             context.getString(R.string.geocoding_address_build_fail)
         } returns "Unable to determine address, please enter it manually"
         every { context.getString(R.string.error_network_io) } returns "Network error. Check your internet connection."
+        every {
+            context.getString(R.string.error_server_unavailable)
+        } returns "Сервер недоступен. Попробуйте позже."
     }
 
     @Test
@@ -66,5 +69,14 @@ class AppErrorExtTest {
         val result = error.toUiText(context)
 
         assertEquals("Custom error message", result)
+    }
+
+    @Test
+    fun toUiText_whenServerErrorWithCode503_returnsServerUnavailableString() {
+        val error = AppError.Server(message = "Сервер недоступен", code = 503)
+
+        val result = error.toUiText(context)
+
+        assertEquals("Сервер недоступен. Попробуйте позже.", result)
     }
 }

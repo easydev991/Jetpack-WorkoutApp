@@ -16,7 +16,9 @@ import com.swparks.domain.usecase.SyncJournalsUseCase
 import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalsUiState
 import com.swparks.util.AppError
+import com.swparks.util.HTTP_SERVICE_UNAVAILABLE
 import com.swparks.util.UserNotifier
+import com.swparks.util.isInfraNotFound
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -222,12 +224,22 @@ class JournalsViewModel(
                     }.onFailure { error ->
                         Log.e(TAG, "Ошибка при удалении дневника: ${error.message}")
                         analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.JOURNAL_DELETE_FAILED, error))
-                        userNotifier.handleError(
-                            AppError.Generic(
-                                error.message ?: resources.getString(R.string.error_delete_journal),
-                                error
+                        if (error.isInfraNotFound()) {
+                            // Инфра-404 (HTML/чужой JSON от прокси): локализованное «Сервер недоступен»
+                            userNotifier.handleError(
+                                AppError.Server(
+                                    code = HTTP_SERVICE_UNAVAILABLE,
+                                    message = error.message ?: ""
+                                )
                             )
-                        )
+                        } else {
+                            userNotifier.handleError(
+                                AppError.Generic(
+                                    error.message ?: resources.getString(R.string.error_delete_journal),
+                                    error
+                                )
+                            )
+                        }
                     }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e

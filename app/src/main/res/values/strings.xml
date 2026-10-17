@@ -381,7 +381,6 @@
     <string name="search_min_length_hint">Enter at least 2 characters</string>
 
     <!-- Other User Profile Screen -->
-    <string name="blocked_by_user">This user has restricted access to their profile</string>
     <string name="go_back">Go back</string>
     <string name="block_user_alert">Are you sure you want to block this user? They will not be able to view your profile or send you messages.</string>
     <string name="unblock_user_alert">Are you sure you want to unblock this user? They will be able to view your profile and send you messages again.</string>

@@ -83,12 +83,3 @@ private fun AppError.LocationFailed.toLocationFailedUiText(context: Context): St
 
 private fun AppError.LocationDisabled.toLocationDisabledUiText(context: Context): String =
     context.getString(R.string.location_settings_disabled)
-
-/**
- * HTTP коды ошибок.
- */
-private const val HTTP_UNAUTHORIZED = 401
-private const val HTTP_FORBIDDEN = 403
-private const val HTTP_NOT_FOUND = 404
-private const val HTTP_INTERNAL_SERVER_ERROR = 500
-private const val HTTP_SERVICE_UNAVAILABLE = 503

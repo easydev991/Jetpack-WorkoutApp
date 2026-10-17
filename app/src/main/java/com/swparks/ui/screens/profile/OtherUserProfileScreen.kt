@@ -373,11 +373,6 @@ private fun ProfileUiStateContent(
                 onBack = { handlers.onProfileAction(ProfileNavigationAction.Back) }
             )
 
-        is OtherUserProfileUiState.BlockedByUser ->
-            BlockedByUserContent(
-                onBack = { handlers.onProfileAction(ProfileNavigationAction.Back) }
-            )
-
         is OtherUserProfileUiState.Success -> {
             ProfileContent(
                 state =
@@ -775,33 +770,6 @@ internal fun UserNotFoundContent(onBack: () -> Unit) {
 }
 
 @Composable
-internal fun BlockedByUserContent(onBack: () -> Unit) {
-    Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(dimensionResource(R.dimen.spacing_regular)),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = stringResource(R.string.blocked_by_user),
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_regular)))
-        SWButton(
-            config =
-                ButtonConfig(
-                    size = SWButtonSize.SMALL,
-                    text = stringResource(R.string.go_back),
-                    onClick = onBack
-                )
-        )
-    }
-}
-
-@Composable
 internal fun ErrorContent(
     message: String,
     canRetry: Boolean,
@@ -864,14 +832,6 @@ private fun FriendActionButtonPreview() {
 private fun UserNotFoundContentPreview() {
     JetpackWorkoutAppTheme {
         UserNotFoundContent(onBack = {})
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun BlockedByUserContentPreview() {
-    JetpackWorkoutAppTheme {
-        BlockedByUserContent(onBack = {})
     }
 }
 

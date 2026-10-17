@@ -16,11 +16,14 @@ import com.swparks.data.repository.AuthRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.FriendsRepository
 import com.swparks.data.repository.UserProfileRepository
+import com.swparks.domain.exception.ServerException
 import com.swparks.ui.model.BlacklistAction
 import com.swparks.ui.model.toApiOption
 import com.swparks.util.AppError
+import com.swparks.util.HTTP_NOT_FOUND
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
+import com.swparks.util.isInfraNotFound
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,7 +35,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
-import retrofit2.HttpException
 import kotlin.time.Duration.Companion.milliseconds
 
 @Suppress("TooGenericExceptionCaught", "InstanceOfCheckForException", "UnusedPrivateProperty")
@@ -52,8 +54,6 @@ class OtherUserProfileViewModel(
         private const val TAG = "OtherUserProfileViewModel"
         const val CURRENT_USER_LOAD_TIMEOUT_MS = 10_000L // Доступна в тестах
         private const val SUBSCRIPTION_TIMEOUT_MS = 5000L
-        private const val HTTP_FORBIDDEN = 403
-        private const val HTTP_NOT_FOUND = 404
     }
 
     private val _viewedUser = MutableStateFlow<User?>(null)
@@ -156,14 +156,17 @@ class OtherUserProfileViewModel(
                     loadProfileAddress(viewedUser)
                     logger.i(TAG, "Профиль загружен: ${viewedUser.id}")
                 }.onFailure { error ->
-                    val (message, canRetry) =
-                        when (val code = (error as? HttpException)?.code()) {
-                            HTTP_NOT_FOUND -> "Пользователь не найден" to false
-                            HTTP_FORBIDDEN -> "Доступ запрещен" to false
-                            else -> "Ошибка загрузки профиля: ${error.message}" to true
+                    // Репозиторий заворачивает HttpException в ServerException (handleHttpException):
+                    // настоящий API-404 приходит с code = HTTP_NOT_FOUND, инфра-404 — с code = 503
+                    val isUserNotFound = error is ServerException && error.code == HTTP_NOT_FOUND
+                    val message =
+                        when {
+                            isUserNotFound -> resources.getString(R.string.error_user_not_found)
+                            error.isInfraNotFound() -> resources.getString(R.string.error_server_unavailable)
+                            else -> "Ошибка загрузки профиля: ${error.message}"
                         }
                     userNotifier.handleError(AppError.Generic(message, error))
-                    if (!canRetry) {
+                    if (isUserNotFound) {
                         _uiState.update { OtherUserProfileUiState.UserNotFound }
                     } else {
                         _uiState.update { OtherUserProfileUiState.Error(message, canRetry = true) }
@@ -184,9 +187,24 @@ class OtherUserProfileViewModel(
                     _viewedUser.update { viewedUser }
                     loadProfileAddress(viewedUser)
                 }.onFailure { error ->
-                    val message = "Ошибка обновления профиля: ${error.message}"
-                    userNotifier.handleError(AppError.Generic(message, error))
-                    logger.e(TAG, message)
+                    // Настоящий API-404 при refresh: профиль удалён на сервере —
+                    // открываем экран «не найден»; прочие ошибки не трогают состояние
+                    // (контракт refresh: снэкбар + текущий экран)
+                    if (error is ServerException && error.code == HTTP_NOT_FOUND) {
+                        val notFoundMessage = resources.getString(R.string.error_user_not_found)
+                        userNotifier.handleError(AppError.Generic(notFoundMessage, error))
+                        logger.e(TAG, notFoundMessage)
+                        _uiState.update { OtherUserProfileUiState.UserNotFound }
+                    } else {
+                        val message =
+                            if (error.isInfraNotFound()) {
+                                resources.getString(R.string.error_server_unavailable)
+                            } else {
+                                "Ошибка обновления профиля: ${error.message}"
+                            }
+                        userNotifier.handleError(AppError.Generic(message, error))
+                        logger.e(TAG, message)
+                    }
                 }
 
             _isRefreshing.update { false }
@@ -246,7 +264,6 @@ class OtherUserProfileViewModel(
                     )
 
                 is OtherUserProfileUiState.UserNotFound -> OtherUserProfileUiState.UserNotFound
-                is OtherUserProfileUiState.BlockedByUser -> OtherUserProfileUiState.BlockedByUser
             }
         }
     }

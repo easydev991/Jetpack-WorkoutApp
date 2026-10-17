@@ -18,6 +18,7 @@ import com.swparks.data.repository.CommentsRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.domain.exception.NotFoundException
+import com.swparks.domain.exception.ServerException
 import com.swparks.domain.usecase.DeleteParkUseCase
 import com.swparks.ui.ds.CommentAction
 import com.swparks.ui.model.TextEntryMode
@@ -745,6 +746,42 @@ class ParkDetailViewModelTest {
 
             val state = viewModel.uiState.value
             assertTrue(state is ParkDetailUIState.Error)
+        }
+
+    @Test
+    fun loadPark_whenServerExceptionWithCode503_thenShowsServerUnavailableAndDoesNotDelete() =
+        runTest {
+            // Given — инфра-404 (HTML от прокси), классифицированный репозиторием как ServerException(503)
+            val testDispatcher = StandardTestDispatcher(testScheduler)
+            Dispatchers.setMain(testDispatcher)
+
+            coEvery { parksEventsRepository.getPark(TEST_PARK_ID) } returns
+                Result.failure(ServerException(message = "Сервер недоступен", code = 503))
+
+            val viewModel = createViewModel()
+
+            // When
+            viewModel.events.test {
+                runCurrent()
+
+                // Then — NavigateBack не эмитится, локальный кэш не удаляется
+                expectNoEvents()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            coVerify(exactly = 0) { deleteParkUseCase.invoke(TEST_PARK_ID) }
+            verify {
+                userNotifier.handleError(
+                    AppError.Server(
+                        code = 503,
+                        message = "Сервер недоступен"
+                    )
+                )
+            }
+            assertTrue(
+                "Ожидалось состояние Error",
+                viewModel.uiState.value is ParkDetailUIState.Error
+            )
         }
 
     // ==================== Тесты аналитики ====================

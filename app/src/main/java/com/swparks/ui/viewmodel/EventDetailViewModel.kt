@@ -33,8 +33,10 @@ import com.swparks.ui.model.TextEntryOption
 import com.swparks.ui.state.EventDetailUIState
 import com.swparks.util.AppError
 import com.swparks.util.Complaint
+import com.swparks.util.HTTP_SERVICE_UNAVAILABLE
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
+import com.swparks.util.isInfraNotFound
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -395,7 +397,14 @@ class EventDetailViewModel(
                         )
                         analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.EVENT_LOAD_FAILED, exception))
                         handleError(exception, "загрузке мероприятия")
-                        _uiState.value = EventDetailUIState.Error(exception.message)
+                        _uiState.value =
+                            EventDetailUIState.Error(
+                                if (exception.isInfraNotFound()) {
+                                    resourcesProvider.getString(R.string.error_server_unavailable)
+                                } else {
+                                    exception.message
+                                }
+                            )
                     }
                 )
             } catch (e: Exception) {
@@ -403,7 +412,14 @@ class EventDetailViewModel(
                 logger.e(TAG, "Исключение при загрузке мероприятия: ${e.message}", e)
                 analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.EVENT_LOAD_FAILED, e))
                 handleError(e, "загрузке мероприятия")
-                _uiState.value = EventDetailUIState.Error(e.message)
+                _uiState.value =
+                    EventDetailUIState.Error(
+                        if (e.isInfraNotFound()) {
+                            resourcesProvider.getString(R.string.error_server_unavailable)
+                        } else {
+                            e.message
+                        }
+                    )
             }
         }
     }
@@ -1020,6 +1036,17 @@ class EventDetailViewModel(
         exception: Throwable,
         operation: String
     ) {
+        // Инфра-404 (HTML/чужой JSON от прокси): «Сервер недоступен» — без удаления кэша и NavigateBack
+        if (exception.isInfraNotFound()) {
+            userNotifier.handleError(
+                AppError.Server(
+                    code = HTTP_SERVICE_UNAVAILABLE,
+                    message = exception.message ?: ""
+                )
+            )
+            return
+        }
+
         when (exception) {
             is NotFoundException.EventNotFound -> {
                 viewModelScope.launch {

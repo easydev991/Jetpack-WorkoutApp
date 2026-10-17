@@ -8,6 +8,7 @@ import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.model.JournalEntry
 import com.swparks.network.SWApi
 import com.swparks.util.CrashReporter
+import com.swparks.util.HTTP_NOT_FOUND
 import com.swparks.util.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -32,7 +33,6 @@ class JournalEntriesRepositoryImpl(
 ) {
     private companion object {
         const val TAG = "JournalEntriesRepository"
-        const val HTTP_NOT_FOUND = 404
     }
 
     fun observeJournalEntries(
@@ -98,11 +98,20 @@ class JournalEntriesRepositoryImpl(
                     Result.success(Unit)
                 }
 
-                response.code() == HTTP_NOT_FOUND -> {
-                    // Запись уже удалена на сервере — синхронизируем локальный кэш
+                response.code() == HTTP_NOT_FOUND &&
+                    isApiNotFoundBody(response.raw().peekBody(ERROR_BODY_PEEK_BYTES), json) != null -> {
+                    // Настоящий API-404: запись уже удалена на сервере — синхронизируем локальный кэш
                     logger.i(TAG, "Запись уже удалена на сервере (404), удаляем из локального кэша")
                     journalEntryDao.deleteById(entryId)
                     Result.success(Unit)
+                }
+
+                response.code() == HTTP_NOT_FOUND -> {
+                    // Инфра-404 (HTML/чужой JSON от прокси): класс не наследует BaseRepository,
+                    // классифицируем напрямую — кэш не трогаем
+                    logger.e(TAG, "[infra_html_404] Инфраструктурный 404 при удалении записи — кэш не удаляется")
+                    crashReporter.log("[infra_html_404] Инфраструктурный 404 при удалении записи")
+                    Result.failure(infraNotFound(cause = HttpException(response)))
                 }
 
                 else -> {

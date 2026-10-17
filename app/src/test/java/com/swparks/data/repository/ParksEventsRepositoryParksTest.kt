@@ -12,6 +12,7 @@ import com.swparks.data.database.entity.toEntity
 import com.swparks.data.model.Park
 import com.swparks.data.model.Photo
 import com.swparks.domain.exception.NetworkException
+import com.swparks.domain.exception.ServerException
 import com.swparks.network.SWApi
 import com.swparks.ui.model.ParkForm
 import com.swparks.util.NoOpCrashReporter
@@ -29,8 +30,10 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -38,7 +41,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
 
@@ -244,13 +246,14 @@ class ParksEventsRepositoryParksTest {
     @Test
     fun getPark_whenApiReturns404_thenReturnsParkNotFound() =
         runTest {
-            // Given
+            // Given — JSON-тело как на проде (BaseController::notFound())
             val parkId = 123L
             val mockApi = mockk<SWApi>()
-            val mockResponse = mockk<Response<*>>(relaxed = true)
-            every { mockResponse.code() } returns 404
-            every { mockResponse.message() } returns "HTTP 404"
-            coEvery { mockApi.getPark(parkId) } throws HttpException(mockResponse)
+            coEvery { mockApi.getPark(parkId) } throws
+                testHttpException(
+                    404,
+                    """{"errors": ["площадка не найдена"]}""".toResponseBody(null)
+                )
 
             val repository =
                 ParksEventsRepository(
@@ -277,6 +280,76 @@ class ParksEventsRepositoryParksTest {
                 parkId,
                 (exception as com.swparks.domain.exception.NotFoundException.ParkNotFound).resourceId
             )
+        }
+
+    @Test
+    fun getPark_whenApiReturns404WithHtmlBody_thenReturnsFailureWithServerExceptionCode503() =
+        runTest {
+            // Given — HTML-страница от nginx (инфраструктурный 404)
+            val parkId = 123L
+            val html =
+                "<html><head><title>404 Not Found</title></head><body>404 Not Found</body></html>"
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.getPark(parkId) } throws
+                testHttpException(
+                    404,
+                    html.toResponseBody("text/html".toMediaType())
+                )
+
+            val repository =
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    logger = logger,
+                    crashReporter = crashReporter
+                )
+
+            // When
+            val result = repository.getPark(parkId)
+
+            // Then — не NotFoundException: инфра-404 не должен инициировать удаление кэша
+            assertTrue(result.isFailure)
+            val exception = result.exceptionOrNull()
+            assertTrue(
+                "Ожидался ServerException, получено: $exception",
+                exception is ServerException
+            )
+            assertEquals(503, (exception as ServerException).code)
+        }
+
+    @Test
+    fun getPark_whenApiReturns404WithEmptyBody_thenReturnsFailureWithServerExceptionCode503() =
+        runTest {
+            // Given — пустое тело: реальный API всегда кладёт errors/name, значит это инфраструктура
+            val parkId = 123L
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.getPark(parkId) } throws testHttpException(404, "".toResponseBody(null))
+
+            val repository =
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    logger = logger,
+                    crashReporter = crashReporter
+                )
+
+            // When
+            val result = repository.getPark(parkId)
+
+            // Then — не NotFoundException: инфра-404 не должен инициировать удаление кэша
+            assertTrue(result.isFailure)
+            val exception = result.exceptionOrNull()
+            assertTrue(
+                "Ожидался ServerException, получено: $exception",
+                exception is ServerException
+            )
+            assertEquals(503, (exception as ServerException).code)
         }
 
     @Test
@@ -765,6 +838,63 @@ class ParksEventsRepositoryParksTest {
             // Then
             assertTrue(result.isSuccess)
             coVerify { mockApi.deletePark(1L) }
+        }
+
+    @Test
+    fun deletePark_when404WithApiBody_thenDeletesLocallyAndReturnsSuccess() =
+        runTest {
+            // Given — идемпотентность как в iOS: настоящий API-404 = площадка уже удалена на сервере
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.deletePark(1L) } returns
+                testErrorResponse(404, """{"errors": ["площадка не найдена"]}""".toResponseBody(null))
+
+            val repository =
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    logger = logger,
+                    crashReporter = crashReporter
+                )
+
+            // When
+            val result = repository.deletePark(1L)
+
+            // Then — локальный кэш синхронизирован
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) { mockParkDao.deleteById(1L) }
+        }
+
+    @Test
+    fun deletePark_when404WithHtmlBody_thenReturnsFailureWithServerExceptionCode503() =
+        runTest {
+            // Given — инфраструктурный 404 (HTML от прокси): площадка могла остаться на сервере
+            val mockApi = mockk<SWApi>()
+            coEvery { mockApi.deletePark(1L) } returns
+                testErrorResponse(404, "<html><body>404 Not Found</body></html>".toResponseBody(null))
+
+            val repository =
+                ParksEventsRepository(
+                    swApi = mockApi,
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    logger = logger,
+                    crashReporter = crashReporter
+                )
+
+            // When
+            val result = repository.deletePark(1L)
+
+            // Then — кэш не трогаем, ServerException(503)
+            assertTrue("Ожидался failure", result.isFailure)
+            val exception = result.exceptionOrNull()
+            assertTrue("Ожидался ServerException", exception is ServerException)
+            assertEquals(503, (exception as? ServerException)?.code)
+            coVerify(exactly = 0) { mockParkDao.deleteById(any()) }
         }
 
     @Test

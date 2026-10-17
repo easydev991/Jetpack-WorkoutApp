@@ -17,7 +17,7 @@
 
 - [x] `FriendAction` enum (SEND_FRIEND_REQUEST, REMOVE_FRIEND)
 - [x] `BlacklistAction` enum (BLOCK, UNBLOCK)
-- [x] `OtherUserProfileUiState` sealed class (Loading, UserNotFound, BlockedByUser, Success, Error)
+- [x] `OtherUserProfileUiState` sealed class (Loading, UserNotFound, Success, Error)
 - [x] ViewModel с кэшированием viewedUser, currentUser, friends, blacklist
 - [x] DI через AppContainer, навигация из MyFriendsScreen/SearchUserScreen
 
@@ -28,7 +28,6 @@
 - [x] `BlacklistActionDialog` - диалог подтверждения блокировки/разблокировки
 - [x] `RemoveFriendDialog` - диалог подтверждения удаления из друзей
 - [x] `UserNotFoundContent` - экран "Пользователь не найден"
-- [x] `BlockedByUserContent` - экран "Пользователь ограничил доступ"
 - [x] `ErrorContent` - экран ошибки с кнопкой повтора
 
 ### Friend Actions
@@ -43,7 +42,6 @@
 - [x] Блокировка/разблокировка пользователя
 - [x] Диалоги подтверждения (BlacklistActionDialog)
 - [x] Возврат назад после успешной блокировки (`onBlocked` callback)
-- [x] Отображение состояния "Пользователь ограничил доступ" (`BlockedByUser`)
 
 ### Отправка сообщений
 
@@ -78,28 +76,26 @@ isLoadingCurrentUser (timeout 10s)
 Auth Error  Loading → getUser
 (canRetry=false)
               │
-       ┌──────┴──────┐
-       │             │
-    [404/403]      [200]
-       │             │
-       ▼             ▼
-  UserNotFound   isBlockedMe?
-                     │
-              ┌──────┴──────┐
-              │             │
-           [true]        [false]
-              │             │
-              ▼             ▼
-        BlockedByUser   Success → pull-to-refresh
-                           │
-                           ▼
-                    ProfileContent
-                    ├─ SendMessageButton → TextEntrySheet
-                    ├─ FriendActionButton → Action/Dialog
-                    ├─ FriendsButton
-                    ├─ UsedParksButton
-                    ├─ AddedParksButton
-                    └─ JournalsButton (if > 0)
+       ┌──────┴──────────────┐
+       │                     │
+[ServerException 404]     [200]
+       │                     │
+       ▼                     ▼
+  UserNotFound         Success → pull-to-refresh
+  (loadUser и refreshUser)         │
+                           [ServerException 404]
+                                   │
+                                   ▼
+                            UserNotFound
+                           (прочие ошибки refresh:
+                            снэкбар + текущий экран)
+                           → ProfileContent
+                           ├─ SendMessageButton → TextEntrySheet
+                           ├─ FriendActionButton → Action/Dialog
+                           ├─ FriendsButton
+                           ├─ UsedParksButton
+                           ├─ AddedParksButton
+                           └─ JournalsButton (if > 0)
 ```
 
 ---
@@ -127,7 +123,7 @@ Auth Error  Loading → getUser
 
 | Файл                                           | Назначение                                                                                                                                                      |
 |------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `ui/screens/profile/OtherUserProfileScreen.kt` | UI экран, компоненты: SendMessageButton, FriendActionButton, BlacklistActionDialog, RemoveFriendDialog, UserNotFoundContent, BlockedByUserContent, ErrorContent |
+| `ui/screens/profile/OtherUserProfileScreen.kt` | UI экран, компоненты: SendMessageButton, FriendActionButton, BlacklistActionDialog, RemoveFriendDialog, UserNotFoundContent, ErrorContent |
 | `ui/viewmodel/OtherUserProfileViewModel.kt`    | ViewModel для управления состоянием                                                                                                                             |
 | `ui/viewmodel/OtherUserProfileUiState.kt`      | Sealed class состояний UI                                                                                                                                       |
 | `ui/viewmodel/IOtherUserProfileViewModel.kt`   | Интерфейс ViewModel                                                                                                                                             |
@@ -146,3 +142,9 @@ Auth Error  Loading → getUser
 6. **Тесты:** Приватные composables помечать `internal`, для дублей текста использовать `onAllNodesWithText(text)[index]`
 7. **Собственный профиль:** При `viewedUserId == currentUserId` вызывается `onNavigateToOwnProfile()`
 8. **Адрес:** Кэшируется в ViewModel для оптимизации refreshUser
+9. **404 (пользователь удалён):** `ServerException(code = 404)` в `loadUser` **и**
+   `refreshUser` открывает экран `UserNotFound` (локализованный
+   `R.string.error_user_not_found`); прочие ошибки refresh не меняют состояние
+   (снэкбар + текущий экран). Инфра-503 — обычная ошибка с ретраем.
+   Состояние `BlockedByUser` удалено (2026-10-17): сервер 403 на профиль не
+   отдаёт (`AuthController` на отсутствующего пользователя возвращает 404)

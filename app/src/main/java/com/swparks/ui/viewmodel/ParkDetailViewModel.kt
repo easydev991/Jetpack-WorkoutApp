@@ -31,8 +31,10 @@ import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.state.ParkDetailUIState
 import com.swparks.util.AppError
 import com.swparks.util.Complaint
+import com.swparks.util.HTTP_SERVICE_UNAVAILABLE
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
+import com.swparks.util.isInfraNotFound
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -268,7 +270,14 @@ class ParkDetailViewModel(
                             )
                             analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.PARK_LOAD_FAILED, exception))
                             handleError(exception, "загрузке площадки")
-                            _uiState.value = ParkDetailUIState.Error(exception.message)
+                            _uiState.value =
+                                ParkDetailUIState.Error(
+                                    if (exception.isInfraNotFound()) {
+                                        resourcesProvider.getString(R.string.error_server_unavailable)
+                                    } else {
+                                        exception.message
+                                    }
+                                )
                         }
                     )
                 }
@@ -277,7 +286,14 @@ class ParkDetailViewModel(
                 logger.e(TAG, "Исключение при загрузке площадки: ${e.message}", e)
                 analyticsService.log(AnalyticsEvent.AppError(AppErrorOperation.PARK_LOAD_FAILED, e))
                 handleError(e, "загрузке площадки")
-                _uiState.value = ParkDetailUIState.Error(e.message)
+                _uiState.value =
+                    ParkDetailUIState.Error(
+                        if (e.isInfraNotFound()) {
+                            resourcesProvider.getString(R.string.error_server_unavailable)
+                        } else {
+                            e.message
+                        }
+                    )
             }
         }
     }
@@ -945,6 +961,17 @@ class ParkDetailViewModel(
         exception: Throwable,
         operation: String
     ) {
+        // Инфра-404 (HTML/чужой JSON от прокси): «Сервер недоступен» — без удаления кэша и NavigateBack
+        if (exception.isInfraNotFound()) {
+            userNotifier.handleError(
+                AppError.Server(
+                    code = HTTP_SERVICE_UNAVAILABLE,
+                    message = exception.message ?: ""
+                )
+            )
+            return
+        }
+
         when (exception) {
             is NotFoundException.ParkNotFound -> {
                 viewModelScope.launch {

@@ -6,6 +6,7 @@ import com.swparks.data.database.dao.UserDao
 import com.swparks.data.model.JournalEntryResponse
 import com.swparks.data.model.JournalResponse
 import com.swparks.domain.exception.NetworkException
+import com.swparks.domain.exception.ServerException
 import com.swparks.network.SWApi
 import com.swparks.ui.model.JournalAccess
 import com.swparks.util.NoOpCrashReporter
@@ -21,6 +22,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -440,5 +442,79 @@ class JournalsRepositoryImplTest {
             // Then
             assertTrue(result.isFailure)
             assertTrue(result.exceptionOrNull() is NetworkException)
+        }
+
+    @Test
+    fun deleteJournal_when404WithMessageOnlyJsonBody_thenReturnsFailureWithServerExceptionCode503() =
+        runTest {
+            // Given — message-only JSON без полей API (как у прокси): классифицируется как инфра-404
+            val mockApi = mockk<SWApi>()
+            coEvery {
+                mockApi.deleteJournal(
+                    userId = any(),
+                    journalId = any()
+                )
+            } returns
+                testErrorResponse(
+                    404,
+                    """{"message": "Дневник не найден"}""".toResponseBody(null)
+                )
+
+            val repository =
+                JournalsRepositoryImpl(
+                    mockApi,
+                    mockJournalDao,
+                    mockUserDao,
+                    logger,
+                    crashReporter
+                )
+
+            // When
+            val result = repository.deleteJournal(123L, 1L)
+
+            // Then — кэш не трогаем, ServerException(503)
+            assertTrue("Ожидался failure", result.isFailure)
+            val exception = result.exceptionOrNull()
+            assertTrue("Ожидался ServerException", exception is ServerException)
+            assertEquals(503, (exception as? ServerException)?.code)
+            coVerify(exactly = 0) { mockJournalDao.deleteById(any()) }
+            coVerify(exactly = 0) { mockUserDao.decrementJournalCount() }
+        }
+
+    @Test
+    fun deleteJournal_when404WithHtmlBody_thenReturnsFailureWithServerExceptionCode503() =
+        runTest {
+            // Given — инфраструктурный 404 (HTML от прокси): дневник мог остаться на сервере
+            val mockApi = mockk<SWApi>()
+            coEvery {
+                mockApi.deleteJournal(
+                    userId = any(),
+                    journalId = any()
+                )
+            } returns
+                testErrorResponse(
+                    404,
+                    "<html><body>404 Not Found</body></html>".toResponseBody(null)
+                )
+
+            val repository =
+                JournalsRepositoryImpl(
+                    mockApi,
+                    mockJournalDao,
+                    mockUserDao,
+                    logger,
+                    crashReporter
+                )
+
+            // When
+            val result = repository.deleteJournal(123L, 1L)
+
+            // Then — кэш не трогаем, ServerException(503)
+            assertTrue("Ожидался failure", result.isFailure)
+            val exception = result.exceptionOrNull()
+            assertTrue("Ожидался ServerException", exception is ServerException)
+            assertEquals(503, (exception as? ServerException)?.code)
+            coVerify(exactly = 0) { mockJournalDao.deleteById(any()) }
+            coVerify(exactly = 0) { mockUserDao.decrementJournalCount() }
         }
 }

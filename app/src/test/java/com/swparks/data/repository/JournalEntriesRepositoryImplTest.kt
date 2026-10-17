@@ -3,6 +3,7 @@ package com.swparks.data.repository
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.entity.JournalEntryEntity
 import com.swparks.data.model.JournalEntryResponse
+import com.swparks.domain.exception.ServerException
 import com.swparks.network.SWApi
 import com.swparks.util.CrashReporter
 import com.swparks.util.Logger
@@ -490,15 +491,16 @@ class JournalEntriesRepositoryImplTest {
         }
 
     /**
-     * Тест 11: Идемпотентность - 404 Not Found возвращает success и удаляет из БД
+     * Тест 11: 404 Not Found с пустым телом — инфра-404, кэш не удаляется
+     * (реальный API всегда кладёт errors/name, пустой 404 приходит от инфраструктуры)
      */
     @Test
-    fun testDeleteJournalEntry_404_deletesFromDbAndReturnsSuccess() =
+    fun testDeleteJournalEntry_404_emptyBody_returnsFailureWithServerExceptionCode503() =
         runTest {
-            // Given
+            // Given — пустое тело: классифицируется как инфра-404
             val testEntryId = 1L
             val notFoundResponse: Response<Unit> =
-                Response.error(404, "".toResponseBody(null))
+                testErrorResponse(404, "".toResponseBody(null))
             coEvery { mockApi.deleteJournalEntry(testUserId, testJournalId, testEntryId) } returns
                 notFoundResponse
 
@@ -506,17 +508,58 @@ class JournalEntriesRepositoryImplTest {
             val result = repository.deleteJournalEntry(testUserId, testJournalId, testEntryId)
 
             // Then
-            assertTrue(result.isSuccess)
-            coVerify(exactly = 1) {
-                mockApi.deleteJournalEntry(testUserId, testJournalId, testEntryId)
-            }
-            coVerify(exactly = 1) { mockJournalEntryDao.deleteById(testEntryId) }
-            verify {
-                logger.i(
-                    TAG,
-                    "Запись уже удалена на сервере (404), удаляем из локального кэша"
+            assertTrue("Ожидался failure", result.isFailure)
+            val exception = result.exceptionOrNull()
+            assertTrue("Ожидался ServerException", exception is ServerException)
+            assertEquals(503, (exception as? ServerException)?.code)
+            coVerify(exactly = 0) { mockJournalEntryDao.deleteById(any()) }
+        }
+
+    /**
+     * Тест 11a: 404 с message-only JSON (как у прокси) — инфра-404, кэш не удаляется
+     */
+    @Test
+    fun testDeleteJournalEntry_404_messageOnlyJsonBody_returnsFailureWithServerExceptionCode503() =
+        runTest {
+            // Given
+            val testEntryId = 1L
+            coEvery { mockApi.deleteJournalEntry(testUserId, testJournalId, testEntryId) } returns
+                testErrorResponse(404, """{"message": "Запись не найдена"}""".toResponseBody(null))
+
+            // When
+            val result = repository.deleteJournalEntry(testUserId, testJournalId, testEntryId)
+
+            // Then
+            assertTrue("Ожидался failure", result.isFailure)
+            val exception = result.exceptionOrNull()
+            assertTrue("Ожидался ServerException", exception is ServerException)
+            assertEquals(503, (exception as? ServerException)?.code)
+            coVerify(exactly = 0) { mockJournalEntryDao.deleteById(any()) }
+        }
+
+    /**
+     * Тест 11b: инфраструктурный 404 (HTML от прокси) — кэш не удаляется
+     */
+    @Test
+    fun testDeleteJournalEntry_404_htmlBody_returnsFailureWithServerExceptionCode503() =
+        runTest {
+            // Given
+            val testEntryId = 1L
+            coEvery { mockApi.deleteJournalEntry(testUserId, testJournalId, testEntryId) } returns
+                testErrorResponse(
+                    404,
+                    "<html><body>404 Not Found</body></html>".toResponseBody(null)
                 )
-            }
+
+            // When
+            val result = repository.deleteJournalEntry(testUserId, testJournalId, testEntryId)
+
+            // Then
+            assertTrue("Ожидался failure", result.isFailure)
+            val exception = result.exceptionOrNull()
+            assertTrue("Ожидался ServerException", exception is ServerException)
+            assertEquals(503, (exception as? ServerException)?.code)
+            coVerify(exactly = 0) { mockJournalEntryDao.deleteById(any()) }
         }
 
     /**

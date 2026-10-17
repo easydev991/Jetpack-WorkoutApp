@@ -12,6 +12,7 @@ import com.swparks.network.SWApi
 import com.swparks.ui.model.EditJournalSettingsRequest
 import com.swparks.ui.model.JournalAccess
 import com.swparks.util.CrashReporter
+import com.swparks.util.HTTP_NOT_FOUND
 import com.swparks.util.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -38,7 +39,6 @@ open class JournalsRepositoryImpl(
 ) : BaseRepository(logger, crashReporter) {
     companion object {
         private const val TAG = "JournalsRepository"
-        private const val HTTP_NOT_FOUND = 404
     }
 
     fun observeJournals(userId: Long): Flow<List<Journal>> =
@@ -236,13 +236,22 @@ open class JournalsRepositoryImpl(
                     Result.success(Unit)
                 }
 
-                response.code() == HTTP_NOT_FOUND -> {
-                    // Дневник уже удален на сервере — синхронизируем локальный кэш
+                response.code() == HTTP_NOT_FOUND &&
+                    HttpException(response).tryApiNotFoundBody() != null -> {
+                    // Настоящий API-404: дневник уже удален на сервере — синхронизируем локальный кэш
                     logger.i(TAG, "Дневник уже удален на сервере (404), удаляем из локального кэша")
                     journalDao.deleteById(journalId)
                     // Обновляем счётчик дневников текущего пользователя
                     userDao.decrementJournalCount()
                     Result.success(Unit)
+                }
+
+                response.code() == HTTP_NOT_FOUND -> {
+                    // Инфра-404 (HTML/чужой JSON от прокси): не фолбэким в else — там errorBody
+                    // потребляется до handleHttpException и классификация тела теряется
+                    logger.e(TAG, "[infra_html_404] Инфраструктурный 404 при удалении дневника — кэш не удаляется")
+                    crashReporter.log("[infra_html_404] Инфраструктурный 404 при удалении дневника")
+                    Result.failure(infraNotFound(cause = HttpException(response)))
                 }
 
                 else -> {

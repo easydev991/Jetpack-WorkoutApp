@@ -21,6 +21,7 @@ import com.swparks.ui.model.EventForm
 import com.swparks.ui.model.EventType
 import com.swparks.ui.model.ParkForm
 import com.swparks.util.CrashReporter
+import com.swparks.util.HTTP_NOT_FOUND
 import com.swparks.util.Logger
 import com.swparks.util.readJSONFromAssets
 import kotlinx.coroutines.Dispatchers
@@ -122,7 +123,9 @@ open class ParksEventsRepository(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, TAG, "загрузке площадки"))
         } catch (e: HttpException) {
-            if (e.code() == 404) {
+            // Только настоящий API-404 (JSON/пустое тело) даёт NotFoundException;
+            // HTML от прокси уходит в handleHttpException → ServerException(503)
+            if (e.tryApiNotFoundBody() != null) {
                 Result.failure(NotFoundException.ParkNotFound(resourceId = id))
             } else {
                 Result.failure(handleHttpException(e, TAG, "загрузке площадки"))
@@ -212,21 +215,42 @@ open class ParksEventsRepository(
     open suspend fun deletePark(parkId: Long): Result<Unit> =
         try {
             val response = swApi.deletePark(parkId)
-            if (response.isSuccessful) {
-                val currentUserId = preferencesRepository.getCurrentUserIdSync()
-                if (currentUserId != null) {
-                    removeParkFromUser(currentUserId, parkId)
+            when {
+                response.isSuccessful -> {
+                    removeParkLocallyFromServerState(parkId)
+                    Result.success(Unit)
                 }
-                parkDao.deleteById(parkId)
-                Result.success(Unit)
-            } else {
-                Result.failure(handleResponseError(response, TAG, "удалении площадки"))
+                // Идемпотентность как в iOS: настоящий API-404 = площадка уже удалена
+                // на сервере — синхронизируем локальный кэш; инфра-404 кэш не трогается
+                response.code() == HTTP_NOT_FOUND &&
+                    HttpException(response).tryApiNotFoundBody() != null -> {
+                    logger.i(TAG, "Площадка уже удалена на сервере (404), удаляем из локального кэша")
+                    removeParkLocallyFromServerState(parkId)
+                    Result.success(Unit)
+                }
+                response.code() == HTTP_NOT_FOUND -> {
+                    // Инфра-404 (HTML/чужой JSON от прокси): не фолбэким в else — там errorBody
+                    // потребляется до handleResponseError и классификация тела теряется
+                    logger.e(TAG, "[infra_html_404] Инфраструктурный 404 при удалении площадки — кэш не удаляется")
+                    crashReporter.log("[infra_html_404] Инфраструктурный 404 при удалении площадки")
+                    Result.failure(infraNotFound(cause = HttpException(response)))
+                }
+                else -> Result.failure(handleResponseError(response, TAG, "удалении площадки"))
             }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, TAG, "удалении площадки"))
         } catch (e: HttpException) {
             Result.failure(handleHttpException(e, TAG, "удалении площадки"))
         }
+
+    /** Локальная очистка после того, как сервер подтвердил удаление площадки */
+    private suspend fun removeParkLocallyFromServerState(parkId: Long) {
+        val currentUserId = preferencesRepository.getCurrentUserIdSync()
+        if (currentUserId != null) {
+            removeParkFromUser(currentUserId, parkId)
+        }
+        parkDao.deleteById(parkId)
+    }
 
     open suspend fun removeParkLocally(parkId: Long): Result<Unit> =
         try {
@@ -403,7 +427,9 @@ open class ParksEventsRepository(
         } catch (e: IOException) {
             Result.failure(handleIOException(e, TAG, "загрузке мероприятия"))
         } catch (e: HttpException) {
-            if (e.code() == 404) {
+            // Только настоящий API-404 (JSON/пустое тело) даёт NotFoundException;
+            // HTML от прокси уходит в handleHttpException → ServerException(503)
+            if (e.tryApiNotFoundBody() != null) {
                 Result.failure(NotFoundException.EventNotFound(resourceId = id))
             } else {
                 Result.failure(handleHttpException(e, TAG, "загрузке мероприятия"))
@@ -494,18 +520,39 @@ open class ParksEventsRepository(
     open suspend fun deleteEvent(eventId: Long): Result<Unit> =
         try {
             val response = swApi.deleteEvent(eventId)
-            if (response.isSuccessful) {
-                futureEventsFlow.value = futureEventsFlow.value.filter { it.id != eventId }
-                eventDao.deleteById(eventId)
-                Result.success(Unit)
-            } else {
-                Result.failure(handleResponseError(response, TAG, "удалении мероприятия"))
+            when {
+                response.isSuccessful -> {
+                    removeEventLocallyFromServerState(eventId)
+                    Result.success(Unit)
+                }
+                // Идемпотентность как в iOS: настоящий API-404 = мероприятие уже удалено
+                // на сервере — синхронизируем локальный кэш; инфра-404 кэш не трогается
+                response.code() == HTTP_NOT_FOUND &&
+                    HttpException(response).tryApiNotFoundBody() != null -> {
+                    logger.i(TAG, "Мероприятие уже удалено на сервере (404), удаляем из локального кэша")
+                    removeEventLocallyFromServerState(eventId)
+                    Result.success(Unit)
+                }
+                response.code() == HTTP_NOT_FOUND -> {
+                    // Инфра-404 (HTML/чужой JSON от прокси): не фолбэким в else — там errorBody
+                    // потребляется до handleResponseError и классификация тела теряется
+                    logger.e(TAG, "[infra_html_404] Инфраструктурный 404 при удалении мероприятия — кэш не удаляется")
+                    crashReporter.log("[infra_html_404] Инфраструктурный 404 при удалении мероприятия")
+                    Result.failure(infraNotFound(cause = HttpException(response)))
+                }
+                else -> Result.failure(handleResponseError(response, TAG, "удалении мероприятия"))
             }
         } catch (e: IOException) {
             Result.failure(handleIOException(e, TAG, "удалении мероприятия"))
         } catch (e: HttpException) {
             Result.failure(handleHttpException(e, TAG, "удалении мероприятия"))
         }
+
+    /** Локальная очистка после того, как сервер подтвердил удаление мероприятия */
+    private suspend fun removeEventLocallyFromServerState(eventId: Long) {
+        futureEventsFlow.value = futureEventsFlow.value.filter { it.id != eventId }
+        eventDao.deleteById(eventId)
+    }
 
     open suspend fun deleteEventPhoto(
         eventId: Long,

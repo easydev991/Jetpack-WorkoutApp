@@ -91,58 +91,6 @@ class OtherUserProfileScreenTest : TimeoutTest() {
         assert(backClicked) { "Ожидался вызов onBack при клике на кнопку" }
     }
 
-    // === Тесты для BlockedByUserContent ===
-
-    @Test
-    fun blockedByUserContent_displaysErrorMessage() {
-        // When
-        composeTestRule.setContent {
-            JetpackWorkoutAppTheme {
-                BlockedByUserContent(onBack = {})
-            }
-        }
-
-        // Then
-        composeTestRule
-            .onNodeWithText(context.getString(R.string.blocked_by_user))
-            .assertIsDisplayed()
-    }
-
-    @Test
-    fun blockedByUserContent_displaysGoBackButton() {
-        // When
-        composeTestRule.setContent {
-            JetpackWorkoutAppTheme {
-                BlockedByUserContent(onBack = {})
-            }
-        }
-
-        // Then
-        composeTestRule
-            .onNodeWithText(context.getString(R.string.go_back))
-            .assertIsDisplayed()
-    }
-
-    @Test
-    fun blockedByUserContent_clickGoBack_callsOnBack() {
-        // Given
-        var backClicked = false
-
-        composeTestRule.setContent {
-            JetpackWorkoutAppTheme {
-                BlockedByUserContent(onBack = { backClicked = true })
-            }
-        }
-
-        // When
-        composeTestRule
-            .onNodeWithText(context.getString(R.string.go_back))
-            .performClick()
-
-        // Then
-        assert(backClicked) { "Ожидался вызов onBack при клике на кнопку" }
-    }
-
     // === Тесты для ErrorContent ===
 
     @Test

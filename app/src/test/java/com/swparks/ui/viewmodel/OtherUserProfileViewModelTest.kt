@@ -15,6 +15,7 @@ import com.swparks.data.repository.AuthRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.FriendsRepository
 import com.swparks.data.repository.UserProfileRepository
+import com.swparks.domain.exception.ServerException
 import com.swparks.util.AppError
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
@@ -31,15 +32,12 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import retrofit2.HttpException
-import retrofit2.Response
 import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -113,8 +111,10 @@ class OtherUserProfileViewModelTest {
     @Test
     fun loadUser_whenNotFound_thenShowsUserNotFound() =
         runTest {
+            // Репозиторий возвращает ServerException через handleHttpException
+            // (HTTP_NOT_FOUND для настоящего API-404) — HttpException наружу не проходит
             val userId = 999L
-            val error = HttpException(Response.error<Any>(404, "".toResponseBody()))
+            val error = ServerException(message = "Пользователь не найден", code = 404)
             coEvery { mockUserProfileRepository.getUser(userId) } returns Result.failure(error)
 
             val viewModel =
@@ -132,6 +132,34 @@ class OtherUserProfileViewModelTest {
             advanceUntilIdle()
 
             assertTrue(viewModel.uiState.value is OtherUserProfileUiState.UserNotFound)
+        }
+
+    @Test
+    fun loadUser_whenInfraUnavailable_thenShowsErrorWithRetry() =
+        runTest {
+            // Инфра-404 (ServerException 503) — не «пользователь не найден»,
+            // обычная ошибка с ретраем
+            val userId = 999L
+            val error = ServerException(message = "Сервер недоступен", code = 503)
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.failure(error)
+
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources,
+                    mockAnalyticsService
+                )
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertTrue("Ожидалось состояние Error", state is OtherUserProfileUiState.Error)
+            assertTrue("Ожидался ретрай", (state as OtherUserProfileUiState.Error).canRetry)
         }
 
     @Test

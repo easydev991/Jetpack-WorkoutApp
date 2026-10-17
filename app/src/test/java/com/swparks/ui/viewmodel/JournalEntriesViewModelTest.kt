@@ -12,6 +12,7 @@ import com.swparks.data.model.User
 import com.swparks.data.provider.ResourcesProviderImpl
 import com.swparks.data.repository.FriendsRepository
 import com.swparks.data.repository.JournalsRepositoryImpl
+import com.swparks.domain.exception.ServerException
 import com.swparks.domain.model.JournalEntry
 import com.swparks.domain.usecase.CanDeleteJournalEntryUseCase
 import com.swparks.domain.usecase.DeleteJournalEntryUseCase
@@ -620,6 +621,33 @@ class JournalEntriesViewModelTest {
             // Then - проверяем, что handleError был вызван (хотя бы один раз)
             coVerify(atLeast = 1) {
                 userNotifier.handleError(match { it is AppError.Generic })
+            }
+        }
+
+    /**
+     * Тест 14.1: Инфра-404 (ServerException с кодом 503) — локализованное «Сервер недоступен»
+     */
+    @Test
+    fun testDeleteEntry_serverExceptionWithCode503_callsHandleErrorWithServer() =
+        runTest {
+            // Given
+            val testEntryId = 1L
+            coEvery {
+                deleteJournalEntryUseCase(testUserId, testJournalId, testEntryId)
+            } returns Result.failure(ServerException(message = "Сервер недоступен", code = 503))
+
+            // When
+            viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.deleteEntry(testEntryId)
+            advanceUntilIdle()
+
+            // Then - handleError получает AppError.Server (локализованная строка вместо хардкода)
+            coVerify(exactly = 1) {
+                userNotifier.handleError(
+                    AppError.Server(code = 503, message = "Сервер недоступен")
+                )
             }
         }
 

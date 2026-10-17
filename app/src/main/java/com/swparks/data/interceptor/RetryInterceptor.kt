@@ -1,5 +1,8 @@
 package com.swparks.data.interceptor
 
+import com.swparks.util.HTTP_BAD_GATEWAY
+import com.swparks.util.HTTP_GATEWAY_TIMEOUT
+import com.swparks.util.HTTP_SERVICE_UNAVAILABLE
 import com.swparks.util.Logger
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -17,9 +20,6 @@ class RetryInterceptor(
     companion object {
         private const val MAX_RETRIES = 3
         private const val RETRY_DELAY_MS = 500L
-        private const val HTTP_BAD_GATEWAY = 502
-        private const val HTTP_SERVICE_UNAVAILABLE = 503
-        private const val HTTP_GATEWAY_TIMEOUT = 504
         private val RETRY_CODES =
             setOf(HTTP_BAD_GATEWAY, HTTP_SERVICE_UNAVAILABLE, HTTP_GATEWAY_TIMEOUT)
     }

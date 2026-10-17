@@ -24,7 +24,9 @@ import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.model.canCreateEntry
 import com.swparks.ui.state.JournalEntriesUiState
 import com.swparks.util.AppError
+import com.swparks.util.HTTP_SERVICE_UNAVAILABLE
 import com.swparks.util.UserNotifier
+import com.swparks.util.isInfraNotFound
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -343,13 +345,23 @@ class JournalEntriesViewModel(
                         deps.analyticsService.log(
                             AnalyticsEvent.AppError(AppErrorOperation.JOURNAL_DELETE_FAILED, error)
                         )
-                        deps.userNotifier.handleError(
-                            AppError.Generic(
-                                error.message
-                                    ?: deps.resources.getString(R.string.error_delete_entry),
-                                error
+                        if (error.isInfraNotFound()) {
+                            // Инфра-404 (HTML/чужой JSON от прокси): локализованное «Сервер недоступен»
+                            deps.userNotifier.handleError(
+                                AppError.Server(
+                                    code = HTTP_SERVICE_UNAVAILABLE,
+                                    message = error.message ?: ""
+                                )
                             )
-                        )
+                        } else {
+                            deps.userNotifier.handleError(
+                                AppError.Generic(
+                                    error.message
+                                        ?: deps.resources.getString(R.string.error_delete_entry),
+                                    error
+                                )
+                            )
+                        }
                     }
             } catch (e: CancellationException) {
                 throw e
