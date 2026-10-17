@@ -22,6 +22,7 @@
 
 **Секция "Другие приложения" (OtherAppsSection):**
 
+- ✅ Мои тренировки (ExternalLinkRow, RuStore)
 - ✅ Days Counter (ExternalLinkRow, RuStore)
 
 **Секция "Поддержать проект" (SupportProjectSection):**

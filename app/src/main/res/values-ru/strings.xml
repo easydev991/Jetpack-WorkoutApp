@@ -151,6 +151,7 @@
     <string name="github_page">GitHub</string>
     <string name="share_chooser_title">Поделиться приложением SW Площадки</string>
     <string name="share_text">Посмотри приложение для воркаут-площадок</string>
+    <string name="my_workouts_app">Мои тренировки</string>
     <string name="days_counter_app">Счётчик дней</string>
     <string name="app_theme">Тема приложения</string>
     <string name="dynamic_colors">Динамические цвета</string>

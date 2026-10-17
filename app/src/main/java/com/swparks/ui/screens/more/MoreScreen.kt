@@ -247,7 +247,9 @@ private fun ExternalLinkRow(
                 showChevron = true,
                 modifier =
                     Modifier.clickable {
-                        uriHandler.openUri(url)
+                        // Без браузера openUri бросает IllegalArgumentException — гасим,
+                        // чтобы некорректная ссылка не роняла приложение
+                        runCatching { uriHandler.openUri(url) }
                     }
             )
     )
@@ -293,6 +295,11 @@ private fun OtherAppsSection(uriHandler: UriHandler) {
         Column(
             verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_xxsmall))
         ) {
+            ExternalLinkRow(
+                textResId = R.string.my_workouts_app,
+                url = AppConstants.MY_WORKOUTS_APP_STORE_URL,
+                uriHandler = uriHandler
+            )
             ExternalLinkRow(
                 textResId = R.string.days_counter_app,
                 url = AppConstants.DAYS_COUNTER_APP_STORE_URL,

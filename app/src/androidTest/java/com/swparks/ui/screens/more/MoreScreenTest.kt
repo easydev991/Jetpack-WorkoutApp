@@ -106,6 +106,18 @@ class MoreScreenTest : TimeoutTest() {
     }
 
     @Test
+    fun moreScreen_whenDisplayed_thenShowsMyWorkoutsAppButton() {
+        // When
+        setContent()
+
+        // Then
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.my_workouts_app), ignoreCase = true)
+            .assertIsDisplayed()
+            .assertHasClickAction()
+    }
+
+    @Test
     fun moreScreen_whenDisplayed_thenShowsDaysCounterAppButton() {
         // When
         setContent()
