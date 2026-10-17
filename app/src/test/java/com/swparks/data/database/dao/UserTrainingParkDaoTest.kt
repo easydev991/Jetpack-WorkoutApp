@@ -233,6 +233,35 @@ class UserTrainingParkDaoTest {
             assertTrue(parks.isEmpty())
         }
 
+    @Test
+    fun getParksForUserFromCache_whenParkRowDeleted_thenJoinExcludesDeletedPark() =
+        runTest {
+            // Сценарий «площадка удалена на сервере»: removeParkLocally сносит строку
+            // parks, и INNER JOIN убирает площадку из кэша «Тренируюсь здесь» сразу,
+            // без ожидания следующего getParksForUser
+            val park1 = createParkEntity(id = 100L, name = "Park One")
+            val park2 = createParkEntity(id = 200L, name = "Park Two")
+            parkDao.upsertPark(park1)
+            parkDao.upsertPark(park2)
+
+            userTrainingParkDao.insertForUser(
+                listOf(
+                    UserTrainingParkEntity(userId = 1L, parkId = 100L),
+                    UserTrainingParkEntity(userId = 1L, parkId = 200L)
+                )
+            )
+
+            parkDao.deleteById(100L)
+
+            val parks = userTrainingParkDao.getParksForUserFromCache(1L)
+
+            assertEquals(1, parks.size)
+            assertEquals(200L, parks.first().id)
+            // Осиротевшая связь остаётся в user_training_parks: невидима для JOIN
+            // и чистится при следующем replaceForUser
+            assertTrue(userTrainingParkDao.getParkIdsForUser(1L).contains(100L))
+        }
+
     private fun createParkEntity(
         id: Long = 1L,
         name: String = "Test Park"

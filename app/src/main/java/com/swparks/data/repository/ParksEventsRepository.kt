@@ -217,7 +217,7 @@ open class ParksEventsRepository(
             val response = swApi.deletePark(parkId)
             when {
                 response.isSuccessful -> {
-                    removeParkLocallyFromServerState(parkId)
+                    removeParkLocally(parkId)
                     Result.success(Unit)
                 }
                 // Идемпотентность как в iOS: настоящий API-404 = площадка уже удалена
@@ -225,7 +225,7 @@ open class ParksEventsRepository(
                 response.code() == HTTP_NOT_FOUND &&
                     HttpException(response).tryApiNotFoundBody() != null -> {
                     logger.i(TAG, "Площадка уже удалена на сервере (404), удаляем из локального кэша")
-                    removeParkLocallyFromServerState(parkId)
+                    removeParkLocally(parkId)
                     Result.success(Unit)
                 }
                 response.code() == HTTP_NOT_FOUND -> {
@@ -243,18 +243,18 @@ open class ParksEventsRepository(
             Result.failure(handleHttpException(e, TAG, "удалении площадки"))
         }
 
-    /** Локальная очистка после того, как сервер подтвердил удаление площадки */
-    private suspend fun removeParkLocallyFromServerState(parkId: Long) {
-        removeParkLocally(parkId)
-        parkDao.deleteById(parkId)
-    }
-
+    /**
+     * Локальное удаление несуществующей на сервере площадки: связь из addedParks
+     * плюс строка из общего кэша parks — карта и список читают parks напрямую
+     * и реактивно убирают площадку после deleteById (контракт docs/doc-404-delete.md).
+     */
     open suspend fun removeParkLocally(parkId: Long): Result<Unit> =
         try {
             val currentUserId = preferencesRepository.getCurrentUserIdSync()
             if (currentUserId != null) {
                 removeParkFromUser(currentUserId, parkId)
             }
+            parkDao.deleteById(parkId)
             Result.success(Unit)
         } catch (e: Exception) {
             logger.e(TAG, "Ошибка локального удаления парка $parkId", e)

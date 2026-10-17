@@ -924,6 +924,100 @@ class ParksEventsRepositoryParksTest {
         }
 
     @Test
+    fun removeParkLocally_whenUserLoggedIn_deletesRelationAndParksRow() =
+        runTest {
+            // Given — удалённая на сервере площадка: чистим addedParks и общий кэш parks,
+            // иначе она остаётся на карте/в списке (SELECT * FROM parks)
+            val currentUserId = 1L
+            val parkIdToDelete = 123L
+            val mockPark = createMockPark(parkIdToDelete)
+            val mockUser =
+                UserEntity(id = currentUserId, name = "test", addedParks = listOf(mockPark))
+
+            every { mockPreferencesRepository.getCurrentUserIdSync() } returns currentUserId
+            every { mockUserDao.getUserByIdFlow(currentUserId) } returns flowOf(mockUser)
+
+            val repository =
+                ParksEventsRepository(
+                    swApi = mockk<SWApi>(),
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    logger = logger,
+                    crashReporter = crashReporter
+                )
+
+            // When
+            val result = repository.removeParkLocally(parkIdToDelete)
+
+            // Then — и связь, и строка из общего кэша
+            assertTrue(result.isSuccess)
+            coVerify {
+                mockUserDao.insert(
+                    withArg { user ->
+                        assertTrue(user.addedParks?.none { it.id == parkIdToDelete } == true)
+                    }
+                )
+            }
+            coVerify(exactly = 1) { mockParkDao.deleteById(parkIdToDelete) }
+        }
+
+    @Test
+    fun removeParkLocally_whenNoCurrentUser_stillDeletesParksRow() =
+        runTest {
+            // Given — пользователь не авторизован: строку из общего кэша всё равно чистим
+            every { mockPreferencesRepository.getCurrentUserIdSync() } returns null
+
+            val repository =
+                ParksEventsRepository(
+                    swApi = mockk<SWApi>(),
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    logger = logger,
+                    crashReporter = crashReporter
+                )
+
+            // When
+            val result = repository.removeParkLocally(123L)
+
+            // Then
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 0) { mockUserDao.insert(any()) }
+            coVerify(exactly = 1) { mockParkDao.deleteById(123L) }
+        }
+
+    @Test
+    fun removeParkLocally_whenDaoFails_thenReturnsFailure() =
+        runTest {
+            // Given — сбой Room при удалении строки: не должен вылететь наружу
+            val currentUserId = 1L
+            every { mockPreferencesRepository.getCurrentUserIdSync() } returns currentUserId
+            every { mockUserDao.getUserByIdFlow(currentUserId) } returns flowOf(null)
+            coEvery { mockParkDao.deleteById(123L) } throws RuntimeException("Room failure")
+
+            val repository =
+                ParksEventsRepository(
+                    swApi = mockk<SWApi>(),
+                    preferencesRepository = mockPreferencesRepository,
+                    eventDao = mockEventDao,
+                    parkDao = mockParkDao,
+                    userDao = mockUserDao,
+                    logger = logger,
+                    crashReporter = crashReporter
+                )
+
+            // When
+            val result = repository.removeParkLocally(123L)
+
+            // Then
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is RuntimeException)
+        }
+
+    @Test
     fun getParksForUser_whenApiReturnsParks_thenReturnsParks() =
         runTest {
             // Given
