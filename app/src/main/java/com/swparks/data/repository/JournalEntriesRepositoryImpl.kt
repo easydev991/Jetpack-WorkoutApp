@@ -99,7 +99,7 @@ class JournalEntriesRepositoryImpl(
                 }
 
                 response.code() == HTTP_NOT_FOUND &&
-                    isApiNotFoundBody(response.raw().peekBody(ERROR_BODY_PEEK_BYTES), json) != null -> {
+                    isApiNotFoundBody(response.raw().peekBody(ERROR_BODY_PEEK_BYTES)) != null -> {
                     // Настоящий API-404: запись уже удалена на сервере — синхронизируем локальный кэш
                     logger.i(TAG, "Запись уже удалена на сервере (404), удаляем из локального кэша")
                     journalEntryDao.deleteById(entryId)

@@ -221,6 +221,37 @@ class OtherUserProfileViewModelTest {
             assertTrue(viewModel.uiState.value is OtherUserProfileUiState.Success)
         }
 
+    @Test
+    fun refreshUser_whenApiNotFound_showsUserNotFound() =
+        runTest {
+            // Настоящий API-404 при refresh: профиль удалён на сервере — экран «не найден»
+            val userId = 123L
+            val user = User(id = userId, name = "test", image = null)
+            coEvery { mockUserProfileRepository.getUser(userId) } returns Result.success(user) andThen
+                Result.failure(ServerException(message = "Пользователь не найден", code = 404))
+
+            val viewModel =
+                OtherUserProfileViewModel(
+                    userId,
+                    mockCountriesRepository,
+                    mockAuthRepository,
+                    mockUserProfileRepository,
+                    mockFriendsRepository,
+                    mockLogger,
+                    mockUserNotifier,
+                    mockResources,
+                    mockAnalyticsService
+                )
+            advanceUntilIdle()
+
+            assertTrue(viewModel.uiState.value is OtherUserProfileUiState.Success)
+
+            viewModel.refreshUser()
+            advanceUntilIdle()
+
+            assertTrue(viewModel.uiState.value is OtherUserProfileUiState.UserNotFound)
+        }
+
     // === Address loading tests ===
 
     @Test

@@ -1,6 +1,5 @@
 package com.swparks.data.repository
 
-import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
@@ -10,25 +9,21 @@ import org.junit.Test
 /**
  * Unit тесты для isApiNotFoundBody
  *
- * Проверяют классификацию тела 404-ответа: JSON с полями API (errors/message/name)
- * или пустое тело — реальный API-404, HTML/битый JSON/чужой JSON без полей API —
+ * Проверяют классификацию тела 404-ответа: JSON с полями API (errors/name) —
+ * реальный API-404, HTML/битый JSON/пустое тело/чужой JSON без полей API —
  * инфраструктурный 404 (null).
  * Классификация выполняется по содержимому тела, Content-Type не проверяется.
+ * Используется продовый file-level json из BaseRepository — тест проверяет
+ * реальную конфигурацию парсера, а не собственную копию.
  */
 class BaseRepositoryIsApiNotFoundBodyTest {
-    private val json =
-        Json {
-            ignoreUnknownKeys = true
-            isLenient = true
-        }
-
     @Test
     fun isApiNotFoundBody_whenJsonBody_thenReturnsParsedErrorResponse() {
         // Given — JSON-тело как на проде (BaseController::notFound())
         val body = """{"errors": ["площадка не найдена"]}""".toResponseBody(null)
 
         // When
-        val result = isApiNotFoundBody(body, json)
+        val result = isApiNotFoundBody(body)
 
         // Then
         assertEquals("площадка не найдена", result?.realMessage)
@@ -42,7 +37,7 @@ class BaseRepositoryIsApiNotFoundBodyTest {
                 .toResponseBody("text/html".toMediaType())
 
         // When
-        val result = isApiNotFoundBody(body, json)
+        val result = isApiNotFoundBody(body)
 
         // Then
         assertNull("HTML-тело не должно считаться API-404", result)
@@ -51,7 +46,7 @@ class BaseRepositoryIsApiNotFoundBodyTest {
     @Test
     fun isApiNotFoundBody_whenNullBody_thenReturnsNull() {
         // When
-        val result = isApiNotFoundBody(null, json)
+        val result = isApiNotFoundBody(null)
 
         // Then — реальный API всегда кладёт errors/name; пустой 404 — от инфраструктуры
         assertNull("Пустой 404 не должен считаться API-404", result)
@@ -64,8 +59,8 @@ class BaseRepositoryIsApiNotFoundBodyTest {
         val blankBody = "   \n\t ".toResponseBody(null)
 
         // When
-        val emptyResult = isApiNotFoundBody(emptyBody, json)
-        val blankResult = isApiNotFoundBody(blankBody, json)
+        val emptyResult = isApiNotFoundBody(emptyBody)
+        val blankResult = isApiNotFoundBody(blankBody)
 
         // Then — реальный API всегда кладёт errors/name; пустой 404 — от инфраструктуры
         assertNull("Пустой 404 не должен считаться API-404", emptyResult)
@@ -78,7 +73,7 @@ class BaseRepositoryIsApiNotFoundBodyTest {
         val body = """{"errors": ["незакрытый""".toResponseBody(null)
 
         // When
-        val result = isApiNotFoundBody(body, json)
+        val result = isApiNotFoundBody(body)
 
         // Then
         assertNull("Битый JSON не должен считаться API-404", result)
@@ -93,7 +88,7 @@ class BaseRepositoryIsApiNotFoundBodyTest {
                 .toResponseBody(null)
 
         // When
-        val result = isApiNotFoundBody(body, json)
+        val result = isApiNotFoundBody(body)
 
         // Then
         assertNull("JSON без полей API не должен считаться API-404", result)
@@ -107,7 +102,7 @@ class BaseRepositoryIsApiNotFoundBodyTest {
                 .toResponseBody("text/html".toMediaType())
 
         // When
-        val result = isApiNotFoundBody(body, json)
+        val result = isApiNotFoundBody(body)
 
         // Then
         assertEquals("Страница не найдена.", result?.realMessage)
@@ -121,7 +116,7 @@ class BaseRepositoryIsApiNotFoundBodyTest {
                 .toResponseBody(null)
 
         // When
-        val result = isApiNotFoundBody(body, json)
+        val result = isApiNotFoundBody(body)
 
         // Then
         assertNull("message без errors/name не должен считаться API-404", result)

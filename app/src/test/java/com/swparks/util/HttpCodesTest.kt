@@ -1,21 +1,37 @@
 package com.swparks.util
 
-import org.junit.Assert.assertEquals
+import com.swparks.domain.exception.NetworkException
+import com.swparks.domain.exception.ServerException
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Guard-тест канонических значений HTTP-кодов: защищает единственный
- * источник констант от случайной порчи (локальные копии в проекте удалены).
+ * Тесты isInfraNotFound — признака инфраструктурного 404 (ServerException с кодом 503),
+ * по которому ViewModels ветвятся вместо деструктивных действий.
  */
 class HttpCodesTest {
     @Test
-    fun httpCodes_whenRead_thenMatchCanonicalValues() {
-        assertEquals(401, HTTP_UNAUTHORIZED)
-        assertEquals(403, HTTP_FORBIDDEN)
-        assertEquals(404, HTTP_NOT_FOUND)
-        assertEquals(500, HTTP_INTERNAL_SERVER_ERROR)
-        assertEquals(502, HTTP_BAD_GATEWAY)
-        assertEquals(503, HTTP_SERVICE_UNAVAILABLE)
-        assertEquals(504, HTTP_GATEWAY_TIMEOUT)
+    fun isInfraNotFound_whenServerException503_thenReturnsTrue() {
+        // Given — инфра-404: то, что возвращают infraNotFound() и handleHttpException
+        val error = ServerException(message = "Сервер недоступен", code = HTTP_SERVICE_UNAVAILABLE)
+
+        // Then
+        assertTrue(error.isInfraNotFound())
+    }
+
+    @Test
+    fun isInfraNotFound_whenServerExceptionOtherCode_thenReturnsFalse() {
+        // Given — настоящий API-404 и прочие серверные коды — не инфраструктура
+        // Then
+        assertFalse(ServerException(message = "Пользователь не найден", code = HTTP_NOT_FOUND).isInfraNotFound())
+        assertFalse(ServerException(message = "Ошибка сервера", code = HTTP_INTERNAL_SERVER_ERROR).isInfraNotFound())
+    }
+
+    @Test
+    fun isInfraNotFound_whenOtherExceptionType_thenReturnsFalse() {
+        // Given — сетевая ошибка без кода вообще
+        // Then
+        assertFalse(NetworkException(message = "Ошибка сети").isInfraNotFound())
     }
 }

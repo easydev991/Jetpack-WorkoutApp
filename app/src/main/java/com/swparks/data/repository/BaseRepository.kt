@@ -35,15 +35,11 @@ internal val json: Json =
  *
  * @param body Peek-копия тела ответа (okhttp3.Response.peekBody) — функцией
  *   потребляется, исходное errorBody не затрагивается
- * @param json Конфигурация Json для парсинга ErrorResponse
  * @return `null` — не API-404 (инфраструктурный 404: HTML/XML/пустое или битое
  *   тело, валидный JSON без полей API); `ErrorResponse` — API-404, сообщение
  *   сервера в `realMessage` (может быть `null`, если заполнено только `name`)
  */
-internal fun isApiNotFoundBody(
-    body: ResponseBody?,
-    json: Json
-): ErrorResponse? {
+internal fun isApiNotFoundBody(body: ResponseBody?): ErrorResponse? {
     val content = body?.string().orEmpty()
     return runCatching { json.decodeFromString<ErrorResponse>(content) }
         .getOrNull()
@@ -75,7 +71,7 @@ open class BaseRepository(
      */
     protected fun HttpException.tryApiNotFoundBody(): ErrorResponse? =
         if (code() == HTTP_NOT_FOUND) {
-            isApiNotFoundBody(response()?.raw()?.peekBody(ERROR_BODY_PEEK_BYTES), json)
+            isApiNotFoundBody(response()?.raw()?.peekBody(ERROR_BODY_PEEK_BYTES))
         } else {
             null
         }
@@ -99,7 +95,8 @@ open class BaseRepository(
         operation: String
     ): Exception {
         val statusCode = e.code()
-        // Классификация до чтения body: peek-копия валидна только до потребления errorBody
+        // peekBody возвращает независимую копию тела, но брать её нужно до того,
+        // как errorBody будет потреблено — после потребления копия окажется пустой
         val errResp = e.tryApiNotFoundBody()
         logger.e(tag, "Ошибка сервера $statusCode при $operation")
 

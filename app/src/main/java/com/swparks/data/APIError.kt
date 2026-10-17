@@ -20,7 +20,6 @@ enum class APIError(
     SERVER_ERROR("Ошибка сервера", 500),
     INVALID_USER_ID("Неверный идентификатор пользователя"),
     TOO_MANY_REQUESTS("Слишком много запросов", 429),
-    SERVICE_UNAVAILABLE("Сервер недоступен", 503),
     FORBIDDEN("Нет доступа к ресурсу", 403);
 
     companion object {
@@ -36,7 +35,6 @@ enum class APIError(
                 413 -> PAYLOAD_TOO_LARGE
                 429 -> TOO_MANY_REQUESTS
                 in 500..599 -> SERVER_ERROR
-                in listOf(502, 503, 504) -> SERVICE_UNAVAILABLE
                 in listOf(400, 402), in 405..412, in 414..428 -> BAD_REQUEST
                 else -> UNKNOWN
             }
