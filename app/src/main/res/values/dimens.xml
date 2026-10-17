@@ -30,6 +30,7 @@
     <dimen name="icon_size_small_plus">34dp</dimen>
     <dimen name="icon_size_medium">42dp</dimen>
     <dimen name="icon_size_large">48dp</dimen>
+    <dimen name="icon_size_app_preview">64dp</dimen>
     <dimen name="icon_size_xlarge">80dp</dimen>
 
     <!-- Border Width -->
