@@ -11,7 +11,7 @@
 - [Скриншоты](#скриншоты)
   - [Генерация скриншотов](#генерация-скриншотов)
   - [Обновление README.md](#обновление-readmemd)
-- [Подготовка Room Database к релизу](#подготовка-room-database-к-релизу)
+- [Миграции Room](plan-room-migrations.md) — отдельный план
 
 ## Секреты для подписи
 
@@ -66,6 +66,7 @@ VERSION_NAME=1.0
 
 - `1.0` - первый релиз
 - `1.1` - минорное обновление с новыми функциями
+- `1.3.4` - патч в рамках минора `1.3` (исправления багов без новых функций)
 - `2.0` - мажорное обновление с изменениями в функционале
 
 ### Номер сборки (VERSION_CODE)
@@ -128,10 +129,9 @@ make update_readme
 
 Эта команда автоматически:
 
-1. Находит актуальные файлы скриншотов по шаблону `{номер}-{описание}_{временнаяМетка}.png`
-2. Заменяет HTML-комментарии в README.md на реальные теги `<img>` с путями к файлам
-3. Использует скриншоты только из локали `ru-RU`
-4. Обновляет версии в README.md (вызывает `updateReadmeVersions`)
+1. Находит самые свежие файлы скриншотов по шаблону `{номер}-{описание}_{временнаяМетка}.png` (используется только локаль `ru-RU`)
+2. Заменяет существующие теги `<img src="./fastlane/.../{номер}-{описание}_{временнаяМетка}.png">` в README.md на пути со свежим таймстампом
+3. Обновляет версии в README.md (вызывает `updateReadmeVersions`)
 
 Порядок работы:
 
@@ -146,73 +146,10 @@ make screenshots
 
 ## Подготовка Room Database к релизу
 
-⚠️ **ВАЖНО:** Перед релизом необходимо удалить `fallbackToDestructiveMigration()` и добавить миграции для сохранения данных пользователей!
-
-### На этапе разработки
-
-Используется `fallbackToDestructiveMigration()` для удобства:
-
-```kotlin
-val database = Room.databaseBuilder(
-    context.applicationContext,
-    SWDatabase::class.java,
-    "sw_database"
-).fallbackToDestructiveMigration(dropAllTables = true)  // ❌ УДАЛИТЬ ПЕРЕД РЕЛИЗОМ
-  .build()
-```
-
-**Что делает этот метод:**
-- Удаляет **ВСЕ данные** в БД при изменении схемы
-- Пересоздает БД с нуля
-- Удобно для разработки, но **НЕБЕЗОПАСНО для продакшена**
-
-### Перед релизом
-
-**Удалить** `fallbackToDestructiveMigration()` и добавить миграции:
-
-```kotlin
-val MIGRATION_1_2 = object : Migration(1, 2) {
-    override fun migrate(database: SupportSQLiteDatabase) {
-        // SQL для изменения структуры таблицы
-        database.execSQL("ALTER TABLE users ADD COLUMN newColumn TEXT")
-    }
-}
-
-val database = Room.databaseBuilder(
-    context.applicationContext,
-    SWDatabase::class.java,
-    "sw_database"
-).addMigrations(MIGRATION_1_2)  // ✅ ДОБАВИТЬ МИГРАЦИИ
-  .build()
-```
-
-**Почему это обязательно:**
-- Сохранение данных пользователя при обновлении приложения
-- Предотвращение потери доверия пользователей
-- Корректный UX при обновлении версии
-
-### Если первая версия приложения
-
-Если Room Database используется впервые (нет существующей версии БД), то:
-
-```kotlin
-@Database(
-    entities = [UserEntity::class],
-    version = 1,  // Первая версия
-    exportSchema = false
-)
-abstract class SWDatabase : RoomDatabase()
-```
-
-- `version = 1` - первая версия БД
-- Миграции не нужны
-- `fallbackToDestructiveMigration()` можно использовать для разработки
+⚠️ **ВАЖНО:** Сейчас в `AppContainer.kt:228` используется `fallbackToDestructiveMigration(dropAllTables = true)`. Это означает, что при любом изменении схемы Room **стирает все пользовательские данные** (диалоги, дневники, избранные площадки, локальный кэш пользователей).
 
 ### Чек-лист перед релизом
 
-- [ ] Удален `fallbackToDestructiveMigration()` из кода
-- [ ] Добавлены миграции для всех изменений схемы
-- [ ] Протестирована миграция на тестовом устройстве (с реальными данными)
 - [ ] Увеличен `VERSION_NAME` при необходимости
 - [ ] Сгенерированы и обновлены скриншоты
 - [ ] Выполнен `make release` и создан AAB-файл
