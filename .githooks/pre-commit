@@ -1,5 +1,23 @@
 #!/bin/bash
 
+# Guard: Room экспортирует app/schemas/*.json на каждом билде, поэтому правка
+# entity без bump версии молча перезаписывает эталон, а MigrationTest это не
+# ловит (сравнивает код с его же выводом). Две защиты:
+# 1) unstaged diff — эталон перезаписан, но не замечен;
+# 2) staged diff без bump'а версии — схема уезжает в коммит молча (git add .).
+if ! git diff --quiet -- app/schemas; then
+    echo "✗ app/schemas изменены, но не застейджены: похоже, entity правилась без bump версии БД."
+    echo "  Смотри git diff app/schemas. Осознанное изменение схемы: bump version + MIGRATION + .addMigrations (docs/plan-room-migrations.md), затем застейджь схемы."
+    exit 1
+fi
+if ! git diff --cached --quiet -- app/schemas; then
+    if ! git diff --cached -- '*Database.kt' | grep -qE '^\+\s*version\s*=\s*[0-9]'; then
+        echo "✗ app/schemas в коммите, но bump версии в *Database.kt не найден."
+        echo "  Осознанное изменение схемы: подними version в SWDatabase.kt, добавь MIGRATION + .addMigrations (docs/plan-room-migrations.md), застейджь вместе со схемами."
+        exit 1
+    fi
+fi
+
 echo "Updating versions in README.md..."
 if ./gradlew updateReadmeVersions --no-configuration-cache --quiet; then
     echo "✓ Versions updated successfully"

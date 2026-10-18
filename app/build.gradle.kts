@@ -91,6 +91,11 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    // Экспортированные схемы Room — как assets androidTest: без них MigrationTestHelper не найдёт JSON
+    sourceSets {
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
+    }
 }
 
 kotlin {
@@ -98,6 +103,11 @@ kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
     }
+}
+
+// Экспорт схемы Room в app/schemas — эталон для аудита изменений и MigrationTestHelper
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {
@@ -163,6 +173,7 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     androidTestImplementation(libs.mockk.android)
+    androidTestImplementation(libs.androidx.room.testing)
     // JUnit-правило LeakCanary: валит тест при подтвержденных утечках (make memory-check)
     androidTestImplementation(libs.leakcanary.android.instrumentation)
     debugImplementation(libs.androidx.ui.tooling)

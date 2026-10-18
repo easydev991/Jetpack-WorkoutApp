@@ -40,7 +40,8 @@ import com.swparks.data.database.entity.UserTrainingParkEntity
         UserTrainingParkCacheStateEntity::class
     ],
     version = 2,
-    exportSchema = false
+    // Экспорт схемы в app/schemas: diff таблиц между версиями — основа для миграций вместо «на глаз»
+    exportSchema = true
 )
 @TypeConverters(AppConverters::class)
 abstract class SWDatabase : RoomDatabase() {

@@ -217,7 +217,8 @@ open class DefaultAppContainer(
 
     /**
      * Room Database для локального хранения данных
-     * Использует миграции для сохранения данных при обновлении схемы
+     * Миграций нет: при смене схемы нужна MIGRATION_{N-1}_N + .addMigrations(...),
+     * см. docs/plan-room-migrations.md
      */
     val database: SWDatabase by lazy {
         Room
@@ -225,8 +226,7 @@ open class DefaultAppContainer(
                 appContext,
                 SWDatabase::class.java,
                 "sw_database"
-            ).fallbackToDestructiveMigration(dropAllTables = true)
-            .build()
+            ).build()
     }
 
     /**
