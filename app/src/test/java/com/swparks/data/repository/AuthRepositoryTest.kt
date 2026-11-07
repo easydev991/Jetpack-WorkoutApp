@@ -4,11 +4,11 @@ import android.util.Log
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.database.dao.DialogDao
 import com.swparks.data.database.dao.UserDao
-import com.swparks.data.model.LoginSuccess
-import com.swparks.data.model.User
 import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.exception.ServerException
+import com.swparks.domain.model.LoginSuccess
 import com.swparks.domain.model.RegistrationParams
+import com.swparks.domain.model.User
 import com.swparks.network.SWApi
 import com.swparks.util.NoOpCrashReporter
 import com.swparks.util.NoOpLogger

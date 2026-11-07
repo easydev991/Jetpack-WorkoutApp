@@ -15,11 +15,11 @@ import androidx.test.espresso.NoActivityResumedException
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
-import com.swparks.data.model.Park
-import com.swparks.data.model.ParkSize
-import com.swparks.data.model.ParkType
+import com.swparks.domain.model.Park
+import com.swparks.domain.model.ParkForm
+import com.swparks.domain.model.ParkSize
+import com.swparks.domain.model.ParkType
 import com.swparks.testing.TimeoutTest
-import com.swparks.ui.model.ParkForm
 import com.swparks.ui.model.ParkFormMode
 import com.swparks.ui.state.ParkFormUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme

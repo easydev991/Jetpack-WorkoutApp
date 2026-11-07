@@ -2,8 +2,8 @@ package com.swparks.data.repository
 
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.ParkDao
+import com.swparks.domain.model.TextEntryOption
 import com.swparks.network.SWApi
-import com.swparks.ui.model.TextEntryOption
 import com.swparks.util.CrashReporter
 import com.swparks.util.Logger
 import retrofit2.HttpException

@@ -1,10 +1,10 @@
 package com.swparks.domain.model
 
-import com.swparks.R
-
-enum class FriendAction(
-    val description: Int
-) {
-    SEND_FRIEND_REQUEST(R.string.send_friend_request),
-    REMOVE_FRIEND(R.string.remove_friend)
+/**
+ * Действие с друзьями по отношению к другому пользователю (добавить/удалить).
+ * Не зависит от Android-ресурсов: подпись выбирается в UI-слое
+ */
+enum class FriendAction {
+    SEND_FRIEND_REQUEST,
+    REMOVE_FRIEND
 }

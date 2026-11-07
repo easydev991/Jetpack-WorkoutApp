@@ -1,15 +1,7 @@
 package com.swparks.screenshots
 
 import android.content.Context
-import com.swparks.data.DefaultAppContainer
 import com.swparks.data.TokenEncoder
-import com.swparks.data.model.City
-import com.swparks.data.model.Country
-import com.swparks.data.model.Event
-import com.swparks.data.model.LoginSuccess
-import com.swparks.data.model.Park
-import com.swparks.data.model.SocialUpdates
-import com.swparks.data.model.User
 import com.swparks.data.provider.LocationServiceImpl
 import com.swparks.data.provider.ResourcesProviderImpl
 import com.swparks.data.repository.AuthRepository
@@ -18,8 +10,17 @@ import com.swparks.data.repository.FriendsRepository
 import com.swparks.data.repository.MessagesRepositoryImpl
 import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.data.repository.UserProfileRepository
+import com.swparks.di.DefaultAppContainer
 import com.swparks.domain.exception.NotFoundException
+import com.swparks.domain.model.City
+import com.swparks.domain.model.Country
+import com.swparks.domain.model.Event
+import com.swparks.domain.model.EventType
 import com.swparks.domain.model.LocationCoordinates
+import com.swparks.domain.model.LoginSuccess
+import com.swparks.domain.model.Park
+import com.swparks.domain.model.SocialUpdates
+import com.swparks.domain.model.User
 import com.swparks.domain.provider.LocationSettingsCheckResult
 import com.swparks.domain.usecase.GetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.GetPastEventsFlowUseCase
@@ -30,7 +31,6 @@ import com.swparks.domain.usecase.SyncFutureEventsUseCase
 import com.swparks.domain.usecase.SyncParksUseCase
 import com.swparks.domain.usecase.SyncPastEventsUseCase
 import com.swparks.network.SWApi
-import com.swparks.ui.model.EventType
 import com.swparks.ui.viewmodel.DialogsViewModel
 import com.swparks.ui.viewmodel.OtherUserProfileViewModel
 import com.swparks.ui.viewmodel.ProfileViewModel

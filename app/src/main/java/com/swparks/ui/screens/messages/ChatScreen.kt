@@ -43,7 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.swparks.R
-import com.swparks.data.model.MessageResponse
+import com.swparks.domain.model.MessageResponse
 import com.swparks.ui.ds.AsyncImageConfig
 import com.swparks.ui.ds.ChatInputBar
 import com.swparks.ui.ds.LoadingOverlayView

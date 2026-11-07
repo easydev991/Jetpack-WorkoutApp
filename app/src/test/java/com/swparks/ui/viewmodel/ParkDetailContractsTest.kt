@@ -1,7 +1,7 @@
 package com.swparks.ui.viewmodel
 
-import com.swparks.data.model.Photo
-import com.swparks.data.model.User
+import com.swparks.domain.model.Photo
+import com.swparks.domain.model.User
 import com.swparks.ui.ds.CommentAction
 import com.swparks.ui.model.MapUriSet
 import com.swparks.ui.model.TextEntryMode
@@ -191,7 +191,7 @@ class ParkDetailContractsTest {
     }
 
     private fun createPark() =
-        com.swparks.data.model.Park(
+        com.swparks.domain.model.Park(
             id = 1L,
             name = "Test Park",
             sizeID = 1,

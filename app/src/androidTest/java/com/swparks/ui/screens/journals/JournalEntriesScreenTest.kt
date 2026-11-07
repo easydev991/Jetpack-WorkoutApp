@@ -18,8 +18,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.fakeAnalyticsLogger
-import com.swparks.data.model.User
 import com.swparks.domain.model.JournalEntry
+import com.swparks.domain.model.User
 import com.swparks.navigation.AppState
 import com.swparks.testing.TimeoutTest
 import com.swparks.ui.model.TextEntryMode
@@ -180,8 +180,8 @@ class JournalEntriesScreenTest : TimeoutTest() {
                 override fun editJournalSettings(
                     journalId: Long,
                     title: String,
-                    viewAccess: com.swparks.ui.model.JournalAccess,
-                    commentAccess: com.swparks.ui.model.JournalAccess
+                    viewAccess: com.swparks.domain.model.JournalAccess,
+                    commentAccess: com.swparks.domain.model.JournalAccess
                 ) = Unit
             }
 
@@ -240,8 +240,8 @@ class JournalEntriesScreenTest : TimeoutTest() {
                 override fun editJournalSettings(
                     journalId: Long,
                     title: String,
-                    viewAccess: com.swparks.ui.model.JournalAccess,
-                    commentAccess: com.swparks.ui.model.JournalAccess
+                    viewAccess: com.swparks.domain.model.JournalAccess,
+                    commentAccess: com.swparks.domain.model.JournalAccess
                 ) = Unit
             }
 

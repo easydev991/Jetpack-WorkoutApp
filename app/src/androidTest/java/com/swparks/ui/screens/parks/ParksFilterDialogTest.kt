@@ -12,10 +12,11 @@ import androidx.test.espresso.Espresso.pressBack
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
-import com.swparks.data.model.ParkFilter
-import com.swparks.data.model.ParkSize
-import com.swparks.data.model.ParkType
+import com.swparks.domain.model.ParkFilter
+import com.swparks.domain.model.ParkSize
+import com.swparks.domain.model.ParkType
 import com.swparks.testing.TimeoutTest
+import com.swparks.ui.model.descriptionRes
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import org.junit.Rule
 import org.junit.Test
@@ -105,7 +106,7 @@ class ParksFilterDialogTest : TimeoutTest() {
         setContent(filter = initialFilter, onApply = { applyCalled = true })
 
         composeTestRule
-            .onNodeWithText(context.getString(ParkSize.LARGE.description), useUnmergedTree = true)
+            .onNodeWithText(context.getString(ParkSize.LARGE.descriptionRes), useUnmergedTree = true)
             .performClick()
 
         composeTestRule.waitForIdle()
@@ -140,15 +141,15 @@ class ParksFilterDialogTest : TimeoutTest() {
         setContent()
 
         composeTestRule
-            .onNodeWithText(context.getString(ParkSize.SMALL.description))
+            .onNodeWithText(context.getString(ParkSize.SMALL.descriptionRes))
             .assertHasClickAction()
 
         composeTestRule
-            .onNodeWithText(context.getString(ParkSize.MEDIUM.description))
+            .onNodeWithText(context.getString(ParkSize.MEDIUM.descriptionRes))
             .assertHasClickAction()
 
         composeTestRule
-            .onNodeWithText(context.getString(ParkSize.LARGE.description))
+            .onNodeWithText(context.getString(ParkSize.LARGE.descriptionRes))
             .assertHasClickAction()
     }
 
@@ -157,19 +158,19 @@ class ParksFilterDialogTest : TimeoutTest() {
         setContent()
 
         composeTestRule
-            .onNodeWithText(context.getString(ParkType.SOVIET.description))
+            .onNodeWithText(context.getString(ParkType.SOVIET.descriptionRes))
             .assertHasClickAction()
 
         composeTestRule
-            .onNodeWithText(context.getString(ParkType.MODERN.description))
+            .onNodeWithText(context.getString(ParkType.MODERN.descriptionRes))
             .assertHasClickAction()
 
         composeTestRule
-            .onNodeWithText(context.getString(ParkType.COLLARS.description))
+            .onNodeWithText(context.getString(ParkType.COLLARS.descriptionRes))
             .assertHasClickAction()
 
         composeTestRule
-            .onNodeWithText(context.getString(ParkType.LEGENDARY.description))
+            .onNodeWithText(context.getString(ParkType.LEGENDARY.descriptionRes))
             .assertHasClickAction()
     }
 
@@ -194,7 +195,7 @@ class ParksFilterDialogTest : TimeoutTest() {
     /** Переключает размер площадки, создавая несохранённое изменение фильтра. */
     private fun changeFilter() {
         composeTestRule
-            .onNodeWithText(context.getString(ParkSize.LARGE.description))
+            .onNodeWithText(context.getString(ParkSize.LARGE.descriptionRes))
             .performClick()
     }
 

@@ -1,7 +1,7 @@
 package com.swparks.ui.viewmodel
 
 import android.net.Uri
-import com.swparks.ui.model.EventForm
+import com.swparks.domain.model.EventForm
 import com.swparks.ui.model.EventFormMode
 import com.swparks.ui.state.EventFormEvent
 import com.swparks.ui.state.EventFormUiState

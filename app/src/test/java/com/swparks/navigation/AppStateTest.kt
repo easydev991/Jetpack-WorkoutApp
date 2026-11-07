@@ -3,7 +3,7 @@ package com.swparks.navigation
 import android.util.Log
 import androidx.navigation.NavHostController
 import com.swparks.analytics.AnalyticsService
-import com.swparks.data.model.User
+import com.swparks.domain.model.User
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic

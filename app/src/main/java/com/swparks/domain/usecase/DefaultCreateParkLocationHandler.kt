@@ -1,7 +1,7 @@
 package com.swparks.domain.usecase
 
-import com.swparks.data.model.NewParkDraft
 import com.swparks.data.provider.LocationServiceImpl
+import com.swparks.domain.model.NewParkDraft
 import com.swparks.util.AppError
 import com.swparks.util.UserNotifier
 

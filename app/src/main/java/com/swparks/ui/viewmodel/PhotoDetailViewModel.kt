@@ -8,8 +8,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.swparks.data.UserPreferencesRepository
-import com.swparks.data.model.Photo
 import com.swparks.data.repository.ParksEventsRepository
+import com.swparks.domain.model.Photo
 import com.swparks.ui.state.PhotoDetailAction
 import com.swparks.ui.state.PhotoDetailConfig
 import com.swparks.ui.state.PhotoDetailEvent

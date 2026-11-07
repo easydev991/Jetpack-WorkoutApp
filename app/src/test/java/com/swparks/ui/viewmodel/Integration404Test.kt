@@ -5,14 +5,14 @@ import app.cash.turbine.test
 import com.swparks.R
 import com.swparks.analytics.AnalyticsService
 import com.swparks.data.UserPreferencesRepository
-import com.swparks.data.model.Event
-import com.swparks.data.model.Park
-import com.swparks.data.model.User
 import com.swparks.data.provider.ResourcesProviderImpl
 import com.swparks.data.repository.AuthRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.domain.exception.NotFoundException
+import com.swparks.domain.model.Event
+import com.swparks.domain.model.Park
+import com.swparks.domain.model.User
 import com.swparks.domain.usecase.DeleteEventUseCase
 import com.swparks.domain.usecase.DeleteParkUseCase
 import com.swparks.domain.usecase.GetFutureEventsFlowUseCase

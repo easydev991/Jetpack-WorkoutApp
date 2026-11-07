@@ -5,9 +5,9 @@ import androidx.room.Room
 import com.swparks.data.database.SWDatabase
 import com.swparks.data.database.entity.ParkEntity
 import com.swparks.data.database.entity.UserTrainingParkEntity
-import com.swparks.data.model.Comment
-import com.swparks.data.model.Photo
-import com.swparks.data.model.User
+import com.swparks.domain.model.Comment
+import com.swparks.domain.model.Photo
+import com.swparks.domain.model.User
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals

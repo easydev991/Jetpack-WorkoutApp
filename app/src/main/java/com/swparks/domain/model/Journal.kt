@@ -1,7 +1,5 @@
 package com.swparks.domain.model
 
-import com.swparks.ui.model.JournalAccess
-
 /**
  * Доменная модель дневника
  *

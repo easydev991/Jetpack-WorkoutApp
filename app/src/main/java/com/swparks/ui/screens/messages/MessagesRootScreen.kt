@@ -87,7 +87,7 @@ data class DialogsContentParams(
     val isRefreshing: Boolean,
     val isUpdating: Boolean,
     val syncError: String?,
-    val currentUser: com.swparks.data.model.User?,
+    val currentUser: com.swparks.domain.model.User?,
     val onRefresh: () -> Unit,
     val onDismissSyncError: () -> Unit,
     val onDialogClick: (DialogEntity) -> Unit,
@@ -101,7 +101,7 @@ data class DialogsStateParams(
     val uiState: DialogsUiState,
     val isRefreshing: Boolean,
     val isUpdating: Boolean,
-    val currentUser: com.swparks.data.model.User?,
+    val currentUser: com.swparks.domain.model.User?,
     val onRefresh: () -> Unit,
     val onDialogClick: (DialogEntity) -> Unit,
     val onLongClick: (DialogEntity, Offset, Offset) -> Unit
@@ -204,7 +204,7 @@ internal data class DialogsCallbacks(
 internal fun createDialogsContentParams(
     uiState: DialogsUiState,
     loadingState: DialogsLoadingState,
-    currentUser: com.swparks.data.model.User?,
+    currentUser: com.swparks.domain.model.User?,
     viewModel: IDialogsViewModel,
     callbacks: DialogsCallbacks
 ): DialogsContentParams =
@@ -482,7 +482,7 @@ private fun HandleSyncError(
  */
 @Composable
 private fun EmptyStateViewForDialogs(
-    currentUser: com.swparks.data.model.User?,
+    currentUser: com.swparks.domain.model.User?,
     onNavigateToFriends: () -> Unit,
     onNavigateToSearchUsers: () -> Unit
 ) {

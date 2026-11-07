@@ -74,7 +74,7 @@ make install        # installDebug
 - `docs/plan-development.md`
 - `app/src/main/java/com/swparks/JetpackWorkoutApplication.kt`
 - `app/src/main/java/com/swparks/MainActivity.kt`
-- `app/src/main/java/com/swparks/data/AppContainer.kt`
+- `app/src/main/java/com/swparks/di/AppContainer.kt`
 - `app/src/main/java/com/swparks/navigation/Destinations.kt`
 
 ## Repo-local OpenCode skills

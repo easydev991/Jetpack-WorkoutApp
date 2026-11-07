@@ -1,6 +1,6 @@
 package com.swparks.navigation
 
-import com.swparks.data.model.User
+import com.swparks.domain.model.User
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

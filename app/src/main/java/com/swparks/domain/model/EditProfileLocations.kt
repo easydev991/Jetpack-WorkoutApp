@@ -1,8 +1,5 @@
 package com.swparks.domain.model
 
-import com.swparks.data.model.City
-import com.swparks.data.model.Country
-
 /**
  * Страны и города для редактирования профиля.
  *

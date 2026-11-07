@@ -27,7 +27,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.swparks.data.DefaultAppContainer
+import com.swparks.di.DefaultAppContainer
 import com.swparks.ui.state.RegisterUiState
 import com.swparks.ui.viewmodel.IRegisterViewModel
 import com.swparks.util.toUiText

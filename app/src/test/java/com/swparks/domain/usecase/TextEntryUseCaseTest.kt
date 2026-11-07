@@ -68,7 +68,7 @@ class TextEntryUseCaseTest {
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) {
                 commentsRepository.addComment(
-                    match { it is com.swparks.ui.model.TextEntryOption.Journal },
+                    match { it is com.swparks.domain.model.TextEntryOption.Journal },
                     testText
                 )
             }
@@ -88,7 +88,7 @@ class TextEntryUseCaseTest {
             assertTrue(result.isFailure)
             coVerify(exactly = 1) {
                 commentsRepository.addComment(
-                    match { it is com.swparks.ui.model.TextEntryOption.Journal },
+                    match { it is com.swparks.domain.model.TextEntryOption.Journal },
                     testText
                 )
             }
@@ -108,7 +108,7 @@ class TextEntryUseCaseTest {
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) {
                 commentsRepository.editComment(
-                    match { it is com.swparks.ui.model.TextEntryOption.Journal },
+                    match { it is com.swparks.domain.model.TextEntryOption.Journal },
                     testEntryId,
                     testText
                 )
@@ -128,7 +128,7 @@ class TextEntryUseCaseTest {
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) {
                 commentsRepository.addComment(
-                    match { it is com.swparks.ui.model.TextEntryOption.Park },
+                    match { it is com.swparks.domain.model.TextEntryOption.Park },
                     testText
                 )
             }
@@ -147,7 +147,7 @@ class TextEntryUseCaseTest {
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) {
                 commentsRepository.editComment(
-                    match { it is com.swparks.ui.model.TextEntryOption.Park },
+                    match { it is com.swparks.domain.model.TextEntryOption.Park },
                     testCommentId,
                     testText
                 )
@@ -167,7 +167,7 @@ class TextEntryUseCaseTest {
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) {
                 commentsRepository.addComment(
-                    match { it is com.swparks.ui.model.TextEntryOption.Event },
+                    match { it is com.swparks.domain.model.TextEntryOption.Event },
                     testText
                 )
             }
@@ -186,7 +186,7 @@ class TextEntryUseCaseTest {
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) {
                 commentsRepository.editComment(
-                    match { it is com.swparks.ui.model.TextEntryOption.Event },
+                    match { it is com.swparks.domain.model.TextEntryOption.Event },
                     testCommentId,
                     testText
                 )

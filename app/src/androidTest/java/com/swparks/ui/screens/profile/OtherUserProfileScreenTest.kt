@@ -12,8 +12,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.analytics.AnalyticsService
-import com.swparks.data.model.User
 import com.swparks.domain.model.FriendAction
+import com.swparks.domain.model.User
 import com.swparks.navigation.rememberAppState
 import com.swparks.testing.TimeoutTest
 import com.swparks.ui.theme.JetpackWorkoutAppTheme

@@ -12,7 +12,7 @@ import androidx.test.espresso.NoActivityResumedException
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
-import com.swparks.data.model.User
+import com.swparks.domain.model.User
 import com.swparks.testing.TimeoutTest
 import com.swparks.ui.state.EditProfileUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme

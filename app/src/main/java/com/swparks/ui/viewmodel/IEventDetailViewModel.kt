@@ -1,7 +1,7 @@
 package com.swparks.ui.viewmodel
 
-import com.swparks.data.model.Event
-import com.swparks.data.model.Photo
+import com.swparks.domain.model.Event
+import com.swparks.domain.model.Photo
 import com.swparks.ui.ds.CommentAction
 import com.swparks.ui.model.MapUriSet
 import com.swparks.ui.state.EventDetailUIState

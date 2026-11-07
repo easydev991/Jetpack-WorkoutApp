@@ -38,8 +38,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
-import com.swparks.data.model.Event
-import com.swparks.data.model.User
+import com.swparks.domain.model.Event
+import com.swparks.domain.model.User
 import com.swparks.ui.ds.ErrorContentView
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.screens.common.TextEntrySheetHost

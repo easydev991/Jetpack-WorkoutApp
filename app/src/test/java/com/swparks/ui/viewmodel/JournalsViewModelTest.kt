@@ -9,11 +9,11 @@ import com.swparks.analytics.UserActionType
 import com.swparks.data.provider.ResourcesProviderImpl
 import com.swparks.domain.exception.ServerException
 import com.swparks.domain.model.Journal
+import com.swparks.domain.model.JournalAccess
 import com.swparks.domain.usecase.DeleteJournalUseCase
 import com.swparks.domain.usecase.EditJournalSettingsUseCase
 import com.swparks.domain.usecase.GetJournalsUseCase
 import com.swparks.domain.usecase.SyncJournalsUseCase
-import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalsUiState
 import com.swparks.util.AppError
 import com.swparks.util.UserNotifier

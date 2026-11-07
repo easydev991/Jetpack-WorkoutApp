@@ -38,6 +38,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.swparks.R
 import com.swparks.domain.exception.NetworkException
+import com.swparks.domain.model.LoginCredentials
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.SWButton
@@ -45,7 +46,6 @@ import com.swparks.ui.ds.SWButtonMode
 import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.ds.SWTextField
 import com.swparks.ui.ds.TextFieldConfig
-import com.swparks.ui.model.LoginCredentials
 import com.swparks.ui.state.LoginEvent
 import com.swparks.ui.state.LoginUiState
 import com.swparks.ui.testtags.ScreenshotTestTags

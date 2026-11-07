@@ -1,7 +1,7 @@
 package com.swparks.ui.viewmodel
 
+import com.swparks.domain.model.JournalAccess
 import com.swparks.domain.model.JournalEntry
-import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalEntriesUiState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow

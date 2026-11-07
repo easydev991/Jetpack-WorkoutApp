@@ -1,7 +1,7 @@
 package com.swparks.ui.state
 
 import android.net.Uri
-import com.swparks.ui.model.EventForm
+import com.swparks.domain.model.EventForm
 import com.swparks.ui.model.EventFormMode
 
 data class EventFormUiState(
@@ -42,7 +42,7 @@ data class EventFormUiState(
 
 sealed interface EventFormEvent {
     data class Saved(
-        val event: com.swparks.data.model.Event
+        val event: com.swparks.domain.model.Event
     ) : EventFormEvent
 
     data object NavigateBack : EventFormEvent

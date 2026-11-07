@@ -2,9 +2,9 @@ package com.swparks.data.repository
 
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.toDomain
-import com.swparks.data.model.ApiBlacklistOption
-import com.swparks.data.model.ApiFriendAction
-import com.swparks.data.model.User
+import com.swparks.domain.model.ApiBlacklistOption
+import com.swparks.domain.model.ApiFriendAction
+import com.swparks.domain.model.User
 import com.swparks.network.SWApi
 import com.swparks.util.CrashReporter
 import com.swparks.util.Logger

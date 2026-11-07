@@ -5,8 +5,8 @@ import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
-import com.swparks.data.model.MessageResponse
 import com.swparks.data.repository.MessagesRepositoryImpl
+import com.swparks.domain.model.MessageResponse
 import com.swparks.network.SWApi
 import com.swparks.ui.state.ChatEvent
 import com.swparks.ui.state.ChatUiState

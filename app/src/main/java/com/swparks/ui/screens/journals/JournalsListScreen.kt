@@ -52,6 +52,7 @@ import com.swparks.R
 import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.UserActionType
 import com.swparks.domain.model.Journal
+import com.swparks.domain.model.JournalAccess
 import com.swparks.navigation.AppState
 import com.swparks.ui.ds.EmptyStateView
 import com.swparks.ui.ds.ErrorContentView
@@ -60,7 +61,6 @@ import com.swparks.ui.ds.JournalRowData
 import com.swparks.ui.ds.JournalRowMode
 import com.swparks.ui.ds.JournalRowView
 import com.swparks.ui.ds.LoadingOverlayView
-import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.ui.screens.common.TextEntrySheetHost
 import com.swparks.ui.state.JournalsUiState

@@ -1,6 +1,6 @@
 package com.swparks.ui.viewmodel
 
-import com.swparks.data.model.User
+import com.swparks.domain.model.User
 import kotlinx.coroutines.flow.StateFlow
 
 interface IOtherUserProfileViewModel {

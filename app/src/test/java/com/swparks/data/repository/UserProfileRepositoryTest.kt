@@ -6,10 +6,10 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.database.dao.UserDao
-import com.swparks.data.model.User
 import com.swparks.domain.exception.NetworkException
+import com.swparks.domain.model.MainUserForm
+import com.swparks.domain.model.User
 import com.swparks.network.SWApi
-import com.swparks.ui.model.MainUserForm
 import com.swparks.util.NoOpCrashReporter
 import com.swparks.util.NoOpLogger
 import io.mockk.coEvery

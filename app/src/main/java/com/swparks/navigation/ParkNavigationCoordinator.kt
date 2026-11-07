@@ -2,9 +2,9 @@ package com.swparks.navigation
 
 import android.util.Log
 import androidx.navigation.NavController
-import com.swparks.data.model.NewParkDraft
-import com.swparks.data.model.Park
-import com.swparks.data.model.User
+import com.swparks.domain.model.NewParkDraft
+import com.swparks.domain.model.Park
+import com.swparks.domain.model.User
 import com.swparks.util.WorkoutAppJson
 
 private const val TAG = "ParkNavCoordinator"

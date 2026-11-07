@@ -3,9 +3,9 @@ package com.swparks.domain.usecase
 import com.swparks.data.SecureTokenRepository
 import com.swparks.data.TokenEncoder
 import com.swparks.data.UserPreferencesRepository
-import com.swparks.data.model.LoginSuccess
 import com.swparks.data.repository.AuthRepository
-import com.swparks.ui.model.LoginCredentials
+import com.swparks.domain.model.LoginCredentials
+import com.swparks.domain.model.LoginSuccess
 import com.swparks.util.CrashReporter
 
 /**

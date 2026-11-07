@@ -27,7 +27,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.swparks.R
-import com.swparks.data.model.Park
+import com.swparks.domain.model.Park
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.ParksListView
 import com.swparks.ui.viewmodel.IUserTrainingParksViewModel

@@ -2,8 +2,8 @@ package com.swparks.data.preferences
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import com.swparks.data.model.ParkSize
-import com.swparks.data.model.ParkType
+import com.swparks.domain.model.ParkSize
+import com.swparks.domain.model.ParkType
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.first

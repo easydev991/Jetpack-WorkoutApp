@@ -1,6 +1,6 @@
 package com.swparks.ui.model
 
-import com.swparks.data.model.Park
+import com.swparks.domain.model.Park
 
 sealed class ParkFormMode {
     data class Create(

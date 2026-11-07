@@ -24,7 +24,7 @@
 
 | Файл | Изменение |
 |------|-----------|
-| `app/src/main/java/com/swparks/data/AppContainer.kt` | Условный `logger` + условный `LoggingInterceptor` |
+| `app/src/main/java/com/swparks/di/AppContainer.kt` | Условный `logger` + условный `LoggingInterceptor` |
 | `app/src/main/java/com/swparks/JetpackWorkoutApplication.kt` | `logger` удалён (DI) |
 
 ---

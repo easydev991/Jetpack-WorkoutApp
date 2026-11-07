@@ -6,9 +6,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
-import com.swparks.data.model.User
+import com.swparks.domain.model.Gender
+import com.swparks.domain.model.User
 import com.swparks.testing.TimeoutTest
-import com.swparks.ui.model.Gender
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.FakeProfileViewModel
 import com.swparks.ui.viewmodel.ProfileUiState

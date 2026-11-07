@@ -87,7 +87,7 @@
 
 - `app/src/main/java/com/swparks/ui/viewmodel/EventsViewModel.kt`
 - `app/src/main/java/com/swparks/ui/viewmodel/IEventsViewModel.kt`
-- `app/src/main/java/com/swparks/data/AppContainer.kt`
+- `app/src/main/java/com/swparks/di/AppContainer.kt`
 
 ### UI
 
@@ -183,7 +183,7 @@
 - `app/src/main/java/com/swparks/ui/viewmodel/IEventsViewModel.kt`
 - `app/src/main/java/com/swparks/ui/screens/events/EventsScreen.kt`
 - `app/src/main/java/com/swparks/ui/screens/RootScreen.kt`
-- `app/src/main/java/com/swparks/data/AppContainer.kt`
+- `app/src/main/java/com/swparks/di/AppContainer.kt`
 - `app/src/main/java/com/swparks/data/repository/ParksEventsRepository.kt`
 - `app/src/main/res/values/strings.xml`
 - `app/src/main/res/values-ru/strings.xml`

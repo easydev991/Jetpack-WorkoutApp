@@ -1,7 +1,7 @@
 package com.swparks.navigation
 
 import androidx.lifecycle.SavedStateHandle
-import com.swparks.data.model.Park
+import com.swparks.domain.model.Park
 import com.swparks.util.WorkoutAppJson
 
 internal const val USER_PARKS_SEED_JSON_KEY = "user_parks_seed_json"

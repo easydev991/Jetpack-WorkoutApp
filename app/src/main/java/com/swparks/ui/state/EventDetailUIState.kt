@@ -1,6 +1,6 @@
 package com.swparks.ui.state
 
-import com.swparks.data.model.Event
+import com.swparks.domain.model.Event
 
 /**
  * Состояния UI экрана детальной информации о мероприятии.

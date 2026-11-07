@@ -1,7 +1,7 @@
 package com.swparks.ui.viewmodel
 
-import com.swparks.data.model.City
-import com.swparks.data.model.Country
+import com.swparks.domain.model.City
+import com.swparks.domain.model.Country
 
 sealed class OtherUserProfileUiState {
     data object Loading : OtherUserProfileUiState()

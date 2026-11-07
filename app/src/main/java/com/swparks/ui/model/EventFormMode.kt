@@ -1,7 +1,7 @@
 package com.swparks.ui.model
 
 import com.swparks.R
-import com.swparks.data.model.Event
+import com.swparks.domain.model.Event
 
 sealed class EventFormMode {
     data object RegularCreate : EventFormMode()

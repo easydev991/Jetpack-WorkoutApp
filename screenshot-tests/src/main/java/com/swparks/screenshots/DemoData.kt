@@ -1,12 +1,12 @@
 package com.swparks.screenshots
 
 import android.content.Context
-import com.swparks.data.model.Comment
-import com.swparks.data.model.Country
-import com.swparks.data.model.Event
-import com.swparks.data.model.Park
-import com.swparks.data.model.Photo
-import com.swparks.data.model.User
+import com.swparks.domain.model.Comment
+import com.swparks.domain.model.Country
+import com.swparks.domain.model.Event
+import com.swparks.domain.model.Park
+import com.swparks.domain.model.Photo
+import com.swparks.domain.model.User
 import com.swparks.util.WorkoutAppJson
 import com.swparks.util.readJSONFromAssets
 

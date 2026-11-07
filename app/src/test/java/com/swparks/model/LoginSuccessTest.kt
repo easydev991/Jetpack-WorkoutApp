@@ -1,6 +1,6 @@
 package com.swparks.model
 
-import com.swparks.data.model.LoginSuccess
+import com.swparks.domain.model.LoginSuccess
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

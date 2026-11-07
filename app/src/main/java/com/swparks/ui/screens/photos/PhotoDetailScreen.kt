@@ -25,7 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
-import com.swparks.data.model.Photo
+import com.swparks.domain.model.Photo
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.state.PhotoDetailAction
 import com.swparks.ui.state.PhotoDetailUIState

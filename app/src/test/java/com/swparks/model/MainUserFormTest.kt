@@ -1,6 +1,6 @@
 package com.swparks.model
 
-import com.swparks.ui.model.MainUserForm
+import com.swparks.domain.model.MainUserForm
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

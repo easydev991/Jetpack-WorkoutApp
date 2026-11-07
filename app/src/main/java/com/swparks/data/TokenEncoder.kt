@@ -1,6 +1,6 @@
 package com.swparks.data
 
-import com.swparks.ui.model.LoginCredentials
+import com.swparks.domain.model.LoginCredentials
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 

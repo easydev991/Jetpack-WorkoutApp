@@ -5,9 +5,9 @@ import com.swparks.data.database.dao.DialogDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.toDomain
 import com.swparks.data.database.entity.toEntity
-import com.swparks.data.model.LoginSuccess
-import com.swparks.data.model.User
+import com.swparks.domain.model.LoginSuccess
 import com.swparks.domain.model.RegistrationParams
+import com.swparks.domain.model.User
 import com.swparks.network.SWApi
 import com.swparks.util.CrashReporter
 import com.swparks.util.Logger

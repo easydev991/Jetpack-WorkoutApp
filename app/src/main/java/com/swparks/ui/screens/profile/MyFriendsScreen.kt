@@ -25,7 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
-import com.swparks.data.model.User
+import com.swparks.domain.model.User
 import com.swparks.ui.ds.FriendRequestData
 import com.swparks.ui.ds.FriendRequestRowView
 import com.swparks.ui.ds.LoadingOverlayView

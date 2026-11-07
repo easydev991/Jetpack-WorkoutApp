@@ -9,9 +9,9 @@ import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
 import com.swparks.data.provider.AvatarHelperImpl
+import com.swparks.domain.model.EventForm
 import com.swparks.domain.usecase.CreateEventUseCase
 import com.swparks.domain.usecase.EditEventUseCase
-import com.swparks.ui.model.EventForm
 import com.swparks.ui.model.EventFormMode
 import com.swparks.ui.state.EventFormEvent
 import com.swparks.ui.state.EventFormUiState
@@ -52,7 +52,7 @@ class EventFormViewModel(
 
         fun factory(
             mode: EventFormMode,
-            appContainer: com.swparks.data.DefaultAppContainer
+            appContainer: com.swparks.di.DefaultAppContainer
         ): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {

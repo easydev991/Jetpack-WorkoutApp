@@ -1,16 +1,16 @@
 package com.swparks.network
 
-import com.swparks.data.model.Comment
-import com.swparks.data.model.Country
-import com.swparks.data.model.DialogResponse
-import com.swparks.data.model.Event
-import com.swparks.data.model.JournalEntryResponse
-import com.swparks.data.model.JournalResponse
-import com.swparks.data.model.LoginSuccess
-import com.swparks.data.model.MessageResponse
-import com.swparks.data.model.Park
-import com.swparks.data.model.Photo
-import com.swparks.data.model.User
+import com.swparks.domain.model.Comment
+import com.swparks.domain.model.Country
+import com.swparks.domain.model.DialogResponse
+import com.swparks.domain.model.Event
+import com.swparks.domain.model.JournalEntryResponse
+import com.swparks.domain.model.JournalResponse
+import com.swparks.domain.model.LoginSuccess
+import com.swparks.domain.model.MessageResponse
+import com.swparks.domain.model.Park
+import com.swparks.domain.model.Photo
+import com.swparks.domain.model.User
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response

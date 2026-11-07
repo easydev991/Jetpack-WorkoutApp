@@ -3,8 +3,8 @@ package com.swparks.navigation
 import android.os.Build
 import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
-import com.swparks.data.model.Event
-import com.swparks.data.model.User
+import com.swparks.domain.model.Event
+import com.swparks.domain.model.User
 import com.swparks.util.WorkoutAppJson
 import io.mockk.every
 import io.mockk.mockk

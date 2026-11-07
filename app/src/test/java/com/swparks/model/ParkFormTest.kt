@@ -1,8 +1,8 @@
 package com.swparks.model
 
-import com.swparks.data.model.Park
-import com.swparks.data.model.Photo
-import com.swparks.ui.model.ParkForm
+import com.swparks.domain.model.Park
+import com.swparks.domain.model.ParkForm
+import com.swparks.domain.model.Photo
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

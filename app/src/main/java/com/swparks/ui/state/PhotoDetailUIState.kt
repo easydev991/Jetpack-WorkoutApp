@@ -1,6 +1,6 @@
 package com.swparks.ui.state
 
-import com.swparks.data.model.Photo
+import com.swparks.domain.model.Photo
 import com.swparks.util.Complaint
 
 sealed class PhotoOwner {

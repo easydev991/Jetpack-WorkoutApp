@@ -16,10 +16,10 @@ import com.swparks.R
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.fakeAnalyticsLogger
 import com.swparks.data.database.entity.DialogEntity
-import com.swparks.data.model.User
+import com.swparks.domain.model.Gender
+import com.swparks.domain.model.User
 import com.swparks.navigation.AppState
 import com.swparks.testing.TimeoutTest
-import com.swparks.ui.model.Gender
 import com.swparks.ui.state.DialogsUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.IDialogsViewModel

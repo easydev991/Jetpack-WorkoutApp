@@ -2,8 +2,8 @@ package com.swparks.data.repository
 
 import android.util.Log
 import com.swparks.data.database.dao.DialogDao
-import com.swparks.data.model.MessageResponse
 import com.swparks.domain.exception.NetworkException
+import com.swparks.domain.model.MessageResponse
 import com.swparks.network.SWApi
 import com.swparks.util.CrashReporter
 import com.swparks.util.NoOpLogger

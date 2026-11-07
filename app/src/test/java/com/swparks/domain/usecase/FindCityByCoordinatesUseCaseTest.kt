@@ -1,7 +1,7 @@
 package com.swparks.domain.usecase
 
-import com.swparks.data.model.City
 import com.swparks.data.repository.CountriesRepositoryImpl
+import com.swparks.domain.model.City
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest

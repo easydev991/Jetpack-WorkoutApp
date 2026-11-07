@@ -1,7 +1,7 @@
 package com.swparks.ui.viewmodel
 
-import com.swparks.data.model.Photo
-import com.swparks.data.model.User
+import com.swparks.domain.model.Photo
+import com.swparks.domain.model.User
 import com.swparks.ui.model.TextEntryMode
 import com.swparks.util.Complaint
 
@@ -61,7 +61,7 @@ sealed class ParkDetailEvent {
      * @param park Площадка для редактирования
      */
     data class NavigateToEditPark(
-        val park: com.swparks.data.model.Park
+        val park: com.swparks.domain.model.Park
     ) : ParkDetailEvent()
 
     /**

@@ -6,14 +6,15 @@ import com.swparks.data.database.dao.EventDao
 import com.swparks.data.database.dao.ParkDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.dao.UserTrainingParkDao
-import com.swparks.data.model.Comment
-import com.swparks.data.model.Event
-import com.swparks.data.model.User
 import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.exception.ServerException
+import com.swparks.domain.model.Comment
+import com.swparks.domain.model.Event
+import com.swparks.domain.model.EventForm
+import com.swparks.domain.model.EventType
+import com.swparks.domain.model.Photo
+import com.swparks.domain.model.User
 import com.swparks.network.SWApi
-import com.swparks.ui.model.EventForm
-import com.swparks.ui.model.EventType
 import com.swparks.util.NoOpCrashReporter
 import com.swparks.util.NoOpLogger
 import io.mockk.coEvery
@@ -1012,10 +1013,8 @@ class ParksEventsRepositoryEventsTest {
             address = "Moscow, Red Square",
             photos =
                 listOf(
-                    com.swparks.data.model
-                        .Photo(id = 1L, photo = "photo1.jpg"),
-                    com.swparks.data.model
-                        .Photo(id = 2L, photo = "photo2.jpg")
+                    Photo(id = 1L, photo = "photo1.jpg"),
+                    Photo(id = 2L, photo = "photo2.jpg")
                 ),
             trainingUsers =
                 listOf(

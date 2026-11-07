@@ -30,9 +30,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.DialogProperties
 import com.swparks.R
-import com.swparks.data.model.ParkFilter
-import com.swparks.data.model.ParkSize
-import com.swparks.data.model.ParkType
+import com.swparks.domain.model.ParkFilter
+import com.swparks.domain.model.ParkSize
+import com.swparks.domain.model.ParkType
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.CheckmarkRowView
 import com.swparks.ui.ds.ConfirmCloseDialog
@@ -41,6 +41,7 @@ import com.swparks.ui.ds.FormCardContainerParams
 import com.swparks.ui.ds.SWButton
 import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.ds.SectionView
+import com.swparks.ui.model.descriptionRes
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 @Composable
@@ -124,7 +125,7 @@ private fun FilterDialogContent(state: ParksFilterDialogState) {
             items =
                 ParkSize.entries.map { size ->
                     FilterItem(
-                        text = stringResource(size.description),
+                        text = stringResource(size.descriptionRes),
                         isChecked = state.isSizeSelected(size),
                         onToggle = {
                             state.toggleSize(size)
@@ -137,7 +138,7 @@ private fun FilterDialogContent(state: ParksFilterDialogState) {
             items =
                 ParkType.entries.map { type ->
                     FilterItem(
-                        text = stringResource(type.description),
+                        text = stringResource(type.descriptionRes),
                         isChecked = state.isTypeSelected(type),
                         onToggle = {
                             state.toggleType(type)

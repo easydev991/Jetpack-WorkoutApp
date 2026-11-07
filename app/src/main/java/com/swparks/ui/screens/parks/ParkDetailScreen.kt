@@ -47,7 +47,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.swparks.R
-import com.swparks.data.model.User
+import com.swparks.domain.model.User
 import com.swparks.ui.ds.ErrorContentView
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.screens.common.TextEntrySheetHost
@@ -84,7 +84,7 @@ sealed class ParkDetailAction {
     ) : ParkDetailAction()
 
     data class OnNavigateToEditPark(
-        val park: com.swparks.data.model.Park
+        val park: com.swparks.domain.model.Park
     ) : ParkDetailAction()
 }
 

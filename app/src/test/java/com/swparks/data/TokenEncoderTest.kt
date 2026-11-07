@@ -1,6 +1,6 @@
 package com.swparks.data
 
-import com.swparks.ui.model.LoginCredentials
+import com.swparks.domain.model.LoginCredentials
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

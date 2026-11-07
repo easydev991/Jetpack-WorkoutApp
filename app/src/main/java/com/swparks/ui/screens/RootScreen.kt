@@ -28,9 +28,9 @@ import com.swparks.JetpackWorkoutApplication
 import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AppScreen
 import com.swparks.analytics.UserActionType
-import com.swparks.data.model.Park
 import com.swparks.data.preferences.AppSettingsDataStore
 import com.swparks.data.provider.ResourcesProviderImpl
+import com.swparks.domain.model.Park
 import com.swparks.domain.usecase.DeleteEventUseCase
 import com.swparks.domain.usecase.DeleteParkUseCase
 import com.swparks.navigation.AppState
@@ -801,7 +801,7 @@ fun RootScreen(appState: AppState) {
                 LaunchedEffect(updatedEventJson) {
                     if (updatedEventJson != null) {
                         val updatedEvent =
-                            WorkoutAppJson.decodeFromString<com.swparks.data.model.Event>(
+                            WorkoutAppJson.decodeFromString<com.swparks.domain.model.Event>(
                                 updatedEventJson
                             )
                         eventDetailViewModel.onEventUpdated(updatedEvent)

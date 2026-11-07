@@ -1,9 +1,9 @@
 package com.swparks.model
 
 import android.util.Log
-import com.swparks.data.model.Park
-import com.swparks.data.model.User
-import com.swparks.ui.model.Gender
+import com.swparks.domain.model.Gender
+import com.swparks.domain.model.Park
+import com.swparks.domain.model.User
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll

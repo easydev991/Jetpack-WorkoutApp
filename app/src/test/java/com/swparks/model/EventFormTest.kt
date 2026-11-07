@@ -1,6 +1,6 @@
 package com.swparks.model
 
-import com.swparks.ui.model.EventForm
+import com.swparks.domain.model.EventForm
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

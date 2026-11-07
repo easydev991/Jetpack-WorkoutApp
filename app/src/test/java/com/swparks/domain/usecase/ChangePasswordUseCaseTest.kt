@@ -2,10 +2,10 @@ package com.swparks.domain.usecase
 
 import com.swparks.data.SecureTokenRepository
 import com.swparks.data.TokenEncoder
-import com.swparks.data.model.User
 import com.swparks.data.repository.AuthRepository
 import com.swparks.domain.exception.ServerException
-import com.swparks.ui.model.LoginCredentials
+import com.swparks.domain.model.LoginCredentials
+import com.swparks.domain.model.User
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

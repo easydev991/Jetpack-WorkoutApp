@@ -3,9 +3,9 @@ package com.swparks.data.repository
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.entity.toDomain
 import com.swparks.data.database.entity.toEntity
-import com.swparks.data.model.JournalEntryResponse
 import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.model.JournalEntry
+import com.swparks.domain.model.JournalEntryResponse
 import com.swparks.network.SWApi
 import com.swparks.util.CrashReporter
 import com.swparks.util.HTTP_NOT_FOUND

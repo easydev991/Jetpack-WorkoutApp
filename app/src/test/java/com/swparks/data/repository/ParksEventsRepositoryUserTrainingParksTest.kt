@@ -6,7 +6,7 @@ import com.swparks.data.database.dao.ParkDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.dao.UserTrainingParkDao
 import com.swparks.data.database.entity.ParkEntity
-import com.swparks.data.model.Park
+import com.swparks.domain.model.Park
 import com.swparks.network.SWApi
 import com.swparks.util.NoOpCrashReporter
 import com.swparks.util.NoOpLogger

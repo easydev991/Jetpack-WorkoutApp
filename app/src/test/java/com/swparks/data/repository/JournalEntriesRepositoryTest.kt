@@ -3,7 +3,7 @@ package com.swparks.data.repository
 import android.util.Log
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.entity.JournalEntryEntity
-import com.swparks.data.model.JournalEntryResponse
+import com.swparks.domain.model.JournalEntryResponse
 import com.swparks.network.SWApi
 import com.swparks.util.NoOpCrashReporter
 import com.swparks.util.NoOpLogger

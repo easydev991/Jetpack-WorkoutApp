@@ -1,6 +1,6 @@
 package com.swparks.domain.usecase
 
-import com.swparks.data.model.NewParkDraft
+import com.swparks.domain.model.NewParkDraft
 
 /**
  * Интерфейс для обработки create-flow после получения разрешения на геолокацию.

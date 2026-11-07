@@ -87,7 +87,7 @@
 - `app/src/main/java/com/swparks/analytics/AppScreen.kt`
 - `app/src/main/java/com/swparks/analytics/UserActionType.kt`
 - `app/src/main/java/com/swparks/analytics/AppErrorOperation.kt`
-- `app/src/main/java/com/swparks/data/AppContainer.kt`
+- `app/src/main/java/com/swparks/di/AppContainer.kt`
 - `app/src/main/java/com/swparks/navigation/AppState.kt`
 - `app/src/main/java/com/swparks/util/Logger.kt`
 - `app/src/main/java/com/swparks/util/CrashReporter.kt`

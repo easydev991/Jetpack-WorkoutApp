@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import com.swparks.R
-import com.swparks.data.model.Park
+import com.swparks.domain.model.Park
 import com.swparks.ui.testtags.ScreenshotTestTags
 
 /**

@@ -1,6 +1,6 @@
 package com.swparks.navigation
 
-import com.swparks.data.model.Park
+import com.swparks.domain.model.Park
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

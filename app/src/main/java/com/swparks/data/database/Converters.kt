@@ -2,10 +2,10 @@ package com.swparks.data.database
 
 import android.util.Log
 import androidx.room.TypeConverter
-import com.swparks.data.model.Comment
-import com.swparks.data.model.Park
-import com.swparks.data.model.Photo
-import com.swparks.data.model.User
+import com.swparks.domain.model.Comment
+import com.swparks.domain.model.Park
+import com.swparks.domain.model.Photo
+import com.swparks.domain.model.User
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer

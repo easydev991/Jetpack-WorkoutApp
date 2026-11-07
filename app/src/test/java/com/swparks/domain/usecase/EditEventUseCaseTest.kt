@@ -1,8 +1,9 @@
 package com.swparks.domain.usecase
 
-import com.swparks.data.model.Event
 import com.swparks.data.repository.ParksEventsRepository
-import com.swparks.ui.model.EventForm
+import com.swparks.domain.model.Event
+import com.swparks.domain.model.EventForm
+import com.swparks.domain.model.User
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -109,8 +110,7 @@ class EditEventUseCaseTest {
             isCurrent = true,
             photos = emptyList(),
             author =
-                com.swparks.data.model
-                    .User(id = 1L, name = "Автор", image = null),
+                User(id = 1L, name = "Автор", image = null),
             name = "event"
         )
 }

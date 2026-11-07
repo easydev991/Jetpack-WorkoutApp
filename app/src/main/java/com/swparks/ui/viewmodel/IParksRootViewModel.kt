@@ -2,12 +2,12 @@ package com.swparks.ui.viewmodel
 
 import android.content.Intent
 import android.content.IntentSender
-import com.swparks.data.model.City
-import com.swparks.data.model.NewParkDraft
-import com.swparks.data.model.Park
-import com.swparks.data.model.ParkFilter
-import com.swparks.data.model.ParkSize
-import com.swparks.data.model.ParkType
+import com.swparks.domain.model.City
+import com.swparks.domain.model.NewParkDraft
+import com.swparks.domain.model.Park
+import com.swparks.domain.model.ParkFilter
+import com.swparks.domain.model.ParkSize
+import com.swparks.domain.model.ParkType
 import com.swparks.ui.model.ParksTab
 import com.swparks.ui.screens.settings.ItemListMode
 import com.swparks.ui.state.ItemListUiState

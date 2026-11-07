@@ -1,7 +1,7 @@
 package com.swparks.ui.viewmodel
 
-import com.swparks.data.model.Event
-import com.swparks.data.model.User
+import com.swparks.domain.model.Event
+import com.swparks.domain.model.User
 import com.swparks.ui.model.EventKind
 import com.swparks.ui.state.EventsUIState
 import kotlinx.coroutines.flow.Flow

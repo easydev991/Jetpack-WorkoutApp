@@ -9,7 +9,7 @@
 | `app/src/main/java/com/swparks/network/SWApi.kt`                | Retrofit интерфейс с 57 эндпоинтами |
 | `app/src/main/java/com/swparks/data/model/*.kt`                 | 19 моделей данных для API и кэша    |
 | `app/src/main/java/com/swparks/data/repository/*.kt`            | Репозитории для работы с API (`AuthRepository`, `FriendsRepository`, `UserProfileRepository`, `ParksEventsRepository`, `CommentsRepository`, `JournalsRepositoryImpl`, `JournalEntriesRepositoryImpl`, `MessagesRepositoryImpl`, `CountriesRepositoryImpl`, базовый `BaseRepository`) |
-| `app/src/main/java/com/swparks/data/AppContainer.kt`            | Создание `OkHttpClient`, `Retrofit` и общего `SWApi` |
+| `app/src/main/java/com/swparks/di/AppContainer.kt`            | Создание `OkHttpClient`, `Retrofit` и общего `SWApi` |
 | `app/src/main/java/com/swparks/JetpackWorkoutApplication.kt`    | Инициализация `DefaultAppContainer` и preload auth token |
 
 ### Interceptors

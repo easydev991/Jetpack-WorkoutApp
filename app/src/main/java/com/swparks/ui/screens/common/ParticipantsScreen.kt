@@ -23,7 +23,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
-import com.swparks.data.model.User
+import com.swparks.domain.model.User
 import com.swparks.ui.ds.EmptyStateView
 import com.swparks.ui.ds.UserRowData
 import com.swparks.ui.ds.UserRowView

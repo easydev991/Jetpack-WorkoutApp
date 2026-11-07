@@ -1,7 +1,7 @@
 package com.swparks.ui.viewmodel
 
-import com.swparks.data.model.City
-import com.swparks.data.model.Country
+import com.swparks.domain.model.City
+import com.swparks.domain.model.Country
 import com.swparks.ui.model.RegisterForm
 import com.swparks.ui.state.RegisterEvent
 import com.swparks.ui.state.RegisterUiState

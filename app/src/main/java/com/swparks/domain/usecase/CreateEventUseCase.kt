@@ -1,8 +1,8 @@
 package com.swparks.domain.usecase
 
-import com.swparks.data.model.Event
 import com.swparks.data.repository.ParksEventsRepository
-import com.swparks.ui.model.EventForm
+import com.swparks.domain.model.Event
+import com.swparks.domain.model.EventForm
 
 class CreateEventUseCase(
     private val parksEventsRepository: ParksEventsRepository

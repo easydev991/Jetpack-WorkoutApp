@@ -29,7 +29,7 @@ import com.swparks.R
 import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppScreen
-import com.swparks.data.model.User
+import com.swparks.domain.model.User
 import com.swparks.navigation.TopLevelDestinations.EVENTS
 import com.swparks.navigation.TopLevelDestinations.MESSAGES
 import com.swparks.navigation.TopLevelDestinations.MORE

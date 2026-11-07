@@ -5,13 +5,13 @@ import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
 import com.swparks.data.UserPreferencesRepository
-import com.swparks.data.model.City
-import com.swparks.data.model.Country
-import com.swparks.data.model.Event
-import com.swparks.data.model.User
 import com.swparks.data.repository.AuthRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.ParksEventsRepository
+import com.swparks.domain.model.City
+import com.swparks.domain.model.Country
+import com.swparks.domain.model.Event
+import com.swparks.domain.model.User
 import com.swparks.domain.usecase.GetFutureEventsFlowUseCase
 import com.swparks.domain.usecase.GetPastEventsFlowUseCase
 import com.swparks.domain.usecase.SyncFutureEventsUseCase

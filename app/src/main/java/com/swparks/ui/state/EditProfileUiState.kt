@@ -1,9 +1,9 @@
 package com.swparks.ui.state
 
 import android.net.Uri
-import com.swparks.data.model.City
-import com.swparks.data.model.Country
-import com.swparks.ui.model.MainUserForm
+import com.swparks.domain.model.City
+import com.swparks.domain.model.Country
+import com.swparks.domain.model.MainUserForm
 
 /**
  * UI State для экрана редактирования профиля.

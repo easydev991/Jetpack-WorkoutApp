@@ -3,12 +3,12 @@ package com.swparks.data.repository
 import android.util.Log
 import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.UserDao
-import com.swparks.data.model.JournalEntryResponse
-import com.swparks.data.model.JournalResponse
 import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.exception.ServerException
+import com.swparks.domain.model.JournalAccess
+import com.swparks.domain.model.JournalEntryResponse
+import com.swparks.domain.model.JournalResponse
 import com.swparks.network.SWApi
-import com.swparks.ui.model.JournalAccess
 import com.swparks.util.NoOpCrashReporter
 import com.swparks.util.NoOpLogger
 import io.mockk.coEvery

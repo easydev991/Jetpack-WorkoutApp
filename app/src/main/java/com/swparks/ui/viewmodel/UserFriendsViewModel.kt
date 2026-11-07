@@ -2,8 +2,8 @@ package com.swparks.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.swparks.data.model.User
 import com.swparks.data.repository.FriendsRepository
+import com.swparks.domain.model.User
 import com.swparks.util.AppError
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier

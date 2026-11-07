@@ -23,12 +23,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.swparks.R
-import com.swparks.data.model.Park
-import com.swparks.data.model.ParkSize
-import com.swparks.data.model.ParkType
+import com.swparks.domain.model.Park
+import com.swparks.domain.model.ParkSize
+import com.swparks.domain.model.ParkType
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.SWButton
 import com.swparks.ui.ds.SWButtonSize
+import com.swparks.ui.model.descriptionRes
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 private val PARK_INFO_CARD_MAX_WIDTH = 420.dp
@@ -113,14 +114,14 @@ private fun ParkInfoDescription(park: Park) {
         ) {
             park.size?.let { size ->
                 Text(
-                    text = stringResource(size.description),
+                    text = stringResource(size.descriptionRes),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             park.type?.let { type ->
                 Text(
-                    text = stringResource(type.description),
+                    text = stringResource(type.descriptionRes),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

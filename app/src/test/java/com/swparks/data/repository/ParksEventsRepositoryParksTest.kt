@@ -9,12 +9,12 @@ import com.swparks.data.database.dao.UserTrainingParkDao
 import com.swparks.data.database.entity.ParkEntity
 import com.swparks.data.database.entity.UserEntity
 import com.swparks.data.database.entity.toEntity
-import com.swparks.data.model.Park
-import com.swparks.data.model.Photo
 import com.swparks.domain.exception.NetworkException
 import com.swparks.domain.exception.ServerException
+import com.swparks.domain.model.Park
+import com.swparks.domain.model.ParkForm
+import com.swparks.domain.model.Photo
 import com.swparks.network.SWApi
-import com.swparks.ui.model.ParkForm
 import com.swparks.util.NoOpCrashReporter
 import com.swparks.util.NoOpLogger
 import io.mockk.coEvery

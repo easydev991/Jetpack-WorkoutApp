@@ -1,7 +1,7 @@
 package com.swparks.ui.viewmodel
 
 import android.net.Uri
-import com.swparks.ui.model.ParkForm
+import com.swparks.domain.model.ParkForm
 import com.swparks.ui.model.ParkFormMode
 import com.swparks.ui.state.ParkFormEvent
 import com.swparks.ui.state.ParkFormUiState

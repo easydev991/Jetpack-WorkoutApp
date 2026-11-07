@@ -10,7 +10,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swparks.R
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.fakeAnalyticsLogger
-import com.swparks.data.DefaultAppContainer
+import com.swparks.di.DefaultAppContainer
 import com.swparks.navigation.rememberAppState
 import com.swparks.testing.TimeoutTest
 import com.swparks.util.AppError

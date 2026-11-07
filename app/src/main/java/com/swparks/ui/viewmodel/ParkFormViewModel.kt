@@ -12,8 +12,8 @@ import com.swparks.data.database.dao.UserDao
 import com.swparks.data.provider.AvatarHelperImpl
 import com.swparks.data.provider.GeocodingServiceImpl
 import com.swparks.data.repository.ParksEventsRepository
+import com.swparks.domain.model.ParkForm
 import com.swparks.domain.usecase.FindCityByCoordinatesUseCase
-import com.swparks.ui.model.ParkForm
 import com.swparks.ui.model.ParkFormMode
 import com.swparks.ui.state.ParkFormEvent
 import com.swparks.ui.state.ParkFormUiState
@@ -48,7 +48,7 @@ class ParkFormViewModel(
 
         fun factory(
             mode: ParkFormMode,
-            appContainer: com.swparks.data.DefaultAppContainer
+            appContainer: com.swparks.di.DefaultAppContainer
         ): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {

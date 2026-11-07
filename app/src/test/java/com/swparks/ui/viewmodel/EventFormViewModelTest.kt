@@ -7,13 +7,13 @@ import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
-import com.swparks.data.model.Event
-import com.swparks.data.model.Photo
-import com.swparks.data.model.User
 import com.swparks.data.provider.AvatarHelperImpl
+import com.swparks.domain.model.Event
+import com.swparks.domain.model.EventForm
+import com.swparks.domain.model.Photo
+import com.swparks.domain.model.User
 import com.swparks.domain.usecase.CreateEventUseCase
 import com.swparks.domain.usecase.EditEventUseCase
-import com.swparks.ui.model.EventForm
 import com.swparks.ui.model.EventFormMode
 import com.swparks.ui.state.EventFormEvent
 import com.swparks.util.AppError

@@ -1,10 +1,10 @@
 package com.swparks.ui.viewmodel
 
 import com.swparks.analytics.AnalyticsService
-import com.swparks.data.model.LoginSuccess
+import com.swparks.domain.model.LoginCredentials
+import com.swparks.domain.model.LoginSuccess
 import com.swparks.domain.usecase.LoginUseCase
 import com.swparks.domain.usecase.ResetPasswordUseCase
-import com.swparks.ui.model.LoginCredentials
 import com.swparks.ui.state.LoginEvent
 import com.swparks.ui.state.LoginUiState
 import com.swparks.util.Logger

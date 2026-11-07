@@ -1,8 +1,8 @@
 package com.swparks.navigation
 
 import androidx.navigation.NavBackStackEntry
-import com.swparks.data.model.Event
-import com.swparks.data.model.User
+import com.swparks.domain.model.Event
+import com.swparks.domain.model.User
 import com.swparks.util.WorkoutAppJson
 
 internal data class EventParticipantsNavArgs(

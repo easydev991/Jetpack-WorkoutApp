@@ -1,6 +1,6 @@
 package com.swparks.ui.state
 
-import com.swparks.data.model.MessageResponse
+import com.swparks.domain.model.MessageResponse
 
 /**
  * UI State для экрана чата (диалога).

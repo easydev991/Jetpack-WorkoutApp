@@ -2,7 +2,7 @@ package com.swparks.navigation
 
 import android.net.Uri
 import androidx.navigation.NavBackStackEntry
-import com.swparks.ui.model.JournalAccess
+import com.swparks.domain.model.JournalAccess
 
 internal data class JournalEntriesNavArgs(
     val journalId: Long,

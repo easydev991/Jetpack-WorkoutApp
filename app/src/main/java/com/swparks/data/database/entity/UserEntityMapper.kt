@@ -1,6 +1,6 @@
 package com.swparks.data.database.entity
 
-import com.swparks.data.model.User
+import com.swparks.domain.model.User
 
 /**
  * Конвертировать [User] в [UserEntity] с указанием флагов категоризации

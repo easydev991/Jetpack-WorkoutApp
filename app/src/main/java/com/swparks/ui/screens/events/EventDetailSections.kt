@@ -32,10 +32,10 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
-import com.swparks.data.model.Comment
-import com.swparks.data.model.Event
-import com.swparks.data.model.Photo
-import com.swparks.data.model.User
+import com.swparks.domain.model.Comment
+import com.swparks.domain.model.Event
+import com.swparks.domain.model.Photo
+import com.swparks.domain.model.User
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.CommentRowData
 import com.swparks.ui.ds.CommentRowView

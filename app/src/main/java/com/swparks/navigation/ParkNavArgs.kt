@@ -1,9 +1,9 @@
 package com.swparks.navigation
 
 import androidx.navigation.NavBackStackEntry
-import com.swparks.data.model.NewParkDraft
-import com.swparks.data.model.Park
-import com.swparks.data.model.User
+import com.swparks.domain.model.NewParkDraft
+import com.swparks.domain.model.Park
+import com.swparks.domain.model.User
 import com.swparks.util.WorkoutAppJson
 
 internal const val EDIT_PARK_JSON_KEY = "edit_park_json"

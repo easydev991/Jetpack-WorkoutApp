@@ -1,6 +1,6 @@
 package com.swparks.ui.screens.messages
 
-import com.swparks.data.model.User
+import com.swparks.domain.model.User
 import com.swparks.ui.state.FriendsListUiState
 import com.swparks.ui.viewmodel.IFriendsListViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -5,10 +5,10 @@ import com.swparks.data.UserPreferencesRepository
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.toDomain
 import com.swparks.data.database.entity.toEntity
-import com.swparks.data.model.SocialUpdates
-import com.swparks.data.model.User
+import com.swparks.domain.model.MainUserForm
+import com.swparks.domain.model.SocialUpdates
+import com.swparks.domain.model.User
 import com.swparks.network.SWApi
-import com.swparks.ui.model.MainUserForm
 import com.swparks.util.CrashReporter
 import com.swparks.util.Logger
 import kotlinx.coroutines.async

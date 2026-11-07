@@ -1,7 +1,7 @@
 package com.swparks.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.swparks.data.DefaultAppContainer
+import com.swparks.di.DefaultAppContainer
 import com.swparks.ui.model.EventFormMode
 import io.mockk.every
 import io.mockk.mockk

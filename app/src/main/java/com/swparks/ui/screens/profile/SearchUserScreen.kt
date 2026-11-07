@@ -251,7 +251,7 @@ private fun SearchUserStateContent(
  */
 @Composable
 private fun UsersList(
-    users: List<com.swparks.data.model.User>,
+    users: List<com.swparks.domain.model.User>,
     onUserClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
     currentUserId: Long? = null

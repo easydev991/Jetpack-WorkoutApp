@@ -43,7 +43,7 @@
 ## Изменённые файлы
 
 - `res/values/strings.xml`, `res/values-ru/strings.xml` — локализация
-- `data/AppContainer.kt` — фабрика ViewModel
+- `di/AppContainer.kt` — фабрика ViewModel
 - `ui/screens/RootScreen.kt` — навигация
 
 ---

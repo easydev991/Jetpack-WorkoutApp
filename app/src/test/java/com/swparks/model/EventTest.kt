@@ -1,9 +1,9 @@
 package com.swparks.model
 
-import com.swparks.data.model.Comment
-import com.swparks.data.model.Event
-import com.swparks.data.model.Photo
-import com.swparks.data.model.User
+import com.swparks.domain.model.Comment
+import com.swparks.domain.model.Event
+import com.swparks.domain.model.Photo
+import com.swparks.domain.model.User
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

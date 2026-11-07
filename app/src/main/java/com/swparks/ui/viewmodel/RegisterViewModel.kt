@@ -6,11 +6,11 @@ import com.swparks.R
 import com.swparks.data.SecureTokenRepository
 import com.swparks.data.TokenEncoder
 import com.swparks.data.UserPreferencesRepository
-import com.swparks.data.model.City
-import com.swparks.data.model.Country
 import com.swparks.data.provider.ResourcesProviderImpl
 import com.swparks.data.repository.AuthRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
+import com.swparks.domain.model.City
+import com.swparks.domain.model.Country
 import com.swparks.domain.model.RegistrationParams
 import com.swparks.ui.model.RegisterForm
 import com.swparks.ui.state.RegisterEvent
@@ -271,7 +271,7 @@ class RegisterViewModel(
                     // Генерируем токен из логина и пароля (как при обычной авторизации)
                     val token =
                         tokenEncoder.encode(
-                            com.swparks.ui.model.LoginCredentials(
+                            com.swparks.domain.model.LoginCredentials(
                                 login = currentForm.login,
                                 password = currentForm.password
                             )

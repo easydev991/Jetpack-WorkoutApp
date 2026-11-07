@@ -1,7 +1,7 @@
 package com.swparks.ui.viewmodel
 
 import android.net.Uri
-import com.swparks.ui.model.Gender
+import com.swparks.domain.model.Gender
 import com.swparks.ui.state.EditProfileEvent
 import com.swparks.ui.state.EditProfileUiState
 import kotlinx.coroutines.flow.SharedFlow

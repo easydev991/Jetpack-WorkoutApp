@@ -39,7 +39,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.swparks.R
-import com.swparks.data.model.Event
+import com.swparks.domain.model.Event
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.EmptyStateView
 import com.swparks.ui.ds.ErrorContentView

@@ -1,6 +1,6 @@
 package com.swparks.ui.viewmodel
 
-import com.swparks.ui.model.JournalAccess
+import com.swparks.domain.model.JournalAccess
 import com.swparks.ui.state.JournalsUiState
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow

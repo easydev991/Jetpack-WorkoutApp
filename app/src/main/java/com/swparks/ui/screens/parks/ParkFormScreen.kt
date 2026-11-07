@@ -31,9 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
-import com.swparks.data.model.Park
-import com.swparks.data.model.ParkSize
-import com.swparks.data.model.ParkType
+import com.swparks.domain.model.Park
+import com.swparks.domain.model.ParkSize
+import com.swparks.domain.model.ParkType
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.ConfirmCloseDialog
 import com.swparks.ui.ds.FormCardContainer
@@ -52,6 +52,7 @@ import com.swparks.ui.ds.SWTextField
 import com.swparks.ui.ds.TextFieldConfig
 import com.swparks.ui.ds.rememberPickedImagesController
 import com.swparks.ui.model.ParkFormMode
+import com.swparks.ui.model.descriptionRes
 import com.swparks.ui.state.ParkFormEvent
 import com.swparks.ui.viewmodel.IParkFormViewModel
 import com.swparks.ui.viewmodel.ParkFormAction
@@ -79,7 +80,7 @@ private sealed class ParkFormDialogAction {
 }
 
 private data class ParkFormContentParams(
-    val form: com.swparks.ui.model.ParkForm,
+    val form: com.swparks.domain.model.ParkForm,
     val isEnabled: Boolean,
     val selectedPhotos: List<Uri>,
     val maxNewPhotos: Int,
@@ -341,7 +342,7 @@ private fun ParkTypeRadioButtons(
         Column(modifier = Modifier.selectableGroup()) {
             ParkType.entries.forEach { parkType ->
                 SWRadioButton(
-                    text = stringResource(parkType.description),
+                    text = stringResource(parkType.descriptionRes),
                     selected = selectedTypeId == parkType.rawValue,
                     onClick = { onTypeChange(parkType.rawValue) },
                     onClickable = enabled
@@ -389,7 +390,7 @@ private fun ParkSizeRadioButtons(
         Column(modifier = Modifier.selectableGroup()) {
             ParkSize.entries.forEach { parkSize ->
                 SWRadioButton(
-                    text = stringResource(parkSize.description),
+                    text = stringResource(parkSize.descriptionRes),
                     selected = selectedSizeId == parkSize.rawValue,
                     onClick = { onSizeChange(parkSize.rawValue) },
                     onClickable = enabled

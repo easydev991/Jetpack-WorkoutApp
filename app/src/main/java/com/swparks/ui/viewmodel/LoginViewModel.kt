@@ -10,9 +10,9 @@ import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
+import com.swparks.domain.model.LoginCredentials
 import com.swparks.domain.usecase.LoginUseCase
 import com.swparks.domain.usecase.ResetPasswordUseCase
-import com.swparks.ui.model.LoginCredentials
 import com.swparks.ui.state.LoginEvent
 import com.swparks.ui.state.LoginUiState
 import com.swparks.util.Logger

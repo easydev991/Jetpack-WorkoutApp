@@ -28,7 +28,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.swparks.R
-import com.swparks.ui.model.Gender
+import com.swparks.domain.model.Gender
+import com.swparks.ui.model.descriptionRes
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 
 /**
@@ -142,7 +143,7 @@ fun UserProfileCardViewPreview() {
                     UserProfileData(
                         imageStringURL = null,
                         userName = "Very very very very very very long user name for two lines",
-                        gender = stringResource(id = Gender.FEMALE.description),
+                        gender = stringResource(id = Gender.FEMALE.descriptionRes),
                         age = 30,
                         shortAddress = "Россия, Москва"
                     )

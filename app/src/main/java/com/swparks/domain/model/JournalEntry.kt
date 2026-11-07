@@ -1,7 +1,5 @@
 package com.swparks.domain.model
 
-import com.swparks.data.model.JournalEntryResponse
-
 /**
  * Доменная модель записи в дневнике
  *

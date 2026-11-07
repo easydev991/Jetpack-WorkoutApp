@@ -6,9 +6,9 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.swparks.data.model.ParkFilter
-import com.swparks.data.model.ParkSize
-import com.swparks.data.model.ParkType
+import com.swparks.domain.model.ParkFilter
+import com.swparks.domain.model.ParkSize
+import com.swparks.domain.model.ParkType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 

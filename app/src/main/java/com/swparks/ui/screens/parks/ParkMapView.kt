@@ -37,7 +37,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.swparks.BuildConfig
 import com.swparks.R
-import com.swparks.data.model.Park
+import com.swparks.domain.model.Park
 import com.swparks.ui.screens.parks.map.clusterTextSize
 import com.swparks.ui.screens.parks.map.isValidCoordinates
 import com.swparks.ui.screens.parks.map.selectedCityBoundsCameraUpdate

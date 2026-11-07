@@ -50,7 +50,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.swparks.R
-import com.swparks.data.model.User
+import com.swparks.domain.model.Gender
+import com.swparks.domain.model.User
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.ConfirmCloseDialog
 import com.swparks.ui.ds.DateTimePickerConfig
@@ -67,7 +68,7 @@ import com.swparks.ui.ds.SWDatePickerMode
 import com.swparks.ui.ds.SWDateTimePicker
 import com.swparks.ui.ds.SWTextField
 import com.swparks.ui.ds.TextFieldConfig
-import com.swparks.ui.model.Gender
+import com.swparks.ui.model.sexRes
 import com.swparks.ui.state.EditProfileEvent
 import com.swparks.ui.viewmodel.IEditProfileViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -94,11 +95,11 @@ private data class EditProfileContentParams(
     val avatarUrl: String?,
     val selectedAvatarUri: Uri?,
     val avatarError: String?,
-    val userForm: com.swparks.ui.model.MainUserForm,
+    val userForm: com.swparks.domain.model.MainUserForm,
     val emailError: String?,
     val birthDateError: String?,
-    val selectedCountry: com.swparks.data.model.Country?,
-    val selectedCity: com.swparks.data.model.City?,
+    val selectedCountry: com.swparks.domain.model.Country?,
+    val selectedCity: com.swparks.domain.model.City?,
     val isLoading: Boolean,
     val onChangeAvatarClick: () -> Unit,
     val onLoginChange: (String) -> Unit,
@@ -574,7 +575,7 @@ private fun GenderPicker(
                 ListRowData(
                     leadingText = stringResource(R.string.gender),
                     trailingText =
-                        selectedGender?.let { stringResource(it.sex) }
+                        selectedGender?.let { stringResource(it.sexRes) }
                             ?: stringResource(R.string.select_gender),
                     showChevron = true,
                     enabled = enabled
@@ -593,7 +594,7 @@ private fun GenderPicker(
             ) {
                 Gender.entries.forEach { gender ->
                     DropdownMenuItem(
-                        text = { Text(stringResource(gender.sex)) },
+                        text = { Text(stringResource(gender.sexRes)) },
                         onClick = {
                             onGenderChange(gender)
                             expanded = false

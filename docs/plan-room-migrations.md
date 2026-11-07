@@ -2,7 +2,7 @@
 
 ## Контекст
 
-В `app/src/main/java/com/swparks/data/AppContainer.kt:228` БД собирается так:
+В `app/src/main/java/com/swparks/di/AppContainer.kt:228` БД собирается так:
 
 ```kotlin
 Room.databaseBuilder(...)

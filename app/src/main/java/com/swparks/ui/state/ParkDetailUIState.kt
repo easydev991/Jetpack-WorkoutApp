@@ -1,6 +1,6 @@
 package com.swparks.ui.state
 
-import com.swparks.data.model.Park
+import com.swparks.domain.model.Park
 
 /**
  * Состояния UI экрана детальной информации о площадке.

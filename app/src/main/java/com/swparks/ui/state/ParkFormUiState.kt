@@ -1,7 +1,7 @@
 package com.swparks.ui.state
 
 import android.net.Uri
-import com.swparks.ui.model.ParkForm
+import com.swparks.domain.model.ParkForm
 import com.swparks.ui.model.ParkFormMode
 
 data class ParkFormUiState(
@@ -39,7 +39,7 @@ data class ParkFormUiState(
 
 sealed interface ParkFormEvent {
     data class Saved(
-        val park: com.swparks.data.model.Park
+        val park: com.swparks.domain.model.Park
     ) : ParkFormEvent
 
     data object NavigateBack : ParkFormEvent

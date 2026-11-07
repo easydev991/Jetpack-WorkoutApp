@@ -3,8 +3,8 @@ package com.swparks.data.repository
 import android.content.Context
 import android.content.res.AssetManager
 import android.util.Log
-import com.swparks.data.model.City
-import com.swparks.data.model.Country
+import com.swparks.domain.model.City
+import com.swparks.domain.model.Country
 import com.swparks.network.SWApi
 import com.swparks.util.Logger
 import com.swparks.util.NoOpLogger

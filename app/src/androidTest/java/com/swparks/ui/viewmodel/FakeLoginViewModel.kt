@@ -1,6 +1,6 @@
 package com.swparks.ui.viewmodel
 
-import com.swparks.ui.model.LoginCredentials
+import com.swparks.domain.model.LoginCredentials
 import com.swparks.ui.state.LoginEvent
 import com.swparks.ui.state.LoginUiState
 import kotlinx.coroutines.flow.MutableSharedFlow

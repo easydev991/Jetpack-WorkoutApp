@@ -1,6 +1,6 @@
 package com.swparks.ui.state
 
-import com.swparks.data.model.User
+import com.swparks.domain.model.User
 
 /** UI State для экрана черного списка */
 sealed class BlacklistUiState {

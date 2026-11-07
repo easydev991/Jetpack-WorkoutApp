@@ -1,6 +1,6 @@
 package com.swparks.ui.state
 
-import com.swparks.data.model.Park
+import com.swparks.domain.model.Park
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame

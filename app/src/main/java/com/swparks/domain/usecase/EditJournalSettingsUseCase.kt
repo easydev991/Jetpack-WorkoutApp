@@ -1,7 +1,7 @@
 package com.swparks.domain.usecase
 
 import com.swparks.data.repository.JournalsRepositoryImpl
-import com.swparks.ui.model.JournalAccess
+import com.swparks.domain.model.JournalAccess
 
 /**
  * Use case для редактирования настроек дневника

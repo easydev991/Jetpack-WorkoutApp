@@ -1,7 +1,7 @@
 package com.swparks.navigation
 
 import androidx.navigation.NavController
-import com.swparks.data.model.Park
+import com.swparks.domain.model.Park
 
 internal data class UserAddedParksNavigationData(
     val route: String,

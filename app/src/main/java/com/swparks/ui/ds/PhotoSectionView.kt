@@ -19,7 +19,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import com.swparks.R
-import com.swparks.data.model.Photo
+import com.swparks.domain.model.Photo
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.utils.disabledAlpha
 

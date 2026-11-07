@@ -3,8 +3,8 @@ package com.swparks.data.database
 import com.swparks.data.database.entity.UserEntity
 import com.swparks.data.database.entity.toDomain
 import com.swparks.data.database.entity.toEntity
-import com.swparks.data.model.Park
-import com.swparks.data.model.User
+import com.swparks.domain.model.Park
+import com.swparks.domain.model.User
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

@@ -4,9 +4,9 @@ import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
-import com.swparks.data.model.ApiBlacklistOption
-import com.swparks.data.model.User
 import com.swparks.data.repository.FriendsRepository
+import com.swparks.domain.model.ApiBlacklistOption
+import com.swparks.domain.model.User
 import com.swparks.ui.state.BlacklistAction
 import com.swparks.ui.state.BlacklistUiState
 import com.swparks.ui.viewmodel.BlacklistViewModel

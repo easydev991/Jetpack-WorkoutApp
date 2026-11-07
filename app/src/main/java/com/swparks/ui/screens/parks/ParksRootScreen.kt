@@ -58,8 +58,8 @@ import com.swparks.R
 import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AppScreen
 import com.swparks.analytics.UserActionType
-import com.swparks.data.model.NewParkDraft
-import com.swparks.data.model.Park
+import com.swparks.domain.model.NewParkDraft
+import com.swparks.domain.model.Park
 import com.swparks.navigation.AppState
 import com.swparks.ui.components.SearchCityButton
 import com.swparks.ui.ds.LoadingOverlayView

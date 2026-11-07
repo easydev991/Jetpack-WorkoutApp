@@ -1,9 +1,9 @@
 package com.swparks.domain.usecase
 
-import com.swparks.data.model.Park
-import com.swparks.data.model.ParkFilter
-import com.swparks.data.model.ParkSize
-import com.swparks.data.model.ParkType
+import com.swparks.domain.model.Park
+import com.swparks.domain.model.ParkFilter
+import com.swparks.domain.model.ParkSize
+import com.swparks.domain.model.ParkType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

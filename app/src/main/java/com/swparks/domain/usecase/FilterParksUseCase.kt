@@ -1,7 +1,7 @@
 package com.swparks.domain.usecase
 
-import com.swparks.data.model.Park
-import com.swparks.data.model.ParkFilter
+import com.swparks.domain.model.Park
+import com.swparks.domain.model.ParkFilter
 
 class FilterParksUseCase {
     operator fun invoke(

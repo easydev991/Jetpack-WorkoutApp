@@ -1,7 +1,7 @@
 package com.swparks.domain.usecase
 
-import com.swparks.data.model.Country
 import com.swparks.data.repository.CountriesRepositoryImpl
+import com.swparks.domain.model.Country
 import kotlinx.coroutines.flow.Flow
 
 /**

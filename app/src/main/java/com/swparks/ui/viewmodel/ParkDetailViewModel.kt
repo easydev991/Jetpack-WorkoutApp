@@ -13,16 +13,16 @@ import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
 import com.swparks.analytics.UserActionType
 import com.swparks.data.UserPreferencesRepository
-import com.swparks.data.model.Comment
-import com.swparks.data.model.Photo
-import com.swparks.data.model.User
-import com.swparks.data.model.removePhotoById
 import com.swparks.data.provider.ResourcesProviderImpl
 import com.swparks.data.repository.AuthRepository
 import com.swparks.data.repository.CommentsRepository
 import com.swparks.data.repository.CountriesRepositoryImpl
 import com.swparks.data.repository.ParksEventsRepository
 import com.swparks.domain.exception.NotFoundException
+import com.swparks.domain.model.Comment
+import com.swparks.domain.model.Photo
+import com.swparks.domain.model.User
+import com.swparks.domain.model.removePhotoById
 import com.swparks.domain.usecase.DeleteParkUseCase
 import com.swparks.ui.ds.CommentAction
 import com.swparks.ui.model.EditInfo
@@ -843,7 +843,7 @@ class ParkDetailViewModel(
                 val result =
                     commentsRepository.deleteComment(
                         option =
-                            com.swparks.ui.model.TextEntryOption
+                            com.swparks.domain.model.TextEntryOption
                                 .Park(currentState.park.id),
                         commentId = commentId
                     )

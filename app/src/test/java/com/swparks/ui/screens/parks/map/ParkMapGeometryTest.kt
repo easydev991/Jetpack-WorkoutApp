@@ -1,6 +1,6 @@
 package com.swparks.ui.screens.parks.map
 
-import com.swparks.data.model.Park
+import com.swparks.domain.model.Park
 import com.swparks.ui.state.MapCameraPosition
 import com.swparks.ui.state.UiCoordinates
 import org.junit.Assert.assertEquals

@@ -77,7 +77,7 @@ class BlacklistViewModel(
         }
     }
 
-    private fun showRemoveDialog(user: com.swparks.data.model.User) {
+    private fun showRemoveDialog(user: com.swparks.domain.model.User) {
         val currentState = _uiState.value
         if (currentState is BlacklistUiState.Success) {
             _uiState.value =
@@ -88,7 +88,7 @@ class BlacklistViewModel(
         }
     }
 
-    private fun removeFromBlacklist(user: com.swparks.data.model.User) {
+    private fun removeFromBlacklist(user: com.swparks.domain.model.User) {
         analyticsService.log(AnalyticsEvent.UserAction(UserActionType.UNBLOCK_USER))
 
         viewModelScope.launch {

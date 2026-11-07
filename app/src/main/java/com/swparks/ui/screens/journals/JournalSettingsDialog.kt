@@ -37,13 +37,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.DialogProperties
 import com.swparks.R
 import com.swparks.domain.model.Journal
+import com.swparks.domain.model.JournalAccess
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.ConfirmCloseDialog
 import com.swparks.ui.ds.LoadingOverlayView
 import com.swparks.ui.ds.SWButton
 import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.ds.SWRadioButton
-import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.IJournalSettingsViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

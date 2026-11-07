@@ -4,7 +4,7 @@ import android.util.Log
 import com.swparks.data.database.dao.JournalDao
 import com.swparks.data.database.dao.UserDao
 import com.swparks.data.database.entity.JournalEntity
-import com.swparks.data.model.JournalResponse
+import com.swparks.domain.model.JournalResponse
 import com.swparks.network.SWApi
 import com.swparks.util.NoOpCrashReporter
 import com.swparks.util.NoOpLogger

@@ -4,11 +4,11 @@ import android.util.Log
 import com.swparks.data.database.dao.JournalEntryDao
 import com.swparks.data.database.dao.ParkDao
 import com.swparks.data.database.entity.ParkEntity
-import com.swparks.data.model.Comment
-import com.swparks.data.model.User
 import com.swparks.domain.exception.NetworkException
+import com.swparks.domain.model.Comment
+import com.swparks.domain.model.TextEntryOption
+import com.swparks.domain.model.User
 import com.swparks.network.SWApi
-import com.swparks.ui.model.TextEntryOption
 import com.swparks.util.NoOpCrashReporter
 import com.swparks.util.NoOpLogger
 import io.mockk.coEvery

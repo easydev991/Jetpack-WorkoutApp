@@ -40,8 +40,8 @@ import com.swparks.R
 import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AppScreen
 import com.swparks.analytics.UserActionType
-import com.swparks.data.DefaultAppContainer
-import com.swparks.data.model.User
+import com.swparks.di.DefaultAppContainer
+import com.swparks.domain.model.User
 import com.swparks.navigation.AppState
 import com.swparks.navigation.Screen
 import com.swparks.navigation.navigateToUserAddedParks
@@ -58,6 +58,7 @@ import com.swparks.ui.ds.SWButtonSize
 import com.swparks.ui.ds.UsedParksButton
 import com.swparks.ui.ds.UserProfileCardView
 import com.swparks.ui.ds.UserProfileData
+import com.swparks.ui.model.descriptionRes
 import com.swparks.ui.testtags.ScreenshotTestTags
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.IProfileViewModel
@@ -241,7 +242,7 @@ private fun ProfileCardSection(
                 modifier = Modifier,
                 imageStringURL = user.image,
                 userName = user.fullName?.takeIf { it.isNotBlank() } ?: user.name,
-                gender = user.genderOption?.let { stringResource(id = it.description) } ?: "",
+                gender = user.genderOption?.let { stringResource(id = it.descriptionRes) } ?: "",
                 age = user.age,
                 shortAddress = shortAddress
             )

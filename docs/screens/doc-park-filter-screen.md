@@ -117,7 +117,7 @@ data class ParkFilter(
 | `ui/viewmodel/IParksRootViewModel.kt`       | Интерфейс ViewModel     |
 | `ui/viewmodel/ParksRootViewModel.kt`        | Реализация ViewModel    |
 | `ui/screens/RootScreen.kt`                  | Интеграция в RootScreen |
-| `data/AppContainer.kt`                      | DI container            |
+| `di/AppContainer.kt`                      | DI container            |
 | `res/values/strings.xml`                    | Строки                  |
 | `res/values-ru/strings.xml`                 | Строки (ru)             |
 

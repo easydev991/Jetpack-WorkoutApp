@@ -50,10 +50,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.swparks.R
 import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AppScreen
-import com.swparks.data.model.City
-import com.swparks.data.model.Country
-import com.swparks.data.model.User
+import com.swparks.domain.model.City
+import com.swparks.domain.model.Country
 import com.swparks.domain.model.FriendAction
+import com.swparks.domain.model.User
 import com.swparks.navigation.AppState
 import com.swparks.navigation.Screen
 import com.swparks.navigation.navigateToUserAddedParks
@@ -71,6 +71,7 @@ import com.swparks.ui.ds.UserProfileCardView
 import com.swparks.ui.ds.UserProfileData
 import com.swparks.ui.model.BlacklistAction
 import com.swparks.ui.model.TextEntryMode
+import com.swparks.ui.model.descriptionRes
 import com.swparks.ui.screens.common.TextEntrySheetHost
 import com.swparks.ui.testtags.ScreenshotTestTags
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
@@ -605,7 +606,7 @@ private fun ProfileHeaderSection(
             UserProfileData(
                 imageStringURL = viewedUser.image,
                 userName = viewedUser.fullName?.takeIf { it.isNotBlank() } ?: viewedUser.name,
-                gender = viewedUser.genderOption?.let { stringResource(it.description) } ?: "",
+                gender = viewedUser.genderOption?.let { stringResource(it.descriptionRes) } ?: "",
                 age = viewedUser.age,
                 shortAddress = shortAddress
             )
@@ -732,6 +733,17 @@ internal fun SendMessageButton(
     )
 }
 
+/**
+ * Подпись действия с друзьями. Domain-модель [FriendAction] не зависит от Android-ресурсов —
+ * выбор строки выполняется в UI-слое
+ */
+private val FriendAction.descriptionRes: Int
+    get() =
+        when (this) {
+            FriendAction.SEND_FRIEND_REQUEST -> R.string.send_friend_request
+            FriendAction.REMOVE_FRIEND -> R.string.remove_friend
+        }
+
 @Composable
 internal fun FriendActionButton(
     action: FriendAction,
@@ -749,7 +761,7 @@ internal fun FriendActionButton(
                 modifier = Modifier.fillMaxWidth(),
                 mode = SWButtonMode.TINTED,
                 imageVector = icon,
-                text = stringResource(action.description),
+                text = stringResource(action.descriptionRes),
                 enabled = enabled,
                 onClick = onClick
             )

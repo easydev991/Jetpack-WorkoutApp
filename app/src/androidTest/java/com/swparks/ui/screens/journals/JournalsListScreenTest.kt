@@ -17,11 +17,11 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.fakeAnalyticsLogger
-import com.swparks.data.model.User
 import com.swparks.domain.model.Journal
+import com.swparks.domain.model.JournalAccess
+import com.swparks.domain.model.User
 import com.swparks.navigation.AppState
 import com.swparks.testing.TimeoutTest
-import com.swparks.ui.model.JournalAccess
 import com.swparks.ui.state.JournalsUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme
 import com.swparks.ui.viewmodel.FakeJournalsViewModel

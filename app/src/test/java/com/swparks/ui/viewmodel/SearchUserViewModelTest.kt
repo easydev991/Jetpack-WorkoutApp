@@ -3,8 +3,8 @@ package com.swparks.ui.viewmodel
 import com.swparks.analytics.AnalyticsEvent
 import com.swparks.analytics.AnalyticsService
 import com.swparks.analytics.AppErrorOperation
-import com.swparks.data.model.User
 import com.swparks.data.repository.UserProfileRepository
+import com.swparks.domain.model.User
 import com.swparks.ui.state.SearchUserUiState
 import com.swparks.util.Logger
 import com.swparks.util.NoOpLogger

@@ -1,8 +1,8 @@
 package com.swparks.ui.viewmodel
 
-import com.swparks.data.model.Park
-import com.swparks.data.model.User
 import com.swparks.data.repository.UserProfileRepository
+import com.swparks.domain.model.Park
+import com.swparks.domain.model.User
 import com.swparks.util.AppError
 import com.swparks.util.AppNotification
 import com.swparks.util.Logger

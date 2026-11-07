@@ -2,8 +2,8 @@ package com.swparks.ui.viewmodel
 
 import android.util.Log
 import app.cash.turbine.test
-import com.swparks.data.model.Park
 import com.swparks.data.repository.ParksEventsRepository
+import com.swparks.domain.model.Park
 import com.swparks.util.Logger
 import com.swparks.util.UserNotifier
 import io.mockk.coEvery

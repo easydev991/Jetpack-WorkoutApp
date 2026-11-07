@@ -29,7 +29,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.swparks.R
-import com.swparks.data.model.Event
+import com.swparks.domain.model.Event
+import com.swparks.domain.model.EventForm
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.ConfirmCloseDialog
 import com.swparks.ui.ds.DateTimePickerConfig
@@ -52,7 +53,6 @@ import com.swparks.ui.ds.SWTextEditor
 import com.swparks.ui.ds.SWTextField
 import com.swparks.ui.ds.TextFieldConfig
 import com.swparks.ui.ds.rememberPickedImagesController
-import com.swparks.ui.model.EventForm
 import com.swparks.ui.state.EventFormEvent
 import com.swparks.ui.viewmodel.EventFormAction
 import com.swparks.ui.viewmodel.IEventFormViewModel

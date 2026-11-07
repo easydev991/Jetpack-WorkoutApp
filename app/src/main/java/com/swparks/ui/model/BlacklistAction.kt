@@ -2,7 +2,7 @@ package com.swparks.ui.model
 
 import androidx.annotation.StringRes
 import com.swparks.R
-import com.swparks.data.model.ApiBlacklistOption
+import com.swparks.domain.model.ApiBlacklistOption
 
 /**
  * Действие с чёрным списком по отношению к другому пользователю (заблокировать/разблокировать)

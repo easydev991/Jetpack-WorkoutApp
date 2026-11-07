@@ -1,7 +1,7 @@
 package com.swparks
 
 import android.app.Application
-import com.swparks.data.DefaultAppContainer
+import com.swparks.di.DefaultAppContainer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

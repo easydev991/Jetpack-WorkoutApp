@@ -4,7 +4,7 @@ import android.util.Log
 import com.swparks.data.repository.CommentsRepository
 import com.swparks.data.repository.MessagesRepositoryImpl
 import com.swparks.domain.event.MessageSentNotifier
-import com.swparks.ui.model.TextEntryOption
+import com.swparks.domain.model.TextEntryOption
 
 /**
  * Use case для добавления/редактирования комментариев и записей в дневнике.

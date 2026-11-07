@@ -1,6 +1,6 @@
 package com.swparks.ui.state
 
-import com.swparks.data.model.User
+import com.swparks.domain.model.User
 
 /**
  * Состояния экрана поиска пользователей.

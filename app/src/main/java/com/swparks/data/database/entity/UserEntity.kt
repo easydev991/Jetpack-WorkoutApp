@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.swparks.data.database.AppConverters
-import com.swparks.data.model.Park
+import com.swparks.domain.model.Park
 
 /**
  * Entity для хранения данных пользователя в Room

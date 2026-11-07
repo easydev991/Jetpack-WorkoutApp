@@ -16,10 +16,10 @@ import androidx.test.espresso.NoActivityResumedException
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.swparks.R
-import com.swparks.data.model.Event
-import com.swparks.data.model.User
+import com.swparks.domain.model.Event
+import com.swparks.domain.model.EventForm
+import com.swparks.domain.model.User
 import com.swparks.testing.TimeoutTest
-import com.swparks.ui.model.EventForm
 import com.swparks.ui.model.EventFormMode
 import com.swparks.ui.state.EventFormUiState
 import com.swparks.ui.theme.JetpackWorkoutAppTheme

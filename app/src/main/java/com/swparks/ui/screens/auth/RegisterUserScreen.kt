@@ -44,8 +44,9 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.core.net.toUri
 import com.swparks.R
-import com.swparks.data.model.City
-import com.swparks.data.model.Country
+import com.swparks.domain.model.City
+import com.swparks.domain.model.Country
+import com.swparks.domain.model.Gender
 import com.swparks.ui.ds.ButtonConfig
 import com.swparks.ui.ds.DateTimePickerConfig
 import com.swparks.ui.ds.FormCardContainer
@@ -61,8 +62,8 @@ import com.swparks.ui.ds.SWDateTimePicker
 import com.swparks.ui.ds.SWRadioButton
 import com.swparks.ui.ds.SWTextField
 import com.swparks.ui.ds.TextFieldConfig
-import com.swparks.ui.model.Gender
 import com.swparks.ui.model.RegisterForm
+import com.swparks.ui.model.sexRes
 import com.swparks.ui.state.RegisterEvent
 import com.swparks.ui.utils.disabledAlpha
 import com.swparks.ui.viewmodel.IRegisterViewModel
@@ -510,7 +511,7 @@ private fun GenderRadioButtons(
         ) {
             Gender.entries.forEach { gender ->
                 SWRadioButton(
-                    text = stringResource(gender.sex),
+                    text = stringResource(gender.sexRes),
                     selected = selectedGenderCode == gender.rawValue,
                     onClick = { onGenderChange(gender.rawValue) },
                     onClickable = enabled
