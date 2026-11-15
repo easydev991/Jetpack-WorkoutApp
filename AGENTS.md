@@ -56,7 +56,7 @@ make install        # installDebug
 
 ## Testing
 
-Подробности — в навыке `testing` (`.opencode/skills/testing/SKILL.md`).
+Подробности — в навыке `testing` (`.agents/skills/testing/SKILL.md`).
 Ключевое:
 - Тесты: `app/src/test/` (unit, JUnit 4) и `app/src/androidTest/` (UI/integration).
 - Имена: `functionName_whenCondition_thenExpectedResult()`.
@@ -77,9 +77,9 @@ make install        # installDebug
 - `app/src/main/java/com/swparks/di/AppContainer.kt`
 - `app/src/main/java/com/swparks/navigation/Destinations.kt`
 
-## Repo-local OpenCode skills
+## Repo-local agent skills
 
-`.opencode/skills/` has project-specific skills for Compose tasks: `android-dimens`, `jetpack-compose-safe-areas`, `loading-overlay`, `localization`, `pull-to-refresh`, `testing`.
+`.agents/skills/` has project-specific skills for Compose tasks: `android-dimens`, `jetpack-compose-safe-areas`, `loading-overlay`, `localization`, `pull-to-refresh`, `testing`.
 
 ## Git hooks
 
